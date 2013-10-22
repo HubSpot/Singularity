@@ -9,8 +9,6 @@ public class SingularityTask {
   private final SingularityRequest request;
   private final String guid;
   
-  private String taskId;
-  
   @JsonCreator
   public SingularityTask(@JsonProperty("request") SingularityRequest request, @JsonProperty("guid") String guid) {
     this.request = request;

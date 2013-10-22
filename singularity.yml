@@ -1,5 +1,18 @@
 server:
-    type: simple
-    applicationContextPath: /singularity/v1
+  type: simple
+  applicationContextPath: /singularity/v1
 
-master: zk://configqa1.iad01.hubspot-networks.net:2181,configqa2.iad01.hubspot-networks.net:2181,configqa3.iad01.hubspot-networks.net:2181/mesos/sprocket2
+mesos:
+  master: zk://localhost:2181/mesos/sprocket
+  defaultCpus: 1
+  defaultMemory: 128
+  frameworkName: Singularity
+  frameworkFailoverTimeout: 1
+
+zookeeper:
+  quorum: localhost:2181
+  zkNamespace: singularity
+  sessionTimeoutMillis: 60000
+  connectTimeoutMillis: 5000
+  retryBaseSleepTimeMilliseconds: 1000
+  retryMaxTries: 3

@@ -5,21 +5,20 @@ import org.apache.mesos.Protos;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.config.SingularityModule;
+import com.hubspot.singularity.SingularityModule;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityDriver {
-  
-  public static final String FRAMEWORK_NAME = "Singularity-0.0.1";
 
   private final Protos.FrameworkInfo frameworkInfo;
   private final MesosSchedulerDriver driver;
 
   @Inject
-  public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityScheduler scheduler) {
+  public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityScheduler scheduler, SingularityConfiguration configuration) {
     frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(false)
-        .setFailoverTimeout(1)
-        .setName(FRAMEWORK_NAME)
+        .setFailoverTimeout(configuration.getMesosConfiguration().getFrameworkFailoverTimeout())
+        .setName(configuration.getMesosConfiguration().getFrameworkName())
         .setUser("")  // let mesos assign
         .build();
   
@@ -30,6 +29,10 @@ public class SingularityDriver {
     System.out.println("starting driver...");
 
     driver.start();
+  }
+  
+  public void stop() {
+    driver.stop();
   }
   
 }

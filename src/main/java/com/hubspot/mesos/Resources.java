@@ -9,7 +9,7 @@ public class Resources {
   private final int memoryMb;
 
   @JsonCreator
-  public Resources(@JsonProperty("cpus") int cpus, @JsonProperty("mem") int memoryMb) {
+  public Resources(@JsonProperty("cpus") int cpus, @JsonProperty("memoryMb") int memoryMb) {
     this.cpus = cpus;
     this.memoryMb = memoryMb;
   }
