@@ -1,24 +1,30 @@
 package com.hubspot.singularity.mesos;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.CommandInfo;
+import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.hubspot.mesos.MesosUtils;
+import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.data.SingularityTask;
+import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityScheduler implements Scheduler {
-  public static final String FRAMEWORK_NAME = "Singularity-0.0.1";
-  private final List<Protos.Resource> desiredResources;
-  private final Protos.CommandInfo commandInfo;
-
-  private boolean taskLaunched = false;
+  
+  private final Resources DEFAULT_RESOURCES;
+  private final TaskManager taskManager;
 
   @Inject
-  public SingularityScheduler(List<Protos.Resource> desiredResources, Protos.CommandInfo commandInfo) {
-    this.desiredResources = desiredResources;
-    this.commandInfo = commandInfo;
+  public SingularityScheduler(TaskManager taskManager) {
+    DEFAULT_RESOURCES = new Resources(1, 128);
+    this.taskManager = taskManager;
   }
 
   @Override
@@ -30,51 +36,47 @@ public class SingularityScheduler implements Scheduler {
   public void reregistered(SchedulerDriver driver, Protos.MasterInfo masterInfo) {
     System.out.println("Re-registered.");
   }
-
-  private boolean offerSatisfiesDesiredResources(Protos.Offer offer) {
-    if (desiredResources.size() == 0) {
-      return true;
-    }
-
-    for (Protos.Resource desiredResource : desiredResources) {
-      boolean matchingOffer = false;
-
-      for (Protos.Resource offeredResource : offer.getResourcesList()) {
-        if (offeredResource.getName().equals(desiredResource.getName()) && offeredResource.getType().equals(desiredResource.getType())) {
-          matchingOffer = true;
-
-          if (offeredResource.getType() == Protos.Value.Type.SCALAR) {
-            if (offeredResource.getScalar().getValue() < desiredResource.getScalar().getValue()) {
-              return false;
-            }
-          } else {
-            return false;
-          }
-        }
-      }
-
-      if (!matchingOffer) {  // all offer resources need a matching desired resource
-        return false;
-      }
-    }
-
-    return true;
-  }
-
+  
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
-    System.out.println("Got an offer!");
+    System.out.println("Got offers");
+    
+    final List<SingularityTask> tasks = taskManager.getPendingTasks();
+    Collections.shuffle(tasks);
+    
     for (Protos.Offer offer : offers) {
-      if (!taskLaunched && offerSatisfiesDesiredResources(offer)) {
-        System.out.println(String.format("Accepting slot on slave %s (%s)", offer.getSlaveId(), offer.getHostname()));
-
-        driver.launchTasks(offer.getId(), ImmutableList.of(Protos.TaskInfo.newBuilder()
-            .setCommand(commandInfo)
-            .build()
-        ));
-        taskLaunched = true;
-      } else {
+      
+      SingularityTask accepted = null;
+      
+      for (SingularityTask task : tasks) {
+        Resources taskResources = DEFAULT_RESOURCES;
+        
+        if (task.getRequest().getResources().isPresent()) {
+          taskResources = task.getRequest().getResources().get();
+        }
+        
+        if (MesosUtils.doesOfferMatchResources(taskResources, offer)) {
+          System.out.println(String.format("Task %s slot on slave %s (%s)", task.getGuid(), offer.getSlaveId(), offer.getHostname()));
+          
+          taskManager.launchTask(task);
+ 
+          driver.launchTasks(offer.getId(), 
+              ImmutableList.of(Protos.TaskInfo.newBuilder()
+                  .setTaskId(TaskID.newBuilder().setValue(task.getGuid()))
+                  .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()))
+                  .build()
+              )
+          );
+          
+          accepted = task;
+          break;
+        }
+      }
+      
+      if (accepted == null) {
         driver.declineOffer(offer.getId());
+      } else {
+        tasks.remove(accepted);
       }
     }
   }
@@ -86,12 +88,12 @@ public class SingularityScheduler implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
-    System.out.println("status update");
+    System.out.println("status update:" + status);
   }
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-    System.out.println("framework message");
+    System.out.println("framework message: " + new String(data));
   }
 
   @Override

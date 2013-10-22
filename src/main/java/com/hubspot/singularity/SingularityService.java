@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-
 import com.codahale.dropwizard.Application;
 import com.codahale.dropwizard.setup.Bootstrap;
 import com.codahale.dropwizard.setup.Environment;
@@ -8,7 +7,6 @@ import com.hubspot.dropwizard.guice.GuiceBundle;
 import com.hubspot.singularity.config.SingularityModule;
 
 public class SingularityService extends Application<SingularityConfiguration> {
-
 
   @Override
   public void initialize(Bootstrap<SingularityConfiguration> bootstrap) {
@@ -21,9 +19,10 @@ public class SingularityService extends Application<SingularityConfiguration> {
   }
 
   @Override
-  public void run(SingularityConfiguration configuration, Environment environment) throws Exception { }
+  public void run(SingularityConfiguration configuration, Environment environment) throws Exception {}
 
   public static void main(String[] args) throws Exception {
     new SingularityService().run(args);
   }
+
 }
