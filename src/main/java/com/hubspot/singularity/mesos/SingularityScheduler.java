@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.SingularityTask;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -27,8 +27,8 @@ public class SingularityScheduler implements Scheduler {
   private final TaskManager taskManager;
 
   @Inject
-  public SingularityScheduler(SingularityConfiguration singularityConfiguration, TaskManager taskManager) {
-    DEFAULT_RESOURCES = new Resources(singularityConfiguration.getMesosConfiguration().getDefaultCpus(), singularityConfiguration.getMesosConfiguration().getDefaultMemory());
+  public SingularityScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager) {
+    DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory());
     this.taskManager = taskManager;
   }
 
@@ -117,6 +117,11 @@ public class SingularityScheduler implements Scheduler {
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     taskManager.recordStatus(status.getState().name(), status.getTaskId().getValue(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+    
+    if (MesosUtils.isTaskDone(status.getState())) {
+      taskManager.deleteActiveTask(status.getTaskId().getValue());
+    }
+    
     System.out.println("status update:" + status);
   }
 

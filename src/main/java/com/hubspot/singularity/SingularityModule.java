@@ -11,6 +11,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.mesos.SingularityDriver;
@@ -38,20 +39,30 @@ public class SingularityModule extends AbstractModule {
     return config.getMesosConfiguration().getMaster();
   }
   
+  @Provides
+  @Singleton
+  public ZooKeeperConfiguration zooKeeperConfiguration(SingularityConfiguration config) {
+    return config.getZooKeeperConfiguration();
+  }
+  
+  @Provides
+  @Singleton
+  public MesosConfiguration mesosConfiguration(SingularityConfiguration config) {
+    return config.getMesosConfiguration();
+  }
+  
   @Singleton
   @Provides
-  public CuratorFramework provideCurator(SingularityConfiguration config) {
-    ZooKeeperConfiguration zkConfig = config.getZooKeeperConfiguration();
-    
+  public CuratorFramework provideCurator(ZooKeeperConfiguration config) {
     CuratorFramework client = CuratorFrameworkFactory.newClient(
-        zkConfig.getQuorum(),
-        zkConfig.getSessionTimeoutMillis(),
-        zkConfig.getConnectTimeoutMillis(),
-        new ExponentialBackoffRetry(zkConfig.getRetryBaseSleepTimeMilliseconds(), zkConfig.getRetryMaxTries()));
+        config.getQuorum(),
+        config.getSessionTimeoutMillis(),
+        config.getConnectTimeoutMillis(),
+        new ExponentialBackoffRetry(config.getRetryBaseSleepTimeMilliseconds(), config.getRetryMaxTries()));
     
     client.start();
     
-    return client.usingNamespace(zkConfig.getZkNamespace());
+    return client.usingNamespace(config.getZkNamespace());
   }
   
 }

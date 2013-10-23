@@ -6,7 +6,7 @@ import org.apache.mesos.Protos;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityModule;
-import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.MesosConfiguration;
 
 public class SingularityDriver {
 
@@ -14,11 +14,11 @@ public class SingularityDriver {
   private final MesosSchedulerDriver driver;
 
   @Inject
-  public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityScheduler scheduler, SingularityConfiguration configuration) {
+  public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityScheduler scheduler, MesosConfiguration configuration) {
     frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(false)
-        .setFailoverTimeout(configuration.getMesosConfiguration().getFrameworkFailoverTimeout())
-        .setName(configuration.getMesosConfiguration().getFrameworkName())
+        .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
+        .setName(configuration.getFrameworkName())
         .setUser("")  // let mesos assign
         .build();
   

@@ -41,6 +41,12 @@ public class TaskResource {
   }
   
   @GET
+  @Path("/active")
+  public List<SingularityTask> getActiveTasks() {
+    return taskManager.getActiveTasks();
+  }
+  
+  @GET
   @Path("/history/{taskId}")
   public List<SingularityHistory> getHistoryForTask(@PathParam("taskId") String taskId) {
     return taskManager.getHistory(taskId);

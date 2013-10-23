@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +14,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityRequest;
 
 public class TaskManager {
@@ -25,7 +25,8 @@ public class TaskManager {
   private final static String HISTORY_ROOT_FORMAT = "/history/%s";
   private final static String HISTORY_PATH_FORMAT = HISTORY_ROOT_FORMAT + "/%s";
 
-  private final static String ACTIVE_PATH_FORMAT = "/tasks/%s";
+  private final static String ACTIVE_PATH_ROOT = "/tasks";
+  private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
 
   private final static String PENDING_PATH_ROOT = "/pending";
   private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
@@ -44,12 +45,12 @@ public class TaskManager {
     return String.format(HISTORY_ROOT_FORMAT, taskId);
   }
   
-  private String getActivePath(SingularityTask task) {
-    return String.format(ACTIVE_PATH_FORMAT, task.getGuid());
+  private String getActivePath(String taskId) {
+    return String.format(ACTIVE_PATH_FORMAT, taskId);
   }
 
-  private String getPendingPath(SingularityTask task) {
-    return String.format(PENDING_PATH_FORMAT, task.getGuid());
+  private String getPendingPath(String taskId) {
+    return String.format(PENDING_PATH_FORMAT, taskId);
   }
 
   public SingularityTask persistRequest(SingularityRequest request) {
@@ -73,20 +74,20 @@ public class TaskManager {
 
     final SingularityTask task = new SingularityTask(request, guid);
 
-    final String pendingPath = getPendingPath(task);
+    final String pendingPath = getPendingPath(task.getGuid());
 
     curator.create().creatingParentsIfNeeded().forPath(pendingPath, getTaskData(task));
   
     return task;
   }
-
-  public List<SingularityTask> getPendingTasks() {
+  
+  private List<SingularityTask> getTasksForRoot(String root) {
     try {
-      List<String> taskGuids = curator.getChildren().forPath(PENDING_PATH_ROOT);
+      List<String> taskGuids = curator.getChildren().forPath(root);
       List<SingularityTask> tasks = Lists.newArrayListWithCapacity(taskGuids.size());
       
       for (String taskGuid : taskGuids) {
-        SingularityTask request = getTaskFromData(curator.getData().forPath(ZKPaths.makePath(PENDING_PATH_ROOT, taskGuid)));
+        SingularityTask request = getTaskFromData(curator.getData().forPath(ZKPaths.makePath(root, taskGuid)));
         tasks.add(request);
       }
 
@@ -96,6 +97,14 @@ public class TaskManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+  
+  public List<SingularityTask> getActiveTasks() {
+    return getTasksForRoot(ACTIVE_PATH_ROOT);
+  }
+
+  public List<SingularityTask> getPendingTasks() {
+    return getTasksForRoot(PENDING_PATH_ROOT);
   }
 
   public void launchTask(SingularityTask task) {
@@ -107,28 +116,12 @@ public class TaskManager {
   }
 
   private void launchTaskPrivate(SingularityTask task) throws Exception {
-    final String pendingPath = getPendingPath(task);
-    final String activePath = getActivePath(task);
+    final String pendingPath = getPendingPath(task.getGuid());
+    final String activePath = getActivePath(task.getGuid());
     
     curator.delete().forPath(pendingPath);
     
     curator.create().creatingParentsIfNeeded().forPath(activePath, getTaskData(task));
-  }
-  
-  private byte[] toBytes(String string) {
-    try {
-      return string.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-  
-  private String toString(byte[] bytes) {
-    try {
-      return new String(bytes, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
-    }
   }
   
   private List<SingularityHistory> getHistoryPrivate(String taskId) throws Exception {
@@ -154,7 +147,7 @@ public class TaskManager {
       if (payload == null || payload.length == 0) {
         maybeMessage = Optional.absent();
       } else {
-        maybeMessage = Optional.of(toString(payload));
+        maybeMessage = Optional.of(JavaUtils.toString(payload));
       }
       
       histories.add(new SingularityHistory(stat.getCtime(), historyNode, maybeMessage));
@@ -171,13 +164,23 @@ public class TaskManager {
     }
   } 
     
+  public void deleteActiveTask(String taskId) {
+    try {
+      curator.delete().guaranteed().inBackground().forPath(getActivePath(taskId));
+    } catch (NoNodeException nee) {
+      // ignore this 
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
   public void recordStatus(String statusUpdate, String taskId, Optional<String> message) {
     byte[] payload = null;
     
     if (message.isPresent()) {
-      payload = toBytes(message.get());
+      payload = JavaUtils.toBytes(message.get());
     } else {
-      payload = toBytes("");
+      payload = JavaUtils.toBytes("");
     }
     
     try {

@@ -2,6 +2,7 @@ package com.hubspot.mesos;
 
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.Value;
 
 public class MesosUtils {
@@ -57,5 +58,9 @@ public class MesosUtils {
     }
 
     return true;
+  }
+  
+  public static boolean isTaskDone(TaskState state) {
+    return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }
 }
