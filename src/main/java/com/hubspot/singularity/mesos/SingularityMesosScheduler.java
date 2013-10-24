@@ -118,12 +118,12 @@ public class SingularityMesosScheduler implements Scheduler {
     try {
       final List<SingularityTask> tasks = getDueTasks();
       
-      LOG.debug(String.format("Got tasks to match with offers %s", tasks));
+      LOG.trace(String.format("Got tasks to match with offers %s", tasks));
       
       numTasksSeen = tasks.size();
       
       for (Protos.Offer offer : offers) {
-        LOG.debug(String.format("Evaluating offer %s", offer));
+        LOG.trace(String.format("Evaluating offer %s", offer));
         
         Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks);
         
@@ -156,9 +156,8 @@ public class SingularityMesosScheduler implements Scheduler {
   }
   
   private void abort() {
-    LOG.error("Aborting");
-    System.out.println("Aborting... due to failure");
-//    System.exit(0);
+    LOG.error("Abort called - DOING NOTHING");
+    //    System.exit(0);
   }
   
   private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTask> tasks) {
