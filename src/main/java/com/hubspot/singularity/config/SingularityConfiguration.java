@@ -11,6 +11,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("zookeeper")
   private ZooKeeperConfiguration zooKeeperConfiguration;
 
+  @JsonProperty("hostname")
+  private String hostname = "127.0.0.1";
+
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -27,4 +30,11 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
+  public String getHostname() {
+    return hostname;
+  }
+
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
+  }
 }

@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import com.codahale.dropwizard.jackson.Jackson;
@@ -21,6 +22,8 @@ import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 public class SingularityModule extends AbstractModule {
   
   public static final String MASTER_PROPERTY = "singularity.master";
+  public static final String ZK_NAMESPACE_PROPERTY = "singularity.namespace";
+  public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   
   @Override
   protected void configure() {
@@ -44,6 +47,26 @@ public class SingularityModule extends AbstractModule {
   @Singleton
   public ZooKeeperConfiguration zooKeeperConfiguration(SingularityConfiguration config) {
     return config.getZooKeeperConfiguration();
+  }
+
+  @Provides
+  @Named(ZK_NAMESPACE_PROPERTY)
+  public String providesZkNamespace(ZooKeeperConfiguration config) {
+    return config.getZkNamespace();
+  }
+
+  @Provides
+  @Named(HOSTNAME_PROPERTY)
+  public String providesHostnameProperty(SingularityConfiguration config) {
+    return config.getHostname();
+  }
+
+  @Provides
+  @Singleton
+  public LeaderLatch provideLeaderLatch(CuratorFramework curator,
+                                        @Named(SingularityModule.ZK_NAMESPACE_PROPERTY) String zkNamespace,
+                                        @Named(SingularityModule.HOSTNAME_PROPERTY) String hostname) {
+    return new LeaderLatch(curator, String.format("%s/leader", zkNamespace), hostname);
   }
   
   @Provides
