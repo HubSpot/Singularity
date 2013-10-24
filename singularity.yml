@@ -10,6 +10,7 @@ mesos:
   defaultCpus: 1
   defaultMemory: 128
   frameworkName: Singularity
+  frameworkId: Singularity_1
   frameworkFailoverTimeout: 1
 
 zookeeper:

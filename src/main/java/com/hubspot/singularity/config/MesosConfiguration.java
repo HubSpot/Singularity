@@ -9,6 +9,8 @@ public class MesosConfiguration {
   @NotNull
   private String frameworkName;
   @NotNull
+  private String frameworkId;
+  @NotNull
   private Double frameworkFailoverTimeout;
   @NotNull
   private Integer defaultCpus;
@@ -17,6 +19,14 @@ public class MesosConfiguration {
 
   public String getMaster() {
     return master;
+  }
+
+  public String getFrameworkId() {
+    return frameworkId;
+  }
+
+  public void setFrameworkId(String frameworkId) {
+    this.frameworkId = frameworkId;
   }
 
   public String getFrameworkName() {
