@@ -2,11 +2,15 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
+import org.apache.mesos.Protos.CommandInfo.URI;
+import org.apache.mesos.Protos.Environment;
+import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.Status;
@@ -17,6 +21,8 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -41,13 +47,15 @@ public class SingularityMesosScheduler implements Scheduler {
   private final RequestManager requestManager;
   private final TaskManager taskManager;
   private final SingularityScheduler scheduler;
+  private final ObjectMapper objectMapper;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler) {
-    DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory());
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler, ObjectMapper objectMapper) {
+    DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.scheduler = scheduler;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -71,9 +79,44 @@ public class SingularityMesosScheduler implements Scheduler {
             .setExecutorId(ExecutorID.newBuilder().setValue("custom"))
       );
       
-      bldr.setData(ByteString.copyFromUtf8(task.getRequest().getCommand()));
+      Object executorData = task.getRequest().getExecutorData();
+      
+      if (executorData != null) {
+        if (executorData instanceof String) {
+          bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
+        } else {
+          try {
+            bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
+          } catch (JsonProcessingException e) {
+            LOG.warn(String.format("Unable to process executor data %s as json", executorData), e);
+            bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
+          }
+        }
+      } else {
+        bldr.setData(ByteString.copyFromUtf8(task.getRequest().getCommand()));
+      }
+      
     } else {
-      bldr.setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()));
+      CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
+      
+      commandBldr.setValue(task.getRequest().getCommand());
+      
+      if (task.getRequest().getUris() != null) {
+        for (String uri : task.getRequest().getUris()) {
+          commandBldr.addUris(URI.newBuilder().setValue(uri).build());
+        }
+      }
+      
+      if (task.getRequest().getArgs() != null) {
+        Environment.Builder envBldr = Environment.newBuilder();
+        
+        for (Entry<String, String> envEntry : task.getRequest().getArgs().entrySet()) {
+          envBldr.addVariables(Variable.newBuilder()
+              .setName(envEntry.getKey())
+              .setValue(envEntry.getValue())
+              .build());
+        }
+      }     
     }
     
     bldr.addResources(MesosUtils.getCpuResource(resources.getCpus()));
@@ -152,7 +195,7 @@ public class SingularityMesosScheduler implements Scheduler {
       abort();
     }
     
-    LOG.info(String.format("Finished handling offers (%s), accepted %s, declined %s, outstanding tasks %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(), offers.size(), numTasksSeen - acceptedOffers.size()));
+    LOG.info(String.format("Finished handling offers (%s), accepted %s, declined %s, outstanding tasks %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(), offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
   
   private void abort() {
