@@ -116,6 +116,9 @@ public class SingularityMesosScheduler implements Scheduler {
     
     try {
       final List<SingularityTask> tasks = getDueTasks();
+      
+      LOG.debug(String.format("Got tasks to match with offers %s", tasks));
+      
       numTasksSeen = tasks.size();
       
       for (Protos.Offer offer : offers) {
@@ -171,6 +174,8 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.launchTask(task);
         
         final TaskInfo mesosTask = buildTask(offer, task, taskResources);
+        
+        LOG.debug(String.format("Launching mesos task: %s", mesosTask));
         
         Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(mesosTask));
         
