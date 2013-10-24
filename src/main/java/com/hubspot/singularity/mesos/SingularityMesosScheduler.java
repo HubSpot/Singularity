@@ -145,7 +145,8 @@ public class SingularityMesosScheduler implements Scheduler {
   
   private void abort() {
     LOG.error("Aborting");
-    System.exit(0);
+    System.out.println("Aborting... due to failure");
+//    System.exit(0);
   }
   
   private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTask> tasks) {
