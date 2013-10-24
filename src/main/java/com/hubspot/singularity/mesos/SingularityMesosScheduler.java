@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -96,6 +97,15 @@ public class SingularityMesosScheduler implements Scheduler {
           bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
         } else {
           try {
+            if (ports != null) {
+              try {
+                Map<String, Object> executorDataMap = (Map<String, Object>) executorData;
+                executorDataMap.put("ports", ports);
+              } catch (ClassCastException cce) {
+                LOG.warn(String.format("Unable to add ports executor data %s because it wasn't a map", executorData), cce);
+              }
+            }
+            
             bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
           } catch (JsonProcessingException e) {
             LOG.warn(String.format("Unable to process executor data %s as json", executorData), e);
