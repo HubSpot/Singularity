@@ -69,8 +69,9 @@ public class SingularityMesosScheduler implements Scheduler {
           ExecutorInfo.newBuilder()
             .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getExecutor()))
             .setExecutorId(ExecutorID.newBuilder().setValue("custom"))
-            .setData(ByteString.copyFromUtf8(task.getRequest().getCommand()))
       );
+      
+      bldr.setData(ByteString.copyFromUtf8(task.getRequest().getCommand()));
     } else {
       bldr.setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()));
     }
