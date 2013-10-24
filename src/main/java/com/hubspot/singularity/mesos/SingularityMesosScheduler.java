@@ -13,6 +13,7 @@ import org.apache.mesos.Protos.Environment;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -72,6 +74,14 @@ public class SingularityMesosScheduler implements Scheduler {
     TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().toString()));
     
+    long[] ports = null;
+    Resource portsResource = null;
+    
+    if (resources.getNumPorts() > 0) {
+      portsResource = MesosUtils.getPortsResource(resources.getNumPorts(), offer);
+      ports = MesosUtils.getPorts(portsResource, resources.getNumPorts());
+    }
+    
     if (task.getRequest().getExecutor() != null) {
       bldr.setExecutor(
           ExecutorInfo.newBuilder()
@@ -107,16 +117,30 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       }
       
-      if (task.getRequest().getArgs() != null) {
+      if (task.getRequest().getArgs() != null || ports != null) {
         Environment.Builder envBldr = Environment.newBuilder();
         
-        for (Entry<String, String> envEntry : task.getRequest().getArgs().entrySet()) {
+        for (Entry<String, String> envEntry : Objects.firstNonNull(task.getRequest().getArgs(), Collections.<String, String>emptyMap()).entrySet()) {
           envBldr.addVariables(Variable.newBuilder()
               .setName(envEntry.getKey())
               .setValue(envEntry.getValue())
               .build());
         }
+        
+        if (ports != null) {
+          int portNum = 0;
+          for (long port : ports) {
+            envBldr.addVariables(Variable.newBuilder()
+                .setName(String.format("PORT%s", portNum++))
+                .setValue(Long.toString(port))
+                .build());
+          }
+        }
       }     
+    }
+    
+    if (portsResource != null) {
+      bldr.addResources(portsResource);
     }
     
     bldr.addResources(MesosUtils.getCpuResource(resources.getCpus()));

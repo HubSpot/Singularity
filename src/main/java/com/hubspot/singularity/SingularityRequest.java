@@ -49,6 +49,7 @@ public class SingularityRequest {
     Preconditions.checkState((daemon == null || daemon) || (instances == null || instances == 0), "Non-daemons can not be ran on more than one instance");
     Preconditions.checkState(schedule == null || CronExpression.isValidExpression(schedule), "Cron Schedule %s was not parseable", schedule);
     Preconditions.checkState((command != null && executorData == null) || (executorData != null && executor != null && command == null), "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
+    Preconditions.checkState(resources == null || resources.getNumPorts() == 0 || (executor == null || (executorData != null && executorData instanceof Map)), "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
     
     this.command = command;
     this.name = name;
