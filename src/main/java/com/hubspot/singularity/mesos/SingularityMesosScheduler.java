@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
+import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskID;
@@ -64,7 +65,11 @@ public class SingularityMesosScheduler implements Scheduler {
         .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()));
     
     if (task.getRequest().getExecutor() != null) {
-      bldr.setExecutor(ExecutorInfo.newBuilder().setName(task.getRequest().getExecutor()));
+      bldr.setExecutor(
+          ExecutorInfo.newBuilder()
+            .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getExecutor()))
+            .setExecutorId(ExecutorID.newBuilder().setValue("custom-executor"))
+      );
     }
     
     bldr.addResources(MesosUtils.getCpuResource(resources.getCpus()));
