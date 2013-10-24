@@ -63,4 +63,6 @@ public class MesosUtils {
   public static boolean isTaskDone(TaskState state) {
     return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }
+  
+  
 }

@@ -5,6 +5,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import com.codahale.dropwizard.jackson.Jackson;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -15,7 +16,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.mesos.SingularityDriver;
-import com.hubspot.singularity.mesos.SingularityScheduler;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 
 public class SingularityModule extends AbstractModule {
   
@@ -23,14 +24,14 @@ public class SingularityModule extends AbstractModule {
   
   @Override
   protected void configure() {
-    bind(SingularityScheduler.class).in(Scopes.SINGLETON);
+    bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
     bind(SingularityDriver.class).in(Scopes.SINGLETON);
   }
 
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
-    return Jackson.newObjectMapper();
+    return Jackson.newObjectMapper().setSerializationInclusion(Include.NON_NULL);
   }
   
   @Provides

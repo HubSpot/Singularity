@@ -2,32 +2,33 @@ package com.hubspot.singularity.data;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.SingularityRequest;
 
-public class SingularityTask {
+public class SingularityTask implements Comparable<SingularityTask> {
 
   private final SingularityRequest request;
-  private final String guid;
+  private final SingularityTaskId taskId;
   
   @JsonCreator
-  public SingularityTask(@JsonProperty("request") SingularityRequest request, @JsonProperty("guid") String guid) {
+  public SingularityTask(@JsonProperty("request") SingularityRequest request, @JsonProperty("taskId") SingularityTaskId taskId) {
     this.request = request;
-    this.guid = guid;
+    this.taskId = taskId;
   }
   
   public SingularityRequest getRequest() {
     return request;
   }
   
-  public String getGuid() {
-    return guid;
+  public SingularityTaskId getTaskId() {
+    return taskId;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((guid == null) ? 0 : guid.hashCode());
+    result = prime * result + ((taskId == null) ? 0 : taskId.hashCode());
     return result;
   }
 
@@ -40,14 +41,25 @@ public class SingularityTask {
     if (getClass() != obj.getClass())
       return false;
     SingularityTask other = (SingularityTask) obj;
-    if (guid == null) {
-      if (other.guid != null)
+    if (taskId == null) {
+      if (other.taskId != null)
         return false;
-    } else if (!guid.equals(other.guid))
+    } else if (!taskId.equals(other.taskId))
       return false;
     return true;
   }
+
+  @Override
+  public int compareTo(SingularityTask o) {
+    return this.getTaskId().compareTo(o.getTaskId());
+  }
   
-  
+  public byte[] getTaskData(ObjectMapper objectMapper) throws Exception {
+    return objectMapper.writeValueAsBytes(this);
+  }
+
+  public static SingularityTask getTaskFromData(byte[] data, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(data, SingularityTask.class);
+  }
   
 }
