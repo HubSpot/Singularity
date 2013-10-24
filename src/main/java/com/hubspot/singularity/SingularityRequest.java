@@ -96,7 +96,7 @@ public class SingularityRequest {
     
     if (dayOfWeek.equals("*")) {
       dayOfWeek = "?";
-    } else {
+    } else if (!dayOfWeek.equals("?")) {
       dayOfMonth = "?";
     }
 
