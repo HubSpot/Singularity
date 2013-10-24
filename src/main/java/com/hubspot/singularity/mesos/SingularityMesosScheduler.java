@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
@@ -61,15 +62,17 @@ public class SingularityMesosScheduler implements Scheduler {
  
   private TaskInfo buildTask(Protos.Offer offer, SingularityTask task, Resources resources) {
     TaskInfo.Builder bldr = TaskInfo.newBuilder()
-        .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().toString()))
-        .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()));
+        .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().toString()));
     
     if (task.getRequest().getExecutor() != null) {
       bldr.setExecutor(
           ExecutorInfo.newBuilder()
             .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getExecutor()))
-            .setExecutorId(ExecutorID.newBuilder().setValue("custom-executor"))
+            .setExecutorId(ExecutorID.newBuilder().setValue("custom"))
+            .setData(ByteString.copyFromUtf8(task.getRequest().getCommand()))
       );
+    } else {
+      bldr.setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()));
     }
     
     bldr.addResources(MesosUtils.getCpuResource(resources.getCpus()));
