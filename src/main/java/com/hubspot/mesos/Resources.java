@@ -28,4 +28,9 @@ public class Resources {
     return memoryMb;
   }
 
+  @Override
+  public String toString() {
+    return "Resources [cpus=" + cpus + ", memoryMb=" + memoryMb + ", numPorts=" + numPorts + "]";
+  }
+  
 }

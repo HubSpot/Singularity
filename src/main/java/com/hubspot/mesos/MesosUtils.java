@@ -47,7 +47,7 @@ public class MesosUtils {
     }
     
     for (Range range : ranges.getRangeList()) {
-      long num = range.getEnd() - range.getEnd();
+      long num = range.getEnd() - range.getBegin();
       totalRanges += num;
     }
     

@@ -9,7 +9,7 @@
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <name>One-off mesos tasks</name>
+  <name>Mesos Scheduler for applications, cron jobs.</name>
 
   <properties>
     <java.abi>1.7</java.abi>
