@@ -6,6 +6,7 @@ import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
+import org.apache.mesos.Protos.Value.Type;
 
 public class MesosUtils {
 
@@ -103,6 +104,7 @@ public class MesosUtils {
     }
     
     return Resource.newBuilder()
+        .setType(Type.RANGES)
         .setName(PORTS)
         .setRanges(rangesBldr)
         .build();
