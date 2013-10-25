@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.codahale.dropwizard.validation.ValidationMethod;
 import org.quartz.CronExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -18,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hubspot.mesos.Resources;
 
 public class SingularityRequest {
+  private static final Joiner JOINER = Joiner.on(" ");
 
   @NotNull
   private final String name;
@@ -37,7 +39,30 @@ public class SingularityRequest {
   private final List<String> uris;
   private final Object executorData;
 
-  private static final Joiner JOINER = Joiner.on(" ");
+  @ValidationMethod(message="Scheduled requests can not be ran on more than one instance, and must not be daemons")
+  public boolean isScheduleInstancesValid() {
+    return schedule == null || ((instances == null || instances == 0) && (daemon == null || !daemon));
+  }
+
+  @ValidationMethod(message="Non-daemons can not be ran on more than one instance")
+  public boolean isNonDaemonInstancesValid() {
+    return (daemon == null || daemon) || (instances == null || instances == 0);
+  }
+
+  @ValidationMethod(message="Cron schedule was not parseable")
+  public boolean isCronScheduleValid() {
+    return schedule == null || CronExpression.isValidExpression(schedule);
+  }
+
+  @ValidationMethod(message="If not using custom executor, specify a command. If using custom executor, specify executorData OR command.")
+  public boolean isExecutorValid() {
+    return (command != null && executorData == null) || (executorData != null && executor != null && command == null);
+  }
+
+  @ValidationMethod(message="Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor")
+  public boolean isPortsValid() {
+    return resources == null || resources.getNumPorts() == 0 || (executor == null || (executorData != null && executorData instanceof Map));
+  }
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("command") String command, @JsonProperty("name") String name, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources, @JsonProperty("schedule") String schedule,
@@ -45,12 +70,6 @@ public class SingularityRequest {
       @JsonProperty("executorData") Object executorData, @JsonProperty("rackSensitive") Boolean rackSensitive) {
     schedule = adjustSchedule(schedule);
 
-    Preconditions.checkState(schedule == null || ((instances == null || instances == 0) && (daemon == null || !daemon)), "Scheduled requests can not be ran on more than one instance, and must not be daemons");
-    Preconditions.checkState((daemon == null || daemon) || (instances == null || instances == 0), "Non-daemons can not be ran on more than one instance");
-    Preconditions.checkState(schedule == null || CronExpression.isValidExpression(schedule), "Cron Schedule %s was not parseable", schedule);
-    Preconditions.checkState((command != null && executorData == null) || (executorData != null && executor != null && command == null), "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
-    Preconditions.checkState(resources == null || resources.getNumPorts() == 0 || (executor == null || (executorData != null && executorData instanceof Map)), "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
-    
     this.command = command;
     this.name = name;
     this.resources = resources;
