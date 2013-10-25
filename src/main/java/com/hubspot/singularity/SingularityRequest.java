@@ -179,4 +179,10 @@ public class SingularityRequest {
     return command;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityRequest [name=" + name + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command="
+        + command + ", args=" + args + ", uris=" + uris + ", executorData=" + executorData + "]";
+  }
+  
 }

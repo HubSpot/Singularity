@@ -61,5 +61,10 @@ public class SingularityTask implements Comparable<SingularityTask> {
   public static SingularityTask getTaskFromData(byte[] data, ObjectMapper objectMapper) throws Exception {
     return objectMapper.readValue(data, SingularityTask.class);
   }
+
+  @Override
+  public String toString() {
+    return "SingularityTask [request=" + request + ", taskId=" + taskId + "]";
+  }
   
 }

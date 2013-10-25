@@ -87,7 +87,7 @@ public class SingularityTaskId implements Comparable<SingularityTaskId> {
   @Override
   public int compareTo(SingularityTaskId o) {
     return ComparisonChain.start()
-        .compare(o.getNextRunAt(), this.getNextRunAt())
+        .compare(this.getNextRunAt(), o.getNextRunAt())
         .compare(this.getName(), o.getName())
         .compare(this.getInstanceNo(), o.getInstanceNo())
         .result();
