@@ -15,6 +15,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
@@ -38,7 +39,9 @@ public class SingularityModule extends AbstractModule {
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
-    return Jackson.newObjectMapper().setSerializationInclusion(Include.NON_NULL);
+    return Jackson.newObjectMapper()
+        .setSerializationInclusion(Include.NON_NULL)
+        .registerModule(new ProtobufModule());
   }
   
   @Provides

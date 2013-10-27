@@ -15,8 +15,8 @@ import com.hubspot.singularity.data.history.SingularityTaskHistoryUpdate.Singula
 
 public interface HistoryJDBI {
 
-  @SqlUpdate("INSERT INTO taskHistory (requestName, taskId, task, driverStatus, createdAt) VALUES (:requestName, :taskId, :task, :driverStatus, :createdAt)")
-  void insertTaskHistory(@Bind("requestName") String requestName, @Bind("taskId") String taskId, @Bind("task") byte[] task, @Bind("driverStatus") String driverStatus, @Bind("createdAt") Date createdAt);
+  @SqlUpdate("INSERT INTO taskHistory (requestName, taskId, task, status, createdAt) VALUES (:requestName, :taskId, :task, :status, :createdAt)")
+  void insertTaskHistory(@Bind("requestName") String requestName, @Bind("taskId") String taskId, @Bind("task") byte[] task, @Bind("status") String status, @Bind("createdAt") Date createdAt);
 
   @SqlUpdate("INSERT INTO taskUpdates (taskId, status, message, createdAt) VALUES (:taskId, :status, :message, :createdAt)")
   void insertTaskUpdate(@Bind("taskId") String taskId, @Bind("status") String status, @Bind("message") String message, @Bind("createdAt") Date createdAt);
