@@ -6,15 +6,14 @@ import java.util.Map;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import com.codahale.dropwizard.validation.ValidationMethod;
 import org.quartz.CronExpression;
 
+import com.codahale.dropwizard.validation.ValidationMethod;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.Resources;
 
@@ -39,26 +38,31 @@ public class SingularityRequest {
   private final List<String> uris;
   private final Object executorData;
 
+  @JsonIgnore
   @ValidationMethod(message="Scheduled requests can not be ran on more than one instance, and must not be daemons")
   public boolean isScheduleInstancesValid() {
     return schedule == null || ((instances == null || instances == 0) && (daemon == null || !daemon));
   }
 
+  @JsonIgnore
   @ValidationMethod(message="Non-daemons can not be ran on more than one instance")
   public boolean isNonDaemonInstancesValid() {
     return (daemon == null || daemon) || (instances == null || instances == 0);
   }
 
+  @JsonIgnore
   @ValidationMethod(message="Cron schedule was not parseable")
   public boolean isCronScheduleValid() {
     return schedule == null || CronExpression.isValidExpression(schedule);
   }
 
+  @JsonIgnore
   @ValidationMethod(message="If not using custom executor, specify a command. If using custom executor, specify executorData OR command.")
   public boolean isExecutorValid() {
     return (command != null && executorData == null) || (executorData != null && executor != null && command == null);
   }
 
+  @JsonIgnore
   @ValidationMethod(message="Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor")
   public boolean isPortsValid() {
     return resources == null || resources.getNumPorts() == 0 || (executor == null || (executorData != null && executorData instanceof Map));

@@ -65,14 +65,14 @@ public class RequestManager {
     }
   }
   
-  public List<SingularityTask> fetchTasks(List<SingularityTaskId> taskIds) {
-    final List<SingularityTask> tasks = Lists.newArrayListWithCapacity(taskIds.size());
+  public List<SingularityTaskRequest> fetchTasks(List<SingularityTaskId> taskIds) {
+    final List<SingularityTaskRequest> tasks = Lists.newArrayListWithCapacity(taskIds.size());
     
     for (SingularityTaskId taskId : taskIds) {
       Optional<SingularityRequest> maybeRequest = fetchRequest(taskId.getName());
       
       if (maybeRequest.isPresent()) {
-        tasks.add(new SingularityTask(maybeRequest.get(), taskId));
+        tasks.add(new SingularityTaskRequest(maybeRequest.get(), taskId));
       }
     }
     

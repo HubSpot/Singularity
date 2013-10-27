@@ -20,7 +20,6 @@ import com.hubspot.singularity.data.SingularityTaskId;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 @Path("/request")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource {
 
@@ -55,6 +54,7 @@ public class RequestResource {
   }
 
   @POST
+  @Consumes({ MediaType.APPLICATION_JSON })
   public SingularitySubmitRequestResponse submit(@Valid SingularityRequest request) {
     requestManager.persistRequest(request);
   

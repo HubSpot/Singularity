@@ -39,7 +39,9 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityTask;
 import com.hubspot.singularity.data.SingularityTaskId;
+import com.hubspot.singularity.data.SingularityTaskRequest;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 public class SingularityMesosScheduler implements Scheduler {
@@ -51,14 +53,16 @@ public class SingularityMesosScheduler implements Scheduler {
   private final TaskManager taskManager;
   private final SingularityScheduler scheduler;
   private final ObjectMapper objectMapper;
+  private final HistoryManager historyManager;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler, ObjectMapper objectMapper) {
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler, ObjectMapper objectMapper, HistoryManager historyManager) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.scheduler = scheduler;
     this.objectMapper = objectMapper;
+    this.historyManager = historyManager;
   }
 
   @Override
@@ -71,7 +75,7 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info(String.format("Reregistered driver %s, with master %s", driver, masterInfo));
   }
  
-  private TaskInfo buildTask(Protos.Offer offer, SingularityTask task, Resources resources) {
+  private TaskInfo buildTask(Protos.Offer offer, SingularityTaskRequest task, Resources resources) {
     TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().toString()));
     
@@ -163,7 +167,7 @@ public class SingularityMesosScheduler implements Scheduler {
     return bldr.build();
   }
   
-  private List<SingularityTask> getDueTasks() {
+  private List<SingularityTaskRequest> getDueTasks() {
     final List<SingularityTaskId> tasks = taskManager.getPendingTasks();
       
     final long now = System.currentTimeMillis();
@@ -176,7 +180,7 @@ public class SingularityMesosScheduler implements Scheduler {
       } 
     }
     
-    final List<SingularityTask> dueTasks = requestManager.fetchTasks(dueTaskIds);
+    final List<SingularityTaskRequest> dueTasks = requestManager.fetchTasks(dueTaskIds);
     Collections.sort(dueTasks);
   
     return dueTasks;
@@ -193,7 +197,7 @@ public class SingularityMesosScheduler implements Scheduler {
     int numTasksSeen = 0;
     
     try {
-      final List<SingularityTask> tasks = getDueTasks();
+      final List<SingularityTaskRequest> tasks = getDueTasks();
       
       LOG.trace(String.format("Got tasks to match with offers %s", tasks));
       
@@ -208,7 +212,7 @@ public class SingularityMesosScheduler implements Scheduler {
           driver.declineOffer(offer.getId());
         } else {
           acceptedOffers.add(offer.getId());
-          tasks.remove(accepted.get());
+          tasks.remove(accepted.get().getTaskRequest());
         }
       }
     } catch (Throwable t) {
@@ -237,26 +241,28 @@ public class SingularityMesosScheduler implements Scheduler {
     //    System.exit(0);
   }
   
-  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTask> tasks) {
-    for (SingularityTask task : tasks) {
+  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks) {
+    for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
       
-      if (task.getRequest().getResources() != null) {
-        taskResources = task.getRequest().getResources();
+      if (taskRequest.getRequest().getResources() != null) {
+        taskResources = taskRequest.getRequest().getResources();
       }
      
       if (MesosUtils.doesOfferMatchResources(taskResources, offer)) {
-        LOG.info(String.format("Launching task %s slot on slave %s (%s)", task.getTaskId(), offer.getSlaveId(), offer.getHostname()));
+        LOG.info(String.format("Launching task %s slot on slave %s (%s)", taskRequest.getTaskId(), offer.getSlaveId(), offer.getHostname()));
+        
+        final TaskInfo mesosTask = buildTask(offer, taskRequest, taskResources);
+        
+        final SingularityTask task = new SingularityTask(taskRequest, offer, mesosTask);
         
         taskManager.launchTask(task);
-        
-        final TaskInfo mesosTask = buildTask(offer, task, taskResources);
         
         LOG.debug(String.format("Launching mesos task: %s", mesosTask));
         
         Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(mesosTask));
         
-        taskManager.recordStatus(initialStatus.name(), mesosTask.getTaskId().getValue(), Optional.<String> absent());
+        historyManager.saveTaskHistory(task, initialStatus.name());
         
         return Optional.of(task);
       }
@@ -275,8 +281,8 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info(String.format("Got a status update: %s", status));
     
     try {
-      taskManager.recordStatus(status.getState().name(), status.getTaskId().getValue(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
-    
+      historyManager.saveTaskUpdate(status.getTaskId().getValue(), status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+      
       if (MesosUtils.isTaskDone(status.getState())) {
         taskManager.deleteActiveTask(status.getTaskId().getValue());
       
