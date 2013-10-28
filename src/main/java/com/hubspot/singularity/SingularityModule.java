@@ -6,14 +6,21 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.skife.jdbi.v2.DBI;
 
 import com.codahale.dropwizard.jackson.Jackson;
+import com.codahale.dropwizard.jdbi.DBIFactory;
+import com.codahale.dropwizard.setup.Environment;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.name.Named;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
+import com.hubspot.singularity.data.history.HistoryJDBI;
+import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import org.eclipse.jetty.server.Connector;
@@ -30,12 +37,15 @@ public class SingularityModule extends AbstractModule {
   protected void configure() {
     bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
     bind(SingularityDriver.class).in(Scopes.SINGLETON);
+    bind(HistoryManager.class).to(JDBIHistoryManager.class);
   }
 
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
-    return Jackson.newObjectMapper().setSerializationInclusion(Include.NON_NULL);
+    return Jackson.newObjectMapper()
+        .setSerializationInclusion(Include.NON_NULL)
+        .registerModule(new ProtobufModule());
   }
   
   @Provides
@@ -102,6 +112,18 @@ public class SingularityModule extends AbstractModule {
     client.start();
     
     return client.usingNamespace(config.getZkNamespace());
+  }
+  
+  @Provides
+  @Singleton
+  public DBI getDBI(Environment environment, SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
+    final DBIFactory factory = new DBIFactory();
+    return factory.build(environment, singularityConfiguration.getDataSourceFactory(), "db");
+  }
+  
+  @Provides
+  public HistoryJDBI getHistoryJDBI(DBI dbi) {
+    return dbi.onDemand(HistoryJDBI.class);
   }
   
 }

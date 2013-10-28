@@ -2,13 +2,19 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
+import org.apache.mesos.Protos.CommandInfo.URI;
+import org.apache.mesos.Protos.Environment;
+import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
@@ -17,6 +23,9 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -30,7 +39,9 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityTask;
 import com.hubspot.singularity.data.SingularityTaskId;
+import com.hubspot.singularity.data.SingularityTaskRequest;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 public class SingularityMesosScheduler implements Scheduler {
@@ -41,13 +52,17 @@ public class SingularityMesosScheduler implements Scheduler {
   private final RequestManager requestManager;
   private final TaskManager taskManager;
   private final SingularityScheduler scheduler;
+  private final ObjectMapper objectMapper;
+  private final HistoryManager historyManager;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler) {
-    DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory());
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler, ObjectMapper objectMapper, HistoryManager historyManager) {
+    DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.scheduler = scheduler;
+    this.objectMapper = objectMapper;
+    this.historyManager = historyManager;
   }
 
   @Override
@@ -60,9 +75,17 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info(String.format("Reregistered driver %s, with master %s", driver, masterInfo));
   }
  
-  private TaskInfo buildTask(Protos.Offer offer, SingularityTask task, Resources resources) {
+  private TaskInfo buildTask(Protos.Offer offer, SingularityTaskRequest task, Resources resources) {
     TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().toString()));
+    
+    long[] ports = null;
+    Resource portsResource = null;
+    
+    if (resources.getNumPorts() > 0) {
+      portsResource = MesosUtils.getPortsResource(resources.getNumPorts(), offer);
+      ports = MesosUtils.getPorts(portsResource, resources.getNumPorts());
+    }
     
     if (task.getRequest().getExecutor() != null) {
       bldr.setExecutor(
@@ -71,9 +94,67 @@ public class SingularityMesosScheduler implements Scheduler {
             .setExecutorId(ExecutorID.newBuilder().setValue("custom"))
       );
       
-      bldr.setData(ByteString.copyFromUtf8(task.getRequest().getCommand()));
+      Object executorData = task.getRequest().getExecutorData();
+      
+      if (executorData != null) {
+        if (executorData instanceof String) {
+          bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
+        } else {
+          try {
+            if (ports != null) {
+              try {
+                Map<String, Object> executorDataMap = (Map<String, Object>) executorData;
+                executorDataMap.put("ports", ports);
+              } catch (ClassCastException cce) {
+                LOG.warn(String.format("Unable to add ports executor data %s because it wasn't a map", executorData), cce);
+              }
+            }
+            
+            bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
+          } catch (JsonProcessingException e) {
+            LOG.warn(String.format("Unable to process executor data %s as json", executorData), e);
+            bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
+          }
+        }
+      } else {
+        bldr.setData(ByteString.copyFromUtf8(task.getRequest().getCommand()));
+      }
+      
     } else {
-      bldr.setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getCommand()));
+      CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
+      
+      commandBldr.setValue(task.getRequest().getCommand());
+      
+      if (task.getRequest().getUris() != null) {
+        for (String uri : task.getRequest().getUris()) {
+          commandBldr.addUris(URI.newBuilder().setValue(uri).build());
+        }
+      }
+      
+      if (task.getRequest().getArgs() != null || ports != null) {
+        Environment.Builder envBldr = Environment.newBuilder();
+        
+        for (Entry<String, String> envEntry : Objects.firstNonNull(task.getRequest().getArgs(), Collections.<String, String>emptyMap()).entrySet()) {
+          envBldr.addVariables(Variable.newBuilder()
+              .setName(envEntry.getKey())
+              .setValue(envEntry.getValue())
+              .build());
+        }
+        
+        if (ports != null) {
+          int portNum = 0;
+          for (long port : ports) {
+            envBldr.addVariables(Variable.newBuilder()
+                .setName(String.format("PORT%s", portNum++))
+                .setValue(Long.toString(port))
+                .build());
+          }
+        }
+      }     
+    }
+    
+    if (portsResource != null) {
+      bldr.addResources(portsResource);
     }
     
     bldr.addResources(MesosUtils.getCpuResource(resources.getCpus()));
@@ -86,7 +167,7 @@ public class SingularityMesosScheduler implements Scheduler {
     return bldr.build();
   }
   
-  private List<SingularityTask> getDueTasks() {
+  private List<SingularityTaskRequest> getDueTasks() {
     final List<SingularityTaskId> tasks = taskManager.getPendingTasks();
       
     final long now = System.currentTimeMillis();
@@ -99,7 +180,7 @@ public class SingularityMesosScheduler implements Scheduler {
       } 
     }
     
-    final List<SingularityTask> dueTasks = requestManager.fetchTasks(dueTaskIds);
+    final List<SingularityTaskRequest> dueTasks = requestManager.fetchTasks(dueTaskIds);
     Collections.sort(dueTasks);
   
     return dueTasks;
@@ -116,7 +197,7 @@ public class SingularityMesosScheduler implements Scheduler {
     int numTasksSeen = 0;
     
     try {
-      final List<SingularityTask> tasks = getDueTasks();
+      final List<SingularityTaskRequest> tasks = getDueTasks();
       
       LOG.trace(String.format("Got tasks to match with offers %s", tasks));
       
@@ -131,7 +212,7 @@ public class SingularityMesosScheduler implements Scheduler {
           driver.declineOffer(offer.getId());
         } else {
           acceptedOffers.add(offer.getId());
-          tasks.remove(accepted.get());
+          tasks.remove(accepted.get().getTaskRequest());
         }
       }
     } catch (Throwable t) {
@@ -152,7 +233,7 @@ public class SingularityMesosScheduler implements Scheduler {
       abort();
     }
     
-    LOG.info(String.format("Finished handling offers (%s), accepted %s, declined %s, outstanding tasks %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(), offers.size(), numTasksSeen - acceptedOffers.size()));
+    LOG.info(String.format("Finished handling offers (%s), accepted %s, declined %s, outstanding tasks %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(), offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
   
   private void abort() {
@@ -160,26 +241,28 @@ public class SingularityMesosScheduler implements Scheduler {
     //    System.exit(0);
   }
   
-  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTask> tasks) {
-    for (SingularityTask task : tasks) {
+  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks) {
+    for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
       
-      if (task.getRequest().getResources() != null) {
-        taskResources = task.getRequest().getResources();
+      if (taskRequest.getRequest().getResources() != null) {
+        taskResources = taskRequest.getRequest().getResources();
       }
      
       if (MesosUtils.doesOfferMatchResources(taskResources, offer)) {
-        LOG.info(String.format("Launching task %s slot on slave %s (%s)", task.getTaskId(), offer.getSlaveId(), offer.getHostname()));
+        LOG.info(String.format("Launching task %s slot on slave %s (%s)", taskRequest.getTaskId(), offer.getSlaveId(), offer.getHostname()));
+        
+        final TaskInfo mesosTask = buildTask(offer, taskRequest, taskResources);
+        
+        final SingularityTask task = new SingularityTask(taskRequest, offer, mesosTask);
         
         taskManager.launchTask(task);
-        
-        final TaskInfo mesosTask = buildTask(offer, task, taskResources);
         
         LOG.debug(String.format("Launching mesos task: %s", mesosTask));
         
         Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(mesosTask));
         
-        taskManager.recordStatus(initialStatus.name(), mesosTask.getTaskId().getValue(), Optional.<String> absent());
+        historyManager.saveTaskHistory(task, initialStatus.name());
         
         return Optional.of(task);
       }
@@ -198,8 +281,8 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info(String.format("Got a status update: %s", status));
     
     try {
-      taskManager.recordStatus(status.getState().name(), status.getTaskId().getValue(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
-    
+      historyManager.saveTaskUpdate(status.getTaskId().getValue(), status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+      
       if (MesosUtils.isTaskDone(status.getState())) {
         taskManager.deleteActiveTask(status.getTaskId().getValue());
       

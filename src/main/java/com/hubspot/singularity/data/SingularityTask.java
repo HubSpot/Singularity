@@ -1,65 +1,53 @@
 package com.hubspot.singularity.data;
 
+import java.io.IOException;
+
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.TaskInfo;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hubspot.singularity.SingularityRequest;
 
-public class SingularityTask implements Comparable<SingularityTask> {
+public class SingularityTask {
 
-  private final SingularityRequest request;
-  private final SingularityTaskId taskId;
-  
+  private final SingularityTaskRequest taskRequest;
+  private final Offer offer;
+  private final TaskInfo task;
+
   @JsonCreator
-  public SingularityTask(@JsonProperty("request") SingularityRequest request, @JsonProperty("taskId") SingularityTaskId taskId) {
-    this.request = request;
-    this.taskId = taskId;
-  }
-  
-  public SingularityRequest getRequest() {
-    return request;
-  }
-  
-  public SingularityTaskId getTaskId() {
-    return taskId;
+  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("offer") Offer offer, @JsonProperty("task") TaskInfo task) {
+    this.taskRequest = taskRequest;
+    this.offer = offer;
+    this.task = task;
   }
 
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((taskId == null) ? 0 : taskId.hashCode());
-    return result;
+  public SingularityTaskRequest getTaskRequest() {
+    return taskRequest;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    SingularityTask other = (SingularityTask) obj;
-    if (taskId == null) {
-      if (other.taskId != null)
-        return false;
-    } else if (!taskId.equals(other.taskId))
-      return false;
-    return true;
+  public Offer getOffer() {
+    return offer;
   }
 
-  @Override
-  public int compareTo(SingularityTask o) {
-    return this.getTaskId().compareTo(o.getTaskId());
+  public TaskInfo getTask() {
+    return task;
   }
-  
-  public byte[] getTaskData(ObjectMapper objectMapper) throws Exception {
+
+  public byte[] getTaskData(ObjectMapper objectMapper) throws JsonProcessingException {
     return objectMapper.writeValueAsBytes(this);
   }
 
-  public static SingularityTask getTaskFromData(byte[] data, ObjectMapper objectMapper) throws Exception {
+  public static SingularityTask getTaskFromData(byte[] data, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
     return objectMapper.readValue(data, SingularityTask.class);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityTask [taskRequest=" + taskRequest + ", offer=" + offer + ", task=" + task + "]";
   }
   
 }

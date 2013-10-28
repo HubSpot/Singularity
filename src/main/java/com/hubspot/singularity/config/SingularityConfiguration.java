@@ -1,6 +1,10 @@
 package com.hubspot.singularity.config;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import com.codahale.dropwizard.Configuration;
+import com.codahale.dropwizard.db.DataSourceFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityConfiguration extends Configuration {
@@ -13,6 +17,20 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("hostname")
   private String hostname = "127.0.0.1";
+
+  @Valid
+  @NotNull
+  private DataSourceFactory database;
+
+  @JsonProperty("database")
+  public DataSourceFactory getDataSourceFactory() {
+    return database;
+  }
+
+  @JsonProperty("database")
+  public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
+    this.database = dataSourceFactory;
+  }
 
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
