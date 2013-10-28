@@ -1,7 +1,9 @@
 package com.hubspot.singularity;
 
 import com.codahale.dropwizard.setup.Environment;
+import com.google.common.base.Strings;
 import com.google.inject.*;
+import com.hubspot.mesos.JavaUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -10,7 +12,6 @@ import org.skife.jdbi.v2.DBI;
 
 import com.codahale.dropwizard.jackson.Jackson;
 import com.codahale.dropwizard.jdbi.DBIFactory;
-import com.codahale.dropwizard.setup.Environment;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.name.Named;
@@ -68,8 +69,8 @@ public class SingularityModule extends AbstractModule {
 
   @Provides
   @Named(HOSTNAME_PROPERTY)
-  public String providesHostnameProperty(SingularityConfiguration config) {
-    return config.getHostname();
+  public String providesHostnameProperty(SingularityConfiguration config) throws Exception {
+    return !Strings.isNullOrEmpty(config.getHostname()) ? config.getHostname() : JavaUtils.getHostAddress();
   }
 
   @Provides

@@ -16,7 +16,7 @@ public class SingularityConfiguration extends Configuration {
   private ZooKeeperConfiguration zooKeeperConfiguration;
 
   @JsonProperty("hostname")
-  private String hostname = "127.0.0.1";
+  private String hostname;
 
   @Valid
   @NotNull
