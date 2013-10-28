@@ -42,7 +42,8 @@ public class LeaderRedirectorFilterFactory implements ResourceFilterFactory {
       if (!leaderLatch.hasLeadership()) {
         try {
           final String leader = leaderLatch.getLeader().getId();
-          throw new WebApplicationException(Response.temporaryRedirect(new URI(String.format("http://%s%s", leader, request.getPath()))).build());
+          final String path = request.getAbsolutePath().getPath();
+          throw new WebApplicationException(Response.temporaryRedirect(new URI(String.format("http://%s%s", leader, path))).build());
         } catch (WebApplicationException e) {
           throw e;  // OMFG this is stupid
         } catch (Exception e) {

@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import com.codahale.dropwizard.setup.Environment;
+import com.google.inject.*;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -8,22 +10,21 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import com.codahale.dropwizard.jackson.Jackson;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ServerConnector;
 
 public class SingularityModule extends AbstractModule {
   
   public static final String MASTER_PROPERTY = "singularity.master";
   public static final String ZK_NAMESPACE_PROPERTY = "singularity.namespace";
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
+  public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
   
   @Override
   protected void configure() {
@@ -63,10 +64,24 @@ public class SingularityModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named(HTTP_PORT_PROPERTY)
+  public int providesHttpPortProperty(SingularityConfiguration config, Environment environment) {
+    for (Connector connector : config.getServerFactory().build(environment).getConnectors()) {
+      if (connector instanceof ServerConnector) {
+        return ((ServerConnector) connector).getPort();
+      }
+    }
+
+    throw new ProvisionException("Failed to get HTTP port from dropwizard config");
+  }
+
+  @Provides
+  @Singleton
   public LeaderLatch provideLeaderLatch(CuratorFramework curator,
                                         @Named(SingularityModule.ZK_NAMESPACE_PROPERTY) String zkNamespace,
-                                        @Named(SingularityModule.HOSTNAME_PROPERTY) String hostname) {
-    return new LeaderLatch(curator, String.format("%s/leader", zkNamespace), hostname);
+                                        @Named(SingularityModule.HOSTNAME_PROPERTY) String hostname,
+                                        @Named(SingularityModule.HTTP_PORT_PROPERTY) int httpPort) {
+    return new LeaderLatch(curator, String.format("%s/leader", zkNamespace), String.format("%s:%d", hostname, httpPort));
   }
   
   @Provides

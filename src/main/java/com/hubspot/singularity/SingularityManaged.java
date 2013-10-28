@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-import com.google.inject.name.Named;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.codahale.dropwizard.lifecycle.Managed;
