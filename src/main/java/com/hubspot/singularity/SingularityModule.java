@@ -28,6 +28,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 
 public class SingularityModule extends AbstractModule {
+  private static final String LEADER_PATH = "/leader";
   
   public static final String MASTER_PROPERTY = "singularity.master";
   public static final String ZK_NAMESPACE_PROPERTY = "singularity.namespace";
@@ -92,7 +93,7 @@ public class SingularityModule extends AbstractModule {
                                         @Named(SingularityModule.ZK_NAMESPACE_PROPERTY) String zkNamespace,
                                         @Named(SingularityModule.HOSTNAME_PROPERTY) String hostname,
                                         @Named(SingularityModule.HTTP_PORT_PROPERTY) int httpPort) {
-    return new LeaderLatch(curator, String.format("%s/leader", zkNamespace), String.format("%s:%d", hostname, httpPort));
+    return new LeaderLatch(curator, LEADER_PATH, String.format("%s:%d", hostname, httpPort));
   }
   
   @Provides
