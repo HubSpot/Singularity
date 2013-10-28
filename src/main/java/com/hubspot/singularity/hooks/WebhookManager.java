@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.data.SingularityTaskUpdate;
 import com.hubspot.singularity.data.TaskManager;
 import com.ning.http.client.AsyncCompletionHandler;
@@ -38,19 +40,19 @@ public class WebhookManager {
     this.objectMapper = objectMapper;
     
     hooks = loadHooks();
-  
+
     asyncHttpClient = new AsyncHttpClient();
-    handler = new AsyncCompletionHandler<Response>(){
+    handler = new AsyncCompletionHandler<Response>() {
 
-        @Override
-        public Response onCompleted(Response response) throws Exception{
-            return response;
-        }
+      @Override
+      public Response onCompleted(Response response) throws Exception {
+        return response;
+      }
 
-        @Override
-        public void onThrowable(Throwable t) {
-          LOG.warn("Throwable while processing a webhook", t);
-        }
+      @Override
+      public void onThrowable(Throwable t) {
+        LOG.warn("Throwable while processing a webhook", t);
+      }
     };
   }
   
@@ -68,7 +70,7 @@ public class WebhookManager {
   }
   
   private String getHookPath(String uri) {
-    return String.format(HOOK_FORMAT_PATH, uri);
+    return String.format(HOOK_FORMAT_PATH, JavaUtils.urlEncode(uri));
   }
   
   public List<String> getWebhooks() {
@@ -77,9 +79,14 @@ public class WebhookManager {
   
   private List<String> loadHooks() {
     try {
-      return curator.getChildren().forPath(HOOK_ROOT_PATH);
+      final List<String> hooks = curator.getChildren().forPath(HOOK_ROOT_PATH);
+      final List<String> decodedHooks = Lists.newArrayListWithCapacity(hooks.size());
+      for (String hook : hooks) {
+        decodedHooks.add(JavaUtils.urlDecode(hook));
+      }
+      return decodedHooks;
     } catch (NoNodeException nee) {
-      return Collections.emptyList();
+      return Lists.newArrayList();
     } catch (Exception e) {
       // TODO fix this - throw a curator exception.
       throw Throwables.propagate(e);

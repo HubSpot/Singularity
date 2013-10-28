@@ -1,6 +1,8 @@
 package com.hubspot.mesos;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -27,6 +29,22 @@ public class JavaUtils {
       throw Throwables.propagate(e);
     }
   }
+  public static String urlEncode(String string) {
+    try {
+      return URLEncoder.encode(string, CHARSET_UTF);
+    } catch (UnsupportedEncodingException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  public static String urlDecode(String string) {
+    try {
+      return URLDecoder.decode(string, CHARSET_UTF);
+    } catch (UnsupportedEncodingException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
 
   public static String getHostAddress() throws Exception {
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();

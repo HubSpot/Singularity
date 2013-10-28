@@ -34,7 +34,7 @@ public class SingularityRequest {
   private final Boolean daemon;
 
   private final String command;
-  private final Map<String, String> args;
+  private final Map<String, String> env;
   private final List<String> uris;
   private final Object executorData;
 
@@ -70,7 +70,7 @@ public class SingularityRequest {
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("command") String command, @JsonProperty("name") String name, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources, @JsonProperty("schedule") String schedule,
-      @JsonProperty("instances") Integer instances, @JsonProperty("daemon") Boolean daemon, @JsonProperty("args") Map<String, String> args, @JsonProperty("uris") List<String> uris,
+      @JsonProperty("instances") Integer instances, @JsonProperty("daemon") Boolean daemon, @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris,
       @JsonProperty("executorData") Object executorData, @JsonProperty("rackSensitive") Boolean rackSensitive) {
     schedule = adjustSchedule(schedule);
 
@@ -83,13 +83,13 @@ public class SingularityRequest {
     this.instances = instances;
     this.rackSensitive = rackSensitive;
     
-    this.args = args;
+    this.env = env;
     this.uris = uris;
     this.executorData = executorData;
   }
 
-  public Map<String, String> getArgs() {
-    return args;
+  public Map<String, String> getEnv() {
+    return env;
   }
 
   public List<String> getUris() {
@@ -205,7 +205,7 @@ public class SingularityRequest {
   @Override
   public String toString() {
     return "SingularityRequest [name=" + name + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command="
-        + command + ", args=" + args + ", uris=" + uris + ", executorData=" + executorData + "]";
+        + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
   }
   
 }

@@ -40,8 +40,10 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityTask;
 import com.hubspot.singularity.data.SingularityTaskId;
 import com.hubspot.singularity.data.SingularityTaskRequest;
+import com.hubspot.singularity.data.SingularityTaskUpdate;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.hooks.WebhookManager;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 public class SingularityMesosScheduler implements Scheduler {
@@ -54,15 +56,17 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityScheduler scheduler;
   private final ObjectMapper objectMapper;
   private final HistoryManager historyManager;
+  private final WebhookManager webhookManager;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler, ObjectMapper objectMapper, HistoryManager historyManager) {
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, RequestManager requestManager, SingularityScheduler scheduler, ObjectMapper objectMapper, HistoryManager historyManager, WebhookManager webhookManager) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.scheduler = scheduler;
     this.objectMapper = objectMapper;
     this.historyManager = historyManager;
+    this.webhookManager = webhookManager;
   }
 
   @Override
@@ -131,10 +135,10 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       }
       
-      if (task.getRequest().getArgs() != null || ports != null) {
+      if (task.getRequest().getEnv() != null || ports != null) {
         Environment.Builder envBldr = Environment.newBuilder();
         
-        for (Entry<String, String> envEntry : Objects.firstNonNull(task.getRequest().getArgs(), Collections.<String, String>emptyMap()).entrySet()) {
+        for (Entry<String, String> envEntry : Objects.firstNonNull(task.getRequest().getEnv(), Collections.<String, String>emptyMap()).entrySet()) {
           envBldr.addVariables(Variable.newBuilder()
               .setName(envEntry.getKey())
               .setValue(envEntry.getValue())
@@ -279,6 +283,8 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     LOG.info(String.format("Got a status update: %s", status));
+    
+    webhookManager.notify(new SingularityTaskUpdate(taskManager.getActiveTask(status.getTaskId().getValue()).get(), status.getState()));
     
     try {
       historyManager.saveTaskUpdate(status.getTaskId().getValue(), status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());

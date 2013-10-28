@@ -88,7 +88,7 @@ public class MesosUtils {
     int portsSoFar = 0;
     
     for (Range range : ranges.getRangeList()) {
-      long rangeEnd = Math.min(portsSoFar + range.getBegin(), range.getEnd());
+      long rangeEnd = Math.min(numPorts - portsSoFar + range.getBegin(), range.getEnd());
       
       long numPortsInRange = rangeEnd - range.getBegin();
     
