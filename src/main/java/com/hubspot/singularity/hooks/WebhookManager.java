@@ -1,6 +1,5 @@
 package com.hubspot.singularity.hooks;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
