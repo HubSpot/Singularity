@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.sun.jersey.api.model.AbstractMethod;
 import com.sun.jersey.spi.container.*;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -13,15 +14,21 @@ import java.util.List;
 
 public class LeaderRedirectorFilterFactory implements ResourceFilterFactory {
   private final LeaderLatch leaderLatch;
+  private final Boolean highAvailability;
 
   @Inject
-  public LeaderRedirectorFilterFactory(LeaderLatch leaderLatch) {
+  public LeaderRedirectorFilterFactory(LeaderLatch leaderLatch, @Named(SingularityModule.HA_PROPERTY) Boolean highAvailability) {
     this.leaderLatch = leaderLatch;
+    this.highAvailability = highAvailability;
   }
 
   @Override
   public List<ResourceFilter> create(AbstractMethod am) {
-    return Collections.<ResourceFilter>singletonList(new Filter());
+    if (highAvailability) {
+      return Collections.<ResourceFilter>singletonList(new Filter());
+    } else {
+      return null;
+    }
   }
 
   private class Filter implements ResourceFilter, ContainerRequestFilter {
