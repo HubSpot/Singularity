@@ -11,7 +11,6 @@
 	</parent>
 	
   <artifactId>SingularityService</artifactId>
-  <name>Mesos scheduler API for applications, tasks, cron jobs.</name>
 
   <repositories>
     <repository>
