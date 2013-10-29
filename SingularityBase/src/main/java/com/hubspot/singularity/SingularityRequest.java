@@ -78,6 +78,11 @@ public class SingularityRequest {
   }
 
   @JsonIgnore
+  public boolean isRackSensitive() {
+    return (rackSensitive != null && rackSensitive.booleanValue());
+  }
+  
+  @JsonIgnore
   public boolean alwaysRunning() {
     return (daemon == null || daemon.booleanValue()) && !isScheduled();
   }

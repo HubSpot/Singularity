@@ -12,7 +12,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityPendingTaskId;
 
 public class JDBIHistoryManager implements HistoryManager {
 
@@ -34,7 +34,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public void saveTaskHistory(SingularityTask task, String driverStatus) {
     try {
       history.insertTaskHistory(task.getTaskRequest().getRequest().getName(),
-          task.getTaskRequest().getTaskId().toString(),
+          task.getTaskId().toString(),
           task.getTaskData(objectMapper),
           driverStatus,
           new Date());
@@ -49,7 +49,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskId> getTaskHistoryForRequest(String requestName) {
+  public List<SingularityPendingTaskId> getTaskHistoryForRequest(String requestName) {
     return history.getTaskHistoryForRequest(requestName);
   }
 

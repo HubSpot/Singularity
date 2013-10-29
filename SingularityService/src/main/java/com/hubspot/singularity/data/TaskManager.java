@@ -14,6 +14,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTaskId;
 
 public class TaskManager {
@@ -43,9 +44,9 @@ public class TaskManager {
     return String.format(PENDING_PATH_FORMAT, taskId);
   }
 
-  public void persistScheduleTasks(List<SingularityTaskId> taskIds) {
+  public void persistScheduleTasks(List<SingularityPendingTaskId> taskIds) {
     try {
-      for (SingularityTaskId taskId : taskIds) {
+      for (SingularityPendingTaskId taskId : taskIds) {
         persistTaskId(taskId);
       }
     } catch (Throwable t) {
@@ -53,23 +54,15 @@ public class TaskManager {
     }
   }
 
-  private void persistTaskId(SingularityTaskId taskId) throws Exception {
+  private void persistTaskId(SingularityPendingTaskId taskId) throws Exception {
     final String pendingPath = getPendingPath(taskId.toString());
 
     curator.create().creatingParentsIfNeeded().forPath(pendingPath);
   }
   
-  private List<SingularityTaskId> getTasksForRoot(String root) {
+  private List<String> getTasksForRoot(String root) {
     try {
-      List<String> taskIds = curator.getChildren().forPath(root);
-      List<SingularityTaskId> tasksIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
-      
-      for (String taskId : taskIds) {
-        SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
-        tasksIdsObjs.add(taskIdObj);
-      }
-
-      return tasksIdsObjs;
+      return curator.getChildren().forPath(root);
     } catch (NoNodeException nne) {
       return Collections.emptyList();
     } catch (Throwable t) {
@@ -78,7 +71,15 @@ public class TaskManager {
   }
   
   public List<SingularityTaskId> getActiveTaskIds() {
-    return getTasksForRoot(ACTIVE_PATH_ROOT);
+    List<String> taskIds = getTasksForRoot(ACTIVE_PATH_ROOT);
+    List<SingularityTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
+
+    for (String taskId : taskIds) {
+      SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
+      taskIdsObjs.add(taskIdObj);
+    }
+    
+    return taskIdsObjs;
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {
@@ -119,10 +120,18 @@ public class TaskManager {
     }
   }
 
-  public List<SingularityTaskId> getPendingTasks() {
-    return getTasksForRoot(PENDING_PATH_ROOT);
-  }
+  public List<SingularityPendingTaskId> getPendingTasks() {
+    List<String> taskIds = getTasksForRoot(PENDING_PATH_ROOT);
+    List<SingularityPendingTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
 
+    for (String taskId : taskIds) {
+      SingularityPendingTaskId taskIdObj = SingularityPendingTaskId.fromString(taskId);
+      taskIdsObjs.add(taskIdObj);
+    }
+    
+    return taskIdsObjs;
+  }
+  
   public void launchTask(SingularityTask task) {
     try {
       launchTaskPrivate(task);
@@ -132,8 +141,8 @@ public class TaskManager {
   }
 
   private void launchTaskPrivate(SingularityTask task) throws Exception {
-    final String pendingPath = getPendingPath(task.getTaskRequest().getTaskId().toString());
-    final String activePath = getActivePath(task.getTaskRequest().getTaskId().toString());
+    final String pendingPath = getPendingPath(task.getTaskRequest().getPendingTaskId().toString());
+    final String activePath = getActivePath(task.getTaskId().toString());
     
     curator.delete().forPath(pendingPath);
     

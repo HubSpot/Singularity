@@ -18,6 +18,16 @@ public class MesosConfiguration {
   private Integer defaultMemory;
   @NotNull
   private Boolean checkpoint = false;
+  @NotNull
+  private String rackIdAttributeKey = "rackid";
+  
+  public String getRackIdAttributeKey() {
+    return rackIdAttributeKey;
+  }
+
+  public void setRackIdAttributeKey(String rackIdAttributeKey) {
+    this.rackIdAttributeKey = rackIdAttributeKey;
+  }
 
   public String getMaster() {
     return master;

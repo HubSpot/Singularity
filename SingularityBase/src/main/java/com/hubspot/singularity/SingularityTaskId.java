@@ -1,39 +1,58 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ComparisonChain;
 
-public class SingularityTaskId implements Comparable<SingularityTaskId> {
+public class SingularityTaskId {
 
   private final String name;
-  private final long nextRunAt;
+  private final long startedAt;
   private final int instanceNo;
+  private final String rackId;
 
   @JsonCreator
-  public SingularityTaskId(@JsonProperty("name") String name, @JsonProperty("nextRunAt") long nextRunAt, @JsonProperty("instanceNo") int instanceNo) {
+  public SingularityTaskId(@JsonProperty("name") String name, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("rackId") String rackId) {
     this.name = name;
-    this.nextRunAt = nextRunAt;
+    this.startedAt = startedAt;
     this.instanceNo = instanceNo;
+    this.rackId = rackId;
+  }
+  
+  public String getRackId() {
+    return rackId;
+  }
+  
+  @JsonIgnore
+  public String getSafeRackId() {
+    if (rackId == null) {
+      return "";
+    } 
+    return rackId.replace("-", "");
   }
 
   public String getName() {
     return name;
   }
 
-  public long getNextRunAt() {
-    return nextRunAt;
+  public long getStartedAt() {
+    return startedAt;
   }
 
   public int getInstanceNo() {
     return instanceNo;
   }
   
+  public boolean matches(SingularityPendingTaskId pendingTaskId) {
+    return getName().equals(pendingTaskId.getName());
+  }
+  
   public static SingularityTaskId fromString(String string) {
     final String[] splits = string.split("\\-");
- 
-    final int instanceNo = Integer.parseInt(splits[splits.length - 1]);
-    final long nextRunAt = Long.parseLong(splits[splits.length - 2]);
+    
+    final String rackId = splits[splits.length - 1];
+    final int instanceNo = Integer.parseInt(splits[splits.length - 2]);
+    final long startedAt = Long.parseLong(splits[splits.length - 3]);
     
     StringBuilder nameBldr = new StringBuilder();
     
@@ -46,7 +65,7 @@ public class SingularityTaskId implements Comparable<SingularityTaskId> {
      
     final String name = nameBldr.toString();
     
-    return new SingularityTaskId(name, nextRunAt, instanceNo);
+    return new SingularityTaskId(name, startedAt, instanceNo, rackId);
   }
 
   @Override
@@ -55,7 +74,8 @@ public class SingularityTaskId implements Comparable<SingularityTaskId> {
     int result = 1;
     result = prime * result + instanceNo;
     result = prime * result + ((name == null) ? 0 : name.hashCode());
-    result = prime * result + (int) (nextRunAt ^ (nextRunAt >>> 32));
+    result = prime * result + ((rackId == null) ? 0 : rackId.hashCode());
+    result = prime * result + (int) (startedAt ^ (startedAt >>> 32));
     return result;
   }
 
@@ -75,23 +95,18 @@ public class SingularityTaskId implements Comparable<SingularityTaskId> {
         return false;
     } else if (!name.equals(other.name))
       return false;
-    if (nextRunAt != other.nextRunAt)
+    if (rackId == null) {
+      if (other.rackId != null)
+        return false;
+    } else if (!rackId.equals(other.rackId))
+      return false;
+    if (startedAt != other.startedAt)
       return false;
     return true;
   }
 
   public String toString() {
-    return String.format("%s-%s-%s", getName(), getNextRunAt(), getInstanceNo());
+    return String.format("%s-%s-%s-%s", getName(), getStartedAt(), getInstanceNo(), getSafeRackId());
   }
   
-  @Override
-  public int compareTo(SingularityTaskId o) {
-    return ComparisonChain.start()
-        .compare(this.getNextRunAt(), o.getNextRunAt())
-        .compare(this.getName(), o.getName())
-        .compare(this.getInstanceNo(), o.getInstanceNo())
-        .result();
-  }
-  
-
 }

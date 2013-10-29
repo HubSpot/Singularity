@@ -9,7 +9,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -31,7 +31,7 @@ public class TaskResource {
   @GET
   @Path("/pending")
   public List<SingularityTaskRequest> getPendingTasks() {
-    final List<SingularityTaskId> taskIds = taskManager.getPendingTasks();
+    final List<SingularityPendingTaskId> taskIds = taskManager.getPendingTasks();
     
     return requestManager.fetchTasks(taskIds);
   }

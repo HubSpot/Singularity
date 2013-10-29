@@ -14,7 +14,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityRequestValidator;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -35,9 +35,9 @@ public class RequestResource {
   static class SingularitySubmitRequestResponse {
 
     private final SingularityRequest request;
-    private final List<SingularityTaskId> scheduledTasks;
+    private final List<SingularityPendingTaskId> scheduledTasks;
 
-    public SingularitySubmitRequestResponse(SingularityRequest request, List<SingularityTaskId> scheduledTasks) {
+    public SingularitySubmitRequestResponse(SingularityRequest request, List<SingularityPendingTaskId> scheduledTasks) {
       super();
       this.request = request;
       this.scheduledTasks = scheduledTasks;
@@ -47,7 +47,7 @@ public class RequestResource {
       return request;
     }
 
-    public List<SingularityTaskId> getScheduledTasks() {
+    public List<SingularityPendingTaskId> getScheduledTasks() {
       return scheduledTasks;
     }
 
@@ -61,7 +61,7 @@ public class RequestResource {
     
     requestManager.persistRequest(request);
   
-    List<SingularityTaskId> scheduledTasks = scheduler.scheduleTasks(request);
+    List<SingularityPendingTaskId> scheduledTasks = scheduler.scheduleTasks(request);
     
     return new SingularitySubmitRequestResponse(request, scheduledTasks);
   }

@@ -16,7 +16,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 
 public class RequestManager {
@@ -67,10 +67,10 @@ public class RequestManager {
     }
   }
   
-  public List<SingularityTaskRequest> fetchTasks(List<SingularityTaskId> taskIds) {
+  public List<SingularityTaskRequest> fetchTasks(List<SingularityPendingTaskId> taskIds) {
     final List<SingularityTaskRequest> tasks = Lists.newArrayListWithCapacity(taskIds.size());
     
-    for (SingularityTaskId taskId : taskIds) {
+    for (SingularityPendingTaskId taskId : taskIds) {
       Optional<SingularityRequest> maybeRequest = fetchRequest(taskId.getName());
       
       if (maybeRequest.isPresent()) {
