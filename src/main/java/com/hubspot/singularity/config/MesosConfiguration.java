@@ -16,6 +16,8 @@ public class MesosConfiguration {
   private Integer defaultCpus;
   @NotNull
   private Integer defaultMemory;
+  @NotNull
+  private Boolean checkpoint = false;
 
   public String getMaster() {
     return master;
@@ -63,6 +65,14 @@ public class MesosConfiguration {
 
   public void setDefaultMemory(Integer defaultMemory) {
     this.defaultMemory = defaultMemory;
+  }
+
+  public Boolean getCheckpoint() {
+    return checkpoint;
+  }
+
+  public void setCheckpoint(Boolean checkpoint) {
+    this.checkpoint = checkpoint;
   }
 
 }
