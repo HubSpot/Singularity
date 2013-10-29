@@ -37,22 +37,22 @@
   </modules>
 
   <scm>
-           <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
-           <developerConnection>scm:git:git@github.com:HubSpot/Singularity.git</developerConnection>
-           <url>git@github.com:HubSpot/Singularity.git</url>
-       </scm>
+    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
+    <developerConnection>scm:git:git@github.com:HubSpot/Singularity.git</developerConnection>
+    <url>git@github.com:HubSpot/Singularity.git</url>
+  </scm>
 
-       <developers>
-           <developer>
-               <name>Whitney Sorenson</name>
-               <email>wsorenson@gmail.com</email>
-           </developer>
-                   <developer>
-                       <name>Tom Petr</name>
-                       <email>tpetr@hubspot.com</email>
-                   </developer>
-       </developers>
-       
+  <developers>
+    <developer>
+      <name>Whitney Sorenson</name>
+      <email>wsorenson@gmail.com</email>
+    </developer>
+    <developer>
+      <name>Tom Petr</name>
+      <email>tpetr@hubspot.com</email>
+    </developer>
+  </developers>
+
   <build>
     <plugins>
       <plugin>
