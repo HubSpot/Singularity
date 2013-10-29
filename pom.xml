@@ -6,6 +6,12 @@
     <maven>3.0.0</maven>
   </prerequisites>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <properties>
     <singularity.version>0.1.0</singularity.version>
     <mesos.version>0.14.0</mesos.version>
