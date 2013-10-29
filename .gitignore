@@ -13,5 +13,5 @@ JavaConsole.java
 .idea
 *.pyc
 __pycache__
-ContactsHadoopTasks/kir/
+local_singularity.yml
 Docs/_build
