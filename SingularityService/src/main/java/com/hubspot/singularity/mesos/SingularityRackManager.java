@@ -70,7 +70,7 @@ public class SingularityRackManager {
   
   // TODO log or better reasoning behind why certain rack choices are made (maybe an ENUM?)
   public boolean checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
-    String rackId = getRackId(offer).or(defaultRackId);
+    String rackId = getRackId(offer);
     
     int numDesiredInstances = taskRequest.getRequest().getInstances();
     
@@ -138,13 +138,13 @@ public class SingularityRackManager {
     }
   }
   
-  public Optional<String> getRackId(Offer offer) {
+  public String getRackId(Offer offer) {
     for (Attribute attribute : offer.getAttributesList()) {
       if (attribute.getName().equals(rackIdAttributeKey)) {
-        return Optional.of(attribute.getText().getValue());
+        return attribute.getText().getValue();
       }
     }
-    return Optional.absent();
+    return defaultRackId;
   }
   
   private void saveRackId(String slaveId, Optional<String> maybeRackId) {
@@ -158,9 +158,9 @@ public class SingularityRackManager {
     final String slaveId = offer.getSlaveId().getValue();
     
     if (!slaveToRacks.containsKey(slaveId)) {
-      Optional<String> maybeRackId = getRackId(offer);
+      String rackId = getRackId(offer);
       
-      saveRackId(slaveId, maybeRackId);
+      saveRackId(slaveId, Optional.of(rackId));
     }
   }
 

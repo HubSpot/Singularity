@@ -42,7 +42,7 @@ public class SingularityMesosTaskBuilder {
   }
   
   public SingularityTask buildTask(Protos.Offer offer, SingularityTaskRequest taskRequest, Resources resources) {
-    final String rackId = rackManager.getRackId(offer).orNull();
+    final String rackId = rackManager.getRackId(offer);
     
     final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTaskId().getName(), System.currentTimeMillis(), taskRequest.getPendingTaskId().getInstanceNo(), rackId);
     

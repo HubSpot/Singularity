@@ -25,9 +25,6 @@ public class SingularityTaskId {
   
   @JsonIgnore
   public String getSafeRackId() {
-    if (rackId == null) {
-      return "";
-    } 
     return rackId.replace("-", "");
   }
 
