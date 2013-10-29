@@ -75,12 +75,4 @@ public class MesosConfiguration {
     this.defaultMemory = defaultMemory;
   }
 
-  public Boolean getCheckpoint() {
-    return checkpoint;
-  }
-
-  public void setCheckpoint(Boolean checkpoint) {
-    this.checkpoint = checkpoint;
-  }
-
 }
