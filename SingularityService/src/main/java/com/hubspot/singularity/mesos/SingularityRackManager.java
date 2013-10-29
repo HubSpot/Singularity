@@ -1,5 +1,7 @@
 package com.hubspot.singularity.mesos;
 
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosSlaveObject;
 import com.hubspot.mesos.json.MesosStateObject;
 import com.hubspot.singularity.SingularityTaskId;
@@ -37,6 +38,7 @@ public class SingularityRackManager {
   private final static String MASTER_STATE_FORMAT = "http://%s:%s/master/state.json";
   
   private final String rackIdAttributeKey;
+  private final String defaultRackId;
   
   private final Map<String, String> slaveToRacks;
   private final Set<String> racks;
@@ -48,6 +50,7 @@ public class SingularityRackManager {
   public SingularityRackManager(ObjectMapper objectMapper, MesosConfiguration mesosConfiguration) {
     this.objectMapper = objectMapper;
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
+    this.defaultRackId = mesosConfiguration.getDefaultRackId();
     
     asyncHttpClient = new AsyncHttpClient();
   
@@ -56,20 +59,18 @@ public class SingularityRackManager {
   }
   
   private String getStateUri(MasterInfo masterInfo) {
-    return String.format(MASTER_STATE_FORMAT, InetAddresses.fromInteger(masterInfo.getIp()).getHostAddress(), masterInfo.getPort());
+    byte[] fromIp = ByteBuffer.allocate(4).putInt(masterInfo.getIp()).array();
+   
+    try {
+      return String.format(MASTER_STATE_FORMAT, InetAddresses.fromLittleEndianByteArray(fromIp).getHostAddress(), masterInfo.getPort());
+    } catch (UnknownHostException e) {
+      throw Throwables.propagate(e);
+    }
   }
   
   // TODO log or better reasoning behind why certain rack choices are made (maybe an ENUM?)
   public boolean checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
-    Optional<String> rackId = getRackId(offer);
-    
-    if (!rackId.isPresent()) {
-      if (racks.isEmpty()) {
-        return true;
-      } else {
-        return false;
-      }
-    }  
+    String rackId = getRackId(offer).or(defaultRackId);
     
     int numDesiredInstances = taskRequest.getRequest().getInstances();
     
@@ -82,7 +83,7 @@ public class SingularityRackManager {
     }
     
     double numPerRack = (double) numDesiredInstances / (double) racks.size();
-    double numOnRack = Objects.firstNonNull(rackUsage.get(rackId.get()), 0);
+    double numOnRack = Objects.firstNonNull(rackUsage.get(rackId), 0);
     
     return numOnRack < numPerRack;
   }
@@ -126,11 +127,9 @@ public class SingularityRackManager {
       MesosStateObject state = objectMapper.readValue(response.getResponseBodyAsStream(), MesosStateObject.class);
       
       for (MesosSlaveObject slave : state.getSlaves()) {
-        String rackId = slave.getAttributes().get(rackIdAttributeKey); 
-
-        if (rackId != null) {
-          saveRackId(slave.getId(), rackId);
-        }
+        Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey)); 
+      
+        saveRackId(slave.getId(), maybeRackId);
       }
       
       LOG.info(String.format("Found %s racks", racks.size()));
@@ -148,19 +147,20 @@ public class SingularityRackManager {
     return Optional.absent();
   }
   
-  private void saveRackId(String slaveId, String rackId) {
+  private void saveRackId(String slaveId, Optional<String> maybeRackId) {
+    final String rackId = maybeRackId.or(defaultRackId);
+    
     slaveToRacks.put(slaveId, rackId);
     racks.add(rackId);
   }
   
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
+    
     if (!slaveToRacks.containsKey(slaveId)) {
-      Optional<String> rackId = getRackId(offer);
+      Optional<String> maybeRackId = getRackId(offer);
       
-      if (rackId.isPresent()) {
-        saveRackId(slaveId, rackId.get());
-      }
+      saveRackId(slaveId, maybeRackId);
     }
   }
 

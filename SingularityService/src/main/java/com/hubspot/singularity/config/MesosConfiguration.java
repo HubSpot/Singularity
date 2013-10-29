@@ -20,9 +20,19 @@ public class MesosConfiguration {
   private Boolean checkpoint = false;
   @NotNull
   private String rackIdAttributeKey = "rackid";
+  @NotNull
+  private String defaultRackId = "DEFAULT";
   
   public String getRackIdAttributeKey() {
     return rackIdAttributeKey;
+  }
+
+  public String getDefaultRackId() {
+    return defaultRackId;
+  }
+
+  public void setDefaultRackId(String defaultRackId) {
+    this.defaultRackId = defaultRackId;
   }
 
   public void setRackIdAttributeKey(String rackIdAttributeKey) {
