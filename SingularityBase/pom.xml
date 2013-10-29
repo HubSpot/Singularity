@@ -19,7 +19,7 @@
 
   <groupId>com.hubspot</groupId>
   <artifactId>SingularityBase</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1-SNAPSHOT</version>
 
   <repositories>
     <repository>
