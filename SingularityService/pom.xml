@@ -2,14 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
-	<parent>
-		<groupId>com.hubspot</groupId>
-		<artifactId>Singularity</artifactId>
-		<version>0.1.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
-	</parent>
-	
+
+  <parent>
+    <groupId>com.hubspot</groupId>
+    <artifactId>Singularity</artifactId>
+    <version>0.1.1</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
   <artifactId>SingularityService</artifactId>
 
   <repositories>
@@ -25,13 +25,13 @@
   </repositories>
 
   <dependencies>
-    
+
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
-      <version>${singularity.version}-SNAPSHOT</version>
+      <version>0.1.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guice</artifactId>
