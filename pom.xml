@@ -30,12 +30,6 @@
     </repository>
   </repositories>
 
-  <modules>
-    <module>SingularityBase</module>
-    <module>SingularityClient</module>
-    <module>SingularityService</module>
-  </modules>
-
   <scm>
     <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
     <developerConnection>scm:git:git@github.com:HubSpot/Singularity.git</developerConnection>
