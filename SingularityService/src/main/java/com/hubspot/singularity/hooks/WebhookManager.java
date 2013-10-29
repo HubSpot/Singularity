@@ -1,5 +1,6 @@
 package com.hubspot.singularity.hooks;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -29,17 +30,16 @@ public class WebhookManager {
   private final CuratorFramework curator;
   private final ObjectMapper objectMapper;
   
-  private final List<String> hooks;
   private final AsyncHttpClient asyncHttpClient;
   private final AsyncCompletionHandler<Response> handler;
+  
+  // TODO watch/cache
   
   @Inject
   public WebhookManager(CuratorFramework curator, ObjectMapper objectMapper) {
     this.curator = curator;
     this.objectMapper = objectMapper;
     
-    hooks = loadHooks();
-
     asyncHttpClient = new AsyncHttpClient();
     handler = new AsyncCompletionHandler<Response>() {
 
@@ -56,7 +56,7 @@ public class WebhookManager {
   }
   
   public void notify(SingularityTaskUpdate taskUpdate) {
-    for (String hook : hooks) {
+    for (String hook : getWebhooks()) {
       try {
         asyncHttpClient.preparePost(hook)
           .setBody(taskUpdate.getTaskData(objectMapper))
@@ -73,7 +73,7 @@ public class WebhookManager {
   }
   
   public List<String> getWebhooks() {
-    return hooks;
+    return loadHooks();
   }
   
   private List<String> loadHooks() {
@@ -85,7 +85,7 @@ public class WebhookManager {
       }
       return decodedHooks;
     } catch (NoNodeException nee) {
-      return Lists.newArrayList();
+      return Collections.emptyList();
     } catch (Exception e) {
       // TODO fix this - throw a curator exception.
       throw Throwables.propagate(e);
@@ -96,7 +96,6 @@ public class WebhookManager {
     final String path = getHookPath(uri);
     try {
       curator.create().creatingParentsIfNeeded().forPath(path);
-      hooks.add(uri);
     } catch (NodeExistsException nee) {
       LOG.info("Webhook already existed for path: " + uri);
     } catch (Exception e) {
@@ -108,7 +107,6 @@ public class WebhookManager {
     final String path = getHookPath(uri);
     try {
       curator.delete().forPath(path);
-      hooks.remove(uri);
     } catch (NoNodeException nne) {
       LOG.info("Expected webhook, but didn't exist at path for path: " + uri);
     } catch (Exception e) {
