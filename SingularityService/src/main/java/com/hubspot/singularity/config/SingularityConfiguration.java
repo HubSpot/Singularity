@@ -18,9 +18,6 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("hostname")
   private String hostname;
 
-  @JsonProperty("highAvailability")
-  private Boolean highAvailability = true;
-
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -57,13 +54,5 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHostname(String hostname) {
     this.hostname = hostname;
-  }
-
-  public Boolean getHighAvailability() {
-    return highAvailability;
-  }
-
-  public void setHighAvailability(Boolean highAvailability) {
-    this.highAvailability = highAvailability;
   }
 }

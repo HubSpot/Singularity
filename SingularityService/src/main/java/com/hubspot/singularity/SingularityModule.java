@@ -38,7 +38,6 @@ public class SingularityModule extends AbstractModule {
   public static final String ZK_NAMESPACE_PROPERTY = "singularity.namespace";
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
-  public static final String HA_PROPERTY = "singularity.highAvailability";
   
   @Override
   protected void configure() {
@@ -90,12 +89,6 @@ public class SingularityModule extends AbstractModule {
     }
 
     throw new ProvisionException("Failed to get HTTP port from dropwizard config");
-  }
-
-  @Provides
-  @Named(HA_PROPERTY)
-  public Boolean providesHighAvailabilityProperty(SingularityConfiguration config) {
-    return config.getHighAvailability();
   }
 
   @Provides
