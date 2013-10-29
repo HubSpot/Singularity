@@ -63,7 +63,7 @@ public class SingularityScheduler {
   }
   
   public void scheduleOnCompletion(TaskState state, String stringTaskId) {
-    SingularityPendingTaskId taskId = SingularityPendingTaskId.fromString(stringTaskId);
+    SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
     
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getName());
     
@@ -79,11 +79,11 @@ public class SingularityScheduler {
       int requiredInstances = request.getInstances();
       
       List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-      List<SingularityPendingTaskId> matchingTaskIds = Lists.newArrayListWithExpectedSize(requiredInstances);
+      List<SingularityTaskId> matchingTaskIds = Lists.newArrayListWithExpectedSize(requiredInstances);
       
       for (SingularityTaskId activeTaskId : activeTaskIds) {
         if (activeTaskId.getName().equals(request.getName())) {
-          matchingTaskIds.add(taskId);
+          matchingTaskIds.add(activeTaskId);
         }
       }
       
@@ -94,7 +94,7 @@ public class SingularityScheduler {
         
         int highestInstanceNo = 0;
         
-        for (SingularityPendingTaskId matchingTaskId : matchingTaskIds) {
+        for (SingularityTaskId matchingTaskId : matchingTaskIds) {
           if (matchingTaskId.getInstanceNo() > highestInstanceNo) {
             highestInstanceNo = matchingTaskId.getInstanceNo();
           }
