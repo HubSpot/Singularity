@@ -21,7 +21,7 @@ public class SingularityDriver {
   @Inject
   public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityMesosScheduler scheduler, MesosConfiguration configuration) {
     frameworkInfo = Protos.FrameworkInfo.newBuilder()
-        .setCheckpoint(false)
+        .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
         .setName(configuration.getFrameworkName())
         .setId(FrameworkID.newBuilder().setValue(configuration.getFrameworkId()))
