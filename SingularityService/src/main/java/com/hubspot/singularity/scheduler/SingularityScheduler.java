@@ -62,7 +62,7 @@ public class SingularityScheduler {
     return scheduledTasks;
   }
   
-  public void scheduleOnCompletion(TaskState state, String stringTaskId) {
+  public void scheduleOnCompletion(String stringTaskId) {
     SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
     
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getName());

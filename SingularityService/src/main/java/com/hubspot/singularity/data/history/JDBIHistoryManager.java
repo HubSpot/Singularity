@@ -21,14 +21,13 @@ public class JDBIHistoryManager implements HistoryManager {
   private final HistoryJDBI history;
   private final ObjectMapper objectMapper;
 
+  // TODO jdbi timeouts? should this be synchronous?
+  
   @Inject
   public JDBIHistoryManager(HistoryJDBI history, ObjectMapper objectMapper) {
     this.history = history;
     this.objectMapper = objectMapper;
   }
-  
-  // TODO notify on persister failures?
-  // TODO handle DB failures
   
   @Override
   public void saveTaskHistory(SingularityTask task, String driverStatus) {
@@ -45,7 +44,11 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message) {
-    history.insertTaskUpdate(taskId, statusUpdate, message.orNull(), new Date());
+    try {
+      history.insertTaskUpdate(taskId, statusUpdate, message.orNull(), new Date());
+    } catch (Throwable t) {
+      LOG.warn(String.format("Error while inserting update to history for %s - %s", taskId, statusUpdate), t);
+    }
   }
 
   @Override
@@ -62,7 +65,6 @@ public class JDBIHistoryManager implements HistoryManager {
     try {
       return new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.getTaskFromData(helper.getTaskData(), objectMapper));
     } catch (Exception e) {
-      // TODO handle this
       throw Throwables.propagate(e);
     }
   }

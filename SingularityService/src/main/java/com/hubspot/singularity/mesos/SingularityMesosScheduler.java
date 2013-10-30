@@ -5,15 +5,11 @@ import java.util.Set;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.LoggerContext;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +40,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final WebhookManager webhookManager;
   private final SingularityRackManager rackManager;
-
+  
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
       SingularityMesosTaskBuilder mesosTaskBuidler) {
@@ -60,29 +56,16 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void registered(SchedulerDriver driver, Protos.FrameworkID frameworkId, Protos.MasterInfo masterInfo) {
     LOG.info(String.format("Registered driver %s, with frameworkId %s and master %s", driver, frameworkId, masterInfo));
-
-    loadRacks(masterInfo);
-  }
-
-  private void loadRacks(MasterInfo masterInfo) {
-    try {
-      rackManager.loadRacksFromMaster(masterInfo);
-    } catch (Throwable t) {
-      LOG.error("Fatal - while registering and retrieving rack information", t);
-      abort();
-    }
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, Protos.MasterInfo masterInfo) {
     LOG.info(String.format("Reregistered driver %s, with master %s", driver, masterInfo));
-
-    loadRacks(masterInfo);
   }
 
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
-    LOG.info(String.format("Recieved %s offer(s)", offers.size()));
+    LOG.info(String.format("Received %s offer(s)", offers.size()));
 
     final long start = System.currentTimeMillis();
 
@@ -115,37 +98,21 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       }
     } catch (Throwable t) {
-      LOG.error("Fatal - while accepting offers", t);
+      LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
 
       for (Protos.Offer offer : offers) {
         if (acceptedOffers.contains(offer.getId())) {
           continue;
         }
 
-        try {
-          driver.declineOffer(offer.getId());
-        } catch (Throwable d) {
-          LOG.error("While decling an offer", d);
-        }
+        driver.declineOffer(offer.getId());
       }
 
-      abort();
+      throw t;
     }
 
     LOG.info(String.format("Finished handling offers (%s), accepted %s, declined %s, outstanding tasks %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
-  }
-
-  private void abort() {
-    ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
-    // Check for logback implementation of slf4j
-    if (loggerFactory instanceof LoggerContext) {
-      LoggerContext context = (LoggerContext) loggerFactory;
-      context.stop();
-    }
-
-    LOG.error("Abort called - DOING NOTHING");
-    // System.exit(0);
   }
 
   private boolean isRackAppropriate(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
@@ -200,20 +167,25 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     LOG.info(String.format("Got a status update: %s", status));
+    
+    final String taskId = status.getTaskId().getValue();
+    
+    Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
+    
+    if (maybeActiveTask.isPresent()) {
+      webhookManager.notify(new SingularityTaskUpdate(maybeActiveTask.get(), status.getState()));
+    } else {
+      LOG.info(String.format("Got an update for non-active task %s, skipping webhooks", taskId));
+    }
 
-    webhookManager.notify(new SingularityTaskUpdate(taskManager.getActiveTask(status.getTaskId().getValue()).get(), status.getState()));
+    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
 
-    try {
-      historyManager.saveTaskUpdate(status.getTaskId().getValue(), status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
-
-      if (MesosUtils.isTaskDone(status.getState())) {
-        taskManager.deleteActiveTask(status.getTaskId().getValue());
-
-        scheduler.scheduleOnCompletion(status.getState(), status.getTaskId().getValue());
+    if (MesosUtils.isTaskDone(status.getState())) {
+      if (maybeActiveTask.isPresent()) {
+        taskManager.deleteActiveTask(taskId);
       }
-    } catch (Throwable t) {
-      LOG.error("FATAL - while recording a status update", t);
-      abort();
+      
+      scheduler.scheduleOnCompletion(taskId);
     }
   }
 
@@ -236,7 +208,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void executorLost(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, int status) {
-    LOG.warn(String.format("Lost an executor %s on slave %s with status", executorId, slaveId, status));
+    LOG.warn(String.format("Lost an executor %s on slave %s with status %s", executorId, slaveId, status));
   }
 
   @Override

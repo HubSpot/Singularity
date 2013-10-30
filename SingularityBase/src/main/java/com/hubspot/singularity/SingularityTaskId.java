@@ -53,9 +53,9 @@ public class SingularityTaskId {
     
     StringBuilder nameBldr = new StringBuilder();
     
-    for (int s = 0; s < splits.length - 2; s++) {
+    for (int s = 0; s < splits.length - 3; s++) {
       nameBldr.append(splits[s]);
-      if (s < splits.length - 3) {
+      if (s < splits.length - 4) {
         nameBldr.append("-");
       }
     }
