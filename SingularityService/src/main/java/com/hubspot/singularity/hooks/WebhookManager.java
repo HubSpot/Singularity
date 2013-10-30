@@ -34,6 +34,7 @@ public class WebhookManager {
   private final AsyncCompletionHandler<Response> handler;
   
   // TODO watch/cache
+  // TODO one async htp client?
   
   @Inject
   public WebhookManager(CuratorFramework curator, ObjectMapper objectMapper) {
