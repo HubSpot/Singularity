@@ -8,8 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;

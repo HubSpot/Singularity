@@ -3,8 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.List;
 
 import com.google.common.base.Optional;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityTask;
 
 public interface HistoryManager {
 

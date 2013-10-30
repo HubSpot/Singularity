@@ -7,8 +7,8 @@ import java.util.List;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityTask;
 
 public class SingularityTaskHistory {
 

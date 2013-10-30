@@ -15,8 +15,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskRequest;
 
 public class RequestManager {
