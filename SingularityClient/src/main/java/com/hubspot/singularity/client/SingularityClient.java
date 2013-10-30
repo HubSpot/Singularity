@@ -10,13 +10,22 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityRequest;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
 public class SingularityClient {
-
+  
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
+
+  public static final String HOSTS_PROPERTY_NAME = "singularity.hosts";
+  
+  private static final String REQUEST_FORMAT = "http://%s/singularity/v1/request";
+  private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/%s";
+  
+  private static final String CONTENT_TYPE_JSON = "application/json";
+  private static final String HEADER_CONTENT_TYPE = "Content-Type";
   
   private final Random random;
   private final List<String> hosts;
@@ -25,7 +34,7 @@ public class SingularityClient {
   private final AsyncHttpClient httpClient;
   
   @Inject
-  public SingularityClient(AsyncHttpClient httpClient, ObjectMapper objectMapper, List<String> hosts) {
+  public SingularityClient(AsyncHttpClient httpClient, ObjectMapper objectMapper, @Named(HOSTS_PROPERTY_NAME) List<String> hosts) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     
@@ -36,12 +45,6 @@ public class SingularityClient {
   private String getHost() {
     return hosts.get(random.nextInt(hosts.size()));
   }
-  
-  private static final String REQUEST_FORMAT = "http://%s/singularity/v1/request";
-  private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/%s";
-  
-  private static final String CONTENT_TYPE_JSON = "application/json";
-  private static final String HEADER_CONTENT_TYPE = "Content-Type";
   
   private Response deployToUri(String requestUri, SingularityRequest request) {
     try {
