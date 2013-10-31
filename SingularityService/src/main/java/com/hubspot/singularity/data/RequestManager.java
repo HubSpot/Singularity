@@ -59,7 +59,7 @@ public class RequestManager {
   
   public void addToPendingQueue(String requestName) {
     try {
-      curator.create().forPath(getPendingPath(requestName));
+      curator.create().creatingParentsIfNeeded().forPath(getPendingPath(requestName));
     } catch (NodeExistsException nee) {
       // ignored
     } catch (Throwable t) {
