@@ -123,6 +123,8 @@ public class SingularityMesosTaskBuilder {
         commandBldr.addUris(URI.newBuilder().setValue(uri).build());
       }
     }
+
+    bldr.setCommand(commandBldr);
     
     if (task.getRequest().getEnv() != null || ports != null) {
       Environment.Builder envBldr = Environment.newBuilder();
