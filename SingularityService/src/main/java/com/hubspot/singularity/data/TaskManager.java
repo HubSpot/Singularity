@@ -148,15 +148,23 @@ public class TaskManager {
     
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getTaskData(objectMapper));
   }
-    
-  public void deleteActiveTask(String taskId) {
-    final String activePath = getActivePath(taskId);
-    
+  
+  private void delete(String path) {
     try {
-      curator.delete().forPath(activePath);
+      curator.delete().forPath(path);
+    } catch (NoNodeException nne) {
+      LOG.warn(String.format("Expected task at %s", path), nne);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+  
+  public void deleteActiveTask(String taskId) {
+    delete(getActivePath(taskId));
+  }
+  
+  public void deleteScheduledTask(String taskId) {
+    delete(getScheduledPath(taskId));
   }
   
 }

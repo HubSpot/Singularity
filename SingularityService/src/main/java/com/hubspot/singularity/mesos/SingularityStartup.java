@@ -58,7 +58,9 @@ public class SingularityStartup {
   public void startup(MasterInfo masterInfo) {
     final String uri = getStateUri(masterInfo);
     
-    LOG.info("Fetching state data from: " + uri);
+    final long start = System.currentTimeMillis();
+    
+    LOG.info("Starting up... fetching state data from: " + uri);
     
     try {
       Response response = asyncHttpClient.prepareGet(uri).execute().get();
@@ -79,6 +81,8 @@ public class SingularityStartup {
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
+    
+    LOG.info(String.format("Finished startup after %sms", System.currentTimeMillis() - start));
   }
   
   private void checkForMissingActiveTasks(MesosStateObject state) {
@@ -99,12 +103,18 @@ public class SingularityStartup {
       // TODO record history?
       taskManager.deleteActiveTask(strTaskId);
     }
+    
+    LOG.info(String.format("Finished reconciling active tasks: %s active tasks, %s were deleted", activeTaskIds.size(), strTaskIds.size()));
   }
   
   private void rescheduleTheWorld() {
-    for (String requestName : requestManager.getRequestNames()) {
+    final List<String> requests = requestManager.getRequestNames();
+    
+    for (String requestName : requests) {
       requestManager.addToPendingQueue(requestName);
     }
+    
+    LOG.info(String.format("Put %s requests in pending queue", requests.size()));
   }
   
 }

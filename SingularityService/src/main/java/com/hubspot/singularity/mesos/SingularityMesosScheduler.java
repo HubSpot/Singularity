@@ -69,7 +69,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
     final long start = System.currentTimeMillis();
 
-    scheduler.drainPendingQueue();
+    final List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIds();
+
+    scheduler.drainPendingQueue(activeTasks);
     
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
@@ -81,7 +83,6 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> tasks = scheduler.getDueTasks();
-      final List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIds();
 
       LOG.trace(String.format("Got tasks to match with offers %s", tasks));
 
@@ -168,7 +169,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
-    LOG.info(String.format("Got a status update: %s", status));
+    LOG.debug(String.format("Got a status update: %s", status));
     
     final String taskId = status.getTaskId().getValue();
     

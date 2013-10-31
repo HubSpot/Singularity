@@ -34,12 +34,18 @@ public class SingularityScheduler {
     this.requestManager = requestManager;
   }
   
-  public void drainPendingQueue() {
-    List<String> pendingRequests = requestManager.getPendingRequestNames();
-    
+  public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds) {
     final long start = System.currentTimeMillis();
     
+    final List<String> pendingRequests = requestManager.getPendingRequestNames();
+    
     LOG.info(String.format("Pending queue had %s requests", pendingRequests.size()));
+    
+    if (pendingRequests.isEmpty()) {
+      return;
+    }
+    
+    final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
     
     int numScheduledTasks = 0;
     
@@ -50,7 +56,7 @@ public class SingularityScheduler {
         continue;
       }
       
-      numScheduledTasks += scheduleTasks(maybeRequest.get()).size();
+      numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, maybeRequest.get()).size();
       
       requestManager.deletePendingRequest(pendingRequest);
     }
@@ -77,8 +83,14 @@ public class SingularityScheduler {
     return dueTasks;
   }
 
-  public List<SingularityPendingTaskId> scheduleTasks(SingularityRequest request) {
-    final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(request);
+  public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
+    for (SingularityPendingTaskId taskId : scheduledTaskIds) {
+      if (taskId.getName().equals(request.getName())) {
+        taskManager.deleteScheduledTask(taskId.toString());
+      }
+    }
+    
+    final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(activeTaskIds, request);
     
     taskManager.persistScheduleTasks(scheduledTasks);
   
@@ -98,46 +110,12 @@ public class SingularityScheduler {
     
     SingularityRequest request = maybeRequest.get();
     
-    if (request.alwaysRunning()) {
-      int requiredInstances = request.getInstances();
-      
-      List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-      List<SingularityTaskId> matchingTaskIds = Lists.newArrayListWithExpectedSize(requiredInstances);
-      
-      for (SingularityTaskId activeTaskId : activeTaskIds) {
-        if (activeTaskId.getName().equals(request.getName())) {
-          matchingTaskIds.add(activeTaskId);
-        }
-      }
-      
-      int numMissingInstances = requiredInstances - matchingTaskIds.size();
-      
-      if (numMissingInstances > 0) {
-        final long now = System.currentTimeMillis();
+    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
         
-        int highestInstanceNo = 0;
-        
-        for (SingularityTaskId matchingTaskId : matchingTaskIds) {
-          if (matchingTaskId.getInstanceNo() > highestInstanceNo) {
-            highestInstanceNo = matchingTaskId.getInstanceNo();
-          }
-        }
-        
-        final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
-        
-        for (int i = 0; i < numMissingInstances; i++) {
-          newTaskIds.add(new SingularityPendingTaskId(request.getName(), now, i + 1 + highestInstanceNo));
-        }
-        
-        taskManager.persistScheduleTasks(newTaskIds);
-      }
-    } else if (request.isScheduled()) {
-      taskManager.persistScheduleTasks(getScheduledTaskIds(request));
-    }
-    
+    taskManager.persistScheduleTasks(getScheduledTaskIds(activeTaskIds, request));
   }
   
-  private List<SingularityPendingTaskId> getScheduledTaskIds(SingularityRequest request) {
+  private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
     final int numInstances = Objects.firstNonNull(request.getInstances(), 1);
     
     long nextRunAt = System.currentTimeMillis();
@@ -152,13 +130,33 @@ public class SingularityScheduler {
       }
     }
   
-    final List<SingularityPendingTaskId> taskIds = Lists.newArrayListWithCapacity(numInstances);
-
-    for (int i = 0; i < numInstances; i++) {
-      taskIds.add(new SingularityPendingTaskId(request.getName(), nextRunAt, i));
+    int highestInstanceNo = 0;
+    
+    List<SingularityTaskId> matchingTaskIds = Lists.newArrayListWithExpectedSize(numInstances);
+    
+    for (SingularityTaskId activeTaskId : activeTaskIds) {
+      if (activeTaskId.getName().equals(request.getName())) {
+        matchingTaskIds.add(activeTaskId);
+      }
     }
     
-    return taskIds;
+    final int numMissingInstances = numInstances - matchingTaskIds.size();
+    
+    if (numMissingInstances > 0) {
+      for (SingularityTaskId matchingTaskId : matchingTaskIds) {
+        if (matchingTaskId.getInstanceNo() > highestInstanceNo) {
+          highestInstanceNo = matchingTaskId.getInstanceNo();
+        }
+      }
+    }
+    
+    final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
+    
+    for (int i = 0; i < numMissingInstances; i++) {
+      newTaskIds.add(new SingularityPendingTaskId(request.getName(), nextRunAt, i + 1 + highestInstanceNo));
+    }
+    
+    return newTaskIds;
   }
   
 }
