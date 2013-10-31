@@ -29,9 +29,9 @@ public class TaskResource {
   }
   
   @GET
-  @Path("/pending")
-  public List<SingularityTaskRequest> getPendingTasks() {
-    final List<SingularityPendingTaskId> taskIds = taskManager.getPendingTasks();
+  @Path("/scheduled")
+  public List<SingularityTaskRequest> getScheduledTasks() {
+    final List<SingularityPendingTaskId> taskIds = taskManager.getScheduledTasks();
     
     return requestManager.fetchTasks(taskIds);
   }

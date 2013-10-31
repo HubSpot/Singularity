@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
 
 public class SingularityTaskId {
 
@@ -18,6 +19,14 @@ public class SingularityTaskId {
     this.instanceNo = instanceNo;
     this.rackId = rackId;
   }
+  
+  public static Function<SingularityTaskId, String> MAP_FUNCTION = new Function<SingularityTaskId, String>() {
+
+    @Override
+    public String apply(SingularityTaskId input) {
+      return input.toString();
+    }   
+  };
   
   public String getRackId() {
     return rackId;

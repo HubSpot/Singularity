@@ -27,8 +27,8 @@ public class TaskManager {
   private final static String ACTIVE_PATH_ROOT = "/tasks";
   private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
 
-  private final static String PENDING_PATH_ROOT = "/pending";
-  private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
+  private final static String SCHEDULED_PATH_ROOT = "/scheduled";
+  private final static String SCHEDULED_PATH_FORMAT = SCHEDULED_PATH_ROOT + "/%s";
     
   @Inject
   public TaskManager(CuratorFramework curator, ObjectMapper objectMapper) {
@@ -40,10 +40,10 @@ public class TaskManager {
     return String.format(ACTIVE_PATH_FORMAT, taskId);
   }
 
-  private String getPendingPath(String taskId) {
-    return String.format(PENDING_PATH_FORMAT, taskId);
+  private String getScheduledPath(String taskId) {
+    return String.format(SCHEDULED_PATH_FORMAT, taskId);
   }
-
+  
   public void persistScheduleTasks(List<SingularityPendingTaskId> taskIds) {
     try {
       for (SingularityPendingTaskId taskId : taskIds) {
@@ -55,7 +55,7 @@ public class TaskManager {
   }
 
   private void persistTaskId(SingularityPendingTaskId taskId) throws Exception {
-    final String pendingPath = getPendingPath(taskId.toString());
+    final String pendingPath = getScheduledPath(taskId.toString());
 
     curator.create().creatingParentsIfNeeded().forPath(pendingPath);
   }
@@ -120,8 +120,8 @@ public class TaskManager {
     }
   }
 
-  public List<SingularityPendingTaskId> getPendingTasks() {
-    List<String> taskIds = getTasksForRoot(PENDING_PATH_ROOT);
+  public List<SingularityPendingTaskId> getScheduledTasks() {
+    List<String> taskIds = getTasksForRoot(SCHEDULED_PATH_ROOT);
     List<SingularityPendingTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (String taskId : taskIds) {
@@ -141,10 +141,10 @@ public class TaskManager {
   }
 
   private void launchTaskPrivate(SingularityTask task) throws Exception {
-    final String pendingPath = getPendingPath(task.getTaskRequest().getPendingTaskId().toString());
+    final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTaskId().toString());
     final String activePath = getActivePath(task.getTaskId().toString());
     
-    curator.delete().forPath(pendingPath);
+    curator.delete().forPath(scheduledPath);
     
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getTaskData(objectMapper));
   }

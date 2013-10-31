@@ -2,6 +2,8 @@ package com.hubspot.singularity.mesos;
 
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.mesos.Protos.MasterInfo;
 import org.slf4j.Logger;
@@ -10,9 +12,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
+import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosStateObject;
+import com.hubspot.mesos.json.MesosTaskObject;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.TaskManager;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
@@ -24,13 +32,17 @@ public class SingularityStartup {
   
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
+  private final TaskManager taskManager;
   private final SingularityRackManager rackManager;
+  private final RequestManager requestManager;
   
   @Inject
-  public SingularityStartup(AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper, SingularityRackManager rackManager) {
+  public SingularityStartup(AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper, SingularityRackManager rackManager, TaskManager taskManager, RequestManager requestManager) {
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
     this.rackManager = rackManager;
+    this.taskManager = taskManager;
+    this.requestManager = requestManager;
   }
   
   private String getStateUri(MasterInfo masterInfo) {
@@ -57,8 +69,41 @@ public class SingularityStartup {
         
       rackManager.loadRacksFromMaster(state);
       
+      // two things need to happen: 
+      // 1- we need to look for active tasks that are no longer active (assume that there is no such thing as a missing active task.)
+      // 2- we need to reschedule the world.
+      
+      checkForMissingActiveTasks(state);
+      rescheduleTheWorld();
+      
     } catch (Exception e) {
       throw Throwables.propagate(e);
+    }
+  }
+  
+  private void checkForMissingActiveTasks(MesosStateObject state) {
+    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+    final Set<String> strTaskIds = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
+    for (SingularityTaskId taskId : activeTaskIds) {
+      strTaskIds.add(taskId.toString());
+    }
+    
+    for (MesosFrameworkObject framework : state.getFrameworks()) {
+      for (MesosTaskObject taskObject : framework.getTasks()) {
+        strTaskIds.remove(taskObject.getId());
+      }
+    }
+    
+    // these are no longer running.
+    for (String strTaskId : strTaskIds) {
+      // TODO record history?
+      taskManager.deleteActiveTask(strTaskId);
+    }
+  }
+  
+  private void rescheduleTheWorld() {
+    for (String requestName : requestManager.getRequestNames()) {
+      requestManager.addToPendingQueue(requestName);
     }
   }
   

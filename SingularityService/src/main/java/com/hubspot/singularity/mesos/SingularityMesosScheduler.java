@@ -69,6 +69,8 @@ public class SingularityMesosScheduler implements Scheduler {
 
     final long start = System.currentTimeMillis();
 
+    scheduler.drainPendingQueue();
+    
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
     for (Protos.Offer offer : offers) {

@@ -34,8 +34,32 @@ public class SingularityScheduler {
     this.requestManager = requestManager;
   }
   
+  public void drainPendingQueue() {
+    List<String> pendingRequests = requestManager.getPendingRequestNames();
+    
+    final long start = System.currentTimeMillis();
+    
+    LOG.info(String.format("Pending queue had %s requests", pendingRequests.size()));
+    
+    int numScheduledTasks = 0;
+    
+    for (String pendingRequest : pendingRequests) {
+      Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingRequest);
+      
+      if (!maybeRequest.isPresent()) {
+        continue;
+      }
+      
+      numScheduledTasks += scheduleTasks(maybeRequest.get()).size();
+      
+      requestManager.deletePendingRequest(pendingRequest);
+    }
+    
+    LOG.info(String.format("Scheduled %s requests in %sms", numScheduledTasks, System.currentTimeMillis() - start));
+  }
+  
   public List<SingularityTaskRequest> getDueTasks() {
-    final List<SingularityPendingTaskId> tasks = taskManager.getPendingTasks();
+    final List<SingularityPendingTaskId> tasks = taskManager.getScheduledTasks();
       
     final long now = System.currentTimeMillis();
     
