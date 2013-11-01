@@ -27,6 +27,9 @@ database:
   password: 
   url: jdbc:mysql://localhost/singularity
 
+logging:
 
-  
-  
+  loggers:
+
+    "com.hubspot.singularity.mesos" : INFO 
+
