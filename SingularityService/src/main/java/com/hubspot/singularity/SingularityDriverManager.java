@@ -4,6 +4,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Status;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -22,6 +23,24 @@ public class SingularityDriverManager {
     this.driverProvider = driverProvider;
     
     driverLock = new ReentrantLock();
+  }
+  
+  public Protos.Status kill(String taskId) {
+    Protos.Status newStatus = null;
+    
+    driverLock.lock();
+    
+    try {
+      Preconditions.checkState(driver != null);
+
+      newStatus = driver.kill(taskId);
+      
+      Preconditions.checkState(newStatus == Status.DRIVER_RUNNING);
+    } finally {
+      driverLock.unlock();
+    }
+    
+    return newStatus;
   }
   
   public Protos.Status start() {

@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.TaskID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +17,12 @@ public class SingularityDriver {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
   
   private final Protos.FrameworkInfo frameworkInfo;
+  private final SingularityMesosSchedulerDelegator scheduler;
   private final MesosSchedulerDriver driver;
 
   @Inject
   public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
-    frameworkInfo = Protos.FrameworkInfo.newBuilder()
+    this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
         .setName(configuration.getFrameworkName())
@@ -28,9 +30,11 @@ public class SingularityDriver {
         .setUser("")  // let mesos assign
         .build();
   
-    driver = new MesosSchedulerDriver(scheduler, frameworkInfo, master);
+    this.scheduler = scheduler;
+    
+    this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, master);
   }
-
+  
   public Protos.Status start() {
     Protos.Status status = driver.start();
   
@@ -39,12 +43,22 @@ public class SingularityDriver {
     return status;
   }
   
+  public Protos.Status kill(String taskId) {
+    Protos.Status status = driver.killTask(TaskID.newBuilder().setValue(taskId).build());
+  
+    LOG.info(String.format("Killed task %s with driver status: %s", taskId, status));
+    
+    return status;
+  }
+  
   public Protos.Status abort() {
+    scheduler.notifyStopping();
+    
     Protos.Status status = driver.abort();
     
     LOG.info("Aborted with status: " + status);
         
-    return driver.abort();
+    return status;
   }
   
 }

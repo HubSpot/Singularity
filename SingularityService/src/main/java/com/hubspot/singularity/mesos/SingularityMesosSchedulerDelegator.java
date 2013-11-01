@@ -17,9 +17,11 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
@@ -29,40 +31,51 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final SingularityStartup startup;
   private final SingularityAbort abort;
   
-  private final Lock startupLock;
+  private final Lock stateLock;
   private final Lock lock;
 
   private enum SchedulerState {
-    STARTUP, RUNNING;
+    STARTUP, RUNNING, STOPPED;
   }
 
   private volatile SchedulerState state;
   private final List<Protos.TaskStatus> queuedUpdates;
-
+  private final SingularityCleanupPoller cleanupPoller;
+  
   @Inject
-  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort) {
+  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller) {
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
-
+    this.cleanupPoller = cleanupPoller;
+    
     this.queuedUpdates = Lists.newArrayList();
 
     this.lock = new ReentrantLock();
-    this.startupLock = new ReentrantLock();
+    this.stateLock = new ReentrantLock();
 
     this.state = SchedulerState.STARTUP;
   }
   
   // TODO should the lock wait on a timeout and then notify that it's taking a while?
   
-  private void lock() {
+  public void lock() {
     lock.lock();
   }
 
-  private void release() {
+  public void release() {
     lock.unlock();
   }
-
+  
+  public void notifyStopping() {
+    LOG.info("Scheduler is moving to stopped, current state: " + state);
+    
+    cleanupPoller.stop();
+    state = SchedulerState.STOPPED;
+  
+    LOG.info("Scheduler now in state: " + state);
+  }
+  
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
 
@@ -70,16 +83,13 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   }
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) {
-    if (isRunning()) {
-      LOG.info("Asked to startup - but already running - aborting");
-      abort.abort();
-    } else {
-      state = SchedulerState.STARTUP;
-    }
+    Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
     
     startup.startup(masterInfo);
 
-    startupLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
+    cleanupPoller.start(this);
+    
+    stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
 
     try {
       state = SchedulerState.RUNNING; // calls to resource offers will now block, since we are already scheduler locked.
@@ -89,7 +99,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       }
       
     } finally {
-      startupLock.unlock();
+      stateLock.unlock();
     }
   }
 
@@ -152,6 +162,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void offerRescinded(SchedulerDriver driver, OfferID offerId) {
+    if (!isRunning()) {
+      return;
+    }
+    
     lock();
 
     try {
@@ -165,7 +179,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, TaskStatus status) {
-    startupLock.lock();
+    stateLock.lock();
 
     try {
       if (!isRunning()) {
@@ -176,11 +190,11 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
         return;
       }
     } finally {
-      startupLock.unlock();
+      stateLock.unlock();
     }
 
     lock();
-
+    
     try {
       scheduler.statusUpdate(driver, status);
     } catch (Throwable t) {
@@ -192,6 +206,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, ExecutorID executorId, SlaveID slaveId, byte[] data) {
+    if (!isRunning()) {
+      return;
+    }
+    
     lock();
 
     try {
@@ -205,10 +223,12 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void disconnected(SchedulerDriver driver) {
+    if (!isRunning()) {
+      return;
+    }
+    
     lock();
     
-    System.out.println("DISCONNECTED.................");
-
     try {
       scheduler.disconnected(driver);
     } catch (Throwable t) {
@@ -220,8 +240,12 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void slaveLost(SchedulerDriver driver, SlaveID slaveId) {
+    if (!isRunning()) {
+      return;
+    }
+    
     lock();
-
+    
     try {
       scheduler.slaveLost(driver, slaveId);
     } catch (Throwable t) {
@@ -233,8 +257,12 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void executorLost(SchedulerDriver driver, ExecutorID executorId, SlaveID slaveId, int status) {
+    if (!isRunning()) {
+      return;
+    }
+    
     lock();
-
+    
     try {
       scheduler.executorLost(driver, executorId, slaveId, status);
     } catch (Throwable t) {
@@ -246,8 +274,12 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void error(SchedulerDriver driver, String message) {
+    if (!isRunning()) {
+      return;
+    }
+    
     lock();
-
+    
     try {
       scheduler.error(driver, message);
     } catch (Throwable t) {

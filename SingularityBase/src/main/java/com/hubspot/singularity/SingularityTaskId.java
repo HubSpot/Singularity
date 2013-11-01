@@ -1,9 +1,11 @@
 package com.hubspot.singularity;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 public class SingularityTaskId {
 
@@ -20,13 +22,15 @@ public class SingularityTaskId {
     this.rackId = rackId;
   }
   
-  public static Function<SingularityTaskId, String> MAP_FUNCTION = new Function<SingularityTaskId, String>() {
-
-    @Override
-    public String apply(SingularityTaskId input) {
-      return input.toString();
-    }   
-  };
+  public static List<SingularityTaskId> filter(List<SingularityTaskId> taskIds, String name) {
+    List<SingularityTaskId> matching = Lists.newArrayList();
+    for (SingularityTaskId taskId : taskIds) {
+      if (taskId.getName().equals(name)) {
+        matching.add(taskId);
+      }
+    }
+    return matching;
+  }
   
   public String getRackId() {
     return rackId;

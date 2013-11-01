@@ -22,6 +22,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private DataSourceFactory database;
 
+  @NotNull
+  private long cleanupEverySeconds = 5;
+  
+  public long getCleanupEverySeconds() {
+    return cleanupEverySeconds;
+  }
+
+  public void setCleanupEverySeconds(long cleanupEverySeconds) {
+    this.cleanupEverySeconds = cleanupEverySeconds;
+  }
+
   @JsonProperty("database")
   public DataSourceFactory getDataSourceFactory() {
     return database;

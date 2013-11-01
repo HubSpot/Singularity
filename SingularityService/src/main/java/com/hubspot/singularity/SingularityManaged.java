@@ -61,8 +61,6 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
       if (currentStatus != Protos.Status.DRIVER_RUNNING) {
         abort.abort();
       }
-      
-      LOG.info("Driver started, current status: " + currentStatus);
     } else {
       LOG.warn("Driver was already running - took no action.");
     }    
@@ -79,10 +77,7 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
         LOG.error("While stopping driver", t);
         abort.abort();
       }
-      
-      LOG.info("Driver stopped, current status: " + currentStatus);
     }
-    
   }
 
 }

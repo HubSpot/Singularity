@@ -22,7 +22,7 @@ public class MesosConfiguration {
   private String rackIdAttributeKey = "rackid";
   @NotNull
   private String defaultRackId = "DEFAULT";
-  
+    
   public String getRackIdAttributeKey() {
     return rackIdAttributeKey;
   }

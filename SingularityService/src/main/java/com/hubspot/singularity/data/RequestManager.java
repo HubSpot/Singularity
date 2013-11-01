@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -32,6 +33,9 @@ public class RequestManager {
   private final static String PENDING_PATH_ROOT = "/pending";
   private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
   
+  private final static String CLEANUP_PATH_ROOT = "/cleanup";
+  private final static String CLEANUP_PATH_FORMAT = CLEANUP_PATH_ROOT + "/%s";
+  
   @Inject
   public RequestManager(CuratorFramework curator, ObjectMapper objectMapper) {
     this.curator = curator;
@@ -46,25 +50,44 @@ public class RequestManager {
     return String.format(PENDING_PATH_FORMAT, name);
   }
   
+  private String getCleanupPath(String name) {
+    return String.format(CLEANUP_PATH_FORMAT, name);
+  }
+  
   public void deletePendingRequest(String requestName) {
-    final String path = getPendingPath(requestName);
+    deletePath(getPendingPath(requestName));
+  }
+  
+  public void deleteCleanRequest(String requestName) {
+    deletePath(getCleanupPath(requestName));
+  }
+  
+  private void deletePath(String path) {
     try {
       curator.delete().forPath(path);
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Expected a pending request at %s", path), nne);
+      LOG.warn(String.format("Expected a request pointer at %s", path), nne);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
   
-  public void addToPendingQueue(String requestName) {
+  private void create(String path) {
     try {
-      curator.create().creatingParentsIfNeeded().forPath(getPendingPath(requestName));
+      curator.create().creatingParentsIfNeeded().forPath(path);
     } catch (NodeExistsException nee) {
       // ignored
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+  
+  public void addToCleanupQueue(String requestName) {
+    create(getCleanupPath(requestName));
+  }
+  
+  public void addToPendingQueue(String requestName) {
+    create(getPendingPath(requestName));
   }
 
   public void persistRequest(SingularityRequest request) {
@@ -76,6 +99,8 @@ public class RequestManager {
   }
 
   private void persistRequestPrivate(SingularityRequest request) throws Exception {
+    Preconditions.checkState(curator.checkExists().forPath(getCleanupPath(request.getName())) == null, "A cleanup request exists for %s", request.getName());
+    
     final String requestPath = getRequestPath(request.getName());
 
     try {
@@ -101,6 +126,10 @@ public class RequestManager {
   
   public List<String> getPendingRequestNames() {
     return getChildren(PENDING_PATH_ROOT);
+  }
+  
+  public List<String> getCleanupRequestNames() {
+    return getChildren(CLEANUP_PATH_ROOT);
   }
   
   public List<SingularityTaskRequest> fetchTasks(List<SingularityPendingTaskId> taskIds) {
@@ -150,6 +179,8 @@ public class RequestManager {
     
     if (request.isPresent()) {
       try {
+        addToCleanupQueue(requestName);
+        
         curator.delete().forPath(getRequestPath(requestName));
       } catch (NoNodeException nee) {
         LOG.warn(String.format("Couldn't find request at %s to delete", requestName));

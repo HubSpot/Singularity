@@ -43,14 +43,14 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
-      SingularityMesosTaskBuilder mesosTaskBuidler) {
+      SingularityMesosTaskBuilder mesosTaskBuilder) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
     this.scheduler = scheduler;
     this.historyManager = historyManager;
     this.webhookManager = webhookManager;
-    this.mesosTaskBuilder = mesosTaskBuidler;
+    this.mesosTaskBuilder = mesosTaskBuilder;
   }
 
   @Override

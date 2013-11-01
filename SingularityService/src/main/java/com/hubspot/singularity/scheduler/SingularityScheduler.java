@@ -14,6 +14,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskId;
@@ -27,11 +28,44 @@ public class SingularityScheduler {
   
   private final TaskManager taskManager;
   private final RequestManager requestManager;
+  private final SingularityDriverManager driverManager;
   
   @Inject
-  public SingularityScheduler(TaskManager taskManager, RequestManager requestManager) {
+  public SingularityScheduler(TaskManager taskManager, RequestManager requestManager, SingularityDriverManager driverManager) {
     this.taskManager = taskManager;
     this.requestManager = requestManager;
+    this.driverManager = driverManager;
+  }
+  
+  public void drainCleanupQueue() {
+    final long start = System.currentTimeMillis();
+
+    final List<String> cleanupRequests = requestManager.getCleanupRequestNames();
+    
+    LOG.info(String.format("Cleanup queue had %s requests", cleanupRequests.size()));
+    
+    if (cleanupRequests.isEmpty()) {
+      return;
+    }
+    
+    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+    
+    int numTasksKilled = 0;
+    
+    for (String requestName : cleanupRequests) {
+      if (!requestManager.fetchRequest(requestName).isPresent()) {
+        for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestName)) {
+          driverManager.kill(matchingTaskId.toString());
+          numTasksKilled++;
+        }
+      } else {
+        LOG.info(String.format("Not cleaning %s, it existed", requestName));
+      }
+      
+      requestManager.deleteCleanRequest(requestName);
+    }
+    
+    LOG.info(String.format("Killed %s tasks in %sms", numTasksKilled, System.currentTimeMillis() - start));
   }
   
   public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds) {
@@ -132,13 +166,7 @@ public class SingularityScheduler {
   
     int highestInstanceNo = 0;
     
-    List<SingularityTaskId> matchingTaskIds = Lists.newArrayListWithExpectedSize(numInstances);
-    
-    for (SingularityTaskId activeTaskId : activeTaskIds) {
-      if (activeTaskId.getName().equals(request.getName())) {
-        matchingTaskIds.add(activeTaskId);
-      }
-    }
+    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.filter(activeTaskIds, request.getName());
     
     final int numMissingInstances = numInstances - matchingTaskIds.size();
     

@@ -51,7 +51,7 @@ public class SingularityAbort {
     try {
       driverManager.stop();
     } catch (Throwable t) {
-      LOG.error("While stopping driver", t);
+      LOG.warn("While stopping driver", t);
     }
   }
   

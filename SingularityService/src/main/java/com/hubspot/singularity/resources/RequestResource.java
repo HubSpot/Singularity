@@ -46,6 +46,18 @@ public class RequestResource {
     return requestManager.getKnownRequests();
   }
   
+  @GET
+  @Path("/queued/pending")
+  public List<String> getPendingRequests() {
+    return requestManager.getPendingRequestNames();
+  }
+  
+  @GET
+  @Path("/queued/cleanup")
+  public List<String> getCleanupRequests() {
+    return requestManager.getCleanupRequestNames();
+  }
+  
   @DELETE
   @Path("/{requestName}")
   public Optional<SingularityRequest> getHistoryForTask(@PathParam("requestName") String requestName) {
