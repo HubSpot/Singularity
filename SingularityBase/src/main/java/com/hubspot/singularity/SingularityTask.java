@@ -15,14 +15,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SingularityTask {
 
   private final SingularityTaskRequest taskRequest;
+  private final SingularityTaskId taskId;
   private final Offer offer;
   private final TaskInfo task;
 
   @JsonCreator
-  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("offer") Offer offer, @JsonProperty("task") TaskInfo task) {
+  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("task") TaskInfo task) {
     this.taskRequest = taskRequest;
     this.offer = offer;
     this.task = task;
+    this.taskId = taskId;
+  }
+
+  public SingularityTaskId getTaskId() {
+    return taskId;
   }
 
   public SingularityTaskRequest getTaskRequest() {
@@ -47,7 +53,7 @@ public class SingularityTask {
 
   @Override
   public String toString() {
-    return "SingularityTask [taskRequest=" + taskRequest + ", offer=" + offer + ", task=" + task + "]";
+    return "SingularityTask [taskRequest=" + taskRequest + ", taskId=" + taskId + ", offer=" + offer + ", task=" + task + "]";
   }
   
 }

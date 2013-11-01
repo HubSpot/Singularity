@@ -13,27 +13,27 @@ import com.hubspot.singularity.SingularityRequest;
 public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
-  private final SingularityTaskId taskId;
+  private final SingularityPendingTaskId pendingTaskId;
   
   @JsonCreator
-  public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("taskId") SingularityTaskId taskId) {
+  public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId) {
     this.request = request;
-    this.taskId = taskId;
+    this.pendingTaskId = pendingTaskId;
   }
   
   public SingularityRequest getRequest() {
     return request;
   }
   
-  public SingularityTaskId getTaskId() {
-    return taskId;
+  public SingularityPendingTaskId getPendingTaskId() {
+    return pendingTaskId;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((taskId == null) ? 0 : taskId.hashCode());
+    result = prime * result + ((pendingTaskId == null) ? 0 : pendingTaskId.hashCode());
     return result;
   }
 
@@ -46,17 +46,17 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
     if (getClass() != obj.getClass())
       return false;
     SingularityTaskRequest other = (SingularityTaskRequest) obj;
-    if (taskId == null) {
-      if (other.taskId != null)
+    if (pendingTaskId == null) {
+      if (other.pendingTaskId != null)
         return false;
-    } else if (!taskId.equals(other.taskId))
+    } else if (!pendingTaskId.equals(other.pendingTaskId))
       return false;
     return true;
   }
 
   @Override
   public int compareTo(SingularityTaskRequest o) {
-    return this.getTaskId().compareTo(o.getTaskId());
+    return this.getPendingTaskId().compareTo(o.getPendingTaskId());
   }
   
   public byte[] getTaskData(ObjectMapper objectMapper) throws JsonProcessingException {
@@ -69,7 +69,7 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
 
   @Override
   public String toString() {
-    return "SingularityTaskRequest [request=" + request + ", taskId=" + taskId + "]";
+    return "SingularityTaskRequest [request=" + request + ", pendingtaskId=" + pendingTaskId + "]";
   }
   
 }

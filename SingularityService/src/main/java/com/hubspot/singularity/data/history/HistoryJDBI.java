@@ -8,7 +8,7 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.data.history.SingularityTaskHistory.SingularityTaskIdMapper;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryHelper.SingularityTaskHistoryHelperMapper;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryUpdate.SingularityTaskUpdateMapper;
@@ -31,7 +31,7 @@ public interface HistoryJDBI {
   
   @Mapper(SingularityTaskIdMapper.class)
   @SqlQuery("SELECT taskId FROM taskHistory WHERE requestName = :requestName")
-  List<SingularityTaskId> getTaskHistoryForRequest(@Bind("requestName") String requestName);
+  List<SingularityPendingTaskId> getTaskHistoryForRequest(@Bind("requestName") String requestName);
   
   void close();
 

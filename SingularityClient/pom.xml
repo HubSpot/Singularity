@@ -2,16 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
-	<parent>
-		<groupId>com.hubspot</groupId>
-		<artifactId>Singularity</artifactId>
-		<version>${singularity.version}-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
-	</parent>
-	
+
+  <parent>
+    <groupId>com.hubspot</groupId>
+    <artifactId>Singularity</artifactId>
+    <version>0.1.1</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
   <artifactId>SingularityClient</artifactId>
-  
+
   <repositories>
     <repository>
       <id>sonatype-nexus-snapshots</id>
@@ -25,7 +25,19 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
-      <version>${singularity.version}-SNAPSHOT</version>
+      <version>0.1.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.ning</groupId>
+      <artifactId>async-http-client</artifactId>
+      <version>1.7.20</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>3.0</version>
     </dependency>
 
   </dependencies>

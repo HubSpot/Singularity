@@ -13,6 +13,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 
@@ -26,8 +27,8 @@ public class TaskManager {
   private final static String ACTIVE_PATH_ROOT = "/tasks";
   private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
 
-  private final static String PENDING_PATH_ROOT = "/pending";
-  private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
+  private final static String SCHEDULED_PATH_ROOT = "/scheduled";
+  private final static String SCHEDULED_PATH_FORMAT = SCHEDULED_PATH_ROOT + "/%s";
     
   @Inject
   public TaskManager(CuratorFramework curator, ObjectMapper objectMapper) {
@@ -39,13 +40,13 @@ public class TaskManager {
     return String.format(ACTIVE_PATH_FORMAT, taskId);
   }
 
-  private String getPendingPath(String taskId) {
-    return String.format(PENDING_PATH_FORMAT, taskId);
+  private String getScheduledPath(String taskId) {
+    return String.format(SCHEDULED_PATH_FORMAT, taskId);
   }
-
-  public void persistScheduleTasks(List<SingularityTaskId> taskIds) {
+  
+  public void persistScheduleTasks(List<SingularityPendingTaskId> taskIds) {
     try {
-      for (SingularityTaskId taskId : taskIds) {
+      for (SingularityPendingTaskId taskId : taskIds) {
         persistTaskId(taskId);
       }
     } catch (Throwable t) {
@@ -53,23 +54,15 @@ public class TaskManager {
     }
   }
 
-  private void persistTaskId(SingularityTaskId taskId) throws Exception {
-    final String pendingPath = getPendingPath(taskId.toString());
+  private void persistTaskId(SingularityPendingTaskId taskId) throws Exception {
+    final String pendingPath = getScheduledPath(taskId.toString());
 
     curator.create().creatingParentsIfNeeded().forPath(pendingPath);
   }
   
-  private List<SingularityTaskId> getTasksForRoot(String root) {
+  private List<String> getTasksForRoot(String root) {
     try {
-      List<String> taskIds = curator.getChildren().forPath(root);
-      List<SingularityTaskId> tasksIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
-      
-      for (String taskId : taskIds) {
-        SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
-        tasksIdsObjs.add(taskIdObj);
-      }
-
-      return tasksIdsObjs;
+      return curator.getChildren().forPath(root);
     } catch (NoNodeException nne) {
       return Collections.emptyList();
     } catch (Throwable t) {
@@ -78,7 +71,15 @@ public class TaskManager {
   }
   
   public List<SingularityTaskId> getActiveTaskIds() {
-    return getTasksForRoot(ACTIVE_PATH_ROOT);
+    List<String> taskIds = getTasksForRoot(ACTIVE_PATH_ROOT);
+    List<SingularityTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
+
+    for (String taskId : taskIds) {
+      SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
+      taskIdsObjs.add(taskIdObj);
+    }
+    
+    return taskIdsObjs;
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {
@@ -119,10 +120,18 @@ public class TaskManager {
     }
   }
 
-  public List<SingularityTaskId> getPendingTasks() {
-    return getTasksForRoot(PENDING_PATH_ROOT);
-  }
+  public List<SingularityPendingTaskId> getScheduledTasks() {
+    List<String> taskIds = getTasksForRoot(SCHEDULED_PATH_ROOT);
+    List<SingularityPendingTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
 
+    for (String taskId : taskIds) {
+      SingularityPendingTaskId taskIdObj = SingularityPendingTaskId.fromString(taskId);
+      taskIdsObjs.add(taskIdObj);
+    }
+    
+    return taskIdsObjs;
+  }
+  
   public void launchTask(SingularityTask task) {
     try {
       launchTaskPrivate(task);
@@ -132,22 +141,30 @@ public class TaskManager {
   }
 
   private void launchTaskPrivate(SingularityTask task) throws Exception {
-    final String pendingPath = getPendingPath(task.getTaskRequest().getTaskId().toString());
-    final String activePath = getActivePath(task.getTaskRequest().getTaskId().toString());
+    final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTaskId().toString());
+    final String activePath = getActivePath(task.getTaskId().toString());
     
-    curator.delete().forPath(pendingPath);
+    curator.delete().forPath(scheduledPath);
     
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getTaskData(objectMapper));
   }
-    
-  public void deleteActiveTask(String taskId) {
-    final String activePath = getActivePath(taskId);
-    
+  
+  private void delete(String path) {
     try {
-      curator.delete().forPath(activePath);
+      curator.delete().forPath(path);
+    } catch (NoNodeException nne) {
+      LOG.warn(String.format("Expected task at %s", path), nne);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+  
+  public void deleteActiveTask(String taskId) {
+    delete(getActivePath(taskId));
+  }
+  
+  public void deleteScheduledTask(String taskId) {
+    delete(getScheduledPath(taskId));
   }
   
 }

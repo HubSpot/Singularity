@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
 
 public class JDBIHistoryManager implements HistoryManager {
 
@@ -21,20 +21,19 @@ public class JDBIHistoryManager implements HistoryManager {
   private final HistoryJDBI history;
   private final ObjectMapper objectMapper;
 
+  // TODO jdbi timeouts? should this be synchronous?
+  
   @Inject
   public JDBIHistoryManager(HistoryJDBI history, ObjectMapper objectMapper) {
     this.history = history;
     this.objectMapper = objectMapper;
   }
   
-  // TODO notify on persister failures?
-  // TODO handle DB failures
-  
   @Override
   public void saveTaskHistory(SingularityTask task, String driverStatus) {
     try {
       history.insertTaskHistory(task.getTaskRequest().getRequest().getName(),
-          task.getTaskRequest().getTaskId().toString(),
+          task.getTaskId().toString(),
           task.getTaskData(objectMapper),
           driverStatus,
           new Date());
@@ -45,11 +44,15 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message) {
-    history.insertTaskUpdate(taskId, statusUpdate, message.orNull(), new Date());
+    try {
+      history.insertTaskUpdate(taskId, statusUpdate, message.orNull(), new Date());
+    } catch (Throwable t) {
+      LOG.warn(String.format("Error while inserting update to history for %s - %s", taskId, statusUpdate), t);
+    }
   }
 
   @Override
-  public List<SingularityTaskId> getTaskHistoryForRequest(String requestName) {
+  public List<SingularityPendingTaskId> getTaskHistoryForRequest(String requestName) {
     return history.getTaskHistoryForRequest(requestName);
   }
 
@@ -62,7 +65,6 @@ public class JDBIHistoryManager implements HistoryManager {
     try {
       return new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.getTaskFromData(helper.getTaskData(), objectMapper));
     } catch (Exception e) {
-      // TODO handle this
       throw Throwables.propagate(e);
     }
   }

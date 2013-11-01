@@ -152,5 +152,4 @@ public class MesosUtils {
     return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }
   
-  
 }

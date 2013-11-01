@@ -30,6 +30,7 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 
 public class SingularityModule extends AbstractModule {
   private static final String LEADER_PATH = "/leader";
@@ -42,6 +43,7 @@ public class SingularityModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
+    bind(SingularityMesosSchedulerDelegator.class).in(Scopes.SINGLETON);
     bind(SingularityDriver.class).in(Scopes.SINGLETON);
     bind(HistoryManager.class).to(JDBIHistoryManager.class);
   }

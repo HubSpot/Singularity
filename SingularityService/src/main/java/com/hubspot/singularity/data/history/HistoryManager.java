@@ -3,8 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.List;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
 
 public interface HistoryManager {
 
@@ -12,7 +12,7 @@ public interface HistoryManager {
   
   void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message);
   
-  List<SingularityTaskId> getTaskHistoryForRequest(String requestName);
+  List<SingularityPendingTaskId> getTaskHistoryForRequest(String requestName);
   
   SingularityTaskHistory getTaskHistory(String taskId);
   

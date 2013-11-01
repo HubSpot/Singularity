@@ -15,8 +15,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 
 public class RequestManager {
@@ -28,7 +28,10 @@ public class RequestManager {
 
   private final static String REQUEST_PATH_ROOT = "/requests";
   private final static String REQUEST_PATH_FORMAT = REQUEST_PATH_ROOT + "/%s";
-    
+
+  private final static String PENDING_PATH_ROOT = "/pending";
+  private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
+  
   @Inject
   public RequestManager(CuratorFramework curator, ObjectMapper objectMapper) {
     this.curator = curator;
@@ -37,6 +40,31 @@ public class RequestManager {
  
   private String getRequestPath(String name) {
     return String.format(REQUEST_PATH_FORMAT, name);
+  }
+  
+  private String getPendingPath(String name) {
+    return String.format(PENDING_PATH_FORMAT, name);
+  }
+  
+  public void deletePendingRequest(String requestName) {
+    final String path = getPendingPath(requestName);
+    try {
+      curator.delete().forPath(path);
+    } catch (NoNodeException nne) {
+      LOG.warn(String.format("Expected a pending request at %s", path), nne);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  public void addToPendingQueue(String requestName) {
+    try {
+      curator.create().creatingParentsIfNeeded().forPath(getPendingPath(requestName));
+    } catch (NodeExistsException nee) {
+      // ignored
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
   }
 
   public void persistRequest(SingularityRequest request) {
@@ -57,9 +85,9 @@ public class RequestManager {
     }
   }
   
-  public List<String> getRequestNames() {
+  private List<String> getChildren(String root) {
     try {
-      return curator.getChildren().forPath(REQUEST_PATH_ROOT);
+      return curator.getChildren().forPath(root);
     } catch (NoNodeException nne) {
       return Collections.emptyList();
     } catch (Throwable t) {
@@ -67,10 +95,18 @@ public class RequestManager {
     }
   }
   
-  public List<SingularityTaskRequest> fetchTasks(List<SingularityTaskId> taskIds) {
+  public List<String> getRequestNames() {
+    return getChildren(REQUEST_PATH_ROOT);
+  }
+  
+  public List<String> getPendingRequestNames() {
+    return getChildren(PENDING_PATH_ROOT);
+  }
+  
+  public List<SingularityTaskRequest> fetchTasks(List<SingularityPendingTaskId> taskIds) {
     final List<SingularityTaskRequest> tasks = Lists.newArrayListWithCapacity(taskIds.size());
     
-    for (SingularityTaskId taskId : taskIds) {
+    for (SingularityPendingTaskId taskId : taskIds) {
       Optional<SingularityRequest> maybeRequest = fetchRequest(taskId.getName());
       
       if (maybeRequest.isPresent()) {
@@ -97,7 +133,7 @@ public class RequestManager {
     
     return requests;
   }
-  
+
   public Optional<SingularityRequest> fetchRequest(String requestName) {
     try {
       SingularityRequest request = SingularityRequest.getRequestFromData(curator.getData().forPath(ZKPaths.makePath(REQUEST_PATH_ROOT, requestName)), objectMapper);

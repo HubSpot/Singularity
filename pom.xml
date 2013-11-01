@@ -7,16 +7,20 @@
     <maven>3.0.0</maven>
   </prerequisites>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <properties>
-    <singularity.version>0.1.0</singularity.version>
     <mesos.version>0.14.0</mesos.version>
     <java.abi>1.7</java.abi>
   </properties>
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>${singularity.version}-SNAPSHOT</version>
-  <name>Mesos scheduler for applications, tasks, cron jobs.</name>
+  <version>0.1.1</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -31,10 +35,82 @@
     </repository>
   </repositories>
 
+  <scm>
+    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
+    <developerConnection>scm:git:git@github.com:HubSpot/Singularity.git</developerConnection>
+    <url>git@github.com:HubSpot/Singularity.git</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <name>Whitney Sorenson</name>
+      <email>wsorenson@gmail.com</email>
+    </developer>
+    <developer>
+      <name>Tom Petr</name>
+      <email>tpetr@hubspot.com</email>
+    </developer>
+  </developers>
+
   <modules>
     <module>SingularityBase</module>
     <module>SingularityClient</module>
     <module>SingularityService</module>
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.5</version>
+        <configuration>
+          <!-- http://maven.apache.org/plugins/maven-compiler-plugin/ -->
+          <source>${java.abi}</source>
+          <target>${java.abi}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9</version>
+        <executions>
+          <execution>
+            <id>generate-javadoc-jar</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
