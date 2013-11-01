@@ -13,7 +13,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 
 public class SingularityDriver {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
   
   private final Protos.FrameworkInfo frameworkInfo;
   private final MesosSchedulerDriver driver;
@@ -32,19 +32,19 @@ public class SingularityDriver {
   }
 
   public Protos.Status start() {
-    LOG.info("Mesos driver is starting with framework info: " + frameworkInfo);
+    Protos.Status status = driver.start();
+  
+    LOG.info("Started with status:" + status);
 
-    return driver.start();
+    return status;
   }
   
-  public Protos.Status stop(boolean failover) {
-    if (failover) {
-      LOG.info("Mesos driver stopping WITH FAILOVER...");
-    } else {
-      LOG.info("Mesos driver stopping without failover...");
-    }
+  public Protos.Status abort() {
+    Protos.Status status = driver.abort();
     
-    return driver.stop(failover);
+    LOG.info("Aborted with status: " + status);
+        
+    return driver.abort();
   }
   
 }

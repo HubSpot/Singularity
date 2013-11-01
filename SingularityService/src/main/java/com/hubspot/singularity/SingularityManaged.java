@@ -1,65 +1,88 @@
 package com.hubspot.singularity;
 
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
-
-import com.codahale.dropwizard.lifecycle.Managed;
-import com.google.common.io.Closeables;
-import com.google.inject.Inject;
-import com.hubspot.singularity.mesos.SingularityDriver;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SingularityManaged implements Managed {
+import com.codahale.dropwizard.lifecycle.Managed;
+import com.google.inject.Inject;
+
+public class SingularityManaged implements Managed, LeaderLatchListener {
+  
   private final static Logger LOG = LoggerFactory.getLogger(SingularityManaged.class);
 
-  private final SingularityDriver driver;
-  private final CuratorFramework curator;
   private final LeaderLatch leaderLatch;
-
+  private final SingularityDriverManager driverManager;
+  private final SingularityAbort abort;
+  
   private Protos.Status currentStatus;
   
   @Inject
-  public SingularityManaged(SingularityDriver driver, CuratorFramework curator, LeaderLatch leaderLatch) {
-    this.driver = driver;
-    this.curator = curator;
+  public SingularityManaged(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort) {
+    this.driverManager = driverManager;
     this.leaderLatch = leaderLatch;
+    this.abort = abort;
+    
     this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
+
+    leaderLatch.addListener(this);
   }
   
   @Override
   public void start() throws Exception {
-    leaderLatch.addListener(new LeaderLatchListener() {
-      @Override
-      public void isLeader() {
-        LOG.info("We are now the leader!");
-
-        if (currentStatus != Protos.Status.DRIVER_RUNNING) {
-          currentStatus = driver.start();
-        } else {
-          LOG.warn("Driver is already running?");
-        }
-      }
-
-      @Override
-      public void notLeader() {
-        LOG.info("We are not the leader!");
-
-        if (currentStatus == Protos.Status.DRIVER_RUNNING) {
-          currentStatus = driver.stop(false);
-        }
-      }
-    });
-
+    LOG.info("Starting leader latch...");
+    
     leaderLatch.start();
   }
   
   @Override
   public void stop() throws Exception {
-    leaderLatch.close();
-    Closeables.close(curator, true);
+    LOG.info("Graceful STOP initiating...");
+  
+    abort.stop();
+  
+    LOG.info("STOP finished");
+  }
+  
+  @Override
+  public void isLeader() {
+    LOG.info("We are now the leader!");
+
+    if (currentStatus != Protos.Status.DRIVER_RUNNING) {
+      try {
+        currentStatus = driverManager.start();
+      } catch (Throwable t) {
+        LOG.error("While starting driver", t);
+        abort.abort();
+      }
+      
+      if (currentStatus != Protos.Status.DRIVER_RUNNING) {
+        abort.abort();
+      }
+      
+      LOG.info("Driver started, current status: " + currentStatus);
+    } else {
+      LOG.warn("Driver was already running - took no action.");
+    }    
+  }
+  
+  @Override
+  public void notLeader() {
+    LOG.info("We are not the leader! - current status: " + currentStatus);
+
+    if (currentStatus == Protos.Status.DRIVER_RUNNING) {
+      try {
+        currentStatus = driverManager.stop();
+      } catch (Throwable t) {
+        LOG.error("While stopping driver", t);
+        abort.abort();
+      }
+      
+      LOG.info("Driver stopped, current status: " + currentStatus);
+    }
+    
   }
 
 }

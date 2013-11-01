@@ -28,24 +28,22 @@ import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
-import com.hubspot.singularity.mesos.SingularityDriver;
-import com.hubspot.singularity.mesos.SingularityMesosScheduler;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 
 public class SingularityModule extends AbstractModule {
+  
   private static final String LEADER_PATH = "/leader";
   
   public static final String MASTER_PROPERTY = "singularity.master";
   public static final String ZK_NAMESPACE_PROPERTY = "singularity.namespace";
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
+  public static final String UNDERLYING_CURATOR = "curator.base.instance";
   
   @Override
   protected void configure() {
-    bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
-    bind(SingularityMesosSchedulerDelegator.class).in(Scopes.SINGLETON);
-    bind(SingularityDriver.class).in(Scopes.SINGLETON);
     bind(HistoryManager.class).to(JDBIHistoryManager.class);
+    bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
+    bind(SingularityManaged.class).in(Scopes.SINGLETON);
   }
 
   @Provides
@@ -110,6 +108,7 @@ public class SingularityModule extends AbstractModule {
   
   @Singleton
   @Provides
+  @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) {
     CuratorFramework client = CuratorFrameworkFactory.newClient(
         config.getQuorum(),
@@ -119,7 +118,13 @@ public class SingularityModule extends AbstractModule {
     
     client.start();
     
-    return client.usingNamespace(config.getZkNamespace());
+    return client;
+  }
+  
+  @Singleton
+  @Provides
+  public CuratorFramework provideNamespaceCurator(@Named(UNDERLYING_CURATOR) CuratorFramework curator, ZooKeeperConfiguration config) {
+    return curator.usingNamespace(config.getZkNamespace());  
   }
   
   @Provides

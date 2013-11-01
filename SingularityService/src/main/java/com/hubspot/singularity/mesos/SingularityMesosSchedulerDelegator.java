@@ -14,23 +14,21 @@ import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.LoggerContext;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityAbort;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosSchedulerDelegator.class);
 
-  private SchedulerDriver driver;
   private final SingularityMesosScheduler scheduler;
   private final SingularityStartup startup;
-
+  private final SingularityAbort abort;
+  
   private final Lock startupLock;
   private final Lock lock;
 
@@ -42,9 +40,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final List<Protos.TaskStatus> queuedUpdates;
 
   @Inject
-  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup) {
+  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort) {
     this.scheduler = scheduler;
     this.startup = startup;
+    this.abort = abort;
 
     this.queuedUpdates = Lists.newArrayList();
 
@@ -53,9 +52,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
     this.state = SchedulerState.STARTUP;
   }
-
+  
   // TODO should the lock wait on a timeout and then notify that it's taking a while?
-
+  
   private void lock() {
     lock.lock();
   }
@@ -64,51 +63,20 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock.unlock();
   }
 
-  private void flushLogs() {
-    LOG.info("Attempting to flush logs and wait for 5 seconds...");
-    
-    ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
-    // Check for logback implementation of slf4j
-    if (loggerFactory instanceof LoggerContext) {
-      LoggerContext context = (LoggerContext) loggerFactory;
-      context.stop();
-    }
-
-    try {
-      Thread.sleep(5000);
-    } catch (Exception e) {
-
-    }
-  }
-
-  private void exit() {
-    if (driver != null) {
-      driver.abort();
-    }
-
-    System.exit(1);
-  }
-
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
 
-    abort();
-  }
-
-  private void abort() {
-    flushLogs();
-
-    exit();
+    abort.abort();
   }
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) {
-    if (state != SchedulerState.STARTUP) {
-      LOG.info("Asked to startup - but have already startedup - aborting");
-      abort();
+    if (isRunning()) {
+      LOG.info("Asked to startup - but already running - aborting");
+      abort.abort();
+    } else {
+      state = SchedulerState.STARTUP;
     }
-
-    this.driver = driver;
-
+    
     startup.startup(masterInfo);
 
     startupLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
@@ -155,10 +123,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     }
   }
 
+  private boolean isRunning() {
+    return state == SchedulerState.RUNNING;
+  }
+  
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
-    if (state == SchedulerState.STARTUP) {
-      LOG.info(String.format("Scheduler is in startup mode, declining %s offer(s)", offers.size()));
+    if (!isRunning()) {
+      LOG.info(String.format("Scheduler is in state %s, declining %s offer(s)", state.name(), offers.size()));
 
       for (Protos.Offer offer : offers) {
         driver.declineOffer(offer.getId());
@@ -196,8 +168,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     startupLock.lock();
 
     try {
-      if (state == SchedulerState.STARTUP) {
-        LOG.info(String.format("Scheduler is starting up, queueing an update %s - %s queued updates so far", status, queuedUpdates.size()));
+      if (!isRunning()) {
+        LOG.info(String.format("Scheduler is in state %s, queueing an update %s - %s queued updates so far", state.name(), status, queuedUpdates.size()));
 
         queuedUpdates.add(status);
 
@@ -234,6 +206,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void disconnected(SchedulerDriver driver) {
     lock();
+    
+    System.out.println("DISCONNECTED.................");
 
     try {
       scheduler.disconnected(driver);
