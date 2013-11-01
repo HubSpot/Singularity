@@ -11,7 +11,7 @@ mesos:
   defaultMemory: 128
   frameworkName: Singularity
   frameworkId: Singularity_1
-  frameworkFailoverTimeout: 1
+  frameworkFailoverTimeout: 604800
 
 zookeeper:
   quorum: localhost:2181
