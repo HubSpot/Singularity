@@ -40,7 +40,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final WebhookManager webhookManager;
   private final SingularityRackManager rackManager;
-  
+
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
       SingularityMesosTaskBuilder mesosTaskBuidler) {

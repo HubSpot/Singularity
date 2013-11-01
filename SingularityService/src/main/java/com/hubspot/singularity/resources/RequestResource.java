@@ -45,7 +45,7 @@ public class RequestResource {
   public List<SingularityRequest> getKnownRequests() {
     return requestManager.getKnownRequests();
   }
-
+  
   @DELETE
   @Path("/{requestName}")
   public Optional<SingularityRequest> getHistoryForTask(@PathParam("requestName") String requestName) {

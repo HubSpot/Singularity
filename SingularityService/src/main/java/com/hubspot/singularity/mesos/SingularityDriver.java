@@ -31,16 +31,20 @@ public class SingularityDriver {
     driver = new MesosSchedulerDriver(scheduler, frameworkInfo, master);
   }
 
-  public void start() {
+  public Protos.Status start() {
     LOG.info("Mesos driver is starting with framework info: " + frameworkInfo);
 
-    driver.start();
+    return driver.start();
   }
   
-  public void stop() {
-    LOG.info("Mesos driver stopping..");
+  public Protos.Status stop(boolean failover) {
+    if (failover) {
+      LOG.info("Mesos driver stopping WITH FAILOVER...");
+    } else {
+      LOG.info("Mesos driver stopping without failover...");
+    }
     
-    driver.stop();
+    return driver.stop(failover);
   }
   
 }
