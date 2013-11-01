@@ -18,8 +18,6 @@ import com.ning.http.client.Response;
 public class SingularityClient {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
-
-  public static final String HOSTS_PROPERTY_NAME = "singularity.hosts";
   
   private static final String REQUEST_FORMAT = "http://%s/singularity/v1/request";
   private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/%s";
@@ -34,7 +32,7 @@ public class SingularityClient {
   private final AsyncHttpClient httpClient;
   
   @Inject
-  public SingularityClient(AsyncHttpClient httpClient, ObjectMapper objectMapper, @Named(HOSTS_PROPERTY_NAME) List<String> hosts) {
+  public SingularityClient(@Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) List<String> hosts) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     
