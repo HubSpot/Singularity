@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import com.google.inject.Stage;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -15,7 +16,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         .addModule(new SingularityModule())
         .enableAutoConfig(getClass().getPackage().getName())
         .setConfigClass(SingularityConfiguration.class)
-        .build();
+        .build(Stage.DEVELOPMENT);
     bootstrap.addBundle(guiceBundle);
   }
 
