@@ -109,7 +109,7 @@ public class SingularityClient {
   }
   
   public void remove(String name) {
-    final String requestUri = String.format(REQUEST_UNDEPLOY_FORMAT, name);
+    final String requestUri = String.format(REQUEST_UNDEPLOY_FORMAT, getHost(), name);
 
     LOG.info(String.format("Removing %s - (%s)", name, requestUri));
   
