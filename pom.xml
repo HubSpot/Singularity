@@ -14,7 +14,7 @@
   </parent>
 
   <properties>
-    <mesos.version>0.14.0</mesos.version>
+    <mesos.version>0.14.0-rc4</mesos.version>
     <java.abi>1.7</java.abi>
   </properties>
 
@@ -32,6 +32,11 @@
     <repository>
       <id>repo.codahale.com</id>
       <url>http://repo.codahale.com/</url>
+    </repository>
+    <repository>
+      <id>mesosphere-public-repo</id>
+      <name>Mesosphere Public Snapshot Repo</name>
+      <url>http://downloads.mesosphere.io/maven</url>
     </repository>
   </repositories>
 
