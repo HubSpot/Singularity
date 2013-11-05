@@ -33,11 +33,6 @@
       <id>repo.codahale.com</id>
       <url>http://repo.codahale.com/</url>
     </repository>
-    <repository>
-      <id>mesosphere-public-repo</id>
-      <name>Mesosphere Public Snapshot Repo</name>
-      <url>http://downloads.mesosphere.io/maven</url>
-    </repository>
   </repositories>
 
   <scm>
