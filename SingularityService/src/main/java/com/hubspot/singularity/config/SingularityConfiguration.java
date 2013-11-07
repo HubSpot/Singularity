@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
@@ -8,6 +9,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("mesos")
