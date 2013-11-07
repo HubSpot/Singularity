@@ -59,7 +59,11 @@ public class SingularityRackManager {
     double numPerRack = (double) numDesiredInstances / (double) racks.size();
     double numOnRack = Objects.firstNonNull(rackUsage.get(rackId), 0);
 
-    return numOnRack < numPerRack;
+    boolean isRackOk = numOnRack < numPerRack;
+  
+    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTaskId(), rackId, numPerRack, numOnRack));
+    
+    return isRackOk;
   }
 
   private void clearRacks() {

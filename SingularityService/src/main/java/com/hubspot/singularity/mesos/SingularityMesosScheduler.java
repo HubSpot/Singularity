@@ -142,7 +142,12 @@ public class SingularityMesosScheduler implements Scheduler {
         taskResources = taskRequest.getRequest().getResources();
       }
 
-      if (MesosUtils.doesOfferMatchResources(taskResources, offer) && isRackAppropriate(offer, taskRequest, activeTasks)) {
+      LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
+          
+      final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
+      final boolean isRackAppropriate = isRackAppropriate(offer, taskRequest, activeTasks);
+      
+      if (matchesResources && isRackAppropriate) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
 
         LOG.info(String.format("Launching task %s slot on slave %s (%s)", task.getTaskId(), offer.getSlaveId(), offer.getHostname()));
@@ -153,9 +158,13 @@ public class SingularityMesosScheduler implements Scheduler {
 
         Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(task.getTask()));
 
+        LOG.trace(String.format("Task %s launched with status %s", task.getTaskId(), initialStatus.name()));
+        
         historyManager.saveTaskHistory(task, initialStatus.name());
 
         return Optional.of(task);
+      } else {
+        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack appropriate: %s", offer.getId(), taskRequest.getPendingTaskId(), matchesResources, isRackAppropriate));
       }
     }
 
