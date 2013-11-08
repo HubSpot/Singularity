@@ -65,7 +65,7 @@ public class SingularityRequestValidator {
     boolean hasSeconds = split.length > 5;
 
     if (!hasSeconds) {
-      newSchedule.add("*");
+      newSchedule.add("0");
     } else {
       newSchedule.add(split[0]);
     }

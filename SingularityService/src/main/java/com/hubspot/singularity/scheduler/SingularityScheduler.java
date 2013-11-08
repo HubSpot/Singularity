@@ -156,9 +156,14 @@ public class SingularityScheduler {
     
     if (request.getSchedule() != null) {
       try {
+        final Date now = new Date();
+        
         CronExpression cronExpression = new CronExpression(request.getSchedule());
-      
-        nextRunAt = cronExpression.getNextValidTimeAfter(new Date()).getTime();
+
+        final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(now);
+        nextRunAt = nextRunAtDate.getTime();
+        
+        LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (now: %s)", request.getName(), request.getSchedule(), nextRunAtDate, now));
       } catch (ParseException pe) {
         throw Throwables.propagate(pe);
       }
@@ -176,6 +181,12 @@ public class SingularityScheduler {
           highestInstanceNo = matchingTaskId.getInstanceNo();
         }
       }
+    }
+    
+    // TODO handle this? it should never happen. We could scale down / kill the tasks.
+    if (numMissingInstances < 0) {
+      LOG.error(String.format("Missing instances is negative: %s, request %s, matching tasks: %s", numMissingInstances, request, matchingTaskIds));
+      return Collections.emptyList();
     }
     
     final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
