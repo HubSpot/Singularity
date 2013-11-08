@@ -126,4 +126,10 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityRequestBuilder [name=" + name + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command="
+        + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
+  }
+
 }

@@ -20,8 +20,7 @@ public class TaskResource {
   
   private final TaskManager taskManager;
   private final RequestManager requestManager;
-  
-  
+    
   @Inject
   public TaskResource(TaskManager taskManager, RequestManager requestManager) {
     this.taskManager = taskManager;

@@ -32,5 +32,10 @@ public class SingularityTaskUpdate {
   public static SingularityTaskUpdate getTaskUpdateFromData(byte[] data, ObjectMapper objectMapper) throws Exception {
     return objectMapper.readValue(data, SingularityTaskUpdate.class);
   }
+
+  @Override
+  public String toString() {
+    return "SingularityTaskUpdate [task=" + task + ", state=" + state + "]";
+  }
   
 }
