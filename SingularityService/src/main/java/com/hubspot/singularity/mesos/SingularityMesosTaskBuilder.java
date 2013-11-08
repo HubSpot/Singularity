@@ -58,7 +58,7 @@ public class SingularityMesosTaskBuilder {
     }
     
     if (taskRequest.getRequest().getExecutor() != null) {
-      prepareCustomExecutor(bldr, taskRequest, ports);
+      prepareCustomExecutor(bldr, taskId, taskRequest, ports);
     } else {
       prepareCommand(bldr, taskRequest, ports);
     }
@@ -79,11 +79,11 @@ public class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
   
-  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskRequest task, final long[] ports) {
+  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final long[] ports) {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
           .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getExecutor()))
-          .setExecutorId(ExecutorID.newBuilder().setValue("custom"))
+          .setExecutorId(ExecutorID.newBuilder().setValue(String.format("singularity-%s", taskId.toString())))
     );
     
     Object executorData = task.getRequest().getExecutorData();
