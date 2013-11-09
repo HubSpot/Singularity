@@ -38,8 +38,7 @@ public class StateResource {
     
     final RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
     final long uptime = mxBean.getUptime();
-    final long startTime = System.currentTimeMillis() - uptime;
-    
+   
     final int activeTasks = taskManager.getNumActiveTasks();
     final int scheduledTasks = taskManager.getNumScheduledTasks();
     
@@ -47,7 +46,7 @@ public class StateResource {
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
     final int cleaningRequests = requestManager.getSizeOfCleanupQueue();
     
-    return new SingularityState(isMaster, startTime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-");
+    return new SingularityState(isMaster, uptime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-");
   }
   
 }

@@ -49,23 +49,35 @@ public class SingularityScheduler {
     }
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getScheduledTasks();
     
     int numTasksKilled = 0;
+    int numScheduledTasksRemoved = 0;
     
     for (String requestName : cleanupRequests) {
       if (!requestManager.fetchRequest(requestName).isPresent()) {
+        
         for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestName)) {
           driverManager.kill(matchingTaskId.toString());
           numTasksKilled++;
         }
+     
+        for (SingularityPendingTaskId pendingTaskId : pendingTaskIds) {
+          if (pendingTaskId.getName().equals(requestName)) {
+            taskManager.deleteScheduledTask(pendingTaskId.toString());
+            numScheduledTasksRemoved++;
+          }
+        }
+        
       } else {
         LOG.info(String.format("Not cleaning %s, it existed", requestName));
       }
-      
+     
       requestManager.deleteCleanRequest(requestName);
     }
     
-    LOG.info(String.format("Killed %s tasks in %sms", numTasksKilled, System.currentTimeMillis() - start));
+    
+    LOG.info(String.format("Killed %s tasks (removed %s scheduled) in %sms", numTasksKilled, numScheduledTasksRemoved, System.currentTimeMillis() - start));
   }
   
   public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds) {
@@ -109,7 +121,7 @@ public class SingularityScheduler {
     for (SingularityPendingTaskId task : tasks) {
       if (task.getNextRunAt() <= now) {
         dueTaskIds.add(task);
-      } 
+      }
     }
     
     final List<SingularityTaskRequest> dueTasks = requestManager.fetchTasks(dueTaskIds);
