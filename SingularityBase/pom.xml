@@ -6,10 +6,6 @@
     <maven>3.0.0</maven>
   </prerequisites>
 
-  <properties>
-    <java.abi>1.6</java.abi>
-  </properties>
-  
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
