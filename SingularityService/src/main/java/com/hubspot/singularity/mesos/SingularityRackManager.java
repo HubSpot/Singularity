@@ -16,8 +16,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.hubspot.mesos.json.MesosSlaveObject;
-import com.hubspot.mesos.json.MesosStateObject;
+import com.hubspot.mesos.json.MesosMasterSlaveObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -90,10 +90,10 @@ public class SingularityRackManager {
     }
   }
 
-  public void loadRacksFromMaster(MesosStateObject state) {
+  public void loadRacksFromMaster(MesosMasterStateObject state) {
     clearRacks();
 
-    for (MesosSlaveObject slave : state.getSlaves()) {
+    for (MesosMasterSlaveObject slave : state.getSlaves()) {
       Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey));
 
       saveRackId(slave.getId(), maybeRackId);

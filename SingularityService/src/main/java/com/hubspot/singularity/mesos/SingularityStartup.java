@@ -16,7 +16,7 @@ import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFrameworkObject;
-import com.hubspot.mesos.json.MesosStateObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.RequestManager;
@@ -67,7 +67,7 @@ public class SingularityStartup {
       
       Preconditions.checkState(response.getStatusCode() >= 200 && response.getStatusCode() < 300, "Invalid response from master %s : %s", uri, response.getStatusCode());
 
-      MesosStateObject state = objectMapper.readValue(response.getResponseBodyAsStream(), MesosStateObject.class);
+      MesosMasterStateObject state = objectMapper.readValue(response.getResponseBodyAsStream(), MesosMasterStateObject.class);
         
       rackManager.loadRacksFromMaster(state);
       
@@ -85,7 +85,7 @@ public class SingularityStartup {
     LOG.info(String.format("Finished startup after %sms", System.currentTimeMillis() - start));
   }
   
-  private void checkForMissingActiveTasks(MesosStateObject state) {
+  private void checkForMissingActiveTasks(MesosMasterStateObject state) {
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final Set<String> strTaskIds = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
     for (SingularityTaskId taskId : activeTaskIds) {

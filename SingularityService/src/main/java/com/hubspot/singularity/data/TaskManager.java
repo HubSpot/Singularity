@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -17,11 +16,10 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 
-public class TaskManager {
+public class TaskManager extends CuratorManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(TaskManager.class);
   
-  private final CuratorFramework curator;
   private final ObjectMapper objectMapper;
   
   private final static String ACTIVE_PATH_ROOT = "/tasks";
@@ -32,7 +30,7 @@ public class TaskManager {
     
   @Inject
   public TaskManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    this.curator = curator;
+    super(curator);
     this.objectMapper = objectMapper;
   }
   
@@ -42,6 +40,14 @@ public class TaskManager {
 
   private String getScheduledPath(String taskId) {
     return String.format(SCHEDULED_PATH_FORMAT, taskId);
+  }
+  
+  public int getNumActiveTasks() {
+    return getNumChildren(ACTIVE_PATH_ROOT);
+  }
+  
+  public int getNumScheduledTasks() {
+    return getNumChildren(SCHEDULED_PATH_ROOT);
   }
   
   public void persistScheduleTasks(List<SingularityPendingTaskId> taskIds) {
@@ -60,18 +66,8 @@ public class TaskManager {
     curator.create().creatingParentsIfNeeded().forPath(pendingPath);
   }
   
-  private List<String> getTasksForRoot(String root) {
-    try {
-      return curator.getChildren().forPath(root);
-    } catch (NoNodeException nne) {
-      return Collections.emptyList();
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-  }
-  
   public List<SingularityTaskId> getActiveTaskIds() {
-    List<String> taskIds = getTasksForRoot(ACTIVE_PATH_ROOT);
+    List<String> taskIds = getChildren(ACTIVE_PATH_ROOT);
     List<SingularityTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (String taskId : taskIds) {
@@ -121,7 +117,7 @@ public class TaskManager {
   }
 
   public List<SingularityPendingTaskId> getScheduledTasks() {
-    List<String> taskIds = getTasksForRoot(SCHEDULED_PATH_ROOT);
+    List<String> taskIds = getChildren(SCHEDULED_PATH_ROOT);
     List<SingularityPendingTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (String taskId : taskIds) {
@@ -147,16 +143,6 @@ public class TaskManager {
     curator.delete().forPath(scheduledPath);
     
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getTaskData(objectMapper));
-  }
-  
-  private void delete(String path) {
-    try {
-      curator.delete().forPath(path);
-    } catch (NoNodeException nne) {
-      LOG.warn(String.format("Expected task at %s", path), nne);
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
   }
   
   public void deleteActiveTask(String taskId) {

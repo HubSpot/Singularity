@@ -18,6 +18,7 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
   private final SingularityDriverManager driverManager;
   private final SingularityAbort abort;
   
+  private boolean isMaster;
   private Protos.Status currentStatus;
   
   @Inject
@@ -27,7 +28,8 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
     this.abort = abort;
     
     this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
-
+    this.isMaster = false;
+    
     leaderLatch.addListener(this);
   }
   
@@ -50,7 +52,9 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
   @Override
   public void isLeader() {
     LOG.info("We are now the leader!");
-
+    
+    isMaster = true;
+    
     if (currentStatus != Protos.Status.DRIVER_RUNNING) {
       try {
         currentStatus = driverManager.start();
@@ -67,10 +71,20 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
     }    
   }
   
+  public boolean isMaster() {
+    return isMaster;
+  }
+
+  public Protos.Status getCurrentStatus() {
+    return currentStatus;
+  }
+
   @Override
   public void notLeader() {
     LOG.info("We are not the leader! - current status: " + currentStatus);
 
+    isMaster = false;
+    
     if (currentStatus == Protos.Status.DRIVER_RUNNING) {
       try {
         currentStatus = driverManager.stop();

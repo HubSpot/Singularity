@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -20,11 +19,10 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskRequest;
 
-public class RequestManager {
+public class RequestManager extends CuratorManager {
   
   private final static Logger LOG = LoggerFactory.getLogger(RequestManager.class);
   
-  private final CuratorFramework curator;
   private final ObjectMapper objectMapper;
 
   private final static String REQUEST_PATH_ROOT = "/requests";
@@ -38,7 +36,7 @@ public class RequestManager {
   
   @Inject
   public RequestManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    this.curator = curator;
+    super(curator);
     this.objectMapper = objectMapper;
   }
  
@@ -54,34 +52,26 @@ public class RequestManager {
     return String.format(CLEANUP_PATH_FORMAT, name);
   }
   
+  public int getSizeOfPendingQueue() {
+    return getNumChildren(PENDING_PATH_ROOT);
+  }
+  
+  public int getSizeOfCleanupQueue() {
+    return getNumChildren(CLEANUP_PATH_ROOT);
+  }
+  
+  public int getNumRequests() {
+    return getNumChildren(REQUEST_PATH_ROOT);
+  }
+  
   public void deletePendingRequest(String requestName) {
-    deletePath(getPendingPath(requestName));
+    delete(getPendingPath(requestName));
   }
   
   public void deleteCleanRequest(String requestName) {
-    deletePath(getCleanupPath(requestName));
+    delete(getCleanupPath(requestName));
   }
-  
-  private void deletePath(String path) {
-    try {
-      curator.delete().forPath(path);
-    } catch (NoNodeException nne) {
-      LOG.warn(String.format("Expected a request pointer at %s", path), nne);
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-  }
-  
-  private void create(String path) {
-    try {
-      curator.create().creatingParentsIfNeeded().forPath(path);
-    } catch (NodeExistsException nee) {
-      // ignored
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-  }
-  
+ 
   public void addToCleanupQueue(String requestName) {
     create(getCleanupPath(requestName));
   }
@@ -107,16 +97,6 @@ public class RequestManager {
       curator.create().creatingParentsIfNeeded().forPath(requestPath, request.getRequestData(objectMapper));
     } catch (NodeExistsException nee) {
       curator.setData().forPath(requestPath, request.getRequestData(objectMapper));
-    }
-  }
-  
-  private List<String> getChildren(String root) {
-    try {
-      return curator.getChildren().forPath(root);
-    } catch (NoNodeException nne) {
-      return Collections.emptyList();
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
     }
   }
   
