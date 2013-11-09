@@ -82,20 +82,21 @@ public class SingularityScheduler {
     final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
     
     int numScheduledTasks = 0;
+    int obsoleteRequests = 0;
     
     for (String pendingRequest : pendingRequests) {
       Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingRequest);
       
-      if (!maybeRequest.isPresent()) {
-        continue;
+      if (maybeRequest.isPresent()) {
+        numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, maybeRequest.get()).size();
+      } else {
+        obsoleteRequests++;
       }
-      
-      numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, maybeRequest.get()).size();
       
       requestManager.deletePendingRequest(pendingRequest);
     }
     
-    LOG.info(String.format("Scheduled %s requests in %sms", numScheduledTasks, System.currentTimeMillis() - start));
+    LOG.info(String.format("Scheduled %s requests (%s obsolete) in %sms", numScheduledTasks, obsoleteRequests, System.currentTimeMillis() - start));
   }
   
   public List<SingularityTaskRequest> getDueTasks() {
