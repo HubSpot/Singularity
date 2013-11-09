@@ -5,6 +5,8 @@ import java.lang.management.RuntimeMXBean;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.mesos.Protos;
 
@@ -15,6 +17,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
 @Path("/state")
+@Produces({ MediaType.APPLICATION_JSON })
 public class StateResource {
 
   private final RequestManager requestManager;
