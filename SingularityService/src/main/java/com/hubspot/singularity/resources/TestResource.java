@@ -2,9 +2,15 @@ package com.hubspot.singularity.resources;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.TaskStatus;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityManaged;
 
 @Path("/test")
@@ -12,11 +18,22 @@ public class TestResource {
 
   private final SingularityAbort abort;
   private final SingularityManaged managed;
-
+  private final SingularityDriverManager driverManager;
+  
   @Inject
-  public TestResource(SingularityManaged managed, SingularityAbort abort) {
+  public TestResource(SingularityManaged managed, SingularityAbort abort, SingularityDriverManager driverManager) {
     this.managed = managed;
     this.abort = abort;
+    this.driverManager = driverManager;
+  }
+  
+  @POST
+  @Path("/scheduler/statusUpdate/{taskId}/{taskState}")
+  public void statusUpdate(@PathParam("taskId") String taskId, @PathParam("taskState") String taskState) {
+    driverManager.getDriver().getScheduler().statusUpdate(null, TaskStatus.newBuilder()
+        .setTaskId(TaskID.newBuilder().setValue(taskId))
+        .setState(TaskState.valueOf(taskState))
+        .build());
   }
   
   @POST

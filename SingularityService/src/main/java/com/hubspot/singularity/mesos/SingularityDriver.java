@@ -4,9 +4,11 @@ import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityModule;
@@ -33,6 +35,11 @@ public class SingularityDriver {
     this.scheduler = scheduler;
     
     this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, master);
+  }
+  
+  @VisibleForTesting
+  public Scheduler getScheduler() {
+    return scheduler;
   }
   
   public Protos.Status start() {

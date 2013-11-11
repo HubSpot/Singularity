@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Status;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -23,6 +24,11 @@ public class SingularityDriverManager {
     this.driverProvider = driverProvider;
     
     driverLock = new ReentrantLock();
+  }
+  
+  @VisibleForTesting
+  public SingularityDriver getDriver() {
+    return driver;
   }
   
   public Protos.Status kill(String taskId) {
