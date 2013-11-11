@@ -7,8 +7,8 @@ import java.util.List;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskId;
 
 public class SingularityTaskHistory {
 
@@ -34,12 +34,11 @@ public class SingularityTaskHistory {
     return task;
   }
   
-  public class SingularityTaskIdMapper implements ResultSetMapper<SingularityPendingTaskId> {
-    public SingularityPendingTaskId map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-      return SingularityPendingTaskId.fromString(r.getString("taskId"));
+  public static class SingularityTaskIdMapper implements ResultSetMapper<SingularityTaskId> {
+
+    public SingularityTaskId map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      return SingularityTaskId.fromString(r.getString("taskId"));
     }
   }
-  
-  
 
 }

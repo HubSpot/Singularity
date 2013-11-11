@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskId;
 
 public class JDBIHistoryManager implements HistoryManager {
 
@@ -52,7 +52,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityPendingTaskId> getTaskHistoryForRequest(String requestName) {
+  public List<SingularityTaskId> getTaskHistoryForRequest(String requestName) {
     return history.getTaskHistoryForRequest(requestName);
   }
 

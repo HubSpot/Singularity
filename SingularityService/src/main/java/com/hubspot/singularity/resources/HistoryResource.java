@@ -9,7 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityTaskHistory;
 
@@ -32,7 +32,7 @@ public class HistoryResource {
   
   @GET
   @Path("/request/{requestName}")
-  public List<SingularityPendingTaskId> getHistoryForRequest(@PathParam("requestName") String requestName) {
+  public List<SingularityTaskId> getHistoryForRequest(@PathParam("requestName") String requestName) {
     return historyManager.getTaskHistoryForRequest(requestName);
   }
   
