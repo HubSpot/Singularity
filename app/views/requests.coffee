@@ -33,8 +33,6 @@ class RequestsView extends View
                 $rows.each ->
                     $row = $(@)
 
-                    log $row.data('request-id').toLowerCase(), text.toLowerCase()
-
                     if not _.string.contains $row.data('request-id').toLowerCase(), text.toLowerCase()
                         $row.addClass('filtered')
                     else
