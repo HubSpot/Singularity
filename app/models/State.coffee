@@ -9,5 +9,7 @@ class State extends Model
 
     parse: (state) =>
         state = MOCK_JSON
+        state.uptimeHuman = moment.duration(state.uptime).humanize()
+        state
 
 module.exports = State
