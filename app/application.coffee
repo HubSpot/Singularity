@@ -50,7 +50,7 @@ class Application
         @resolve_countdown += 1
         @state = new State
         @state.fetch
-            error: => vex.dialog.alert("An error occurred while trying to load the Singularity state.")
+            error: => vex.dialog.alert('An error occurred while trying to load the Singularity state.')
             success: -> resolve()
 
         resources = [{
