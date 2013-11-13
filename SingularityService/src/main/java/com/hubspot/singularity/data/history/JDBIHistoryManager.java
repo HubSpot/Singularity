@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 
@@ -40,6 +41,39 @@ public class JDBIHistoryManager implements HistoryManager {
     } catch (JsonProcessingException jpe) {
       LOG.warn(String.format("Couldn't insert task history for task %s due to json exception", task), jpe);
     }
+  }
+
+  @Override
+  public void saveRequestHistory(SingularityRequest request) {
+    try {
+      history.insertRequestHistory(request.getName(), request.getRequestData(objectMapper), new Date());
+    } catch (JsonProcessingException jpe) {
+      LOG.warn(String.format("Couldn't insert request history for request %s due to json exception", request), jpe);
+    }
+  }
+
+  @Override
+  public void saveRequestHistoryUpdate(SingularityRequest request) {
+    try {
+      history.updateRequestHistory(request.getName(), request.getRequestData(objectMapper), new Date());
+    } catch (JsonProcessingException jpe) {
+      LOG.warn(String.format("Couldn't insert request history update for request %s due to json exception", request), jpe);
+    }
+  }
+
+  @Override
+  public List<SingularityTaskId> getTaskHistoryForRequestLike(String requestNameLike) {
+    return history.getTaskHistoryForRequestLike(requestNameLike);
+  }
+
+  @Override
+  public List<SingularityRequestHistory> getRequestHistory(String requestName) {
+    return history.getRequestHistory(requestName);
+  }
+
+  @Override
+  public List<SingularityRequestHistory> getRequestHistoryLike(String requestNameLike) {
+    return history.getRequestHistoryLike(requestNameLike);
   }
 
   @Override

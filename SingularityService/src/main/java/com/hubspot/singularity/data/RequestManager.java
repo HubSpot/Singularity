@@ -79,24 +79,30 @@ public class RequestManager extends CuratorManager {
   public void addToPendingQueue(String requestName) {
     create(getPendingPath(requestName));
   }
+  
+  public enum PersistResult {
+    CREATED, UPDATED;
+  }
 
-  public void persistRequest(SingularityRequest request) {
+  public PersistResult persistRequest(SingularityRequest request) {
     try {
-      persistRequestPrivate(request);
+      return persistRequestPrivate(request);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
 
-  private void persistRequestPrivate(SingularityRequest request) throws Exception {
+  private PersistResult persistRequestPrivate(SingularityRequest request) throws Exception {
     Preconditions.checkState(curator.checkExists().forPath(getCleanupPath(request.getName())) == null, "A cleanup request exists for %s", request.getName());
     
     final String requestPath = getRequestPath(request.getName());
 
     try {
       curator.create().creatingParentsIfNeeded().forPath(requestPath, request.getRequestData(objectMapper));
+      return PersistResult.CREATED;
     } catch (NodeExistsException nee) {
       curator.setData().forPath(requestPath, request.getRequestData(objectMapper));
+      return PersistResult.UPDATED;
     }
   }
   

@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.mesos.Resources;
 
@@ -61,7 +62,7 @@ public class SingularityRequest {
     return rackSensitive;
   }
 
-  public byte[] getRequestData(ObjectMapper objectMapper) throws Exception {
+  public byte[] getRequestData(ObjectMapper objectMapper) throws JsonProcessingException {
     return objectMapper.writeValueAsBytes(this);
   }
 

@@ -15,6 +15,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.RequestManager.PersistResult;
+import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.SingularityRequestValidator;
 
 @Path("/request")
@@ -22,10 +24,12 @@ import com.hubspot.singularity.data.SingularityRequestValidator;
 public class RequestResource {
 
   private final RequestManager requestManager;
+  private final HistoryManager historyManager;
   
   @Inject
-  public RequestResource(RequestManager requestManager) {
+  public RequestResource(RequestManager requestManager, HistoryManager historyManager) {
     this.requestManager = requestManager;
+    this.historyManager = historyManager;
   }
 
   @POST
@@ -33,11 +37,17 @@ public class RequestResource {
   public SingularityRequest submit(SingularityRequest request) {
     SingularityRequestValidator validator = new SingularityRequestValidator(request);
     request = validator.buildValidRequest();
-    
-    requestManager.persistRequest(request);
   
+    PersistResult result = requestManager.persistRequest(request);
+    
     requestManager.addToPendingQueue(request.getName());
   
+    if (result == PersistResult.CREATED) {
+      historyManager.saveRequestHistory(request);
+    } else {
+      historyManager.saveRequestHistoryUpdate(request);
+    }
+    
     return request;
   }
 

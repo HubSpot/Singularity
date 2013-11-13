@@ -47,12 +47,18 @@ public class SingularityModule extends AbstractModule {
     bind(SingularityManaged.class).in(Scopes.SINGLETON);
   }
 
-  @Provides
-  @Singleton
-  public ObjectMapper getObjectMapper() {
+  private static ObjectMapper createObjectMapper() {
     return Jackson.newObjectMapper()
         .setSerializationInclusion(Include.NON_NULL)
         .registerModule(new ProtobufModule());
+  }
+  
+  public static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
+  
+  @Provides
+  @Singleton
+  public ObjectMapper getObjectMapper() {
+    return OBJECT_MAPPER;
   }
   
   @Provides
