@@ -11,37 +11,33 @@ class RequestsView extends View
         @$el.html @template context
 
         @setupEvents()
-        # @setUpSearchEvents()
+        @setUpSearchEvents()
 
     setupEvents: ->
         @$el.find('.view-json').unbind('click').click (event) ->
             utils.viewJSON (app.collections.requests.get $(event.target).data 'request-id').toJSON()
 
-    # setUpSearchEvents: =>
-    #     @$search = @$el.find('input[type="search"]').focus()
-    #
-    #     lastText = _.trim @$search.val()
+    setUpSearchEvents: =>
+        $search = @$el.find('input[type="search"]').focus()
+        $rows = @$el.find('tbody > tr')
 
-    #     @$search.on 'change keypress paste focus textInput input click keydown', =>
-    #         text = _.trim @$search.val()
+        lastText = _.trim $search.val()
 
-    #         if text is ''
-    #             @$projects.find('.project').removeClass('filtered')
+        $search.on 'change keypress paste focus textInput input click keydown', =>
+            text = _.trim $search.val()
 
-    #         if text isnt lastText
-    #             @$projects.find('.project').each ->
-    #                 $project = $(@)
+            if text is ''
+                $rows.removeClass('filtered')
 
-    #                 if not _.string.contains $project.data('project').toLowerCase(), text.toLowerCase()
-    #                     $project.addClass('filtered')
+            if text isnt lastText
+                $rows.each ->
+                    $row = $(@)
 
-    #                     if $project.hasClass('opened-from-search opened')
-    #                         $project.removeClass('opened-from-search opened')
-    #                 else
-    #                     $project.removeClass('filtered')
+                    log $row.data('request-id').toLowerCase(), text.toLowerCase()
 
-    #             $notFiltered = @$projects.find('.project:not(".filtered")')
-    #             if $notFiltered.length is 1 and not $notFiltered.hasClass('opened')
-    #                 $notFiltered.addClass('opened-from-search').click()
+                    if not _.string.contains $row.data('request-id').toLowerCase(), text.toLowerCase()
+                        $row.addClass('filtered')
+                    else
+                        $row.removeClass('filtered')
 
 module.exports = RequestsView

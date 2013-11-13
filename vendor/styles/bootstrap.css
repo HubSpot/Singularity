@@ -772,7 +772,6 @@ input[type="week"],
 input[type="number"],
 input[type="email"],
 input[type="url"],
-input[type="search"],
 input[type="tel"],
 input[type="color"],
 .uneditable-input {
@@ -806,7 +805,6 @@ input[type="week"],
 input[type="number"],
 input[type="email"],
 input[type="url"],
-input[type="search"],
 input[type="tel"],
 input[type="color"],
 .uneditable-input {
@@ -837,7 +835,6 @@ input[type="week"]:focus,
 input[type="number"]:focus,
 input[type="email"]:focus,
 input[type="url"]:focus,
-input[type="search"]:focus,
 input[type="tel"]:focus,
 input[type="color"]:focus,
 .uneditable-input:focus {
@@ -1174,14 +1171,14 @@ input[type="checkbox"][readonly] {
   border-color: #468847;
 }
 
-input:focus:required:invalid,
+input[type="text"]:focus:required:invalid,
 textarea:focus:required:invalid,
 select:focus:required:invalid {
   color: #b94a48;
   border-color: #ee5f5b;
 }
 
-input:focus:required:invalid:focus,
+input[type="text"]:focus:required:invalid:focus,
 textarea:focus:required:invalid:focus,
 select:focus:required:invalid:focus {
   border-color: #e9322d;
