@@ -1,6 +1,8 @@
 DashboardView = require 'views/dashboard'
 RequestsView = require 'views/requests'
+RequestView = require 'views/request'
 TasksView = require 'views/tasks'
+TaskView = require 'views/task'
 PageNotFoundView = require 'views/page_not_found'
 NavigationView = require 'views/navigation'
 
@@ -14,7 +16,9 @@ class Router extends Backbone.Router
     routes:
         '(/)': 'dashboard'
         'requests(/)': 'requests'
+        'request/:requestId': 'request'
         'tasks(/)': 'tasks'
+        'task/:taskId': 'task'
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
@@ -31,12 +35,28 @@ class Router extends Backbone.Router
         app.views.current = app.views.requests
         app.views.requests.render()
 
+    request: (requestId) ->
+        nav()
+        app.views.requestViews = {} if not app.views.requestViews
+        if not app.views.requestViews[requestId]
+            app.views.requestViews[requestId] = new RequestView requestId: requestId
+        app.views.current = app.views.requestViews[requestId]
+        app.views.requestViews[requestId].render()
+
     tasks: ->
         nav()
         if not app.views.tasks?
             app.views.tasks = new TasksView
         app.views.current = app.views.tasks
         app.views.tasks.render()
+
+    task: (taskId) ->
+        nav()
+        app.views.taskViews = {} if not app.views.taskViews
+        if not app.views.taskViews[taskId]
+            app.views.taskViews[taskId] = new TaskView taskId: taskId
+        app.views.current = app.views.taskViews[taskId]
+        app.views.taskViews[taskId].render()
 
     templateFromURLFragment: ->
         nav()

@@ -14,6 +14,7 @@ class Requests extends Collection
             request.id = request.name
             request.label = @parseLabelFromName request.name
             request.deployUser = @parseDeployUser request
+            request.JSONString = utils.stringJSON request
             requests[i] = request
 
         requests

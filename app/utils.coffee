@@ -3,11 +3,14 @@ class Utils
     getHTMLTitleFromHistoryFragment: (fragment) ->
         _.capitalize(fragment.split('\/').join(' '))
 
+    stringJSON: (object) ->
+        JSON.stringify object, null, '    '
+
     viewJSON: (object) ->
         vex.dialog.alert
             contentCSS:
                 width: 800
-            message: "<pre>#{ JSON.stringify object, null, '    ' }</pre>"
+            message: "<pre>#{ utils.stringJSON object }</pre>"
 
     getAcrossCollections: (collections, id) ->
         model = undefined

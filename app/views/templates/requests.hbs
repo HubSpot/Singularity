@@ -24,7 +24,7 @@
                 <tbody>
                     {{#eachWithFn requests}}
                         <tr data-request-id="{{ id }}">
-                            <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ name }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
+                            <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ name }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                             <td><span>{{ deployUser }}</span></td>
                             <td><span>{{ instances }}</span></td>
                             <td><span>{{ daemon }}</span></td>
