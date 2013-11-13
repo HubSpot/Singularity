@@ -1,0 +1,10 @@
+module.exports =
+    env: 'prod'
+    API_BASE: 'api.hubapi.com'
+    APP_BASE: 'app.hubspot.com'
+    LOGIN_BASE: 'login.hubspot.com'
+    NAV_BASE: 'nav.hubapi.com'
+    STATIC_BASE: 'static.hubspot.com'
+    INTERNAL_BASE: 'internal.hubapi.com'
+    SINGULARITY_BASE: 'heliograph.iad01.hubspot-networks.net:7000'
+    LOGIN_PORTAL: 271246

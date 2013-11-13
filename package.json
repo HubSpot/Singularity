@@ -1,0 +1,33 @@
+{
+    "author": "Adam Schwartz",
+    "name": "SingularityUI",
+    "description": "UI for Singularity deploy API",
+    "version": "0.0.1",
+    "homepage": "",
+    "repository": {
+        "type": "git",
+        "url": "git@git.hubteam.com:HubSpot/r3.git"
+    },
+    "engines": {
+        "node": "~0.6.10"
+    },
+    "scripts": {
+        "start": "brunch watch --server"
+    },
+    "dependencies": {
+        "javascript-brunch": ">= 1.0 < 1.8",
+        "coffee-script-brunch": ">= 1.0 < 1.8",
+
+        "css-brunch": ">= 1.0 < 1.8",
+        "stylus-brunch": ">= 1.0 < 1.8",
+
+        "handlebars-brunch": ">= 1.0 < 1.8",
+
+        "uglify-js-brunch": ">= 1.0 < 1.8",
+        "clean-css-brunch": ">= 1.0 < 1.8"
+    },
+    "devDependencies": {
+        "mocha": "0.14.0",
+        "expect.js": "0.1.2"
+    }
+}

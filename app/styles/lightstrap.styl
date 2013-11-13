@@ -1,0 +1,61 @@
+html.lightstrap
+
+    .navbar-fixed-top .brand
+        color #888
+        text-shadow none
+
+    .navbar-inner
+        background-color #eee
+        background-image none
+        box-shadow none
+
+    .navbar
+
+        .nav
+
+            > li > a
+                text-shadow none
+
+                &:hover
+                    color #666
+
+            > li.active
+
+                > a, > a:hover
+                    color #555
+                    text-decoration none
+                    background-color #e0e0e0
+                    box-shadow none
+
+            .divider-vertical
+                border-right 1px solid #ccc
+
+            li.dropdown .dropdown-toggle .caret, li.dropdown.open .caret
+                border-top-color #666
+                border-bottom-color #666
+
+            li.dropdown.active > .dropdown-toggle:hover
+                color #666
+
+        .btn-navbar
+            background-color #f0f0f0
+            background-image none
+            border-color #e3e3e3 #e3e3e3 #f4f4f4
+            box-shadow none
+
+            &:active
+                border-color #cfcfcf
+                box-shadow none
+
+            .icon-bar
+                background-color #ccc
+                box-shadow none
+
+    @media (max-width: 979px)
+
+        .nav-collapse .nav > li > a:hover, .nav-collapse .dropdown-menu a:hover
+            background-color rgba(0, 0, 0, 0.02)
+            box-shadow none
+
+        .dropdown-menu li > a:hover, .dropdown-menu .active > a, .dropdown-menu .active > a:hover
+            color #666

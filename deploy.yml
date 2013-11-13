@@ -1,0 +1,13 @@
+name: SingularityUI
+type: brunch
+appRoot: singularity
+buildName: SingularityUI
+
+loadBalancer: tools
+
+servers:
+  qa: ['hubspot.com-brunch-qa.s3-website-us-east-1.amazonaws.com']
+  prod: ['hubspot.com-brunch-prod.s3-website-us-east-1.amazonaws.com']
+
+owners:
+  - aschwartz@hubspot.com

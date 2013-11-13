@@ -1,0 +1,40 @@
+<header class="jumbotron subhead" id="overview">
+    <h1>Requests</h1>
+</header>
+
+<section>
+    <div class="page-header">
+        <h1>Status Overview</h1>
+    </div>
+    <!--
+    <div class="row-fluid">
+        <input type="search" placeholder="Search requests and tasks..." required />
+    </div>
+    -->
+    <div class="row-fluid">
+        <div class="span12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Deploy User</th>
+                        <th>Instances</th>
+                        <th>Daemon</th>
+                        <th>JSON</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn requests}}
+                        <tr data-request-id="{{ id }}">
+                            <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ name }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
+                            <td><span>{{ deployUser }}</span></td>
+                            <td><span>{{ instances }}</span></td>
+                            <td><span>{{ daemon }}</span></td>
+                            <td><span><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

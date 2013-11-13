@@ -1,0 +1,5 @@
+TODO
+
+- API cleanup for @wsorenson and @tpetr
+    - `/request` => `/requests`
+    - `requestName` => `requestID`/`requestGUID`?
