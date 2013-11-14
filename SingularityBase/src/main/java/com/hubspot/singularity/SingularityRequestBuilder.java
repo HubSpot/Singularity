@@ -7,8 +7,13 @@ import com.hubspot.mesos.Resources;
 
 public class SingularityRequestBuilder {
 
-  private String name;
+  private String id;
 
+  private String name;
+  private String version;
+  private Long timestamp;
+  private Map<String, String> metadata;
+  
   private String executor;
   private Resources resources;
 
@@ -24,9 +29,45 @@ public class SingularityRequestBuilder {
   private Object executorData;
 
   public SingularityRequest build() {
-    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, executorData, rackSensitive);
+    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp);
   }
   
+  public String getId() {
+    return id;
+  }
+
+  public SingularityRequestBuilder setId(String id) {
+    this.id = id;
+    return this;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public SingularityRequestBuilder setVersion(String version) {
+    this.version = version;
+    return this;
+  }
+
+  public Long getTimestamp() {
+    return timestamp;
+  }
+
+  public SingularityRequestBuilder setTimestamp(Long timestamp) {
+    this.timestamp = timestamp;
+    return this;
+  }
+
+  public Map<String, String> getMetadata() {
+    return metadata;
+  }
+
+  public SingularityRequestBuilder setMetadata(Map<String, String> metadata) {
+    this.metadata = metadata;
+    return this;
+  }
+
   public String getName() {
     return name;
   }
@@ -128,8 +169,8 @@ public class SingularityRequestBuilder {
 
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [name=" + name + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command="
-        + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
+    return "SingularityRequestBuilder [id=" + id + ", name=" + name + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule
+        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
   }
-
+  
 }

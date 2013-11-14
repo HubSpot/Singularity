@@ -34,7 +34,7 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public void saveTaskHistory(SingularityTask task, String driverStatus) {
     try {
-      history.insertTaskHistory(task.getTaskRequest().getRequest().getName(),
+      history.insertTaskHistory(task.getTaskRequest().getRequest().getId(),
           task.getTaskId().toString(),
           task.getTaskData(objectMapper),
           driverStatus,
@@ -44,29 +44,28 @@ public class JDBIHistoryManager implements HistoryManager {
     }
   }
   
-
   @Override
   public void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user) {
     try {
-      history.insertRequestHistory(request.getName(), request.getRequestData(objectMapper), new Date(), state.name(), user.orNull());
+      history.insertRequestHistory(request.getId(), request.getRequestData(objectMapper), new Date(), state.name(), user.orNull());
     } catch (JsonProcessingException jpe) {
       LOG.warn(String.format("Couldn't insert request history for request %s due to json exception", request), jpe);
     }
   }
   
   @Override
-  public List<SingularityTaskId> getTaskHistoryForRequestLike(String requestNameLike) {
-    return history.getTaskHistoryForRequestLike(requestNameLike);
+  public List<SingularityTaskId> getTaskHistoryForRequestLike(String requestIdLike) {
+    return history.getTaskHistoryForRequestLike(requestIdLike);
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistory(String requestName) {
-    return history.getRequestHistory(requestName);
+  public List<SingularityRequestHistory> getRequestHistory(String requestId) {
+    return history.getRequestHistory(requestId);
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistoryLike(String requestNameLike) {
-    return history.getRequestHistoryLike(requestNameLike);
+  public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike) {
+    return history.getRequestHistoryLike(requestIdLike);
   }
 
   @Override
@@ -79,8 +78,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskId> getTaskHistoryForRequest(String requestName) {
-    return history.getTaskHistoryForRequest(requestName);
+  public List<SingularityTaskId> getTaskHistoryForRequest(String requestId) {
+    return history.getTaskHistoryForRequest(requestId);
   }
 
   @Override

@@ -21,7 +21,7 @@ import com.hubspot.singularity.data.SingularityRequestValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
 
-@Path("/request")
+@Path("/requests")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource {
 
@@ -42,7 +42,7 @@ public class RequestResource {
   
     PersistResult result = requestManager.persistRequest(request);
     
-    requestManager.addToPendingQueue(request.getName());
+    requestManager.addToPendingQueue(request.getId());
   
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
     
@@ -57,19 +57,19 @@ public class RequestResource {
   @GET
   @Path("/queued/pending")
   public List<String> getPendingRequests() {
-    return requestManager.getPendingRequestNames();
+    return requestManager.getPendingrequestIds();
   }
   
   @GET
   @Path("/queued/cleanup")
   public List<String> getCleanupRequests() {
-    return requestManager.getCleanupRequestNames();
+    return requestManager.getCleanuprequestIds();
   }
   
   @DELETE
-  @Path("/{requestName}")
-  public Optional<SingularityRequest> getHistoryForTask(@PathParam("requestName") String requestName, @QueryParam("user") Optional<String> user) {
-    Optional<SingularityRequest> request = requestManager.deleteRequest(requestName);
+  @Path("/{requestId}")
+  public Optional<SingularityRequest> getHistoryForTask(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
+    Optional<SingularityRequest> request = requestManager.deleteRequest(requestId);
   
     if (request.isPresent()) {
       historyManager.saveRequestHistoryUpdate(request.get(), RequestState.DELETED, user);

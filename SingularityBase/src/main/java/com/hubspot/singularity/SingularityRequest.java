@@ -12,7 +12,12 @@ import com.hubspot.mesos.Resources;
 
 public class SingularityRequest {
 
+  private final String id;
+
   private final String name;
+  private final String version;
+  private final Long timestamp;
+  private final Map<String, String> metadata;
 
   private final String executor;
   private final Resources resources;
@@ -30,8 +35,8 @@ public class SingularityRequest {
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("command") String command, @JsonProperty("name") String name, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources, @JsonProperty("schedule") String schedule,
-      @JsonProperty("instances") Integer instances, @JsonProperty("daemon") Boolean daemon, @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris,
-      @JsonProperty("executorData") Object executorData, @JsonProperty("rackSensitive") Boolean rackSensitive) {
+      @JsonProperty("instances") Integer instances, @JsonProperty("daemon") Boolean daemon, @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris, @JsonProperty("metadata") Map<String, String> metadata,
+      @JsonProperty("executorData") Object executorData, @JsonProperty("rackSensitive") Boolean rackSensitive, @JsonProperty("id") String id, @JsonProperty("version") String version, @JsonProperty("timestamp") Long timestamp) {
     this.command = command;
     this.name = name;
     this.resources = resources;
@@ -40,10 +45,30 @@ public class SingularityRequest {
     this.daemon = daemon;
     this.instances = instances;
     this.rackSensitive = rackSensitive;
-    
+
+    this.metadata = metadata;
+    this.version = version;
+    this.id = id;
+    this.timestamp = timestamp;
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public Long getTimestamp() {
+    return timestamp;
+  }
+
+  public Map<String, String> getMetadata() {
+    return metadata;
   }
 
   public Map<String, String> getEnv() {
@@ -57,7 +82,7 @@ public class SingularityRequest {
   public Object getExecutorData() {
     return executorData;
   }
-  
+
   public Boolean getRackSensitive() {
     return rackSensitive;
   }
@@ -82,7 +107,7 @@ public class SingularityRequest {
   public boolean isRackSensitive() {
     return (rackSensitive != null && rackSensitive.booleanValue());
   }
-  
+
   @JsonIgnore
   public boolean alwaysRunning() {
     return (daemon == null || daemon.booleanValue()) && !isScheduled();
@@ -115,8 +140,9 @@ public class SingularityRequest {
 
   @Override
   public String toString() {
-    return "SingularityRequest [name=" + name + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command="
-        + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
+    return "SingularityRequest [id=" + id + ", name=" + name + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule
+        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
   }
-  
+
+
 }

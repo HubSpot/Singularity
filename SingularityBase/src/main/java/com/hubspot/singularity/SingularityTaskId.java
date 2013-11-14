@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,23 +10,23 @@ import com.google.common.collect.Lists;
 
 public class SingularityTaskId {
 
-  private final String name;
+  private final String requestId;
   private final long startedAt;
   private final int instanceNo;
   private final String rackId;
 
   @JsonCreator
-  public SingularityTaskId(@JsonProperty("name") String name, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("rackId") String rackId) {
-    this.name = name;
+  public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("rackId") String rackId) {
+    this.requestId = requestId;
     this.startedAt = startedAt;
     this.instanceNo = instanceNo;
     this.rackId = rackId;
   }
   
-  public static List<SingularityTaskId> filter(List<SingularityTaskId> taskIds, String name) {
+  public static List<SingularityTaskId> filter(List<SingularityTaskId> taskIds, String requestId) {
     List<SingularityTaskId> matching = Lists.newArrayList();
     for (SingularityTaskId taskId : taskIds) {
-      if (taskId.getName().equals(name)) {
+      if (taskId.getRequestId().equals(requestId)) {
         matching.add(taskId);
       }
     }
@@ -41,8 +42,8 @@ public class SingularityTaskId {
     return rackId.replace("-", "");
   }
 
-  public String getName() {
-    return name;
+  public String getRequestId() {
+    return requestId;
   }
 
   public long getStartedAt() {
@@ -54,7 +55,7 @@ public class SingularityTaskId {
   }
   
   public boolean matches(SingularityPendingTaskId pendingTaskId) {
-    return getName().equals(pendingTaskId.getName());
+    return getRequestId().equals(pendingTaskId.getRequestId());
   }
   
   public static SingularityTaskId fromString(String string) {
@@ -64,29 +65,23 @@ public class SingularityTaskId {
     final int instanceNo = Integer.parseInt(splits[splits.length - 2]);
     final long startedAt = Long.parseLong(splits[splits.length - 3]);
     
-    StringBuilder nameBldr = new StringBuilder();
+    StringBuilder requestIdBldr = new StringBuilder();
     
     for (int s = 0; s < splits.length - 3; s++) {
-      nameBldr.append(splits[s]);
+      requestIdBldr.append(splits[s]);
       if (s < splits.length - 4) {
-        nameBldr.append("-");
+        requestIdBldr.append("-");
       }
     }
      
-    final String name = nameBldr.toString();
+    final String requestId = requestIdBldr.toString();
     
-    return new SingularityTaskId(name, startedAt, instanceNo, rackId);
+    return new SingularityTaskId(requestId, startedAt, instanceNo, rackId);
   }
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + instanceNo;
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
-    result = prime * result + ((rackId == null) ? 0 : rackId.hashCode());
-    result = prime * result + (int) (startedAt ^ (startedAt >>> 32));
-    return result;
+    return Objects.hash(instanceNo, requestId, rackId, startedAt);
   }
 
   @Override
@@ -100,10 +95,10 @@ public class SingularityTaskId {
     SingularityTaskId other = (SingularityTaskId) obj;
     if (instanceNo != other.instanceNo)
       return false;
-    if (name == null) {
-      if (other.name != null)
+    if (requestId == null) {
+      if (other.requestId != null)
         return false;
-    } else if (!name.equals(other.name))
+    } else if (!requestId.equals(other.requestId))
       return false;
     if (rackId == null) {
       if (other.rackId != null)
@@ -116,7 +111,7 @@ public class SingularityTaskId {
   }
 
   public String toString() {
-    return String.format("%s-%s-%s-%s", getName(), getStartedAt(), getInstanceNo(), getSafeRackId());
+    return String.format("%s-%s-%s-%s", getRequestId(), getStartedAt(), getInstanceNo(), getSafeRackId());
   }
   
 }

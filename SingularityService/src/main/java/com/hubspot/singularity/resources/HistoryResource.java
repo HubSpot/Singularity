@@ -33,27 +33,27 @@ public class HistoryResource {
   }
   
   @GET
-  @Path("/request/tasks/{requestName}")
-  public List<SingularityTaskId> getTaskHistoryForRequest(@PathParam("requestName") String requestName) {
-    return historyManager.getTaskHistoryForRequest(requestName);
+  @Path("/request/{requestId}/tasks")
+  public List<SingularityTaskId> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
+    return historyManager.getTaskHistoryForRequest(requestId);
   }
   
   @GET
-  @Path("/request/tasks/search")
-  public List<SingularityTaskId> getTaskHistoryForRequestLike(@QueryParam("requestNameLike") String requestNameLike) {
-    return historyManager.getTaskHistoryForRequestLike(requestNameLike);
+  @Path("/tasks/search")
+  public List<SingularityTaskId> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike) {
+    return historyManager.getTaskHistoryForRequestLike(requestIdLike);
   }
   
   @GET
-  @Path("/request/requests/{requestName}")
-  public List<SingularityRequestHistory> getRequestHistoryForRequest(@PathParam("requestName") String requestName) {
-    return historyManager.getRequestHistory(requestName);
+  @Path("/request/{requestId}/requests")
+  public List<SingularityRequestHistory> getRequestHistoryForRequest(@PathParam("requestId") String requestId) {
+    return historyManager.getRequestHistory(requestId);
   }
   
   @GET
-  @Path("/request/requests/search")
-  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestNameLike") String requestNameLike) {
-    return historyManager.getRequestHistoryLike(requestNameLike);
+  @Path("/requests/search")
+  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike) {
+    return historyManager.getRequestHistoryLike(requestIdLike);
   }
   
 }

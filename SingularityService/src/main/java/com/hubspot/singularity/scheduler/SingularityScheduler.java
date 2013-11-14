@@ -40,7 +40,7 @@ public class SingularityScheduler {
   public void drainCleanupQueue() {
     final long start = System.currentTimeMillis();
 
-    final List<String> cleanupRequests = requestManager.getCleanupRequestNames();
+    final List<String> cleanupRequests = requestManager.getCleanuprequestIds();
     
     LOG.info(String.format("Cleanup queue had %s requests", cleanupRequests.size()));
     
@@ -54,26 +54,24 @@ public class SingularityScheduler {
     int numTasksKilled = 0;
     int numScheduledTasksRemoved = 0;
     
-    for (String requestName : cleanupRequests) {
-      if (!requestManager.fetchRequest(requestName).isPresent()) {
+    for (String requestId : cleanupRequests) {
+      if (!requestManager.fetchRequest(requestId).isPresent()) {
         
-        for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestName)) {
+        for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestId)) {
           driverManager.kill(matchingTaskId.toString());
           numTasksKilled++;
         }
      
-        for (SingularityPendingTaskId pendingTaskId : pendingTaskIds) {
-          if (pendingTaskId.getName().equals(requestName)) {
-            taskManager.deleteScheduledTask(pendingTaskId.toString());
-            numScheduledTasksRemoved++;
-          }
+        for (SingularityPendingTaskId matchingTaskId : SingularityPendingTaskId.filter(pendingTaskIds, requestId)) {
+          taskManager.deleteScheduledTask(matchingTaskId.toString());
+          numScheduledTasksRemoved++;
         }
         
       } else {
-        LOG.info(String.format("Not cleaning %s, it existed", requestName));
+        LOG.info(String.format("Not cleaning %s, it existed", requestId));
       }
      
-      requestManager.deleteCleanRequest(requestName);
+      requestManager.deleteCleanRequest(requestId);
     }
     
     
@@ -83,7 +81,7 @@ public class SingularityScheduler {
   public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds) {
     final long start = System.currentTimeMillis();
     
-    final List<String> pendingRequests = requestManager.getPendingRequestNames();
+    final List<String> pendingRequests = requestManager.getPendingrequestIds();
     
     LOG.info(String.format("Pending queue had %s requests", pendingRequests.size()));
     
@@ -131,10 +129,8 @@ public class SingularityScheduler {
   }
 
   public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
-    for (SingularityPendingTaskId taskId : scheduledTaskIds) {
-      if (taskId.getName().equals(request.getName())) {
-        taskManager.deleteScheduledTask(taskId.toString());
-      }
+    for (SingularityPendingTaskId taskId : SingularityPendingTaskId.filter(scheduledTaskIds, request.getId())) {
+      taskManager.deleteScheduledTask(taskId.toString());
     }
     
     final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(activeTaskIds, request);
@@ -147,11 +143,11 @@ public class SingularityScheduler {
   public void scheduleOnCompletion(String stringTaskId) {
     SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
     
-    Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getName());
+    Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
     
     if (!maybeRequest.isPresent()) {
       // TODO what about failures?
-      LOG.warn(String.format("Not scheduling a new task, due to no existing request for %s", taskId.getName()));
+      LOG.warn(String.format("Not scheduling a new task, due to no existing request for %s", taskId.getRequestId()));
       return;
     }
     
@@ -176,7 +172,7 @@ public class SingularityScheduler {
         final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(now);
         nextRunAt = nextRunAtDate.getTime();
         
-        LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (now: %s)", request.getName(), request.getSchedule(), nextRunAtDate, now));
+        LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (now: %s)", request.getId(), request.getSchedule(), nextRunAtDate, now));
       } catch (ParseException pe) {
         throw Throwables.propagate(pe);
       }
@@ -184,7 +180,7 @@ public class SingularityScheduler {
   
     int highestInstanceNo = 0;
     
-    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.filter(activeTaskIds, request.getName());
+    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.filter(activeTaskIds, request.getId());
     
     final int numMissingInstances = numInstances - matchingTaskIds.size();
     
@@ -205,7 +201,7 @@ public class SingularityScheduler {
     final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
     
     for (int i = 0; i < numMissingInstances; i++) {
-      newTaskIds.add(new SingularityPendingTaskId(request.getName(), nextRunAt, i + 1 + highestInstanceNo));
+      newTaskIds.add(new SingularityPendingTaskId(request.getId(), nextRunAt, i + 1 + highestInstanceNo));
     }
     
     return newTaskIds;

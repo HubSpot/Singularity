@@ -108,10 +108,10 @@ public class SingularityStartup {
   }
   
   private void rescheduleTheWorld() {
-    final List<String> requests = requestManager.getRequestNames();
+    final List<String> requests = requestManager.getrequestIds();
     
-    for (String requestName : requests) {
-      requestManager.addToPendingQueue(requestName);
+    for (String requestId : requests) {
+      requestManager.addToPendingQueue(requestId);
     }
     
     LOG.info(String.format("Put %s requests in pending queue", requests.size()));

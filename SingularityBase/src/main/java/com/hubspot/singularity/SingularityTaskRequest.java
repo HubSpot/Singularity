@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,10 +32,7 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((pendingTaskId == null) ? 0 : pendingTaskId.hashCode());
-    return result;
+    return Objects.hash(pendingTaskId);
   }
 
   @Override

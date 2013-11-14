@@ -14,7 +14,7 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
-@Path("/task")
+@Path("/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class TaskResource {
   

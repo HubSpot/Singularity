@@ -29,6 +29,22 @@ public class SingularityRequestHistory {
     this.request = request;
   }
 
+  public long getCreatedAt() {
+    return createdAt;
+  }
+
+  public Optional<String> getUser() {
+    return user;
+  }
+
+  public String getState() {
+    return state.name();
+  }
+  
+  public SingularityRequest getRequest() {
+    return request;
+  }
+
   public static class SingularityRequestHistoryMapper implements ResultSetMapper<SingularityRequestHistory> {
     
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {

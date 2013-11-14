@@ -21,7 +21,7 @@ public class SingularityRequestValidator {
   }
   
   public SingularityRequest buildValidRequest()  {
-    Preconditions.checkState(request.getName() != null, "Name must not be null");
+    Preconditions.checkState(request.getId() != null, "Id must not be null");
     Preconditions.checkState(request.getInstances() == null || request.getInstances() > 0, "Instances must be greater than 0");
     Preconditions.checkState(request.getSchedule() == null || ((request.getInstances() == null || request.getInstances() == 1) && (request.getDaemon() == null || !request.getDaemon())), "Scheduled requests can not be ran on more than one instance, and must not be daemons");
     Preconditions.checkState((request.getDaemon() == null || request.getDaemon()) || (request.getInstances() == null || request.getInstances() == 1), "Non-daemons can not be ran on more than one instance");
@@ -36,7 +36,7 @@ public class SingularityRequestValidator {
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
         
     return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, request.getInstances(), request.getDaemon(), request.getEnv(), 
-        request.getUris(), request.getExecutorData(), request.getRackSensitive());
+        request.getUris(), request.getMetadata(),  request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp());
   }
   
   /**

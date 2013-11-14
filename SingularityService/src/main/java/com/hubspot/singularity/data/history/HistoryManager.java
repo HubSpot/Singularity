@@ -16,14 +16,14 @@ public interface HistoryManager {
   
   void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message);
   
-  List<SingularityTaskId> getTaskHistoryForRequest(String requestName);
+  List<SingularityTaskId> getTaskHistoryForRequest(String requestId);
   
-  List<SingularityTaskId> getTaskHistoryForRequestLike(String requestNameLike);
+  List<SingularityTaskId> getTaskHistoryForRequestLike(String requestIdLike);
   
   SingularityTaskHistory getTaskHistory(String taskId);
  
-  List<SingularityRequestHistory> getRequestHistory(String requestName);
+  List<SingularityRequestHistory> getRequestHistory(String requestId);
   
-  List<SingularityRequestHistory> getRequestHistoryLike(String requestNameLike);
+  List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike);
   
 }

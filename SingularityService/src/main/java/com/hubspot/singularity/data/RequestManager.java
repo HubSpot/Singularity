@@ -64,20 +64,20 @@ public class RequestManager extends CuratorManager {
     return getNumChildren(REQUEST_PATH_ROOT);
   }
   
-  public void deletePendingRequest(String requestName) {
-    delete(getPendingPath(requestName));
+  public void deletePendingRequest(String requestId) {
+    delete(getPendingPath(requestId));
   }
   
-  public void deleteCleanRequest(String requestName) {
-    delete(getCleanupPath(requestName));
+  public void deleteCleanRequest(String requestId) {
+    delete(getCleanupPath(requestId));
   }
  
-  public void addToCleanupQueue(String requestName) {
-    create(getCleanupPath(requestName));
+  public void addToCleanupQueue(String requestId) {
+    create(getCleanupPath(requestId));
   }
   
-  public void addToPendingQueue(String requestName) {
-    create(getPendingPath(requestName));
+  public void addToPendingQueue(String requestId) {
+    create(getPendingPath(requestId));
   }
   
   public enum PersistResult {
@@ -93,9 +93,9 @@ public class RequestManager extends CuratorManager {
   }
 
   private PersistResult persistRequestPrivate(SingularityRequest request) throws Exception {
-    Preconditions.checkState(curator.checkExists().forPath(getCleanupPath(request.getName())) == null, "A cleanup request exists for %s", request.getName());
+    Preconditions.checkState(curator.checkExists().forPath(getCleanupPath(request.getId())) == null, "A cleanup request exists for %s", request.getId());
     
-    final String requestPath = getRequestPath(request.getName());
+    final String requestPath = getRequestPath(request.getId());
 
     try {
       curator.create().creatingParentsIfNeeded().forPath(requestPath, request.getRequestData(objectMapper));
@@ -106,15 +106,15 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public List<String> getRequestNames() {
+  public List<String> getrequestIds() {
     return getChildren(REQUEST_PATH_ROOT);
   }
   
-  public List<String> getPendingRequestNames() {
+  public List<String> getPendingrequestIds() {
     return getChildren(PENDING_PATH_ROOT);
   }
   
-  public List<String> getCleanupRequestNames() {
+  public List<String> getCleanuprequestIds() {
     return getChildren(CLEANUP_PATH_ROOT);
   }
   
@@ -122,7 +122,7 @@ public class RequestManager extends CuratorManager {
     final List<SingularityTaskRequest> tasks = Lists.newArrayListWithCapacity(taskIds.size());
     
     for (SingularityPendingTaskId taskId : taskIds) {
-      Optional<SingularityRequest> maybeRequest = fetchRequest(taskId.getName());
+      Optional<SingularityRequest> maybeRequest = fetchRequest(taskId.getRequestId());
       
       if (maybeRequest.isPresent()) {
         tasks.add(new SingularityTaskRequest(maybeRequest.get(), taskId));
@@ -133,25 +133,25 @@ public class RequestManager extends CuratorManager {
   }
   
   public List<SingularityRequest> getKnownRequests() {
-    final List<String> requestNames = getRequestNames();
-    final List<SingularityRequest> requests = Lists.newArrayListWithCapacity(requestNames.size());
+    final List<String> requestIds = getrequestIds();
+    final List<SingularityRequest> requests = Lists.newArrayListWithCapacity(requestIds.size());
     
-    for (String requestName : requestNames) {
-      Optional<SingularityRequest> request = fetchRequest(requestName);
+    for (String requestId : requestIds) {
+      Optional<SingularityRequest> request = fetchRequest(requestId);
       
       if (request.isPresent()) {
         requests.add(request.get());
       } else {
-        LOG.warn(String.format("While fetching requests, expected to find request %s but it was not found", requestName));
+        LOG.warn(String.format("While fetching requests, expected to find request %s but it was not found", requestId));
       }
     }
     
     return requests;
   }
 
-  public Optional<SingularityRequest> fetchRequest(String requestName) {
+  public Optional<SingularityRequest> fetchRequest(String requestId) {
     try {
-      SingularityRequest request = SingularityRequest.getRequestFromData(curator.getData().forPath(ZKPaths.makePath(REQUEST_PATH_ROOT, requestName)), objectMapper);
+      SingularityRequest request = SingularityRequest.getRequestFromData(curator.getData().forPath(ZKPaths.makePath(REQUEST_PATH_ROOT, requestId)), objectMapper);
       return Optional.of(request);
     } catch (NoNodeException nee) {
       return Optional.absent();
@@ -160,16 +160,16 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public Optional<SingularityRequest> deleteRequest(String requestName) {
-    Optional<SingularityRequest> request = fetchRequest(requestName);
+  public Optional<SingularityRequest> deleteRequest(String requestId) {
+    Optional<SingularityRequest> request = fetchRequest(requestId);
     
     if (request.isPresent()) {
       try {
-        addToCleanupQueue(requestName);
+        addToCleanupQueue(requestId);
         
-        curator.delete().forPath(getRequestPath(requestName));
+        curator.delete().forPath(getRequestPath(requestId));
       } catch (NoNodeException nee) {
-        LOG.warn(String.format("Couldn't find request at %s to delete", requestName));
+        LOG.warn(String.format("Couldn't find request at %s to delete", requestId));
       } catch (Throwable t) {
         throw Throwables.propagate(t);
       }

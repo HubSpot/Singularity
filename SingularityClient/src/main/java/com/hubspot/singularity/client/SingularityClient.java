@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityRequest;
@@ -19,8 +20,9 @@ public class SingularityClient {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
   
-  private static final String REQUEST_FORMAT = "http://%s/singularity/v1/request";
+  private static final String REQUEST_FORMAT = "http://%s/singularity/v1/requests";
   private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/%s";
+  private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
   private static final String CONTENT_TYPE_JSON = "application/json";
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
@@ -56,10 +58,10 @@ public class SingularityClient {
     }
   }
   
-  public void deploy(SingularityRequest request) {
-    final String requestUri = String.format(REQUEST_FORMAT, getHost());
+  public void deploy(SingularityRequest request, Optional<String> user) {
+    final String requestUri = finishUri(String.format(REQUEST_FORMAT, getHost()), user);
     
-    LOG.info(String.format("Deploying %s to (%s)", request.getName(), requestUri));
+    LOG.info(String.format("Deploying %s to (%s)", request.getId(), requestUri));
   
     final long start = System.currentTimeMillis();
     
@@ -67,7 +69,7 @@ public class SingularityClient {
     
     checkResponse("deploy", response);
     
-    LOG.info(String.format("Successfully deployed %s to Singularity in %sms", request.getName(), System.currentTimeMillis() - start));
+    LOG.info(String.format("Successfully deployed %s to Singularity in %sms", request.getId(), System.currentTimeMillis() - start));
   }
   
   private void checkResponse(String type, Response response) {
@@ -108,8 +110,16 @@ public class SingularityClient {
     }
   }
   
-  public void remove(String name) {
-    final String requestUri = String.format(REQUEST_UNDEPLOY_FORMAT, getHost(), name);
+  private String finishUri(String uri, Optional<String> user) {
+    if (!user.isPresent()) {
+      return uri;
+    }
+    
+    return String.format(REQUEST_ADD_USER_FORMAT, uri, user.get());
+  }
+  
+  public void remove(String name, Optional<String> user) {
+    final String requestUri = finishUri(String.format(REQUEST_UNDEPLOY_FORMAT, getHost(), name), user);
 
     LOG.info(String.format("Removing %s - (%s)", name, requestUri));
   

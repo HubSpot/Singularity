@@ -16,11 +16,11 @@ import com.hubspot.singularity.data.history.SingularityTaskHistoryUpdate.Singula
 
 public interface HistoryJDBI {
 
-  @SqlUpdate("INSERT INTO requestHistory (requestName, request, createdAt, requestState, user) VALUES (:requestName, :request, :createdAt, :requestState, :user)")
-  void insertRequestHistory(@Bind("requestName") String requestName, @Bind("request") byte[] request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState, @Bind("user") String user);
+  @SqlUpdate("INSERT INTO requestHistory (requestId, request, createdAt, requestState, user) VALUES (:requestId, :request, :createdAt, :requestState, :user)")
+  void insertRequestHistory(@Bind("requestId") String requestId, @Bind("request") byte[] request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState, @Bind("user") String user);
   
-  @SqlUpdate("INSERT INTO taskHistory (requestName, taskId, task, status, createdAt) VALUES (:requestName, :taskId, :task, :status, :createdAt)")
-  void insertTaskHistory(@Bind("requestName") String requestName, @Bind("taskId") String taskId, @Bind("task") byte[] task, @Bind("status") String status, @Bind("createdAt") Date createdAt);
+  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, task, status, createdAt) VALUES (:requestId, :taskId, :task, :status, :createdAt)")
+  void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("task") byte[] task, @Bind("status") String status, @Bind("createdAt") Date createdAt);
 
   @SqlUpdate("INSERT INTO taskUpdates (taskId, status, message, createdAt) VALUES (:taskId, :status, :message, :createdAt)")
   void insertTaskUpdate(@Bind("taskId") String taskId, @Bind("status") String status, @Bind("message") String message, @Bind("createdAt") Date createdAt);
@@ -34,20 +34,20 @@ public interface HistoryJDBI {
   SingularityTaskHistoryHelper getTaskHistoryForTask(@Bind("taskId") String taskId);
   
   @Mapper(SingularityTaskIdMapper.class)
-  @SqlQuery("SELECT taskId FROM taskHistory WHERE requestName = :requestName")
-  List<SingularityTaskId> getTaskHistoryForRequest(@Bind("requestName") String requestName);
+  @SqlQuery("SELECT taskId FROM taskHistory WHERE requestId = :requestId")
+  List<SingularityTaskId> getTaskHistoryForRequest(@Bind("requestId") String requestId);
   
   @Mapper(SingularityTaskIdMapper.class)
-  @SqlQuery("SELECT taskId FROM taskHistory WHERE requestName LIKE CONCAT('%', CONCAT(:requestNameLike, '%'))")
-  List<SingularityTaskId> getTaskHistoryForRequestLike(@Bind("requestNameLike") String requestNameLike);
+  @SqlQuery("SELECT taskId FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%'))")
+  List<SingularityTaskId> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike);
   
   @Mapper(SingularityRequestHistoryMapper.class)
-  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestName = :requestName")
-  List<SingularityRequestHistory> getRequestHistory(@Bind("requestName") String requestName);
+  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId = :requestId")
+  List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId);
   
   @Mapper(SingularityRequestHistoryMapper.class)
-  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestName LIKE CONCAT('%', CONCAT(:requestNameLike, '%'))")
-  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestNameLike") String requestNameLike);
+  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%'))")
+  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike);
   
   void close();
 
