@@ -4,10 +4,11 @@ USE singularity;
 
 CREATE TABLE requestHistory (
   requestName VARCHAR(100) NOT NULL,
-  updatedAt TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
-  createdAt TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
+  createdAt TIMESTAMP NOT NULL,
+  requestState VARCHAR(25) NOT NULL,
+  user VARCHAR(100) NULL,
   request BLOB NOT NULL,
-  PRIMARY KEY (requestName, updatedAt)
+  PRIMARY KEY (requestName, createdAt)
 );
 
 CREATE TABLE taskHistory (

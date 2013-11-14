@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
 
 public class JDBIHistoryManager implements HistoryManager {
 
@@ -42,25 +43,17 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.warn(String.format("Couldn't insert task history for task %s due to json exception", task), jpe);
     }
   }
+  
 
   @Override
-  public void saveRequestHistory(SingularityRequest request) {
+  public void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user) {
     try {
-      history.insertRequestHistory(request.getName(), request.getRequestData(objectMapper), new Date());
+      history.insertRequestHistory(request.getName(), request.getRequestData(objectMapper), new Date(), state.name(), user.orNull());
     } catch (JsonProcessingException jpe) {
       LOG.warn(String.format("Couldn't insert request history for request %s due to json exception", request), jpe);
     }
   }
-
-  @Override
-  public void saveRequestHistoryUpdate(SingularityRequest request) {
-    try {
-      history.updateRequestHistory(request.getName(), request.getRequestData(objectMapper), new Date());
-    } catch (JsonProcessingException jpe) {
-      LOG.warn(String.format("Couldn't insert request history update for request %s due to json exception", request), jpe);
-    }
-  }
-
+  
   @Override
   public List<SingularityTaskId> getTaskHistoryForRequestLike(String requestNameLike) {
     return history.getTaskHistoryForRequestLike(requestNameLike);
