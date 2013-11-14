@@ -9,7 +9,7 @@ class TasksScheduled extends Tasks
     parse: (tasks) ->
         _.each tasks, (task, i) =>
             task.id = @parsePendingId task.pendingTaskId
-            task.name = task.task.name
+            task.name = task.id
             task.nextRunAt = task.pendingTaskId.nextRunAt
             task.nextRunAtHuman = moment(task.nextRunAt).fromNow()
             task.schedule = task.request.schedule
@@ -19,7 +19,7 @@ class TasksScheduled extends Tasks
         tasks
 
     parsePendingId: (pendingTaskId) ->
-        "#{ pendingTaskId.name }-#{ pendingTaskId.nextRunAt }-#{ pendingTaskId.instanceNo }"
+        "#{ pendingTaskId.requestId }-#{ pendingTaskId.nextRunAt }-#{ pendingTaskId.instanceNo }"
 
     comparator: 'nextRunAt'
 
