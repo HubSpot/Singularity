@@ -24,7 +24,7 @@ class Application
             # before actually starting the app
             @fetchResources =>
 
-                $('.page-loader').hide()
+                $('.page-loader.fixed').hide()
 
                 @router = new Router
 

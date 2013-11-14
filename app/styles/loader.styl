@@ -2,12 +2,6 @@
 @import nib
 
 .page-loader
-    position fixed
-    margin auto
-    top 0
-    left 0
-    bottom 0
-    right 0
     height 2em
     width 2em
     border-radius 100%
@@ -19,6 +13,17 @@
     -webkit-backface-visibility hidden
     -webkit-animation spinner 700ms
     -webkit-animation-iteration-count linear infinite
+
+    &.fixed
+        position fixed
+        margin auto
+        top 0
+        left 0
+        bottom 0
+        right 0
+
+    &.centered
+        margin 0 auto
 
 @-webkit-keyframes spinner
     0%
