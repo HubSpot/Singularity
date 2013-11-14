@@ -4,13 +4,12 @@
 </header>
 
 <section>
+    <div class="page-header">
+        <h1>Tasks</h1>
+    </div>
     {{#if requestTasks}}
-        <div class="page-header">
-            <h1>Tasks</h1>
-        </div>
         <div class="row-fluid">
             <div class="span12">
-
                 <table class="table">
                     <thead>
                         <tr>
@@ -22,14 +21,15 @@
                         {{#eachWithFn requestTasks}}
                             <tr data-request-id="{{ id }}">
                                 <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                <td><span><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
+                                <td><span><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
                 </table>
-
             </div>
         </div>
+    {{else}}
+        <div class="page-loader centered"></div>
     {{/if}}
     <div class="page-header">
         <h1>JSON</h1>
