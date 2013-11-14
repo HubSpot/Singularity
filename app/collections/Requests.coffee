@@ -9,6 +9,7 @@ class Requests extends Collection
             request.id = request.id
             request.deployUser = @parseDeployUser request
             request.JSONString = utils.stringJSON request
+            request.timestampHuman = moment(request.timestamp).from()
             requests[i] = request
 
         requests
