@@ -20,7 +20,7 @@ public class SingularityClient {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
   
-  private static final String REQUEST_FORMAT = "http://%s/singularity/v1/requests";
+  private static final String REQUEST_FORMAT = "http://%s/%s/requests";
   private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/%s";
   private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
@@ -29,14 +29,16 @@ public class SingularityClient {
   
   private final Random random;
   private final List<String> hosts;
+  private final String contextPath;
 
   private final ObjectMapper objectMapper;
   private final AsyncHttpClient httpClient;
   
   @Inject
-  public SingularityClient(@Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) List<String> hosts) {
+  public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) List<String> hosts) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
+    this.contextPath = contextPath;
     
     this.hosts = hosts;
     this.random = new Random();
@@ -59,7 +61,7 @@ public class SingularityClient {
   }
   
   public void deploy(SingularityRequest request, Optional<String> user) {
-    final String requestUri = finishUri(String.format(REQUEST_FORMAT, getHost()), user);
+    final String requestUri = finishUri(String.format(REQUEST_FORMAT, getHost(), contextPath), user);
     
     LOG.info(String.format("Deploying %s to (%s)", request.getId(), requestUri));
   
@@ -119,7 +121,7 @@ public class SingularityClient {
   }
   
   public void remove(String name, Optional<String> user) {
-    final String requestUri = finishUri(String.format(REQUEST_UNDEPLOY_FORMAT, getHost(), name), user);
+    final String requestUri = finishUri(String.format(REQUEST_UNDEPLOY_FORMAT, getHost(), contextPath, name), user);
 
     LOG.info(String.format("Removing %s - (%s)", name, requestUri));
   

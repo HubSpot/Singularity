@@ -18,6 +18,8 @@ public class SingularityClientModule extends AbstractModule {
   public static final String HOSTS_PROPERTY_NAME = "singularity.hosts"; // bind this name to not use the curator discovery
   public static final String CURATOR_NAME = "singularity.curator"; // bind this instead to provide a curator framework to discover singularity
   
+  public static final String CONTEXT_PATH = "singularity.context.path";
+  
   @Override
   protected void configure() {
     bind(AsyncHttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(new AsyncHttpClient());

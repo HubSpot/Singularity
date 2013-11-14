@@ -17,14 +17,16 @@ import com.ning.http.client.AsyncHttpClient;
 public class SingularityClusterManager {
 
   private final CuratorFramework curator;
+  private final String contextPath;
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
 
   private static final String LEADER_PATH = "/leader";
 
   @Inject
-  public SingularityClusterManager(@Named(SingularityClientModule.CURATOR_NAME) CuratorFramework curator, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient,
+  public SingularityClusterManager(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.CURATOR_NAME) CuratorFramework curator, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient,
       @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper) {
+    this.contextPath = contextPath;
     this.curator = curator;
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
@@ -58,7 +60,7 @@ public class SingularityClusterManager {
   }
 
   public SingularityClient getClusterClient(String cluster) {
-    return new SingularityClient(httpClient, objectMapper, getClusterMembers(cluster));
+    return new SingularityClient(contextPath, httpClient, objectMapper, getClusterMembers(cluster));
   }
 
 }
