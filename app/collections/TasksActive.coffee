@@ -9,8 +9,7 @@ class TasksActive extends Tasks
     parse: (tasks) ->
         _.each tasks, (task, i) =>
             task.id = task.task.taskId.value
-            task.name = task.id
-            task.label = @parseLabelFromName task.task.name
+            task.name = task.task.name
             task.resourcesCount = task.task.resources.length
             task.startedAt = task.taskId.startedAt
             task.startedAtHuman = moment(task.taskId.startedAt).from()

@@ -8,7 +8,7 @@ class RequestView extends View
 
     initialize: =>
         @request = app.collections.requests.get(@options.requestId)
-        @requestTasks = new RequestTasks()
+        @requestTasks = new RequestTasks requestId: @options.requestId
         @requestTasks.fetch().done => @render()
 
     render: =>

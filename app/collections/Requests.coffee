@@ -6,16 +6,12 @@ class Requests extends Collection
 
     parse: (requests) ->
         _.each requests, (request, i) =>
-            request.id = request.name
-            request.label = @parseLabelFromName request.name
+            request.id = request.id
             request.deployUser = @parseDeployUser request
             request.JSONString = utils.stringJSON request
             requests[i] = request
 
         requests
-
-    parseLabelFromName: (name) ->
-        name.split(':')[0]
 
     parseDeployUser: (request) ->
         (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]

@@ -19,7 +19,7 @@
                 <tbody>
                     {{#eachWithFn tasksActive}}
                         <tr data-task-id="{{ id }}">
-                            <td><span><a class="simptip-position-top simptip-movable" data-tooltip="{{ name }}" href="singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak label}}{{/hardBreak}}</span></a></td>
+                            <td><span><a class="simptip-position-top simptip-movable" data-tooltip="{{ id }}" href="singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></a></td>
                             <td><span>{{ resourcesCount }}</span></td>
                             <td><span class="ellipsis simptip-position-top simptip-movable" data-tooltip="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
@@ -41,7 +41,7 @@
                 <tbody>
                     {{#eachWithFn tasksScheduled}}
                         <tr data-task-id="{{ id }}">
-                            <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ name }}">{{#hardBreak label}}{{/hardBreak}}</span></td>
+                            <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                             <td><span class="ellipsis simptip-position-top simptip-movable" data-tooltip="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
                             <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
                         </tr>
