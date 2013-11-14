@@ -13,6 +13,7 @@ class TasksScheduled extends Tasks
             task.nextRunAt = task.pendingTaskId.nextRunAt
             task.nextRunAtHuman = moment(task.nextRunAt).fromNow()
             task.schedule = task.request.schedule
+            task.JSONString = utils.stringJSON task
             tasks[i] = task
 
         tasks

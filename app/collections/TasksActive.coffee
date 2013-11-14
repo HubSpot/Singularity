@@ -13,6 +13,7 @@ class TasksActive extends Tasks
             task.resourcesCount = task.task.resources.length
             task.startedAt = task.taskId.startedAt
             task.startedAtHuman = moment(task.taskId.startedAt).from()
+            task.JSONString = utils.stringJSON task
             tasks[i] = task
 
         tasks
