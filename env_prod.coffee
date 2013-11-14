@@ -6,5 +6,5 @@ module.exports =
     NAV_BASE: 'nav.hubapi.com'
     STATIC_BASE: 'static.hubspot.com'
     INTERNAL_BASE: 'internal.hubapi.com'
-    SINGULARITY_BASE: 'heliograph.iad01.hubspot-networks.net:7000'
+    SINGULARITY_BASE: 'heliograph.iad01.hubspot-networks.net:7005'
     LOGIN_PORTAL: 271246
