@@ -1,6 +1,6 @@
 server:
   type: simple
-  applicationContextPath: /
+  applicationContextPath: /singularity
   connector: 
     type: http
     port: 7000
@@ -33,4 +33,4 @@ logging:
 
     "com.hubspot.singularity.mesos" : INFO 
 
-appRoot: /singularity/v1
+appRoot: /v1
