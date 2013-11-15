@@ -1,4 +1,3 @@
-Login = require 'lib/login'
 Router = require 'lib/router'
 
 UserSettings = require 'models/UserSettings'
@@ -11,28 +10,22 @@ TasksScheduled = require 'collections/TasksScheduled'
 class Application
 
     initialize: =>
-        @login = new Login env
-
         @views = {}
         @collections = {}
 
-        @login.verifyUser (data) =>
-            # Pretend to be somebody else :)
-            # @hubspot.context.user.email = 'email@hubspot.com'
+        # Get users, projects, and targets, and user settings
+        # before actually starting the app
+        @fetchResources =>
 
-            # Get users, projects, and targets, and user settings
-            # before actually starting the app
-            @fetchResources =>
+            $('.page-loader.fixed').hide()
 
-                $('.page-loader.fixed').hide()
+            @router = new Router
 
-                @router = new Router
+            Backbone.history.start
+                pushState: false
+                root: '/singularity/'
 
-                Backbone.history.start
-                    pushState: false
-                    root: '/singularity/'
-
-                Object.freeze? @
+            Object.freeze? @
 
     fetchResources: (success) =>
         @resolve_countdown = 0
@@ -40,12 +33,6 @@ class Application
         resolve = =>
             @resolve_countdown -= 1
             success() if @resolve_countdown is 0
-
-        @resolve_countdown += 1
-        @user_settings = new UserSettings
-        @user_settings.fetch
-            error: => vex.dialog.alert("An error occurred while trying to load settings for <b>#{ @login.context.user.login }</b>.")
-            success: -> resolve()
 
         @resolve_countdown += 1
         @state = new State

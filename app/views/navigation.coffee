@@ -11,7 +11,6 @@ class NavigationView extends View
 
     render: =>
         @renderTitle()
-        @renderUserNameDropdown()
         @renderNavLinks()
         @collapse()
 
@@ -19,9 +18,6 @@ class NavigationView extends View
         subtitle = utils.getHTMLTitleFromHistoryFragment(Backbone.history.fragment)
         subtitle = ' — ' + subtitle if subtitle isnt ''
         $('head title').text("Singularity#{subtitle}")
-
-    renderUserNameDropdown: =>
-        $('#nav-user-name').text(app.login.context.user.email)
 
     renderNavLinks: =>
         $nav = @$el
