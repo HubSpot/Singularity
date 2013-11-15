@@ -370,8 +370,7 @@ window.require.define({"constants": function(exports, require, module) {
     constants = {
       app_name: 'singularity',
       config_server_base: '/singularity',
-      api_base: 'singularity2/v1',
-      kumonga_api_base: 'kumonga/v2'
+      api_base: 'singularity/v1'
     };
 
     module.exports = constants;
