@@ -2,14 +2,14 @@ package com.hubspot.singularity;
 
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jdbi.DBIFactory;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.setup.Environment;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ServerConnector;
 import org.skife.jdbi.v2.DBI;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -88,14 +87,11 @@ public class SingularityModule extends AbstractModule {
   @Provides
   @Singleton
   @Named(HTTP_PORT_PROPERTY)
-  public int providesHttpPortProperty(SingularityConfiguration config, Environment environment) {
-    for (Connector connector : config.getServerFactory().build(environment).getConnectors()) {
-      if (connector instanceof ServerConnector) {
-        return ((ServerConnector) connector).getPort();
-      }
-    }
-
-    throw new ProvisionException("Failed to get HTTP port from dropwizard config");
+  public int providesHttpPortProperty(SingularityConfiguration config) {
+    SimpleServerFactory simpleServerFactory = (SimpleServerFactory) config.getServerFactory();
+    HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
+    
+    return httpFactory.getPort();
   }
 
   @Provides
