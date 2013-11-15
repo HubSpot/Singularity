@@ -76,14 +76,10 @@
 
 window.require.define({"application": function(exports, require, module) {
   (function() {
-    var Application, Login, Requests, Router, State, TasksActive, TasksScheduled, UserSettings,
+    var Application, Requests, Router, State, TasksActive, TasksScheduled,
       __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-    Login = require('lib/login');
-
     Router = require('lib/router');
-
-    UserSettings = require('models/UserSettings');
 
     State = require('models/State');
 
@@ -102,19 +98,16 @@ window.require.define({"application": function(exports, require, module) {
 
       Application.prototype.initialize = function() {
         var _this = this;
-        this.login = new Login(env);
         this.views = {};
         this.collections = {};
-        return this.login.verifyUser(function(data) {
-          return _this.fetchResources(function() {
-            $('.page-loader.fixed').hide();
-            _this.router = new Router;
-            Backbone.history.start({
-              pushState: false,
-              root: '/singularity/'
-            });
-            return typeof Object.freeze === "function" ? Object.freeze(_this) : void 0;
+        return this.fetchResources(function() {
+          $('.page-loader.fixed').hide();
+          _this.router = new Router;
+          Backbone.history.start({
+            pushState: false,
+            root: '/singularity/'
           });
+          return typeof Object.freeze === "function" ? Object.freeze(_this) : void 0;
         });
       };
 
@@ -126,16 +119,6 @@ window.require.define({"application": function(exports, require, module) {
           _this.resolve_countdown -= 1;
           if (_this.resolve_countdown === 0) return success();
         };
-        this.resolve_countdown += 1;
-        this.user_settings = new UserSettings;
-        this.user_settings.fetch({
-          error: function() {
-            return vex.dialog.alert("An error occurred while trying to load settings for <b>" + _this.login.context.user.login + "</b>.");
-          },
-          success: function() {
-            return resolve();
-          }
-        });
         this.resolve_countdown += 1;
         this.state = new State;
         this.state.fetch({
@@ -402,14 +385,7 @@ window.require.define({"env": function(exports, require, module) {
 
     module.exports = {
       env: 'local',
-      API_BASE: 'api.hubapiqa.com',
-      APP_BASE: 'app.hubspotqa.com',
-      LOGIN_BASE: 'login.hubspotqa.com',
-      NAV_BASE: 'navqa.hubapi.com',
-      STATIC_BASE: 'static.hubspotqa.com',
-      INTERNAL_BASE: 'internal.hubapiqa.com',
-      SINGULARITY_BASE: 'heliograph.iad01.hubspot-networks.net:7005',
-      LOGIN_PORTAL: 99121841
+      SINGULARITY_BASE: 'heliograph.iad01.hubspot-networks.net:7005'
     };
 
   }).call(this);
@@ -441,44 +417,8 @@ window.require.define({"initialize": function(exports, require, module) {
 
 window.require.define({"lib/login": function(exports, require, module) {
   (function() {
-    var Login,
-      __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-    Login = (function() {
 
-      function Login(env) {
-        this.env = env;
-        this.verifyUser = __bind(this.verifyUser, this);
-        this.verify_url = "https://" + env.LOGIN_BASE + "/login/api-verify?_=" + (+new Date()) + "&portalId=" + env.LOGIN_PORTAL + "&includeGates=false";
-      }
-
-      Login.prototype.verifyUser = function(onSuccess) {
-        var _this = this;
-        return $.ajax({
-          type: 'GET',
-          url: this.verify_url,
-          dataType: 'json',
-          crossDomain: true,
-          data: {},
-          xhrFields: {
-            withCredentials: true
-          },
-          success: function(data) {
-            _this.context = data;
-            _this.env.portalId = data.portal.portal_id;
-            return onSuccess(data);
-          },
-          error: function() {
-            return window.location = "https://" + _this.env.LOGIN_BASE + "/login/?loginRedirectUrl=" + window.location;
-          }
-        });
-      };
-
-      return Login;
-
-    })();
-
-    module.exports = Login;
 
   }).call(this);
   
@@ -772,42 +712,6 @@ window.require.define({"models/Task": function(exports, require, module) {
   
 }});
 
-window.require.define({"models/UserSettings": function(exports, require, module) {
-  (function() {
-    var Model, UserSettings,
-      __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-      __hasProp = Object.prototype.hasOwnProperty,
-      __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
-
-    Model = require('./model');
-
-    UserSettings = (function(_super) {
-
-      __extends(UserSettings, _super);
-
-      function UserSettings() {
-        this.url = __bind(this.url, this);
-        UserSettings.__super__.constructor.apply(this, arguments);
-      }
-
-      UserSettings.prototype.url = function() {
-        return "https://" + env.INTERNAL_BASE + "/" + constants.kumonga_api_base + "/users/" + app.login.context.user.email + "/settings";
-      };
-
-      UserSettings.prototype.defaults = {
-        theme: 'light'
-      };
-
-      return UserSettings;
-
-    })(Model);
-
-    module.exports = UserSettings;
-
-  }).call(this);
-  
-}});
-
 window.require.define({"models/model": function(exports, require, module) {
   (function() {
     var Model,
@@ -928,7 +832,6 @@ window.require.define({"views/navigation": function(exports, require, module) {
         this.collapse = __bind(this.collapse, this);
         this.renderTheme = __bind(this.renderTheme, this);
         this.renderNavLinks = __bind(this.renderNavLinks, this);
-        this.renderUserNameDropdown = __bind(this.renderUserNameDropdown, this);
         this.renderTitle = __bind(this.renderTitle, this);
         this.render = __bind(this.render, this);
         this.initialize = __bind(this.initialize, this);
@@ -938,18 +841,14 @@ window.require.define({"views/navigation": function(exports, require, module) {
       NavigationView.prototype.el = '#top-level-nav';
 
       NavigationView.prototype.initialize = function() {
-        var _this = this;
         $('#top-level-nav').dblclick(function() {
           return window.scrollTo(0, 0);
         });
-        return app.user_settings.on('change:theme', function() {
-          return _this.render();
-        });
+        return this.theme = 'light';
       };
 
       NavigationView.prototype.render = function() {
         this.renderTitle();
-        this.renderUserNameDropdown();
         this.renderNavLinks();
         return this.collapse();
       };
@@ -961,14 +860,10 @@ window.require.define({"views/navigation": function(exports, require, module) {
         return $('head title').text("Singularity" + subtitle);
       };
 
-      NavigationView.prototype.renderUserNameDropdown = function() {
-        return $('#nav-user-name').text(app.login.context.user.email);
-      };
-
       NavigationView.prototype.renderNavLinks = function() {
         var $anchors, $nav;
         $nav = this.$el;
-        this.renderTheme(app.user_settings.get('theme'));
+        this.renderTheme(this.theme);
         $anchors = $nav.find('ul.nav a:not(".dont-route")');
         $anchors.each(function() {
           var route;
@@ -984,16 +879,13 @@ window.require.define({"views/navigation": function(exports, require, module) {
       };
 
       NavigationView.prototype.renderTheme = function(theme) {
-        var previous_theme, settings;
-        settings = app.user_settings;
-        previous_theme = settings.get('theme') === 'light' ? 'dark' : 'light';
+        var previous_theme;
+        previous_theme = this.theme === 'light' ? 'dark' : 'light';
         $('html').addClass("" + theme + "strap").removeClass("" + previous_theme + "strap");
         return $('#theme-changer').html(_.capitalize(previous_theme)).unbind('click').click(function() {
           var new_theme;
-          new_theme = settings.get('theme') === 'dark' ? 'light' : 'dark';
-          return app.user_settings.set({
-            theme: new_theme
-          }).save();
+          new_theme = this.theme === 'dark' ? 'light' : 'dark';
+          return this.theme = new_theme;
         });
       };
 
