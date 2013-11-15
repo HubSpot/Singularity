@@ -6,8 +6,7 @@ class NavigationView extends View
 
     initialize: =>
         $('#top-level-nav').dblclick -> window.scrollTo 0, 0
-
-        app.user_settings.on 'change:theme', => @render()
+        @theme = 'light' # TODO - user cookies to save themes
 
     render: =>
         @renderTitle()
@@ -22,7 +21,7 @@ class NavigationView extends View
     renderNavLinks: =>
         $nav = @$el
 
-        @renderTheme app.user_settings.get('theme')
+        @renderTheme @theme
 
         $anchors = $nav.find('ul.nav a:not(".dont-route")')
         $anchors.each ->
@@ -36,12 +35,11 @@ class NavigationView extends View
             $(@).parents('li').addClass('active') if $(@).attr('href') is "/#{constants.app_name}/#{Backbone.history.fragment}"
 
     renderTheme: (theme) =>
-        settings = app.user_settings
-        previous_theme = if settings.get('theme') is 'light' then 'dark' else 'light'
+        previous_theme = if @theme is 'light' then 'dark' else 'light'
         $('html').addClass("#{theme}strap").removeClass("#{previous_theme}strap")
         $('#theme-changer').html(_.capitalize(previous_theme)).unbind('click').click ->
-            new_theme = if settings.get('theme') is 'dark' then 'light' else 'dark'
-            app.user_settings.set(theme: new_theme).save()
+            new_theme = if @theme is 'dark' then 'light' else 'dark'
+            @theme = new_theme
 
     collapse: =>
         $collapse = $('#top-level-nav .nav-collapse')
