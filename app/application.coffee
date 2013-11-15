@@ -1,6 +1,5 @@
 Router = require 'lib/router'
 
-UserSettings = require 'models/UserSettings'
 State = require 'models/State'
 
 Requests = require 'collections/Requests'
