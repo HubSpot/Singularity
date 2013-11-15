@@ -5,13 +5,15 @@
 <section>
     <!-- <input type="search" placeholder="Search tasks..." required /> -->
     <div class="row-fluid">
-        <div class="span6">
+        <div class="span12">
             <h2>Active Tasks</h2>
             <table class="table">
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Resources</th>
+                        <th>Host</th>
+                        <th>CPUs</th>
+                        <th>Memory</th>
                         <th>Started</th>
                         <th>JSON</th>
                     </tr>
@@ -20,7 +22,9 @@
                     {{#eachWithFn tasksActive}}
                         <tr data-task-id="{{ id }}">
                             <td><span><a class="simptip-position-top simptip-movable" data-tooltip="{{ id }}" href="singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></a></td>
-                            <td><span>{{ resourcesCount }}</span></td>
+                            <td><span>{{ host }}</span></td>
+                            <td><span>{{ resources.cpus }}</span></td>
+                            <td><span>{{ resources.memoryMb }}Mb</span></td>
                             <td><span class="ellipsis simptip-position-top simptip-movable" data-tooltip="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
                         </tr>
@@ -28,7 +32,9 @@
                 </tbody>
             </table>
         </div>
-        <div class="span6">
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
             <h2>Scheduled Tasks</h2>
             <table class="table">
                 <thead>

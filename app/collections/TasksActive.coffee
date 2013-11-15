@@ -10,7 +10,8 @@ class TasksActive extends Tasks
         _.each tasks, (task, i) =>
             task.id = task.task.taskId.value
             task.name = task.task.name
-            task.resourcesCount = task.task.resources.length
+            task.resources = task.taskRequest.request.resources
+            task.host = task.offer.hostname?.split('.')[0]
             task.startedAt = task.taskId.startedAt
             task.startedAtHuman = moment(task.taskId.startedAt).from()
             task.JSONString = utils.stringJSON task
