@@ -20,7 +20,10 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("hostname")
   private String hostname;
-
+  
+  @JsonProperty("appRoot")
+  private String appRoot;
+  
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -69,4 +72,13 @@ public class SingularityConfiguration extends Configuration {
   public void setHostname(String hostname) {
     this.hostname = hostname;
   }
+
+  public String getAppRoot() {
+    return appRoot;
+  }
+
+  public void setAppRoot(String appRoot) {
+    this.appRoot = appRoot;
+  }
+  
 }

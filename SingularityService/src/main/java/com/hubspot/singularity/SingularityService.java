@@ -28,7 +28,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
 
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
-    environment.jersey().setUrlPattern("/singularity/v1/*");
+    environment.jersey().setUrlPattern(configuration.getAppRoot() + "/*");
   }
 
   public static void main(String[] args) throws Exception {
