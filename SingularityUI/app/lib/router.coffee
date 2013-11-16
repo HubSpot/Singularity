@@ -64,7 +64,7 @@ class Router extends Backbone.Router
 
         template = undefined
         try
-            template = require "../views/templates/#{Backbone.history.fragment}"
+            template = require "../views/templates/#{ Backbone.history.fragment }"
         catch error
 
         if template

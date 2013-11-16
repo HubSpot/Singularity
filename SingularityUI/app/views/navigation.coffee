@@ -16,7 +16,7 @@ class NavigationView extends View
     renderTitle: =>
         subtitle = utils.getHTMLTitleFromHistoryFragment(Backbone.history.fragment)
         subtitle = ' — ' + subtitle if subtitle isnt ''
-        $('head title').text("Singularity#{subtitle}")
+        $('head title').text("Singularity#{ subtitle }")
 
     renderNavLinks: =>
         $nav = @$el
@@ -27,16 +27,16 @@ class NavigationView extends View
         $anchors.each ->
             route = $(@).data('href')
             $(@)
-                .attr('href', "/#{constants.app_name}/#{route}")
+                .attr('href', "/#{ constants.app_name }/#{ route }")
                 .data('route', route)
 
         $nav.find('li').removeClass('active')
         $anchors.each ->
-            $(@).parents('li').addClass('active') if $(@).attr('href') is "/#{constants.app_name}/#{Backbone.history.fragment}"
+            $(@).parents('li').addClass('active') if $(@).attr('href') is "/#{ constants.app_name }/#{ Backbone.history.fragment }"
 
     renderTheme: (theme) =>
         previous_theme = if @theme is 'light' then 'dark' else 'light'
-        $('html').addClass("#{theme}strap").removeClass("#{previous_theme}strap")
+        $('html').addClass("#{ theme }strap").removeClass("#{ previous_theme }strap")
         $('#theme-changer').html(_.capitalize(previous_theme)).unbind('click').click ->
             new_theme = if @theme is 'dark' then 'light' else 'dark'
             @theme = new_theme
