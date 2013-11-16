@@ -11,10 +11,10 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Started</th>
                         <th>Host</th>
                         <th>CPUs</th>
                         <th>Memory</th>
-                        <th>Started</th>
                         <th>JSON</th>
                     </tr>
                 </thead>
@@ -22,10 +22,10 @@
                     {{#eachWithFn tasksActive}}
                         <tr data-task-id="{{ id }}">
                             <td><span><a class="simptip-position-top simptip-movable" data-tooltip="{{ id }}" href="singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></a></td>
+                            <td><span class="ellipsis simptip-position-top simptip-movable" data-tooltip="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td><span>{{ host }}</span></td>
                             <td><span>{{ resources.cpus }}</span></td>
                             <td><span>{{ resources.memoryMb }}Mb</span></td>
-                            <td><span class="ellipsis simptip-position-top simptip-movable" data-tooltip="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
                         </tr>
                     {{/eachWithFn}}
