@@ -19,6 +19,6 @@ class TasksActive extends Tasks
 
         tasks
 
-    comparator: 'name'
+    comparator: 'startedAt'
 
 module.exports = TasksActive
