@@ -4,7 +4,7 @@ Tasks = require './Tasks'
 
 class TasksScheduled extends Tasks
 
-    url: "http://#{ env.SINGULARITY_BASE }/#{ constants.api_base }/tasks/scheduled"
+    url: "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/tasks/scheduled"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

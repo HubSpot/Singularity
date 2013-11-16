@@ -2,7 +2,7 @@ Model = require './model'
 
 class RequestTasks extends Model
 
-    url: => "http://#{ env.SINGULARITY_BASE }/#{ constants.api_base }/history/request/#{ @requestId }/tasks"
+    url: => "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/history/request/#{ @requestId }/tasks"
 
     initialize: =>
         @requestId = @attributes.requestId

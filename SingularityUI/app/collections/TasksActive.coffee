@@ -4,7 +4,7 @@ Tasks = require './Tasks'
 
 class TasksActive extends Tasks
 
-    url: "http://#{env.SINGULARITY_BASE}/#{constants.api_base}/tasks/active"
+    url: "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/tasks/active"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

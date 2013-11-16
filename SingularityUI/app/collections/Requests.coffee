@@ -2,7 +2,7 @@ Collection = require './collection'
 
 class Requests extends Collection
 
-    url: "http://#{ env.SINGULARITY_BASE }/#{ constants.api_base }/requests"
+    url: "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/requests"
 
     parse: (requests) ->
         _.each requests, (request, i) =>
