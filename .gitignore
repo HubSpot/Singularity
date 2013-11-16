@@ -15,3 +15,5 @@ JavaConsole.java
 __pycache__
 local_singularity.yml
 Docs/_build
+SingularityUI/node_modules/*
+SingularityUI/brunchlog
