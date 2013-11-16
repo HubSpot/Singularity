@@ -5,7 +5,6 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
 
 public interface HistoryManager {
@@ -16,9 +15,9 @@ public interface HistoryManager {
   
   void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message);
   
-  List<SingularityTaskId> getTaskHistoryForRequest(String requestId);
+  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId);
   
-  List<SingularityTaskId> getTaskHistoryForRequestLike(String requestIdLike);
+  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike);
   
   SingularityTaskHistory getTaskHistory(String taskId);
  

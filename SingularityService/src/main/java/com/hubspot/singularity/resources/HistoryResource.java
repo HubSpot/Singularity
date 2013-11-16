@@ -10,10 +10,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityRequestHistory;
 import com.hubspot.singularity.data.history.SingularityTaskHistory;
+import com.hubspot.singularity.data.history.SingularityTaskIdHistory;
 
 @Path("/history")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -34,13 +34,13 @@ public class HistoryResource {
   
   @GET
   @Path("/request/{requestId}/tasks")
-  public List<SingularityTaskId> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
     return historyManager.getTaskHistoryForRequest(requestId);
   }
   
   @GET
   @Path("/tasks/search")
-  public List<SingularityTaskId> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike) {
     return historyManager.getTaskHistoryForRequestLike(requestIdLike);
   }
   
