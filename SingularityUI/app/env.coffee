@@ -1,4 +1,4 @@
-if window.location.hostname is 'localhost'
+if window.location.hostname.substr(0, 'local'.length) is 'local'
     env =
         env: 'local'
         SINGULARITY_BASE: 'http://heliograph.iad01.hubspot-networks.net:7005'
