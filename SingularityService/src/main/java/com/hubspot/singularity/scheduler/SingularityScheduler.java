@@ -127,11 +127,15 @@ public class SingularityScheduler {
   
     return dueTasks;
   }
-
-  public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
-    for (SingularityPendingTaskId taskId : SingularityPendingTaskId.filter(scheduledTaskIds, request.getId())) {
+  
+  private void deleteScheduledTasks(final List<SingularityPendingTaskId> scheduledTaskIds, String requestId) {
+    for (SingularityPendingTaskId taskId : SingularityPendingTaskId.filter(scheduledTaskIds, requestId)) {
       taskManager.deleteScheduledTask(taskId.toString());
     }
+  }
+
+  public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
+    deleteScheduledTasks(scheduledTaskIds, request.getId());
     
     final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(activeTaskIds, request);
     
@@ -154,8 +158,9 @@ public class SingularityScheduler {
     SingularityRequest request = maybeRequest.get();
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-        
-    taskManager.persistScheduleTasks(getScheduledTaskIds(activeTaskIds, request));
+    final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
+    
+    scheduleTasks(scheduledTasks, activeTaskIds, request);
   }
   
   private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
