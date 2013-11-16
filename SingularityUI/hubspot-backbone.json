@@ -1,0 +1,26 @@
+{
+    "name": "SingularityUI",
+    "type": "brunch",
+    "repoPath": "SingularityUI",
+    "projectsdir": "/usr/share/hubspot/source-svn",
+    "artifactId": "SingularityUI",
+    "contextPath": "SingularityUI",
+    "loadBalancer": "app",
+    "loadBalancerRoutes": [
+        ["singularity"]
+    ],
+    "no_end_to_end_ssl": true,
+    "postDeployTests": [ ],
+    "warmupUrl": "/warmup",
+    "successString": "SUCCESS",
+    "servers": [
+        {
+            "host": "hubspot.com-brunch-qa.s3-website-us-east-1.amazonaws.com",
+            "environment": "qa"
+        },
+        {
+            "host": "hubspot.com-brunch-prod.s3-website-us-east-1.amazonaws.com",
+            "environment": "prod"
+        }
+    ]
+}

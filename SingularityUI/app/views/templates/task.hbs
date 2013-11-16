@@ -1,0 +1,15 @@
+<header class="jumbotron subhead" id="overview">
+    <h1>{{#hardBreak task.name}}{{/hardBreak}}</h1>
+    <h2>{{#hardBreak task.id}}{{/hardBreak}}</h2>
+</header>
+
+<section>
+    <div class="page-header">
+        <h1>JSON</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <pre>{{ task.JSONString }}</pre>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,573 @@
+@import nib
+
+a
+    cursor pointer
+
+.link-spacer
+    opacity 0.2
+    padding 0px 5px
+
+#top-level-nav
+    visibility hidden
+
+html.lightstrap, html.darkstrap
+
+    #top-level-nav
+        visibility visible
+
+.subtle
+    opacity 0.5
+
+.ellipsis
+    overflow ellipsis
+
+.hard-wrap
+    word-wrap break-word
+
+tr.filtered
+    display none
+
+section input[type="search"][required]
+    font-size 1.75em
+    height auto
+    padding .5rem
+    margin-bottom 1rem
+    line-height 1.5em
+
+// Overrides
+
+#nav-user-name
+    cursor: default
+
+.btn-navbar:hover
+    background-position initial
+    transition none
+
+.navbar .btn-navbar:active
+    box-shadow inset 0px 1px 3px rgba(0, 0, 0, 0.2)
+
+.navbar-fixed-top .brand
+    transition none
+
+.navbar .nav > li > a
+    padding 10px 10px 11px
+
+table th
+    text-align left
+
+.well
+
+    table
+        margin-bottom 0px
+
+    h2
+        margin-bottom 10px
+        overflow ellipsis
+
+    &.well-nav
+        padding 8px 0
+
+.modal
+    position fixed
+    top 20%
+    margin-top 0px
+
+.table
+    background #f9f9f9
+
+@media (max-width: 480px)
+
+    .well
+
+        h2
+            margin-top 0px
+
+    .modal
+        position fixed
+        top 10px
+
+// Styles
+
+input[type="search"]
+    height 1.75rem
+    border 0
+    font-family inherit
+    font-size 1.17em
+    padding-left .52rem
+    margin 0
+    color inherit
+    opacity .5
+    width 50%
+    background rgba(0, 0, 0, .1)
+    margin-bottom 4px
+    width 100%
+    font-weight bold
+
+    &::-webkit-search-cancel-button:after
+        line-height 1.8rem
+        font-weight normal
+
+    &:focus
+        background rgba(0, 0, 0, .05)
+        opacity 1
+        outline none
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ul.event-list
+
+    li.event-row
+        clearfix()
+        padding-bottom 18px
+        margin-bottom 18px
+        border-bottom 1px solid rgba(0, 0, 0, 0.1)
+        box-shadow 0 1px white
+        position relative
+
+        &:last-child
+            margin-bottom 0px
+            padding-bottom 0px
+            border-bottom 0px
+            box-shadow none
+
+        .custom-type-message
+            display none
+
+        .event-photo
+            position absolute
+            top 0px
+            left 0px
+
+            img.photo
+                height 48px
+                width 48px
+                border-radius 6px
+
+        .event-contents
+            margin-left 65px
+
+            .event-header
+                margin-bottom 3px
+
+                .user-name
+                    font-weight bold
+                    padding-right 7px
+
+                .project-name
+                    color #888
+                    padding-right 6px //Should be 7 to match user-name, but 6 looked better ;)
+
+            .event-text
+                overflow ellipsis
+
+                .commits-list
+
+                    .commit
+                        overflow ellipsis
+                        line-height 20px
+                        display block
+
+                        .sha a
+                            display inline-block
+                            font-family monospace
+
+        .event-footer
+            clear left
+            margin-top 3px
+
+    &.with-customized-events
+
+        li.event-row
+
+            .full-message
+                display none
+
+            .custom-type-message
+                display inline
+
+            &.DEPLOY, &.JENKINS
+                margin-top -18px
+                padding-top 9px
+                padding-bottom 9px
+                padding-right 9px
+
+                .event-photo
+                    top 9px
+                    left 30px
+
+                    img
+                        height 18px
+                        width 18px
+                        border-radius 3px
+
+                .event-text, .event-header
+                    display inline
+
+                .event-footer
+                    display none
+
+            &.DEPLOY_QA_SUCCESSFUL, &.DEPLOY_PROD_SUCCESSFUL
+                background #E4F1E4
+
+            &.DEPLOY_QA_FAILED, &.DEPLOY_PROD_FAILED
+                background #FCEDED
+
+            &.JENKINS_BUILD_SUCCESSFUL
+                background #E4EDF1
+
+            &.JENKINS_BUILD_FAILED
+                background #FCEDED
+
+            &:first-child
+
+                &.DEPLOY, &.JENKINS
+                    margin-top 0px
+
+            &.rolled-up
+                text-indent -99999px
+                overflow hidden
+                height 0px
+                padding-top 3px
+                padding-bottom 3px
+
+                &:hover
+                    text-indent 0px
+                    overflow visible
+                    height auto
+                    padding-top 9px
+                    padding-bottom 9px
+
+                &.GITHUB
+                    height 7px
+                    margin-top -18px
+                    padding-top 0px
+                    padding-bottom 0px
+                    background rgba(0, 0, 0, 0.02)
+
+                    &:hover
+                        height auto
+                        margin-top -18px
+                        padding-top 18px
+                        padding-bottom 18px
+                        background transparent
+
+                        .event-photo
+                            top 18px
+
+    &.small
+
+        li.event-row
+            padding-bottom 10px
+            margin-bottom 10px
+
+            &:last-child
+                margin-bottom 0px
+                padding-bottom 0px
+
+            .event-photo
+                top -1px
+
+                img.photo
+                    height 18px
+                    width 18px
+                    border-radius 3px
+
+            .event-contents
+                margin-left 32px
+
+                .event-header
+                    margin-right 80px
+
+                .event-text
+                    white-space nowrap
+
+            .event-footer
+                position absolute
+                top -2px
+                right 0px
+
+                .resource-links
+                    display none
+
+.big-number
+    height 55px
+    text-align center
+
+    .number
+        font-size 36px
+        line-height 36px
+        position relative
+        top -2px
+
+    .number-label
+        font-size 19px
+        line-height 21px
+        color #aaa
+        text-transform lowercase
+        overflow ellipsis
+
+        &.small
+            font-size 14px
+
+.simple-bar-chart rect
+    fill #08C
+    stroke whiteSmoke
+
+.dashboard-simple-chart
+    height 55px
+    position relative
+
+    .chart-label
+        position absolute
+        z-index 5
+        top 0
+        left 0
+        opacity 0.5
+
+    &:hover .chart-label
+        opacity 1
+
+    .simple-bar-chart
+        position absolute
+        z-index 3
+        bottom 0
+        left 0
+
+.jira-issue-row, .trello-card-row
+    overflow ellipsis
+    margin-bottom 3px
+
+    &:last-child
+        margin-bottom 10px
+
+.account-container .disconnect-link
+    font-size 13px
+    font-weight normal
+    padding-left 2px
+
+a.user-block
+    display block
+    cursor pointer
+    padding-bottom 20px
+
+    h3
+        overflow ellipsis
+        line-height 1.5
+        padding-bottom 7px
+
+    img.photo
+        width 100%
+        border-radius 6px
+
+    &:hover
+        opacity 0.9
+
+    &:active, &.clicked
+        opacity 0.7
+
+.text-input
+    box-sizing border-box
+    margin-top 10px
+    width 100%
+    padding 14px 8px !important
+
+.settings-items-list
+
+    .close
+        float none
+        line-height 13px
+        padding-right 5px
+        position relative
+        top 1px
+
+#events-filter-nav-phone
+    width 100%
+    margin 5px 0px 30px
+    -webkit-appearance button
+    -webkit-border-radius 5px
+    -webkit-box-shadow 0px 1px 3px rgba(0, 0, 0, 0.1)
+    -webkit-user-select none
+    background-image -webkit-linear-gradient(white, #eee)
+    border 1px solid #CCC
+    color inherit
+    overflow ellipsis
+    padding 2px 17px 3px
+    height 39px
+    font-size 16px
+    width 100%
+    outline none
+    cursor pointer
+
+    &:hover
+        outline none
+        -webkit-box-shadow 0px 1px 5px rgba(0, 0, 0, 0.2)
+        background-image -webkit-linear-gradient(white, #f6f6f6)
+
+    &:active
+        outline none
+        background #f6f6f6
+        -webkit-box-shadow inset 0px 2px 10px rgba(0, 0, 0, 0.15)
+
+.stats-table
+    width 100%
+    table-layout fixed
+
+    td a
+        display inline-block
+        overflow ellipsis
+        max-width 150%
+
+    td, th
+        text-align left
+
+        &.number
+            text-align right
+            padding-right 20px
+
+            &:last-child
+                padding-right 0px
+
+    .you td
+        background #E4EDF1
+
+.users-section
+
+    @media (max-width: 480px)
+        all-spans-thirds()
+
+    @media (max-width: 767px)
+        all-spans-thirds()
+
+.create-project-group
+    margin-bottom 20px
+
+ul.projects-manage-list
+
+    li.project
+        clearfix()
+        padding-bottom 18px
+        margin-bottom 18px
+        border-bottom 1px solid rgba(0, 0, 0, 0.1)
+        box-shadow 0 1px white
+        position relative
+
+        &:last-child
+            margin-bottom 0px
+            padding-bottom 0px
+            border-bottom 0px
+            box-shadow none
+
+        > .name
+            font-size 18px
+            line-height 27px
+            position absolute
+            overflow ellipsis
+            top -5px
+            left 0px
+
+        > .close
+            position absolute
+            text-align center
+            width 20px
+            font-size 20px
+            line-height 27px
+            top -7px
+            left -20px
+            transition opacity 0.4s
+            visibility hidden
+            opacity 0
+
+        &:hover > .close
+            visibility visible
+            opacity 0.6
+
+        ul.targets-manage-list
+            clearfix()
+            margin-bottom 10px
+
+            .close
+                float none
+                line-height 13px
+                padding-right 5px
+                position relative
+                top 1px
+
+            .name
+                display inline
+
+            .target
+                float left
+                display inline-block
+                overflow ellipsis
+
+        .add-target-input
+            margin-top 0px
+            transition opacity 0.4s
+            opacity 0.5
+
+            &:focus
+                opacity 1
+
+ul.projects-manage-list li.project
+
+    > .name
+        width 250px
+
+    ul.targets-manage-list, .add-target
+        margin-left 270px
+
+    .target
+        width 200px
+
+@media (max-width: 979px)
+
+    ul.projects-manage-list li.project
+
+        > .name
+            width 130px
+
+        ul.targets-manage-list, .add-target
+            margin-left 150px
+
+@media (max-width: 480px)
+
+    ul.projects-manage-list li.project
+
+        > .name
+            width 100%
+            position static
+            margin-bottom 5px
+
+        > .close
+            opacity 0.6
+            right -1px
+            left auto
+            visibility visible
+            top -1px
+
+        ul.targets-manage-list, .add-target
+            margin-left 0px
+
+        .target
+            width 100%
+
+.pages-data-row .visible-phone .value
+    position absolute
+    right 20px
