@@ -1,10 +1,7 @@
 exports.config =
 
     paths:
-        public: 'public'
-
-    # paths:
-    #     public: '/user/www/deploy'
+        public: '../SingularityService/src/main/resources/static'
 
     files:
 
