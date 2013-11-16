@@ -13,7 +13,6 @@ import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
 
 public class JDBIHistoryManager implements HistoryManager {
@@ -54,7 +53,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
   
   @Override
-  public List<SingularityTaskId> getTaskHistoryForRequestLike(String requestIdLike) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike) {
     return history.getTaskHistoryForRequestLike(requestIdLike);
   }
 
@@ -78,7 +77,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskId> getTaskHistoryForRequest(String requestId) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId) {
     return history.getTaskHistoryForRequest(requestId);
   }
 
