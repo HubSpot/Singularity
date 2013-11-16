@@ -3,7 +3,7 @@ if window.location.hostname is 'localhost'
         env: 'local'
         SINGULARITY_BASE: 'http://heliograph.iad01.hubspot-networks.net:7005'
 else
-    env
+    env =
         env: 'prod'
         SINGULARITY_BASE: ''
 
