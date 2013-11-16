@@ -6,8 +6,8 @@ class TasksView extends View
 
     render: =>
         context =
-            tasksActive: app.collections.tasksActive.toJSON()
-            tasksScheduled: app.collections.tasksScheduled.toJSON()
+            tasksActive: app.collections.tasksActive.sort().toJSON().reverse()
+            tasksScheduled: app.collections.tasksScheduled.sort().toJSON().reverse()
 
         @$el.html @template context
 
