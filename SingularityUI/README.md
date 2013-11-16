@@ -12,8 +12,14 @@ Then npm install `/SingularityUI/package.json`:
 npm install
 ```
 
-Lastly, run Chrome or Chrome Canary with web security disabled (to allow cross-domain requests):
+Run Chrome or Chrome Canary with web security disabled (to allow cross-domain requests):
 
 ```shell
 open -a Google\ Chrome\ Canary --args --disable-web-security
+```
+
+Lastly, run brunch on your preferred port:
+
+```shell
+brunch watch --server -p PORT
 ```
