@@ -196,7 +196,7 @@ Requests = (function(_super) {
     return _ref;
   }
 
-  Requests.prototype.url = "http://" + env.SINGULARITY_BASE + "/" + constants.api_base + "/requests";
+  Requests.prototype.url = "" + env.SINGULARITY_BASE + "/" + constants.api_base + "/requests";
 
   Requests.prototype.parse = function(requests) {
     var _this = this;
@@ -265,7 +265,7 @@ TasksActive = (function(_super) {
     return _ref;
   }
 
-  TasksActive.prototype.url = "http://" + env.SINGULARITY_BASE + "/" + constants.api_base + "/tasks/active";
+  TasksActive.prototype.url = "" + env.SINGULARITY_BASE + "/" + constants.api_base + "/tasks/active";
 
   TasksActive.prototype.parse = function(tasks) {
     var _this = this;
@@ -309,7 +309,7 @@ TasksScheduled = (function(_super) {
     return _ref;
   }
 
-  TasksScheduled.prototype.url = "http://" + env.SINGULARITY_BASE + "/" + constants.api_base + "/tasks/scheduled";
+  TasksScheduled.prototype.url = "" + env.SINGULARITY_BASE + "/" + constants.api_base + "/tasks/scheduled";
 
   TasksScheduled.prototype.parse = function(tasks) {
     var _this = this;
@@ -371,7 +371,7 @@ module.exports = constants;
 ;require.register("env", function(exports, require, module) {
 var env;
 
-if (window.location.hostname === 'localhost') {
+if (window.location.hostname.substr(0, 'local'.length) === 'local') {
   env = {
     env: 'local',
     SINGULARITY_BASE: 'http://heliograph.iad01.hubspot-networks.net:7005'
@@ -603,7 +603,7 @@ RequestTasks = (function(_super) {
   }
 
   RequestTasks.prototype.url = function() {
-    return "http://" + env.SINGULARITY_BASE + "/" + constants.api_base + "/history/request/" + this.requestId + "/tasks";
+    return "" + env.SINGULARITY_BASE + "/" + constants.api_base + "/history/request/" + this.requestId + "/tasks";
   };
 
   RequestTasks.prototype.initialize = function() {
@@ -644,7 +644,7 @@ State = (function(_super) {
   }
 
   State.prototype.url = function() {
-    return "http://" + env.SINGULARITY_BASE + "/" + constants.api_base + "/state";
+    return "" + env.SINGULARITY_BASE + "/" + constants.api_base + "/state";
   };
 
   State.prototype.parse = function(state) {
@@ -675,7 +675,7 @@ Task = (function(_super) {
   }
 
   Task.prototype.url = function() {
-    return "http://" + env.SINGULARITY_BASE + "/" + constants.api_base + "/task/" + (this.get('name'));
+    return "" + env.SINGULARITY_BASE + "/" + constants.api_base + "/task/" + (this.get('name'));
   };
 
   return Task;
