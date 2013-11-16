@@ -3,6 +3,9 @@ exports.config =
     paths:
         public: 'public'
 
+    paths:
+        public: '/user/www/deploy'
+
     files:
 
         javascripts:
