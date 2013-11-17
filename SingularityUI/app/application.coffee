@@ -21,7 +21,7 @@ class Application
             @router = new Router
 
             Backbone.history.start
-                pushState: false
+                pushState: true
                 root: '/singularity/'
 
             Object.freeze? @
