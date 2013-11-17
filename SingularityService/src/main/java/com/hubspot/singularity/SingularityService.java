@@ -21,7 +21,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         .build(Stage.DEVELOPMENT);
     bootstrap.addBundle(guiceBundle);
 
-    bootstrap.addBundle(new AssetsBundle("/static/", "/"));
+    bootstrap.addBundle(new AssetsBundle("/static/", "/static/"));
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
   }
@@ -29,6 +29,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
     environment.jersey().setUrlPattern(configuration.getAppRoot() + "/*");
+    environment.servlets().addServlet("brunch", new SingularityBrunchServlet("/", "/", "index.html")).addMapping("/*");
   }
 
   public static void main(String[] args) throws Exception {
