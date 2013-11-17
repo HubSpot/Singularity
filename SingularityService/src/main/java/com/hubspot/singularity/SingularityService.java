@@ -21,7 +21,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         .build(Stage.DEVELOPMENT);
     bootstrap.addBundle(guiceBundle);
 
-    bootstrap.addBundle(new AssetsBundle("/static/", "/static/"));
+    bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
   }
