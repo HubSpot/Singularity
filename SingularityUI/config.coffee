@@ -1,7 +1,7 @@
 exports.config =
 
     paths:
-        public: '../SingularityService/src/main/resources/static'
+        public: '../SingularityService/src/main/resources'
 
     files:
 
