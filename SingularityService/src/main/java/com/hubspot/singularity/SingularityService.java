@@ -29,7 +29,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
     environment.jersey().setUrlPattern(configuration.getAppRoot() + "/*");
-    environment.servlets().addServlet("brunch", new SingularityBrunchServlet("/", "/", "index.html")).addMapping("/*");
+    environment.servlets().addServlet("brunch", new SingularityBrunchServlet("/static/", "/", "index.html")).addMapping("/*");
   }
 
   public static void main(String[] args) throws Exception {
