@@ -5,6 +5,35 @@
 
 <section>
     <div class="page-header">
+        <h1>History</h1>
+    </div>
+    {{#if taskUpdates}}
+        <div class="row-fluid">
+            <div class="span12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Message</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn taskUpdates}}
+                            <tr>
+                                <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
+                                <td><span>{{ statusMessage }}</span></td>
+                                <td><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {{else}}
+        <div class="page-loader centered"></div>
+    {{/if}}
+    <div class="page-header">
         <h1>JSON</h1>
     </div>
     <div class="row-fluid">
