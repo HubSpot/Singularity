@@ -18,7 +18,8 @@ class Router extends Backbone.Router
         'requests(/)': 'requests'
         'request/:requestId': 'request'
         'tasks(/)': 'tasks'
-        'task/:taskId': 'task'
+        'tasks/:taskssFilter(/)': 'tasksFiltered'
+        'task/:taskId(/)': 'task'
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
@@ -44,11 +45,14 @@ class Router extends Backbone.Router
         app.views.requestViews[requestId].render()
 
     tasks: ->
+        @tasksFiltered 'active'
+
+    tasksFiltered: (taskssFilter) ->
         nav()
         if not app.views.tasks?
             app.views.tasks = new TasksView
         app.views.current = app.views.tasks
-        app.views.tasks.render()
+        app.views.tasks.render taskssFilter
 
     task: (taskId) ->
         nav()

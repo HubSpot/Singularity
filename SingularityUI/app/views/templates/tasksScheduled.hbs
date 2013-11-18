@@ -1,0 +1,29 @@
+<header class="jumbotron subhead" id="overview">
+    <h1>Scheduled Tasks</h1>
+</header>
+
+<section>
+    <input type="search" placeholder="Search tasks..." required />
+    <div class="row-fluid">
+        <div class="span12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Scheduled</th>
+                        <th>JSON</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn tasks}}
+                        <tr data-task-id="{{ id }}">
+                            <td><span class="simptip-position-top simptip-movable" data-tooltip="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
+                            <td><span class="ellipsis simptip-position-top simptip-movable" data-tooltip="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                            <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

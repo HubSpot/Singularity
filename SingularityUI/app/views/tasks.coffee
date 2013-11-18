@@ -2,14 +2,21 @@ View = require './view'
 
 class TasksView extends View
 
-    template: require './templates/tasks'
+    templateTasksActive: require './templates/tasksActive'
+    templateTasksScheduled: require './templates/tasksScheduled'
 
-    render: =>
+    render: (tasksFiltered) =>
+        @collection = app.collections.tasksActive
+        template = @templateTasksActive
+
+        if tasksFiltered is 'scheduled'
+            @collection = app.collections.tasksScheduled
+            template = @templateTasksScheduled
+
         context =
-            tasksActive: app.collections.tasksActive.sort().toJSON().reverse()
-            tasksScheduled: app.collections.tasksScheduled.sort().toJSON().reverse()
+            tasks: @collection.sort().toJSON().reverse()
 
-        @$el.html @template context
+        @$el.html template context
 
         @setupEvents()
         @setUpSearchEvents()
