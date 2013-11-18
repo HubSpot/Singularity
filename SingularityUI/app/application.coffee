@@ -21,7 +21,7 @@ class Application
             @router = new Router
 
             Backbone.history.start
-                pushState: true
+                pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
                 root: '/singularity/'
 
             Object.freeze? @
