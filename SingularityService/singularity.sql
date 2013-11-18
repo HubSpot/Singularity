@@ -29,3 +29,6 @@ CREATE TABLE taskUpdates (
   createdAt TIMESTAMP NOT NULL,
   PRIMARY KEY (taskId, status)
 );
+
+CREATE USER 'singularity'@'%' IDENTIFIED BY '';
+GRANT ALL PRIVILEGES ON singularity.* TO 'singularity'@'%';
