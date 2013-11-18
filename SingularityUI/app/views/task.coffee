@@ -5,7 +5,7 @@ class TaskView extends View
     template: require './templates/task'
 
     initialize: =>
-        @task = utils.getAcrossCollections [app.collections.tasksActive, app.collections.tasksScheduled], @options.taskId
+        @task = utils.getAcrossCollections ['tasksActive', 'tasksScheduled'], @options.taskId
 
     render: =>
         if not @task

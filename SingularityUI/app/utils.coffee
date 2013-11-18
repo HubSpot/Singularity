@@ -12,9 +12,10 @@ class Utils
                 width: 800
             message: "<pre>#{ utils.stringJSON object }</pre>"
 
-    getAcrossCollections: (collections, id) ->
+    getAcrossCollections: (collectionStrings, id) ->
         model = undefined
-        _.each collections, (collection) ->
+        _.each collectionStrings, (collectionString) ->
+            collection = app.collections[collectionString]
             model = collection.get(id) ? model
         return model
 
