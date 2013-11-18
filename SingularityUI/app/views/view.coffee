@@ -11,6 +11,9 @@ class View extends Backbone.View
     routeLink: (e) =>
         $link = $(e.target)
 
+        $parentLink = $link.parents('a[href]')
+        $link = $parentLink if $parentLink.length
+
         url = $link.attr('href')
 
         return true if $link.attr('target') is '_blank' or typeof url is 'undefined' or url.substr(0, 4) is 'http'
