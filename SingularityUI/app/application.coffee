@@ -2,9 +2,14 @@ Router = require 'lib/router'
 
 State = require 'models/State'
 
-Requests = require 'collections/Requests'
+RequestsActive = require 'collections/RequestsActive'
+RequestsPending = require 'collections/RequestsPending'
+RequestsCleaning = require 'collections/RequestsCleaning'
+
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
+
+Webhooks = require 'collections/Webhooks'
 
 class Application
 
@@ -40,8 +45,16 @@ class Application
             success: -> resolve()
 
         resources = [{
-            collection_key: 'requests'
-            collection: Requests
+            collection_key: 'requestsActive'
+            collection: RequestsActive
+            error_phrase: 'requests'
+        }, {
+            collection_key: 'requestsPending'
+            collection: RequestsPending
+            error_phrase: 'requests'
+        }, {
+            collection_key: 'requestsCleaning'
+            collection: RequestsCleaning
             error_phrase: 'requests'
         }, {
             collection_key: 'tasksActive'
@@ -51,6 +64,10 @@ class Application
             collection_key: 'tasksScheduled'
             collection: TasksScheduled
             error_phrase: 'scheduled tasks'
+        }, {
+            collection_key: 'webhooks'
+            collection: Webhooks
+            error_phrase: 'webhooks'
         }]
 
         _.each resources, (r) =>
