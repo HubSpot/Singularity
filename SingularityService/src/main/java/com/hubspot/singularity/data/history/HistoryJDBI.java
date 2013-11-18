@@ -8,10 +8,13 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 
-import com.hubspot.singularity.data.history.SingularityRequestHistory.SingularityRequestHistoryMapper;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryHelper.SingularityTaskHistoryHelperMapper;
-import com.hubspot.singularity.data.history.SingularityTaskHistoryUpdate.SingularityTaskUpdateMapper;
-import com.hubspot.singularity.data.history.SingularityTaskIdHistory.SingularityTaskIdHistoryMapper;
+import com.hubspot.singularity.data.history.mappers.SingularityRequestHistoryMapper;
+import com.hubspot.singularity.data.history.mappers.SingularityTaskIdHistoryMapper;
+import com.hubspot.singularity.data.history.mappers.SingularityTaskUpdateMapper;
 
 public interface HistoryJDBI {
 

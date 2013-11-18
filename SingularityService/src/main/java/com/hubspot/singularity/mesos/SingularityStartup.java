@@ -18,6 +18,8 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
+import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -108,10 +110,10 @@ public class SingularityStartup {
   }
   
   private void rescheduleTheWorld() {
-    final List<String> requests = requestManager.getrequestIds();
+    final List<String> requests = requestManager.getRequestIds();
     
     for (String requestId : requests) {
-      requestManager.addToPendingQueue(requestId);
+      requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId));
     }
     
     LOG.info(String.format("Put %s requests in pending queue", requests.size()));

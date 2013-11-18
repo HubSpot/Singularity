@@ -2,8 +2,10 @@ package com.hubspot.singularity.resources;
 
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -40,5 +42,11 @@ public class TaskResource {
   public List<SingularityTask> getActiveTasks() {
     return taskManager.getActiveTasks();
   }
-
+  
+  @DELETE
+  @Path("/{taskId}")
+  public void deleteTask(@PathParam("taskId") String taskId) {
+    taskManager.createCleanupTask(taskId);
+  }
+  
 }

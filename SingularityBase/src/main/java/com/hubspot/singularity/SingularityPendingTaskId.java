@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityPendingTaskId implements Comparable<SingularityPendingTaskId> {
 
@@ -44,21 +45,11 @@ public class SingularityPendingTaskId implements Comparable<SingularityPendingTa
   }
   
   public static SingularityPendingTaskId fromString(String string) {
-    final String[] splits = string.split("\\-");
+    final String[] splits = JavaUtils.reverseSplit(string, 3, "-");
  
-    final int instanceNo = Integer.parseInt(splits[splits.length - 1]);
-    final long nextRunAt = Long.parseLong(splits[splits.length - 2]);
-    
-    StringBuilder requestIdBldr = new StringBuilder();
-    
-    for (int s = 0; s < splits.length - 2; s++) {
-      requestIdBldr.append(splits[s]);
-      if (s < splits.length - 3) {
-        requestIdBldr.append("-");
-      }
-    }
-     
-    final String requestId = requestIdBldr.toString();
+    final String requestId = splits[0];
+    final long nextRunAt = Long.parseLong(splits[1]);
+    final int instanceNo = Integer.parseInt(splits[2]);
     
     return new SingularityPendingTaskId(requestId, nextRunAt, instanceNo);
   }

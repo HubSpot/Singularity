@@ -27,6 +27,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.WebhookManager;
+import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 public class SingularityMesosScheduler implements Scheduler {
@@ -118,9 +119,9 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
 
-  private boolean isRackAppropriate(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
+  private RackCheckState getRackCheckState(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
     if (!taskRequest.getRequest().isRackSensitive()) {
-      return true;
+      return RackCheckState.NOT_RACK_SENSITIVE;
     }
 
     List<SingularityTaskId> matchingTasks = Lists.newArrayList();
@@ -145,9 +146,9 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
           
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
-      final boolean isRackAppropriate = isRackAppropriate(offer, taskRequest, activeTasks);
-      
-      if (matchesResources && isRackAppropriate) {
+      final RackCheckState rackCheckState = getRackCheckState(offer, taskRequest, activeTasks);
+            
+      if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
 
         LOG.info(String.format("Launching task %s slot on slave %s (%s)", task.getTaskId(), offer.getSlaveId(), offer.getHostname()));
@@ -164,7 +165,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack appropriate: %s", offer.getId(), taskRequest.getPendingTaskId(), matchesResources, isRackAppropriate));
+        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack appropriate: %s", offer.getId(), taskRequest.getPendingTaskId(), matchesResources, rackCheckState));
       }
     }
 

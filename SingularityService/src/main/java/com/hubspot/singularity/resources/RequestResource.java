@@ -14,12 +14,14 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.RequestManager.PersistResult;
 import com.hubspot.singularity.data.SingularityRequestValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
 
 @Path("/requests")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -39,14 +41,20 @@ public class RequestResource {
   public SingularityRequest submit(SingularityRequest request, @QueryParam("user") Optional<String> user) {
     SingularityRequestValidator validator = new SingularityRequestValidator(request);
     request = validator.buildValidRequest();
-  
+    
     PersistResult result = requestManager.persistRequest(request);
     
-    requestManager.addToPendingQueue(request.getId());
+    requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId()));
   
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
     
     return request;
+  }
+  
+  @POST
+  @Path("/{requestId}/run")
+  public void scheduleImmediately(@PathParam("requestId") String requestId) {
+     requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.IMMEDIATE));
   }
 
   @GET
@@ -56,14 +64,14 @@ public class RequestResource {
   
   @GET
   @Path("/queued/pending")
-  public List<String> getPendingRequests() {
-    return requestManager.getPendingrequestIds();
+  public List<SingularityPendingRequestId> getPendingRequests() {
+    return requestManager.getPendingRequestIds();
   }
   
   @GET
   @Path("/queued/cleanup")
   public List<String> getCleanupRequests() {
-    return requestManager.getCleanuprequestIds();
+    return requestManager.getCleanupRequestIds();
   }
   
   @DELETE

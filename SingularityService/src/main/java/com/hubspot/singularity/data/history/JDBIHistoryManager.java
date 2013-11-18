@@ -12,8 +12,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 
 public class JDBIHistoryManager implements HistoryManager {
 

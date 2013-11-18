@@ -1,11 +1,7 @@
-package com.hubspot.singularity.data.history;
+package com.hubspot.singularity;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularityTaskHistoryUpdate {
@@ -14,7 +10,8 @@ public class SingularityTaskHistoryUpdate {
   private final String statusUpdate;
   private final Optional<String> statusMessage;
 
-  public SingularityTaskHistoryUpdate(long timestamp, String statusUpdate, Optional<String> statusMessage) {
+  @JsonCreator
+  public SingularityTaskHistoryUpdate(@JsonProperty("timestamp") long timestamp, @JsonProperty("statusUpdate") String statusUpdate, @JsonProperty("statusMessage") Optional<String> statusMessage) {
     this.timestamp = timestamp;
     this.statusUpdate = statusUpdate;
     this.statusMessage = statusMessage;
@@ -35,14 +32,6 @@ public class SingularityTaskHistoryUpdate {
   @Override
   public String toString() {
     return "SingularityTaskUpdate [timestamp=" + timestamp + ", statusUpdate=" + statusUpdate + ", statusMessage=" + statusMessage + "]";
-  }
-
-  public static class SingularityTaskUpdateMapper implements ResultSetMapper<SingularityTaskHistoryUpdate> {
-    
-    public SingularityTaskHistoryUpdate map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-      return new SingularityTaskHistoryUpdate(r.getDate("createdAt").getTime(), r.getString("status"), Optional.fromNullable(r.getString("message")));
-    }
-
   }
 
 }

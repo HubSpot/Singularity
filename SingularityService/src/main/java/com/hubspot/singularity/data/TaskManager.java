@@ -22,11 +22,16 @@ public class TaskManager extends CuratorManager {
   
   private final ObjectMapper objectMapper;
   
-  private final static String ACTIVE_PATH_ROOT = "/tasks";
+  private final static String TASKS_ROOT = "/tasks";
+  
+  private final static String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
 
-  private final static String SCHEDULED_PATH_ROOT = "/scheduled";
+  private final static String SCHEDULED_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private final static String SCHEDULED_PATH_FORMAT = SCHEDULED_PATH_ROOT + "/%s";
+  
+  private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
+  private final static String CLEANUP_PATH_FORMAT = CLEANUP_PATH_ROOT + "/%s";
     
   @Inject
   public TaskManager(CuratorFramework curator, ObjectMapper objectMapper) {
@@ -40,6 +45,14 @@ public class TaskManager extends CuratorManager {
 
   private String getScheduledPath(String taskId) {
     return String.format(SCHEDULED_PATH_FORMAT, taskId);
+  }
+  
+  private String getCleanupPath(String taskId) {
+    return String.format(CLEANUP_PATH_FORMAT, taskId);
+  }
+  
+  public int getNumCleanupTasks() {
+    return getNumChildren(CLEANUP_PATH_ROOT);
   }
   
   public int getNumActiveTasks() {
@@ -66,8 +79,8 @@ public class TaskManager extends CuratorManager {
     curator.create().creatingParentsIfNeeded().forPath(pendingPath);
   }
   
-  public List<SingularityTaskId> getActiveTaskIds() {
-    List<String> taskIds = getChildren(ACTIVE_PATH_ROOT);
+  private List<SingularityTaskId> getTaskIds(String root) {
+    List<String> taskIds = getChildren(root);
     List<SingularityTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (String taskId : taskIds) {
@@ -76,6 +89,14 @@ public class TaskManager extends CuratorManager {
     }
     
     return taskIdsObjs;
+  }
+  
+  public List<SingularityTaskId> getActiveTaskIds() {
+    return getTaskIds(ACTIVE_PATH_ROOT);
+  }
+  
+  public List<SingularityTaskId> getCleanupTaskIds() {
+    return getTaskIds(CLEANUP_PATH_ROOT);
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {
@@ -145,12 +166,20 @@ public class TaskManager extends CuratorManager {
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getTaskData(objectMapper));
   }
   
+  public void createCleanupTask(String taskId) {
+    create(getCleanupPath(taskId));
+  }
+  
   public void deleteActiveTask(String taskId) {
     delete(getActivePath(taskId));
   }
   
   public void deleteScheduledTask(String taskId) {
     delete(getScheduledPath(taskId));
+  }
+  
+  public void deleteCleanupTask(String taskId) {
+    delete(getCleanupPath(taskId));
   }
   
 }

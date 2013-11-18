@@ -31,6 +31,6 @@ logging:
 
   loggers:
 
-    "com.hubspot.singularity.mesos" : INFO 
+    "com.hubspot.singularity" : TRACE 
 
 appRoot: /v1

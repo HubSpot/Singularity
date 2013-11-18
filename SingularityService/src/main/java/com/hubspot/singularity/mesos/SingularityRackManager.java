@@ -40,10 +40,28 @@ public class SingularityRackManager {
     slaveToRacks = Maps.newHashMap();
     racks = Sets.newHashSet();
   }
+  
+  public enum RackCheckState {
+    ALREADY_ON_SLAVE (false), RACK_SATURATED (false), RACK_OK (true), NOT_RACK_SENSITIVE (true);
+  
+    private final boolean isRackAppropriate;
 
-  // TODO log or better reasoning behind why certain rack choices are made
-  // (maybe an ENUM?)
-  public boolean checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
+    private RackCheckState(boolean isRackAppropriate) {
+      this.isRackAppropriate = isRackAppropriate;
+    }
+
+    public boolean isRackAppropriate() {
+      return isRackAppropriate;
+    }
+    
+  }
+
+  public String getSlaveName(Offer offer) {
+    return getSafeString(offer.getHostname().split("\\.")[0]);
+  }
+  
+  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
+    String slave = getSlaveName(offer);
     String rackId = getRackId(offer);
 
     int numDesiredInstances = taskRequest.getRequest().getInstances();
@@ -51,6 +69,12 @@ public class SingularityRackManager {
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
     for (SingularityTaskId taskId : activeTasks) {
+      if (taskId.getSlave().equals(slave)) {
+        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTaskId(), slave, taskId));
+        
+        return RackCheckState.ALREADY_ON_SLAVE;
+      }
+      
       Integer currentUsage = Objects.firstNonNull(rackUsage.get(taskId.getRackId()), 0);
 
       rackUsage.put(taskId.getRackId(), currentUsage + 1);
@@ -63,7 +87,11 @@ public class SingularityRackManager {
   
     LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTaskId(), rackId, numPerRack, numOnRack));
     
-    return isRackOk;
+    if (isRackOk) {
+      return RackCheckState.RACK_OK;
+    } else {
+      return RackCheckState.RACK_SATURATED;
+    }
   }
 
   private void clearRacks() {
@@ -106,10 +134,15 @@ public class SingularityRackManager {
   public String getRackId(Offer offer) {
     for (Attribute attribute : offer.getAttributesList()) {
       if (attribute.getName().equals(rackIdAttributeKey)) {
-        return attribute.getText().getValue();
+        return getSafeString(attribute.getText().getValue());
       }
     }
+    
     return defaultRackId;
+  }
+  
+  private String getSafeString(String string) {
+    return string.replace("-", "_");
   }
 
   private void saveRackId(String slaveId, Optional<String> maybeRackId) {

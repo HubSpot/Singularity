@@ -12,6 +12,7 @@ import org.eclipse.jetty.server.Request;
 
 import com.google.common.base.Charsets;
 
+@SuppressWarnings("serial")
 public class SingularityBrunchServlet extends AssetServlet {
 
   public SingularityBrunchServlet(String resourcePath, String uriPath, String indexFile) {

@@ -15,6 +15,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDriverManager;
+import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskId;
@@ -38,15 +40,44 @@ public class SingularityScheduler {
   }
   
   public void drainCleanupQueue() {
+    drainRequestCleanupQueue();
+    drainTaskCleanupQueue();
+  }
+  
+  private void drainTaskCleanupQueue() {
     final long start = System.currentTimeMillis();
 
-    final List<String> cleanupRequests = requestManager.getCleanuprequestIds();
+    final List<SingularityTaskId> cleanupTasks = taskManager.getCleanupTaskIds();
     
-    LOG.info(String.format("Cleanup queue had %s requests", cleanupRequests.size()));
+    LOG.debug(String.format("Task cleanup queue had %s tasks", cleanupTasks.size()));
+    
+    if (cleanupTasks.isEmpty()) {
+      return;
+    }
+    
+    LOG.info(String.format("Cleaning up %s tasks", cleanupTasks.size()));
+   
+    for (SingularityTaskId taskId : cleanupTasks) {
+      driverManager.kill(taskId.toString());
+      
+      taskManager.deleteCleanupTask(taskId.toString());
+    }
+    
+    LOG.info(String.format("Killed %s tasks in %sms", cleanupTasks.size(), System.currentTimeMillis() - start));
+  }
+  
+  private void drainRequestCleanupQueue() {
+    final long start = System.currentTimeMillis();
+
+    final List<String> cleanupRequests = requestManager.getCleanupRequestIds();
+    
+    LOG.debug(String.format("Request cleanup queue had %s requests", cleanupRequests.size()));
     
     if (cleanupRequests.isEmpty()) {
       return;
     }
+    
+    LOG.info(String.format("Cleaning up %s requests", cleanupRequests.size()));
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getScheduledTasks();
@@ -74,14 +105,13 @@ public class SingularityScheduler {
       requestManager.deleteCleanRequest(requestId);
     }
     
-    
     LOG.info(String.format("Killed %s tasks (removed %s scheduled) in %sms", numTasksKilled, numScheduledTasksRemoved, System.currentTimeMillis() - start));
   }
   
   public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds) {
     final long start = System.currentTimeMillis();
     
-    final List<String> pendingRequests = requestManager.getPendingrequestIds();
+    final List<SingularityPendingRequestId> pendingRequests = requestManager.getPendingRequestIds();
     
     LOG.info(String.format("Pending queue had %s requests", pendingRequests.size()));
     
@@ -94,16 +124,16 @@ public class SingularityScheduler {
     int numScheduledTasks = 0;
     int obsoleteRequests = 0;
     
-    for (String pendingRequest : pendingRequests) {
-      Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingRequest);
+    for (SingularityPendingRequestId pendingRequest : pendingRequests) {
+      Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingRequest.getRequestId());
       
       if (maybeRequest.isPresent()) {
-        numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, maybeRequest.get()).size();
+        numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, maybeRequest.get(), pendingRequest.getPendingTypeEnum()).size();
       } else {
         obsoleteRequests++;
       }
       
-      requestManager.deletePendingRequest(pendingRequest);
+      requestManager.deletePendingRequest(pendingRequest.toString());
     }
     
     LOG.info(String.format("Scheduled %s requests (%s obsolete) in %sms", numScheduledTasks, obsoleteRequests, System.currentTimeMillis() - start));
@@ -134,10 +164,10 @@ public class SingularityScheduler {
     }
   }
 
-  public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
+  public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, SingularityRequest request, PendingType pendingType) {
     deleteScheduledTasks(scheduledTaskIds, request.getId());
     
-    final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(activeTaskIds, request);
+    final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(activeTaskIds, request, pendingType);
     
     taskManager.persistScheduleTasks(scheduledTasks);
   
@@ -160,26 +190,30 @@ public class SingularityScheduler {
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
     
-    scheduleTasks(scheduledTasks, activeTaskIds, request);
+    scheduleTasks(scheduledTasks, activeTaskIds, request, PendingType.REGULAR);
   }
   
-  private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, SingularityRequest request) {
+  private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, SingularityRequest request, PendingType pendingType) {
     final int numInstances = Objects.firstNonNull(request.getInstances(), 1);
     
     long nextRunAt = System.currentTimeMillis();
     
     if (request.getSchedule() != null) {
-      try {
-        final Date now = new Date();
-        
-        CronExpression cronExpression = new CronExpression(request.getSchedule());
-
-        final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(now);
-        nextRunAt = nextRunAtDate.getTime();
-        
-        LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (now: %s)", request.getId(), request.getSchedule(), nextRunAtDate, now));
-      } catch (ParseException pe) {
-        throw Throwables.propagate(pe);
+      if (pendingType == PendingType.IMMEDIATE) {
+        LOG.info("Scheduling requested immediate run of %s", request.getId());
+      } else {
+        try {
+          final Date now = new Date();
+          
+          CronExpression cronExpression = new CronExpression(request.getSchedule());
+  
+          final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(now);
+          nextRunAt = nextRunAtDate.getTime();
+          
+          LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (now: %s)", request.getId(), request.getSchedule(), nextRunAtDate, now));
+        } catch (ParseException pe) {
+          throw Throwables.propagate(pe);
+        }
       }
     }
   

@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -25,13 +26,15 @@ public class RequestManager extends CuratorManager {
   
   private final ObjectMapper objectMapper;
 
-  private final static String REQUEST_PATH_ROOT = "/requests";
-  private final static String REQUEST_PATH_FORMAT = REQUEST_PATH_ROOT + "/%s";
+  private final static String REQUEST_ROOT = "/requests";
+    
+  private final static String ACTIVE_PATH_ROOT = REQUEST_ROOT + "/active";
+  private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
 
-  private final static String PENDING_PATH_ROOT = "/pending";
+  private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
   private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
   
-  private final static String CLEANUP_PATH_ROOT = "/cleanup";
+  private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
   private final static String CLEANUP_PATH_FORMAT = CLEANUP_PATH_ROOT + "/%s";
   
   @Inject
@@ -41,7 +44,7 @@ public class RequestManager extends CuratorManager {
   }
  
   private String getRequestPath(String name) {
-    return String.format(REQUEST_PATH_FORMAT, name);
+    return String.format(ACTIVE_PATH_FORMAT, name);
   }
   
   private String getPendingPath(String name) {
@@ -61,11 +64,11 @@ public class RequestManager extends CuratorManager {
   }
   
   public int getNumRequests() {
-    return getNumChildren(REQUEST_PATH_ROOT);
+    return getNumChildren(ACTIVE_PATH_ROOT);
   }
   
-  public void deletePendingRequest(String requestId) {
-    delete(getPendingPath(requestId));
+  public void deletePendingRequest(String pendingRequestId) {
+    delete(getPendingPath(pendingRequestId));
   }
   
   public void deleteCleanRequest(String requestId) {
@@ -76,8 +79,8 @@ public class RequestManager extends CuratorManager {
     create(getCleanupPath(requestId));
   }
   
-  public void addToPendingQueue(String requestId) {
-    create(getPendingPath(requestId));
+  public void addToPendingQueue(SingularityPendingRequestId pendingRequestId) {
+    create(getPendingPath(pendingRequestId.toString()));
   }
   
   public enum PersistResult {
@@ -106,15 +109,22 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public List<String> getrequestIds() {
-    return getChildren(REQUEST_PATH_ROOT);
+  public List<String> getRequestIds() {
+    return getChildren(ACTIVE_PATH_ROOT);
   }
   
-  public List<String> getPendingrequestIds() {
-    return getChildren(PENDING_PATH_ROOT);
+  public List<SingularityPendingRequestId> getPendingRequestIds() {
+    List<String> pendingStrings = getChildren(PENDING_PATH_ROOT);
+    List<SingularityPendingRequestId> pendingRequestIds = Lists.newArrayListWithCapacity(pendingStrings.size());
+    
+    for (String pendingString : pendingStrings) {
+      pendingRequestIds.add(SingularityPendingRequestId.fromString(pendingString));
+    }
+    
+    return pendingRequestIds;
   }
   
-  public List<String> getCleanuprequestIds() {
+  public List<String> getCleanupRequestIds() {
     return getChildren(CLEANUP_PATH_ROOT);
   }
   
@@ -133,7 +143,7 @@ public class RequestManager extends CuratorManager {
   }
   
   public List<SingularityRequest> getKnownRequests() {
-    final List<String> requestIds = getrequestIds();
+    final List<String> requestIds = getRequestIds();
     final List<SingularityRequest> requests = Lists.newArrayListWithCapacity(requestIds.size());
     
     for (String requestId : requestIds) {
@@ -151,7 +161,7 @@ public class RequestManager extends CuratorManager {
 
   public Optional<SingularityRequest> fetchRequest(String requestId) {
     try {
-      SingularityRequest request = SingularityRequest.getRequestFromData(curator.getData().forPath(ZKPaths.makePath(REQUEST_PATH_ROOT, requestId)), objectMapper);
+      SingularityRequest request = SingularityRequest.getRequestFromData(curator.getData().forPath(ZKPaths.makePath(ACTIVE_PATH_ROOT, requestId)), objectMapper);
       return Optional.of(request);
     } catch (NoNodeException nee) {
       return Optional.absent();

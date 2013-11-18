@@ -10,10 +10,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.SingularityRequestHistory;
-import com.hubspot.singularity.data.history.SingularityTaskHistory;
-import com.hubspot.singularity.data.history.SingularityTaskIdHistory;
 
 @Path("/history")
 @Produces({ MediaType.APPLICATION_JSON })

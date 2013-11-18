@@ -43,8 +43,9 @@ public class SingularityMesosTaskBuilder {
   
   public SingularityTask buildTask(Protos.Offer offer, SingularityTaskRequest taskRequest, Resources resources) {
     final String rackId = rackManager.getRackId(offer);
+    final String slave = rackManager.getSlaveName(offer);
     
-    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTaskId().getRequestId(), System.currentTimeMillis(), taskRequest.getPendingTaskId().getInstanceNo(), rackId);
+    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTaskId().getRequestId(), System.currentTimeMillis(), taskRequest.getPendingTaskId().getInstanceNo(), slave, rackId);
     
     final TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
@@ -79,6 +80,7 @@ public class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
   
+  @SuppressWarnings("unchecked")
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final long[] ports) {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()

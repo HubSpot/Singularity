@@ -4,8 +4,11 @@ import java.util.List;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.data.history.SingularityRequestHistory.RequestState;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 
 public interface HistoryManager {
 
