@@ -144,5 +144,4 @@ public class SingularityRequest {
         + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
   }
 
-
 }

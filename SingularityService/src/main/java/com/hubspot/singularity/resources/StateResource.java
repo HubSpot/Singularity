@@ -13,8 +13,11 @@ import org.apache.mesos.Protos;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityManaged;
 import com.hubspot.singularity.SingularityState;
+import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.hooks.WebhookManager;
 
 @Path("/state")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -23,12 +26,18 @@ public class StateResource {
   private final RequestManager requestManager;
   private final TaskManager taskManager;
   private final SingularityManaged managed;
+  private final WebhookManager webhookManager;
+  private final SlaveManager slaveManager;
+  private final RackManager rackManager;
   
   @Inject
-  public StateResource(RequestManager requestManager, TaskManager taskManager, SingularityManaged managed) {
+  public StateResource(RequestManager requestManager, TaskManager taskManager, SingularityManaged managed, WebhookManager webhookManager, SlaveManager slaveManager, RackManager rackManager) {
     this.requestManager = requestManager;
     this.taskManager = taskManager;
     this.managed = managed;
+    this.webhookManager = webhookManager;
+    this.slaveManager = slaveManager;
+    this.rackManager = rackManager;
   }
 
   @GET
@@ -41,12 +50,23 @@ public class StateResource {
    
     final int activeTasks = taskManager.getNumActiveTasks();
     final int scheduledTasks = taskManager.getNumScheduledTasks();
+    final int cleaningTasks = taskManager.getNumCleanupTasks();
     
     final int requests = requestManager.getNumRequests();
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
     final int cleaningRequests = requestManager.getSizeOfCleanupQueue();
     
-    return new SingularityState(isMaster, uptime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-");
+    final int activeRacks = rackManager.getNumActive();
+    final int deadRacks = rackManager.getNumDead();
+    final int decomissioningRacks = rackManager.getNumDecomissioning();
+    
+    final int activeSlaves = slaveManager.getNumActive();
+    final int deadSlaves = slaveManager.getNumDead();
+    final int decomissioningSlaves = slaveManager.getNumDecomissioning();
+    
+    final int numWebhooks = webhookManager.getWebhooks().size();
+    
+    return new SingularityState(isMaster, uptime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-", activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks);
   }
   
 }

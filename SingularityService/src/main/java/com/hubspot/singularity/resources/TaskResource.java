@@ -44,7 +44,7 @@ public class TaskResource {
   }
   
   @DELETE
-  @Path("/{taskId}")
+  @Path("/task/{taskId}")
   public void deleteTask(@PathParam("taskId") String taskId) {
     taskManager.createCleanupTask(taskId);
   }

@@ -36,6 +36,18 @@ public abstract class CuratorManager {
     return 0;
   }
   
+  protected boolean exists(String path) {
+    try {
+      Stat s = curator.checkExists().forPath(path);
+      return s != null;
+    } catch (NoNodeException nne) {
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+    
+    return false;
+  }
+  
   protected List<String> getChildren(String root) {
     try {
       return curator.getChildren().forPath(root);
@@ -46,21 +58,32 @@ public abstract class CuratorManager {
     }
   }
   
-  protected void delete(String path) {
+  public enum DeleteResult {
+    DELETED, DIDNT_EXIST;
+  }
+  
+  protected DeleteResult delete(String path) {
     try {
       curator.delete().forPath(path);
+      return DeleteResult.DELETED;
     } catch (NoNodeException nne) {
       LOG.warn(String.format("Expected item at %s", path), nne);
+      return DeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
   
-  protected void create(String path) {
+  public enum CreateResult {
+    CREATED, EXISTED;
+  }
+  
+  protected CreateResult create(String path) {
     try {
       curator.create().creatingParentsIfNeeded().forPath(path);
+      return CreateResult.CREATED;
     } catch (NodeExistsException nee) {
-      // ignored
+      return CreateResult.EXISTED;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }

@@ -120,10 +120,6 @@ public class SingularityMesosScheduler implements Scheduler {
   }
 
   private RackCheckState getRackCheckState(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
-    if (!taskRequest.getRequest().isRackSensitive()) {
-      return RackCheckState.NOT_RACK_SENSITIVE;
-    }
-
     List<SingularityTaskId> matchingTasks = Lists.newArrayList();
 
     for (SingularityTaskId activeTask : activeTasks) {
@@ -155,9 +151,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
         taskManager.launchTask(task);
 
-        LOG.debug(String.format("Launching mesos task: %s", task.getTask()));
+        LOG.debug(String.format("Launching mesos task: %s", task.getMesosTask()));
 
-        Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(task.getTask()));
+        Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(task.getMesosTask()));
 
         LOG.trace(String.format("Task %s launched with status %s", task.getTaskId(), initialStatus.name()));
         

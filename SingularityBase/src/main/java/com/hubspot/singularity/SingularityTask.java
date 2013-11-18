@@ -17,13 +17,13 @@ public class SingularityTask {
   private final SingularityTaskRequest taskRequest;
   private final SingularityTaskId taskId;
   private final Offer offer;
-  private final TaskInfo task;
+  private final TaskInfo mesosTask;
 
   @JsonCreator
-  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("task") TaskInfo task) {
+  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("mesosTask") TaskInfo task) {
     this.taskRequest = taskRequest;
     this.offer = offer;
-    this.task = task;
+    this.mesosTask = task;
     this.taskId = taskId;
   }
 
@@ -39,8 +39,8 @@ public class SingularityTask {
     return offer;
   }
 
-  public TaskInfo getTask() {
-    return task;
+  public TaskInfo getMesosTask() {
+    return mesosTask;
   }
 
   public byte[] getTaskData(ObjectMapper objectMapper) throws JsonProcessingException {
@@ -53,7 +53,7 @@ public class SingularityTask {
 
   @Override
   public String toString() {
-    return "SingularityTask [taskRequest=" + taskRequest + ", taskId=" + taskId + ", offer=" + offer + ", task=" + task + "]";
+    return "SingularityTask [taskRequest=" + taskRequest + ", taskId=" + taskId + ", offer=" + offer + ", task=" + mesosTask + "]";
   }
   
 }

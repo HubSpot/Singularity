@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.JavaUtils;
 
-public class SingularityPendingRequestId {
+public class SingularityPendingRequestId extends SingularityId {
 
   public enum PendingType {
     IMMEDIATE, REGULAR

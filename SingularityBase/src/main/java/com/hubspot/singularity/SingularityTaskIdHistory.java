@@ -35,8 +35,9 @@ public class SingularityTaskIdHistory {
     return createdAt;
   }
 
-  public String getTaskId() {
-    return taskId.toString();
+  @Override
+  public String toString() {
+    return "SingularityTaskIdHistory [taskId=" + taskId + ", lastStatus=" + lastStatus + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + "]";
   }
 
 }

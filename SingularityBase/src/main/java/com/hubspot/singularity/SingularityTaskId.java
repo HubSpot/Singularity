@@ -8,21 +8,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 
-public class SingularityTaskId {
+public class SingularityTaskId extends SingularityId {
 
   private final String requestId;
   private final long startedAt;
   private final int instanceNo;
-  private final String slave;
+  private final String host;
   private final String rackId;
 
   @JsonCreator
-  public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("slave") String slave, @JsonProperty("rackId") String rackId) {
+  public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId) {
     this.requestId = requestId;
     this.startedAt = startedAt;
     this.instanceNo = instanceNo;
     this.rackId = rackId;
-    this.slave = slave;
+    this.host = host;
   }
   
   public static List<SingularityTaskId> filter(List<SingularityTaskId> taskIds, String requestId) {
@@ -39,8 +39,8 @@ public class SingularityTaskId {
     return rackId;
   }
   
-  public String getSlave() {
-    return slave;
+  public String getHost() {
+    return host;
   }
   
   public String getRequestId() {
@@ -65,15 +65,15 @@ public class SingularityTaskId {
     final String requestId = splits[0];
     final long startedAt = Long.parseLong(splits[1]);
     final int instanceNo = Integer.parseInt(splits[2]);
-    final String slave = splits[3];
+    final String host = splits[3];
     final String rackId = splits[4];
     
-    return new SingularityTaskId(requestId, startedAt, instanceNo, slave, rackId);
+    return new SingularityTaskId(requestId, startedAt, instanceNo, host, rackId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(instanceNo, requestId, rackId, slave, startedAt);
+    return Objects.hash(instanceNo, requestId, rackId, host, startedAt);
   }
   
   @Override
@@ -97,10 +97,10 @@ public class SingularityTaskId {
         return false;
     } else if (!requestId.equals(other.requestId))
       return false;
-    if (slave == null) {
-      if (other.slave != null)
+    if (host == null) {
+      if (other.host != null)
         return false;
-    } else if (!slave.equals(other.slave))
+    } else if (!host.equals(other.host))
       return false;
     if (startedAt != other.startedAt)
       return false;
@@ -108,7 +108,7 @@ public class SingularityTaskId {
   }
   
   public String toString() {
-    return String.format("%s-%s-%s-%s-%s", getRequestId(), getStartedAt(), getInstanceNo(), getSlave(), getRackId());
+    return String.format("%s-%s-%s-%s-%s", getRequestId(), getStartedAt(), getInstanceNo(), getHost(), getRackId());
   }
   
 }

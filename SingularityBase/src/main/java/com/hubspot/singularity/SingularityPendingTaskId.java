@@ -9,7 +9,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 
-public class SingularityPendingTaskId implements Comparable<SingularityPendingTaskId> {
+public class SingularityPendingTaskId extends SingularityId implements Comparable<SingularityPendingTaskId> {
 
   private final String requestId;
   private final long nextRunAt;
@@ -43,7 +43,7 @@ public class SingularityPendingTaskId implements Comparable<SingularityPendingTa
   public int getInstanceNo() {
     return instanceNo;
   }
-  
+    
   public static SingularityPendingTaskId fromString(String string) {
     final String[] splits = JavaUtils.reverseSplit(string, 3, "-");
  

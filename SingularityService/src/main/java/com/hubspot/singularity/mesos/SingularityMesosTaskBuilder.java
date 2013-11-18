@@ -43,9 +43,9 @@ public class SingularityMesosTaskBuilder {
   
   public SingularityTask buildTask(Protos.Offer offer, SingularityTaskRequest taskRequest, Resources resources) {
     final String rackId = rackManager.getRackId(offer);
-    final String slave = rackManager.getSlaveName(offer);
+    final String host = rackManager.getSlaveHost(offer);
     
-    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTaskId().getRequestId(), System.currentTimeMillis(), taskRequest.getPendingTaskId().getInstanceNo(), slave, rackId);
+    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTaskId().getRequestId(), System.currentTimeMillis(), taskRequest.getPendingTaskId().getInstanceNo(), host, rackId);
     
     final TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));

@@ -52,7 +52,7 @@ public class RequestResource {
   }
   
   @POST
-  @Path("/{requestId}/run")
+  @Path("/request/{requestId}/run")
   public void scheduleImmediately(@PathParam("requestId") String requestId) {
      requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.IMMEDIATE));
   }
@@ -75,7 +75,7 @@ public class RequestResource {
   }
   
   @DELETE
-  @Path("/{requestId}")
+  @Path("/request/{requestId}")
   public Optional<SingularityRequest> getHistoryForTask(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     Optional<SingularityRequest> request = requestManager.deleteRequest(requestId);
   
