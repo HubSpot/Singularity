@@ -16,7 +16,8 @@ class Router extends Backbone.Router
     routes:
         '(/)': 'dashboard'
         'requests(/)': 'requests'
-        'request/:requestId': 'request'
+        'requests/:requestsFilter(/)': 'requestsFiltered'
+        'request/:requestId(/)': 'request'
         'tasks(/)': 'tasks'
         'tasks/:taskssFilter(/)': 'tasksFiltered'
         'task/:taskId(/)': 'task'
@@ -30,11 +31,14 @@ class Router extends Backbone.Router
         app.views.dashboard.render()
 
     requests: ->
+        @requestsFiltered 'active'
+
+    requestsFiltered: (requestsFilter) ->
         nav()
         if not app.views.requests?
             app.views.requests = new RequestsView
         app.views.current = app.views.requests
-        app.views.requests.render()
+        app.views.requests.render requestsFilter
 
     request: (requestId) ->
         nav()

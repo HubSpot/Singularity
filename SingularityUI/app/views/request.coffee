@@ -7,7 +7,7 @@ class RequestView extends View
     template: require './templates/request'
 
     initialize: =>
-        @request = app.collections.requests.get(@options.requestId)
+        @request = app.collections.requestsActive.get(@options.requestId)
         @requestTasks = new RequestTasks requestId: @options.requestId
         @requestTasks.fetch().done => @render()
 

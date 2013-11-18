@@ -1,0 +1,33 @@
+<header class="jumbotron subhead" id="overview">
+    <h1>Pending Requests</h1>
+</header>
+
+<section>
+    <div class="row-fluid">
+        <input type="search" placeholder="Search requests..." required />
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if requests.length}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pending Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requests}}
+                            <tr data-request-id="{{ id }}">
+                                <td>{{#hardBreak id}}{{/hardBreak}}</td>
+                                <td><span>{{ pendingType }}</span></td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                There aren't any pending requests.
+            {{/if}}
+        </div>
+    </div>
+</section>
