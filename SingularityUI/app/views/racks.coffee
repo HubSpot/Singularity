@@ -7,16 +7,24 @@ class RacksView extends View
     template: require './templates/racks'
 
     initialize: =>
+        promises = []
+
         @racksActive = new Racks [], rackType: 'active'
-        @racksActive.fetch().done => @render()
+        promises.push @racksActive.fetch()
 
         @racksDead = new Racks [], rackType: 'dead'
-        @racksDead.fetch().done => @render()
+        promises.push @racksDead.fetch()
 
         @racksDecomissioning = new Racks [], rackType: 'decomissioning'
-        @racksDecomissioning.fetch().done => @render()
+        promises.push @racksDecomissioning.fetch()
+
+        $.when(promises...).done =>
+            @fetchDone = true
+            @render()
 
     render: =>
+        return unless @fetchDone
+
         context =
             racksActive: @racksActive.toJSON()
             racksDead: @racksDead.toJSON()

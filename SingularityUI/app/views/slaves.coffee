@@ -7,16 +7,24 @@ class SlavesView extends View
     template: require './templates/slaves'
 
     initialize: =>
+        promises = []
+
         @slavesActive = new Slaves [], slaveType: 'active'
-        @slavesActive.fetch().done => @render()
+        promises.push @slavesActive.fetch()
 
         @slavesDead = new Slaves [], slaveType: 'dead'
-        @slavesDead.fetch().done => @render()
+        promises.push @slavesDead.fetch()
 
         @slavesDecomissioning = new Slaves [], slaveType: 'decomissioning'
-        @slavesDecomissioning.fetch().done => @render()
+        promises.push @slavesDecomissioning.fetch()
+
+        $.when(promises...).done =>
+            @fetchDone = true
+            @render()
 
     render: =>
+        return unless @fetchDone
+
         context =
             slavesActive: @slavesActive.toJSON()
             slavesDead: @slavesDead.toJSON()

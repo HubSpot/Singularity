@@ -8,9 +8,13 @@ class WebhooksView extends View
 
     initialize: =>
         @webhooks = new Webhooks
-        @webhooks.fetch().done => @render()
+        @webhooks.fetch().done =>
+            @fetchDone = true
+            @render()
 
     render: =>
+        return unless @fetchDone
+
         @$el.html @template webhooks: @webhooks.toJSON()
         utils.setupSortableTables()
 
