@@ -27,4 +27,10 @@ constants =
             isActive: false
             label: 'Lost'
 
+    driverStates:
+        DRIVER_ABORTED: 'aborted'
+        DRIVER_NOT_STARTED: 'not started'
+        DRIVER_RUNNING: 'running'
+        DRIVER_STOPPED: 'stopped'
+
 module.exports = constants
