@@ -21,7 +21,7 @@ public class SingularityClient {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
   
   private static final String REQUEST_FORMAT = "http://%s/%s/requests";
-  private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/%s";
+  private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s";
   private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
   private static final String CONTENT_TYPE_JSON = "application/json";
