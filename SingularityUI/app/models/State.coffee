@@ -7,7 +7,7 @@ class State extends Model
     parse: (state) =>
         state.uptimeHuman = moment.duration(state.uptime).humanize()
         state.driverStatusHuman = constants.driverStates[state.driverStatus]
-        state.millisSinceLastOfferHuman = moment(state.millisSinceLastOffer).from()
+        state.millisSinceLastOfferHuman = moment(+new Date() - state.millisSinceLastOffer).from()
         state
 
 module.exports = State
