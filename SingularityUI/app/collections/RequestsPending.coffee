@@ -1,5 +1,3 @@
-Collection = require './collection'
-
 Requests = require './Requests'
 
 class RequestsPending extends Requests

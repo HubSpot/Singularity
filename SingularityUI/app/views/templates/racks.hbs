@@ -1,0 +1,87 @@
+<header class="jumbotron subhead" id="overview">
+    <h1>Racks</h1>
+</header>
+
+<section>
+    <div class="page-header">
+        <h1>Active Racks</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if racksActive.length}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rack</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn racksActive}}
+                            <tr>
+                                <td>{{ rack }}</td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                <center><p>No active racks.</p></center>
+            {{/if}}
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Dead Racks</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if racksDead.length}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rack</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn racksDead}}
+                            <tr>
+                                <td>{{ rack }}</td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                <center><p>No dead racks.</p></center>
+            {{/if}}
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Decomissioning Racks</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if racksDecomissioning.length}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rack</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn racksDecomissioning}}
+                            <tr>
+                                <td>{{ rack }}</td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                <center><p>No decomissioning racks.</p></center>
+            {{/if}}
+        </div>
+    </div>
+</section>

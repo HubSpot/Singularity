@@ -1,5 +1,3 @@
-Collection = require './collection'
-
 Requests = require './Requests'
 
 class RequestsCleaning extends Requests

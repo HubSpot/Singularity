@@ -1,5 +1,3 @@
-Collection = require './collection'
-
 Tasks = require './Tasks'
 
 class TasksActive extends Tasks

@@ -3,6 +3,8 @@ RequestsView = require 'views/requests'
 RequestView = require 'views/request'
 TasksView = require 'views/tasks'
 TaskView = require 'views/task'
+RacksView = require 'views/racks'
+SlavesView = require 'views/slaves'
 WebhooksView = require 'views/webhooks'
 PageNotFoundView = require 'views/page_not_found'
 NavigationView = require 'views/navigation'
@@ -22,6 +24,8 @@ class Router extends Backbone.Router
         'tasks(/)': 'tasks'
         'tasks/:taskssFilter(/)': 'tasksFiltered'
         'task/:taskId(/)': 'task'
+        'racks(/)': 'racks'
+        'slaves(/)': 'slaves'
         'webhooks(/)': 'webhooks'
         '*anything': 'templateFromURLFragment'
 
@@ -67,6 +71,20 @@ class Router extends Backbone.Router
             app.views.taskViews[taskId] = new TaskView taskId: taskId
         app.views.current = app.views.taskViews[taskId]
         app.views.taskViews[taskId].render()
+
+    racks: ->
+        nav()
+        if not app.views.racks?
+            app.views.racks = new RacksView
+        app.views.current = app.views.racks
+        app.views.racks.render()
+
+    slaves: ->
+        nav()
+        if not app.views.slaves?
+            app.views.slaves = new SlavesView
+        app.views.current = app.views.slaves
+        app.views.slaves.render()
 
     webhooks: ->
         nav()
