@@ -14,6 +14,9 @@
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Updated</th>
                             <th>JSON</th>
                         </tr>
                     </thead>
@@ -21,6 +24,9 @@
                         {{#eachWithFn requestTasks}}
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td><span>{{ lastStatus }}</span></td>
+                                <td data-value="{{ createdAt }}"><span>{{ createdAtHuman }}</span></td>
+                                <td data-value="{{ updatedAt }}"><span>{{ updatedAtHuman }}</span></td>
                                 <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
                             </tr>
                         {{/eachWithFn}}
