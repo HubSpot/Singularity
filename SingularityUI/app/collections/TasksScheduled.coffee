@@ -9,6 +9,7 @@ class TasksScheduled extends Tasks
     parse: (tasks) ->
         _.each tasks, (task, i) =>
             task.id = @parsePendingId task.pendingTaskId
+            task.requestId = task.pendingTaskId.requestId
             task.name = task.id
             task.nextRunAt = task.pendingTaskId.nextRunAt
             task.nextRunAtHuman = moment(task.nextRunAt).fromNow()

@@ -9,14 +9,17 @@ class RequestView extends View
     initialize: =>
         @request = app.collections.requestsActive.get(@options.requestId)
         @requestTasks = new RequestTasks [], requestId: @options.requestId
-        @requestTasks.fetch().done => @render()
+        @requestTasks.fetch().done => @render fetchDone = true
 
-    render: =>
+    render: (fetchDone = false) =>
         return false unless @request
 
         context =
             request: @request.toJSON()
-            requestTasks: @requestTasks.toJSON()
+            fetchDone: fetchDone
+            requestTasksActive: _.filter(@requestTasks.toJSON(), (t) -> t.isActive)
+            requestTasksHistorical: _.filter(@requestTasks.toJSON(), (t) -> not t.isActive)
+            requestTasksScheduled: _.filter(app.collections.tasksScheduled.toJSON(), (t) => t.requestId is @options.requestId)
 
         @$el.html @template context
 
