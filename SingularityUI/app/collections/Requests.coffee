@@ -5,15 +5,13 @@ class Requests extends Collection
     parse: (requests) ->
         _.each requests, (request, i) =>
             request.id = request.id
-            request.deployUser = @parseDeployUser request
+            request.name = request.name ? request.id
+            request.deployUser = (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
             request.JSONString = utils.stringJSON request
-            request.timestampHuman = moment(request.timestamp).from()
+            request.timestampHuman = if request?.timestamp? then moment(request.timestamp).from() else ''
             requests[i] = request
 
         requests
-
-    parseDeployUser: (request) ->
-        (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
 
     comparator: 'name'
 
