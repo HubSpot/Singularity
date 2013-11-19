@@ -14,6 +14,7 @@ class TasksActive extends Tasks
             task.startedAt = task.taskId.startedAt
             task.startedAtHuman = moment(task.taskId.startedAt).from()
             task.JSONString = utils.stringJSON task
+            task.rack = task.taskId.rackId
             tasks[i] = task
 
         tasks
