@@ -31,6 +31,12 @@ exports.config =
         stylesheets:
             defaultExtension: 'styl'
             joinTo: 'static/css/app.css'
+            order:
+                before: [
+                    'vendor/styles/bootstrap.css'
+                    'vendor/styles/bootstrap-responsive.css'
+                    'vendor/styles/docs.css'
+                ]
 
         templates:
             defaultExtension: 'hbs'
