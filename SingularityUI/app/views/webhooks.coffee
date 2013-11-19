@@ -12,5 +12,6 @@ class WebhooksView extends View
 
     render: =>
         @$el.html @template webhooks: @webhooks.toJSON()
+        utils.setupSortableTables()
 
 module.exports = WebhooksView
