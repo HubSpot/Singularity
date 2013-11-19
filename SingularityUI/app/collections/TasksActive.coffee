@@ -8,7 +8,7 @@ class TasksActive extends Tasks
         _.each tasks, (task, i) =>
             task.id = task.taskId.id
             task.name = task.mesosTask.name
-            task.resources = task.taskRequest.request.resources
+            task.resources = @parseResources task
             task.memoryHuman = if task.resources?.memoryMb? then "#{ task.resources.memoryMb }Mb" else ''
             task.host = task.offer.hostname?.split('.')[0]
             task.startedAt = task.taskId.startedAt
@@ -18,6 +18,10 @@ class TasksActive extends Tasks
             tasks[i] = task
 
         tasks
+
+    parseResources: (task) ->
+        cpus: _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''
+        memoryMb: _.find(task.mesosTask.resources, (resource) -> resource.name is 'mem')?.scalar?.value ? ''
 
     comparator: 'startedAt'
 
