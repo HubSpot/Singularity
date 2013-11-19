@@ -22,4 +22,6 @@ class TaskView extends View
 
         @$el.html @template context
 
+        utils.setupSortableTables()
+
 module.exports = TaskView
