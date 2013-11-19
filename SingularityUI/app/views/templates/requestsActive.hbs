@@ -25,10 +25,10 @@
                             <tr data-request-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                <td><span>{{ deployUser }}</span></td>
-                                <td><span>{{ instances }}</span></td>
-                                <td><span>{{ daemon }}</span></td>
-                                <td><span><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
+                                <td>{{ deployUser }}</td>
+                                <td>{{ instances }}</td>
+                                <td>{{ daemon }}</td>
+                                <td><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

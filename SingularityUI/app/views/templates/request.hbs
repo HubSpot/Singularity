@@ -24,10 +24,10 @@
                         {{#eachWithFn requestTasksActive}}
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                <td><span>{{ lastStatusHuman }}</span></td>
-                                <td sorttable_customkey="{{ createdAt }}"><span>{{ createdAtHuman }}</span></td>
-                                <td sorttable_customkey="{{ updatedAt }}"><span>{{ updatedAtHuman }}</span></td>
-                                <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
+                                <td>{{ lastStatusHuman }}</td>
+                                <td sorttable_customkey="{{ createdAt }}">{{ createdAtHuman }}</td>
+                                <td sorttable_customkey="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                                <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -61,7 +61,7 @@
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                                 <td><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
-                                <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
+                                <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -95,9 +95,9 @@
                         {{#eachWithFn requestTasksHistorical}}
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
-                                <td><span>{{ lastStatusHuman }}</span></td>
-                                <td sorttable_customkey="{{ createdAt }}"><span>{{ createdAtHuman }}</span></td>
-                                <td sorttable_customkey="{{ updatedAt }}"><span>{{ updatedAtHuman }}</span></td>
+                                <td>{{ lastStatusHuman }}</td>
+                                <td sorttable_customkey="{{ createdAt }}">{{ createdAtHuman }}</td>
+                                <td sorttable_customkey="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
