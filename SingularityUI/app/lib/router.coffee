@@ -1,4 +1,5 @@
 DashboardView = require 'views/dashboard'
+SearchView = require 'views/search'
 RequestsView = require 'views/requests'
 RequestView = require 'views/request'
 TasksView = require 'views/tasks'
@@ -18,6 +19,7 @@ class Router extends Backbone.Router
 
     routes:
         '(/)': 'dashboard'
+        'search(/)': 'search'
         'requests(/)': 'requests'
         'requests/:requestsFilter(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
@@ -35,6 +37,13 @@ class Router extends Backbone.Router
             app.views.dashboard = new DashboardView
         app.views.current = app.views.dashboard
         app.views.dashboard.render()
+
+    search: ->
+        nav()
+        if not app.views.search?
+            app.views.search = new SearchView
+        app.views.current = app.views.search
+        app.views.search.render()
 
     requests: ->
         @requestsFiltered 'active'
