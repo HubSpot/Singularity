@@ -10,7 +10,7 @@ class RequestTasks extends Collection
         _.each tasks, (task) ->
             task.id = task.taskDetails.id
             task.name = task.id
-            task.updateAtHuman = if task.updateAt? then moment(task.updateAt).from() else ''
+            task.updatedAtHuman = if task.updatedAt? then moment(task.updatedAt).from() else ''
             task.createdAtHuman = if task.createdAt? then moment(task.createdAt).from() else ''
             task.lastStatus = task.lastStatus ? ''
 
