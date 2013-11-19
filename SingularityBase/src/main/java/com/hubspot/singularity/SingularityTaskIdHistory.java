@@ -19,7 +19,7 @@ public class SingularityTaskIdHistory {
     this.updatedAt = updatedAt;
   }
 
-  public SingularityTaskId getTaskDetails() {
+  public SingularityTaskId getTaskId() {
     return taskId;
   }
 

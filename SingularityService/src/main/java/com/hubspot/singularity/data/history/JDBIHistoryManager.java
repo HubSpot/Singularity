@@ -67,14 +67,23 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  public void updateTaskHistory(String taskId, String statusUpdate, Date timestamp) {
+    try {
+      history.updateTaskStatus(taskId, statusUpdate,timestamp);
+    } catch (Throwable t) {
+      LOG.warn(String.format("Error while updating task status %s for %s", statusUpdate, taskId), t);
+    }
+  }
+
+  @Override
   public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike) {
     return history.getRequestHistoryLike(requestIdLike);
   }
 
   @Override
-  public void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message) {
+  public void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message, Date timestamp) {
     try {
-      history.insertTaskUpdate(taskId, statusUpdate, message.orNull(), new Date());
+      history.insertTaskUpdate(taskId, statusUpdate, message.orNull(), timestamp);
     } catch (Throwable t) {
       LOG.warn(String.format("Error while inserting update to history for %s - %s", taskId, statusUpdate), t);
     }

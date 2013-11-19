@@ -27,6 +27,9 @@ public interface HistoryJDBI {
   @SqlUpdate("INSERT INTO taskUpdates (taskId, status, message, createdAt) VALUES (:taskId, :status, :message, :createdAt)")
   void insertTaskUpdate(@Bind("taskId") String taskId, @Bind("status") String status, @Bind("message") String message, @Bind("createdAt") Date createdAt);
   
+  @SqlUpdate("UPDATE taskHistory SET lastTaskStatus = :lastStatus, updatedAt = :updatedAt WHERE taskId = :taskId")
+  void updateTaskStatus(@Bind("taskId") String taskId, @Bind("lastStatus") String status, @Bind("updatedAt") Date updatedAt);
+  
   @Mapper(SingularityTaskUpdateMapper.class)
   @SqlQuery("SELECT status, message, createdAt FROM taskUpdates WHERE taskId = :taskId")
   List<SingularityTaskHistoryUpdate> getTaskUpdates(@Bind("taskId") String taskId);

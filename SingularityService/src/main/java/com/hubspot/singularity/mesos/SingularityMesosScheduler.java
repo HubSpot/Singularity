@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -187,7 +188,10 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.info(String.format("Got an update for non-active task %s, skipping webhooks", taskId));
     }
 
-    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+    final Date now = new Date();
+    
+    historyManager.updateTaskHistory(taskId, status.getState().name(), now);
+    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), now);
 
     if (MesosUtils.isTaskDone(status.getState())) {
       if (maybeActiveTask.isPresent()) {
