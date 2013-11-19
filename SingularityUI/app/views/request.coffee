@@ -1,6 +1,6 @@
 View = require './view'
 
-RequestTasks = require '../models/RequestTasks'
+RequestTasks = require '../collections/RequestTasks'
 
 class RequestView extends View
 
@@ -8,7 +8,7 @@ class RequestView extends View
 
     initialize: =>
         @request = app.collections.requestsActive.get(@options.requestId)
-        @requestTasks = new RequestTasks requestId: @options.requestId
+        @requestTasks = new RequestTasks [], requestId: @options.requestId
         @requestTasks.fetch().done => @render()
 
     render: =>
