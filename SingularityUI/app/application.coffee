@@ -15,6 +15,9 @@ class Application
         @views = {}
         @collections = {}
 
+        @allTasks = {}
+        @allRequests = {}
+
         # Get users, projects, and targets, and user settings
         # before actually starting the app
         @fetchResources =>

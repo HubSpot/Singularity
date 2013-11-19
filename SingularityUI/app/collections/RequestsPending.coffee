@@ -8,6 +8,8 @@ class RequestsPending extends Requests
         _.each requests, (request, i) =>
             request.id = request.id
             request.pendingType = request.pendingType
+            request.JSONString = utils.stringJSON request
+            app.allRequests[request.id] = request
 
         requests
 

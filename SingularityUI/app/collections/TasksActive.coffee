@@ -6,6 +6,7 @@ class TasksActive extends Tasks
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>
+            task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.name = task.mesosTask.name
             task.resources = @parseResources task
@@ -13,9 +14,9 @@ class TasksActive extends Tasks
             task.host = task.offer.hostname?.split('.')[0]
             task.startedAt = task.taskId.startedAt
             task.startedAtHuman = moment(task.taskId.startedAt).from()
-            task.JSONString = utils.stringJSON task
             task.rack = task.taskId.rackId
             tasks[i] = task
+            app.allTasks[task.id] = task
 
         tasks
 

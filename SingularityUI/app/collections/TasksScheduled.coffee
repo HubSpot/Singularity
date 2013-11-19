@@ -6,6 +6,7 @@ class TasksScheduled extends Tasks
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>
+            task.JSONString = utils.stringJSON task
             task.id = @parsePendingId task.pendingTaskId
             task.requestId = task.pendingTaskId.requestId
             task.name = task.id
@@ -14,6 +15,7 @@ class TasksScheduled extends Tasks
             task.schedule = task.request.schedule
             task.JSONString = utils.stringJSON task
             tasks[i] = task
+            app.allTasks[task.id] = task
 
         tasks
 

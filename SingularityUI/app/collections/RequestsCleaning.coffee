@@ -7,8 +7,10 @@ class RequestsCleaning extends Requests
     parse: (requests) ->
         _.each requests, (requestIdString, i) ->
             request = {}
+            request.JSONString = utils.stringJSON request
             request.id = requestIdString
             requests[i] = request
+            app.allRequests[request.id] = request
 
         requests
 
