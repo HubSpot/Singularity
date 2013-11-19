@@ -6,7 +6,7 @@ TaskView = require 'views/task'
 RacksView = require 'views/racks'
 SlavesView = require 'views/slaves'
 WebhooksView = require 'views/webhooks'
-PageNotFoundView = require 'views/page_not_found'
+PageNotFoundView = require 'views/pageNotFound'
 NavigationView = require 'views/navigation'
 
 nav = ->
