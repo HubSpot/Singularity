@@ -1,0 +1,30 @@
+.sortTable
+
+    th
+        cursor pointer
+
+    th.sorttable_sorted, th.sorttable_sorted_reverse
+        background rgba(0, 0, 0, .05)
+        position relative
+
+    th.sorttable_sorted #sorttable_sortfwdind, th.sorttable_sorted_reverse #sorttable_sortrevind
+        text-indent -99999px
+        display inline-block
+        height 0
+        width 0
+        border-width 5px
+        border-style solid
+        border-color transparent
+        position absolute
+        margin auto
+        right 8px
+
+    th.sorttable_sorted #sorttable_sortfwdind
+        border-top-color inherit
+        top 4px
+        bottom 0
+
+    th.sorttable_sorted_reverse #sorttable_sortrevind
+        border-bottom-color inherit
+        top 0
+        bottom 4px
