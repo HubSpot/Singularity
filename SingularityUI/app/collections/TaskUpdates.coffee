@@ -8,21 +8,10 @@ class TaskUpdates extends Collection
 
     parse: (history) ->
         _.each history.taskUpdates, (taskUpdate, i) =>
-            taskUpdate.statusUpdateHuman = @parseTaskUpdateState taskUpdate.statusUpdate
+            taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
             taskUpdate.statusMessage = taskUpdate.statusMessage ? 'No status message available'
             taskUpdate.timestampHuman = moment(taskUpdate.timestamp).from()
 
         history.taskUpdates
-
-    parseTaskUpdateState: (state) ->
-        switch state
-            when 'TASK_FAILED' then 'Failed'
-            when 'TASK_FINISHED' then 'Finished'
-            when 'TASK_KILLED' then 'Killed'
-            when 'TASK_LOST' then 'Lost'
-            when 'TASK_RUNNING' then 'Running'
-            when 'TASK_STAGING' then 'Staging'
-            when 'TASK_STARTING' then 'Starting'
-            else ''
 
 module.exports = TaskUpdates
