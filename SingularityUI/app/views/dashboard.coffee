@@ -6,5 +6,6 @@ class DashboardView extends View
 
     render: =>
         @$el.html @template state: app.state.toJSON()
+        utils.setupSortableTables()
 
 module.exports = DashboardView
