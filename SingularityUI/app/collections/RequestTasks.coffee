@@ -8,7 +8,7 @@ class RequestTasks extends Collection
 
     parse: (tasks) ->
         _.each tasks, (task) ->
-            task.id = task.taskDetails.id
+            task.id = task.taskId.id
             task.name = task.id
             task.updatedAtHuman = if task.updatedAt? then moment(task.updatedAt).from() else ''
             task.createdAtHuman = if task.createdAt? then moment(task.createdAt).from() else ''
