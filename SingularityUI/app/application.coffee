@@ -9,8 +9,6 @@ RequestsCleaning = require 'collections/RequestsCleaning'
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
 
-Webhooks = require 'collections/Webhooks'
-
 class Application
 
     initialize: =>
@@ -64,10 +62,6 @@ class Application
             collection_key: 'tasksScheduled'
             collection: TasksScheduled
             error_phrase: 'scheduled tasks'
-        }, {
-            collection_key: 'webhooks'
-            collection: Webhooks
-            error_phrase: 'webhooks'
         }]
 
         _.each resources, (r) =>
