@@ -9,10 +9,8 @@
     border-top-color $grey
     border-right-color $grey
     z-index 300
-    -webkit-perspective 1000
-    -webkit-backface-visibility hidden
-    -webkit-animation spinner 700ms
-    -webkit-animation-iteration-count linear infinite
+    backface-visibility hidden
+    animation spinner 700ms linear infinite
 
     &.fixed
         position fixed
@@ -24,38 +22,6 @@
 
     &.centered
         margin 0 auto
-
-@-webkit-keyframes spinner
-    0%
-        -webkit-transform rotate(0deg)
-        transform rotate(0deg)
-    100%
-        -webkit-transform rotate(360deg)
-        transform rotate(360deg)
-
-@-moz-keyframes spinner
-    0%
-        -moz-transform rotate(0deg)
-        transform rotate(0deg)
-    100%
-        -moz-transform rotate(360deg)
-        transform rotate(360deg)
-
-@-o-keyframes spinner
-    0%
-        -o-transform rotate(0deg)
-        transform rotate(0deg)
-    100%
-        -o-transform rotate(360deg)
-        transform rotate(360deg)
-
-@-ms-keyframes spinner
-    0%
-        -ms-transform rotate(0deg)
-        transform rotate(0deg)
-    100%
-        -ms-transform rotate(360deg)
-        transform rotate(360deg)
 
 @keyframes spinner
     0%
