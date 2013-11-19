@@ -23,7 +23,7 @@
                             <tr>
                                 <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
                                 <td>{{ statusMessage }}</td>
-                                <td><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td sorttable_customkey="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

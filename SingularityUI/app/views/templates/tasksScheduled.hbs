@@ -18,7 +18,7 @@
                     {{#eachWithFn tasks}}
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
-                            <td><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                            <td sorttable_customkey="{{ nextRunAt}}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
                             <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                         </tr>
                     {{/eachWithFn}}

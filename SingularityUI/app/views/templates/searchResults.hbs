@@ -14,7 +14,7 @@
                 {{#eachWithFn tasksResults}}
                     <tr>
                         <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                        <td><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
+                        <td sorttable_customkey="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                         <td>{{ host }}</td>
                         <td>{{ rack }}</td>
                     </tr>
@@ -42,7 +42,7 @@
                 {{#eachWithFn requestsResults}}
                     <tr>
                         <td><a title="{{ id }}" href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                        <td><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                        <td sorttable_customkey="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                         <td>{{ instances }}</td>
                         <td>{{ daemon }}</td>
                     </tr>
