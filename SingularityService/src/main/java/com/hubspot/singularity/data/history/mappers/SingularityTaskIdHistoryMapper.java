@@ -15,13 +15,15 @@ public class SingularityTaskIdHistoryMapper implements ResultSetMapper<Singulari
 
   public SingularityTaskIdHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
     Date updatedAt = r.getDate("updatedAt");
+    
     Optional<Long> maybeUpdatedAt = null;
     if (updatedAt == null) {
       maybeUpdatedAt = Optional.absent();
     } else {
       maybeUpdatedAt = Optional.of(updatedAt.getTime());
     }
-    return new SingularityTaskIdHistory(SingularityTaskId.fromString(r.getString("taskId")), Optional.fromNullable(r.getString("lastStatus")), r.getDate("createdAt").getTime(), maybeUpdatedAt);
+    
+    return new SingularityTaskIdHistory(SingularityTaskId.fromString(r.getString("taskId")), Optional.fromNullable(r.getString("lastTaskStatus")), r.getDate("createdAt").getTime(), maybeUpdatedAt);
   }
   
 }
