@@ -12,7 +12,8 @@ class RequestTasks extends Collection
             task.name = task.id
             task.updatedAtHuman = if task.updatedAt? then moment(task.updatedAt).from() else ''
             task.createdAtHuman = if task.createdAt? then moment(task.createdAt).from() else ''
-            task.lastStatus = task.lastStatus ? ''
+            task.lastStatusHuman = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].label else ''
+            task.isActive = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].isActive else false
 
         tasks
 
