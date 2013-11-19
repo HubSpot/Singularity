@@ -42,6 +42,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
   
+  private long lastOfferTimestamp;
+  
   @Inject
   public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller) {
     this.scheduler = scheduler;
@@ -55,6 +57,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.stateLock = new ReentrantLock();
 
     this.state = SchedulerState.STARTUP;
+  }
+  
+  public long getLastOfferTimestamp() {
+    return lastOfferTimestamp;
   }
   
   // TODO should the lock wait on a timeout and then notify that it's taking a while?
@@ -139,6 +145,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
+    lastOfferTimestamp = System.currentTimeMillis();
+    
     if (!isRunning()) {
       LOG.info(String.format("Scheduler is in state %s, declining %s offer(s)", state.name(), offers.size()));
 

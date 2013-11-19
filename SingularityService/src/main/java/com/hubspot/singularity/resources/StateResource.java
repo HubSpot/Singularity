@@ -66,7 +66,11 @@ public class StateResource {
     
     final int numWebhooks = webhookManager.getWebhooks().size();
     
-    return new SingularityState(isMaster, uptime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-", activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks);
+    final long now = System.currentTimeMillis();
+    final long lastOfferTimestamp = managed.getLastOfferTimestamp();
+    final long millisSinceLastOfferTimestamp = now - lastOfferTimestamp;
+        
+    return new SingularityState(isMaster, uptime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-", activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks, millisSinceLastOfferTimestamp);
   }
   
 }

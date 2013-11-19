@@ -31,6 +31,20 @@ public class SingularityDriverManager {
     return driver;
   }
   
+  public long getLastOfferTimestamp() {
+    driverLock.lock();
+    
+    try {
+      if (driver == null) {
+        return 0;
+      }
+      
+      return driver.getLastOfferTimestamp();
+    } finally {
+      driverLock.unlock();
+    } 
+  }
+  
   public Protos.Status kill(String taskId) {
     Protos.Status newStatus = null;
     

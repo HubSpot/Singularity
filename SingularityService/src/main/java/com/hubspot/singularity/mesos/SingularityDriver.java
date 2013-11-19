@@ -42,6 +42,10 @@ public class SingularityDriver {
     return scheduler;
   }
   
+  public long getLastOfferTimestamp() {
+    return scheduler.getLastOfferTimestamp();
+  }
+  
   public Protos.Status start() {
     Protos.Status status = driver.start();
   

@@ -42,7 +42,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final WebhookManager webhookManager;
   private final SingularityRackManager rackManager;
-
+  
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
       SingularityMesosTaskBuilder mesosTaskBuilder) {
@@ -70,7 +70,7 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info(String.format("Received %s offer(s)", offers.size()));
 
     final long start = System.currentTimeMillis();
-
+    
     final List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIds();
 
     scheduler.drainPendingQueue(activeTasks);

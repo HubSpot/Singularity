@@ -75,6 +75,10 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
     return isMaster;
   }
 
+  public long getLastOfferTimestamp() {
+    return driverManager.getLastOfferTimestamp();
+  }
+  
   public Protos.Status getCurrentStatus() {
     return currentStatus;
   }
