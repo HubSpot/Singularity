@@ -29,7 +29,7 @@ class RequestsView extends View
 
     setupEvents: ->
         @$el.find('.view-json').unbind('click').click (event) ->
-            utils.viewJSON (@collection.get $(event.target).data 'request-id').toJSON()
+            utils.viewJSON 'request', $(event.target).data('request-id')
 
     setUpSearchEvents: =>
         $search = @$el.find('input[type="search"]').focus()

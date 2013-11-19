@@ -24,7 +24,7 @@ class TasksView extends View
 
     setupEvents: ->
         @$el.find('.view-json').unbind('click').click (event) ->
-            utils.viewJSON (utils.getAcrossCollections ['tasksActive', 'tasksScheduled'], $(event.target).data('task-id'))?.toJSON()
+            utils.viewJSON 'task', $(event.target).data('task-id')
 
     setUpSearchEvents: =>
         $search = @$el.find('input[type="search"]').focus()
