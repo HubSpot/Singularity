@@ -38,7 +38,7 @@ public class SlaveManager extends AbstractMachineManager {
   public Optional<SingularitySlave> getActiveSlave(String slaveId) {
     try {
       byte[] data = curator.getData().forPath(getActivePath(slaveId));
-      return Optional.of(SingularitySlave.getSlaveFromData(data, objectMapper));
+      return Optional.of(SingularitySlave.fromBytes(data, objectMapper));
     } catch (NoNodeException nee) {
       return Optional.absent();
     } catch (Exception e) {
@@ -49,7 +49,7 @@ public class SlaveManager extends AbstractMachineManager {
   public void save(SingularitySlave slave) {
     final String path = getActivePath(slave.getSlaveId());
     try {
-      curator.create().creatingParentsIfNeeded().forPath(path, slave.getRequestData(objectMapper));
+      curator.create().creatingParentsIfNeeded().forPath(path, slave.getAsBytes(objectMapper));
     } catch (NodeExistsException nee) {
       LOG.warn(String.format("Node already existed for slave %s at path %s", slave, path));
     } catch (Exception e) {
@@ -63,7 +63,7 @@ public class SlaveManager extends AbstractMachineManager {
     
     for (String activePath : activePaths) {
       try {
-        slaves.add(SingularitySlave.getSlaveFromData(curator.getData().forPath(getActivePath(activePath)), objectMapper));
+        slaves.add(SingularitySlave.fromBytes(curator.getData().forPath(getActivePath(activePath)), objectMapper));
       } catch (NoNodeException nne) {
         LOG.warn(String.format("Unexpected no node exception while fetching active slaves on path %s", activePath));
       } catch (Exception e) {

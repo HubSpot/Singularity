@@ -2,10 +2,9 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularitySlave {
+public class SingularitySlave extends SingularityJsonObject {
 
   private final String slaveId;
   private final String host;
@@ -29,13 +28,9 @@ public class SingularitySlave {
   public String getRackId() {
     return rackId;
   }
-  
-  public byte[] getRequestData(ObjectMapper objectMapper) throws JsonProcessingException {
-    return objectMapper.writeValueAsBytes(this);
-  }
 
-  public static SingularitySlave getSlaveFromData(byte[] request, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(request, SingularitySlave.class);
+  public static SingularitySlave fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularitySlave.class);
   }
   
   @Override

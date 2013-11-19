@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityTaskUpdate {
+public class SingularityTaskUpdate extends SingularityJsonObject {
 
   private final SingularityTask task;
   private final TaskState state;
@@ -25,12 +25,8 @@ public class SingularityTaskUpdate {
     return state;
   }
   
-  public byte[] getTaskData(ObjectMapper objectMapper) throws Exception {
-    return objectMapper.writeValueAsBytes(this);
-  }
-
-  public static SingularityTaskUpdate getTaskUpdateFromData(byte[] data, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(data, SingularityTaskUpdate.class);
+  public static SingularityTaskUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityTaskUpdate.class);
   }
 
   @Override

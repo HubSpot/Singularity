@@ -99,12 +99,13 @@ public class RequestManager extends CuratorManager {
     Preconditions.checkState(curator.checkExists().forPath(getCleanupPath(request.getId())) == null, "A cleanup request exists for %s", request.getId());
     
     final String requestPath = getRequestPath(request.getId());
-
+    final byte[] bytes = request.getAsBytes(objectMapper);
+    
     try {
-      curator.create().creatingParentsIfNeeded().forPath(requestPath, request.getRequestData(objectMapper));
+      curator.create().creatingParentsIfNeeded().forPath(requestPath, bytes);
       return PersistResult.CREATED;
     } catch (NodeExistsException nee) {
-      curator.setData().forPath(requestPath, request.getRequestData(objectMapper));
+      curator.setData().forPath(requestPath, bytes);
       return PersistResult.UPDATED;
     }
   }
@@ -161,7 +162,7 @@ public class RequestManager extends CuratorManager {
 
   public Optional<SingularityRequest> fetchRequest(String requestId) {
     try {
-      SingularityRequest request = SingularityRequest.getRequestFromData(curator.getData().forPath(ZKPaths.makePath(ACTIVE_PATH_ROOT, requestId)), objectMapper);
+      SingularityRequest request = SingularityRequest.fromBytes(curator.getData().forPath(ZKPaths.makePath(ACTIVE_PATH_ROOT, requestId)), objectMapper);
       return Optional.of(request);
     } catch (NoNodeException nee) {
       return Optional.absent();

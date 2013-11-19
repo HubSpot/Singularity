@@ -51,7 +51,7 @@ public class SingularityClient {
   private Response deployToUri(String requestUri, SingularityRequest request) {
     try {
       return httpClient.preparePost(requestUri)
-        .setBody(request.getRequestData(objectMapper))
+        .setBody(request.getAsBytes(objectMapper))
         .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
         .execute().get();
       

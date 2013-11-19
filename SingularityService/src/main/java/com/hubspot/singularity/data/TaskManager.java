@@ -105,7 +105,7 @@ public class TaskManager extends CuratorManager {
     try {
       byte[] data = curator.getData().forPath(path);
       
-      SingularityTask task = SingularityTask.getTaskFromData(data, objectMapper);
+      SingularityTask task = SingularityTask.fromBytes(data, objectMapper);
       
       return Optional.of(task);
     } catch (NoNodeException nne) {
@@ -163,7 +163,7 @@ public class TaskManager extends CuratorManager {
     
     curator.delete().forPath(scheduledPath);
     
-    curator.create().creatingParentsIfNeeded().forPath(activePath, task.getTaskData(objectMapper));
+    curator.create().creatingParentsIfNeeded().forPath(activePath, task.getAsBytes(objectMapper));
   }
   
   public void createCleanupTask(String taskId) {

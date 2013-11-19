@@ -8,11 +8,10 @@ import org.apache.mesos.Protos.TaskInfo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityTask {
+public class SingularityTask extends SingularityJsonObject {
 
   private final SingularityTaskRequest taskRequest;
   private final SingularityTaskId taskId;
@@ -43,12 +42,8 @@ public class SingularityTask {
     return mesosTask;
   }
 
-  public byte[] getTaskData(ObjectMapper objectMapper) throws JsonProcessingException {
-    return objectMapper.writeValueAsBytes(this);
-  }
-
-  public static SingularityTask getTaskFromData(byte[] data, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
-    return objectMapper.readValue(data, SingularityTask.class);
+  public static SingularityTask fromBytes(byte[] bytes, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
+    return objectMapper.readValue(bytes, SingularityTask.class);
   }
 
   @Override

@@ -58,9 +58,11 @@ public class WebhookManager extends CuratorManager {
   
   public void notify(SingularityTaskUpdate taskUpdate) {
     for (String hook : getWebhooks()) {
+      LOG.trace(String.format("Sending a hook to %s with data about task %s", hook, taskUpdate.getTask().getTaskId()));
+      
       try {
         asyncHttpClient.preparePost(hook)
-          .setBody(taskUpdate.getTaskData(objectMapper))
+          .setBody(taskUpdate.getAsBytes(objectMapper))
           .addHeader("Content-Type", "application/json")
           .execute(handler);
       } catch (Exception e) {

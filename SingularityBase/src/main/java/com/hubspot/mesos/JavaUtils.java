@@ -13,7 +13,7 @@ import com.google.common.base.Throwables;
 public class JavaUtils {
 
   private static final String CHARSET_UTF = "UTF-8";
-  
+
   public static byte[] toBytes(String string) {
     try {
       return string.getBytes(CHARSET_UTF);
@@ -21,7 +21,7 @@ public class JavaUtils {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public static String toString(byte[] bytes) {
     try {
       return new String(bytes, CHARSET_UTF);
@@ -29,6 +29,7 @@ public class JavaUtils {
       throw Throwables.propagate(e);
     }
   }
+
   public static String urlEncode(String string) {
     try {
       return URLEncoder.encode(string, CHARSET_UTF);
@@ -44,38 +45,40 @@ public class JavaUtils {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public static String[] reverseSplit(String string, int numItems, String separator) {
     final String[] splits = string.split("\\" + separator);
     final String[] reverseSplit = new String[numItems];
-    
+
     for (int i = 1; i < numItems; i++) {
       reverseSplit[numItems - i] = splits[splits.length - i];
     }
-    
+
     final StringBuilder lastItemBldr = new StringBuilder();
-    
+
     for (int s = 0; s < splits.length - numItems + 1; s++) {
       lastItemBldr.append(splits[s]);
       if (s < splits.length - numItems) {
         lastItemBldr.append(separator);
       }
     }
-     
+
     reverseSplit[0] = lastItemBldr.toString();
-    
+
     return reverseSplit;
   }
-  
+
   public static String getHostAddress() throws Exception {
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-    while (interfaces.hasMoreElements()){
+    while (interfaces.hasMoreElements()) {
       NetworkInterface current = interfaces.nextElement();
-      if (!current.isUp() || current.isLoopback() || current.isVirtual()) continue;
+      if (!current.isUp() || current.isLoopback() || current.isVirtual())
+        continue;
       Enumeration<InetAddress> addresses = current.getInetAddresses();
-      while (addresses.hasMoreElements()){
+      while (addresses.hasMoreElements()) {
         InetAddress current_addr = addresses.nextElement();
-        if (current_addr.isLoopbackAddress()) continue;
+        if (current_addr.isLoopbackAddress())
+          continue;
         if (current_addr instanceof Inet4Address) {
           return current_addr.getHostAddress();
         }
@@ -83,4 +86,17 @@ public class JavaUtils {
     }
     throw new RuntimeException("Couldn't deduce host address");
   }
+  
+  public static String getHostName() {
+    try {
+      InetAddress addr = InetAddress.getLocalHost();
+
+      String hostname = addr.getHostName();
+
+      return hostname;
+    } catch (Throwable t) {
+      return null;
+    }
+  }
+  
 }

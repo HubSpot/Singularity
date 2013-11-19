@@ -6,11 +6,10 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.mesos.Resources;
 
-public class SingularityRequest {
+public class SingularityRequest extends SingularityJsonObject {
 
   private final String id;
 
@@ -87,12 +86,8 @@ public class SingularityRequest {
     return rackSensitive;
   }
 
-  public byte[] getRequestData(ObjectMapper objectMapper) throws JsonProcessingException {
-    return objectMapper.writeValueAsBytes(this);
-  }
-
-  public static SingularityRequest getRequestFromData(byte[] request, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(request, SingularityRequest.class);
+  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityRequest.class);
   }
 
   public Integer getInstances() {

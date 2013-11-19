@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Arrays;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -11,6 +12,8 @@ import javax.ws.rs.core.MediaType;
 import org.apache.mesos.Protos;
 
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityManaged;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.data.RackManager;
@@ -69,8 +72,18 @@ public class StateResource {
     final long now = System.currentTimeMillis();
     final long lastOfferTimestamp = managed.getLastOfferTimestamp();
     final long millisSinceLastOfferTimestamp = now - lastOfferTimestamp;
+    
+    String hostAddress = null;
+    
+    try {
+      hostAddress = JavaUtils.getHostAddress();
+    } catch (Exception e) {
+      hostAddress = "Unknown";
+    }
         
-    return new SingularityState(isMaster, uptime, activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-", activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks, millisSinceLastOfferTimestamp);
+    final SingularityHostState hostState = new SingularityHostState(isMaster, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, JavaUtils.getHostName());
+    
+    return new SingularityState(activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, driverStatus != null ? driverStatus.name() : "-", activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks, Arrays.asList(hostState));
   }
   
 }

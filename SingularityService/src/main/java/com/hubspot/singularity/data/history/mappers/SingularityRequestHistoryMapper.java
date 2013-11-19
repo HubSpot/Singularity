@@ -16,7 +16,7 @@ public class SingularityRequestHistoryMapper implements ResultSetMapper<Singular
 
   public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
     try {
-      return new SingularityRequestHistory(r.getDate("createdAt").getTime(), Optional.fromNullable(r.getString("user")), r.getString("requestState"), SingularityRequest.getRequestFromData(r.getBytes("request"),
+      return new SingularityRequestHistory(r.getDate("createdAt").getTime(), Optional.fromNullable(r.getString("user")), r.getString("requestState"), SingularityRequest.fromBytes(r.getBytes("request"),
           SingularityModule.OBJECT_MAPPER));
     } catch (Exception e) {
       throw Throwables.propagate(e);

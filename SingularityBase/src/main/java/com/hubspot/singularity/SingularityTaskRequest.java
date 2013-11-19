@@ -6,12 +6,10 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hubspot.singularity.SingularityRequest;
 
-public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
+public class SingularityTaskRequest extends SingularityJsonObject implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
   private final SingularityPendingTaskId pendingTaskId;
@@ -57,12 +55,8 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
     return this.getPendingTaskId().compareTo(o.getPendingTaskId());
   }
   
-  public byte[] getTaskData(ObjectMapper objectMapper) throws JsonProcessingException {
-    return objectMapper.writeValueAsBytes(this);
-  }
-
-  public static SingularityTaskRequest getTaskFromData(byte[] data, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
-    return objectMapper.readValue(data, SingularityTaskRequest.class);
+  public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
+    return objectMapper.readValue(bytes, SingularityTaskRequest.class);
   }
 
   @Override

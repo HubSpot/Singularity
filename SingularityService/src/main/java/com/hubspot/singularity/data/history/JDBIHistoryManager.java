@@ -39,7 +39,7 @@ public class JDBIHistoryManager implements HistoryManager {
     try {
       history.insertTaskHistory(task.getTaskRequest().getRequest().getId(),
           task.getTaskId().toString(),
-          task.getTaskData(objectMapper),
+          task.getAsBytes(objectMapper),
           driverStatus,
           new Date());
     } catch (JsonProcessingException jpe) {
@@ -50,7 +50,7 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user) {
     try {
-      history.insertRequestHistory(request.getId(), request.getRequestData(objectMapper), new Date(), state.name(), user.orNull());
+      history.insertRequestHistory(request.getId(), request.getAsBytes(objectMapper), new Date(), state.name(), user.orNull());
     } catch (JsonProcessingException jpe) {
       LOG.warn(String.format("Couldn't insert request history for request %s due to json exception", request), jpe);
     }
@@ -101,7 +101,7 @@ public class JDBIHistoryManager implements HistoryManager {
     List<SingularityTaskHistoryUpdate> updates = history.getTaskUpdates(taskId);
     
     try {
-      return new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.getTaskFromData(helper.getTaskData(), objectMapper));
+      return new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.fromBytes(helper.getTaskData(), objectMapper));
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
