@@ -44,6 +44,7 @@ public class SingularityModule extends AbstractModule {
     bind(HistoryManager.class).to(JDBIHistoryManager.class);
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     bind(SingularityManaged.class).in(Scopes.SINGLETON);
+    bind(SingularityStatePoller.class).in(Scopes.SINGLETON);
   }
 
   private static ObjectMapper createObjectMapper() {

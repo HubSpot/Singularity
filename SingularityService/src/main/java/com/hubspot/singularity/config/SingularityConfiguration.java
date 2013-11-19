@@ -31,6 +31,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long cleanupEverySeconds = 5;
   
+  @NotNull
+  private long saveStateEverySeconds = 60;
+  
+  public long getSaveStateEverySeconds() {
+    return saveStateEverySeconds;
+  }
+
+  public void setSaveStateEverySeconds(long saveStateEverySeconds) {
+    this.saveStateEverySeconds = saveStateEverySeconds;
+  }
+
   public long getCleanupEverySeconds() {
     return cleanupEverySeconds;
   }

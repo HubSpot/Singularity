@@ -17,15 +17,17 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
   private final LeaderLatch leaderLatch;
   private final SingularityDriverManager driverManager;
   private final SingularityAbort abort;
+  private final SingularityStatePoller statePoller;
   
   private boolean isMaster;
   private Protos.Status currentStatus;
   
   @Inject
-  public SingularityManaged(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort) {
+  public SingularityManaged(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller) {
     this.driverManager = driverManager;
     this.leaderLatch = leaderLatch;
     this.abort = abort;
+    this.statePoller = statePoller;
     
     this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
     this.isMaster = false;
@@ -37,6 +39,8 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
   public void start() throws Exception {
     LOG.info("Starting leader latch...");
     
+    statePoller.start(this, abort);
+
     leaderLatch.start();
   }
   

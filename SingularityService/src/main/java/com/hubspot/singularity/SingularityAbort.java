@@ -19,12 +19,14 @@ public class SingularityAbort {
   private final CuratorFramework curator;
   private final LeaderLatch leaderLatch;
   private final SingularityDriverManager driverManager;
+  private final SingularityStatePoller statePoller;
   
   @Inject
-  public SingularityAbort(@Named(SingularityModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager) {
+  public SingularityAbort(@Named(SingularityModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityStatePoller statePoller) {
     this.curator = curator;
     this.leaderLatch = leaderLatch;
     this.driverManager = driverManager;
+    this.statePoller = statePoller;
   }
 
   public void abort() {
@@ -40,11 +42,17 @@ public class SingularityAbort {
   }
 
   public void stop() {
+    stopStatePoller();
+    
     closeDriver();
     
     closeLeader();
   
     closeCurator();
+  }
+  
+  private void stopStatePoller() {
+    statePoller.stop();
   }
   
   private void closeDriver() {
