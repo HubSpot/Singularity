@@ -6,34 +6,26 @@
     <div class="page-header">
         <h1>Hosts</h1>
     </div>
-    {{#eachWithFn state.hostStates}}
-        <div class="row-fluid">
-            <div class="span4">
-                <div class="well">
-                    <div class="big-number">
-                        <div class="number">{{ driverStatusHuman }}</div>
-                        <div class="number-label">Driver Status</div>
-                    </div>
-                </div>
-            </div>
-            <div class="span4">
-                <div class="well">
-                    <div class="big-number">
-                        <div class="number">{{ uptimeHuman }}</div>
-                        <div class="number-label">Uptime</div>
-                    </div>
-                </div>
-            </div>
-            <div class="span4">
-                <div class="well">
-                    <div class="big-number">
-                        <div class="number-label" style="color: inherit; line-height: 1.8em">{{ millisSinceLastOfferHuman }}</div>
-                        <div class="number-label">since last offer</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {{/eachWithFn}}
+    <table class="table sortTable">
+        <thead>
+            <tr>
+                <th>Hostname</th>
+                <th>Driver status</th>
+                <th>Uptime</th>
+                <th>Time since last offer</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#eachWithFn state.hostStates}}
+                <tr>
+                    <td>{{#hardBreak hostname}}{{/hardBreak}}</td>
+                    <td>{{ driverStatusHuman }}</td>
+                    <td sorttable_customkey="{{ uptime }}">{{ uptimeHuman }}</td>
+                    <td sorttable_customkey="{{ millisSinceLastOffer }}">{{ millisSinceLastOfferHuman }}</td>
+                </tr>
+            {{/eachWithFn}}
+        </tbody>
+    </table>
 </section>
 
 <section>
