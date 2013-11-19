@@ -25,6 +25,7 @@ class RequestsView extends View
 
         @setupEvents()
         @setUpSearchEvents()
+        utils.setupSortableTables()
 
     setupEvents: ->
         @$el.find('.view-json').unbind('click').click (event) ->

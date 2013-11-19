@@ -9,7 +9,7 @@
     <div class="row-fluid">
         <div class="span12">
             {{#if requests.length}}
-                <table class="table">
+                <table class="table sortTable">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -28,7 +28,7 @@
                                 <td><span>{{ deployUser }}</span></td>
                                 <td><span>{{ instances }}</span></td>
                                 <td><span>{{ daemon }}</span></td>
-                                <td><span><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
+                                <td><span><a data-request-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
