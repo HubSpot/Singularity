@@ -1,13 +1,13 @@
 <header class="jumbotron subhead" id="overview">
-    <h1>{{#hardBreak task.name}}{{/hardBreak}}</h1>
-    <p class="lead">{{#hardBreak task.id}}{{/hardBreak}}</p>
+    <h1>{{#hardBreak taskHistory.task.name}}{{/hardBreak}}</h1>
+    <p class="lead">{{#hardBreak taskHistory.task.id}}{{/hardBreak}}</p>
 </header>
 
 <section>
     <div class="page-header">
         <h1>History</h1>
     </div>
-    {{#if taskUpdates}}
+    {{#if taskHistory.taskUpdates}}
         <div class="row-fluid">
             <div class="span12">
                 <table class="table sortTable">
@@ -19,7 +19,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#eachWithFn taskUpdates}}
+                        {{#eachWithFn taskHistory.taskUpdates}}
                             <tr>
                                 <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
                                 <td>{{ statusMessage }}</td>
@@ -38,7 +38,7 @@
     </div>
     <div class="row-fluid">
         <div class="span12">
-            <pre>{{ task.JSONString }}</pre>
+            <pre>{{ taskHistory.task.JSONString }}</pre>
         </div>
     </div>
 </section>
