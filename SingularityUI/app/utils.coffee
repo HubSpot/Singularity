@@ -7,10 +7,12 @@ class Utils
         JSON.stringify object, null, '    '
 
     viewJSON: (object) ->
+        objectClone = _.extend {}, object
+        delete objectClone.JSONString
         vex.dialog.alert
             contentCSS:
                 width: 800
-            message: "<pre>#{ utils.stringJSON object }</pre>"
+            message: "<pre>#{ utils.stringJSON objectClone }</pre>"
 
     getAcrossCollections: (collectionStrings, id) ->
         model = undefined
