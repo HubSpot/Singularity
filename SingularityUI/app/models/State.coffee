@@ -5,9 +5,11 @@ class State extends Model
     url: -> "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/state"
 
     parse: (state) =>
-        state.uptimeHuman = moment.duration(state.uptime).humanize()
-        state.driverStatusHuman = constants.driverStates[state.driverStatus]
-        state.millisSinceLastOfferHuman = moment(+new Date() - state.millisSinceLastOffer).from()
+        _.each state.hostStates, (hostState) ->
+            hostState.uptimeHuman = moment.duration(hostState.uptime).humanize()
+            hostState.driverStatusHuman = constants.driverStates[hostState.driverStatus]
+            hostState.millisSinceLastOfferHuman = moment(+new Date() - hostState.millisSinceLastOffer).from()
+
         state
 
 module.exports = State
