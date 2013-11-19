@@ -6,7 +6,7 @@
     <input type="search" placeholder="Search tasks..." required />
     <div class="row-fluid">
         <div class="span12">
-            <table class="table">
+            <table class="table sortTable">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -19,7 +19,7 @@
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                             <td><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
-                            <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
+                            <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>

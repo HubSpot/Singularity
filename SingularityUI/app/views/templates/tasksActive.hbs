@@ -6,7 +6,7 @@
     <input type="search" placeholder="Search tasks..." required />
     <div class="row-fluid">
         <div class="span12">
-            <table class="table">
+            <table class="table sortTable">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -24,8 +24,8 @@
                             <td><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td><span>{{ host }}</span></td>
                             <td><span>{{ resources.cpus }}</span></td>
-                            <td data-value="{{ resources.memoryMb }}"><span>{{ memoryHuman }}</span></td>
-                            <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span><td>
+                            <td sorttable_customkey="{{ resources.memoryMb }}"><span>{{ memoryHuman }}</span></td>
+                            <td><span><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></span></td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>
