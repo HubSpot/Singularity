@@ -21,4 +21,7 @@ class Utils
             model = collection.get(id) ? model
         return model
 
+    setupSortableTables: ->
+        $('table.sortTable').each -> sorttable.makeSortable @
+
 module.exports = new Utils
