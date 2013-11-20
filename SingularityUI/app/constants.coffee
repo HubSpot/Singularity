@@ -2,7 +2,7 @@ constants =
 
     app_name: 'singularity'
     config_server_base: '/singularity'
-    api_base: 'singularity/v1'
+    apiBase: 'singularity/v1'
 
     taskStates:
         TASK_RUNNING:

@@ -2,7 +2,7 @@ Collection = require './collection'
 
 class Racks extends Collection
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/racks/#{ @rackType }"
+    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/racks/#{ @rackType }"
 
     initialize: (models, { @rackType }) =>
 

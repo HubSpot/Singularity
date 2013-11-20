@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsActive extends Requests
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/requests"
+    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests"
 
     parse: (requests) ->
         _.each requests, (request, i) =>

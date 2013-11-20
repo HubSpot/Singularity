@@ -2,7 +2,7 @@ Model = require './model'
 
 class State extends Model
 
-    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/state"
+    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/state"
 
     parse: (state) =>
         _.each state.hostStates, (hostState) ->

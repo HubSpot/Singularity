@@ -2,7 +2,7 @@ Model = require './model'
 
 class TaskHistory extends Model
 
-    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/history/task/#{ @taskId }"
+    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/task/#{ @taskId }"
 
     initialize: (models, { @taskId }) =>
 

@@ -2,7 +2,7 @@ Tasks = require './Tasks'
 
 class TasksSearch extends Tasks
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/history/tasks/search?requestIdLike=#{ @query }"
+    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/tasks/search?requestIdLike=#{ @query }"
 
     initialize: (models, { @query }) =>
 

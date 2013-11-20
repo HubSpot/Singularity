@@ -2,7 +2,7 @@ Collection = require './collection'
 
 class Slaves extends Collection
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/slaves/#{ @slaveType }"
+    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/slaves/#{ @slaveType }"
 
     initialize: (models, { @slaveType }) =>
 

@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsCleaning extends Requests
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.api_base }/requests/queued/cleanup"
+    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/queued/cleanup"
 
     parse: (requests) ->
         _.each requests, (requestIdString, i) ->
