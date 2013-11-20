@@ -33,13 +33,13 @@ class Application
             Object.freeze? @
 
     fetchResources: (success) =>
-        @resolve_countdown = 0
+        @resolveCountdown = 0
 
         resolve = =>
-            @resolve_countdown -= 1
-            success() if @resolve_countdown is 0
+            @resolveCountdown -= 1
+            success() if @resolveCountdown is 0
 
-        @resolve_countdown += 1
+        @resolveCountdown += 1
         @state = new State
         @state.fetch
             error: => vex.dialog.alert('An error occurred while trying to load the Singularity state.')
@@ -68,7 +68,7 @@ class Application
         }]
 
         _.each resources, (r) =>
-            @resolve_countdown += 1
+            @resolveCountdown += 1
             @collections[r.collection_key] = new r.collection
             @collections[r.collection_key].fetch
                 error: -> vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
