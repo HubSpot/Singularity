@@ -7,7 +7,7 @@
         <h1>Hosts</h1>
     </div>
     <div class="row-fluid">
-        <table class="table sortTable">
+        <table class="table" data-sortable="true">
             <thead>
                 <tr>
                     <th>Hostname</th>
@@ -21,8 +21,8 @@
                     <tr>
                         <td>{{#hardBreak hostname}}{{/hardBreak}}</td>
                         <td>{{ driverStatusHuman }}</td>
-                        <td sorttable_customkey="{{ uptime }}">{{ uptimeHuman }}</td>
-                        <td sorttable_customkey="{{ millisSinceLastOffer }}">{{ millisSinceLastOfferHuman }}</td>
+                        <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                        <td data-value="{{ millisSinceLastOffer }}">{{ millisSinceLastOfferHuman }}</td>
                     </tr>
                 {{/eachWithFn}}
             </tbody>

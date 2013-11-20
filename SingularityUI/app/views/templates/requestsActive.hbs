@@ -9,7 +9,7 @@
     <div class="row-fluid">
         <div class="span12">
             {{#if requests.length}}
-                <table class="table sortTable">
+                <table class="table" data-sortable="true">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -17,14 +17,14 @@
                             <th>Deploy User</th>
                             <th>Instances</th>
                             <th>Daemon</th>
-                            <th>JSON</th>
+                            <th data-sort="false">JSON</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                <td sorttable_customkey="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td>{{ deployUser }}</td>
                                 <td>{{ instances }}</td>
                                 <td>{{ daemon }}</td>

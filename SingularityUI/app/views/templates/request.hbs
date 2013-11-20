@@ -10,14 +10,14 @@
     {{#if requestTasksActive}}
         <div class="row-fluid">
             <div class="span12">
-                <table class="table sortTable">
+                <table class="table" data-sortable="true">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Updated</th>
-                            <th>JSON</th>
+                            <th data-sort="false">JSON</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -25,8 +25,8 @@
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td>{{ lastStatusHuman }}</td>
-                                <td sorttable_customkey="{{ createdAt }}">{{ createdAtHuman }}</td>
-                                <td sorttable_customkey="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                                <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                                <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                                 <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                             </tr>
                         {{/eachWithFn}}
@@ -48,19 +48,19 @@
     {{#if requestTasksScheduled}}
         <div class="row-fluid">
             <div class="span12">
-                <table class="table sortTable">
+                <table class="table" data-sortable="true">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Next run</th>
-                            <th>JSON</th>
+                            <th data-sort="false">JSON</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn requestTasksScheduled}}
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
-                                <td sorttable_customkey="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                                <td data-value="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
                                 <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                             </tr>
                         {{/eachWithFn}}
@@ -82,7 +82,7 @@
     {{#if requestTasksHistorical}}
         <div class="row-fluid">
             <div class="span12">
-                <table class="table sortTable">
+                <table class="table" data-sortable="true">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -96,8 +96,8 @@
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                                 <td>{{ lastStatusHuman }}</td>
-                                <td sorttable_customkey="{{ createdAt }}">{{ createdAtHuman }}</td>
-                                <td sorttable_customkey="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                                <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                                <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

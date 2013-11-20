@@ -10,7 +10,7 @@
     {{#if taskHistory.taskUpdates}}
         <div class="row-fluid">
             <div class="span12">
-                <table class="table sortTable">
+                <table class="table" data-sortable="true">
                     <thead>
                         <tr>
                             <th>Status</th>
@@ -23,7 +23,7 @@
                             <tr>
                                 <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
                                 <td>{{ statusMessage }}</td>
-                                <td sorttable_customkey="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

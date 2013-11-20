@@ -6,7 +6,7 @@
     <input type="search" placeholder="Filter tasks..." required />
     <div class="row-fluid">
         <div class="span12">
-            <table class="table sortTable">
+            <table class="table" data-sortable="true">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -15,18 +15,18 @@
                         <th>Rack</th>
                         <th>CPUs</th>
                         <th>Memory</th>
-                        <th>JSON</th>
+                        <th data-sort="false">JSON</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#eachWithFn tasks}}
                         <tr data-task-id="{{ id }}">
                             <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                            <td sorttable_customkey="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
+                            <td data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td>{{ host }}</td>
                             <td>{{ rack }}</td>
                             <td>{{ resources.cpus }}</td>
-                            <td sorttable_customkey="{{ resources.memoryMb }}">{{ memoryHuman }}</td>
+                            <td data-value="{{ resources.memoryMb }}">{{ memoryHuman }}</td>
                             <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                         </tr>
                     {{/eachWithFn}}

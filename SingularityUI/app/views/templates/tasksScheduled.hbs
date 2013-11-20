@@ -6,19 +6,19 @@
     <input type="search" placeholder="Filter tasks..." required />
     <div class="row-fluid">
         <div class="span12">
-            <table class="table sortTable">
+            <table class="table" data-sortable="true">
                 <thead>
                     <tr>
                         <th>Name</th>
                         <th>Next run</th>
-                        <th>JSON</th>
+                        <th data-sort="false">JSON</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#eachWithFn tasks}}
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
-                            <td sorttable_customkey="{{ nextRunAt}}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                            <td data-value="{{ nextRunAt}}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
                             <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
                         </tr>
                     {{/eachWithFn}}
