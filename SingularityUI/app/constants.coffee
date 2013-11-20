@@ -1,7 +1,6 @@
 constants =
 
-    app_name: 'singularity'
-    config_server_base: '/singularity'
+    appName: 'singularity'
     apiBase: 'singularity/v1'
 
     taskStates:
