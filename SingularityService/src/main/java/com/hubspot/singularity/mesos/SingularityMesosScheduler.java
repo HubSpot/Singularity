@@ -73,6 +73,7 @@ public class SingularityMesosScheduler implements Scheduler {
     
     final List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIds();
 
+    scheduler.checkForDecomissions(activeTasks);
     scheduler.drainPendingQueue(activeTasks);
     
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());

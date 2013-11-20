@@ -7,11 +7,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -45,8 +49,8 @@ public class TaskResource {
   
   @DELETE
   @Path("/task/{taskId}")
-  public void deleteTask(@PathParam("taskId") String taskId) {
-    taskManager.createCleanupTask(taskId);
+  public String deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
+    return taskManager.createCleanupTask(new SingularityTaskCleanup(user, CleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId)).name();
   }
   
 }

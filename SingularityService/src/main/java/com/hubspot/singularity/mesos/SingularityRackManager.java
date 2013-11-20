@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.singularity.SingularityMachineAbstraction.SingularityMachineState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -132,7 +133,7 @@ public class SingularityRackManager {
       return;
     }
   
-    Optional<SingularitySlave> slave = slaveManager.getActiveSlave(slaveId);
+    Optional<SingularitySlave> slave = slaveManager.getActiveObject(slaveId);
     
     if (slave.isPresent()) {
       slaveManager.markAsDead(slaveId);
@@ -144,7 +145,7 @@ public class SingularityRackManager {
   }
   
   private void checkRackAfterSlaveLoss(SingularitySlave lostSlave) {
-    List<SingularitySlave> slaves = slaveManager.getActiveSlaves();
+    List<SingularitySlave> slaves = slaveManager.getActiveObjects();
     
     int numInRack = 0;
     
@@ -170,9 +171,9 @@ public class SingularityRackManager {
     for (MesosMasterSlaveObject slave : state.getSlaves()) {
       Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey));
       
-      SingularitySlave singularitySlave = new SingularitySlave(slave.getId(), getHost(slave.getHostname()), getSafeString(maybeRackId.or(defaultRackId)));
+      SingularitySlave singularitySlave = new SingularitySlave(slave.getId(), getHost(slave.getHostname()), getSafeString(maybeRackId.or(defaultRackId)), getInitialSlaveState(slave.getId()));
       
-      SaveSlaveStateResult result = saveSlave(singularitySlave);
+      SaveSlaveStateResult result = checkForNewSlave(singularitySlave);
     
       switch (result) {
         case NEW_RACK:
@@ -204,13 +205,20 @@ public class SingularityRackManager {
     SLAVE_DECOM, RACK_DECOM, NEW_RACK, ACTIVE;
   }
   
-  private SaveSlaveStateResult saveSlave(SingularitySlave slave) {
-    if (isSlaveDecomissioning(slave.getSlaveId())) {
+  private SingularityMachineState getInitialSlaveState(String slaveId) {
+    if (isSlaveDecomissioning(slaveId)) {
+      return slaveManager.getDecomissioning(slaveId).get().getStateEnum();
+    }
+    return SingularityMachineState.ACTIVE;
+  }
+  
+  private SaveSlaveStateResult checkForNewSlave(SingularitySlave slave) {
+    if (slave.getStateEnum() == SingularityMachineState.DECOMISSIONED || slave.getStateEnum() == SingularityMachineState.DECOMISSIONING) {
       return SaveSlaveStateResult.SLAVE_DECOM;
     }
     
-    if (isSlaveDead(slave.getSlaveId())) {
-      slaveManager.removeDead(slave.getSlaveId());
+    if (isSlaveDead(slave.getId())) {
+      slaveManager.removeDead(slave.getId());
     }
     
     slaveManager.save(slave);
@@ -270,9 +278,15 @@ public class SingularityRackManager {
     final String rackId = getRackId(offer);
     final String host = getSlaveHost(offer);
     
-    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);
-        
-    saveSlave(slave);
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, getInitialSlaveState(slaveId));
+    
+    SaveSlaveStateResult result = checkForNewSlave(slave);
+  
+    if (result == SaveSlaveStateResult.NEW_RACK) {
+      LOG.info("Offer revealed a new slave %s and rack %s", slave, slave.getRackId());
+    } else if (result == SaveSlaveStateResult.ACTIVE) {
+      LOG.info("Offer revealed a new slave %s", slave);
+    }
   }
 
 }

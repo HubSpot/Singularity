@@ -17,6 +17,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 
 public class JDBIHistoryManager implements HistoryManager {
@@ -27,6 +28,7 @@ public class JDBIHistoryManager implements HistoryManager {
   private final ObjectMapper objectMapper;
 
   // TODO jdbi timeouts? should this be synchronous?
+  // TODO review exception handling
   
   @Inject
   public JDBIHistoryManager(HistoryJDBI history, ObjectMapper objectMapper) {
@@ -42,7 +44,7 @@ public class JDBIHistoryManager implements HistoryManager {
           task.getAsBytes(objectMapper),
           driverStatus,
           new Date());
-    } catch (JsonProcessingException jpe) {
+    } catch (SingularityJsonException jpe) {
       LOG.warn(String.format("Couldn't insert task history for task %s due to json exception", task), jpe);
     }
   }
@@ -51,7 +53,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user) {
     try {
       history.insertRequestHistory(request.getId(), request.getAsBytes(objectMapper), new Date(), state.name(), user.orNull());
-    } catch (JsonProcessingException jpe) {
+    } catch (SingularityJsonException jpe) {
       LOG.warn(String.format("Couldn't insert request history for request %s due to json exception", request), jpe);
     }
   }

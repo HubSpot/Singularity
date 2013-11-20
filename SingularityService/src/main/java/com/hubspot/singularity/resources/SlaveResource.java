@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.data.CuratorManager.DeleteResult;
 import com.hubspot.singularity.data.SlaveManager;
 
@@ -29,20 +30,20 @@ public class SlaveResource {
   
   @GET
   @Path("/active")
-  public List<String> getSlaves() {
-    return slaveManager.getActive();
+  public List<SingularitySlave> getSlaves() {
+    return slaveManager.getActiveObjects();
   }
   
   @GET
   @Path("/dead")
-  public List<String> getDead() {
-    return slaveManager.getDead();
+  public List<SingularitySlave> getDead() {
+    return slaveManager.getDeadObjects();
   }
   
   @GET
   @Path("/decomissioning")
-  public List<String> getDecomissioning() {
-    return slaveManager.getDecomissioning();
+  public List<SingularitySlave> getDecomissioning() {
+    return slaveManager.getDecomissioningObjects();
   }
 
   @DELETE
@@ -64,6 +65,7 @@ public class SlaveResource {
   @POST
   @Path("/slave/{slaveId}/decomission")
   public void decomissionRack(@PathParam("slaveId") String slaveId) {
+    // TODO check if this mofo is already decomissioning or some shit
     slaveManager.decomission(slaveId);
   }
  

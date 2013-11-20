@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 
 public class TaskManager extends CuratorManager {
@@ -166,8 +167,8 @@ public class TaskManager extends CuratorManager {
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getAsBytes(objectMapper));
   }
   
-  public void createCleanupTask(String taskId) {
-    create(getCleanupPath(taskId));
+  public CreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
+    return create(getCleanupPath(cleanupTask.getTaskId()), Optional.of(cleanupTask.getAsBytes(objectMapper)));
   }
   
   public void deleteActiveTask(String taskId) {

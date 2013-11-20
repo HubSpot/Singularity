@@ -7,7 +7,6 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -29,14 +28,8 @@ public class StateManager extends CuratorManager {
 
   public void save(SingularityHostState hostState) {
     final String path = ZKPaths.makePath(ROOT_PATH, hostState.getHostname());
-    byte[] data;
+    final byte[] data = hostState.getAsBytes(objectMapper);
    
-    try {
-      data = hostState.getAsBytes(objectMapper);
-    } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
-    }
-    
     try {
       // TODO is this right, vs setData - want to override, though.
       if (exists(path)) {
