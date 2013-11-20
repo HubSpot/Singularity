@@ -27,6 +27,6 @@ class Utils
         return model
 
     setupSortableTables: ->
-        $('table[data-sortable="true"]').each -> SorTable.init @
+        $('table[data-sortable="true"]').each -> sortable.init @
 
 module.exports = new Utils
