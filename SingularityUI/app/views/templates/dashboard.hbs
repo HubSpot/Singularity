@@ -6,26 +6,28 @@
     <div class="page-header">
         <h1>Hosts</h1>
     </div>
-    <table class="table sortTable">
-        <thead>
-            <tr>
-                <th>Hostname</th>
-                <th>Driver status</th>
-                <th>Uptime</th>
-                <th>Time since last offer</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#eachWithFn state.hostStates}}
+    <div class="row-fluid">
+        <table class="table sortTable">
+            <thead>
                 <tr>
-                    <td>{{#hardBreak hostname}}{{/hardBreak}}</td>
-                    <td>{{ driverStatusHuman }}</td>
-                    <td sorttable_customkey="{{ uptime }}">{{ uptimeHuman }}</td>
-                    <td sorttable_customkey="{{ millisSinceLastOffer }}">{{ millisSinceLastOfferHuman }}</td>
+                    <th>Hostname</th>
+                    <th>Driver status</th>
+                    <th>Uptime</th>
+                    <th>Time since last offer</th>
                 </tr>
-            {{/eachWithFn}}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {{#eachWithFn state.hostStates}}
+                    <tr>
+                        <td>{{#hardBreak hostname}}{{/hardBreak}}</td>
+                        <td>{{ driverStatusHuman }}</td>
+                        <td sorttable_customkey="{{ uptime }}">{{ uptimeHuman }}</td>
+                        <td sorttable_customkey="{{ millisSinceLastOffer }}">{{ millisSinceLastOfferHuman }}</td>
+                    </tr>
+                {{/eachWithFn}}
+            </tbody>
+        </table>
+    </div>
 </section>
 
 <section>

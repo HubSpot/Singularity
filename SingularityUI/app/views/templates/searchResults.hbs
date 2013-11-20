@@ -1,26 +1,28 @@
 <section>
     {{#if tasksResults}}
-        <h2>Tasks</h2>
-        <table class="table sortTable">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Started</th>
-                    <th>Host</th>
-                    <th>Rack</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#eachWithFn tasksResults}}
+        <div class="row-fluid">
+            <h2>Tasks</h2>
+            <table class="table sortTable">
+                <thead>
                     <tr>
-                        <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                        <td sorttable_customkey="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
-                        <td>{{ host }}</td>
-                        <td>{{ rack }}</td>
+                        <th>Name</th>
+                        <th>Started</th>
+                        <th>Host</th>
+                        <th>Rack</th>
                     </tr>
-                {{/eachWithFn}}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {{#eachWithFn tasksResults}}
+                        <tr>
+                            <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                            <td sorttable_customkey="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
+                            <td>{{ host }}</td>
+                            <td>{{ rack }}</td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
     {{else}}
         <center><p>No tasks found.</p></center>
     {{/if}}
@@ -28,27 +30,29 @@
 
 <section>
     {{#if requestsResults}}
-        <h2>Results</h2>
-        <table class="table sortTable">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Requested</th>
-                    <th>Instances</th>
-                    <th>Daemon</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#eachWithFn requestsResults}}
+        <div class="row-fluid">
+            <h2>Results</h2>
+            <table class="table sortTable">
+                <thead>
                     <tr>
-                        <td><a title="{{ id }}" href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                        <td sorttable_customkey="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                        <td>{{ instances }}</td>
-                        <td>{{ daemon }}</td>
+                        <th>Name</th>
+                        <th>Requested</th>
+                        <th>Instances</th>
+                        <th>Daemon</th>
                     </tr>
-                {{/eachWithFn}}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {{#eachWithFn requestsResults}}
+                        <tr>
+                            <td><a title="{{ id }}" href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                            <td sorttable_customkey="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                            <td>{{ instances }}</td>
+                            <td>{{ daemon }}</td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
     {{else}}
         <center><p>No requests found.</p></center>
     {{/if}}
