@@ -1498,7 +1498,6 @@ legend + .control-group {
 }
 
 table {
-  max-width: 100%;
   background-color: transparent;
   border-collapse: collapse;
   border-spacing: 0;
