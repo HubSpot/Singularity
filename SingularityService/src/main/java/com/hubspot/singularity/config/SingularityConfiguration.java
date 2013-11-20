@@ -1,13 +1,12 @@
 package com.hubspot.singularity.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -20,9 +19,6 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("hostname")
   private String hostname;
-  
-  @JsonProperty("appRoot")
-  private String appRoot;
   
   @Valid
   @NotNull
@@ -84,12 +80,4 @@ public class SingularityConfiguration extends Configuration {
     this.hostname = hostname;
   }
 
-  public String getAppRoot() {
-    return appRoot;
-  }
-
-  public void setAppRoot(String appRoot) {
-    this.appRoot = appRoot;
-  }
-  
 }
