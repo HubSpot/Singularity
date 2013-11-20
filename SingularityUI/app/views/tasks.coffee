@@ -27,7 +27,9 @@ class TasksView extends View
             utils.viewJSON 'task', $(event.target).data('task-id')
 
     setUpSearchEvents: =>
-        $search = @$el.find('input[type="search"]').focus()
+        $search = @$el.find('input[type="search"]')
+        $search.focus() if $(window).width() > 568
+
         $rows = @$el.find('tbody > tr')
 
         lastText = _.trim $search.val()
