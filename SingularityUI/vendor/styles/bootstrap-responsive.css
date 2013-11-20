@@ -25,7 +25,6 @@
 .hide-text {
   font: 0/0 a;
   color: transparent;
-  text-shadow: none;
   background-color: transparent;
   border: 0;
 }
@@ -724,7 +723,6 @@
   }
   .nav-collapse .nav .nav-header {
     color: #999999;
-    text-shadow: none;
   }
   .nav-collapse .nav > li > a,
   .nav-collapse .dropdown-menu a {
