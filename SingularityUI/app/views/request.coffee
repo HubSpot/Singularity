@@ -10,16 +10,18 @@ class RequestView extends View
         @request = app.allRequests[@options.requestId]
 
         @requestTasks = new RequestTasks [], requestId: @options.requestId
-        @requestTasks.fetch().done => @render fetchDone = true
+        @requestTasks.fetch().done =>
+            @fetchDone = true
+            @render()
 
-    render: (fetchDone = false) =>
+    render: =>
         if not @request
             vex.dialog.alert("<p>Could not open a request by that ID.</p><pre>#{ @options.requestId }</pre>")
             return
 
         context =
             request: @request
-            fetchDone: fetchDone
+            fetchDone: @fetchDone
             requestTasksActive: _.filter(@requestTasks.toJSON(), (t) -> t.isActive)
             requestTasksHistorical: _.first(_.filter(@requestTasks.toJSON(), (t) -> not t.isActive), 100)
             requestTasksScheduled: _.filter(app.collections.tasksScheduled.toJSON(), (t) => t.requestId is @options.requestId)
