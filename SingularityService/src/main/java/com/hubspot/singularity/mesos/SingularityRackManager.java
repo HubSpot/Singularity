@@ -118,7 +118,7 @@ public class SingularityRackManager {
     }
   }
 
-  private void clearRacks() {
+  private void clearRacksAndSlaves() {
     final long start = System.currentTimeMillis();
     
     int racksCleared = rackManager.clearActive();
@@ -164,24 +164,23 @@ public class SingularityRackManager {
   }
 
   public void loadRacksFromMaster(MesosMasterStateObject state) {
-    clearRacks();
+    clearRacksAndSlaves();
 
-    int racks = 0;
     int slaves = 0;
+    int racks = 0;
     
     for (MesosMasterSlaveObject slave : state.getSlaves()) {
       Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey));
+      String slaveId = slave.getId();
+      String rackId = getSafeString(maybeRackId.or(defaultRackId));
+      String host = getHost(slave.getHostname());
       
-      SingularitySlave singularitySlave = new SingularitySlave(slave.getId(), getHost(slave.getHostname()), getSafeString(maybeRackId.or(defaultRackId)), getInitialSlaveState(slave.getId()));
+      if (checkSlave(slaveId, host, rackId) == SaveResult.NEW) {
+        slaves++;
+      }
       
-      SaveSlaveStateResult result = checkForNewSlave(singularitySlave);
-    
-      switch (result) {
-        case NEW_RACK:
-          racks++;
-        case ACTIVE:
-          slaves++;
-        default: break;
+      if (checkRack(rackId) == SaveResult.NEW) {
+        racks++;
       }
     }
 
@@ -201,44 +200,45 @@ public class SingularityRackManager {
   private String getSafeString(String string) {
     return string.replace("-", "_");
   }
-
-  private enum SaveSlaveStateResult {
-    SLAVE_DECOM, RACK_DECOM, NEW_RACK, ACTIVE;
+  
+  private SaveResult checkRack(String rackId) {
+    if (isRackActive(rackId)) {
+      return SaveResult.ALREADY_ACTIVE;
+    }
+    
+    if (isRackDecomissioning(rackId)) {
+      return SaveResult.DECOMISSIONING;
+    }
+    
+    if (isRackDead(rackId)) {
+      slaveManager.removeDead(rackId);
+    } 
+    
+    rackManager.save(new SingularityRack(rackId, SingularityMachineState.ACTIVE));
+    
+    return SaveResult.NEW;
+  }
+    
+  private enum SaveResult {
+    NEW, DECOMISSIONING, ALREADY_ACTIVE;
   }
   
-  private SingularityMachineState getInitialSlaveState(String slaveId) {
+  private SaveResult checkSlave(String slaveId, String host, String rackId) {
+    if (isSlaveActive(slaveId)) {
+      return SaveResult.ALREADY_ACTIVE;
+    }
+    
     if (isSlaveDecomissioning(slaveId)) {
-      return slaveManager.getDecomissioning(slaveId).get().getStateEnum();
-    }
-    return SingularityMachineState.ACTIVE;
-  }
-  
-  private SaveSlaveStateResult checkForNewSlave(SingularitySlave slave) {
-    if (slave.getStateEnum() == SingularityMachineState.DECOMISSIONED || slave.getStateEnum() == SingularityMachineState.DECOMISSIONING) {
-      return SaveSlaveStateResult.SLAVE_DECOM;
+      return SaveResult.DECOMISSIONING;
     }
     
-    if (isSlaveDead(slave.getId())) {
-      slaveManager.removeDead(slave.getId());
-    }
+    if (isSlaveDead(slaveId)) {
+      slaveManager.removeDead(slaveId);
+    } 
+      
+    slaveManager.save(new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE));
     
-    slaveManager.save(slave);
-  
-    if (isRackDecomissioning(slave.getRackId())) {
-      return SaveSlaveStateResult.RACK_DECOM;
-    }
-    
-    if (isRackDead(slave.getRackId())) {
-      rackManager.removeDead(slave.getRackId());
-    }
-    
-    if (isRackActive(slave.getRackId())) {
-      return SaveSlaveStateResult.ACTIVE;
-    }
-    
-    rackManager.save(new SingularityRack(slave.getRackId(), SingularityMachineState.ACTIVE));
-    
-    return SaveSlaveStateResult.NEW_RACK;
+    return SaveResult.NEW;
   }
   
   private int getNumRacks() {
@@ -271,22 +271,19 @@ public class SingularityRackManager {
   
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
-
-    if (isSlaveActive(slaveId)) {
-      return;
-    }
-
     final String rackId = getRackId(offer);
     final String host = getSlaveHost(offer);
     
-    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, getInitialSlaveState(slaveId));
+    SaveResult slaveSave = checkSlave(slaveId, host, rackId);
     
-    SaveSlaveStateResult result = checkForNewSlave(slave);
-  
-    if (result == SaveSlaveStateResult.NEW_RACK) {
-      LOG.info(String.format("Offer revealed a new slave %s and rack %s", slave, slave.getRackId()));
-    } else if (result == SaveSlaveStateResult.ACTIVE) {
-      LOG.info(String.format("Offer revealed a new slave %s", slave));
+    if (slaveSave == SaveResult.NEW) {
+      LOG.info(String.format("Offer revealed a new slave %s", new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE)));
+    }
+    
+    SaveResult rackSave = checkRack(rackId);
+    
+    if (rackSave == SaveResult.NEW) {
+      LOG.info(String.format("Offer revealed a new rack %s", new SingularityRack(rackId, SingularityMachineState.ACTIVE)));
     }
   }
 
