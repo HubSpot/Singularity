@@ -91,8 +91,8 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         if (matchingTaskIds.contains(activeTaskId)) {
           continue;
         }
-      
-        if (racks.contains(activeTaskId.getRackId())) {
+    
+        if (rack.getId().equals(activeTaskId.getRackId())) {
           Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
           checkTaskForDecomissionCleanup(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString());
         }
