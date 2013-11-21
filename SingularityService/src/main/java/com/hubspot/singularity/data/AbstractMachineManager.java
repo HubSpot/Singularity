@@ -158,9 +158,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   public void markAsDead(String objectId) {
     Optional<T> activeObject = getActiveObject(objectId);
     
-    // return this?
     if (!activeObject.isPresent()) {
       LOG.warn(String.format("Marking an object %s as dead - but it wasn't active", objectId));
+      return;
     }
  
     if (delete(getActivePath(objectId)) != DeleteResult.DELETED) {
