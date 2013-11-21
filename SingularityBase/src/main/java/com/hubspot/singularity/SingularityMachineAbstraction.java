@@ -34,4 +34,5 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
     this.state = state;
   }
   
+  
 }

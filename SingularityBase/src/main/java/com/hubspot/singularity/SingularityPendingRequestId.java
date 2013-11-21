@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -41,30 +39,6 @@ public class SingularityPendingRequestId extends SingularityId {
   
   public String getPendingType() {
     return pendingType.name();
-  }
-  
-  @Override
-  public int hashCode() {
-    return Objects.hash(requestId, pendingType);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    SingularityPendingRequestId other = (SingularityPendingRequestId) obj;
-    if (pendingType != other.pendingType)
-      return false;
-    if (requestId == null) {
-      if (other.requestId != null)
-        return false;
-    } else if (!requestId.equals(other.requestId))
-      return false;
-    return true;
   }
 
   public static SingularityPendingRequestId fromString(String string) {

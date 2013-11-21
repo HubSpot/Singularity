@@ -12,7 +12,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 public class SingularityTaskUpdateMapper implements ResultSetMapper<SingularityTaskHistoryUpdate> {
   
   public SingularityTaskHistoryUpdate map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-    return new SingularityTaskHistoryUpdate(r.getDate("createdAt").getTime(), r.getString("status"), Optional.fromNullable(r.getString("message")));
+    return new SingularityTaskHistoryUpdate(r.getTimestamp("createdAt").getTime(), r.getString("status"), Optional.fromNullable(r.getString("message")));
   }
 
 }

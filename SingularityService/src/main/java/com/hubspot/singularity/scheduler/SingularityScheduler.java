@@ -17,14 +17,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingRequestId;
-import com.hubspot.singularity.SingularityMachineAbstraction.SingularityMachineState;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
-import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RackManager;
@@ -51,52 +51,70 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     this.rackManager = rackManager;
   }
   
+  private void checkTaskForDecomissionCleanup(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject) {
+    requestIdsToReschedule.add(task.getTaskRequest().getRequest().getId());
+    
+    matchingTaskIds.add(task.getTaskId());
+
+    if (!task.getTaskRequest().getRequest().isScheduled()) {
+      LOG.trace(String.format("Scheduling a cleanup task for %s due to decomissioning %s", task.getTaskId(), decomissioningObject));
+      
+      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), CleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId().getId(), task.getTaskRequest().getRequest().getId()));
+    } else {
+      LOG.trace(String.format("Not adding scheduled task %s to cleanup queue", task.getTaskId()));
+    }
+  }
+  
   public void checkForDecomissions(List<SingularityTaskId> activeTaskIds) {
     final long start = System.currentTimeMillis();
     
     final Set<String> requestIdsToReschedule = Sets.newHashSet();
+    final Set<SingularityTaskId> matchingTaskIds = Sets.newHashSet();
     
-    final List<SingularitySlave> slaves = slaveManager.getDecomissioningObjects();
-    final List<SingularitySlave> decomissioningSlaves = Lists.newArrayListWithCapacity(slaves.size());
-    
-    int matchingTasks = 0;
+    final List<SingularitySlave> slaves = slaveManager.getDecomissioningObjectsFiltered();
     
     for (SingularitySlave slave : slaves) {
-      if (slave.getStateEnum() == SingularityMachineState.DECOMISSIONING) {
-        decomissioningSlaves.add(slave);
-        
-        for (SingularityTaskId activeTaskId : activeTaskIds) {
-          if (activeTaskId.getHost().equals(slave.getHost())) {
-            Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
-            if (slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
-              requestIdsToReschedule.add(maybeTask.get().getTaskRequest().getRequest().getId());
-          
-              matchingTasks++;
-
-              if (!maybeTask.get().getTaskRequest().getRequest().isScheduled()) {
-                LOG.trace(String.format("Scheduling a cleanup task for %s due to decomissioning slave %s", activeTaskId.getId(), slave));
-                
-                taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), CleanupType.DECOMISSIONING, System.currentTimeMillis(), activeTaskId.getId(), maybeTask.get().getTaskRequest().getRequest().getId()));
-              } else {
-                LOG.trace(String.format("Not adding scheduled task %s to cleanup queue", activeTaskId.getId()));
-              }
-            }
+      for (SingularityTaskId activeTaskId : activeTaskIds) {
+        if (activeTaskId.getHost().equals(slave.getHost())) {
+          Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
+          if (slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+            checkTaskForDecomissionCleanup(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), slave.toString());
           }
         }
       }
     }
-   
+    
+    final List<SingularityRack> racks = rackManager.getDecomissioningObjectsFiltered();
+    
+    for (SingularityRack rack : racks) {
+      for (SingularityTaskId activeTaskId : activeTaskIds) {
+        if (matchingTaskIds.contains(activeTaskId)) {
+          continue;
+        }
+      
+        if (racks.contains(activeTaskId.getRackId())) {
+          Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
+          checkTaskForDecomissionCleanup(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString());
+        }
+      }
+    }
+    
     for (String requestId : requestIdsToReschedule) {
-      LOG.trace(String.format("Rescheduling request %s due to decomissioned slave", requestId));
+      LOG.trace(String.format("Rescheduling request %s due to decomissions", requestId));
       requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId));
     }
     
-    for (SingularitySlave slave : decomissioningSlaves) {
+    for (SingularitySlave slave : slaves) {
       LOG.debug(String.format("Marking slave %s as decomissioned", slave));
       slaveManager.markAsDecomissioned(slave);
     }
+    
+    for (SingularityRack rack : racks) {
+      LOG.debug(String.format("Marking rack %s as decomissioned", rack));
+      rackManager.markAsDecomissioned(rack);
+    }
 
-    LOG.info(String.format("Found %s decomissioning slaves, rescheduling %s requests and scheduling %s tasks for cleanup in %sms", decomissioningSlaves.size(), requestIdsToReschedule.size(), matchingTasks, System.currentTimeMillis() - start));
+    LOG.info(String.format("Found %s decomissioning slaves, %s decomissioning racks, rescheduling %s requests and scheduling %s tasks for cleanup in %sms", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), System.currentTimeMillis() - start));
   }
   
   public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds) {

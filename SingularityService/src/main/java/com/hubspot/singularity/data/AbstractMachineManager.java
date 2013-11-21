@@ -72,6 +72,19 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getObjects(getDecomissioningRoot());
   }
   
+  public List<T> getDecomissioningObjectsFiltered() {
+    List<T> decomissioning = getDecomissioningObjects();
+    List<T> filtered = Lists.newArrayListWithCapacity(decomissioning.size());
+    
+    for (T object : decomissioning) {
+      if (object.getStateEnum() == SingularityMachineState.DECOMISSIONING) {
+        filtered.add(object);
+      }
+    }
+    
+    return filtered;
+  }
+  
   private Optional<T> getObject(String path) {
     try {
       byte[] bytes = curator.getData().forPath(path);
@@ -142,17 +155,29 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getNumChildren(getDeadRoot());
   }
   
-  // TODO this should dedal with objects.
   public void markAsDead(String objectId) {
-    delete(getActivePath(objectId));
-    create(getDeadPath(objectId));
+    Optional<T> activeObject = getActiveObject(objectId);
+    
+    // return this?
+    if (!activeObject.isPresent()) {
+      LOG.warn(String.format("Marking an object %s as dead - but it wasn't active", objectId));
+    }
+ 
+    if (delete(getActivePath(objectId)) != DeleteResult.DELETED) {
+      LOG.warn(String.format("Deleting active object at %s failed", getActivePath(objectId)));
+    }
+  
+    activeObject.get().setState(SingularityMachineState.DEAD);
+    
+    if (create(getDeadPath(objectId), Optional.of(activeObject.get().getAsBytes(objectMapper))) != CreateResult.CREATED) {
+      LOG.warn(String.format("Creating dead object at %s failed", getDeadPath(objectId)));
+    }
   }
   
-  public void markAsDecomissioned(T object) {
-    object.setState(SingularityMachineState.DECOMISSIONED);
+  private void mark(T object, String path, SingularityMachineState state) {
+    object.setState(state);
     
     final byte[] data = object.getAsBytes(objectMapper);
-    final String path = getDecomissioningPath(object.getId());
     
     try {
       curator.setData().forPath(path, data);
@@ -161,6 +186,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
+  }
+  
+  public void markAsDecomissioned(T object) {
+    mark(object, getDecomissioningPath(object.getId()), SingularityMachineState.DECOMISSIONED);
   }
   
   public DeleteResult removeDecomissioning(String objectId) {

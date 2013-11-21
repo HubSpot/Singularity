@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -71,42 +70,6 @@ public class SingularityTaskId extends SingularityId {
     return new SingularityTaskId(requestId, startedAt, instanceNo, host, rackId);
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(instanceNo, requestId, rackId, host, startedAt);
-  }
-  
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    SingularityTaskId other = (SingularityTaskId) obj;
-    if (instanceNo != other.instanceNo)
-      return false;
-    if (rackId == null) {
-      if (other.rackId != null)
-        return false;
-    } else if (!rackId.equals(other.rackId))
-      return false;
-    if (requestId == null) {
-      if (other.requestId != null)
-        return false;
-    } else if (!requestId.equals(other.requestId))
-      return false;
-    if (host == null) {
-      if (other.host != null)
-        return false;
-    } else if (!host.equals(other.host))
-      return false;
-    if (startedAt != other.startedAt)
-      return false;
-    return true;
-  }
-  
   public String toString() {
     return String.format("%s-%s-%s-%s-%s", getRequestId(), getStartedAt(), getInstanceNo(), getHost(), getRackId());
   }

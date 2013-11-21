@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,32 +51,6 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     final int instanceNo = Integer.parseInt(splits[2]);
     
     return new SingularityPendingTaskId(requestId, nextRunAt, instanceNo);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(instanceNo, requestId, nextRunAt);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    SingularityPendingTaskId other = (SingularityPendingTaskId) obj;
-    if (instanceNo != other.instanceNo)
-      return false;
-    if (requestId == null) {
-      if (other.requestId != null)
-        return false;
-    } else if (!requestId.equals(other.requestId))
-      return false;
-    if (nextRunAt != other.nextRunAt)
-      return false;
-    return true;
   }
 
   public String toString() {

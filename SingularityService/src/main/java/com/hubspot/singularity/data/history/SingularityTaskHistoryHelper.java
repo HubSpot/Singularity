@@ -27,7 +27,7 @@ public class SingularityTaskHistoryHelper {
   public static class SingularityTaskHistoryHelperMapper implements ResultSetMapper<SingularityTaskHistoryHelper> {
     
     public SingularityTaskHistoryHelper map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-      return new SingularityTaskHistoryHelper(r.getDate("createdAt").getTime(), r.getBytes("task"));
+      return new SingularityTaskHistoryHelper(r.getTimestamp("createdAt").getTime(), r.getBytes("task"));
     }
     
   }
