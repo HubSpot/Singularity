@@ -30,6 +30,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long saveStateEverySeconds = 60;
   
+  @NotNull
+  private long killDecomissionedTasksAfterNewTasksSeconds = 300;
+  
+  public long getKillDecomissionedTasksAfterNewTasksSeconds() {
+    return killDecomissionedTasksAfterNewTasksSeconds;
+  }
+
+  public void setKillDecomissionedTasksAfterNewTasksSeconds(long killDecomissionedTasksAfterNewTasksSeconds) {
+    this.killDecomissionedTasksAfterNewTasksSeconds = killDecomissionedTasksAfterNewTasksSeconds;
+  }
+
   public long getSaveStateEverySeconds() {
     return saveStateEverySeconds;
   }

@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 
 public class TaskManager extends CuratorManager {
@@ -99,6 +101,26 @@ public class TaskManager extends CuratorManager {
     return getTaskIds(CLEANUP_PATH_ROOT);
   }
   
+  public List<SingularityTaskCleanup> getCleanupTasks() {
+    List<SingularityTaskId> taskIds = getCleanupTaskIds();
+    
+    List<SingularityTaskCleanup> cleanupTasks = Lists.newArrayListWithCapacity(taskIds.size());
+    
+    for (SingularityTaskId taskId : taskIds) {
+      try {
+        byte[] data = curator.getData().forPath(ZKPaths.makePath(CLEANUP_PATH_ROOT, taskId.getId()));
+        
+        cleanupTasks.add(SingularityTaskCleanup.fromBytes(data, objectMapper));
+      } catch (NoNodeException nne) {
+        LOG.info(String.format("Expected cleanup task %s but it wasn't there", taskId));
+      } catch (Throwable t) {
+        throw Throwables.propagate(t);
+      }
+    }
+
+    return cleanupTasks;
+  }
+  
   public Optional<SingularityTask> getActiveTask(String taskId) {
     final String path = getActivePath(taskId);
     
@@ -166,8 +188,8 @@ public class TaskManager extends CuratorManager {
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getAsBytes(objectMapper));
   }
   
-  public void createCleanupTask(String taskId) {
-    create(getCleanupPath(taskId));
+  public CreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
+    return create(getCleanupPath(cleanupTask.getTaskId()), Optional.of(cleanupTask.getAsBytes(objectMapper)));
   }
   
   public void deleteActiveTask(String taskId) {

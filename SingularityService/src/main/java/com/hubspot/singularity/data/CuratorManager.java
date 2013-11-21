@@ -10,6 +10,7 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
 public abstract class CuratorManager {
@@ -67,7 +68,7 @@ public abstract class CuratorManager {
       curator.delete().forPath(path);
       return DeleteResult.DELETED;
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Expected item at %s", path), nne);
+      LOG.warn(String.format("Tried to delete an item at path %s that didn't exist", path));
       return DeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
@@ -79,8 +80,16 @@ public abstract class CuratorManager {
   }
   
   protected CreateResult create(String path) {
+    return create(path, Optional.<byte[]> absent());
+  }
+  
+  protected CreateResult create(String path, Optional<byte[]> data) {
     try {
-      curator.create().creatingParentsIfNeeded().forPath(path);
+      if (data.isPresent()) {
+        curator.create().creatingParentsIfNeeded().forPath(path, data.get());
+      } else {
+        curator.create().creatingParentsIfNeeded().forPath(path);
+      }
       return CreateResult.CREATED;
     } catch (NodeExistsException nee) {
       return CreateResult.EXISTED;
