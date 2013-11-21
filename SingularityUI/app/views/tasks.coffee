@@ -34,7 +34,7 @@ class TasksView extends View
 
         lastText = _.trim $search.val()
 
-        $search.on 'change keypress paste focus textInput input click keydown', =>
+        $search.unbind().on 'change keypress paste focus textInput input click keydown', =>
             text = _.trim $search.val()
 
             if text is ''

@@ -9,16 +9,19 @@
                 <thead>
                     <tr>
                         <th>Webhook</th>
+                        <th data-sort="false"></th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#eachWithFn webhooks}}
                         <tr>
                             <td><a target="_blank" href="{{ url }}">{{#hardBreak url}}{{/hardBreak}}</a></td>
+                            <td><a data-action="remove" data-url="{{ url }}">Remove</a></td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>
             </table>
+            <input type="search" placeholder="Add a webhook..." required />
         </div>
     </div>
 </section>
