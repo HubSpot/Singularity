@@ -12,13 +12,19 @@
                 <table class="table" data-sortable="true">
                     <thead>
                         <tr>
-                            <th>Slave</th>
+                            <th>ID</th>
+                            <th>Rack</th>
+                            <th>Host</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn slavesActive}}
                             <tr>
-                                <td>{{ slave }}</td>
+                                <td>{{ id }}</td>
+                                <td>{{ rackId }}</td>
+                                <td>{{ host }}</td>
+                                <td>{{ state }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -40,13 +46,19 @@
                 <table class="table" data-sortable="true">
                     <thead>
                         <tr>
-                            <th>Slave</th>
+                            <th>ID</th>
+                            <th>Rack</th>
+                            <th>Host</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn slavesDead}}
                             <tr>
-                                <td>{{ slave }}</td>
+                                <td>{{ id }}</td>
+                                <td>{{ rackId }}</td>
+                                <td>{{ host }}</td>
+                                <td>{{ state }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -68,13 +80,19 @@
                 <table class="table" data-sortable="true">
                     <thead>
                         <tr>
-                            <th>Slave</th>
+                            <th>ID</th>
+                            <th>Rack</th>
+                            <th>Host</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn slavesDecomissioning}}
                             <tr>
-                                <td>{{ slave }}</td>
+                                <td>{{ id }}</td>
+                                <td>{{ rackId }}</td>
+                                <td>{{ host }}</td>
+                                <td>{{ state }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

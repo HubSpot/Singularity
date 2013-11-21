@@ -12,13 +12,15 @@
                 <table class="table" data-sortable="true">
                     <thead>
                         <tr>
-                            <th>Rack</th>
+                            <th>ID</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn racksActive}}
                             <tr>
-                                <td>{{ rack }}</td>
+                                <td>{{ id }}</td>
+                                <td>{{ state }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -40,13 +42,15 @@
                 <table class="table" data-sortable="true">
                     <thead>
                         <tr>
-                            <th>Rack</th>
+                            <th>ID</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn racksDead}}
                             <tr>
-                                <td>{{ rack }}</td>
+                                <td>{{ id }}</td>
+                                <td>{{ state }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -68,13 +72,15 @@
                 <table class="table" data-sortable="true">
                     <thead>
                         <tr>
-                            <th>Rack</th>
+                            <th>ID</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn racksDecomissioning}}
                             <tr>
-                                <td>{{ rack }}</td>
+                                <td>{{ id }}</td>
+                                <td>{{ state }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
