@@ -19,6 +19,7 @@ import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.sun.jersey.api.NotFoundException;
 
 @Path("/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -50,7 +51,13 @@ public class TaskResource {
   @DELETE
   @Path("/task/{taskId}")
   public String deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
-    return taskManager.createCleanupTask(new SingularityTaskCleanup(user, CleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId)).name();
+    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
+    
+    if (!task.isPresent()) {
+      throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
+    }
+    
+    return taskManager.createCleanupTask(new SingularityTaskCleanup(user, CleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId())).name();
   }
   
 }

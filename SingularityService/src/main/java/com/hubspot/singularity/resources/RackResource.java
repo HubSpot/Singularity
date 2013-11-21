@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.data.CuratorManager.DeleteResult;
 import com.hubspot.singularity.data.RackManager;
 
@@ -29,20 +30,20 @@ public class RackResource {
   
   @GET
   @Path("/active")
-  public List<String> getRacks() {
-    return rackManager.getActive();
+  public List<SingularityRack> getRacks() {
+    return rackManager.getActiveObjects();
   }
   
   @GET
   @Path("/dead")
-  public List<String> getDead() {
-    return rackManager.getDead();
+  public List<SingularityRack> getDead() {
+    return rackManager.getDeadObjects();
   }
   
   @GET
   @Path("/decomissioning")
-  public List<String> getDecomissioning() {
-    return rackManager.getDecomissioning();
+  public List<SingularityRack> getDecomissioning() {
+    return rackManager.getDecomissioningObjects();
   }
 
   @DELETE

@@ -6,19 +6,18 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
-import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 
 public class JDBIHistoryManager implements HistoryManager {
 

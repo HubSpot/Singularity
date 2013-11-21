@@ -12,9 +12,9 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
     ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD, 
   }
   
-  public SingularityMachineAbstraction(SingularityMachineState state, String id) {
-    this.state = state;
+  public SingularityMachineAbstraction(String id, SingularityMachineState state) {
     this.id = id;
+    this.state = state;
   }
   
   public String getId() {

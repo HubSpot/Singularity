@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityMachineAbstraction.SingularityMachineState;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -235,7 +236,7 @@ public class SingularityRackManager {
       return SaveSlaveStateResult.ACTIVE;
     }
     
-    rackManager.addToActive(slave.getRackId());
+    rackManager.save(new SingularityRack(slave.getRackId(), SingularityMachineState.ACTIVE));
     
     return SaveSlaveStateResult.NEW_RACK;
   }
@@ -283,9 +284,9 @@ public class SingularityRackManager {
     SaveSlaveStateResult result = checkForNewSlave(slave);
   
     if (result == SaveSlaveStateResult.NEW_RACK) {
-      LOG.info("Offer revealed a new slave %s and rack %s", slave, slave.getRackId());
+      LOG.info(String.format("Offer revealed a new slave %s and rack %s", slave, slave.getRackId()));
     } else if (result == SaveSlaveStateResult.ACTIVE) {
-      LOG.info("Offer revealed a new slave %s", slave);
+      LOG.info(String.format("Offer revealed a new slave %s", slave));
     }
   }
 

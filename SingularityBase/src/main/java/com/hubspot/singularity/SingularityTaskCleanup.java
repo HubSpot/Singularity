@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -15,23 +16,30 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
   private final CleanupType cleanupType;
   private final long timestamp;
   private final String taskId;
+  private final String requestId;
   
   @JsonCreator
-  public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("type") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") String taskId) {
-    this(user, CleanupType.valueOf(cleanupType), timestamp, taskId);
+  public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") String taskId, @JsonProperty("requestId") String requestId) {
+    this(user, CleanupType.valueOf(cleanupType), timestamp, taskId, requestId);
   }
    
-  public SingularityTaskCleanup(Optional<String> user, CleanupType cleanupType, long timestamp, String taskId) {
+  public SingularityTaskCleanup(Optional<String> user, CleanupType cleanupType, long timestamp, String taskId, String requestId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.taskId = taskId;
+    this.requestId = requestId;
+  }
+
+  public String getRequestId() {
+    return requestId;
   }
 
   public Optional<String> getUser() {
     return user;
   }
 
+  @JsonIgnore
   public CleanupType getCleanupTypeEnum() {
     return cleanupType;
   }
@@ -54,8 +62,7 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityCleanupTask [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + "]";
-  }
-  
+    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + ", requestId=" + requestId + "]";
+  }  
   
 }

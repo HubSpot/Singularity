@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +99,26 @@ public class TaskManager extends CuratorManager {
   
   public List<SingularityTaskId> getCleanupTaskIds() {
     return getTaskIds(CLEANUP_PATH_ROOT);
+  }
+  
+  public List<SingularityTaskCleanup> getCleanupTasks() {
+    List<SingularityTaskId> taskIds = getCleanupTaskIds();
+    
+    List<SingularityTaskCleanup> cleanupTasks = Lists.newArrayListWithCapacity(taskIds.size());
+    
+    for (SingularityTaskId taskId : taskIds) {
+      try {
+        byte[] data = curator.getData().forPath(ZKPaths.makePath(CLEANUP_PATH_ROOT, taskId.getId()));
+        
+        cleanupTasks.add(SingularityTaskCleanup.fromBytes(data, objectMapper));
+      } catch (NoNodeException nne) {
+        LOG.info(String.format("Expected cleanup task %s but it wasn't there", taskId));
+      } catch (Throwable t) {
+        throw Throwables.propagate(t);
+      }
+    }
+
+    return cleanupTasks;
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {

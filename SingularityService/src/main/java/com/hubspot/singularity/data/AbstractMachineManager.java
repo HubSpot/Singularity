@@ -142,6 +142,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getNumChildren(getDeadRoot());
   }
   
+  // TODO this should dedal with objects.
   public void markAsDead(String objectId) {
     delete(getActivePath(objectId));
     create(getDeadPath(objectId));
@@ -170,11 +171,20 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return delete(getDeadPath(objectId));
   }
   
-  public void decomission(String objectId) {
+  public enum DecomissionResult {
+    SUCCESS_DECOMISSIONING, FAILURE_NOT_FOUND, FAILURE_ALREADY_DECOMISSIONING, FAILURE_DEAD;
+  }
+  
+  public DecomissionResult decomission(String objectId) {
     Optional<T> object = getActiveObject(objectId);
     
-    if (object.isPresent()) {
-      // TODO return a 404.
+    if (!object.isPresent()) {
+      if (isDecomissioning(objectId)) {
+        return DecomissionResult.FAILURE_ALREADY_DECOMISSIONING;
+      } else if (isDead(objectId)) {
+        return DecomissionResult.FAILURE_DEAD;
+      }
+      return DecomissionResult.FAILURE_NOT_FOUND;
     }
     
     object.get().setState(SingularityMachineState.DECOMISSIONING);
@@ -182,10 +192,8 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     create(getDecomissioningPath(objectId), Optional.of(object.get().getAsBytes(objectMapper)));
     
     delete(getActivePath(objectId));
-  }
-  
-  public void addToActive(String objectId) {
-    create(getActivePath(objectId));
+    
+    return DecomissionResult.SUCCESS_DECOMISSIONING;
   }
   
   public boolean isActive(String objectId) {

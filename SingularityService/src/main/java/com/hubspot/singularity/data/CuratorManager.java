@@ -68,7 +68,7 @@ public abstract class CuratorManager {
       curator.delete().forPath(path);
       return DeleteResult.DELETED;
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Expected item at %s", path), nne);
+      LOG.warn(String.format("Tried to delete an item at path %s that didn't exist", path));
       return DeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);

@@ -15,6 +15,7 @@ public class SingularityJsonObject {
     }
   }
   
+  @SuppressWarnings("serial")
   public static class SingularityJsonException extends RuntimeException {
 
     public SingularityJsonException(Throwable cause) {

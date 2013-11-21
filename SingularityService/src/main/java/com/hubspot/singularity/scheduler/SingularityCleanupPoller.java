@@ -17,14 +17,14 @@ public class SingularityCleanupPoller {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityCleanupPoller.class);
 
-  private final SingularityScheduler scheduler;
+  private final SingularityCleaner cleaner;
   private final SingularityConfiguration configuration;
   private final ScheduledExecutorService executorService;
   private final SingularityAbort abort;
   
   @Inject
-  public SingularityCleanupPoller(SingularityConfiguration configuration, SingularityScheduler scheduler, SingularityAbort abort) {
-    this.scheduler = scheduler;
+  public SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort) {
+    this.cleaner = cleaner;
     this.abort = abort;
     this.configuration = configuration;
   
@@ -41,7 +41,7 @@ public class SingularityCleanupPoller {
         mesosScheduler.lock();
         
         try {
-          scheduler.drainCleanupQueue();
+          cleaner.drainCleanupQueue();
         
         } catch (Throwable t) {
           LOG.error("Caught an exception while draining cleanup queue -- aborting", t);

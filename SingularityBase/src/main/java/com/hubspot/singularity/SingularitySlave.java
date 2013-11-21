@@ -10,7 +10,7 @@ public class SingularitySlave extends SingularityMachineAbstraction {
   private final String rackId;
   
   public SingularitySlave(String slaveId, String host, String rackId, SingularityMachineState state) {
-    super(state, slaveId);
+    super(slaveId, state);
     this.host = host;
     this.rackId = rackId;
   }
