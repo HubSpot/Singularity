@@ -2,6 +2,8 @@ Collection = require './collection'
 
 class Webhooks extends Collection
 
+    model: require '../models/Webhook'
+
     url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/webhooks"
 
     parse: (webhooks) =>
