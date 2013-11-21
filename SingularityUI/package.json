@@ -6,7 +6,7 @@
     "homepage": "",
     "repository": {
         "type": "git",
-        "url": "git@git.hubteam.com:HubSpot/r3.git"
+        "url": "git@git.hubteam.com:HubSpot/singularity.git"
     },
     "engines": {
         "node": "~0.6.10"
