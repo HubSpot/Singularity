@@ -26,9 +26,9 @@ class SlavesView extends View
         return unless @fetchDone
 
         context =
-            slavesActive: @slavesActive.toJSON()
-            slavesDead: @slavesDead.toJSON()
-            slavesDecomissioning: @slavesDecomissioning.toJSON()
+            slavesActive: _.pluck(@slavesActive.models, 'attributes')
+            slavesDead: _.pluck(@slavesDead.models, 'attributes')
+            slavesDecomissioning: _.pluck(@slavesDecomissioning.models, 'attributes')
 
         @$el.html @template context
 

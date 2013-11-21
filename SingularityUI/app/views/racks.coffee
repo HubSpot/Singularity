@@ -26,9 +26,9 @@ class RacksView extends View
         return unless @fetchDone
 
         context =
-            racksActive: @racksActive.toJSON()
-            racksDead: @racksDead.toJSON()
-            racksDecomissioning: @racksDecomissioning.toJSON()
+            racksActive: _.pluck(@racksActive.models, 'attributes')
+            racksDead: _.pluck(@racksDead.models, 'attributes')
+            racksDecomissioning: _.pluck(@racksDecomissioning.models, 'attributes')
 
         @$el.html @template context
 

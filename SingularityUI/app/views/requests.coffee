@@ -19,7 +19,7 @@ class RequestsView extends View
             template = @templateRequestsCleaning
 
         context =
-            requests: @collection.toJSON()
+            requests: _.pluck(@collection.models, 'attributes')
 
         @$el.html template context
 

@@ -14,8 +14,8 @@ class SearchView extends View
 
     renderResults: ->
         context =
-            tasksResults: _.first(@tasksResults.toJSON(), 10)
-            requestsResults: _.first(@requestsResults.toJSON(), 10)
+            tasksResults: _.first(_.pluck(@tasksResults.models, 'attributes'), 10)
+            requestsResults: _.first(_.pluck(@requestsResults.models, 'attributes'), 10)
 
         @$el.find('.results').html @templateResults context
 

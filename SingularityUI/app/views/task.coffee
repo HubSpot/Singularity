@@ -11,10 +11,10 @@ class TaskView extends View
         @taskHistory.fetch().done => @render()
 
     render: =>
-        return unless @taskHistory.toJSON()?.task?.id
+        return unless @taskHistory.attributes?.task?.id
 
         context =
-            taskHistory: @taskHistory.toJSON()
+            taskHistory: @taskHistory.attributes
 
         @$el.html @template context
 

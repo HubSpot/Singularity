@@ -15,7 +15,7 @@ class WebhooksView extends View
     render: =>
         return unless @fetchDone
 
-        @$el.html @template webhooks: @webhooks.toJSON()
+        @$el.html @template webhooks: _.pluck(@webhooks.models, 'attributes')
         utils.setupSortableTables()
 
 module.exports = WebhooksView

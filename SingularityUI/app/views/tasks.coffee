@@ -14,7 +14,7 @@ class TasksView extends View
             template = @templateTasksScheduled
 
         context =
-            tasks: @collection.sort().toJSON().reverse()
+            tasks: _.pluck(@collection.sort().models, 'attributes').reverse()
 
         @$el.html template context
 
