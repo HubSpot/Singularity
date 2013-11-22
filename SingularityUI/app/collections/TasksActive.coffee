@@ -1,6 +1,9 @@
 Tasks = require './Tasks'
+Task = require '../models/Task'
 
 class TasksActive extends Tasks
+
+    model: Task
 
     url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/active"
 

@@ -44,5 +44,4 @@ class WebhooksView extends View
                     webhookModel.destroy()
                     @webhooks.remove(webhookModel)
 
-
 module.exports = WebhooksView

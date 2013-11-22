@@ -1,6 +1,9 @@
 Requests = require './Requests'
+Request = require '../models/Request'
 
 class RequestsActive extends Requests
+
+    model: Request
 
     url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests"
 
