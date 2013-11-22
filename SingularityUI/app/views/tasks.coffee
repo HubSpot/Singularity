@@ -29,6 +29,7 @@ class TasksView extends View
         $removeLinks = @$el.find('[data-action="remove"]')
 
         $removeLinks.unbind('click').on 'click', (e) =>
+            row = $(e.target).parents('tr')
             taskModel = @collection.get($(e.target).data('task-id'))
 
             vex.dialog.confirm
@@ -38,6 +39,7 @@ class TasksView extends View
                     taskModel.destroy()
                     delete app.allTasks[taskModel.get('id')] # TODO - move to model on destroy?
                     @collection.remove(taskModel)
+                    row.remove()
 
     setUpSearchEvents: =>
         $search = @$el.find('input[type="search"]')

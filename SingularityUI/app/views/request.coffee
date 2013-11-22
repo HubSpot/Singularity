@@ -36,17 +36,4 @@ class RequestView extends View
         @$el.find('.view-json').unbind('click').click (event) ->
             utils.viewJSON 'task', $(event.target).data('task-id')
 
-        $removeLinks = @$el.find('[data-action="remove"]')
-
-        $removeLinks.unbind('click').on 'click', (e) =>
-            requestModel = @collection.get($(e.target).data('request-id'))
-
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the request:</p><pre>#{ requestModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    requestModel.destroy()
-                    delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
-                    @collection.remove(requestModel)
-
 module.exports = RequestView
