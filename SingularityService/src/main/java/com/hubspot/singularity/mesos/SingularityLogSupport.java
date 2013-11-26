@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosExecutorObject;
 import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
+import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.data.history.HistoryManager;
 
@@ -36,9 +37,11 @@ public class SingularityLogSupport {
     
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
       for (MesosExecutorObject executor : slaveFramework.getExecutors()) {
-        if (task.getTaskId().getId().equals(executor.getId())) {
-          directory = executor.getDirectory();
-          break;
+        for (MesosTaskObject executorTask : executor.getTasks()) {
+          if (task.getTaskId().getId().equals(executorTask.getId())) {
+            directory = executor.getDirectory();
+            break;
+          }
         }
       }
     }
