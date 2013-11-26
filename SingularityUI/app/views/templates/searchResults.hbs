@@ -1,4 +1,34 @@
 <section>
+    {{#if requestsResults}}
+        <div class="row-fluid">
+            <h2>Requests</h2>
+            <table class="table" data-sortable="true">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Requested</th>
+                        <th>Instances</th>
+                        <th>Daemon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn requestsResults}}
+                        <tr>
+                            <td><a title="{{ id }}" href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                            <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                            <td>{{ instances }}</td>
+                            <td>{{ daemon }}</td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
+    {{else}}
+        <center><p>No requests found.</p></center>
+    {{/if}}
+</section>
+
+<section>
     {{#if tasksResults}}
         <div class="row-fluid">
             <h2>Tasks</h2>
@@ -25,35 +55,5 @@
         </div>
     {{else}}
         <center><p>No tasks found.</p></center>
-    {{/if}}
-</section>
-
-<section>
-    {{#if requestsResults}}
-        <div class="row-fluid">
-            <h2>Results</h2>
-            <table class="table" data-sortable="true">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Requested</th>
-                        <th>Instances</th>
-                        <th>Daemon</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#eachWithFn requestsResults}}
-                        <tr>
-                            <td><a title="{{ id }}" href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                            <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                            <td>{{ instances }}</td>
-                            <td>{{ daemon }}</td>
-                        </tr>
-                    {{/eachWithFn}}
-                </tbody>
-            </table>
-        </div>
-    {{else}}
-        <center><p>No requests found.</p></center>
     {{/if}}
 </section>
