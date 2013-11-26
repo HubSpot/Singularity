@@ -10,6 +10,10 @@ class State extends Model
             hostState.driverStatusHuman = constants.driverStates[hostState.driverStatus]
             hostState.millisSinceLastOfferHuman = moment(+new Date() - hostState.millisSinceLastOffer).from()
 
+            # Ask wsorenson...
+            if hostState.hostAddress is hostState.mesosMaster?.split(':')[0]
+                state.masterLogsDomain = "#{ hostState.hostname }:#{ hostState.mesosMaster.split(':')[1] }"
+
         state
 
 module.exports = State

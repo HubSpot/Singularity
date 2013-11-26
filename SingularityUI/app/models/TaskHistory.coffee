@@ -23,6 +23,9 @@ class TaskHistory extends Model
             taskUpdate.statusMessage = taskUpdate.statusMessage ? 'No status message available'
             taskUpdate.timestampHuman = moment(taskUpdate.timestamp).from()
 
+        # Construct mesos logs link
+        taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"
+
         app.allTasks[taskHistory.task.id] = taskHistory
 
         taskHistory
