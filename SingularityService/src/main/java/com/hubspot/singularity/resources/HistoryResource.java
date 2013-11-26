@@ -9,11 +9,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.sun.jersey.api.NotFoundException;
 
 @Path("/history")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -29,7 +31,13 @@ public class HistoryResource {
   @GET
   @Path("/task/{taskId}")
   public SingularityTaskHistory getHistoryForTask(@PathParam("taskId") String taskId) {
-    return historyManager.getTaskHistory(taskId);
+    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(taskId);
+  
+    if (!history.isPresent()) {
+      throw new NotFoundException(String.format("No history for task %s", taskId));
+    }
+    
+    return history.get();
   }
   
   @GET

@@ -1,5 +1,9 @@
 package com.hubspot.mesos;
 
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+
+import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskState;
@@ -7,6 +11,9 @@ import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
+
+import com.google.common.base.Throwables;
+import com.google.common.net.InetAddresses;
 
 public class MesosUtils {
 
@@ -151,5 +158,16 @@ public class MesosUtils {
   public static boolean isTaskDone(TaskState state) {
     return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }
+  
+  public static String getMasterHostAndPort(MasterInfo masterInfo) {
+    byte[] fromIp = ByteBuffer.allocate(4).putInt(masterInfo.getIp()).array();
+   
+    try {
+      return String.format("%s:%s", InetAddresses.fromLittleEndianByteArray(fromIp).getHostAddress(), masterInfo.getPort());
+    } catch (UnknownHostException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
   
 }

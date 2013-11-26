@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Status;
+import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -42,10 +43,11 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final WebhookManager webhookManager;
   private final SingularityRackManager rackManager;
+  private final SingularityLogSupport logSupport;
   
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
-      SingularityMesosTaskBuilder mesosTaskBuilder) {
+      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
@@ -53,6 +55,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.historyManager = historyManager;
     this.webhookManager = webhookManager;
     this.mesosTaskBuilder = mesosTaskBuilder;
+    this.logSupport = logSupport;
   }
 
   @Override
@@ -200,6 +203,8 @@ public class SingularityMesosScheduler implements Scheduler {
       }
       
       scheduler.scheduleOnCompletion(taskId);
+    } else if (status.getState() == TaskState.TASK_RUNNING) {
+      logSupport.notifyRunning(maybeActiveTask.get());
     }
   }
 

@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Scheduler;
 import org.slf4j.Logger;
@@ -40,6 +41,10 @@ public class SingularityDriver {
   @VisibleForTesting
   public Scheduler getScheduler() {
     return scheduler;
+  }
+  
+  public MasterInfo getMaster() {
+    return scheduler.getMaster();
   }
   
   public long getLastOfferTimestamp() {

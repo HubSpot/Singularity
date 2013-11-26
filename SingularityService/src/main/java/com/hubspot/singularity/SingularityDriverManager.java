@@ -4,9 +4,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -29,6 +31,20 @@ public class SingularityDriverManager {
   @VisibleForTesting
   public SingularityDriver getDriver() {
     return driver;
+  }
+  
+  public Optional<MasterInfo> getMaster() {
+    driverLock.lock();
+    
+    try {
+      if (driver == null) {
+        return Optional.absent();
+      }
+      
+      return Optional.fromNullable(driver.getMaster());
+    } finally {
+      driverLock.unlock();
+    }
   }
   
   public long getLastOfferTimestamp() {

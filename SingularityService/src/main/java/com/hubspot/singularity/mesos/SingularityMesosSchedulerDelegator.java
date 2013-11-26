@@ -43,6 +43,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final SingularityCleanupPoller cleanupPoller;
   
   private long lastOfferTimestamp;
+  private MasterInfo master;
   
   @Inject
   public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller) {
@@ -61,6 +62,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   
   public long getLastOfferTimestamp() {
     return lastOfferTimestamp;
+  }
+  
+  public MasterInfo getMaster() {
+    return master;
   }
   
   // TODO should the lock wait on a timeout and then notify that it's taking a while?
@@ -90,6 +95,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) {
     Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
+    
+    master = masterInfo;
     
     startup.startup(masterInfo);
 

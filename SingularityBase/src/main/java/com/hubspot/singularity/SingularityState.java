@@ -24,7 +24,7 @@ public class SingularityState {
   private final int decomissioningRacks;
   
   private final int numWebhooks;
-
+  
   private final List<SingularityHostState> hostStates;
 
   @JsonCreator

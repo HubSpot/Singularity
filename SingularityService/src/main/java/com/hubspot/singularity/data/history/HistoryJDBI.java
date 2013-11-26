@@ -30,20 +30,23 @@ public interface HistoryJDBI {
   @SqlUpdate("UPDATE taskHistory SET lastTaskStatus = :lastStatus, updatedAt = :updatedAt WHERE taskId = :taskId")
   void updateTaskStatus(@Bind("taskId") String taskId, @Bind("lastStatus") String status, @Bind("updatedAt") Date updatedAt);
   
+  @SqlUpdate("UPDATE taskHistory SET directory = :directory WHERE taskId = :taskId")
+  void updateTaskDirectory(@Bind("taskId") String taskId, @Bind("directory") String directory);
+  
   @Mapper(SingularityTaskUpdateMapper.class)
   @SqlQuery("SELECT status, message, createdAt FROM taskUpdates WHERE taskId = :taskId")
   List<SingularityTaskHistoryUpdate> getTaskUpdates(@Bind("taskId") String taskId);
   
   @Mapper(SingularityTaskHistoryHelperMapper.class)
-  @SqlQuery("SELECT createdAt, task FROM taskHistory WHERE taskId = :taskId")
+  @SqlQuery("SELECT createdAt, task, directory FROM taskHistory WHERE taskId = :taskId")
   SingularityTaskHistoryHelper getTaskHistoryForTask(@Bind("taskId") String taskId);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, createdAt, updatedAt, lastTaskStatus FROM taskHistory WHERE requestId = :requestId")
+  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId = :requestId")
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, createdAt, updatedAt, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%'))")
+  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%'))")
   List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike);
   
   @Mapper(SingularityRequestHistoryMapper.class)

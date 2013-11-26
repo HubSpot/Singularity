@@ -21,11 +21,13 @@ public interface HistoryManager {
   
   void updateTaskHistory(String taskId, String statusUpdate, Date timestamp);
   
+  void updateTaskDirectory(String taskId, String directory);
+  
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId);
   
   List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike);
   
-  SingularityTaskHistory getTaskHistory(String taskId);
+  Optional<SingularityTaskHistory> getTaskHistory(String taskId);
  
   List<SingularityRequestHistory> getRequestHistory(String requestId);
   

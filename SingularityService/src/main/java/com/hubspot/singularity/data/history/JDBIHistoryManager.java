@@ -49,6 +49,15 @@ public class JDBIHistoryManager implements HistoryManager {
   }
   
   @Override
+  public void updateTaskDirectory(String taskId, String directory) {
+    try {
+      history.updateTaskDirectory(taskId, directory);
+    } catch (Throwable t) {
+      LOG.warn(String.format("Error while setting task directory %s for %s", directory, taskId), t);
+    }
+  }
+
+  @Override
   public void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user) {
     try {
       history.insertRequestHistory(request.getId(), request.getAsBytes(objectMapper), new Date(), state.name(), user.orNull());
@@ -96,13 +105,17 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public SingularityTaskHistory getTaskHistory(String taskId) {
+  public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
     SingularityTaskHistoryHelper helper = history.getTaskHistoryForTask(taskId);
+    
+    if (helper == null) {
+      return Optional.absent();
+    }
     
     List<SingularityTaskHistoryUpdate> updates = history.getTaskUpdates(taskId);
     
     try {
-      return new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.fromBytes(helper.getTaskData(), objectMapper));
+      return Optional.of(new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.fromBytes(helper.getTaskData(), objectMapper), helper.getDirectory()));
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

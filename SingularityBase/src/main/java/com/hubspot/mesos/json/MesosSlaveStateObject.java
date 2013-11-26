@@ -9,20 +9,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MesosSlaveStateObject {
 
-//  {
-//    attributes: { },
-//    hostname: "dahlbero.iad01.hubspot-networks.net",
-//    id: "201309092300-1947527690-5050-13008-3",
-//    pid: "slave(1)@10.238.161.84:5051",
-//    registered_time: 1378767835,
-//    resources: {
-//    cpus: 4,
-//    disk: 396445,
-//    mem: 13987,
-//    ports: "[31000-32000]"
-//    }
-//    
-  
   private final String id;
   private final String pid;
   private final String hostname;

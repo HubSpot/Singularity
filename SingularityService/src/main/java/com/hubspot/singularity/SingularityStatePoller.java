@@ -20,6 +20,7 @@ public class SingularityStatePoller {
   private final long saveStateEverySeconds;
   
   private ScheduledExecutorService executorService;
+  private Runnable stateUpdateRunnable;
   
   @Inject
   public SingularityStatePoller(StateManager stateManager, SingularityConfiguration configuration) {
@@ -34,7 +35,7 @@ public class SingularityStatePoller {
    
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityStatePoller-%d").build());
     
-    this.executorService.scheduleWithFixedDelay(new Runnable() {
+    stateUpdateRunnable = new Runnable() {
       
       @Override
       public void run() {
@@ -47,7 +48,13 @@ public class SingularityStatePoller {
           abort.abort();
         }
       }
-    }, 0, saveStateEverySeconds, TimeUnit.SECONDS);
+    };
+  
+    this.executorService.scheduleWithFixedDelay(stateUpdateRunnable, 0, saveStateEverySeconds, TimeUnit.SECONDS);
+  }
+  
+  public void updateStateNow() { 
+    this.executorService.execute(stateUpdateRunnable);
   }
   
   private final int WAIT_SECONDS = 1;

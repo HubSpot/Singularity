@@ -4,8 +4,11 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.MasterInfo;
 
+import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
 
 public class SingularityStateGenerator {
 
@@ -33,8 +36,15 @@ public class SingularityStateGenerator {
     } catch (Exception e) {
       hostAddress = "Unknown";
     }
-        
-    final SingularityHostState hostState = new SingularityHostState(isMaster, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, JavaUtils.getHostName());
+    
+    String mesosMaster = null;
+    Optional<MasterInfo> mesosMasterInfo = managed.getMaster();
+    
+    if (mesosMasterInfo.isPresent()) {
+      mesosMaster = MesosUtils.getMasterHostAndPort(mesosMasterInfo.get());
+    }
+    
+    final SingularityHostState hostState = new SingularityHostState(isMaster, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, JavaUtils.getHostName(), mesosMaster);
 
     return hostState;
   }

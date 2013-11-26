@@ -5,9 +5,11 @@ import io.dropwizard.lifecycle.Managed;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 public class SingularityManaged implements Managed, LeaderLatchListener {
@@ -62,6 +64,7 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
     if (currentStatus != Protos.Status.DRIVER_RUNNING) {
       try {
         currentStatus = driverManager.start();
+        statePoller.updateStateNow();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
         abort.abort();
@@ -70,6 +73,7 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
       if (currentStatus != Protos.Status.DRIVER_RUNNING) {
         abort.abort();
       }
+      
     } else {
       LOG.warn("Driver was already running - took no action.");
     }    
@@ -79,6 +83,10 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
     return isMaster;
   }
 
+  public Optional<MasterInfo> getMaster() {
+    return driverManager.getMaster();
+  }
+  
   public long getLastOfferTimestamp() {
     return driverManager.getLastOfferTimestamp();
   }
@@ -96,6 +104,8 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
     if (currentStatus == Protos.Status.DRIVER_RUNNING) {
       try {
         currentStatus = driverManager.stop();
+
+        statePoller.updateStateNow();
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
         abort.abort();
