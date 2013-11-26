@@ -34,12 +34,31 @@
         <div class="page-loader centered"></div>
     {{/if}}
     <div class="page-header">
-        <h1>Logs</h1>
+        <h1>Log Files</h1>
     </div>
     <div class="row-fluid">
         <div class="span12">
             <p><a href="{{ taskHistory.mesosMasterLogsLink }}" target="_blank">View logs on Mesos Master</a></p>
-            <pre><center>COMING SOON</center></pre>
+            <table class="table" data-sortable="true">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Size</th>
+                        <th>Last modified</th>
+                        <th data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn taskLogFiles}}
+                        <tr>
+                            <td><a href="{{ ../taskHistory.mesosMasterLogsLink }}" target="_blank">{{ shortPath }}</a></td>
+                            <td data-value="{{ size }}">{{ size }}B</td>
+                            <td data-value="{{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
+                            <td><a href="{{ downloadLink }}" target="_blank">Download</span></td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
         </div>
     </div>
     <div class="page-header">

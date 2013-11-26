@@ -3,6 +3,8 @@ constants =
     appName: 'singularity'
     apiBase: 'singularity/v1'
 
+    mesosLogsPort: '5051'
+
     taskStates:
         TASK_RUNNING:
             isActive: true
