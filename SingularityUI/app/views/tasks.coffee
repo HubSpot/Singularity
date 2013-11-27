@@ -7,12 +7,9 @@ class TasksView extends View
     templateTasksCleaning: require './templates/tasksCleaning'
 
     render: (tasksFilter) =>
-        @collection = app.collections.tasksActive
-        template = @templateTasksActive
-        tasks = _.pluck(@collection.sort().models, 'attributes')
-
         if tasksFilter is 'active'
-            tasks = tasks.reverse()
+            @collection = app.collections.tasksActive
+            template = @templateTasksActive
 
         if tasksFilter is 'scheduled'
             @collection = app.collections.tasksScheduled
@@ -21,6 +18,11 @@ class TasksView extends View
         if tasksFilter is 'cleaning'
             @collection = app.collections.tasksCleaning
             template = @templateTasksCleaning
+
+        tasks = _.pluck(@collection.sort().models, 'attributes')
+
+        if tasksFilter is 'active'
+            tasks = tasks.reverse()
 
         context =
             tasks: tasks
