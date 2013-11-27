@@ -28,6 +28,12 @@ constants =
             isActive: false
             label: 'Lost'
 
+    taskCleanupType:
+        USER_REQUESTED:
+            label: 'User requested'
+        DECOMISSIONING:
+            label: 'Decomissioning'
+
     driverStates:
         DRIVER_ABORTED: 'aborted'
         DRIVER_NOT_STARTED: 'not started'
