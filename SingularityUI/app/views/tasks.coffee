@@ -9,6 +9,10 @@ class TasksView extends View
     render: (tasksFilter) =>
         @collection = app.collections.tasksActive
         template = @templateTasksActive
+        tasks = _.pluck(@collection.sort().models, 'attributes')
+
+        if tasksFilter is 'active'
+            tasks = tasks.reverse()
 
         if tasksFilter is 'scheduled'
             @collection = app.collections.tasksScheduled
@@ -19,7 +23,7 @@ class TasksView extends View
             template = @templateTasksCleaning
 
         context =
-            tasks: _.pluck(@collection.sort().models, 'attributes').reverse()
+            tasks: tasks
 
         @$el.html template context
 
