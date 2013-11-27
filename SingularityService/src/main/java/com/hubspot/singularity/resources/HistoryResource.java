@@ -47,7 +47,7 @@ public class HistoryResource {
       return 100;
     }
     
-    if (countParam < 0) {
+    if (countParam < 1) {
       throw new WebApplicationException(Status.BAD_REQUEST);
     }
     
