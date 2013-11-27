@@ -48,6 +48,12 @@ public class TaskResource {
     return taskManager.getActiveTasks();
   }
   
+  @GET
+  @Path("/cleaning")
+  public List<SingularityTaskCleanup> getCleaningTasks() {
+    return taskManager.getCleanupTasks();
+  }
+  
   @DELETE
   @Path("/task/{taskId}")
   public String deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
