@@ -1,6 +1,6 @@
-TasksActive = require './TasksActive'
+Tasks = require './Tasks'
 
-class TasksCleaning extends TasksActive
+class TasksCleaning extends Tasks
 
     url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/cleaning"
 
@@ -8,7 +8,6 @@ class TasksCleaning extends TasksActive
         _.each tasks, (task, i) =>
             task.JSONString = utils.stringJSON task
             task.name = task.id
-            task.timestamp = task.pendingTaskId.timestamp
             task.timestampHuman = moment(task.timestamp).fromNow()
             task.cleanupTypeHuman = if constants.taskCleanupType[task.cleanupType] then constants.taskCleanupType[task.cleanupType].label else ''
             tasks[i] = task

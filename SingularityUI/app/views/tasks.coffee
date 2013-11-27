@@ -4,6 +4,7 @@ class TasksView extends View
 
     templateTasksActive: require './templates/tasksActive'
     templateTasksScheduled: require './templates/tasksScheduled'
+    templateTasksCleaning: require './templates/tasksCleaning'
 
     render: (tasksFilter) =>
         @collection = app.collections.tasksActive
