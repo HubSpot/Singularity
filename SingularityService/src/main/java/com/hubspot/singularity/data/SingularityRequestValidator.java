@@ -10,6 +10,7 @@ import javax.ws.rs.core.Response.Status;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.SingularityRequest;
 
@@ -53,7 +54,7 @@ public class SingularityRequestValidator {
     checkRequestState(request.getResources() == null || request.getResources().getNumPorts() == 0 || (request.getExecutor() == null || (request.getExecutorData() != null && request.getExecutorData() instanceof Map)), 
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
         
-    return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, request.getInstances(), request.getDaemon(), request.getEnv(), 
+    return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, Objects.firstNonNull(request.getInstances(), 1), request.getDaemon(), request.getEnv(), 
         request.getUris(), request.getMetadata(),  request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp());
   }
   

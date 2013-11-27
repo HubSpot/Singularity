@@ -207,7 +207,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
-    final int numInstances = Objects.firstNonNull(request.getInstances(), 1);
+    final int numInstances = request.getInstances();
     
     final long nextRunAt = getNextRunAt(request, pendingType);
     
