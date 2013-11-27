@@ -5,13 +5,17 @@ class TasksView extends View
     templateTasksActive: require './templates/tasksActive'
     templateTasksScheduled: require './templates/tasksScheduled'
 
-    render: (tasksFiltered) =>
+    render: (tasksFilter) =>
         @collection = app.collections.tasksActive
         template = @templateTasksActive
 
-        if tasksFiltered is 'scheduled'
+        if tasksFilter is 'scheduled'
             @collection = app.collections.tasksScheduled
             template = @templateTasksScheduled
+
+        if tasksFilter is 'cleaning'
+            @collection = app.collections.tasksCleaning
+            template = @templateTasksCleaning
 
         context =
             tasks: _.pluck(@collection.sort().models, 'attributes').reverse()

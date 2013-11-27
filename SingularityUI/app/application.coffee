@@ -8,6 +8,7 @@ RequestsCleaning = require 'collections/RequestsCleaning'
 
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
+TasksCleaning = require 'collections/TasksCleaning'
 
 class Application
 
@@ -65,6 +66,10 @@ class Application
             collection_key: 'tasksScheduled'
             collection: TasksScheduled
             error_phrase: 'scheduled tasks'
+        }, {
+            collection_key: 'tasksCleaning'
+            collection: TasksCleaning
+            error_phrase: 'cleaning tasks'
         }]
 
         _.each resources, (r) =>
