@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -124,18 +123,6 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
 
-  private RackCheckState getRackCheckState(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
-    List<SingularityTaskId> matchingTasks = Lists.newArrayList();
-
-    for (SingularityTaskId activeTask : activeTasks) {
-      if (activeTask.matches(taskRequest.getPendingTaskId())) {
-        matchingTasks.add(activeTask);
-      }
-    }
-
-    return rackManager.checkRack(offer, taskRequest, matchingTasks);
-  }
-
   private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, List<SingularityTaskId> activeTasks) {
     for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
@@ -147,7 +134,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
           
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
-      final RackCheckState rackCheckState = getRackCheckState(offer, taskRequest, activeTasks);
+      final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, activeTasks);
             
       if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
@@ -166,7 +153,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack appropriate: %s", offer.getId(), taskRequest.getPendingTaskId(), matchesResources, rackCheckState));
+        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack state: %s", offer.getId(), taskRequest.getPendingTaskId(), matchesResources, rackCheckState));
       }
     }
 

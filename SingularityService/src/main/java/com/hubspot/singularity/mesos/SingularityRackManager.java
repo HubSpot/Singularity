@@ -24,8 +24,10 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.scheduler.SingularitySchedulerBase;
 
-public class SingularityRackManager {
+public class SingularityRackManager extends SingularitySchedulerBase {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityRackManager.class);
 
@@ -36,7 +38,9 @@ public class SingularityRackManager {
   private final SlaveManager slaveManager;
   
   @Inject
-  public SingularityRackManager(MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager) {
+  public SingularityRackManager(MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+    super(taskManager);
+    
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
     
@@ -92,7 +96,7 @@ public class SingularityRackManager {
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
-    for (SingularityTaskId taskId : activeTasks) {
+    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), activeTasks, getDecomissioningRacks(), getDecomissioningSlaves())) {
       if (taskId.getHost().equals(host)) {
         LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTaskId(), host, taskId));
         
@@ -243,6 +247,14 @@ public class SingularityRackManager {
   
   private int getNumRacks() {
     return rackManager.getNumActive();
+  }
+  
+  private List<String> getDecomissioningRacks() {
+    return rackManager.getDecomissioning();
+  }
+  
+  private List<SingularitySlave> getDecomissioningSlaves() {
+    return slaveManager.getDecomissioningObjects();
   }
   
   private boolean isRackActive(String rackId) {
