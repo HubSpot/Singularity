@@ -10,7 +10,7 @@
     {{#if taskHistory.taskUpdates}}
         <div class="row-fluid">
             <div class="span12">
-                <table class="table" data-sortable="true">
+                <table class="table" data-sortable>
                     <thead>
                         <tr>
                             <th>Status</th>
@@ -39,13 +39,13 @@
     <div class="row-fluid">
         <div class="span12">
             <p><a href="{{ taskHistory.mesosMasterLogsLink }}" target="_blank">View logs on Mesos Master</a></p>
-            <table class="table" data-sortable="true">
+            <table class="table" data-sortable>
                 <thead>
                     <tr>
                         <th>Filename</th>
                         <th>Size</th>
                         <th>Last modified</th>
-                        <th data-sort="false"></th>
+                        <th data-sortable="false"></th>
                     </tr>
                 </thead>
                 <tbody>
