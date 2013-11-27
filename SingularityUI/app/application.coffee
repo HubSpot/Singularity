@@ -76,7 +76,10 @@ class Application
             @resolveCountdown += 1
             @collections[r.collection_key] = new r.collection
             @collections[r.collection_key].fetch
-                error: -> vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
-                success: -> resolve()
+                error: ->
+                    vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
+                    resolve()
+                success: ->
+                    resolve()
 
 module.exports = new Application
