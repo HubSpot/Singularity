@@ -42,20 +42,20 @@ public interface HistoryJDBI {
   SingularityTaskHistoryHelper getTaskHistoryForTask(@Bind("taskId") String taskId);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId = :requestId")
-  List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId);
+  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId = :requestId LIMIT :limitStart, :limitCount")
+  List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%'))")
-  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike);
+  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) LIMIT :limitStart, :limitCount")
+  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityRequestHistoryMapper.class)
   @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId = :requestId")
   List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId);
   
   @Mapper(SingularityRequestHistoryMapper.class)
-  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%'))")
-  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike);
+  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) LIMIT :limitStart, :limitCount")
+  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   void close();
 

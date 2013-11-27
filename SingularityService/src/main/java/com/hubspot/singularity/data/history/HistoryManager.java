@@ -23,14 +23,14 @@ public interface HistoryManager {
   
   void updateTaskDirectory(String taskId, String directory);
   
-  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId);
+  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
   
-  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike);
+  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Integer limitStart, Integer limitCount);
   
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
  
   List<SingularityRequestHistory> getRequestHistory(String requestId);
   
-  List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike);
+  List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
   
 }

@@ -7,7 +7,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -40,16 +42,50 @@ public class HistoryResource {
     return history.get();
   }
   
+  private Integer getLimitCount(Integer countParam) {
+    if (countParam == null) {
+      return 100;
+    }
+    
+    if (countParam < 0) {
+      throw new WebApplicationException(Status.BAD_REQUEST);
+    }
+    
+    if (countParam > 1000) {
+      return 1000;
+    }
+    
+    return countParam;
+  }
+  
+  private Integer getLimitStart(Integer limitCount, Integer pageParam) {
+    if (pageParam == null) {
+      return 0;
+    }
+    
+    if (pageParam < 1) {
+      throw new WebApplicationException(Status.BAD_REQUEST);
+    }
+    
+    return limitCount * (pageParam - 1);
+  }
+  
   @GET
   @Path("/request/{requestId}/tasks")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
-    return historyManager.getTaskHistoryForRequest(requestId);
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+    Integer limitCount = getLimitCount(count);
+    Integer limitStart = getLimitStart(limitCount, page);
+    
+    return historyManager.getTaskHistoryForRequest(requestId, limitStart, limitCount);
   }
   
   @GET
   @Path("/tasks/search")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike) {
-    return historyManager.getTaskHistoryForRequestLike(requestIdLike);
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+    Integer limitCount = getLimitCount(count);
+    Integer limitStart = getLimitStart(limitCount, page);
+    
+    return historyManager.getTaskHistoryForRequestLike(requestIdLike, limitStart, limitCount);
   }
   
   @GET
@@ -60,8 +96,11 @@ public class HistoryResource {
   
   @GET
   @Path("/requests/search")
-  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike) {
-    return historyManager.getRequestHistoryLike(requestIdLike);
+  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+    Integer limitCount = getLimitCount(count);
+    Integer limitStart = getLimitStart(limitCount, page);
+ 
+    return historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
   
 }

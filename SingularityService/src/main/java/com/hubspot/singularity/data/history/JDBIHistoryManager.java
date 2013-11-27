@@ -67,8 +67,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
   
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike) {
-    return history.getTaskHistoryForRequestLike(requestIdLike);
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Integer limitStart, Integer limitCount) {
+    return history.getTaskHistoryForRequestLike(requestIdLike, limitStart, limitCount);
   }
 
   @Override
@@ -86,8 +86,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike) {
-    return history.getRequestHistoryLike(requestIdLike);
+  public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
+    return history.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
 
   @Override
@@ -100,8 +100,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId) {
-    return history.getTaskHistoryForRequest(requestId);
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
+    return history.getTaskHistoryForRequest(requestId, limitStart, limitCount);
   }
 
   @Override
