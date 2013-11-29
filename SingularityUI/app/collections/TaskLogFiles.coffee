@@ -3,8 +3,8 @@ Collection = require './collection'
 class TaskLogFiles extends Collection
 
     url: =>
-    	fullPath = "#{ @directory }/#{ @path ? ''}"
-    	"http://#{ @offerHostname }:#{ constants.mesosLogsPort }/files/browse.json?path=#{ escape fullPath }"
+        fullPath = "#{ @directory }/#{ @path ? ''}"
+        "http://#{ @offerHostname }:#{ constants.mesosLogsPort }/files/browse.json?path=#{ escape fullPath }&jsonp=?"
 
     initialize: (models, { @taskId, @offerHostname, @directory, @path }) =>
 

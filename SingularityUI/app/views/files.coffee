@@ -7,15 +7,15 @@ class FilesView extends View
 
     template: require './templates/files'
 
-    initialize: (@path='') =>
+    initialize: ({@taskId, @path}) =>
         @taskLogFiles = {} # Temporary
 
-        @taskHistory = new TaskHistory {}, taskId: @options.taskId
+        @taskHistory = new TaskHistory {}, taskId: @taskId
         @taskHistory.fetch().done =>
             @render()
 
             @taskLogFiles = new TaskLogFiles {},
-                taskId: @options.taskId
+                taskId: @taskId
                 offerHostname: @taskHistory.attributes.task.offer.hostname
                 directory: @taskHistory.attributes.directory
                 path: @path
