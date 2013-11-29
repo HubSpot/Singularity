@@ -3,20 +3,31 @@ View = require './view'
 TaskHistory = require '../models/TaskHistory'
 TaskLogFiles = require '../collections/TaskLogFiles'
 
-class TaskView extends View
+class FilesView extends View
 
-    template: require './templates/task'
+    template: require './templates/files'
 
-    initialize: =>
+    initialize: (@path='') =>
         @taskLogFiles = {} # Temporary
 
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
         @taskHistory.fetch().done =>
             @render()
 
-            @taskLogFiles = new TaskLogFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
+            @taskLogFiles = new TaskLogFiles {},
+                taskId: @options.taskId
+                offerHostname: @taskHistory.attributes.task.offer.hostname
+                directory: @taskHistory.attributes.directory
+                path: @path
+
             @taskLogFiles.fetch().done =>
                 @render()
+
+    browse: (@path) =>
+        @taskLogFiles.path = @path
+
+        @taskLogFiles.fetch().done =>
+            @render()
 
     render: =>
         return unless @taskHistory.attributes?.task?.id
@@ -29,4 +40,4 @@ class TaskView extends View
 
         utils.setupSortableTables()
 
-module.exports = TaskView
+module.exports = FilesView

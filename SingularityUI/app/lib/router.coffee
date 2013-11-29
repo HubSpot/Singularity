@@ -9,6 +9,7 @@ SlavesView = require 'views/slaves'
 WebhooksView = require 'views/webhooks'
 PageNotFoundView = require 'views/pageNotFound'
 NavigationView = require 'views/navigation'
+FilesView = require 'views/files'
 
 nav = ->
     if not app.views.navigationView?
@@ -26,6 +27,8 @@ class Router extends Backbone.Router
         'tasks(/)': 'tasks'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
         'task/:taskId(/)': 'task'
+        'task/:taskId/files(/)': 'files'
+        'task/:taskId/files/*path': 'files'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
         'webhooks(/)': 'webhooks'
@@ -80,6 +83,16 @@ class Router extends Backbone.Router
             app.views.taskViews[taskId] = new TaskView taskId: taskId
         app.views.current = app.views.taskViews[taskId]
         app.views.taskViews[taskId].render()
+
+    files: (taskId, path='') ->
+        nav()
+        app.views.filesViews = {} if not app.views.filesViews
+        if not app.views.filesViews[taskId]
+            app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
+        else
+            app.views.filesViews[taskId].browse path
+        app.views.current = app.views.filesViews[taskId]
+        app.views.filesViews[taskId].render()
 
     racks: ->
         nav()
