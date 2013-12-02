@@ -19,6 +19,11 @@ class TaskLogFiles extends Collection
             taskLogFile.taskId = @taskId
             taskLogFile
 
-    comparator: 'size'
+    comparator: (a, b) ->
+        if a.get('isDirectory') and not b.get('isDirectory')
+            return 1
+        else if not a.get('isDirectory') and b.get('isDirectory')
+            return -1
+        return a.get('size') - b.get('size')
 
 module.exports = TaskLogFiles
