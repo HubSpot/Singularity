@@ -1,9 +1,8 @@
-package com.hubspot.singularity;
+package com.hubspot.singularity.smtp;
 
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
@@ -46,23 +46,26 @@ public class SingularityMailer {
         properties.setProperty("mail.smtp.port", Integer.toString(smtpConfiguration.getPort().get()));
       }
       
-      properties.setProperty("mail.user", smtpConfiguration.getUsername());
-      properties.setProperty("mail.password", smtpConfiguration.getPassword());
-
+      properties.setProperty("mail.smtp.auth", "true");
+      
       Session session = Session.getDefaultInstance(properties);
-
+      Transport transport = session.getTransport("smtp");
+      transport.connect(smtpConfiguration.getUsername(), smtpConfiguration.getPassword());
+      
       MimeMessage message = new MimeMessage(session);
 
       message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
       
+      List<InternetAddress> addresses = Lists.newArrayList();
+      
       for (String to : toList) {
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+        addresses.add(new InternetAddress(to));
       }
 
       message.setSubject(subject);
       message.setText(body);
       
-      Transport.send(message);
+      transport.sendMessage(message, addresses.toArray(new InternetAddress[addresses.size()]));
     } catch (Throwable t) {
       LOG.warn(String.format("Unable to send message [to: %s, subject: %s, body: %s] due to exception", toList, subject, body), t);
     }

@@ -18,12 +18,22 @@ import com.hubspot.singularity.config.SMTPLoggingConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfiguration> {
-
+  
+  private final static org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SMTPAppenderBundle.class);
+  
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
+    SMTPConfiguration smtp = configuration.getSmtpConfiguration();
+    SMTPLoggingConfiguration smtpLoggingConfiguration = smtp.getSmtpLoggingConfiguration();
+
+    if (!smtpLoggingConfiguration.isEnabled()) {
+      LOG.info("SMTPAppenderBundle is installed, but it is not enabled - enable using smtp: logging: enabled: true");
+      return;
+    }
+    
     final Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     
-    SMTPAppender appender = buildSMTPAppender(configuration.getSmtpConfiguration(), configuration.getSmtpConfiguration().getSmtpLoggingConfiguration(), root.getLoggerContext());
+    SMTPAppender appender = buildSMTPAppender(smtp, smtpLoggingConfiguration, root.getLoggerContext());
     
     root.addAppender(appender);
   }
@@ -56,18 +66,17 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
     appender.setSMTPHost(smtp.getHost());
 
     Optional<Integer> port = smtp.getPort();
-    appender.setSMTPPort(port.or(25));
-//    
-//    if (smtp.getSSL()) {
-//      appender.setSMTPPort(port.or(465));
-//    } else {
-//      appender.setSMTPPort(port.or(25));
-//    }
+   
+    if (smtp.isSsl()) {
+      appender.setSMTPPort(port.or(465));
+    } else {
+      appender.setSMTPPort(port.or(25));
+    }
 
     appender.setUsername(smtp.getUsername());
     appender.setPassword(smtp.getPassword());
-//    appender.setSSL(smtpLogging.getSSL());
-//    appender.setSTARTTLS(sm.getSTARTTLS());
+    appender.setSSL(smtp.isSsl());
+    appender.setSTARTTLS(smtp.isStartTLS());
     appender.setCharsetEncoding(smtpLogging.getCharsetEncoding());
     appender.setLocalhost(smtpLogging.getLocalhost().orNull());
     appender.start();
