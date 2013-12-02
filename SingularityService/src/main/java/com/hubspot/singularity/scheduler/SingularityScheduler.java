@@ -25,11 +25,13 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager;
 
 public class SingularityScheduler extends SingularitySchedulerBase {
 
@@ -41,13 +43,16 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   
+  private final HistoryManager historyManager;
+  
   @Inject
-  public SingularityScheduler(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager) {
+  public SingularityScheduler(TaskManager taskManager, RequestManager requestManager, HistoryManager historyManager, SlaveManager slaveManager, RackManager rackManager) {
     super(taskManager);
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
+    this.historyManager = historyManager;
   }
   
   private void checkTaskForDecomissionCleanup(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject) {
@@ -250,14 +255,22 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       LOG.info("Scheduling requested immediate run of %s", request.getId());
     } else {
       try {
-        final Date now = new Date();
+        Date scheduleFrom = new Date();
+        
+        if (pendingType == PendingType.STARTUP) {
+          // find out what the last time the task ran at was.
+          Optional<SingularityTaskIdHistory> history = historyManager.getLastTaskForRequest(request.getId());
+          if (history.isPresent()) {
+            scheduleFrom = new Date(history.get().getUpdatedAt().or(history.get().getCreatedAt()));
+          }
+        }
         
         CronExpression cronExpression = new CronExpression(request.getSchedule());
 
-        final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(now);
+        final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
         nextRunAt = nextRunAtDate.getTime();
         
-        LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (now: %s)", request.getId(), request.getSchedule(), nextRunAtDate, now));
+        LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (from: %s)", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom));
       } catch (ParseException pe) {
         throw Throwables.propagate(pe);
       }

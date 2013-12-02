@@ -23,7 +23,7 @@ public class SingularityTaskIdHistoryMapper implements ResultSetMapper<Singulari
       maybeUpdatedAt = Optional.of(updatedAt.getTime());
     }
     
-    return new SingularityTaskIdHistory(SingularityTaskId.fromString(r.getString("taskId")), Optional.fromNullable(r.getString("lastTaskStatus")), r.getTimestamp("createdAt").getTime(), maybeUpdatedAt, Optional.fromNullable(r.getString("directory")));
+    return new SingularityTaskIdHistory(SingularityTaskId.fromString(r.getString("taskId")), r.getString("requestId"), Optional.fromNullable(r.getString("lastTaskStatus")), r.getTimestamp("createdAt").getTime(), maybeUpdatedAt, Optional.fromNullable(r.getString("directory")));
   }
   
 }

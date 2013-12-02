@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -9,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
@@ -17,6 +19,9 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
+import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
+import com.hubspot.singularity.data.history.HistoryManager.TaskHistoryOrderBy;
 import com.sun.jersey.api.NotFoundException;
 
 @Path("/history")
@@ -70,22 +75,70 @@ public class HistoryResource {
     return limitCount * (pageParam - 1);
   }
   
+  private Optional<OrderDirection> getOrderDirection(String orderDirection) {
+    if (orderDirection == null) {
+      return Optional.absent();
+    }
+    
+    checkExists(orderDirection, OrderDirection.values());
+    
+    return Optional.of(OrderDirection.valueOf(orderDirection));
+  }
+  
+  private void checkExists(String name, Enum<?>[] choices) {
+    boolean found = false;
+    for (Enum<?> choice : choices) {
+      if (name.equals(choice.name())) {
+        found = true;
+        break;
+      }
+    }
+    
+    if (!found) {
+      throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity(String.format("%s was not found in choices:%s", name, Arrays.toString(choices))).type("text/plain").build());
+    }
+  }
+  
+  private Optional<TaskHistoryOrderBy> getTaskHistoryOrderBy(String orderBy) {
+    if (orderBy == null) {
+      return Optional.absent();
+    }
+    
+    checkExists(orderBy, TaskHistoryOrderBy.values());
+    
+    return Optional.of(TaskHistoryOrderBy.valueOf(orderBy));
+  }
+  
+  private Optional<RequestHistoryOrderBy> getRequestHistoryOrderBy(String orderBy) {
+    if (orderBy == null) {
+      return Optional.absent();
+    }
+    
+    checkExists(orderBy, RequestHistoryOrderBy.values());
+    
+    return Optional.of(RequestHistoryOrderBy.valueOf(orderBy));
+  }
+  
   @GET
   @Path("/request/{requestId}/tasks")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     Integer limitCount = getLimitCount(count);
     Integer limitStart = getLimitStart(limitCount, page);
+    Optional<TaskHistoryOrderBy> taskOrderBy = getTaskHistoryOrderBy(orderBy);
+    Optional<OrderDirection> maybeOrderDirection = getOrderDirection(orderDirection);
     
-    return historyManager.getTaskHistoryForRequest(requestId, limitStart, limitCount);
+    return historyManager.getTaskHistoryForRequest(requestId, taskOrderBy, maybeOrderDirection, limitStart, limitCount);
   }
   
   @GET
   @Path("/tasks/search")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     Integer limitCount = getLimitCount(count);
     Integer limitStart = getLimitStart(limitCount, page);
+    Optional<TaskHistoryOrderBy> taskOrderBy = getTaskHistoryOrderBy(orderBy);
+    Optional<OrderDirection> maybeOrderDirection = getOrderDirection(orderDirection);
     
-    return historyManager.getTaskHistoryForRequestLike(requestIdLike, limitStart, limitCount);
+    return historyManager.getTaskHistoryForRequestLike(requestIdLike, taskOrderBy, maybeOrderDirection, limitStart, limitCount);
   }
   
   @GET
@@ -96,11 +149,13 @@ public class HistoryResource {
   
   @GET
   @Path("/requests/search")
-  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     Integer limitCount = getLimitCount(count);
     Integer limitStart = getLimitStart(limitCount, page);
- 
-    return historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
+    Optional<RequestHistoryOrderBy> requestOrderBy = getRequestHistoryOrderBy(orderBy);
+    Optional<OrderDirection> maybeOrderDirection = getOrderDirection(orderDirection);
+    
+    return historyManager.getRequestHistoryLike(requestIdLike, requestOrderBy, maybeOrderDirection, limitStart, limitCount);
   }
   
 }

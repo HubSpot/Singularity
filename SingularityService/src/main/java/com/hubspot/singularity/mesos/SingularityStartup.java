@@ -15,6 +15,7 @@ import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -88,7 +89,7 @@ public class SingularityStartup {
     final List<String> requests = requestManager.getRequestIds();
     
     for (String requestId : requests) {
-      requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId));
+      requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.STARTUP));
     }
     
     LOG.info(String.format("Put %s requests in pending queue", requests.size()));

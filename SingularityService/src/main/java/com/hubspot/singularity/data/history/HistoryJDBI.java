@@ -42,20 +42,20 @@ public interface HistoryJDBI {
   SingularityTaskHistoryHelper getTaskHistoryForTask(@Bind("taskId") String taskId);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId = :requestId LIMIT :limitStart, :limitCount")
-  List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId = :requestId ORDER BY :orderBy :orderDirection LIMIT :limitStart, :limitCount")
+  List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId, @Bind("orderBy") String orderBy, @Bind("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) LIMIT :limitStart, :limitCount")
-  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) ORDER BY :orderBy :orderDirection LIMIT :limitStart, :limitCount")
+  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike, @Bind("orderBy") String orderBy, @Bind("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityRequestHistoryMapper.class)
   @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId = :requestId")
   List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId);
   
   @Mapper(SingularityRequestHistoryMapper.class)
-  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) LIMIT :limitStart, :limitCount")
-  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) ORDER BY :orderBy :orderDirection LIMIT :limitStart, :limitCount ")
+  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("orderBy") String orderBy, @Bind("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   void close();
 
