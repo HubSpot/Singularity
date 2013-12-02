@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.SingularityRequest;
@@ -67,8 +68,22 @@ public class JDBIHistoryManager implements HistoryManager {
   }
   
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Integer limitStart, Integer limitCount) {
-    return history.getTaskHistoryForRequestLike(requestIdLike, limitStart, limitCount);
+  public Optional<SingularityTaskIdHistory> getLastTaskForRequest(String requestId) {
+    List<SingularityTaskIdHistory> taskIds = getTaskHistoryForRequest(requestId, Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1);
+    if (taskIds.isEmpty()) {
+      return Optional.absent();
+    }
+    SingularityTaskIdHistory first = Iterables.getFirst(taskIds, null);
+    return Optional.of(first);
+  }
+
+  private String getOrderDirection(Optional<OrderDirection> orderDirection) {
+    return orderDirection.or(OrderDirection.ASC).name();
+  }
+  
+  @Override
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
+    return history.getTaskHistoryForRequestLike(requestIdLike, orderBy.or(TaskHistoryOrderBy.requestId).name(), getOrderDirection(orderDirection), limitStart, limitCount);
   }
 
   @Override
@@ -86,8 +101,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
-    return history.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
+  public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
+    return history.getRequestHistoryLike(requestIdLike, orderBy.or(RequestHistoryOrderBy.requestId).name(), getOrderDirection(orderDirection), limitStart, limitCount);
   }
 
   @Override
@@ -100,8 +115,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
-    return history.getTaskHistoryForRequest(requestId, limitStart, limitCount);
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
+    return history.getTaskHistoryForRequest(requestId, orderBy.or(TaskHistoryOrderBy.taskId).name(), getOrderDirection(orderDirection), limitStart, limitCount);
   }
 
   @Override

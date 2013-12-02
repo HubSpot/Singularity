@@ -13,6 +13,18 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 
 public interface HistoryManager {
 
+  public enum OrderDirection {
+    ASC, DESC;
+  }
+  
+  public enum TaskHistoryOrderBy {
+    requestId, taskId, lastTaskStatus, createdAt, updatedAt,
+  }
+  
+  public enum RequestHistoryOrderBy {
+    requestId, createdAt
+  }
+  
   void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user);
   
   void saveTaskHistory(SingularityTask task, String driverStatus);
@@ -23,14 +35,16 @@ public interface HistoryManager {
   
   void updateTaskDirectory(String taskId, String directory);
   
-  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
+  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   
-  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Integer limitStart, Integer limitCount);
+  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
  
   List<SingularityRequestHistory> getRequestHistory(String requestId);
   
-  List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
+  List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   
+  Optional<SingularityTaskIdHistory> getLastTaskForRequest(String requestId);
+   
 }
