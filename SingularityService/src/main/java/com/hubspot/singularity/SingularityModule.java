@@ -23,6 +23,7 @@ import com.google.inject.name.Named;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
@@ -108,6 +109,12 @@ public class SingularityModule extends AbstractModule {
   @Singleton
   public MesosConfiguration mesosConfiguration(SingularityConfiguration config) {
     return config.getMesosConfiguration();
+  }
+  
+  @Provides
+  @Singleton
+  public SMTPConfiguration smtpConfiguration(SingularityConfiguration config) {
+    return config.getSmtpConfiguration();
   }
   
   @Singleton

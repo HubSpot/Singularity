@@ -16,6 +16,9 @@ public class SingularityConfiguration extends Configuration {
   
   @JsonProperty("zookeeper")
   private ZooKeeperConfiguration zooKeeperConfiguration;
+  
+  @JsonProperty("smtp")
+  private SMTPConfiguration smtpConfiguration;
 
   @JsonProperty("hostname")
   private String hostname;
@@ -81,6 +84,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+  
+  public SMTPConfiguration getSmtpConfiguration() {
+    return smtpConfiguration;
+  }
+
+  public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
+    this.smtpConfiguration = smtpConfiguration;
   }
 
   public String getHostname() {

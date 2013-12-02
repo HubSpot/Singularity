@@ -9,6 +9,7 @@ import com.google.inject.Stage;
 import com.hubspot.dropwizard.guice.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.smtp.SMTPAppenderBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
 
@@ -21,6 +22,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         .build(Stage.DEVELOPMENT);
     bootstrap.addBundle(guiceBundle);
 
+    bootstrap.addBundle(new SMTPAppenderBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
