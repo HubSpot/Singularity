@@ -1,7 +1,7 @@
 View = require './view'
 
 TaskHistory = require '../models/TaskHistory'
-TaskLogFiles = require '../collections/TaskLogFiles'
+TaskFiles = require '../collections/TaskFiles'
 
 class TaskView extends View
 
@@ -14,7 +14,7 @@ class TaskView extends View
         @taskHistory.fetch().done =>
             @render()
 
-            @taskLogFiles = new TaskLogFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
+            @taskLogFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
             @taskLogFiles.fetch().done =>
                 @render()
 

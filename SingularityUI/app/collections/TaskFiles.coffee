@@ -1,6 +1,6 @@
 Collection = require './collection'
 
-class TaskLogFiles extends Collection
+class TaskFiles extends Collection
 
     url: =>
         fullPath = "#{ @directory }/#{ @path ? ''}"
@@ -26,4 +26,4 @@ class TaskLogFiles extends Collection
             return -1
         return a.get('size') - b.get('size')
 
-module.exports = TaskLogFiles
+module.exports = TaskFiles
