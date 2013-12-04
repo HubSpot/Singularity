@@ -18,6 +18,7 @@
                             <th>Created</th>
                             <th>Updated</th>
                             <th data-sortable="false">JSON</th>
+                            <th data-sortable="false">Files</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,6 +29,7 @@
                                 <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                                 <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
+                                <td><a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -89,6 +91,7 @@
                             <th>Status</th>
                             <th>Created</th>
                             <th>Updated</th>
+                            <th data-sortable="false">Files</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,6 +101,7 @@
                                 <td>{{ lastStatusHuman }}</td>
                                 <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                                <td><a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}">Files</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
