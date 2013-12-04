@@ -23,8 +23,14 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
   
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
-    SMTPConfiguration smtp = configuration.getSmtpConfiguration();
-    SMTPLoggingConfiguration smtpLoggingConfiguration = smtp.getSmtpLoggingConfiguration();
+    Optional<SMTPConfiguration> smtp = configuration.getSmtpConfiguration();
+    
+    if (!smtp.isPresent()) {
+      LOG.info("SMTPAppenderBundle is installed, but there is no SMTP configuration (smtp: in yml)");
+      return;
+    }
+    
+    SMTPLoggingConfiguration smtpLoggingConfiguration = smtp.get().getSmtpLoggingConfiguration();
 
     if (!smtpLoggingConfiguration.isEnabled()) {
       LOG.info("SMTPAppenderBundle is installed, but it is not enabled - enable using smtp: logging: enabled: true");
@@ -33,7 +39,7 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
     
     final Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     
-    SMTPAppender appender = buildSMTPAppender(smtp, smtpLoggingConfiguration, root.getLoggerContext());
+    SMTPAppender appender = buildSMTPAppender(smtp.get(), smtpLoggingConfiguration, root.getLoggerContext());
     
     root.addAppender(appender);
   }
@@ -72,9 +78,14 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
     } else {
       appender.setSMTPPort(port.or(25));
     }
-
-    appender.setUsername(smtp.getUsername());
-    appender.setPassword(smtp.getPassword());
+    
+    if (smtp.getUsername().isPresent()) {
+      appender.setUsername(smtp.getUsername().get());
+    }
+    if (smtp.getPassword().isPresent()) {
+      appender.setPassword(smtp.getPassword().get());
+    }
+    
     appender.setSSL(smtp.isSsl());
     appender.setSTARTTLS(smtp.isStartTLS());
     appender.setCharsetEncoding(smtpLogging.getCharsetEncoding());

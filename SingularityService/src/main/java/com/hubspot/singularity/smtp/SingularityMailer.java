@@ -11,33 +11,42 @@ import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 
 public class SingularityMailer {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
 
-  private final SMTPConfiguration smtpConfiguration;
+  private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
 
   @Inject
-  public SingularityMailer(SMTPConfiguration smtpConfiguration) {
-    this.smtpConfiguration = smtpConfiguration;
+  public SingularityMailer(Optional<SMTPConfiguration> maybeSmtpConfiguration) {
+    this.maybeSmtpConfiguration = maybeSmtpConfiguration;
   }
-  
-  public void sendAbortNotification() {
-    sendMail(smtpConfiguration.getAdmins(), String.format("Singularity on %s is aborting!", JavaUtils.getHostName()), "If are you using monit to restart Singularity, this is just a notification (Singularity should restart.)");
+
+  private String getEmailLogFormat(List<String> toList, String subject, String body) {
+    return String.format("[to: %s, subject: %s, body: %s]", toList, subject, body);
   }
   
   public void sendMail(List<String> toList, String subject, String body) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.warn(String.format("Couldn't send email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject, body)));
+    }
+    
+    SMTPConfiguration smtpConfiguration = maybeSmtpConfiguration.get();
+    
+    boolean useAuth = false;
+    
+    if (smtpConfiguration.getUsername().isPresent() && smtpConfiguration.getPassword().isPresent()) {
+      useAuth = true;
+    } else if (smtpConfiguration.getUsername().isPresent() || smtpConfiguration.getPassword().isPresent()) {
+      LOG.warn(String.format("Not using smtp authentication because username (%s) or password (%s) was not present", smtpConfiguration.getUsername().isPresent(), smtpConfiguration.getPassword().isPresent()));
+    }
+    
     try {
-      Preconditions.checkArgument(smtpConfiguration.getUsername() != null, "Username must be specified to use SMTP");
-      Preconditions.checkArgument(smtpConfiguration.getHost() != null, "Host must be specified to use SMTP");
-      Preconditions.checkArgument(smtpConfiguration.getPassword() != null, "Password must be specified to use SMTP");
-      
       Properties properties = System.getProperties();
 
       properties.setProperty("mail.smtp.host", smtpConfiguration.getHost());
@@ -46,11 +55,16 @@ public class SingularityMailer {
         properties.setProperty("mail.smtp.port", Integer.toString(smtpConfiguration.getPort().get()));
       }
       
-      properties.setProperty("mail.smtp.auth", "true");
+      if (useAuth) {
+        properties.setProperty("mail.smtp.auth", "true");
+      }
       
       Session session = Session.getDefaultInstance(properties);
       Transport transport = session.getTransport("smtp");
-      transport.connect(smtpConfiguration.getUsername(), smtpConfiguration.getPassword());
+      
+      if (useAuth) {
+        transport.connect(smtpConfiguration.getUsername().get(), smtpConfiguration.getPassword().get());
+      }
       
       MimeMessage message = new MimeMessage(session);
 

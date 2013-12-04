@@ -14,6 +14,7 @@ import org.skife.jdbi.v2.DBI;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -113,7 +114,7 @@ public class SingularityModule extends AbstractModule {
   
   @Provides
   @Singleton
-  public SMTPConfiguration smtpConfiguration(SingularityConfiguration config) {
+  public Optional<SMTPConfiguration> smtpConfiguration(SingularityConfiguration config) {
     return config.getSmtpConfiguration();
   }
   

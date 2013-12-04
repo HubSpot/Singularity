@@ -2,6 +2,8 @@ package com.hubspot.singularity.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
+
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
@@ -86,8 +88,8 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
   
-  public SMTPConfiguration getSmtpConfiguration() {
-    return smtpConfiguration;
+  public Optional<SMTPConfiguration> getSmtpConfiguration() {
+    return Optional.fromNullable(smtpConfiguration);
   }
 
   public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
