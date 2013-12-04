@@ -8,14 +8,14 @@ class TaskView extends View
     template: require './templates/task'
 
     initialize: =>
-        @taskLogFiles = {} # Temporary
+        @taskFiles = {} # Temporary
 
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
         @taskHistory.fetch().done =>
             @render()
 
-            @taskLogFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
-            @taskLogFiles.fetch().done =>
+            @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
+            @taskFiles.fetch().done =>
                 @render()
 
     render: =>
@@ -23,9 +23,13 @@ class TaskView extends View
 
         context =
             taskHistory: @taskHistory.attributes
-            taskLogFiles: _.pluck(@taskLogFiles.models, 'attributes').reverse()
+            taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
 
-        @$el.html @template context
+        partials =
+            partials:
+                filesTable: require './templates/filesTable'
+
+        @$el.html @template context, partials
 
         utils.setupSortableTables()
 

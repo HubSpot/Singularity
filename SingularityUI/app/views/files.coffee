@@ -8,25 +8,25 @@ class FilesView extends View
     template: require './templates/files'
 
     initialize: ({@taskId, @path}) =>
-        @taskLogFiles = {} # Temporary
+        @taskFiles = {} # Temporary
 
         @taskHistory = new TaskHistory {}, taskId: @taskId
         @taskHistory.fetch().done =>
             @render()
 
-            @taskLogFiles = new TaskFiles {},
+            @taskFiles = new TaskFiles {},
                 taskId: @taskId
                 offerHostname: @taskHistory.attributes.task.offer.hostname
                 directory: @taskHistory.attributes.directory
                 path: @path
 
-            @taskLogFiles.fetch().done =>
+            @taskFiles.fetch().done =>
                 @render()
 
     browse: (@path) =>
-        @taskLogFiles.path = @path
+        @taskFiles.path = @path
 
-        @taskLogFiles.fetch().done =>
+        @taskFiles.fetch().done =>
             @render()
 
     render: =>
@@ -34,9 +34,13 @@ class FilesView extends View
 
         context =
             taskHistory: @taskHistory.attributes
-            taskLogFiles: _.pluck(@taskLogFiles.models, 'attributes').reverse()
+            taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
 
-        @$el.html @template context
+        partials =
+            partials:
+                filesTable: require './templates/filesTable'
+
+        @$el.html @template context, partials
 
         utils.setupSortableTables()
 

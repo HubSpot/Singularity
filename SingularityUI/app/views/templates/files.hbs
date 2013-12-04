@@ -6,24 +6,7 @@
 <section>
     <div class="row-fluid">
         <div class="span12">
-            <table class="table" data-sortable>
-                <thead>
-                    <tr>
-                        <th>Filename</th>
-                        <th>Size</th>
-                        <th>Last modified</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#eachWithFn taskLogFiles}}
-                        <tr>
-                            <td>{{#if isDirectory}}<a href="/singularity/task/{{ taskId }}/files{{ relPath }}" data-route="/task/{{ taskId }}/files{{ relPath }}">{{ shortPath }}</a>{{else}}<a href="{{ downloadLink }}" target="_blank">{{ shortPath }}</a>{{/if}}</td>
-                            <td data-value="{{ size }}">{{ sizeHuman }}</td>
-                            <td data-value="{{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
-                        </tr>
-                    {{/eachWithFn}}
-                </tbody>
-            </table>
+            {{> filesTable}}
         </div>
     </div>
 </section>

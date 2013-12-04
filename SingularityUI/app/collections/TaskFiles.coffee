@@ -8,8 +8,8 @@ class TaskFiles extends Collection
 
     initialize: (models, { @taskId, @offerHostname, @directory, @path }) =>
 
-    parse: (taskLogFiles) =>
-        _.map taskLogFiles, (taskLogFile) =>
+    parse: (taskFiles) =>
+        _.map taskFiles, (taskLogFile) =>
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
             taskLogFile.mtimeHuman = moment(taskLogFile.mtime * 1000).from()
             taskLogFile.sizeHuman = Humanize.fileSize(taskLogFile.size)
