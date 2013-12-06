@@ -52,6 +52,20 @@ class TasksView extends View
                     @collection.remove(taskModel)
                     row.remove()
 
+        $runNowLinks = @$el.find('[data-action="run-now"]')
+
+        $runNowLinks.unbind('click').on 'click', (e) =>
+            taskModel = @collection.get($(e.target).data('task-id'))
+            row = $(e.target).parents('tr')
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    taskModel.run()
+                    @collection.remove(taskModel)
+                    row.remove()
+
     setUpSearchEvents: =>
         $search = @$el.find('input[type="search"]')
         $search.focus() if $(window).width() > 568

@@ -11,7 +11,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Next run</th>
-                        <th data-sortable="false">JSON</th>
+                        <th data-sortable="false"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -19,7 +19,11 @@
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                             <td data-value="{{ nextRunAt}}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
-                            <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
+                            <td>
+                                <a data-task-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                &nbsp;&nbsp;
+                                <a data-task-id="{{ id }}" class="dont-route" data-action="run-now" data-url="{{ url }}">Run now</a>
+                            </td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>

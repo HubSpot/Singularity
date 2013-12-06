@@ -1,6 +1,9 @@
 Tasks = require './Tasks'
+TaskScheduled = require '../models/TaskScheduled'
 
 class TasksScheduled extends Tasks
+
+    model: TaskScheduled
 
     url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/scheduled"
 
