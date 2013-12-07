@@ -1,13 +1,15 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hubspot.mesos.Resources;
+
+import java.util.List;
+import java.util.Map;
 
 public class SingularityRequest extends SingularityJsonObject {
 
@@ -32,6 +34,10 @@ public class SingularityRequest extends SingularityJsonObject {
   private final List<String> uris;
   private final Object executorData;
 
+  public static SingularityRequestBuilder newBuilder() {
+    return new SingularityRequestBuilder();
+  }
+
   @JsonCreator
   public SingularityRequest(@JsonProperty("command") String command, @JsonProperty("name") String name, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources, @JsonProperty("schedule") String schedule,
       @JsonProperty("instances") Integer instances, @JsonProperty("daemon") Boolean daemon, @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris, @JsonProperty("metadata") Map<String, String> metadata,
@@ -52,6 +58,25 @@ public class SingularityRequest extends SingularityJsonObject {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+  }
+
+  public SingularityRequestBuilder toBuilder() {
+    return new SingularityRequestBuilder()
+        .setCommand(command)
+        .setName(name)
+        .setResources(resources)
+        .setExecutor(executor)
+        .setSchedule(schedule)
+        .setDaemon(daemon)
+        .setInstances(instances)
+        .setRackSensitive(rackSensitive)
+        .setMetadata(Maps.newHashMap(metadata))
+        .setVersion(version)
+        .setId(id)
+        .setTimestamp(timestamp)
+        .setEnv(Maps.newHashMap(env))
+        .setUris(Lists.newArrayList(uris))
+        .setExecutorData(executorData);  // TODO: find the best way to clone this, maybe force it to be a Map<String, String> ?
   }
 
   public String getId() {
