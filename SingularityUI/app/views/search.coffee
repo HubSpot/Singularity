@@ -19,6 +19,8 @@ class SearchView extends View
 
         @$el.find('.results').html @templateResults context
 
+        utils.setupSortableTables()
+
     setupEvents: ->
         @$el.find('.view-json').unbind('click').click (event) ->
             utils.viewJSON 'task', $(event.target).data('task-id')
