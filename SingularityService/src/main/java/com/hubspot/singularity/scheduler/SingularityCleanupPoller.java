@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 
@@ -21,13 +22,15 @@ public class SingularityCleanupPoller {
   private final SingularityConfiguration configuration;
   private final ScheduledExecutorService executorService;
   private final SingularityAbort abort;
+  private final SingularityCloser closer;
   
   @Inject
-  public SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort) {
+  public SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort, SingularityCloser closer) {
     this.cleaner = cleaner;
     this.abort = abort;
     this.configuration = configuration;
-  
+    this.closer = closer;
+    
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityCleanupPoller-%d").build());
   }
   
@@ -54,17 +57,8 @@ public class SingularityCleanupPoller {
     configuration.getCleanupEverySeconds(), configuration.getCleanupEverySeconds(), TimeUnit.SECONDS);
   }
   
-  private final int WAIT_SECONDS = 1;
-  
   public void stop() {
-    LOG.info(String.format("Stopping cleanup poller (waiting %s seconds) ... ", WAIT_SECONDS));
-    
-    try {
-      executorService.shutdownNow();
-      executorService.awaitTermination(WAIT_SECONDS, TimeUnit.SECONDS);
-    } catch (Throwable t) {
-      LOG.warn("While shutting down cleanup poller", t);
-    }
+    closer.shutdown(getClass().getName(), executorService, 1);
   }
   
 }

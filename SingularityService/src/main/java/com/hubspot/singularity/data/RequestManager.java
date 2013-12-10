@@ -18,6 +18,8 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestCleanup.CleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
 
 public class RequestManager extends CuratorManager {
@@ -31,6 +33,9 @@ public class RequestManager extends CuratorManager {
   private final static String ACTIVE_PATH_ROOT = REQUEST_ROOT + "/active";
   private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
 
+  private final static String PAUSED_PATH_ROOT = REQUEST_ROOT + "/paused";
+  private final static String PAUSED_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
+
   private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
   private final static String PENDING_PATH_FORMAT = PENDING_PATH_ROOT + "/%s";
   
@@ -43,16 +48,24 @@ public class RequestManager extends CuratorManager {
     this.objectMapper = objectMapper;
   }
  
-  private String getRequestPath(String name) {
-    return String.format(ACTIVE_PATH_FORMAT, name);
+  private String getRequestPath(String requestId) {
+    return String.format(ACTIVE_PATH_FORMAT, requestId);
   }
   
-  private String getPendingPath(String name) {
-    return String.format(PENDING_PATH_FORMAT, name);
+  private String getPendingPath(String requestId) {
+    return String.format(PENDING_PATH_FORMAT, requestId);
   }
   
-  private String getCleanupPath(String name) {
-    return String.format(CLEANUP_PATH_FORMAT, name);
+  private String getCleanupPath(String requestId) {
+    return String.format(CLEANUP_PATH_FORMAT, requestId);
+  }
+  
+  private String getPausedPath(String requestId) {
+    return String.format(PAUSED_PATH_FORMAT, requestId);
+  }
+  
+  public int getNumPausedRequests() {
+    return getNumChildren(PAUSED_PATH_ROOT);
   }
   
   public int getSizeOfPendingQueue() {
@@ -75,8 +88,23 @@ public class RequestManager extends CuratorManager {
     delete(getCleanupPath(requestId));
   }
  
-  public void addToCleanupQueue(String requestId) {
-    create(getCleanupPath(requestId));
+  public CreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
+    return create(getCleanupPath(cleanupRequest.getRequestId()), Optional.of(cleanupRequest.getAsBytes(objectMapper)));
+  }
+  
+  public void pause(SingularityRequest request) {
+    
+//    persistRequest(request.getAsBytes(objectMapper));
+    
+    create(getPausedPath(request.getId()), Optional.of(request.getAsBytes(objectMapper)));
+//    delete(getRequestPath(getRequestPath(requestId)));
+    // decide how / where tasks get cleaned up for puasing requests. and what gets put in reuqest history.
+    
+//    create(getPausedPath(request));
+  }
+  
+  public void unpause(String requestId) {
+    
   }
   
   public void addToPendingQueue(SingularityPendingRequestId pendingRequestId) {
@@ -128,6 +156,24 @@ public class RequestManager extends CuratorManager {
   public List<String> getCleanupRequestIds() {
     return getChildren(CLEANUP_PATH_ROOT);
   }
+   
+  public List<SingularityRequestCleanup> getCleanupRequests() {
+    return fetchCleanupRequests(getCleanupRequestIds());
+  }
+  
+  public List<SingularityRequestCleanup> fetchCleanupRequests(List<String> cleanupRequestIds) {
+    final List<SingularityRequestCleanup> cleanupRequests = Lists.newArrayListWithCapacity(cleanupRequestIds.size());
+    
+    for (String requestId : cleanupRequestIds) {
+      Optional<SingularityRequestCleanup> maybeRequestCleanup = fetchCleanupRequest(requestId);
+      
+      if (maybeRequestCleanup.isPresent()) {
+        cleanupRequests.add(maybeRequestCleanup.get());
+      }
+    }
+    
+    return cleanupRequests;
+  }
   
   public List<SingularityTaskRequest> fetchTasks(List<SingularityPendingTaskId> taskIds) {
     final List<SingularityTaskRequest> tasks = Lists.newArrayListWithCapacity(taskIds.size());
@@ -171,19 +217,23 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public Optional<SingularityRequest> deleteRequest(String requestId) {
+  public Optional<SingularityRequestCleanup> fetchCleanupRequest(String requestId) {
+    try {
+      SingularityRequestCleanup cleanupRequest = SingularityRequestCleanup.fromBytes(curator.getData().forPath(ZKPaths.makePath(CLEANUP_PATH_ROOT, requestId)), objectMapper);
+      return Optional.of(cleanupRequest);
+    } catch (NoNodeException nee) {
+      return Optional.absent();
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  public Optional<SingularityRequest> deleteRequest(Optional<String> user, String requestId) {
     Optional<SingularityRequest> request = fetchRequest(requestId);
     
     if (request.isPresent()) {
-      try {
-        addToCleanupQueue(requestId);
-        
-        curator.delete().forPath(getRequestPath(requestId));
-      } catch (NoNodeException nee) {
-        LOG.warn(String.format("Couldn't find request at %s to delete", requestId));
-      } catch (Throwable t) {
-        throw Throwables.propagate(t);
-      }
+      createCleanupRequest(new SingularityRequestCleanup(user, CleanupType.DELETING, System.currentTimeMillis(), requestId));
+      delete(getRequestPath(getRequestPath(requestId)));
     }
     
     return request;

@@ -33,6 +33,9 @@ public class SingularityRequest extends SingularityJsonObject {
   private final Map<String, String> env;
   private final List<String> uris;
   private final Object executorData;
+  
+  private final List<String> owners;
+  private final Integer numRetriesOnFailure;
 
   public static SingularityRequestBuilder newBuilder() {
     return new SingularityRequestBuilder();
@@ -41,7 +44,8 @@ public class SingularityRequest extends SingularityJsonObject {
   @JsonCreator
   public SingularityRequest(@JsonProperty("command") String command, @JsonProperty("name") String name, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources, @JsonProperty("schedule") String schedule,
       @JsonProperty("instances") Integer instances, @JsonProperty("daemon") Boolean daemon, @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris, @JsonProperty("metadata") Map<String, String> metadata,
-      @JsonProperty("executorData") Object executorData, @JsonProperty("rackSensitive") Boolean rackSensitive, @JsonProperty("id") String id, @JsonProperty("version") String version, @JsonProperty("timestamp") Long timestamp) {
+      @JsonProperty("executorData") Object executorData, @JsonProperty("rackSensitive") Boolean rackSensitive, @JsonProperty("id") String id, @JsonProperty("version") String version, @JsonProperty("timestamp") Long timestamp, 
+      @JsonProperty("owners") List<String> owners, @JsonProperty("numRetriesOnFailure") Integer numRetriesOnFailure) {
     this.command = command;
     this.name = name;
     this.resources = resources;
@@ -58,6 +62,20 @@ public class SingularityRequest extends SingularityJsonObject {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+    
+    this.owners = owners;
+    this.numRetriesOnFailure = numRetriesOnFailure;
+  }
+  
+  public List<String> getOwners() {
+    if (owners == null) {
+      return Collections.emptyList();
+    }
+    return owners;
+  }
+  
+  public Integer getNumRetriesOnFailure() {
+    return numRetriesOnFailure;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -161,7 +179,8 @@ public class SingularityRequest extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityRequest [id=" + id + ", name=" + name + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", schedule=" + schedule
-        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
+        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", daemon=" + daemon + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", owners=" + owners
+        + ", numRetriesOnFailure=" + numRetriesOnFailure + "]";
   }
 
 }
