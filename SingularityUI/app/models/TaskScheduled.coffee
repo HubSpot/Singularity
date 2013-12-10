@@ -4,7 +4,7 @@ class TaskScheduled extends Model
 
     run: ->
         $.ajax
-            url: "/requests/request/#{ @get('requestId') }/run"
+            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('requestId') }/run"
             type: 'POST'
             contentType: 'application/json'
 
