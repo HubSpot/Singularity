@@ -30,6 +30,9 @@ public class SingularityConfiguration extends Configuration {
   private DataSourceFactory database;
 
   @NotNull
+  private long closeWaitSeconds = 5;
+  
+  @NotNull
   private long cleanupEverySeconds = 5;
   
   @NotNull
@@ -38,6 +41,14 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
   
+  public long getCloseWaitSeconds() {
+    return closeWaitSeconds;
+  }
+
+  public void setCloseWaitSeconds(long closeWaitSeconds) {
+    this.closeWaitSeconds = closeWaitSeconds;
+  }
+
   public long getKillDecomissionedTasksAfterNewTasksSeconds() {
     return killDecomissionedTasksAfterNewTasksSeconds;
   }

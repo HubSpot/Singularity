@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.mesos.Protos.TaskState;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +16,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -32,6 +35,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityScheduler extends SingularitySchedulerBase {
 
@@ -44,15 +48,17 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   private final RackManager rackManager;
   
   private final HistoryManager historyManager;
+  private final SingularityMailer mailer;
   
   @Inject
-  public SingularityScheduler(TaskManager taskManager, RequestManager requestManager, HistoryManager historyManager, SlaveManager slaveManager, RackManager rackManager) {
+  public SingularityScheduler(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, HistoryManager historyManager, SingularityMailer mailer) {
     super(taskManager);
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.historyManager = historyManager;
+    this.mailer = mailer;
   }
   
   private void checkTaskForDecomissionCleanup(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject) {
@@ -189,9 +195,9 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return scheduledTasks;
   }
   
-  public void scheduleOnCompletion(String stringTaskId) {
+  public void handleCompletedTask(String stringTaskId, TaskState state) {
     SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
-    
+ 
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
     
     if (!maybeRequest.isPresent()) {
@@ -202,6 +208,44 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     
     SingularityRequest request = maybeRequest.get();
     
+    if (MesosUtils.isTaskFailed(state)) {
+      // TODO send an email every time?
+      mailer.sendTaskFailedMail(taskId, request, state);
+      
+      if (shouldPause(request)) {
+        requestManager.pause(request);
+        return;
+      }
+    }
+    
+    scheduleOnCompletion(maybeRequest.get());
+  }
+  
+  private boolean shouldPause(SingularityRequest request) {
+    if (request.getNumRetriesOnFailure() != null) {
+      return false;
+    }
+    
+    List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), 0, request.getNumRetriesOnFailure());
+    
+    if (taskHistory.size() < request.getNumRetriesOnFailure()) {
+      return false;
+    }
+    
+    for (SingularityTaskIdHistory history : taskHistory) {
+      if (history.getLastStatus().isPresent()) {
+        TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
+        
+        if (!MesosUtils.isTaskFailed(taskState)) {
+          return false;
+        }
+      }
+    }
+  
+    return true;
+  }
+   
+  public void scheduleOnCompletion(SingularityRequest request) {
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
     final List<String> decomissioningRacks = rackManager.getDecomissioning();

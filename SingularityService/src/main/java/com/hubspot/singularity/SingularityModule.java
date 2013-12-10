@@ -30,6 +30,7 @@ import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityModule extends AbstractModule {
   
@@ -47,6 +48,8 @@ public class SingularityModule extends AbstractModule {
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     bind(SingularityManaged.class).in(Scopes.SINGLETON);
     bind(SingularityStatePoller.class).in(Scopes.SINGLETON);
+    bind(SingularityCloser.class).in(Scopes.SINGLETON);
+    bind(SingularityMailer.class).in(Scopes.SINGLETON);
   }
 
   private static ObjectMapper createObjectMapper() {

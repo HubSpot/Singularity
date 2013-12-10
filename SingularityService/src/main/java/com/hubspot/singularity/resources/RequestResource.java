@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.RequestManager.PersistResult;
@@ -70,14 +71,14 @@ public class RequestResource {
   
   @GET
   @Path("/queued/cleanup")
-  public List<String> getCleanupRequests() {
-    return requestManager.getCleanupRequestIds();
+  public List<SingularityRequestCleanup> getCleanupRequests() {
+    return requestManager.getCleanupRequests();
   }
   
   @DELETE
   @Path("/request/{requestId}")
   public Optional<SingularityRequest> getHistoryForTask(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
-    Optional<SingularityRequest> request = requestManager.deleteRequest(requestId);
+    Optional<SingularityRequest> request = requestManager.deleteRequest(user, requestId);
   
     if (request.isPresent()) {
       historyManager.saveRequestHistoryUpdate(request.get(), RequestState.DELETED, user);

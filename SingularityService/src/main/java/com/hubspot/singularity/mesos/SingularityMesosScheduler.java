@@ -170,6 +170,7 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.debug(String.format("Got a status update: %s", status));
     
     final String taskId = status.getTaskId().getValue();
+    final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
     
     Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
     
@@ -189,7 +190,7 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.deleteActiveTask(taskId);
       }
       
-      scheduler.scheduleOnCompletion(taskId);
+      scheduler.handleCompletedTask(taskId, status.getState());
     } else if (status.getState() == TaskState.TASK_RUNNING) {
       logSupport.notifyRunning(maybeActiveTask.get());
     }
