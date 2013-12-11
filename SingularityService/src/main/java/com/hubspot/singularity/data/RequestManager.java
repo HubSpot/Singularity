@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -21,6 +20,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.sun.jersey.api.ConflictException;
 
 public class RequestManager extends CuratorManager {
   
@@ -93,15 +93,24 @@ public class RequestManager extends CuratorManager {
     deleteRequestObject(request.getId());
   }
   
+  public boolean isRequestPaused(String requestId) {
+    try {
+      return curator.checkExists().forPath(getPausedPath(requestId)) != null;
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
   public void deletePausedRequest(String requestId) {
     delete(getPausedPath(requestId));
   }
   
-  public Optional<SingularityRequest> unpause(String requestId) {
+  public Optional<SingularityRequest> unpause(String requestId) throws IllegalStateException {
     Optional<SingularityRequest> paused = fetchPausedRequest(requestId);
     
     if (paused.isPresent()) {
       persistRequest(paused.get());
+      
       deletePausedRequest(requestId);
     }
   
@@ -129,7 +138,9 @@ public class RequestManager extends CuratorManager {
   }
 
   private PersistResult persistRequestPrivate(SingularityRequest request) throws Exception {
-    Preconditions.checkState(curator.checkExists().forPath(getCleanupPath(request.getId())) == null, "A cleanup request exists for %s", request.getId());
+    if (curator.checkExists().forPath(getCleanupPath(request.getId())) != null) {
+      throw new ConflictException(String.format("A cleanup request exists for %s", request.getId())); // TODO if this was called internally it would be a problem.
+    }
     
     final String requestPath = getRequestPath(request.getId());
     final byte[] bytes = request.getAsBytes(objectMapper);
