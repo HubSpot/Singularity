@@ -27,13 +27,8 @@ public class TaskManager extends CuratorManager {
   private final static String TASKS_ROOT = "/tasks";
   
   private final static String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
-  private final static String ACTIVE_PATH_FORMAT = ACTIVE_PATH_ROOT + "/%s";
-
   private final static String SCHEDULED_PATH_ROOT = TASKS_ROOT + "/scheduled";
-  private final static String SCHEDULED_PATH_FORMAT = SCHEDULED_PATH_ROOT + "/%s";
-  
   private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
-  private final static String CLEANUP_PATH_FORMAT = CLEANUP_PATH_ROOT + "/%s";
     
   @Inject
   public TaskManager(CuratorFramework curator, ObjectMapper objectMapper) {
@@ -42,15 +37,15 @@ public class TaskManager extends CuratorManager {
   }
   
   private String getActivePath(String taskId) {
-    return String.format(ACTIVE_PATH_FORMAT, taskId);
+    return ZKPaths.makePath(ACTIVE_PATH_ROOT, taskId);
   }
 
   private String getScheduledPath(String taskId) {
-    return String.format(SCHEDULED_PATH_FORMAT, taskId);
+    return ZKPaths.makePath(SCHEDULED_PATH_ROOT, taskId);
   }
   
   private String getCleanupPath(String taskId) {
-    return String.format(CLEANUP_PATH_FORMAT, taskId);
+    return ZKPaths.makePath(CLEANUP_PATH_ROOT, taskId);
   }
   
   public int getNumCleanupTasks() {

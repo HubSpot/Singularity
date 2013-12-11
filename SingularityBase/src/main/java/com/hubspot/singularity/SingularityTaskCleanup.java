@@ -8,22 +8,22 @@ import com.google.common.base.Optional;
 
 public class SingularityTaskCleanup extends SingularityJsonObject {
 
-  public enum CleanupType {
+  public enum TaskCleanupType {
     USER_REQUESTED, DECOMISSIONING
   }
   
   private final Optional<String> user;
-  private final CleanupType cleanupType;
+  private final TaskCleanupType cleanupType;
   private final long timestamp;
   private final String taskId;
   private final String requestId;
   
   @JsonCreator
   public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") String taskId, @JsonProperty("requestId") String requestId) {
-    this(user, CleanupType.valueOf(cleanupType), timestamp, taskId, requestId);
+    this(user, TaskCleanupType.valueOf(cleanupType), timestamp, taskId, requestId);
   }
    
-  public SingularityTaskCleanup(Optional<String> user, CleanupType cleanupType, long timestamp, String taskId, String requestId) {
+  public SingularityTaskCleanup(Optional<String> user, TaskCleanupType cleanupType, long timestamp, String taskId, String requestId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
@@ -40,7 +40,7 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
   }
 
   @JsonIgnore
-  public CleanupType getCleanupTypeEnum() {
+  public TaskCleanupType getCleanupTypeEnum() {
     return cleanupType;
   }
 

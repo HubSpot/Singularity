@@ -47,6 +47,7 @@ public class StateResource {
     final int requests = requestManager.getNumRequests();
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
     final int cleaningRequests = requestManager.getSizeOfCleanupQueue();
+    final int pausedRequests = requestManager.getNumPausedRequests();
     
     final int activeRacks = rackManager.getNumActive();
     final int deadRacks = rackManager.getNumDead();
@@ -60,7 +61,7 @@ public class StateResource {
     
     final List<SingularityHostState> states = stateManager.getHostStates();
     
-    return new SingularityState(activeTasks, requests, scheduledTasks, pendingRequests, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks, states);
+    return new SingularityState(activeTasks, requests, pausedRequests, scheduledTasks, pendingRequests, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, numWebhooks, cleaningTasks, states);
   }
   
 }

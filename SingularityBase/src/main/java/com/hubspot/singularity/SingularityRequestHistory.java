@@ -13,7 +13,7 @@ public class SingularityRequestHistory {
   private final SingularityRequest request;
   
   public enum RequestState {
-    CREATED, UPDATED, DELETED;
+    CREATED, UPDATED, DELETED, PAUSED, UNPAUSED;
   }
   
   @JsonCreator

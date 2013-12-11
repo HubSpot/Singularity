@@ -19,13 +19,15 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -70,7 +72,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     if (!task.getTaskRequest().getRequest().isScheduled()) {
       LOG.trace(String.format("Scheduling a cleanup task for %s due to decomissioning %s", task.getTaskId(), decomissioningObject));
       
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), CleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId().getId(), task.getTaskRequest().getRequest().getId()));
+      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId().getId(), task.getTaskRequest().getRequest().getId()));
     } else {
       LOG.trace(String.format("Not adding scheduled task %s to cleanup queue", task.getTaskId()));
     }
@@ -213,8 +215,9 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       // TODO send an email every time?
       mailer.sendTaskFailedMail(taskId, request, state);
       
+      // TODO how to handle this if there are running tasks that are working?
       if (shouldPause(request)) {
-        requestManager.pause(request);
+        requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), request.getId()));
         return;
       }
     }

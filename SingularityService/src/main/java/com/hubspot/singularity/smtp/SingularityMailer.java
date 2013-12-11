@@ -137,7 +137,7 @@ public class SingularityMailer implements SingularityCloseable {
       
       transport.sendMessage(message, addresses.toArray(new InternetAddress[addresses.size()]));
     } catch (Throwable t) {
-      LOG.warn(String.format("Unable to send message [to: %s, subject: %s, body: %s] due to exception", toList, subject, body), t);
+      LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject, body)), t);
     }
   }
 
