@@ -226,11 +226,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private boolean shouldPause(SingularityRequest request) {
-    if (request.getNumRetriesOnFailure() != null) {
+    if (request.getNumRetriesOnFailure() == null) {
       return false;
     }
     
     List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, request.getNumRetriesOnFailure());
+    
+    LOG.trace(String.format("Found %s historical tasks for request %s", taskHistory.size(), request.getId()));
     
     if (taskHistory.size() < request.getNumRetriesOnFailure()) {
       return false;
@@ -241,11 +243,15 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
         
         if (!MesosUtils.isTaskFailed(taskState)) {
+          LOG.trace(String.format("Task % was not a failure (%s), so request %s is not paused", history.getTaskId(), taskState, request.getId())); 
+              
           return false;
         }
       }
     }
   
+    LOG.info(String.format("Pausing request %s because it has failed %s tasks in a row", request.getId(), taskHistory.size()));
+    
     return true;
   }
    

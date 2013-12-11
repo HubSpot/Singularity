@@ -70,12 +70,14 @@ public class SingularityMailer implements SingularityCloseable {
   private void queueMail(final List<String> toList, final String subject, final String body) {
     if (toList.isEmpty()) {
       LOG.warn(String.format("Couldn't queue email %s because no to address is present", getEmailLogFormat(toList, subject, body)));
+      return;
     }
     
     if (!mailSenderExecutorService.isPresent()) {
       LOG.warn(String.format("Couldn't queue email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject, body)));
+      return;
     }  
-
+    
     final Runnable cmd = new Runnable() {
       
       @Override
@@ -83,6 +85,8 @@ public class SingularityMailer implements SingularityCloseable {
         sendMail(toList, subject, body);
       }
     };
+    
+    LOG.debug(String.format("Queuing an email to %s (subject: %s)", toList, subject)); 
     
     mailSenderExecutorService.get().submit(cmd);
   }
