@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -63,7 +63,7 @@ public class TaskResource {
       throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
     }
     
-    return taskManager.createCleanupTask(new SingularityTaskCleanup(user, CleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId())).name();
+    return taskManager.createCleanupTask(new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId())).name();
   }
   
 }
