@@ -49,6 +49,10 @@ public class RequestResource {
     
     PersistResult result = requestManager.persistRequest(request);
     
+    if (requestManager.isRequestPaused(request.getId())) {
+      requestManager.deletePausedRequest(request.getId());
+    }
+    
     requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId()));
   
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
