@@ -85,10 +85,10 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
     return history.getTaskHistoryForRequestLike(requestIdLike, orderBy.or(TaskHistoryOrderBy.requestId).name(), getOrderDirection(orderDirection), limitStart, limitCount);
   }
-
+  
   @Override
-  public List<SingularityRequestHistory> getRequestHistory(String requestId) {
-    return history.getRequestHistory(requestId);
+  public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
+    return history.getRequestHistory(requestId, orderBy.or(RequestHistoryOrderBy.createdAt).name(), getOrderDirection(orderDirection), limitStart, limitCount);
   }
 
   @Override

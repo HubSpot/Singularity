@@ -41,7 +41,7 @@ public interface HistoryManager {
   
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
  
-  List<SingularityRequestHistory> getRequestHistory(String requestId);
+  List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   
   List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   

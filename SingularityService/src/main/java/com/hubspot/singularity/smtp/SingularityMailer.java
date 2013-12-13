@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.mail.Message.RecipientType;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -57,6 +58,14 @@ public class SingularityMailer implements SingularityCloseable {
   
   private String getEmailLogFormat(List<String> toList, String subject, String body) {
     return String.format("[to: %s, subject: %s, body: %s]", toList, subject, body);
+  }
+  
+  public void sendRequestPausedMail(SingularityRequest request) {
+    final List<String> to = request.getOwners();
+    final String subject = String.format("Request %s is PAUSED", request.getId());
+    final String body = String.format("It has failed %s times consecutively. It will not run again until it is manually unpaused or updated.", request.getNumRetriesOnFailure());
+    
+    queueMail(to, subject, body); 
   }
   
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {
@@ -134,8 +143,9 @@ public class SingularityMailer implements SingularityCloseable {
       
       for (String to : toList) {
         addresses.add(new InternetAddress(to));
+        message.addRecipients(RecipientType.TO, to);
       }
-
+      
       message.setSubject(subject);
       message.setText(body);
       

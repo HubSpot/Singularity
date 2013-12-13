@@ -6,6 +6,8 @@ import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.setup.Environment;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -20,6 +22,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
@@ -50,6 +53,27 @@ public class SingularityModule extends AbstractModule {
     bind(SingularityStatePoller.class).in(Scopes.SINGLETON);
     bind(SingularityCloser.class).in(Scopes.SINGLETON);
     bind(SingularityMailer.class).in(Scopes.SINGLETON);
+    bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
+  }
+  
+  private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
+    bindInterceptor(Matchers.subclassesOf(JDBIHistoryManager.class), Matchers.any(), new MethodInterceptor() {
+      
+      @Override
+      public Object invoke(MethodInvocation invocation) throws Throwable {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        
+        if (cl == null) {
+          Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
+        }
+        
+        try {
+          return invocation.proceed();
+        } finally {
+          Thread.currentThread().setContextClassLoader(cl);
+        }
+      }
+    });
   }
 
   private static ObjectMapper createObjectMapper() {

@@ -143,8 +143,13 @@ public class HistoryResource {
   
   @GET
   @Path("/request/{requestId}/requests")
-  public List<SingularityRequestHistory> getRequestHistoryForRequest(@PathParam("requestId") String requestId) {
-    return historyManager.getRequestHistory(requestId);
+  public List<SingularityRequestHistory> getRequestHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+    Integer limitCount = getLimitCount(count);
+    Integer limitStart = getLimitStart(limitCount, page);
+    Optional<RequestHistoryOrderBy> requestOrderBy = getRequestHistoryOrderBy(orderBy);
+    Optional<OrderDirection> maybeOrderDirection = getOrderDirection(orderDirection);
+    
+    return historyManager.getRequestHistory(requestId, requestOrderBy, maybeOrderDirection, limitStart, limitCount);
   }
   
   @GET

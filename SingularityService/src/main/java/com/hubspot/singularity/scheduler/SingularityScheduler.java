@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -24,6 +25,7 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -37,6 +39,7 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
+import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.history.HistoryManager.TaskHistoryOrderBy;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -217,6 +220,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       
       // TODO how to handle this if there are running tasks that are working?
       if (shouldPause(request)) {
+        mailer.sendRequestPausedMail(request);
         requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), request.getId()));
         return;
       }
@@ -230,27 +234,45 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return false;
     }
     
-    List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, request.getNumRetriesOnFailure());
+    final int pauseAfterNumFailedTasks = request.getNumRetriesOnFailure() + 1;
     
-    LOG.trace(String.format("Found %s historical tasks for request %s", taskHistory.size(), request.getId()));
-    
-    if (taskHistory.size() < request.getNumRetriesOnFailure()) {
-      return false;
-    }
-    
-    for (SingularityTaskIdHistory history : taskHistory) {
-      if (history.getLastStatus().isPresent()) {
-        TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
-        
-        if (!MesosUtils.isTaskFailed(taskState)) {
-          LOG.trace(String.format("Task % was not a failure (%s), so request %s is not paused", history.getTaskId(), taskState, request.getId())); 
-              
+    if (request.getNumRetriesOnFailure() > 0) {
+      SingularityRequestHistory lastUpdate = Iterables.getFirst(historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1), null);
+      long lastUpdateAt = 0;
+      
+      if (lastUpdate != null) {
+        lastUpdateAt = lastUpdate.getCreatedAt();
+      } else {
+        LOG.warn(String.format("Couldn't find a historical request for %s", request.getId()));
+      }
+            
+      List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, pauseAfterNumFailedTasks);
+      
+      LOG.trace(String.format("Found %s historical tasks for request %s", taskHistory.size(), request.getId()));
+      
+      if (taskHistory.size() < pauseAfterNumFailedTasks) {
+        return false;
+      }
+      
+      for (SingularityTaskIdHistory history : taskHistory) {
+        if (lastUpdateAt > history.getCreatedAt()) {
+          LOG.debug(String.format("Not pausing request %s because task %s was launched at %s, before the last request update (%s)", request.getId(), history.getTaskId(), history.getCreatedAt(), lastUpdateAt));
           return false;
+        }
+        
+        if (history.getLastStatus().isPresent()) {
+          TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
+          
+          if (!MesosUtils.isTaskFailed(taskState)) {
+            LOG.debug(String.format("Task %s was not a failure (%s), so request %s is not paused", history.getTaskId(), taskState, request.getId())); 
+                
+            return false;
+          }
         }
       }
     }
   
-    LOG.info(String.format("Pausing request %s because it has failed %s tasks in a row", request.getId(), taskHistory.size()));
+    LOG.info(String.format("Pausing request %s because it has failed at least %s tasks in a row", request.getId(), pauseAfterNumFailedTasks));
     
     return true;
   }
