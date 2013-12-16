@@ -1,4 +1,4 @@
-RequestsActive = require './Requests'
+RequestsActive = require './RequestsActive'
 
 class RequestsPaused extends RequestsActive
 
