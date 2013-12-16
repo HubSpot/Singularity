@@ -3,13 +3,17 @@ View = require './view'
 class RequestsView extends View
 
     templateRequestsActive: require './templates/requestsActive'
+    templateRequestsPaused: require './templates/requestsPaused'
     templateRequestsPending: require './templates/requestsPending'
     templateRequestsCleaning: require './templates/requestsCleaning'
-    templateRequestsPaused: require './templates/requestsPaused'
 
     render: (requestsFilter) =>
         @collection = app.collections.requestsActive
         template = @templateRequestsActive
+
+        if requestsFilter is 'paused'
+            @collection = app.collections.requestsPaused
+            template = @templateRequestsPaused
 
         if requestsFilter is 'pending'
             @collection = app.collections.requestsPending
@@ -18,10 +22,6 @@ class RequestsView extends View
         if requestsFilter is 'cleaning'
             @collection = app.collections.requestsCleaning
             template = @templateRequestsCleaning
-
-        if requestsFilter is 'paused'
-            @collection = app.collections.requestsPaused
-            template = @templateRequestsPaused
 
         context =
             requests: _.pluck(@collection.models, 'attributes')

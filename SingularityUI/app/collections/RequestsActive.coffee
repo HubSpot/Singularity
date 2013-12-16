@@ -14,6 +14,7 @@ class RequestsActive extends Requests
             request.name = request.name ? request.id
             request.deployUser = (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
             request.timestampHuman = if request?.timestamp? then moment(request.timestamp).from() else ''
+            log request.schedule
             requests[i] = request
             app.allRequests[request.id] = request
 
