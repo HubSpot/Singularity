@@ -5,7 +5,7 @@ class RequestsActive extends Requests
 
     model: Request
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests"
+    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/active"
 
     parse: (requests) ->
         _.each requests, (request, i) =>
