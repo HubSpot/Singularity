@@ -13,14 +13,18 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Pending Type</th>
+                            <th>User</th>
+                            <th>Timestamp</th>
+                            <th>Cleaning Type</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}">
                                 <td>{{#hardBreak id}}{{/hardBreak}}</td>
-                                <td>{{ pendingType }}</td>
+                                <td>{{ user }}</td>
+                                <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
+                                <td>{{ cleanupType }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

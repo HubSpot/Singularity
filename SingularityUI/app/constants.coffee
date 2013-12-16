@@ -28,6 +28,10 @@ constants =
             isActive: false
             label: 'Lost'
 
+    requestCleanupType:
+        DELETING: 'Deleting'
+        PAUSING: 'Pausing'
+
     taskCleanupType:
         USER_REQUESTED:
             label: 'User requested'
