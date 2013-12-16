@@ -19,13 +19,6 @@ class Utils
                 width: 800
             message: "<pre>#{ lookupObject[objectId].JSONString }</pre>"
 
-    getAcrossCollections: (collectionStrings, id) ->
-        model = undefined
-        _.each collectionStrings, (collectionString) ->
-            collection = app.collections[collectionString]
-            model = collection.get(id) ? model
-        return model
-
     setupSortableTables: ->
         sortable.init()
 
