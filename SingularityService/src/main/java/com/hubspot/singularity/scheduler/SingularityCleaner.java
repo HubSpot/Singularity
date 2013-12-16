@@ -11,9 +11,11 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.CleanupType;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RackManager;
@@ -48,7 +50,7 @@ public class SingularityCleaner extends SingularitySchedulerBase {
   }
 
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves) {
-    if (taskCleanup.getCleanupTypeEnum() == CleanupType.USER_REQUESTED) {
+    if (taskCleanup.getCleanupTypeEnum() == TaskCleanupType.USER_REQUESTED) {
       return true;
     }
     
@@ -82,7 +84,7 @@ public class SingularityCleaner extends SingularitySchedulerBase {
   private void drainRequestCleanupQueue() {
     final long start = System.currentTimeMillis();
 
-    final List<String> cleanupRequests = requestManager.getCleanupRequestIds();
+    final List<SingularityRequestCleanup> cleanupRequests = requestManager.getCleanupRequests();
     
     LOG.debug(String.format("Request cleanup queue had %s requests", cleanupRequests.size()));
     
@@ -98,8 +100,27 @@ public class SingularityCleaner extends SingularitySchedulerBase {
     int numTasksKilled = 0;
     int numScheduledTasksRemoved = 0;
     
-    for (String requestId : cleanupRequests) {
-      if (!requestManager.fetchRequest(requestId).isPresent()) {
+    for (SingularityRequestCleanup requestCleanup : cleanupRequests) {
+      final String requestId = requestCleanup.getRequestId();
+      final Optional<SingularityRequest> request = requestManager.fetchRequest(requestId);
+      
+      boolean killTasks = true;
+      
+      if (requestCleanup.getCleanupTypeEnum() == RequestCleanupType.PAUSING) {
+        if (request.isPresent()) {
+          requestManager.pause(request.get());
+        } else {
+          killTasks = false;
+          LOG.info(String.format("Not pausing %s, because it didn't exist in active requests", requestId));
+        }
+      } else if (requestCleanup.getCleanupTypeEnum() == RequestCleanupType.DELETING) {
+        if (!request.isPresent()) {        
+          killTasks = false;
+          LOG.info(String.format("Not cleaning %s, because it existed", requestId));
+        }
+      }
+      
+      if (killTasks) {
         
         for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestId)) {
           driverManager.kill(matchingTaskId.toString());
@@ -111,8 +132,6 @@ public class SingularityCleaner extends SingularitySchedulerBase {
           numScheduledTasksRemoved++;
         }
         
-      } else {
-        LOG.info(String.format("Not cleaning %s, it existed", requestId));
       }
      
       requestManager.deleteCleanRequest(requestId);

@@ -28,10 +28,41 @@ public class SingularityRequestBuilder {
   private List<String> uris;
   private Object executorData;
 
+  private List<String> owners;
+  private int numRetriesOnFailure;
+  private int maxFailuresBeforePausing;
+  
   public SingularityRequest build() {
-    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp);
+    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure, maxFailuresBeforePausing);
   }
   
+  public int getMaxFailuresBeforePausing() {
+    return maxFailuresBeforePausing;
+  }
+
+  public SingularityRequestBuilder setMaxFailuresBeforePausing(int maxFailuresBeforePausing) {
+    this.maxFailuresBeforePausing = maxFailuresBeforePausing;
+    return this;
+  }
+
+  public List<String> getOwners() {
+    return owners;
+  }
+
+  public SingularityRequestBuilder setOwners(List<String> owners) {
+    this.owners = owners;
+    return this;
+  }
+
+  public int getNumRetriesOnFailure() {
+    return numRetriesOnFailure;
+  }
+
+  public SingularityRequestBuilder setNumRetriesOnFailure(int numRetriesOnFailure) {
+    this.numRetriesOnFailure = numRetriesOnFailure;
+    return this;
+  }
+
   public String getId() {
     return id;
   }

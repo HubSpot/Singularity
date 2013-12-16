@@ -189,7 +189,7 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.deleteActiveTask(taskId);
       }
       
-      scheduler.scheduleOnCompletion(taskId);
+      scheduler.handleCompletedTask(taskId, status.getState());
     } else if (status.getState() == TaskState.TASK_RUNNING) {
       logSupport.notifyRunning(maybeActiveTask.get());
     }

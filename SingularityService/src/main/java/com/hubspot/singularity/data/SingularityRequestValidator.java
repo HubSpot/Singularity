@@ -55,7 +55,7 @@ public class SingularityRequestValidator {
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
         
     return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, Objects.firstNonNull(request.getInstances(), 1), request.getDaemon(), request.getEnv(), 
-        request.getUris(), request.getMetadata(),  request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp());
+        request.getUris(), request.getMetadata(), request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp(), request.getOwners(), request.getNumRetriesOnFailure(), request.getMaxFailuresBeforePausing());
   }
   
   /**

@@ -9,6 +9,7 @@ public class SingularityState {
   
   private final int activeTasks;
   private final int requests;
+  private final int pausedRequests;
   private final int scheduledTasks;
   private final int cleaningTasks;
   
@@ -28,12 +29,13 @@ public class SingularityState {
   private final List<SingularityHostState> hostStates;
 
   @JsonCreator
-  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("requests") int requests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests,
+  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("requests") int requests, @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests,
       @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves, 
       @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks, 
       @JsonProperty("numWebhooks") int numWebhooks, @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates) {
     this.activeTasks = activeTasks;
     this.requests = requests;
+    this.pausedRequests = pausedRequests;
     this.scheduledTasks = scheduledTasks;
     this.pendingRequests = pendingRequests;
     this.cleaningRequests = cleaningRequests;
@@ -46,6 +48,10 @@ public class SingularityState {
     this.numWebhooks = numWebhooks;
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
+  }
+
+  public int getPausedRequests() {
+    return pausedRequests;
   }
 
   public List<SingularityHostState> getHostStates() {
@@ -106,9 +112,9 @@ public class SingularityState {
 
   @Override
   public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", requests=" + requests + ", scheduledTasks=" + scheduledTasks + ", cleaningTasks=" + cleaningTasks + ", pendingRequests=" + pendingRequests + ", cleaningRequests="
-        + cleaningRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks=" + deadRacks + ", decomissioningRacks="
-        + decomissioningRacks + ", numWebhooks=" + numWebhooks + ", hostStates=" + hostStates + "]";
+    return "SingularityState [activeTasks=" + activeTasks + ", requests=" + requests + ", pausedRequests=" + pausedRequests + ", scheduledTasks=" + scheduledTasks + ", cleaningTasks=" + cleaningTasks + ", pendingRequests="
+        + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
+        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", numWebhooks=" + numWebhooks + ", hostStates=" + hostStates + "]";
   }
 
 }

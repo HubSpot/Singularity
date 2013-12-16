@@ -1,14 +1,14 @@
 package com.hubspot.singularity.config;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -30,6 +30,9 @@ public class SingularityConfiguration extends Configuration {
   private DataSourceFactory database;
 
   @NotNull
+  private long closeWaitSeconds = 5;
+  
+  @NotNull
   private long cleanupEverySeconds = 5;
   
   @NotNull
@@ -38,6 +41,14 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
   
+  public long getCloseWaitSeconds() {
+    return closeWaitSeconds;
+  }
+
+  public void setCloseWaitSeconds(long closeWaitSeconds) {
+    this.closeWaitSeconds = closeWaitSeconds;
+  }
+
   public long getKillDecomissionedTasksAfterNewTasksSeconds() {
     return killDecomissionedTasksAfterNewTasksSeconds;
   }
