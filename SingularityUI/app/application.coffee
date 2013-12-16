@@ -52,10 +52,6 @@ class Application
             collection: RequestsActive
             error_phrase: 'requests'
         }, {
-            collection_key: 'requestsPaused'
-            collection: RequestsPaused
-            error_phrase: 'paused requests'
-        }, {
             collection_key: 'requestsPending'
             collection: RequestsPending
             error_phrase: 'pending requests'
@@ -63,6 +59,10 @@ class Application
             collection_key: 'requestsCleaning'
             collection: RequestsCleaning
             error_phrase: 'cleaning requests'
+        }, {
+            collection_key: 'requestsPaused'
+            collection: RequestsPaused
+            error_phrase: 'paused requests'
         }, {
             collection_key: 'tasksActive'
             collection: TasksActive

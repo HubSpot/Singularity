@@ -35,7 +35,7 @@
         <h1>Requests</h1>
     </div>
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span3">
             <a class="big-number-link" href="/singularity/requests" data-route="requests">
                 <div class="well">
                     <div class="big-number">
@@ -45,7 +45,7 @@
                 </div>
             </a>
         </div>
-        <div class="span4">
+        <div class="span3">
             <a class="big-number-link" href="/singularity/requests/pending" data-route="requests/pending">
                 <div class="well">
                     <div class="big-number">
@@ -55,12 +55,22 @@
                 </div>
             </a>
         </div>
-        <div class="span4">
+        <div class="span3">
             <a class="big-number-link" href="/singularity/requests/cleaning" data-route="requests/cleaning">
                 <div class="well">
                     <div class="big-number">
                         <div class="number">{{ state.cleaningRequests }}</div>
                         <div class="number-label">Cleaning</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="span3">
+            <a class="big-number-link" href="/singularity/requests/paused" data-route="requests/paused">
+                <div class="well">
+                    <div class="big-number">
+                        <div class="number">{{ state.pausedRequests }}</div>
+                        <div class="number-label">Paused</div>
                     </div>
                 </div>
             </a>
