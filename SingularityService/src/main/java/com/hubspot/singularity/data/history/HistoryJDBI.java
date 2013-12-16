@@ -45,7 +45,7 @@ public interface HistoryJDBI {
   SingularityTaskHistoryHelper getTaskHistoryForTask(@Bind("taskId") String taskId);
 
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, pendingType, lastTaskStatus FROM taskHistory WHERE requestId = :requestId AND (lastTaskStatus IS NULL or lastTaskStatus = 'TASK_STAGING' or lastTaskStatus = 'TASK_STARTING' or lastTaskStatus = 'TASK_RUNNING'")
+  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, pendingType, lastTaskStatus FROM taskHistory WHERE requestId = :requestId AND (lastTaskStatus IS NULL OR lastTaskStatus = 'TASK_STAGING' OR lastTaskStatus = 'TASK_STARTING' OR lastTaskStatus = 'TASK_RUNNING')")
   List<SingularityTaskIdHistory> getActiveTaskHistoryForRequest(@Bind("requestId") String requestId);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
