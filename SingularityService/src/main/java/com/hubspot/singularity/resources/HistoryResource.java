@@ -120,6 +120,12 @@ public class HistoryResource {
   }
   
   @GET
+  @Path("/request/{requestId}/tasks/active")
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {    
+    return historyManager.getActiveTaskHistoryForRequest(requestId);
+  }
+  
+  @GET
   @Path("/request/{requestId}/tasks")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     Integer limitCount = getLimitCount(count);

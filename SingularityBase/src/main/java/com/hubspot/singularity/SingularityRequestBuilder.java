@@ -30,11 +30,21 @@ public class SingularityRequestBuilder {
 
   private List<String> owners;
   private int numRetriesOnFailure;
+  private int maxFailuresBeforePausing;
   
   public SingularityRequest build() {
-    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure);
+    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure, maxFailuresBeforePausing);
   }
   
+  public int getMaxFailuresBeforePausing() {
+    return maxFailuresBeforePausing;
+  }
+
+  public SingularityRequestBuilder setMaxFailuresBeforePausing(int maxFailuresBeforePausing) {
+    this.maxFailuresBeforePausing = maxFailuresBeforePausing;
+    return this;
+  }
+
   public List<String> getOwners() {
     return owners;
   }

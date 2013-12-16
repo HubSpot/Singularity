@@ -63,7 +63,7 @@ public class SingularityMailer implements SingularityCloseable {
   public void sendRequestPausedMail(SingularityRequest request) {
     final List<String> to = request.getOwners();
     final String subject = String.format("Request %s is PAUSED", request.getId());
-    final String body = String.format("It has failed %s times consecutively. It will not run again until it is manually unpaused or updated.", request.getNumRetriesOnFailure());
+    final String body = String.format("It has failed %s times consecutively. It will not run again until it is manually unpaused or updated.", request.getMaxFailuresBeforePausing());
     
     queueMail(to, subject, body); 
   }

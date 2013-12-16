@@ -214,6 +214,8 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     
     SingularityRequest request = maybeRequest.get();
     
+    PendingType pendingType = PendingType.REGULAR;
+    
     if (MesosUtils.isTaskFailed(state)) {
       // TODO send an email every time?
       mailer.sendTaskFailedMail(taskId, request, state);
@@ -224,19 +226,60 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), request.getId()));
         return;
       }
+      
+      if (request.isScheduled() && shouldRetryImmediately(request)) {
+        pendingType = PendingType.RETRY;
+      }
     }
     
-    scheduleOnCompletion(maybeRequest.get());
+    scheduleOnCompletion(maybeRequest.get(), pendingType);
   }
   
-  private boolean shouldPause(SingularityRequest request) {
+  private boolean shouldRetryImmediately(SingularityRequest request) {
     if (request.getNumRetriesOnFailure() == null) {
       return false;
     }
+   
+    final int numRetriesInARow = getNumRetriesInARow(request);
     
-    final int pauseAfterNumFailedTasks = request.getNumRetriesOnFailure() + 1;
+    if (numRetriesInARow >= request.getNumRetriesOnFailure()) {
+      LOG.debug(String.format("Request %s had %s retries in a row, not retrying again (num retries on failure: %s)", request.getId(), numRetriesInARow, request.getNumRetriesOnFailure()));
+      return false;
+    }
     
-    if (request.getNumRetriesOnFailure() > 0) {
+    LOG.debug(String.format("Request %s had %s retries in a row - retrying again (num retries on failure: %s)", request.getId(), numRetriesInARow, request.getNumRetriesOnFailure()));
+    
+    return true;
+  } 
+  
+  private int getNumRetriesInARow(SingularityRequest request) {
+    int retries = 0;
+    
+    List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, request.getNumRetriesOnFailure());
+    
+    for (SingularityTaskIdHistory history : taskHistory) { 
+      if (history.getLastStatus().isPresent()) {
+        TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
+        
+        if (MesosUtils.isTaskFailed(taskState) && PendingType.valueOf(history.getPendingType()) == PendingType.RETRY) {
+          retries++;
+        } else {
+          break;
+        }
+      }
+    }
+    
+    return retries;
+  }
+  
+  private boolean shouldPause(SingularityRequest request) {
+    if (request.getMaxFailuresBeforePausing() == null) {
+      return false;
+    }
+    
+    final int pauseAfterNumFailedTasks = request.getMaxFailuresBeforePausing() + 1;
+    
+    if (request.getMaxFailuresBeforePausing() > 0) {
       SingularityRequestHistory lastUpdate = Iterables.getFirst(historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1), null);
       long lastUpdateAt = 0;
       
@@ -277,13 +320,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return true;
   }
    
-  public void scheduleOnCompletion(SingularityRequest request) {
+  private void scheduleOnCompletion(SingularityRequest request, PendingType pendingType) {
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
     final List<String> decomissioningRacks = rackManager.getDecomissioning();
     final List<SingularitySlave> decomissioningSlaves = slaveManager.getDecomissioningObjects();
     
-    scheduleTasks(scheduledTasks, activeTaskIds, decomissioningRacks, decomissioningSlaves, request, PendingType.REGULAR);
+    scheduleTasks(scheduledTasks, activeTaskIds, decomissioningRacks, decomissioningSlaves, request, pendingType);
   }
   
   private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
@@ -314,7 +357,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
     
     for (int i = 0; i < numMissingInstances; i++) {
-      newTaskIds.add(new SingularityPendingTaskId(request.getId(), nextRunAt, i + 1 + highestInstanceNo));
+      newTaskIds.add(new SingularityPendingTaskId(request.getId(), nextRunAt, i + 1 + highestInstanceNo, pendingType));
     }
     
     return newTaskIds;
@@ -327,7 +370,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return nextRunAt;
     }
     
-    if (pendingType == PendingType.IMMEDIATE) {
+    if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
       LOG.info("Scheduling requested immediate run of %s", request.getId());
     } else {
       try {
