@@ -3,6 +3,7 @@ Router = require 'lib/router'
 State = require 'models/State'
 
 RequestsActive = require 'collections/RequestsActive'
+RequestsPaused = require 'collections/RequestsPaused'
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
 
@@ -50,6 +51,10 @@ class Application
             collection_key: 'requestsActive'
             collection: RequestsActive
             error_phrase: 'requests'
+        }, {
+            collection_key: 'requestsPaused'
+            collection: RequestsPaused
+            error_phrase: 'paused requests'
         }, {
             collection_key: 'requestsPending'
             collection: RequestsPending
