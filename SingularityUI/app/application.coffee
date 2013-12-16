@@ -58,11 +58,11 @@ class Application
         }, {
             collection_key: 'requestsPending'
             collection: RequestsPending
-            error_phrase: 'requests'
+            error_phrase: 'pending requests'
         }, {
             collection_key: 'requestsCleaning'
             collection: RequestsCleaning
-            error_phrase: 'requests'
+            error_phrase: 'cleaning requests'
         }, {
             collection_key: 'tasksActive'
             collection: TasksActive
