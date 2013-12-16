@@ -9,9 +9,14 @@ class RequestView extends View
     initialize: =>
         @request = app.allRequests[@options.requestId]
 
-        @requestTasks = new RequestTasks [], requestId: @options.requestId
-        @requestTasks.fetch().done =>
-            @fetchDone = true
+        @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
+        @requestTasksActive.fetch().done =>
+            @fetchDoneActive = true
+            @render()
+
+        @requestTasksHistorical = new RequestTasks [], { requestId: @options.requestId, active: false }
+        @requestTasksHistorical.fetch().done =>
+            @fetchDoneHistorical = true
             @render()
 
     render: =>
@@ -21,9 +26,13 @@ class RequestView extends View
 
         context =
             request: @request
-            fetchDone: @fetchDone
-            requestTasksActive: _.filter(_.pluck(@requestTasks.models, 'attributes'), (t) -> t.isActive)
-            requestTasksHistorical: _.first(_.filter(_.pluck(@requestTasks.models, 'attributes'), (t) -> not t.isActive), 100)
+
+            fetchDoneActive: @fetchDoneActive
+            fetchDoneHistorical: @fetchDoneHistorical
+
+            requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
+            requestTasksHistorical: _.pluck(@requestTasksHistorical.models, 'attributes')
+
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
 
         @$el.html @template context

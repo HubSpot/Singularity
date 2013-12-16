@@ -2,9 +2,9 @@ Collection = require './collection'
 
 class RequestTasks extends Collection
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks"
+    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
 
-    initialize: (models, { @requestId }) =>
+    initialize: (models, { @requestId, @active }) =>
 
     parse: (tasks) ->
         _.each tasks, (task) ->
