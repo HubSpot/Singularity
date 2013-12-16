@@ -8,8 +8,11 @@ class RequestsView extends View
     templateRequestsCleaning: require './templates/requestsCleaning'
 
     render: (requestsFilter) =>
-        @collection = app.collections.requestsActive
-        template = @templateRequestsActive
+        return unless requestsFilter
+
+        if requestsFilter is 'active'
+            @collection = app.collections.requestsActive
+            template = @templateRequestsActive
 
         if requestsFilter is 'paused'
             @collection = app.collections.requestsPaused
@@ -23,8 +26,14 @@ class RequestsView extends View
             @collection = app.collections.requestsCleaning
             template = @templateRequestsCleaning
 
-        context =
-            requests: _.pluck(@collection.models, 'attributes')
+        context = {}
+
+        if requestsFilter in ['active', 'paused']
+            context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled)
+            context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
+
+        else
+            context.requests = _.pluck(@collection.models, 'attributes')
 
         @$el.html template context
 

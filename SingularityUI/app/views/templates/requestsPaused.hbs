@@ -6,6 +6,7 @@
     <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." required />
     </div>
+    <h2>Paused</h2>
     <div class="row-fluid">
         <div class="span12">
             {{#if requests.length}}
@@ -16,7 +17,6 @@
                             <th>Requested</th>
                             <th>Deploy User</th>
                             <th>Instances</th>
-                            <th>Daemon</th>
                             <th data-sortable="false"></th>
                         </tr>
                     </thead>
@@ -27,7 +27,6 @@
                                 <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td>{{ deployUser }}</td>
                                 <td>{{ instances }}</td>
-                                <td>{{ daemon }}</td>
                                 <td>
                                     <a data-request-id="{{ id }}" class="dont-route view-json">JSON</a>
                                     &nbsp;&nbsp;
@@ -38,7 +37,42 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No active requests.</p></center>
+                <center><p>No paused requests.</p></center>
+            {{/if}}
+        </div>
+    </div>
+    <h2>Scheduled</h2>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if requestsScheduled.length}}
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Requested</th>
+                            <th>Deploy User</th>
+                            <th>Schedule</th>
+                            <th data-sortable="false"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requestsScheduled}}
+                            <tr data-request-id="{{ id }}">
+                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td>{{ deployUser }}</td>
+                                <td>{{ schedule }}</td>
+                                <td>
+                                    <a data-request-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    &nbsp;&nbsp;
+                                    <a data-request-id="{{ id }}" class="dont-route" data-action="remove" data-url="{{ url }}">Remove</a>
+                                </td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                <center><p>No paused scheduled requests.</p></center>
             {{/if}}
         </div>
     </div>
