@@ -11,6 +11,7 @@ class TasksActive extends Tasks
         _.each tasks, (task, i) =>
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
+            task.requestId = task.taskRequest?.request.id
             task.name = task.mesosTask.name
             task.resources = @parseResources task
             task.memoryHuman = if task.resources?.memoryMb? then "#{ task.resources.memoryMb }Mb" else ''
