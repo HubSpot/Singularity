@@ -114,7 +114,7 @@ public class SingularityCleaner extends SingularitySchedulerBase {
           LOG.info(String.format("Not pausing %s, because it didn't exist in active requests", requestId));
         }
       } else if (requestCleanup.getCleanupTypeEnum() == RequestCleanupType.DELETING) {
-        if (!request.isPresent()) {        
+        if (request.isPresent()) {        
           killTasks = false;
           LOG.info(String.format("Not cleaning %s, because it existed", requestId));
         }

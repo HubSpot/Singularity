@@ -20,11 +20,11 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
-import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
@@ -155,7 +155,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingRequest.getRequestId());
       
       if (maybeRequest.isPresent()) {
-        numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, decomissioningRacks, decomissioningSlaves, maybeRequest.get(), pendingRequest.getPendingTypeEnum()).size();
+        numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, decomissioningRacks, decomissioningSlaves, maybeRequest.get(), pendingRequest.getPendingTypeEnum());
       } else {
         obsoleteRequests++;
       }
@@ -191,14 +191,32 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     }
   }
 
-  public List<SingularityPendingTaskId> scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
+  public int scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
     deleteScheduledTasks(scheduledTaskIds, request.getId());
     
-    final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(activeTaskIds, decomissioningRacks, decomissioningSlaves, request, pendingType);
+    final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), activeTaskIds, decomissioningRacks, decomissioningSlaves);
     
-    taskManager.persistScheduleTasks(scheduledTasks);
-  
-    return scheduledTasks;
+    final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request);
+
+    if (numMissingInstances > 0) {
+      final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, activeTaskIds, decomissioningRacks, decomissioningSlaves, request, pendingType);
+      
+      taskManager.persistScheduleTasks(scheduledTasks);
+    } else if (numMissingInstances < 0) {
+      LOG.debug(String.format("Missing instances is negative: %s, request %s, matching tasks: %s", numMissingInstances, request, matchingTaskIds));
+      
+      final long now = System.currentTimeMillis();
+      
+      for (int i = 0; i < Math.abs(numMissingInstances); i++) {
+        final SingularityTaskId toCleanup = matchingTaskIds.get(i);
+        
+        LOG.info(String.format("Cleaning up task %s due to new request %s - scaling down to %s instances", toCleanup.getId(), request.getId(), request.getInstances()));
+    
+        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup.getId(), request.getId()));
+      }
+    }
+    
+    return numMissingInstances;
   }
   
   public void handleCompletedTask(String stringTaskId, TaskState state) {
@@ -329,31 +347,23 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     scheduleTasks(scheduledTasks, activeTaskIds, decomissioningRacks, decomissioningSlaves, request, pendingType);
   }
   
-  private List<SingularityPendingTaskId> getScheduledTaskIds(List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
+  private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
     final int numInstances = request.getInstances();
     
+    return numInstances - matchingTaskIds.size();
+  }
+  
+  private List<SingularityPendingTaskId> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
     final long nextRunAt = getNextRunAt(request, pendingType);
-    
+  
     int highestInstanceNo = 0;
-    
-    final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), activeTaskIds, decomissioningRacks, decomissioningSlaves);
-    
-    final int numMissingInstances = numInstances - matchingTaskIds.size();
-    
-    if (numMissingInstances > 0) {
-      for (SingularityTaskId matchingTaskId : matchingTaskIds) {
-        if (matchingTaskId.getInstanceNo() > highestInstanceNo) {
-          highestInstanceNo = matchingTaskId.getInstanceNo();
-        }
+
+    for (SingularityTaskId matchingTaskId : matchingTaskIds) {
+      if (matchingTaskId.getInstanceNo() > highestInstanceNo) {
+        highestInstanceNo = matchingTaskId.getInstanceNo();
       }
     }
-    
-    // TODO handle this? it should never happen. We could scale down / kill the tasks.
-    if (numMissingInstances < 0) {
-      LOG.error(String.format("Missing instances is negative: %s, request %s, matching tasks: %s", numMissingInstances, request, matchingTaskIds));
-      return Collections.emptyList();
-    }
-    
+  
     final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
     
     for (int i = 0; i < numMissingInstances; i++) {
