@@ -49,7 +49,7 @@ public interface HistoryJDBI {
   List<SingularityTaskIdHistory> getActiveTaskHistoryForRequest(@Bind("requestId") String requestId);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, pendingType, lastTaskStatus FROM taskHistory WHERE requestId = :requestId ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
+  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, pendingType, lastTaskStatus FROM taskHistory WHERE requestId = :requestId AND (lastTaskStatus = 'TASK_FAILED' OR lastTaskStatus = 'TASK_FINISHED' OR lastTaskStatus = 'TASK_LOST' OR lastTaskStatus = 'TASK_KILLED') ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)

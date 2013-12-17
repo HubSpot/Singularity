@@ -21,9 +21,7 @@ CREATE TABLE taskHistory (
   updatedAt TIMESTAMP NULL,
   directory VARCHAR(500) NULL,
   task BLOB NOT NULL,
-  INDEX (requestId, createdAt),
-  INDEX (requestId, updatedAt),
-  INDEX (requestId, lastTaskStatus)
+  INDEX (requestId, lastTaskStatus, createdAt),
 ) ENGINE=InnoDB;
  
 CREATE TABLE taskUpdates (
