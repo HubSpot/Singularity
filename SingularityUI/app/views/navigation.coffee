@@ -31,8 +31,12 @@ class NavigationView extends View
                 .data('route', route)
 
         $nav.find('li').removeClass('active')
+
+        currentTopLevel = "/#{ constants.appName }/#{ Backbone.history.fragment.split('/')[0] }"
+
         $anchors.each ->
-            $(@).parents('li').addClass('active') if $(@).attr('href') is "/#{ constants.appName }/#{ Backbone.history.fragment }"
+            if $(@).attr('href') in [currentTopLevel, currentTopLevel + 's']
+                $(@).parents('li').addClass('active')
 
     renderTheme: (theme) =>
         previousTheme = if @theme is 'light' then 'dark' else 'light'
