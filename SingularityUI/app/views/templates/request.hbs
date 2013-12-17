@@ -93,7 +93,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#eachWithFn requestTasksActive}}
+                        {{#eachWithFn requestTasksHistorical}}
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td>{{ lastStatusHuman }}</td>
