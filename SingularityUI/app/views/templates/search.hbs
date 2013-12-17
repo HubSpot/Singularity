@@ -4,8 +4,47 @@
 
 <section>
     <div class="row-fluid">
-        <input type="search" placeholder="Search requests and tasks..." required />
+        <div class="span12">
+            <input type="search" placeholder="Search requests and tasks..." required />
+            <div class="search-options">
+                <div class="options-category-group">
+                    <h4>Requests order options</h4>
+                    <div class="options-group">
+                        <select data-search-option="orderBy" data-search-category="requests">
+                            <option value="requestId">Request ID</option>
+                            <option value="createdAt">Created</option>
+                        </select>
+                    </div>
+                    <div class="options-group">
+                        <select data-search-option="orderDirection" data-search-category="requests">
+                            <option value="ASC">Asc</option>
+                            <option value="DESC">Desc</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="options-category-group">
+                    <h4>Task order options</h4>
+                    <div class="options-group">
+                        <select data-search-option="orderBy" data-search-category="tasks">
+                            <option value="requestId">Request ID</option>
+                            <option value="taskId">Task ID</option>
+                            <option value="lastTaskStatus">Last Task Status</option>
+                            <option value="createdAt">Created</option>
+                            <option value="updatedAt">Updated</option>
+                        </select>
+                    </div>
+                    <div class="options-group">
+                        <select data-search-option="orderDirection" data-search-category="tasks">
+                            <option value="ASC">Asc</option>
+                            <option value="DESC">Desc</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<div class="results"></div>
+<section>
+    <div class="results"></div>
+</section>

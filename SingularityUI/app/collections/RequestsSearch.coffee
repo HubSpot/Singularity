@@ -2,9 +2,13 @@ Requests = require './Requests'
 
 class RequestsSearch extends Requests
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/requests/search?requestIdLike=#{ @query }"
+    url: =>
+        paramsString = ''
+        for key, value of @params
+            paramsString += "#{ key }=#{ value }&"
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/requests/search?#{ paramsString }requestIdLike=#{ @query }"
 
-    initialize: (models, { @query }) =>
+    initialize: (models, { @query, @params }) =>
 
     parse: (requests) ->
         _.each requests, (request, i) =>
