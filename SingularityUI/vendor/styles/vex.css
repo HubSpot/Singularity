@@ -710,6 +710,9 @@ body.vex-open {
   font-size: 1.1em;
   line-height: 1.5em;
 }
+html.darkstrap .vex.vex-theme-default .vex-content {
+  background: #3F3F3F;
+}
 /* line 36, ../sass/vex-theme-default.sass */
 .vex.vex-theme-default .vex-content h1, .vex.vex-theme-default .vex-content h2, .vex.vex-theme-default .vex-content h3, .vex.vex-theme-default .vex-content h4, .vex.vex-theme-default .vex-content h5, .vex.vex-theme-default .vex-content h6, .vex.vex-theme-default .vex-content p, .vex.vex-theme-default .vex-content ul, .vex.vex-theme-default .vex-content li {
   color: inherit;
