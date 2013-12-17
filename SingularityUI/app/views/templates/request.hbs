@@ -17,8 +17,7 @@
                             <th>Status</th>
                             <th>Created</th>
                             <th>Updated</th>
-                            <th data-sortable="false">JSON</th>
-                            <th data-sortable="false">Files</th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,8 +27,11 @@
                                 <td>{{ lastStatusHuman }}</td>
                                 <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
-                                <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
-                                <td><a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a></td>
+                                <td>
+                                    <a data-task-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    &nbsp;&nbsp;
+                                    <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
+                                </td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -37,7 +39,7 @@
             </div>
         </div>
     {{else}}
-        {{#if fetchDone}}
+        {{#if fetchDoneActive}}
             <center><p>No active tasks.</p></center>
         {{else}}
             <div class="page-loader centered"></div>
@@ -87,17 +89,21 @@
                             <th>Status</th>
                             <th>Created</th>
                             <th>Updated</th>
-                            <th data-sortable="false">Files</th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{#eachWithFn requestTasksHistorical}}
+                        {{#eachWithFn requestTasksActive}}
                             <tr data-task-id="{{ id }}">
-                                <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
+                                <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td>{{ lastStatusHuman }}</td>
                                 <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
-                                <td><a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a></td>
+                                <td>
+                                    <a data-task-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    &nbsp;&nbsp;
+                                    <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
+                                </td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -105,7 +111,7 @@
             </div>
         </div>
     {{else}}
-        {{#if fetchDone}}
+        {{#if fetchDoneHistorical}}
             <center><p>No histocial tasks.</p></center>
         {{else}}
             <div class="page-loader centered"></div>

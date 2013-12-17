@@ -31,7 +31,7 @@ class RequestView extends View
             fetchDoneHistorical: @fetchDoneHistorical
 
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
-            requestTasksHistorical: _.pluck(@requestTasksHistorical.models, 'attributes')
+            requestTasksHistorical: _.filter(_.pluck(@requestTasksHistorical.models, 'attributes'), (t) => not t.isActive)
 
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
 
