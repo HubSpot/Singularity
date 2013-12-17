@@ -22,4 +22,10 @@ class Utils
     setupSortableTables: ->
         sortable.init()
 
+    paramsString: (params) ->
+        paramsString = ''
+        for key, value of params
+            paramsString += "#{ key }=#{ value }&"
+        paramsString
+
 module.exports = new Utils
