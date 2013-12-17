@@ -26,7 +26,7 @@ class TaskHistory extends Model
         # Construct mesos logs link
         taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"
 
-        app.allTasks[taskHistory.task.id] = taskHistory
+        app.allTasks[taskHistory.task.id] = taskHistory.task
 
         taskHistory
 

@@ -31,6 +31,12 @@ class TaskView extends View
 
         @$el.html @template context, partials
 
+        @setupEvents()
+
         utils.setupSortableTables()
+
+    setupEvents: =>
+        @$el.find('.view-object-json').unbind('click').click (event) ->
+            utils.viewJSON 'task', $(event.target).data('task-id')
 
 module.exports = TaskView

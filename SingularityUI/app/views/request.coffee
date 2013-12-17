@@ -45,4 +45,7 @@ class RequestView extends View
         @$el.find('.view-json').unbind('click').click (event) ->
             utils.viewJSON 'task', $(event.target).data('task-id')
 
+        @$el.find('.view-object-json').unbind('click').click (event) ->
+            utils.viewJSON 'request', $(event.target).data('request-id')
+
 module.exports = RequestView
