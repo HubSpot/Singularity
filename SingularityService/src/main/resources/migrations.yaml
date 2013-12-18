@@ -1,0 +1,150 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: tpetr
+      changes:
+        - createTable:
+            tableName: taskUpdates
+            columns:
+              - column:
+                  name: id
+                  type: INT(10)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: taskId
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: createdAt
+                  type: TIMESTAMP
+                  defaultValueDate: "1971-01-01 00:00:00"
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: requestHistory
+            columns:
+              - column:
+                  name: requestId
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: createdAt
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requestState
+                  type: VARCHAR(25)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user
+                  type: VARCHAR(100)
+              - column:
+                  name: request
+                  type: LONGBLOB
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: taskHistory
+            columns:
+              - column:
+                  name: taskId
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requestId
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pendingType
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: createdAt
+                  type: TIMESTAMP
+                  defaultValueDate: "1971-01-01 00:00:00"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastTaskStatus
+                  type: VARCHAR(100)
+              - column:
+                  name: updatedAt
+                  type: TIMESTAMP
+              - column:
+                  name: directory
+                  type: VARCHAR(500)
+              - column:
+                  name: task
+                  type: LONGBLOB
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 2
+      author: tpetr
+      changes:
+        - addPrimaryKey:
+            tableName: requestHistory
+            columnNames: requestId, createdAt
+            constraintName: PRIMARY
+        - addPrimaryKey:
+            tableName: taskHistory
+            columnNames: taskId
+            constraintName: PRIMARY
+        - createIndex:
+            tableName: taskHistory
+            indexName: requestId
+            unique: false
+            columns:
+              - column:
+                  name: requestId
+              - column:
+                  name: createdAt
+        - createIndex:
+            tableName: taskHistory
+            indexName: requestId_2
+            unique: false
+            columns:
+              - column:
+                  name: requestId
+              - column:
+                  name: updatedAt
+        - createIndex:
+            tableName: taskUpdates
+            indexName: taskId
+            unique: false
+            columns:
+              - column:
+                  name: taskId
+        - createIndex:
+            tableName: taskHistory
+            indexName: requestId_3
+            unique: false
+            columns:
+              - column:
+                  name: requestId
+              - column:
+                  name: lastTaskStatus

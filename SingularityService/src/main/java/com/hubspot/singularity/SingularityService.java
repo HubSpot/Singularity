@@ -2,6 +2,8 @@ package com.hubspot.singularity;
 
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
@@ -24,6 +26,12 @@ public class SingularityService extends Application<SingularityConfiguration> {
 
     bootstrap.addBundle(new SMTPAppenderBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
+    bootstrap.addBundle(new MigrationsBundle<SingularityConfiguration>() {
+      @Override
+      public DataSourceFactory getDataSourceFactory(SingularityConfiguration configuration) {
+        return configuration.getDataSourceFactory();
+      }
+    });
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
   }
