@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.data.CuratorManager.CreateResult;
+import com.hubspot.singularity.data.CuratorManager.DeleteResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.RequestManager.PersistResult;
 import com.hubspot.singularity.data.SingularityRequestValidator;
@@ -88,7 +89,7 @@ public class RequestResource {
     Optional<SingularityRequest> request = requestManager.unpause(requestId);
     
     if (!request.isPresent()) {
-      handleNoMatchingRequest(requestId);
+      throw handleNoMatchingRequest(requestId);
     }
     
     requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.UNPAUSED));
@@ -126,26 +127,46 @@ public class RequestResource {
     Optional<SingularityRequest> request = requestManager.fetchRequest(requestId);
     
     if (!request.isPresent()) {
-      handleNoMatchingRequest(requestId);
+      throw handleNoMatchingRequest(requestId);
     }
     
     return request.get();
   }
   
-  private void handleNoMatchingRequest(String requestId) {
+  private NotFoundException handleNoMatchingRequest(String requestId) {
     throw new NotFoundException("Couldn't find request with id: " + requestId);
   }
   
   @DELETE
+  @Path("/request/{requestId}/paused")
+  public SingularityRequest deletedRequestPaused(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
+    Optional<SingularityRequest> request = requestManager.fetchPausedRequest(requestId);
+    
+    if (!request.isPresent()) {
+      throw handleNoMatchingRequest(requestId);
+    }
+    
+    DeleteResult result = requestManager.deletePausedRequest(requestId);
+    
+    if (result != DeleteResult.DELETED) {
+      throw handleNoMatchingRequest(requestId);
+    }
+    
+    historyManager.saveRequestHistoryUpdate(request.get(), RequestState.DELETED, user);
+    
+    return request.get();
+  }
+  
+  @DELETE
   @Path("/request/{requestId}")
-  public SingularityRequest getHistoryForTask(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
+  public SingularityRequest deleteRequest(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     Optional<SingularityRequest> request = requestManager.deleteRequest(user, requestId);
   
-    if (request.isPresent()) {
-      historyManager.saveRequestHistoryUpdate(request.get(), RequestState.DELETED, user);
-    } else {
-      handleNoMatchingRequest(requestId);
+    if (!request.isPresent()) {
+      throw handleNoMatchingRequest(requestId);
     }
+    
+    historyManager.saveRequestHistoryUpdate(request.get(), RequestState.DELETED, user);
     
     return request.get();
   }

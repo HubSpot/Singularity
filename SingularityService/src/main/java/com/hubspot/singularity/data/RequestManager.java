@@ -101,8 +101,8 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public void deletePausedRequest(String requestId) {
-    delete(getPausedPath(requestId));
+  public DeleteResult deletePausedRequest(String requestId) {
+    return delete(getPausedPath(requestId));
   }
   
   public Optional<SingularityRequest> unpause(String requestId) throws IllegalStateException {
