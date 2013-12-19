@@ -31,6 +31,8 @@ class RequestsView extends View
         if requestsFilter in ['active', 'paused']
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled)
             context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
+            context.requests.reverse()
+            context.requestsScheduled.reverse()
 
         else
             context.requests = _.pluck(@collection.models, 'attributes')
