@@ -4,6 +4,27 @@
 
 <section>
     <div class="row-fluid">
+        <div class="span12">
+            <ul class="nav nav-tabs">
+                <li>
+                    <a href="/singularity/requests" data-route="requests">Active</a>
+                </li>
+                <li>
+                    <a href="/singularity/requests/paused" data-route="requests/paused">Paused</a>
+                </li>
+                <li class="active">
+                    <a href="/singularity/requests/pending" data-route="requests/pending">Pending</a>
+                </li>
+                <li>
+                    <a href="/singularity/requests/cleaning" data-route="requests/cleaning">Cleaning</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." required />
     </div>
     <div class="row-fluid">
