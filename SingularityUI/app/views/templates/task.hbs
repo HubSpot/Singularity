@@ -34,6 +34,9 @@
     {{else}}
         <div class="page-loader centered"></div>
     {{/if}}
+</section>
+
+<section>
     <div class="page-header">
         <h1>Files</h1>
     </div>
@@ -41,6 +44,18 @@
         <div class="span12">
             <p><a href="{{ taskHistory.mesosMasterLogsLink }}" target="_blank">View on Mesos Master</a></p>
             {{> filesTable}}
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Info</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <p>Executor guid:</p>
+            <pre>{{ taskHistory.task.mesosTask.executor.executorId.value }}</pre>
         </div>
     </div>
 </section>
