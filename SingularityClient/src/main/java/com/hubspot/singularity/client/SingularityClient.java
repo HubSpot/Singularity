@@ -136,6 +136,7 @@ public class SingularityClient {
   private Response postJson(String requestUri, Object data) {
     try {
       return httpClient.preparePost(requestUri)
+          .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
           .setBody(objectMapper.writeValueAsBytes(data))
           .execute().get();
     } catch (Exception e) {
@@ -176,7 +177,7 @@ public class SingularityClient {
 
     checkResponse("get active requests", getResponse);
 
-    LOG.info("Successfully got active requests from Singularity in %sms", System.currentTimeMillis() - start);
+    LOG.info(String.format("Successfully got active requests from Singularity in %sms", System.currentTimeMillis() - start));
 
     try {
       return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SINGULARITY_REQUESTS);
@@ -196,7 +197,7 @@ public class SingularityClient {
 
     checkResponse("get active tasks", getResponse);
 
-    LOG.info("Successfully got active tasks from Singularity in %sms", System.currentTimeMillis() - start);
+    LOG.info(String.format("Successfully got active tasks from Singularity in %sms", System.currentTimeMillis() - start));
 
     try {
       return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SINGULARITY_TASKS);
