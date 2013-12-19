@@ -1,5 +1,5 @@
 <header class="jumbotron subhead" id="overview">
-    <h1>{{#hardBreak request.name}}{{/hardBreak}} <small><a data-request-id="{{ request.id }}" class="dont-route view-object-json">JSON</a></small></h1>
+    <h1>{{#hardBreak request.name}}{{/hardBreak}} <small><a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a></small></h1>
     <p class="lead">{{#hardBreak request.id}}{{/hardBreak}}</p>
 </header>
 
@@ -28,7 +28,7 @@
                                 <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                                 <td>
-                                    <a data-task-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                                     &nbsp;&nbsp;
                                     <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                                 </td>
@@ -65,7 +65,7 @@
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                                 <td data-value="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
-                                <td><a data-task-id="{{ id }}" class="dont-route view-json">JSON</a></td>
+                                <td><a data-task-id="{{ id }}" data-action="viewJSON">JSON</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -100,7 +100,7 @@
                                 <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                                 <td>
-                                    <a data-task-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                                     &nbsp;&nbsp;
                                     <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                                 </td>

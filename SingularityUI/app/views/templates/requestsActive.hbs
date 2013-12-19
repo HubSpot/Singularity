@@ -28,9 +28,9 @@
                                 <td>{{ deployUser }}</td>
                                 <td>{{ instances }}</td>
                                 <td>
-                                    <a data-request-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
                                     &nbsp;&nbsp;
-                                    <a data-request-id="{{ id }}" class="dont-route" data-action="remove">Remove</a>
+                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}
@@ -63,9 +63,9 @@
                                 <td>{{ deployUser }}</td>
                                 <td>{{ schedule }}</td>
                                 <td>
-                                    <a data-request-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
                                     &nbsp;&nbsp;
-                                    <a data-request-id="{{ id }}" class="dont-route" data-action="remove">Remove</a>
+                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}

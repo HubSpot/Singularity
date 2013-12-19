@@ -44,7 +44,7 @@ class RequestsView extends View
         utils.setupSortableTables()
 
     setupEvents: ->
-        @$el.find('.view-json').unbind('click').click (event) ->
+        @$el.find('[data-action="viewJSON"]').unbind('click').click (event) ->
             utils.viewJSON 'request', $(event.target).data('request-id')
 
         $removeLinks = @$el.find('[data-action="remove"]')

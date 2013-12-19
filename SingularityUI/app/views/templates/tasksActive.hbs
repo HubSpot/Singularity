@@ -28,9 +28,9 @@
                             <td>{{ resources.cpus }}</td>
                             <td data-value="{{ resources.memoryMb }}">{{ memoryHuman }}</td>
                             <td>
-                                <a data-task-id="{{ id }}" class="dont-route view-json">JSON</a>
+                                <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                                 &nbsp;&nbsp;
-                                <a data-task-id="{{ id }}" class="dont-route" data-action="remove" data-url="{{ url }}">Remove</a>
+                                <a data-task-id="{{ id }}" data-action="remove" data-url="{{ url }}">Remove</a>
                             </td>
                         </tr>
                     {{/eachWithFn}}
