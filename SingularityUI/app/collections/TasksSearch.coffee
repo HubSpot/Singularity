@@ -2,7 +2,7 @@ Tasks = require './Tasks'
 
 class TasksSearch extends Tasks
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/tasks/search?#{ utils.paramsString @params }requestIdLike=#{ @query }"
+    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/tasks/search?count=6&#{ utils.paramsString @params }requestIdLike=#{ @query }"
 
     initialize: (models, { @query, @params }) =>
 
@@ -22,5 +22,7 @@ class TasksSearch extends Tasks
             app.allTasks[task.id] = task
 
         tasks
+
+    comparator: 'startedAt'
 
 module.exports = TasksSearch

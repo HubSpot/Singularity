@@ -6,7 +6,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Requested</th>
+                        <th>Created</th>
                         <th>Instances</th>
                         <th>Daemon</th>
                     </tr>
@@ -15,7 +15,7 @@
                     {{#eachWithFn requestsResults}}
                         <tr>
                             <td><a title="{{ id }}" href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                            <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                            <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
                             <td>{{ instances }}</td>
                             <td>{{ daemon }}</td>
                         </tr>
