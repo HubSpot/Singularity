@@ -6,12 +6,12 @@ class Request extends Model
 
     deletePaused: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('requestId') }/paused"
+            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/paused"
             type: 'DELETE'
 
     unpause: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('requestId') }/unpause"
+            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/unpause"
             type: 'POST'
 
 module.exports = Request
