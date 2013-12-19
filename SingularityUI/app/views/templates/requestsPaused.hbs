@@ -30,7 +30,9 @@
                                 <td>
                                     <a data-request-id="{{ id }}" class="dont-route view-json">JSON</a>
                                     &nbsp;&nbsp;
-                                    <a data-request-id="{{ id }}" class="dont-route" data-action="remove" data-url="{{ url }}">Remove</a>
+                                    <a data-request-id="{{ id }}" class="dont-route" data-action="deletePaused">Remove</a>
+                                    &nbsp;&nbsp;
+                                    <a data-request-id="{{ id }}" class="dont-route" data-action="unpause">Unpause</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}
@@ -65,7 +67,9 @@
                                 <td>
                                     <a data-request-id="{{ id }}" class="dont-route view-json">JSON</a>
                                     &nbsp;&nbsp;
-                                    <a data-request-id="{{ id }}" class="dont-route" data-action="remove" data-url="{{ url }}">Remove</a>
+                                    <a data-request-id="{{ id }}" class="dont-route" data-action="deletePaused">Remove</a>
+                                    &nbsp;&nbsp;
+                                    <a data-request-id="{{ id }}" class="dont-route" data-action="unpause">Unpause</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}

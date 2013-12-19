@@ -62,6 +62,35 @@ class RequestsView extends View
                     @collection.remove(requestModel)
                     row.remove()
 
+        $deletePausedLinks = @$el.find('[data-action="deletePaused"]')
+
+        $deletePausedLinks.unbind('click').on 'click', (e) =>
+            row = $(e.target).parents('tr')
+            requestModel = @collection.get($(e.target).data('request-id'))
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    row.remove()
+                    requestModel.deletePaused().done =>
+                        delete app.allRequests[requestModel.get('id')]
+                        @collection.remove(requestModel)
+
+        $unpauseLinks = @$el.find('[data-action="unpause"]')
+
+        $unpauseLinks .unbind('click').on 'click', (e) =>
+            row = $(e.target).parents('tr')
+            requestModel = @collection.get($(e.target).data('request-id'))
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    row.remove()
+                    requestModel.unpause().done =>
+                        @render()
+
     setUpSearchEvents: =>
         $search = @$el.find('input[type="search"]')
         $search.focus() if $(window).width() > 568
