@@ -20,4 +20,6 @@ class RequestsActive extends Requests
 
         requests
 
+    comparator: 'timestamp'
+
 module.exports = RequestsActive

@@ -20,8 +20,6 @@ class Application
         @allTasks = {}
         @allRequests = {}
 
-        # Get users, projects, and targets, and user settings
-        # before actually starting the app
         @fetchResources =>
 
             $('.page-loader.fixed').hide()

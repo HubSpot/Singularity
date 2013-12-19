@@ -23,7 +23,7 @@ class NavigationView extends View
 
         @renderTheme @theme
 
-        $anchors = $nav.find('ul.nav a:not(".dont-route")')
+        $anchors = $nav.find('ul.nav a[data-href]')
         $anchors.each ->
             route = $(@).data('href')
             $(@)

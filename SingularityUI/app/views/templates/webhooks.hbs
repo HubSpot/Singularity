@@ -16,7 +16,7 @@
                     {{#eachWithFn webhooks}}
                         <tr>
                             <td><a target="_blank" href="{{ url }}">{{#hardBreak url}}{{/hardBreak}}</a></td>
-                            <td><a class="dont-route" data-action="remove" data-url="{{ url }}">Remove</a></td>
+                            <td><a data-action="remove" data-url="{{ url }}">Remove</a></td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>
