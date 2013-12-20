@@ -15,6 +15,7 @@ exports.config =
 
             order:
                 before: [
+                    'vendor/scripts/shlandlebars-1.1.2.js'
                     'vendor/scripts/log.coffee'
                     'vendor/scripts/parseDec.coffee'
                     'vendor/scripts/modernizr.custom-2.6.2.js'
@@ -30,6 +31,8 @@ exports.config =
                     'vendor/scripts/tether-0.1.3.js'
                     'vendor/scripts/drop-0.1.5.js'
                     'vendor/scripts/select-0.2.0.js'
+                    'vendor/scripts/backbone.paginator-0.9.0.js'
+                    'vendor/scripts/teeble-0.3.4.js'
                 ]
 
         stylesheets:

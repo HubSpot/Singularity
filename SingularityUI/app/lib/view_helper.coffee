@@ -5,6 +5,7 @@ Handlebars.registerHelper 'ifGT', (v1, v2, options) -> if v1 > v2 then options.f
 Handlebars.registerHelper 'pluralize', (number, single, plural) -> if number is 1 then single else plural
 
 Handlebars.registerHelper 'hardBreak', (string, options) -> string?.replace(/(:|-)/g, '$1<wbr/>')
+Shlandlebars.registerHelper 'hardBreak', (string, options) -> string?.replace(/(:|-)/g, '$1<wbr/>')
 
 Handlebars.registerHelper 'eachWithFn', (items, options) ->
     _(items).map((item, i, items) =>
