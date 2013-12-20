@@ -47,8 +47,20 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> admins = Collections.emptyList();
 
+  @NotNull
+  @JsonProperty
+  private boolean includeAdminsOnAllMails = false;
+
   @JsonProperty("logging")
   private SMTPLoggingConfiguration smtpLoggingConfiguration = new SMTPLoggingConfiguration();
+
+  public boolean isIncludeAdminsOnAllMails() {
+    return includeAdminsOnAllMails;
+  }
+
+  public void setIncludeAdminsOnAllMails(boolean includeAdminsOnAllMails) {
+    this.includeAdminsOnAllMails = includeAdminsOnAllMails;
+  }
   
   public SMTPLoggingConfiguration getSmtpLoggingConfiguration() {
     return smtpLoggingConfiguration;

@@ -194,6 +194,12 @@ public class SingularityMailer implements SingularityCloseable {
         message.addRecipients(RecipientType.TO, to);
       }
       
+      if (maybeSmtpConfiguration.get().isIncludeAdminsOnAllMails()) {
+        for (String admin : maybeSmtpConfiguration.get().getAdmins()) {
+          message.addRecipient(RecipientType.CC, new InternetAddress(admin));
+        }
+      }
+      
       message.setSubject(subject);
       message.setContent(body, "text/html; charset=utf-8");
       
