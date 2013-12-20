@@ -28,17 +28,19 @@ public class SingularityClient {
 
   private static final String TASK_FORMAT = "http://%s/%s/tasks";
   private static final String TASK_ACTIVE_FORMAT = TASK_FORMAT + "/active";
+  private static final String TASK_SCHEDULED_FORMAT = TASK_FORMAT + "/scheduled";
 
   private static final String REQUEST_FORMAT = "http://%s/%s/requests";
   private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s";
   private static final String REQUEST_ACTIVE_FORMAT = REQUEST_FORMAT + "/active";
+  private static final String REQUEST_PAUSED_FORMAT = REQUEST_FORMAT + "/paused";
   private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
   private static final String CONTENT_TYPE_JSON = "application/json";
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
-  private static final TypeReference<Collection<SingularityRequest>> SINGULARITY_REQUESTS = new TypeReference<Collection<SingularityRequest>>() {};
-  private static final TypeReference<Collection<SingularityTask>> SINGULARITY_TASKS = new TypeReference<Collection<SingularityTask>>() {};
+  private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
+  private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
   
   private final Random random;
   private final List<String> hosts;
@@ -180,7 +182,27 @@ public class SingularityClient {
     LOG.info(String.format("Successfully got active requests from Singularity in %sms", System.currentTimeMillis() - start));
 
     try {
-      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SINGULARITY_REQUESTS);
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), REQUESTS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  public Collection<SingularityRequest> getPausedRequests() {
+    final String requestUri = String.format(REQUEST_PAUSED_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Getting paused requests - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get paused requests", getResponse);
+
+    LOG.info(String.format("Successfully got paused requests from Singularity in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), REQUESTS_COLLECTION);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
@@ -200,7 +222,27 @@ public class SingularityClient {
     LOG.info(String.format("Successfully got active tasks from Singularity in %sms", System.currentTimeMillis() - start));
 
     try {
-      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SINGULARITY_TASKS);
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  public Collection<SingularityTask> getScheduledTasks() {
+    final String requestUri = String.format(TASK_SCHEDULED_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Getting active tasks - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get active tasks", getResponse);
+
+    LOG.info(String.format("Successfully got active tasks from Singularity in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKS_COLLECTION);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
@@ -217,6 +259,6 @@ public class SingularityClient {
 
     checkResponse("add webhook", postResponse);
 
-    LOG.info("Successfully added webhook to Singularity in %sms", System.currentTimeMillis() - start);
+    LOG.info(String.format("Successfully added webhook to Singularity in %sms", System.currentTimeMillis() - start));
   }
 }
