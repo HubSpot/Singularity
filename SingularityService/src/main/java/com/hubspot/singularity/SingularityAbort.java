@@ -11,6 +11,7 @@ import ch.qos.logback.classic.LoggerContext;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityAbort {
 
@@ -20,16 +21,20 @@ public class SingularityAbort {
   private final LeaderLatch leaderLatch;
   private final SingularityDriverManager driverManager;
   private final SingularityCloser closer;
+  private final SingularityMailer mailer;
   
   @Inject
-  public SingularityAbort(@Named(SingularityModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer) {
+  public SingularityAbort(@Named(SingularityModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer) {
     this.curator = curator;
     this.leaderLatch = leaderLatch;
     this.driverManager = driverManager;
     this.closer = closer;
+    this.mailer = mailer;
   }
 
   public void abort() {
+    mailer.sendAbortMail();
+    
     stop();
     
     flushLogs();

@@ -31,7 +31,7 @@ public class SingularityStatePoller implements SingularityCloseable {
     this.closer = closer;
   }
   
-  public void start(final SingularityManaged managed, final SingularityAbort abort) {
+  public void start(final SingularityLeaderController managed, final SingularityAbort abort) {
     final SingularityStateGenerator generator = new SingularityStateGenerator(managed);
     
     LOG.info(String.format("Starting a state poller that will report every %s seconds", saveStateEverySeconds));

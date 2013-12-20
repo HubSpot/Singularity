@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
-public class SingularityManaged implements Managed, LeaderLatchListener {
+public class SingularityLeaderController implements Managed, LeaderLatchListener {
   
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityManaged.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
 
   private final LeaderLatch leaderLatch;
   private final SingularityDriverManager driverManager;
@@ -25,7 +25,7 @@ public class SingularityManaged implements Managed, LeaderLatchListener {
   private Protos.Status currentStatus;
   
   @Inject
-  public SingularityManaged(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller) {
+  public SingularityLeaderController(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller) {
     this.driverManager = driverManager;
     this.leaderLatch = leaderLatch;
     this.abort = abort;

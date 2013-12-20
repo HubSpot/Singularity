@@ -11,17 +11,17 @@ import org.apache.mesos.Protos.TaskStatus;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDriverManager;
-import com.hubspot.singularity.SingularityManaged;
+import com.hubspot.singularity.SingularityLeaderController;
 
 @Path("/test")
 public class TestResource {
 
   private final SingularityAbort abort;
-  private final SingularityManaged managed;
+  private final SingularityLeaderController managed;
   private final SingularityDriverManager driverManager;
   
   @Inject
-  public TestResource(SingularityManaged managed, SingularityAbort abort, SingularityDriverManager driverManager) {
+  public TestResource(SingularityLeaderController managed, SingularityAbort abort, SingularityDriverManager driverManager) {
     this.managed = managed;
     this.abort = abort;
     this.driverManager = driverManager;

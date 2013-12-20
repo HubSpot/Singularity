@@ -12,9 +12,9 @@ import com.hubspot.mesos.MesosUtils;
 
 public class SingularityStateGenerator {
 
-  private final SingularityManaged managed;
+  private final SingularityLeaderController managed;
   
-  public SingularityStateGenerator(SingularityManaged managed) {
+  public SingularityStateGenerator(SingularityLeaderController managed) {
     this.managed = managed;
   }
 

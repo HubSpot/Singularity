@@ -73,6 +73,18 @@ public class SingularityMailer implements SingularityCloseable {
     closer.shutdown(getClass().getName(), mailSenderExecutorService.get());
   }
   
+  public void sendAbortMail() {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.warn("Couldn't send abort mail because no SMTP configuration is present");
+      return;
+    }
+    
+    final List<String> to = maybeSmtpConfiguration.get().getAdmins();
+    final String subject = String.format("Singularity on %s is aborting", JavaUtils.getHostName());
+    
+    queueMail(to, subject, "");
+  }
+  
   private String getEmailLogFormat(List<String> toList, String subject, String body) {
     return String.format("[to: %s, subject: %s, body: %s]", toList, subject, body);
   }

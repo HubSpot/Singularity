@@ -49,7 +49,7 @@ public class SingularityModule extends AbstractModule {
   protected void configure() {
     bind(HistoryManager.class).to(JDBIHistoryManager.class);
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
-    bind(SingularityManaged.class).in(Scopes.SINGLETON);
+    bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     bind(SingularityStatePoller.class).in(Scopes.SINGLETON);
     bind(SingularityCloser.class).in(Scopes.SINGLETON);
     bind(SingularityMailer.class).in(Scopes.SINGLETON);
