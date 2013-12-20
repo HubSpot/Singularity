@@ -10,7 +10,7 @@ class TaskFiles extends Collection
     url: =>
         fullPath = "#{ @directory }/#{ @path ? ''}"
         baseUrl = @getSlaveUrlBase()
-        "#{baseUrl}/files/browse.json?path=#{ escape fullPath }&jsonp=?"
+        "#{ baseUrl }/files/browse.json?path=#{ escape fullPath }&jsonp=?"
 
     initialize: (models, { @taskId, @offerHostname, @directory, @path }) =>
 
@@ -20,7 +20,7 @@ class TaskFiles extends Collection
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
             taskLogFile.mtimeHuman = moment(taskLogFile.mtime * 1000).from()
             taskLogFile.sizeHuman = Humanize.fileSize(taskLogFile.size)
-            taskLogFile.downloadLink = "#{baseUrl}/files/download.json?path=#{ taskLogFile.path }"
+            taskLogFile.downloadLink = "#{ baseUrl }/files/download.json?path=#{ taskLogFile.path }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.relPath = taskLogFile.path.replace(@directory, '')
             taskLogFile.taskId = @taskId
