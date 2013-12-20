@@ -6,12 +6,11 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.2.9</version>
+    <version>0.2.10</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>SingularityClient</artifactId>
-  <version>0.2.9.3</version>
 
   <repositories>
     <repository>
