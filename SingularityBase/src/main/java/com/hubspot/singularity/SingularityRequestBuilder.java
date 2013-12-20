@@ -36,11 +36,11 @@ public class SingularityRequestBuilder {
     return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure, maxFailuresBeforePausing);
   }
   
-  public int getMaxFailuresBeforePausing() {
+  public Integer getMaxFailuresBeforePausing() {
     return maxFailuresBeforePausing;
   }
 
-  public SingularityRequestBuilder setMaxFailuresBeforePausing(int maxFailuresBeforePausing) {
+  public SingularityRequestBuilder setMaxFailuresBeforePausing(Integer maxFailuresBeforePausing) {
     this.maxFailuresBeforePausing = maxFailuresBeforePausing;
     return this;
   }
@@ -54,11 +54,11 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public int getNumRetriesOnFailure() {
+  public Integer getNumRetriesOnFailure() {
     return numRetriesOnFailure;
   }
 
-  public SingularityRequestBuilder setNumRetriesOnFailure(int numRetriesOnFailure) {
+  public SingularityRequestBuilder setNumRetriesOnFailure(Integer numRetriesOnFailure) {
     this.numRetriesOnFailure = numRetriesOnFailure;
     return this;
   }
