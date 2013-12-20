@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
+import com.hubspot.mesos.Resources;
+
 import java.util.List;
 import java.util.Map;
-
-import com.hubspot.mesos.Resources;
 
 public class SingularityRequestBuilder {
 
@@ -29,8 +29,8 @@ public class SingularityRequestBuilder {
   private Object executorData;
 
   private List<String> owners;
-  private int numRetriesOnFailure;
-  private int maxFailuresBeforePausing;
+  private Integer numRetriesOnFailure;
+  private Integer maxFailuresBeforePausing;
   
   public SingularityRequest build() {
     return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure, maxFailuresBeforePausing);
