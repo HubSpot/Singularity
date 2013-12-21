@@ -83,7 +83,7 @@
         <h1>Tasks</h1>
     </div>
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span3">
             <a class="big-number-link" href="/singularity/tasks" data-route="tasks">
                 <div class="well">
                     <div class="big-number">
@@ -93,17 +93,27 @@
                 </div>
             </a>
         </div>
-        <div class="span4">
+        <div class="span3">
             <a class="big-number-link" href="/singularity/tasks/scheduled" data-route="tasks/scheduled">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.scheduledTasks }}</div>
-                        <div class="number-label">Scheduled</div>
+                        <div class="number">{{ state.lateTasks }}</div>
+                        <div class="number-label">Overdue</div>
                     </div>
                 </div>
             </a>
         </div>
-        <div class="span4">
+        <div class="span3">
+            <a class="big-number-link" href="/singularity/tasks/scheduled" data-route="tasks/scheduled">
+                <div class="well">
+                    <div class="big-number">
+                        <div class="number">{{ state.futureTasks }}</div>
+                        <div class="number-label">Future</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="span3">
             <a class="big-number-link" href="/singularity/tasks/cleaning" data-route="tasks/cleaning">
                 <div class="well">
                     <div class="big-number">
