@@ -1,11 +1,13 @@
 package com.hubspot.singularity.smtp;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.mail.Address;
 import javax.mail.Message.RecipientType;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -199,26 +201,41 @@ public class SingularityMailer implements SingularityCloseable {
 
       message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
       
-      List<InternetAddress> addresses = Lists.newArrayList();
-      
-      for (String to : toList) {
-        addresses.add(new InternetAddress(to));
-        message.addRecipients(RecipientType.TO, to);
-      }
-      
       if (maybeSmtpConfiguration.get().isIncludeAdminsOnAllMails()) {
-        for (String admin : maybeSmtpConfiguration.get().getAdmins()) {
-          message.addRecipient(RecipientType.CC, new InternetAddress(admin));
+        Address[] ccArray = getAddresses(maybeSmtpConfiguration.get().getAdmins());
+        if (ccArray.length > 0) {
+          LOG.trace(String.format("Adding admins %s to mail %s", Arrays.toString(ccArray), subject));
+          message.addRecipients(RecipientType.CC, ccArray);
         }
       }
       
       message.setSubject(subject);
       message.setContent(body, "text/html; charset=utf-8");
       
-      transport.sendMessage(message, addresses.toArray(new InternetAddress[addresses.size()]));
+      Address[] toArray = getAddresses(toList);
+      
+      message.addRecipients(RecipientType.TO, toArray);
+      
+      LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), message));
+      
+      transport.sendMessage(message, toArray);
     } catch (Throwable t) {
       LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject, body)), t);
     }
+  }
+
+  private Address[] getAddresses(List<String> toList) {
+    List<InternetAddress> addresses = Lists.newArrayListWithCapacity(toList.size());
+    
+    for (String to : toList) {
+      try {
+        addresses.add(new InternetAddress(to));
+      } catch (Throwable t) {
+        LOG.warn(String.format("Invalid address %s - ignoring", to), t);
+      }
+    }
+    
+    return addresses.toArray(new InternetAddress[addresses.size()]);
   }
 
 }
