@@ -29,6 +29,7 @@ import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.data.StateManager;
@@ -101,22 +102,41 @@ public class SingularityMailer implements SingularityCloseable {
   
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {
     final List<String> to = request.getOwners();
-    final String subject = String.format("Task %s failed with state %s", taskId.toString(), state.name());
-
+    
+    Optional<SingularityTaskHistory> taskHistory = historyManager.getTaskHistory(taskId.getId());
+    
+    final String subject = getSubjectForTaskHistory(taskId, state, taskHistory);
+    
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     builder.put("request_id", request.getId());
     builder.put("task_id", taskId.getId());
     builder.put("status", state.name());
-    builder.put("mesos_logs_link", getMesosLogsLink(taskId));
+    builder.put("mesos_logs_link", getMesosLogsLink(taskHistory));
     
     final String body = taskFailedTemplate.render(builder.build());
     
     queueMail(to, subject, body);
   }
   
-  private String getMesosLogsLink(SingularityTaskId taskId) {
-    Optional<SingularityTaskHistory> taskHistory = historyManager.getTaskHistory(taskId.getId());
+  private boolean taskEverRan(SingularityTaskHistory taskHistory) {
+    for (SingularityTaskHistoryUpdate update : taskHistory.getTaskUpdates()) {
+      if (TaskState.valueOf(update.getStatusUpdate()) == TaskState.TASK_RUNNING) {
+        return true;
+      }
+    }
     
+    return false;
+  }
+  
+  private String getSubjectForTaskHistory(SingularityTaskId taskId, TaskState state, Optional<SingularityTaskHistory> taskHistory) {
+    if (!taskHistory.isPresent() || !taskEverRan(taskHistory.get())) {
+      return String.format("Task %s never started in mesos (%s)", taskId.toString(), state.name());
+    }
+    
+    return String.format("Task %s failed after running (%s)", taskId.toString(), state.name());
+  }
+  
+  private String getMesosLogsLink(Optional<SingularityTaskHistory> taskHistory) {
     if (!taskHistory.isPresent() || !taskHistory.get().getDirectory().isPresent()) {
       return "";
     }
