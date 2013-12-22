@@ -6,11 +6,13 @@ public class SingularityScheduledTasksInfo {
   private final int numLateTasks;
   private final int numFutureTasks;
   private final long maxTaskLag;
+  private final long timestamp;
 
-  private SingularityScheduledTasksInfo(int numLateTasks, int numFutureTasks, long maxTaskLag) {
+  private SingularityScheduledTasksInfo(int numLateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
     this.numLateTasks = numLateTasks;
     this.numFutureTasks = numFutureTasks;
     this.maxTaskLag = maxTaskLag;
+    this.timestamp = timestamp;
   }
 
   public int getNumLateTasks() {
@@ -25,25 +27,31 @@ public class SingularityScheduledTasksInfo {
     return maxTaskLag;
   }
 
-  public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTaskId> pendingTaskIds) {
-    final long now = System.currentTimeMillis();
+  public long getTimestamp() {
+    return timestamp;
+  }
 
+  public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTaskId> pendingTaskIds) {
+    return getInfo(pendingTaskIds, System.currentTimeMillis());
+  }
+
+  public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTaskId> pendingTaskIds, long timestamp) {
     int numLateTasks = 0;
     int numFutureTasks = 0;
     long maxTaskLag = 0;
 
     for (SingularityPendingTaskId pendingTaskId : pendingTaskIds) {
-      if (pendingTaskId.getNextRunAt() <= now) {
+      if (pendingTaskId.getNextRunAt() <= timestamp) {
         numLateTasks++;
       } else {
         numFutureTasks++;
       }
 
-      if (now - pendingTaskId.getNextRunAt() > maxTaskLag) {
-        maxTaskLag = now - pendingTaskId.getNextRunAt();
+      if (timestamp - pendingTaskId.getNextRunAt() > maxTaskLag) {
+        maxTaskLag = timestamp - pendingTaskId.getNextRunAt();
       }
     }
 
-    return new SingularityScheduledTasksInfo(numLateTasks, numFutureTasks, maxTaskLag);
+    return new SingularityScheduledTasksInfo(numLateTasks, numFutureTasks, maxTaskLag, timestamp);
   }
 }
