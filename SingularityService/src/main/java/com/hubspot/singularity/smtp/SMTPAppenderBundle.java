@@ -37,6 +37,8 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
       return;
     }
     
+    LOG.info(String.format("Installing an SMTPAppender with LOG threshold %s", smtpLoggingConfiguration.getThreshold()));
+   
     final Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     
     SMTPAppender appender = buildSMTPAppender(smtp.get(), smtpLoggingConfiguration, root.getLoggerContext());
