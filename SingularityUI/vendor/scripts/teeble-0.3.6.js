@@ -1,8 +1,8 @@
 /*!
-* teeble - v0.3.4 - 2013-10-25
+* teeble - v0.3.6 - 2013-12-23
 * https://github.com/HubSpot/teeble
 * Copyright (c) 2013 HubSpot, Marc Neuwirth, Jonathan Kim;
-* Licensed MIT
+* Licensed MIT 
 */
 
 (function() {
@@ -503,7 +503,7 @@
     };
 
     PaginationView.prototype.render = function() {
-      var html, info, p, page, pages;
+      var html, info, page, pages;
       if (!this.collection.information) {
         this.collection.pager();
       }
@@ -515,11 +515,10 @@
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             page = _ref[_i];
-            p = {
+            _results.push({
               active: page === info.currentPage ? this.options.pagination.pagination_active : void 0,
               number: page
-            };
-            _results.push(p);
+            });
           }
           return _results;
         }).call(this);
@@ -527,8 +526,8 @@
           pagination_class: this.options.pagination.pagination_class,
           pagination_disabled: this.options.pagination.pagination_disabled,
           pagination_active: this.options.pagination.pagination_active,
-          prev_disabled: info.previous === false || info.hasPrevious === false,
-          next_disabled: info.next === false || info.hasNext === false,
+          prev_disabled: info.previous === false,
+          next_disabled: info.next === false,
           pages: pages
         });
         this.$el.html(html);
@@ -707,7 +706,7 @@
           _base.pager();
         }
       }
-      this.$el.empty().append("<table><tbody></tbody></table");
+      this.$el.empty().append("<table><tbody></tbody></table>");
       this.table = this.$('table').addClass(this.options.table_class);
       this.body = this.$('tbody');
       this.rendered = true;

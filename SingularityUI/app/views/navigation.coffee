@@ -15,7 +15,7 @@ class NavigationView extends View
 
     renderTitle: =>
         subtitle = utils.getHTMLTitleFromHistoryFragment(Backbone.history.fragment)
-        subtitle = ' — ' + subtitle if subtitle isnt ''
+        subtitle = ' — ' + subtitle if subtitle
         $('head title').text("Singularity#{ subtitle }")
 
     renderNavLinks: =>
