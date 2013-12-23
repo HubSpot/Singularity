@@ -41,11 +41,14 @@ class RequestView extends View
         @historicalTasks = new HistoricalTasksCollection [], { requestId: @options.requestId, active: false }
 
         $.extend @historicalTasks,
-            totalPages: 10
+            totalPages: 100
             totalRecords: 1000
             currentPage: 1
             firstPage: 1
-            perPage: 100
+            perPage: 10
+
+        class HistoryPaginationView extends Teeble.PaginationView
+            template: "<div class=\" <%= pagination_class %>\">\n    <ul>\n        <li>\n            <a href=\"#\" class=\"pagination-previous previous <% if (prev_disabled){ %><%= pagination_disabled %><% } %>\">\n                <span class=\"left\"></span>\n                Newer\n            </a>\n        </li>\n        <% _.each(pages, function(page) { %>\n        <li>\n            <a href=\"#\" class=\"pagination-page <% if (page.active){ %><%= pagination_active %><% } %>\" data-page=\"<%= page.number %>\"><%= page.number %></a>\n        </li>\n        <% }); %>\n        <li>\n            <a href=\"#\" class=\"pagination-next next <% if(next_disabled){ %><%= pagination_disabled %><% } %>\">\n                Older\n                <span class=\"right\"></span>\n            </a>\n        </li>\n    </ul>\n</div>"
 
         @historicalTasks.pager
             reset: true
@@ -55,6 +58,8 @@ class RequestView extends View
                     collection: @historicalTasks
                     pagination: true
                     table_class: 'table'
+                    subviews: $.extend {}, @subviews,
+                        pagination: HistoryPaginationView
                     partials: [
                         header: '<th class="sorting" data-sort="name">Name</th>'
                         cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>'
