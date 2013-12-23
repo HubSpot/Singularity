@@ -1,12 +1,24 @@
-Collection = require './collection'
+RequestTasks = require './RequestTasks'
 
-class RequestTasks extends Collection
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
+class HistoricalTasksCollection extends Mixen(RequestTasks, Teeble.ServerCollection)
+    model: Backbone.Model
 
-    comparator: 'createdAt'
+    paginator_core:
+        url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks"
+        type: "GET"
+        dataType: "json"
 
-    initialize: (models, { @requestId, @active }) =>
-        super
+    paginator_ui:
+        firstPage: 1
+        currentPage: 1
+        perPage: 5
+        totalPages: 50
+        pagesInRange: 10
+
+    server_api:
+        count: -> @perPage
+        page: -> @currentPage
+        orderBy: 'updatedAt'
 
     parse: (tasks) ->
         _.each tasks, (task) ->
@@ -21,4 +33,5 @@ class RequestTasks extends Collection
 
         tasks
 
-module.exports = RequestTasks
+
+module.exports = HistoricalTasksCollection

@@ -2,6 +2,8 @@ View = require './view'
 
 RequestTasks = require '../collections/RequestTasks'
 
+HistoricalTasksCollection = require '../collections/HistoricalTasks'
+
 class RequestView extends View
 
     template: require './templates/request'
@@ -9,18 +11,10 @@ class RequestView extends View
     initialize: =>
         @request = app.allRequests[@options.requestId]
 
-        count = 0
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-        @requestTasksActive.fetch().done =>
-            @fetchDoneActive = true
-            if ++count is 2
-              @render()
-
         @requestTasksHistorical = new RequestTasks [], { requestId: @options.requestId, active: false }
-        @requestTasksHistorical.fetch().done =>
-            @fetchDoneHistorical = true
-            if ++count is 2
-              @render()
+
+        $.when(@requestTasksActive.fetch(), @requestTasksHistorical.fetch()).done _.bind(@render, @)
 
     render: =>
         if not @request
@@ -47,56 +41,14 @@ class RequestView extends View
         utils.setupSortableTables()
 
     renderHistoricalTasksPaginated: ->
-        if @historicalTasksPaginated
-            $('.historical-tasks-paginated').html @historicalTasksPaginated.render().el
-            return
-
-        @teebleView = Teeble.TableView.extend({})
-
-        @PaginatedCollection = Teeble.ClientCollection.extend(
-            model: Backbone.Model
-            paginator_core:
-                url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @options.requestId }/tasks"
-                type: "GET"
-                dataType: "json"
-
-            paginator_ui:
-                firstPage: 1
-                currentPage: 1
-                perPage: 5
-                totalPages: 50
-                pagesInRange: 10
-
-            server_api:
-                count: -> @perPage
-                page: -> @currentPage
-                orderBy: 'updatedAt'
-
-            parse: (tasks) ->
-                # @totalPages = 50#Math.ceil(tasks / this.perPage)
-                # @totalRecords = 50#parseInt(tasks, 10)
-
-                # TODO abstract
-                # since duplicated from RequestTasks.coffee
-                _.each tasks, (task) ->
-                    task.id = task.taskId.id
-                    task.name = task.id
-                    task.updatedAtHuman = if task.updatedAt? then moment(task.updatedAt).from() else ''
-                    task.createdAtHuman = if task.createdAt? then moment(task.createdAt).from() else ''
-                    task.lastStatusHuman = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].label else ''
-                    task.isActive = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].isActive else false
-
-                tasks
-        )
-
-        @paginatedItems = new @PaginatedCollection()
-        @paginatedItems.fetch
+        @historicalTasks = new HistoricalTasksCollection [], { requestId: @options.requestId, active: false }
+        @historicalTasks.fetch
             reset: true
             success: =>
-                @paginatedItems.pager()
-                @historicalTasksPaginated = new @teebleView(
-                    compile: Shlandlebars.compile # oh yeah...
-                    collection: @paginatedItems
+                @historicalTasks.pager()
+                @historicalTasksView = new Teeble.TableView
+                    compile: Handlebars.compile
+                    collection: @historicalTasks
                     pagination: true
                     table_class: 'table'
                     partials: [
@@ -121,10 +73,9 @@ class RequestView extends View
                             </td>
                         '''
                     ]
-                )
 
-                @historicalTasksPaginated.setElement $('.historical-tasks-paginated')[0]
-                @historicalTasksPaginated.render()
+                @historicalTasksView.setElement $('.historical-tasks-paginated')[0]
+                @historicalTasksView.render()
 
                 @setupEvents()
 

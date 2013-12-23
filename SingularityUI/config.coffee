@@ -15,7 +15,6 @@ exports.config =
 
             order:
                 before: [
-                    'vendor/scripts/shlandlebars-1.1.2.js'
                     'vendor/scripts/log.coffee'
                     'vendor/scripts/parseDec.coffee'
                     'vendor/scripts/modernizr.custom-2.6.2.js'
