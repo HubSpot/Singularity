@@ -9,15 +9,18 @@ class RequestView extends View
     initialize: =>
         @request = app.allRequests[@options.requestId]
 
+        count = 0
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
         @requestTasksActive.fetch().done =>
             @fetchDoneActive = true
-            @render()
+            if ++count is 2
+              @render()
 
         @requestTasksHistorical = new RequestTasks [], { requestId: @options.requestId, active: false }
         @requestTasksHistorical.fetch().done =>
             @fetchDoneHistorical = true
-            @render()
+            if ++count is 2
+              @render()
 
     render: =>
         if not @request
@@ -120,9 +123,8 @@ class RequestView extends View
                     ]
                 )
 
-                el = @historicalTasksPaginated.render().el
-
-                $('.historical-tasks-paginated').html el
+                @historicalTasksPaginated.setElement $('.historical-tasks-paginated')[0]
+                @historicalTasksPaginated.render()
 
                 @setupEvents()
 
