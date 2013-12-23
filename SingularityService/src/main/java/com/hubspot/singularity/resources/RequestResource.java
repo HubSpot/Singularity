@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -59,6 +60,18 @@ public class RequestResource {
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
     
     return request;
+  }
+  
+  @POST
+  @Path("/request/{requestId}/bounce")
+  public void bounce(@PathParam("requestId") String requestId) {
+    SingularityRequest request = fetchRequest(requestId);
+    
+    if (request.isScheduled()) {
+      throw new BadRequestException(String.format("Can not request a bounce of a scheduled request (%s - %s)", request.getId(), request.getSchedule()));
+    }
+    
+    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.BOUNCE));
   }
   
   @POST

@@ -39,8 +39,6 @@ public class SingularityRackManager extends SingularitySchedulerBase {
   
   @Inject
   public SingularityRackManager(MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
-    super(taskManager);
-    
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
     
@@ -75,7 +73,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     return getHost(offer.getHostname());
   }
   
-  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks) {
+  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks, List<SingularityTaskId> cleaningTasks) {
     final String host = getSlaveHost(offer);
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();
@@ -96,7 +94,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
-    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), activeTasks, getDecomissioningRacks(), getDecomissioningSlaves())) {
+    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), activeTasks, cleaningTasks)) {
       if (taskId.getHost().equals(host)) {
         LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTaskId(), host, taskId));
         
@@ -247,14 +245,6 @@ public class SingularityRackManager extends SingularitySchedulerBase {
   
   private int getNumRacks() {
     return rackManager.getNumActive();
-  }
-  
-  private List<String> getDecomissioningRacks() {
-    return rackManager.getDecomissioning();
-  }
-  
-  private List<SingularitySlave> getDecomissioningSlaves() {
-    return slaveManager.getDecomissioningObjects();
   }
   
   private boolean isRackActive(String rackId) {

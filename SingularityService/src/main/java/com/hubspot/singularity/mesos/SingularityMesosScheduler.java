@@ -7,7 +7,6 @@ import java.util.Set;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Status;
-import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -76,7 +75,10 @@ public class SingularityMesosScheduler implements Scheduler {
     final List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIds();
 
     scheduler.checkForDecomissions(activeTasks);
-    scheduler.drainPendingQueue(activeTasks);
+    
+    final List<SingularityTaskId> cleaningTasks = taskManager.getCleanupTaskIds();
+    
+    scheduler.drainPendingQueue(activeTasks, cleaningTasks);
     
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
@@ -96,7 +98,7 @@ public class SingularityMesosScheduler implements Scheduler {
       for (Protos.Offer offer : offers) {
         LOG.trace(String.format("Evaluating offer %s", offer));
 
-        Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, activeTasks);
+        Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, activeTasks, cleaningTasks);
 
         if (!accepted.isPresent()) {
           driver.declineOffer(offer.getId());
@@ -123,7 +125,7 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
 
-  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, List<SingularityTaskId> activeTasks) {
+  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, List<SingularityTaskId> activeTasks, List<SingularityTaskId> cleaningTasks) {
     for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
 
@@ -134,7 +136,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
           
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
-      final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, activeTasks);
+      final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, activeTasks, cleaningTasks);
             
       if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
@@ -184,14 +186,14 @@ public class SingularityMesosScheduler implements Scheduler {
     historyManager.updateTaskHistory(taskId, status.getState().name(), now);
     historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), now);
 
+    logSupport.checkDirectory(maybeActiveTask.get());
+    
     if (MesosUtils.isTaskDone(status.getState())) {
       if (maybeActiveTask.isPresent()) {
         taskManager.deleteActiveTask(taskId);
       }
       
       scheduler.handleCompletedTask(taskId, status.getState());
-    } else if (status.getState() == TaskState.TASK_RUNNING) {
-      logSupport.notifyRunning(maybeActiveTask.get());
     }
   }
 

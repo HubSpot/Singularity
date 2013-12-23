@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 public class SingularityTaskCleanup extends SingularityJsonObject {
 
   public enum TaskCleanupType {
-    USER_REQUESTED, DECOMISSIONING, SCALING_DOWN
+    USER_REQUESTED, DECOMISSIONING, SCALING_DOWN, BOUNCING
   }
   
   private final Optional<String> user;

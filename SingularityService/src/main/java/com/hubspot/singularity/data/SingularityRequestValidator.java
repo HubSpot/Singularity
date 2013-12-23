@@ -3,15 +3,12 @@ package com.hubspot.singularity.data;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.SingularityRequest;
 
 public class SingularityRequestValidator {
@@ -19,31 +16,24 @@ public class SingularityRequestValidator {
   private static final Joiner JOINER = Joiner.on(" ");
   
   private final SingularityRequest request;
+  private static final int MAX_REQUEST_ID_SIZE = 100;
   
   public SingularityRequestValidator(SingularityRequest request) {
     this.request = request;
   }
   
-  @SuppressWarnings("serial")
-  private static class InvalidRequestException extends WebApplicationException {
-
-    public InvalidRequestException(String message) {
-      super(Response.status(Status.BAD_REQUEST).entity(message).type("text/plain").build());
-    }
-   
-  }
-  
   private void checkRequestState(boolean expression, String message) {
     if (!expression) {
-      throw new InvalidRequestException(message);
+      throw new BadRequestException(message);
     }
   }
   
-  public SingularityRequest buildValidRequest() throws InvalidRequestException {
+  public SingularityRequest buildValidRequest() throws BadRequestException {
     checkRequestState(request.getId() != null, "Id must not be null");
     checkRequestState(request.getInstances() == null || request.getInstances() > 0, "Instances must be greater than 0");
     checkRequestState(request.getSchedule() == null || ((request.getInstances() == null || request.getInstances() == 1) && (request.getDaemon() == null || !request.getDaemon())), "Scheduled requests can not be ran on more than one instance, and must not be daemons");
     checkRequestState((request.getDaemon() == null || request.getDaemon()) || (request.getInstances() == null || request.getInstances() == 1), "Non-daemons can not be ran on more than one instance");
+    checkRequestState(request.getId().length() < MAX_REQUEST_ID_SIZE, String.format("Request id must be less than %s characters, it is %s (%s)", MAX_REQUEST_ID_SIZE, request.getId().length(), request.getId()));
     
     String schedule = adjustSchedule(request.getSchedule());
     
@@ -68,7 +58,7 @@ public class SingularityRequestValidator {
    * Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year
    * (Optional) empty, 1970-2199 , - * /
    */
-  private String adjustSchedule(String schedule) throws InvalidRequestException {
+  private String adjustSchedule(String schedule) throws BadRequestException {
     if (schedule == null) {
       return null;
     }
@@ -76,7 +66,7 @@ public class SingularityRequestValidator {
     String[] split = schedule.split(" ");
 
     if (split.length < 4) {
-      throw new InvalidRequestException(String.format("Schedule %s is invalid", schedule));
+      throw new BadRequestException(String.format("Schedule %s is invalid", schedule));
     }
 
     List<String> newSchedule = Lists.newArrayListWithCapacity(6);

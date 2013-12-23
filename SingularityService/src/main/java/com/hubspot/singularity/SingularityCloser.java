@@ -47,8 +47,9 @@ public class SingularityCloser {
     LOG.info(String.format("Shutting down %s - waiting %s seconds", name, waitSeconds));
     
     try {
-      executorService.shutdownNow();
+      executorService.shutdown();
       executorService.awaitTermination(waitSeconds, TimeUnit.SECONDS);
+      executorService.shutdownNow();
     } catch (Throwable t) {
       LOG.warn(String.format("While shutting down %s executor service", name), t);
     }

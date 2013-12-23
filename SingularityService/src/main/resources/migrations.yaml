@@ -14,7 +14,7 @@ databaseChangeLog:
                     primaryKey: true
               - column:
                   name: taskId
-                  type: VARCHAR(100)
+                  type: VARCHAR(200)
                   constraints:
                     nullable: false
               - column:
@@ -64,7 +64,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: taskId
-                  type: VARCHAR(100)
+                  type: VARCHAR(200)
                   constraints:
                     nullable: false
               - column:
