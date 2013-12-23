@@ -28,7 +28,7 @@ class NavigationView extends View
             route = $(@).data('href')
             $(@)
                 .attr('href', "/#{ constants.appName }/#{ route }")
-                .data('route', route)
+                .attr('data-route', route)
 
         $nav.find('li').removeClass('active')
 
