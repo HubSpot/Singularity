@@ -6,7 +6,7 @@ class View extends Backbone.View
     el: '#page'
 
     events:
-        'click a': 'routeLink'
+        'click a[data-route]': 'routeLink'
 
     routeLink: (e) =>
         $link = $(e.target)

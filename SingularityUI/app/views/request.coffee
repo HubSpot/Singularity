@@ -42,10 +42,17 @@ class RequestView extends View
 
     renderHistoricalTasksPaginated: ->
         @historicalTasks = new HistoricalTasksCollection [], { requestId: @options.requestId, active: false }
-        @historicalTasks.fetch
+
+        $.extend @historicalTasks,
+            totalPages: 10
+            totalRecords: 1000
+            currentPage: 1
+            firstPage: 1
+            perPage: 100
+
+        @historicalTasks.pager
             reset: true
             success: =>
-                @historicalTasks.pager()
                 @historicalTasksView = new Teeble.TableView
                     compile: Handlebars.compile
                     collection: @historicalTasks
@@ -76,6 +83,8 @@ class RequestView extends View
 
                 @historicalTasksView.setElement $('.historical-tasks-paginated')[0]
                 @historicalTasksView.render()
+
+                @historicalTasks.on 'sync', => @historicalTasksView.render()
 
                 @setupEvents()
 
