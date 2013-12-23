@@ -12,9 +12,9 @@ class RequestView extends View
         @request = app.allRequests[@options.requestId]
 
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-        @requestTasksHistorical = new RequestTasks [], { requestId: @options.requestId, active: false }
-
-        $.when(@requestTasksActive.fetch(), @requestTasksHistorical.fetch()).done _.bind(@render, @)
+        @requestTasksActive.fetch().done =>
+            @requestTasksActive.fetched = true
+            @render()
 
     render: =>
         if not @request
@@ -24,11 +24,8 @@ class RequestView extends View
         context =
             request: @request
 
-            fetchDoneActive: @fetchDoneActive
-            fetchDoneHistorical: @fetchDoneHistorical
-
+            fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
-            requestTasksHistorical: _.filter(_.pluck(@requestTasksHistorical.models, 'attributes'), (t) => not t.isActive)
 
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
 
