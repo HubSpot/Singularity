@@ -14,7 +14,7 @@
                     {{#if isDirectory}}
                         <a href="/singularity/task/{{ taskId }}/files{{ relPath }}" data-route="/task/{{ taskId }}/files{{ relPath }}">{{ shortPath }}</a>
                     {{else}}
-                        {{ shortPath }}
+                        <a href="/singularity/task/{{ taskId }}/tail{{ relPath }}" data-route="/task/{{ taskId }}/tail{{ relPath }}">{{ shortPath }}</a>
                     {{/if}}
                 </td>
                 <td data-value="{{ size }}">{{ sizeHuman }}</td>
