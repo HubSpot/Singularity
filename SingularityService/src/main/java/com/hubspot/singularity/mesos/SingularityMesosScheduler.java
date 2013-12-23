@@ -186,7 +186,7 @@ public class SingularityMesosScheduler implements Scheduler {
     historyManager.updateTaskHistory(taskId, status.getState().name(), now);
     historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), now);
 
-    logSupport.checkDirectory(maybeActiveTask.get());
+    logSupport.checkDirectory(SingularityTaskId.fromString(taskId));
     
     if (MesosUtils.isTaskDone(status.getState())) {
       if (maybeActiveTask.isPresent()) {

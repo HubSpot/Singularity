@@ -38,7 +38,7 @@ public class HistoryResource {
   @GET
   @Path("/task/{taskId}")
   public SingularityTaskHistory getHistoryForTask(@PathParam("taskId") String taskId) {
-    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(taskId);
+    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(taskId, true);
   
     if (!history.isPresent()) {
       throw new NotFoundException(String.format("No history for task %s", taskId));

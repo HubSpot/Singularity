@@ -103,7 +103,7 @@ public class SingularityMailer implements SingularityCloseable {
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {
     final List<String> to = request.getOwners();
     
-    Optional<SingularityTaskHistory> taskHistory = historyManager.getTaskHistory(taskId.getId());
+    Optional<SingularityTaskHistory> taskHistory = historyManager.getTaskHistory(taskId.getId(), true);
     
     final String subject = getSubjectForTaskHistory(taskId, state, taskHistory);
     

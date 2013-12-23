@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -126,14 +127,18 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
+  public Optional<SingularityTaskHistory> getTaskHistory(String taskId, boolean fetchUpdates) {
     SingularityTaskHistoryHelper helper = history.getTaskHistoryForTask(taskId);
     
     if (helper == null) {
       return Optional.absent();
     }
     
-    List<SingularityTaskHistoryUpdate> updates = history.getTaskUpdates(taskId);
+    List<SingularityTaskHistoryUpdate> updates = Collections.emptyList();
+    
+    if (fetchUpdates) {
+      updates = history.getTaskUpdates(taskId);
+    }
     
     try {
       return Optional.of(new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.fromBytes(helper.getTaskData(), objectMapper), helper.getDirectory()));
