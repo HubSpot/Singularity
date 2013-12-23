@@ -48,7 +48,29 @@ class RequestView extends View
             perPage: 10
 
         class HistoryPaginationView extends Teeble.PaginationView
-            template: "<div class=\" <%= pagination_class %>\">\n    <ul>\n        <li>\n            <a href=\"#\" class=\"pagination-previous previous <% if (prev_disabled){ %><%= pagination_disabled %><% } %>\">\n                <span class=\"left\"></span>\n                Newer\n            </a>\n        </li>\n        <% _.each(pages, function(page) { %>\n        <li>\n            <a href=\"#\" class=\"pagination-page <% if (page.active){ %><%= pagination_active %><% } %>\" data-page=\"<%= page.number %>\"><%= page.number %></a>\n        </li>\n        <% }); %>\n        <li>\n            <a href=\"#\" class=\"pagination-next next <% if(next_disabled){ %><%= pagination_disabled %><% } %>\">\n                Older\n                <span class=\"right\"></span>\n            </a>\n        </li>\n    </ul>\n</div>"
+            template: '''
+                <div class=" <%= pagination_class %>">
+                    <ul>
+                        <li>
+                            <a href="#" class="pagination-previous previous <% if (prev_disabled){ %><%= pagination_disabled %><% } %>">
+                                <span class="left"></span>
+                                Newer
+                            </a>
+                        </li>
+                        <% _.each(pages, function(page) { %>
+                            <li>
+                                <a href="#" class="pagination-page <% if (page.active){ %><%= pagination_active %><% } %>" data-page="<%= page.number %>"><%= page.number %></a>
+                            </li>
+                        <% }); %>
+                        <li>
+                            <a href="#" class="pagination-next next <% if(next_disabled){ %><%= pagination_disabled %><% } %>">
+                                Older
+                                <span class="right"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            '''
 
         @historicalTasks.pager
             reset: true
