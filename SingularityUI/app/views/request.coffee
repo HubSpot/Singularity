@@ -2,7 +2,7 @@ View = require './view'
 
 RequestTasks = require '../collections/RequestTasks'
 
-HistoricalTasksCollection = require '../collections/HistoricalTasks'
+HistoricalTasks = require '../collections/HistoricalTasks'
 
 class RequestView extends View
 
@@ -38,7 +38,7 @@ class RequestView extends View
         utils.setupSortableTables()
 
     renderHistoricalTasksPaginated: ->
-        @historicalTasks = new HistoricalTasksCollection [], { requestId: @options.requestId, active: false }
+        @historicalTasks = new HistoricalTasks [], { requestId: @options.requestId, active: false }
 
         $.extend @historicalTasks,
             totalPages: 100
