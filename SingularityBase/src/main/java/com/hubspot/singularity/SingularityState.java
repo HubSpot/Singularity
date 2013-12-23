@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
 
 public class SingularityState {
   
@@ -11,7 +11,11 @@ public class SingularityState {
   private final int requests;
   private final int pausedRequests;
   private final int scheduledTasks;
+  private final int lateTasks;
+  private final int futureTasks;
   private final int cleaningTasks;
+
+  private final long maxTaskLag;
   
   private final int pendingRequests;
   private final int cleaningRequests;
@@ -32,7 +36,8 @@ public class SingularityState {
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("requests") int requests, @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests,
       @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves, 
       @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks, 
-      @JsonProperty("numWebhooks") int numWebhooks, @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates) {
+      @JsonProperty("numWebhooks") int numWebhooks, @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates,
+      @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag) {
     this.activeTasks = activeTasks;
     this.requests = requests;
     this.pausedRequests = pausedRequests;
@@ -48,6 +53,9 @@ public class SingularityState {
     this.numWebhooks = numWebhooks;
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
+    this.lateTasks = lateTasks;
+    this.futureTasks = futureTasks;
+    this.maxTaskLag = maxTaskLag;
   }
 
   public int getPausedRequests() {
@@ -110,11 +118,23 @@ public class SingularityState {
     return cleaningRequests;
   }
 
+  public int getLateTasks() {
+    return lateTasks;
+  }
+
+  public int getFutureTasks() {
+    return futureTasks;
+  }
+
+  public long getMaxTaskLag() {
+    return maxTaskLag;
+  }
+
   @Override
   public String toString() {
     return "SingularityState [activeTasks=" + activeTasks + ", requests=" + requests + ", pausedRequests=" + pausedRequests + ", scheduledTasks=" + scheduledTasks + ", cleaningTasks=" + cleaningTasks + ", pendingRequests="
         + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
-        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", numWebhooks=" + numWebhooks + ", hostStates=" + hostStates + "]";
+        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", numWebhooks=" + numWebhooks + ", hostStates=" + hostStates + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", maxTaskLag=" + maxTaskLag + "]";
   }
 
 }
