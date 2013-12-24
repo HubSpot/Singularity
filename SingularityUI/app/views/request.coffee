@@ -38,7 +38,11 @@ class RequestView extends View
         utils.setupSortableTables()
 
     renderHistoricalTasksPaginated: ->
-        @historicalTasks = new HistoricalTasks [], { requestId: @options.requestId, active: false }
+        @historicalTasks = new HistoricalTasks [],
+            requestId: @options.requestId
+            active: false
+            sortColumn: 'updatedAt'
+            sortDirection: 'asc'
 
         $.extend @historicalTasks,
             totalPages: 100
@@ -49,7 +53,7 @@ class RequestView extends View
 
         class HistoryPaginationView extends Teeble.PaginationView
             template: '''
-                <div class=" <%= pagination_class %>">
+                <div class="<%= pagination_class %>">
                     <ul>
                         <li>
                             <a href="#" class="pagination-previous previous <% if (prev_disabled){ %><%= pagination_disabled %><% } %>">
@@ -83,10 +87,10 @@ class RequestView extends View
                     subviews: $.extend {}, @subviews,
                         pagination: HistoryPaginationView
                     partials: [
-                        header: '<th class="sorting" data-sort="name">Name</th>'
+                        header: '<th class="sorting" data-sort="taskId">Name</th>'
                         cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>'
                     ,
-                        header: '<th class="sorting" data-sort="lastStatus">Status</th>'
+                        header: '<th class="sorting" data-sort="lastTaskStatus">Status</th>'
                         cell: '<td>{{ lastStatusHuman }}</td>'
                     ,
                         header: '<th class="sorting" data-sort="createdAt">Created</th>'
@@ -95,7 +99,7 @@ class RequestView extends View
                         header: '<th class="sorting" data-sort="updatedAt">Updated</th>'
                         cell: '<td>{{ updatedAtHuman }}</td>'
                     ,
-                        header: '<th class="sorting" data-sort="id">&nbsp;</th>'
+                        header: '<th>&nbsp;</th>'
                         cell: '''
                             <td>
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>

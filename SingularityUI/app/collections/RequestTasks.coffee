@@ -5,7 +5,7 @@ class RequestTasks extends Collection
 
     comparator: 'createdAt'
 
-    initialize: (models, { @requestId, @active }) =>
+    initialize: (models, { @requestId, @active, @sortColumn, @sortDirection }) =>
         super
 
     parse: (tasks) ->
