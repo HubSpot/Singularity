@@ -58,7 +58,7 @@ class RequestView extends View
                         <li>
                             <a href="#" class="pagination-previous previous <% if (prev_disabled){ %><%= pagination_disabled %><% } %>">
                                 <span class="left"></span>
-                                Newer
+                                Previous
                             </a>
                         </li>
                         <% _.each(pages, function(page) { %>
@@ -68,7 +68,7 @@ class RequestView extends View
                         <% }); %>
                         <li>
                             <a href="#" class="pagination-next next <% if(next_disabled){ %><%= pagination_disabled %><% } %>">
-                                Older
+                                Next
                                 <span class="right"></span>
                             </a>
                         </li>
