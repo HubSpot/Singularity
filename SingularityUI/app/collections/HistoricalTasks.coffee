@@ -8,6 +8,13 @@ class HistoricalTasks extends Mixen(RequestTasks, Teeble.ServerCollection)
         sortDirection = @sortDirection.toUpperCase()
         if @sortColumn in ['updatedAt', 'createdAt']
             sortDirection = if sortDirection is 'ASC' then 'DESC' else 'ASC'
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks?count=#{ @perPage }&page=#{ @currentPage }&orderBy=#{ @sortColumn }&orderDirection=#{ sortDirection }"
+
+        params =
+            count: @perPage
+            page: @currentPage
+            orderBy: @sortColumn
+            orderDirection: sortDirection
+
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks?#{ $.param params }"
 
 module.exports = HistoricalTasks
