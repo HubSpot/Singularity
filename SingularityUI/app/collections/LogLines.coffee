@@ -1,142 +1,78 @@
 LogLine = require '../models/LogLine'
 
-# heavily borrowed from https://github.com/apache/mesos/blob/master/src/webui/master/static/js/jquery.pailer.js
-# cheers, @ssorallen !
-
-# TODO: delete unnecessary data (ex. you scroll all the way from top to bottom -- dont need to store the lines at the to)
-# TODO: misc. cleanup / optimization
-
 class LogLines extends Backbone.Collection
+    @instances: {}
+    @getInstance: ({taskHistory, path}) ->
+        taskId = taskHistory.get('task').id
+        key = "#{taskId}-#{path}"
+
+        # create if necessary
+        if not LogLines.instances[key]
+            LogLines.instances[key] = new LogLines [],
+                offerHostname: taskHistory.get('task').offer.hostname
+                directory: taskHistory.get('directory')
+                taskId: taskId
+                path: path
+
+        LogLines.instances[key]
+
     model: LogLine
+    comparator: 'offset'
+    delimiter: /\n/
 
-    initialize: (models, @options) =>
-        {@offerHostname, @directory, @path, @offset, @readLength} = @options
-        @offset ?= 0
-        @readLength ?= 7000
-
-        @headBuffer = ''
-        @tailBuffer = ''
-        @headOffset = @offset
-        @tailOffset = @offset
-
-        @tailing = false
-        @paging = false
+    initialize: (models, {@offerHostname, @directory, @path}) ->
 
     getSlaveUrlBase: =>
-        if constants.mesosLogsPortHttps?
+        if constants.mesosLogsPortHttps
             "https://#{ @offerHostname }:#{ constants.mesosLogsPortHttps }"
         else
             "http://#{ @offerHostname }:#{ constants.mesosLogsPort }"
 
-    url: (offset=@offset, length=@readLength) =>
-        baseUrl = @getSlaveUrlBase()
-        fullPath = "#{ @directory }/#{ @path ? ''}"
-        "#{ baseUrl }/files/read.json?path=#{ escape fullPath }&offset=#{ offset }&length=#{ length }&jsonp=?"
+    getMinOffset: =>
+        if @length > 0 then @first().getStartOffset() else 0
 
-    getCurrentOffset: (cb) =>
-        promise = $.getJSON @url(-1, 0)
-        promise.success (data) =>
-            cb?(data.offset)
+    getMaxOffset: =>
+        if @length > 0 then @last().getEndOffset() else 0
 
-    page: =>
-        # one page at a time...
-        if @paging
-            return
+    url: =>
+        params =
+            path: "#{ @directory }/#{ @path ? ''}"
 
-        # don't keep paging if we're at the beginning
-        if @headOffset <= 0
-            return
+        "#{ @getSlaveUrlBase() }/files/read.json?#{ $.param params }&jsonp=?"
 
-        @paging = true
+    fetchEndOffset: =>
+        deferred = Q.defer()
 
-        offset = Math.max(@headOffset - @readLength, 0)
-        length = if @headOffset > @readLength then @readLength else @headOffset
+        ajaxPromise = $.getJSON @url()
 
-        ajax = $.getJSON @url(offset, length)
+        ajaxPromise.done (result) ->
+            deferred.resolve(result.offset)
 
-        ajax.success (data) =>
-            if not data.data
-                @paging = false
-                return
+        ajaxPromise.fail (jqXHR, status, error) ->
+            deferred.reject(error)
+        
+        return deferred.promise
 
-            @headBuffer = data.data + @headBuffer
+    parse: (result) =>
+        offset = result.offset
 
-            lines = []
+        # split on newlines
+        lines = result.data.split @delimiter
+        
+        # omit the last element, since it'll either be a blank or incomplete line
+        lines = _.initial(lines)
 
-            index = @headBuffer.lastIndexOf '\n'
+        # omit the first (incomplete) element unless we're at the beginning of the file
+        if offset > 0 and lines.length > 0
+            offset += lines[0].length + 1
+            lines = _.rest(lines)
 
-            while index > -1
-                line = @headBuffer.substring index + 1
-                @headOffset -= line.length
+        # create the LogLine models
+        lines.map (data) ->
+            obj = new LogLine {data, offset}
 
-                lines.push new LogLine
-                    data: line
-                    offset: @headOffset
+            offset += data.length + 1
 
-                @headBuffer = @headBuffer.substring 0, index
-                
-                index = @headBuffer.lastIndexOf '\n'
-
-            if offset is 0
-                lines.push new LogLine
-                    data: @headBuffer.substring 0, index
-                    offset: 0
-
-                @headBuffer = ''
-                @headOffset = 0
-
-            @unshift line for line in lines
-
-            @paging = false
-
-            @trigger 'paged', lines
-
-        ajax.fail =>
-            @paging = false
-            # TODO: notify in some way...
-
-    tail: =>
-        # one tail at a time...
-        if @tailing
-            return
-
-        @tailing = true
-
-        ajax = $.getJSON @url(@tailOffset)
-
-        ajax.success (data) =>
-            if not data.data
-                @tailing = false
-                return
-
-            @tailBuffer += data.data
-            @tailOffset += data.data.length
-
-            lines = []
-
-            index = @tailBuffer.indexOf '\n'
-            while index > -1
-                line = @tailBuffer.substring 0, index
-
-                lines.push new LogLine
-                    data: line
-                    offset: @tailOffset - @tailBuffer.length
-
-                @tailBuffer = @tailBuffer.substring(index + 1)
-                @tailOffset += line.length
-
-                index = @tailBuffer.indexOf '\n'
-
-            @add lines
-
-            @trigger 'tailed', lines
-
-            @tailing = false
-
-        ajax.fail =>
-            @tailing = false
-            # TODO: notify in some way...
-
-    fetch: =>
+            return obj
 
 module.exports = LogLines

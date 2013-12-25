@@ -2,68 +2,100 @@ View = require './view'
 
 LogLines = require '../collections/LogLines'
 
-# TODO: misc. cleanup / optimizations
-
-escapeHTML = (string) ->
-    if not string
-        return ''
-
-    escapes =
-      '&': '&amp;'
-      '<': '&lt;'
-      '>': '&gt;'
-      '"': '&quot;'
-      "'": '&#x27;'
-      '/': '&#x2F;'
-
-    regex = new RegExp '[' + Object.keys(escapes).join('') + ']', 'g'
-
-    return ('' + string).replace regex, (match) -> escapes[match]
-
 class TailerView extends Backbone.View
-    initialize: =>
-        @paging = false
-        @tailing = true
+    lineTemplate: require './templates/logline'
 
-        @lines = new LogLines [], @options
+    tagName: 'div'
+    className: 'lines'
 
-        @lines.on 'tailed', =>
-            {scrollTop, height, scrollHeight} = @getScrollInfo()
+    readLength: 30000
 
-            # stop tailing if not at bottom anymore
-            if scrollTop + height < scrollHeight
-                @tailing = false
+    initialize: ->
+        @deferredSetup = Q.defer()
+        @lines = LogLines.getInstance @options
 
-            @render()
+        @rendered = false
 
-        @lines.on 'paged', =>
-            @render()
+        @lines.on 'sort', =>
+            children = @$el.children()
 
+            # append all if tailer element is empty
+            if children.length == 0
+                @lines.each (model) =>
+                    @$el.append @renderLine model
+                return
+
+            head = children.first()
+            headIndex = @lines.indexOf(@lines.get(head.data('offset')))
+            tailIndex = @lines.indexOf(@lines.get(children.last().data('offset')))
+
+            origScrollHeight = @$el[0].scrollHeight
+
+            # add lines at top            
+            _.each @lines.first(headIndex), (model) =>
+                head.before @renderLine model
+
+            # update scroll
+            if headIndex > 0
+                scrollDiff = @$el[0].scrollHeight - origScrollHeight
+                @$el.scrollTop @$el.scrollTop() + scrollDiff
+
+            # add lines at bottom
+            _.each @lines.last(@lines.length - tailIndex - 1), (model) =>
+                @$el.append @renderLine model
+
+        # seek to the end of the file
+        @lines.fetchEndOffset().then (offset) =>
+            ajaxPromise = @lines.fetch
+                data: $.param
+                    offset: Math.max(offset - @readLength, 0)
+                    length: Math.min(offset, @readLength)
+
+            ajaxPromise.done =>
+                @scrollToBottom()
+                Q.delay(1).then @handleScroll
+                @deferredSetup.resolve()
+
+            ajaxPromise.fail (jqXHR, status, error) =>
+                @deferredSetup.reject(error)
+
+        # page / tail based on scroll events
         @$el.scroll @handleScroll
 
-        @lines.tail()
+    scrollToBottom: =>
+        @$el.scrollTop @$el[0].scrollHeight
+
+    renderLine: (model) =>
+        @lineTemplate model.toJSON()
+
+    page: =>
+        if @lines.getMinOffset() is 0
+            return
+
+        @lines.fetch
+            data: $.param
+                offset: Math.max(@lines.getMinOffset() - @readLength, 0)
+                length: Math.min(@lines.getMinOffset(), @readLength)
+            remove: false
+
+    tail: =>
+        @lines.fetch
+            data: $.param
+                offset: @lines.getMaxOffset()
+                length: @readLength
+            remove: false
 
     handleScroll: =>
-        {scrollTop, height, scrollHeight} = @getScrollInfo()
+        scrollTop = @$el.scrollTop()
+        scrollBottom = scrollTop + @$el.height()
+        scrollMax = @$el[0].scrollHeight
+        
+        if scrollTop is 0 and @lines.getMinOffset() > 0
+            @page()
+        else if scrollBottom is scrollMax
+            @tail()  # TODO: keep attempting tail if we're at the bottom and theres no more data yet
 
-        if scrollTop is 0
-            # we're at the top, we should page
-            @lines.page()
-        else if scrollTop + height >= scrollHeight - 20
-            # we're near the bottom, we should tail if not tailing already...
-            if not @tailing
-                @tailing = true
-                @lines.tail()
-        else
-            # we're in the middle, stop tailing...
-            @tailing = false
-
-    getScrollInfo: =>
-        scrollTop: @$el.scrollTop()
-        height: @$el.height()
-        scrollHeight: @$el[0].scrollHeight
-
-    render: =>
-        @$el.html (@lines.map (line) -> escapeHTML(line.attributes.data)).join '\n'
+    setup: =>
+        @deferredSetup.promise
 
 module.exports = TailerView

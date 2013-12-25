@@ -6,23 +6,36 @@ TailerView = require './tailer'
 class TailView extends View
     template: require './templates/tail'
 
-    initialize: =>
-        @render()
+    initialize: ({@taskId, @path}) ->
+        @deferredSetup = Q.defer()
 
-        @taskHistory = new TaskHistory {}, taskId: @options.taskId
-
-        @taskHistory.fetch().done =>
+        @taskHistory = new TaskHistory [], {@taskId}
+        ajaxPromise = @taskHistory.fetch()
+        
+        ajaxPromise.done =>
             @tailer = new TailerView
-                el: @$el.find 'pre.tailer'
-                taskId: @options.taskId
-                offerHostname: @taskHistory.attributes.task.offer.hostname
-                directory: @taskHistory.attributes.directory
-                path: @options.path
+                taskHistory: @taskHistory
+                path: @path
+
+            @tailer.setup()
+
+            window.tailer = @tailer
+
+            @deferredSetup.resolve(@tailer)
+
+        ajaxPromise.fail (jqXHR, status, error) =>
+            @deferredSetup.reject(error)
+
+    setup: =>
+        return @deferredSetup.promise
 
     render: =>
-        context =
-            taskHistory: @taskHistory
-            path: @options.path
-        @$el.html @template context
+        @$el.html @template {@taskHistory, @path}
+
+        # only render the tailer if it's initialized...
+        if @deferredSetup.promise.isFulfilled()
+            @$el.find('div.tail-container').html @tailer.$el
+
+        @
 
 module.exports = TailView
