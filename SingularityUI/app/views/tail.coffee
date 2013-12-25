@@ -19,8 +19,6 @@ class TailView extends View
 
             @tailer.setup()
 
-            window.tailer = @tailer
-
             @deferredSetup.resolve(@tailer)
 
         ajaxPromise.fail (jqXHR, status, error) =>
