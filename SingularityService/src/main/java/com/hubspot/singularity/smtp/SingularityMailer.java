@@ -237,8 +237,8 @@ public class SingularityMailer implements SingularityCloseable {
       message.addRecipients(RecipientType.TO, toArray);
       
       LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), message));
-      
-      transport.sendMessage(message, toArray);
+
+      transport.send(message);
     } catch (Throwable t) {
       LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject, body)), t);
     }
