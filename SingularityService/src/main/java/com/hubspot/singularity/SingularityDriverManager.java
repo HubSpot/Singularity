@@ -47,12 +47,12 @@ public class SingularityDriverManager {
     }
   }
   
-  public long getLastOfferTimestamp() {
+  public Optional<Long> getLastOfferTimestamp() {
     driverLock.lock();
     
     try {
       if (driver == null) {
-        return 0;
+        return Optional.absent();
       }
       
       return driver.getLastOfferTimestamp();

@@ -17,6 +17,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,7 +43,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
   
-  private long lastOfferTimestamp;
+  private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
   
   @Inject
@@ -60,7 +61,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.state = SchedulerState.STARTUP;
   }
   
-  public long getLastOfferTimestamp() {
+  public Optional<Long> getLastOfferTimestamp() {
     return lastOfferTimestamp;
   }
   
@@ -152,7 +153,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
-    lastOfferTimestamp = System.currentTimeMillis();
+    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     
     if (!isRunning()) {
       LOG.info(String.format("Scheduler is in state %s, declining %s offer(s)", state.name(), offers.size()));

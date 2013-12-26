@@ -26,8 +26,8 @@ public class SingularityStateGenerator {
     final long uptime = mxBean.getUptime();
     
     final long now = System.currentTimeMillis();
-    final long lastOfferTimestamp = managed.getLastOfferTimestamp();
-    final long millisSinceLastOfferTimestamp = now - lastOfferTimestamp;
+    final Optional<Long> lastOfferTimestamp = managed.getLastOfferTimestamp();
+    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long> absent();
     
     String hostAddress = null;
     

@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 
 public class SingularityHostState extends SingularityJsonObject {
 
@@ -11,7 +12,7 @@ public class SingularityHostState extends SingularityJsonObject {
 
   private final String driverStatus;
 
-  private final long millisSinceLastOffer;
+  private final Optional<Long> millisSinceLastOffer;
   
   private final String hostAddress;
   private final String hostname;
@@ -19,7 +20,7 @@ public class SingularityHostState extends SingularityJsonObject {
   private final String mesosMaster;
   
   @JsonCreator
-  public SingularityHostState(@JsonProperty("master") boolean master, @JsonProperty("uptime") long uptime, @JsonProperty("driverStatus") String driverStatus, @JsonProperty("millisSinceLastOffer") long millisSinceLastOffer, @JsonProperty("hostAddress") String hostAddress, @JsonProperty("hostname") String hostname, @JsonProperty("mesosMaster") String mesosMaster) {
+  public SingularityHostState(@JsonProperty("master") boolean master, @JsonProperty("uptime") long uptime, @JsonProperty("driverStatus") String driverStatus, @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer, @JsonProperty("hostAddress") String hostAddress, @JsonProperty("hostname") String hostname, @JsonProperty("mesosMaster") String mesosMaster) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;
@@ -45,7 +46,7 @@ public class SingularityHostState extends SingularityJsonObject {
     return driverStatus;
   }
 
-  public long getMillisSinceLastOffer() {
+  public Optional<Long> getMillisSinceLastOffer() {
     return millisSinceLastOffer;
   }
 
