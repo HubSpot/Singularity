@@ -7,6 +7,7 @@ class TasksCleaning extends Tasks
     parse: (tasks) ->
         _.each tasks, (task, i) =>
             task.JSONString = utils.stringJSON task
+            task.id = task.taskId
             task.name = task.id
             task.timestampHuman = moment(task.timestamp).fromNow()
             task.cleanupTypeHuman = if constants.taskCleanupType[task.cleanupType] then constants.taskCleanupType[task.cleanupType].label else ''

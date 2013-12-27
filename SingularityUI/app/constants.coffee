@@ -34,6 +34,8 @@ constants =
         PAUSING: 'Pausing'
 
     taskCleanupType:
+        BOUNCING:
+            label: 'Bouncing'
         USER_REQUESTED:
             label: 'User requested'
         DECOMISSIONING:
