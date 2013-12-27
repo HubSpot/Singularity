@@ -110,11 +110,21 @@ class RequestView extends View
                     ]
 
                 @historicalTasksView.setElement $('.historical-tasks-paginated')[0]
-                @historicalTasksView.render()
 
-                @historicalTasks.on 'sync', => @historicalTasksView.render()
+                @historicalTasksView.render()
+                @postHistoricalTasksViewRender()
+
+                @historicalTasks.on 'sync', =>
+                    @historicalTasksView.render()
+                    @postHistoricalTasksViewRender()
 
                 @setupEvents()
+
+    postHistoricalTasksViewRender: ->
+        $teebleOuter = $(@historicalTasksView.el)
+        $empty = $teebleOuter.find('.teeble_empty')
+        if $empty.length
+            $teebleOuter.html('<center><p>No historical tasks.</p></center>')
 
     setupEvents: ->
         @$el.find('[data-action="viewJSON"]').unbind('click').click (event) ->
