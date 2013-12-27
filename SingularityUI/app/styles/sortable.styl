@@ -53,3 +53,59 @@ table[data-sortable]
         &[data-sorted-direction="ascending"]:after
             border-bottom-color inherit
             margin-top 8px - 5px
+
+table.teeble-table
+    border-collapse collapse
+    border-spacing 0
+    background rgba(0, 0, 0, .05)
+
+    tbody td
+        border-top 1px solid rgba(0, 0, 0, .05)
+
+    th
+        vertical-align bottom
+        font-weight bold
+
+    th, td
+        text-align left
+        padding 10px
+
+    th.sorting
+        -webkit-user-select none
+        -moz-user-select none
+        -ms-user-select none
+        -o-user-select none
+        user-select none
+        -webkit-tap-highlight-color rgba(0, 0, 0, 0)
+        -webkit-touch-callout none
+        cursor pointer
+
+    th
+
+        &:after
+            content ""
+            visibility hidden
+            display inline-block
+            vertical-align inherit
+            height 0
+            width 0
+            border-width 5px
+            border-style solid
+            border-color transparent
+            margin-right 1px
+            margin-left 10px
+            float right
+
+        &.sorting_asc, &.sorting_desc
+            background rgba(0, 0, 0, .05)
+
+            &:after
+                visibility visible
+
+        &.sorting_desc:after
+            border-top-color inherit
+            margin-top 8px
+
+        &.sorting_asc:after
+            border-bottom-color inherit
+            margin-top 8px - 5px

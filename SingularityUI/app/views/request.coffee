@@ -83,7 +83,7 @@ class RequestView extends View
                     compile: Handlebars.compile
                     collection: @historicalTasks
                     pagination: true
-                    table_class: 'table'
+                    table_class: 'table teeble-table'
                     subviews: $.extend {}, @subviews,
                         pagination: HistoryPaginationView
                     partials: [
