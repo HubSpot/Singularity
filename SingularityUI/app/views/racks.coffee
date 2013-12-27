@@ -6,7 +6,7 @@ class RacksView extends View
 
     template: require './templates/racks'
 
-    initialize: =>
+    initialize: ->
         promises = []
 
         @racksActive = new Racks [], rackType: 'active'
@@ -22,7 +22,7 @@ class RacksView extends View
             @fetchDone = true
             @render()
 
-    render: =>
+    render: ->
         return unless @fetchDone
 
         context =
@@ -32,6 +32,23 @@ class RacksView extends View
 
         @$el.html @template context
 
+        @setupEvents()
+
         utils.setupSortableTables()
+
+    setupEvents: ->
+        $removeLinks = @$el.find('[data-action="remove"]')
+
+        $removeLinks.unbind('click').on 'click', (e) =>
+            row = $(e.target).parents('tr')
+            rackModel = @racksDead.get($(e.target).data('rack-id'))
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to delete the rack:</p><pre>#{ rackModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    rackModel.destroy()
+                    @racksDead.remove(rackModel)
+                    row.remove()
 
 module.exports = RacksView

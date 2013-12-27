@@ -6,7 +6,7 @@ class SlavesView extends View
 
     template: require './templates/slaves'
 
-    initialize: =>
+    initialize: ->
         promises = []
 
         @slavesActive = new Slaves [], slaveType: 'active'
@@ -22,7 +22,7 @@ class SlavesView extends View
             @fetchDone = true
             @render()
 
-    render: =>
+    render: ->
         return unless @fetchDone
 
         context =
@@ -32,6 +32,23 @@ class SlavesView extends View
 
         @$el.html @template context
 
+        @setupEvents()
+
         utils.setupSortableTables()
+
+    setupEvents: ->
+        $removeLinks = @$el.find('[data-action="remove"]')
+
+        $removeLinks.unbind('click').on 'click', (e) =>
+            row = $(e.target).parents('tr')
+            slaveModel = @slavesDead.get($(e.target).data('slave-id'))
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to delete the slave:</p><pre>#{ slaveModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    slaveModel.destroy()
+                    @slavesDead.remove(slaveModel)
+                    row.remove()
 
 module.exports = SlavesView
