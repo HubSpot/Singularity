@@ -51,7 +51,6 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.lock = new ReentrantLock();
     this.stateLock = new ReentrantLock();
 
-    this.lastOfferTimestamp = Optional.absent();
     this.state = SchedulerState.STARTUP;
     this.lastOfferTimestamp = Optional.absent();
   }
