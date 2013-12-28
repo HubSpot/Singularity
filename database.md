@@ -19,21 +19,21 @@ Singularity uses the [dropwizard-migrations](http://dropwizard.codahale.com/manu
 To check the status of your database, run the `db status` task:
 
 ```
-java -jar SingularityService/target/SingularityService-0.2.13.jar db status ./config.yaml --migrations SingularityService/src/main/resources/migrations.yaml
-INFO  [2013-12-23 18:41:33,620] liquibase: Reading from singularity11.DATABASECHANGELOG
-INFO  [2013-12-23 18:41:33,668] liquibase: Reading from singularity11.DATABASECHANGELOG
-2 change sets have not been applied to root@localhost@jdbc:mysql://localhost:3306/singularity11
+java -jar SingularityService/target/SingularityService-0.2.13.jar db status ./config.yaml --migrations migrations.sql
+INFO  [2013-12-23 18:41:33,620] liquibase: Reading from singularity.DATABASECHANGELOG
+INFO  [2013-12-23 18:41:33,668] liquibase: Reading from singularity.DATABASECHANGELOG
+1 change sets have not been applied to root@localhost@jdbc:mysql://localhost:3306/singularity
 ```
 
 To apply pending migrations, run the `db migrate` task:
 
 ```
-java -jar SingularityService/target/SingularityService-0.2.13.jar db migrate ./config.yaml --migrations SingularityService/src/main/resources/migrations.yaml
+java -jar SingularityService/target/SingularityService-0.2.13.jar db migrate ./config.yaml --migrations migrations.sql
 INFO  [2013-12-23 18:42:08,469] liquibase: Successfully acquired change log lock
-INFO  [2013-12-23 18:42:10,206] liquibase: Creating database history table with name: singularity11.DATABASECHANGELOG
-INFO  [2013-12-23 18:42:10,237] liquibase: Reading from singularity11.DATABASECHANGELOG
-INFO  [2013-12-23 18:42:10,239] liquibase: Reading from singularity11.DATABASECHANGELOG
-INFO  [2013-12-23 18:42:10,327] liquibase: ChangeSet SingularityService/src/main/resources/migrations.yaml::1::tpetr ran successfully in 57ms
+INFO  [2013-12-23 18:42:10,206] liquibase: Creating database history table with name: singularity.DATABASECHANGELOG
+INFO  [2013-12-23 18:42:10,237] liquibase: Reading from singularity.DATABASECHANGELOG
+INFO  [2013-12-23 18:42:10,239] liquibase: Reading from singularity.DATABASECHANGELOG
+INFO  [2013-12-23 18:42:10,327] liquibase: ChangeSet migrations.sql::1::tpetr ran successfully in 57ms
 ```
 
 More information about `db` tasks can be found in the dropwizard-migrations [docs](http://dropwizard.codahale.com/manual/migrations/), and more information about the migration file syntax can be found in the liquibase [docs](http://www.liquibase.org/documentation/yaml_format.html).
