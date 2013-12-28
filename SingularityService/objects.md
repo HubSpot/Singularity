@@ -9,7 +9,7 @@ The request object is the basic object in Singularity. In order to run something
 #### Basic Fields
 
 - id: (String) (Required) The unique identifier of this request. If this is the same as an existing request it will update that request.
-- resources: (TODO Resources Object) The number of resources to request for each task or instance this request launches.
+- resources: ([Resources Object](objects.md#resources)) The number of resources to request for each task or instance this request launches.
 
 #### Default Executor Fields
 
@@ -42,7 +42,7 @@ Only for use when running services, long running tasks, etc.
 
 For cron and scheduled tasks.
 
-- schedule: (String) A UNIX TODO cron schedule for when to run this request.
+- schedule: (String) A cron schedule (which allows seconds, but does not require them) for how often to run this request.
 - numRetriesOnFailure: (Number) The number of times to immediately retry this request when it does not complete successfully. If NULL or set to 0, when a scheduled task fails, it will calculate its next run based on the schedule and the current time. When the number of retries is exhausted, it will also calculate the next run based on its schedule and the current time.
 
 #### Metadata Fields
