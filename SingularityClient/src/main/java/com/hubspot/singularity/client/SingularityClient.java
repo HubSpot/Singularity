@@ -31,6 +31,7 @@ public class SingularityClient {
   private static final String TASK_SCHEDULED_FORMAT = TASK_FORMAT + "/scheduled";
 
   private static final String REQUEST_FORMAT = "http://%s/%s/requests";
+  private static final String REQUEST_BOUNCE_FORMAT = REQUEST_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s";
   private static final String REQUEST_ACTIVE_FORMAT = REQUEST_FORMAT + "/active";
   private static final String REQUEST_PAUSED_FORMAT = REQUEST_FORMAT + "/paused";
@@ -88,6 +89,20 @@ public class SingularityClient {
     
     LOG.info(String.format("Successfully deployed %s to Singularity in %sms", request.getId(), System.currentTimeMillis() - start));
   }
+
+  public void bounce(String requestId) {
+    final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
+
+    LOG.info(String.format("Bouncing %s", requestId));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = postUri(requestUri);
+
+    checkResponse("bounce", response);
+
+    LOG.info(String.format("Successfully bounced %s in %sms", requestId, System.currentTimeMillis() - start));
+  }
   
   private void checkResponse(String type, Response response) {
     if (!isSuccess(response)) {
@@ -132,6 +147,14 @@ public class SingularityClient {
       return httpClient.prepareGet(requestUri).execute().get();
     } catch (Exception e) {
       throw new SingularityClientException("Failed to delete Singularity request due to exception", e);
+    }
+  }
+
+  private Response postUri(String requestUri) {
+    try {
+      return httpClient.preparePost(requestUri).execute().get();
+    } catch (Exception e) {
+      throw new SingularityClientException("Failed to POST due to exception", e);
     }
   }
 
