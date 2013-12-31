@@ -48,6 +48,8 @@ public class SingularityModule extends AbstractModule {
   
   @Override
   protected void configure() {
+
+    MesosNativeLoader.load();
     bind(HistoryManager.class).to(JDBIHistoryManager.class);
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
