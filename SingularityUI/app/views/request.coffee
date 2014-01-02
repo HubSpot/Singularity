@@ -1,7 +1,8 @@
 View = require './view'
 
-RequestTasks = require '../collections/RequestTasks'
+RequestHistory = require '../models/RequestHistory'
 
+RequestTasks = require '../collections/RequestTasks'
 HistoricalTasks = require '../collections/HistoricalTasks'
 
 class RequestView extends View
@@ -10,6 +11,11 @@ class RequestView extends View
 
     initialize: =>
         @request = app.allRequests[@options.requestId]
+
+        @requestHistory = new RequestHistory {}, requestId: @options.requestId
+        @requestHistory.fetch().done =>
+            @requestHistory.fetched = true
+            @render()
 
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
         @requestTasksActive.fetch().done =>
@@ -23,6 +29,9 @@ class RequestView extends View
 
         context =
             request: @request
+
+            fetchDoneHistory: @requestHistory.fetched
+            requestHistory: @requestHistory.attributes
 
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')

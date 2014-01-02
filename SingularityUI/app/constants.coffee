@@ -29,6 +29,13 @@ constants =
             isActive: false
             label: 'Lost'
 
+    requestStates:
+        CREATED: 'Created'
+        UPDATED: 'Updated'
+        DELETED: 'Deleted'
+        PAUSED: 'Paused'
+        UNPAUSED: 'Unpaused'
+
     requestCleanupType:
         DELETING: 'Deleting'
         PAUSING: 'Pausing'

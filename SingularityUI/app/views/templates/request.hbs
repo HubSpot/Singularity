@@ -5,6 +5,42 @@
 
 <section>
     <div class="page-header">
+        <h1>History</h1>
+    </div>
+    {{#if requestHistory.requestUpdates}}
+        <div class="row-fluid">
+            <div class="span12">
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>User</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requestHistory.requestUpdates}}
+                            <tr>
+                                <td><span title="{{ state }}">{{ stateHuman }}</span></td>
+                                <td><span title="{{ user }}">{{ userHuman }}</span></td>
+                                <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {{else}}
+        {{#if fetchDoneHistory}}
+            <center><p>No request history.</p></center>
+        {{else}}
+            <div class="page-loader centered"></div>
+        {{/if}}
+    {{/if}}
+</section>
+
+<section>
+    <div class="page-header">
         <h1>Active Tasks</h1>
     </div>
     {{#if requestTasksActive}}
