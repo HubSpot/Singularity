@@ -118,7 +118,7 @@ public class MesosNativeLoader {
     if (useSystemLib)
       return null; // Use a pre-installed libmesos
 
-    // Try to load the library in org.xerial.snappy.lib.path  */
+    // Try to load the library from the path set in MESOS_NATIVE_LIBRARY
     String mesosNativeLibraryFullPath = System.getenv("MESOS_NATIVE_LIBRARY");
     if (mesosNativeLibraryFullPath != null) {
       File nativeLib = new File(mesosNativeLibraryFullPath);
