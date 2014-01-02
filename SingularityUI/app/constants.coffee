@@ -36,11 +36,11 @@ constants =
         PAUSED: 'Paused'
         UNPAUSED: 'Unpaused'
 
-    requestCleanupType:
+    requestCleanupTypes:
         DELETING: 'Deleting'
         PAUSING: 'Pausing'
 
-    taskCleanupType:
+    taskCleanupTypes:
         BOUNCING:
             label: 'Bouncing'
         USER_REQUESTED:
