@@ -27,7 +27,12 @@
     <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." required />
     </div>
-    <h2>Paused</h2>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Paused</h1>
+    </div>
     <div class="row-fluid">
         <div class="span12">
             {{#if requests.length}}
@@ -64,7 +69,12 @@
             {{/if}}
         </div>
     </div>
-    <h2>Scheduled</h2>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Scheduled</h1>
+    </div>
     <div class="row-fluid">
         <div class="span12">
             {{#if requestsScheduled.length}}
