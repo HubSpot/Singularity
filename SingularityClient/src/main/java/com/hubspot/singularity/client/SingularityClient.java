@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import org.slf4j.Logger;
@@ -15,10 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class SingularityClient {
   
@@ -29,6 +28,10 @@ public class SingularityClient {
   private static final String TASK_FORMAT = "http://%s/%s/tasks";
   private static final String TASK_ACTIVE_FORMAT = TASK_FORMAT + "/active";
   private static final String TASK_SCHEDULED_FORMAT = TASK_FORMAT + "/scheduled";
+
+  private static final String HISTORY_FORMAT = "http://%s/%s/history";
+  private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
+  private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
 
   private static final String REQUEST_FORMAT = "http://%s/%s/requests";
   private static final String REQUEST_BOUNCE_FORMAT = REQUEST_FORMAT + "/request/%s/bounce";
@@ -42,6 +45,7 @@ public class SingularityClient {
 
   private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
+  private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   
   private final Random random;
   private final List<String> hosts;
@@ -283,5 +287,47 @@ public class SingularityClient {
     checkResponse("add webhook", postResponse);
 
     LOG.info(String.format("Successfully added webhook to Singularity in %sms", System.currentTimeMillis() - start));
+  }
+
+  public Optional<SingularityTaskHistory> getHistoryForTask(String taskId) {
+    final String requestUri = String.format(TASK_HISTORY_FORMAT, getHost(), contextPath, taskId);
+
+    LOG.info(String.format("Getting task history for %s - (%s)", taskId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    LOG.info(String.format("Got task history from Singularity in %sms", System.currentTimeMillis() - start));
+
+    if (getResponse.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    try {
+      return Optional.of(objectMapper.readValue(getResponse.getResponseBodyAsStream(), SingularityTaskHistory.class));
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  public Collection<SingularityTaskIdHistory> getActiveTaskHistoryForRequest(String requestId) {
+    final String requestUri = String.format(REQUEST_ACTIVE_TASKS_HISTORY_FORMAT, getHost(), contextPath, requestId);
+
+    LOG.info(String.format("Getting active task history for request %s - (%s)", requestId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    LOG.info(String.format("Got active task history from Singularity in %sms", System.currentTimeMillis() - start));
+
+    checkResponse("get active task history", getResponse);
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKID_HISTORY_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
   }
 }
