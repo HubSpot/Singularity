@@ -1,3 +1,10 @@
+_oldAjax = jQuery.ajax
+jQuery.ajax = (opts) ->
+  opts.xhrFields ?= {}
+  opts.xhrFields.withCredentials = true
+
+  _oldAjax.call jQuery, opts
+
 class BufferWrites
 
     @pendingCreates: []
