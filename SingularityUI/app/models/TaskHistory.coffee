@@ -15,13 +15,13 @@ class TaskHistory extends Model
         taskHistory.task.memoryHuman = if taskHistory.task.resources?.memoryMb? then "#{ taskHistory.task.resources.memoryMb }Mb" else ''
         taskHistory.task.host = taskHistory.task.offer.hostname?.split('.')[0]
         taskHistory.task.startedAt = taskHistory.task.taskId.startedAt
-        taskHistory.task.startedAtHuman = moment(taskHistory.task.taskId.startedAt).from()
+        taskHistory.task.startedAtHuman = utils.humanTimeAgo taskHistory.task.taskId.startedAt
         taskHistory.task.rack = taskHistory.task.taskId.rackId
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
             taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
             taskUpdate.statusMessage = taskUpdate.statusMessage ? 'No status message available'
-            taskUpdate.timestampHuman = moment(taskUpdate.timestamp).from()
+            taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
         # Construct mesos logs link
         taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"

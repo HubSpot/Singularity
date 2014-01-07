@@ -14,9 +14,9 @@ class State extends Model
             now = +new Date()
             if hostState.millisSinceLastOffer?
                 if now - hostState.millisSinceLastOffer > hostState.millisSinceLastOffer
-                    hostState.millisSinceLastOfferHuman = moment(+new Date() - hostState.millisSinceLastOffer).from()
+                    hostState.millisSinceLastOfferHuman = utils.humanTimeAgo(+new Date() - hostState.millisSinceLastOffer)
                 else
-                    hostState.millisSinceLastOfferHuman = moment(hostState.millisSinceLastOffer).from()
+                    hostState.millisSinceLastOfferHuman = utils.humanTimeAgo hostState.millisSinceLastOffer
             else
                 hostState.millisSinceLastOfferHuman = 'Never'
 

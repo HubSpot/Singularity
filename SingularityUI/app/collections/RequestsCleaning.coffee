@@ -9,7 +9,7 @@ class RequestsCleaning extends Requests
             request.JSONString = utils.stringJSON request
             request.id = request.requestId
             request.cleanupType = constants.requestCleanupTypes[request.cleanupType]
-            request.timestampHuman = if request.timestamp? then moment(request.timestamp).from() else ''
+            request.timestampHuman = utils.humanTimeAgo request.timestamp
             requests[i] = request
             app.allRequests[request.id] = request
 

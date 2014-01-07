@@ -17,7 +17,7 @@ class TasksActive extends Tasks
             task.memoryHuman = if task.resources?.memoryMb? then "#{ task.resources.memoryMb }Mb" else ''
             task.host = task.offer.hostname?.split('.')[0]
             task.startedAt = task.taskId.startedAt
-            task.startedAtHuman = moment(task.taskId.startedAt).from()
+            task.startedAtHuman = utils.humanTimeAgo task.taskId.startedAt
             task.rack = task.taskId.rackId
             tasks[i] = task
             app.allTasks[task.id] = task

@@ -18,7 +18,7 @@ class TaskFiles extends Collection
         baseUrl = @getSlaveUrlBase()
         _.map taskFiles, (taskLogFile) =>
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
-            taskLogFile.mtimeHuman = moment(taskLogFile.mtime * 1000).from()
+            taskLogFile.mtimeHuman = utils.humanTimeAgo(taskLogFile.mtime * 1000)
             taskLogFile.sizeHuman = Humanize.fileSize(taskLogFile.size)
             taskLogFile.downloadLink = "#{ baseUrl }/files/download.json?path=#{ taskLogFile.path }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'

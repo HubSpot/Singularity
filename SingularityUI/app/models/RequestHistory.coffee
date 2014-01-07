@@ -13,7 +13,7 @@ class RequestHistory extends Model
 
         _.each requestHistory.requestUpdates, (requestUpdate, i) =>
             requestUpdate.userHuman = requestUpdate.user?.split('@')[0] ? '—'
-            requestUpdate.createdAtHuman = if requestUpdate.createdAt? then moment(requestUpdate.createdAt).from() else ''
+            requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
             requestUpdate.stateHuman = constants.requestStates[requestUpdate.state]
 
         requestHistory
