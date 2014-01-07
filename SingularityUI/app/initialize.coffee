@@ -17,4 +17,17 @@ jQuery.ajax = (opts) ->
 
     _oldAjax.call jQuery, opts
 
+# Configure moment().calender() to be used as an alternative to moment().from()
+relative = -> "[#{ @from() }]"
+relativePlus = -> "[#{ @from() }] ([#{ @format('l h:mma') }])"
+
+moment.lang 'en',
+    calendar:
+        nextWeek: relativePlus
+        nextDay: relativePlus
+        sameDay: relative
+        lastDay: relativePlus
+        lastWeek: relativePlus
+        sameElse: relativePlus
+
 $ -> app.initialize()
