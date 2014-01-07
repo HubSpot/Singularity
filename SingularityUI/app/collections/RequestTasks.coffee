@@ -1,9 +1,10 @@
 Collection = require './collection'
 
 class RequestTasks extends Collection
+
     url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
 
-    comparator: -> -@get('createdAt')
+    comparator: -> - @get('createdAt')
 
     initialize: (models, { @requestId, @active, @sortColumn, @sortDirection }) =>
         super
