@@ -18,6 +18,9 @@ class View extends Backbone.View
 
         return true if $link.attr('target') is '_blank' or url is 'javascript:;' or typeof url is 'undefined' or url.substr(0, 4) is 'http'
 
+        if e.metaKey or e.ctrlKey or e.shiftKey
+            return
+
         e.preventDefault()
 
         if url.indexOf('.') == 0
