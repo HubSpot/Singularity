@@ -9,4 +9,12 @@ _.mixin _.string.exports()
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
 
+# Patch jQuery ajax to always use xhrFields.withCredentials true
+_oldAjax = jQuery.ajax
+jQuery.ajax = (opts) ->
+    opts.xhrFields ?= {}
+    opts.xhrFields.withCredentials = true
+
+    _oldAjax.call jQuery, opts
+
 $ -> app.initialize()
