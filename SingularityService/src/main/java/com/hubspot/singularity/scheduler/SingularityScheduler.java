@@ -247,7 +247,6 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
     
     if (!maybeRequest.isPresent()) {
-      // TODO what about failures?
       LOG.warn(String.format("Not scheduling a new task, due to no existing request for %s", taskId.getRequestId()));
       return;
     }
@@ -409,12 +408,10 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       try {
         Date scheduleFrom = new Date();
         
-        if (pendingType == PendingType.STARTUP) {
-          // find out what the last time the task ran at was.
-          Optional<SingularityTaskIdHistory> history = historyManager.getLastTaskForRequest(request.getId());
-          if (history.isPresent()) {
-            scheduleFrom = new Date(history.get().getUpdatedAt().or(history.get().getCreatedAt()));
-          }
+        // find out what the last time the task ran at was.
+        Optional<SingularityTaskIdHistory> history = historyManager.getLastTaskForRequest(request.getId());
+        if (history.isPresent()) {
+          scheduleFrom = new Date(history.get().getUpdatedAt().or(history.get().getCreatedAt()));
         }
         
         CronExpression cronExpression = new CronExpression(request.getSchedule());
