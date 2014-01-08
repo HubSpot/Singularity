@@ -207,8 +207,6 @@ public class SingularityMailer implements SingularityCloseable {
     try {
       final Session session = createSession(maybeSmtpConfiguration.get(), useAuth);
 
-      final Transport transport = session.getTransport("smtp");
-      
       MimeMessage message = new MimeMessage(session);
 
       message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
@@ -230,7 +228,7 @@ public class SingularityMailer implements SingularityCloseable {
       
       LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), message));
 
-      transport.send(message);
+      Transport.send(message);
     } catch (Throwable t) {
       LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject, body)), t);
     }
