@@ -15,7 +15,7 @@ class RequestTasks extends Collection
             task.id = task.taskId.id
             task.name = task.id
             task.updatedAtHuman = utils.humanTimeAgo task.updatedAt
-            task.createdAtHuman = utils.humanTimeAgotask.createdAt
+            task.createdAtHuman = utils.humanTimeAgo task.createdAt
             task.lastStatusHuman = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].label else ''
             task.isActive = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].isActive else false
             app.allTasks[task.id] = task
