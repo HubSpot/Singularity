@@ -31,12 +31,11 @@ public class StateManager extends CuratorManager {
     final byte[] data = hostState.getAsBytes(objectMapper);
    
     try {
-      // TODO is this right, vs setData - want to override, though.
       if (exists(path)) {
-        delete(path);
+        curator.setData().forPath(path, data);
+      } else {
+        curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
       }
-      
-      curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
