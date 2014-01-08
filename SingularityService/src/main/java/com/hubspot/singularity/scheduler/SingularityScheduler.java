@@ -411,7 +411,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         // find out what the last time the task ran at was.
         Optional<SingularityTaskIdHistory> history = historyManager.getLastTaskForRequest(request.getId());
         if (history.isPresent()) {
-          scheduleFrom = new Date(history.get().getUpdatedAt().or(history.get().getCreatedAt()));
+          scheduleFrom = new Date(history.get().getCreatedAt());
         }
         
         CronExpression cronExpression = new CronExpression(request.getSchedule());
