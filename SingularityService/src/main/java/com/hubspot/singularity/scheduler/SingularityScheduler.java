@@ -396,7 +396,9 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private long getNextRunAt(SingularityRequest request, PendingType pendingType) {
-    long nextRunAt = System.currentTimeMillis();
+    final long now = System.currentTimeMillis();
+    
+    long nextRunAt = now;
     
     if (!request.isScheduled()) {
       return nextRunAt;
@@ -406,13 +408,24 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       LOG.info("Scheduling requested immediate run of %s", request.getId());
     } else {
       try {
-        Date scheduleFrom = new Date();
+        Date scheduleFrom = new Date(now);
         
         // find out what the last time the task ran at was.
         Optional<SingularityTaskIdHistory> history = historyManager.getLastTaskForRequest(request.getId());
         if (history.isPresent()) {
           scheduleFrom = new Date(history.get().getCreatedAt());
+        } else {
+          // if the request has never ran before, schedule from its request creation.
+          SingularityRequestHistory requestHistory = Iterables.getFirst(historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.ASC), 0, 1), null);
+          
+          if (requestHistory != null) {
+            scheduleFrom = new Date(requestHistory.getCreatedAt());
+          } else {
+            LOG.warn(String.format("Could not find request history for request %s - task will be scheduled based on %s", request.getId(), now));
+          }
         }
+        
+        scheduleFrom = new Date(Math.max(scheduleFrom.getTime(), now)); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
         
         CronExpression cronExpression = new CronExpression(request.getSchedule());
 
