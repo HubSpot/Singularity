@@ -47,7 +47,7 @@ public class SandboxResource {
     final String slaveHostname = maybeTaskHistory.get().getTask().getOffer().getHostname();
     final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
 
-    return sandboxManager.browse(maybeTaskHistory.get().getTask().getOffer().getHostname(), new File(maybeTaskHistory.get().getDirectory().get(), path).toString());
+    return sandboxManager.browse(slaveHostname, fullPath);
   }
 
   @GET
@@ -67,7 +67,7 @@ public class SandboxResource {
     final String slaveHostname = maybeTaskHistory.get().getTask().getOffer().getHostname();
     final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
 
-    final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(maybeTaskHistory.get().getTask().getOffer().getHostname(), fullPath, offset, length);
+    final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
 
     if (!maybeChunk.isPresent()) {
       throw new NotFoundException(String.format("File %s does not exist for task ID %s", fullPath, taskId));
