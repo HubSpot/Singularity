@@ -103,8 +103,7 @@ class Router extends Backbone.Router
             app.views.tailViews[taskId] = new TailView taskId: taskId, path: path
         app.views.current = app.views.tailViews[taskId]
 
-        app.views.tailViews[taskId].setup().then ->
-            app.views.tailViews[taskId].render()
+        app.views.tailViews[taskId].render()
 
     racks: ->
         nav()

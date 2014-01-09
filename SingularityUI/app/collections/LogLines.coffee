@@ -2,15 +2,12 @@ LogLine = require '../models/LogLine'
 
 class LogLines extends Backbone.Collection
     @instances: {}
-    @getInstance: ({taskHistory, path}) ->
-        taskId = taskHistory.get('task').id
+    @getInstance: ({taskId, path}) ->
         key = "#{taskId}-#{path}"
 
         # create if necessary
         if not LogLines.instances[key]
             LogLines.instances[key] = new LogLines [],
-                offerHostname: taskHistory.get('task').offer.hostname
-                directory: taskHistory.get('directory')
                 taskId: taskId
                 path: path
 
@@ -20,13 +17,7 @@ class LogLines extends Backbone.Collection
     comparator: 'offset'
     delimiter: /\n/
 
-    initialize: (models, {@offerHostname, @directory, @path}) ->
-
-    getSlaveUrlBase: =>
-        if constants.mesosLogsPortHttps
-            "https://#{ @offerHostname }:#{ constants.mesosLogsPortHttps }"
-        else
-            "http://#{ @offerHostname }:#{ constants.mesosLogsPort }"
+    initialize: (models, {@taskId, @path}) ->
 
     getMinOffset: =>
         if @length > 0 then @first().getStartOffset() else 0
@@ -36,9 +27,9 @@ class LogLines extends Backbone.Collection
 
     url: =>
         params =
-            path: "#{ @directory }/#{ @path ? ''}"
+            path: @path
 
-        "#{ @getSlaveUrlBase() }/files/read.json?#{ $.param params }&jsonp=?"
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/read?#{ $.param params }"
 
     fetchEndOffset: =>
         deferred = Q.defer()
