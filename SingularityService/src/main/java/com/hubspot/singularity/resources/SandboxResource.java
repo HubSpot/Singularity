@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
@@ -12,7 +13,10 @@ import com.sun.jersey.api.NotFoundException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 
 @Path("/sandbox")
@@ -40,6 +44,9 @@ public class SandboxResource {
       throw new BadRequestException(String.format("Task ID %s does not have a directory yet", taskId));
     }
 
+    final String slaveHostname = maybeTaskHistory.get().getTask().getOffer().getHostname();
+    final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
+
     return sandboxManager.browse(maybeTaskHistory.get().getTask().getOffer().getHostname(), new File(maybeTaskHistory.get().getDirectory().get(), path).toString());
   }
 
@@ -57,6 +64,7 @@ public class SandboxResource {
       throw new BadRequestException(String.format("Task ID %s does not have a directory yet", taskId));
     }
 
+    final String slaveHostname = maybeTaskHistory.get().getTask().getOffer().getHostname();
     final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
 
     final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(maybeTaskHistory.get().getTask().getOffer().getHostname(), fullPath, offset, length);
@@ -66,5 +74,30 @@ public class SandboxResource {
     }
 
     return maybeChunk.get();
+  }
+
+  @GET
+  @Path("/{taskId}/download")
+  public Response download(@PathParam("taskId") String taskId, @QueryParam("path") String path) {
+    final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId, true);
+
+    if (!maybeTaskHistory.isPresent()) {
+      throw new NotFoundException(String.format("Task ID %s does not exist", taskId));
+    }
+
+    if (!maybeTaskHistory.get().getDirectory().isPresent()) {
+      throw new BadRequestException(String.format("Task ID %s does not have a directory yet", taskId));
+    }
+
+    final String slaveHostname = maybeTaskHistory.get().getTask().getOffer().getHostname();
+    final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
+
+    try {
+      final URI downloadUri = new URI("http", slaveHostname, "5051", "/files/download.json", String.format("path=%s", fullPath));
+
+      return Response.temporaryRedirect(downloadUri).build();
+    } catch (URISyntaxException e) {
+      throw Throwables.propagate(e);
+    }
   }
 }
