@@ -1,0 +1,10 @@
+<header class="jumbotron subhead" id="overview">
+    <h3><a href="/singularity/task/{{ taskId }}" data-route="task/{{ taskId }}">{{#hardBreak taskId}}{{/hardBreak}}</a></h3>
+    <h1><a href="/singularity/task/{{ taskId }}/files/" data-route="task/{{ taskId }}/files/">...</a>/{{#each subfolders}}<a href="/singularity/task/{{ ../taskId }}/files/{{ fullPath }}" data-route="task/{{ ../taskId }}/files/{{ fullPath }}">{{name}}</a>/{{/each}}{{#hardBreak filename }}{{/hardBreak}}</h1>
+</header>
+
+<section>
+    <div class="row-fluid">
+        <div class="span12 tail-container">Loading...</div>
+    </div>
+</section>
