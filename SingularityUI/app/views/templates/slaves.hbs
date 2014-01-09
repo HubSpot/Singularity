@@ -50,6 +50,7 @@
                             <th>Rack</th>
                             <th>Host</th>
                             <th>State</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -59,6 +60,7 @@
                                 <td>{{ rackId }}</td>
                                 <td>{{ host }}</td>
                                 <td>{{ state }}</td>
+                                <td><a data-slave-id="{{ id }}" data-action="remove">Remove</a>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

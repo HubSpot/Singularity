@@ -34,6 +34,7 @@ public class SingularityRequestValidator {
     checkRequestState(request.getSchedule() == null || ((request.getInstances() == null || request.getInstances() == 1) && (request.getDaemon() == null || !request.getDaemon())), "Scheduled requests can not be ran on more than one instance, and must not be daemons");
     checkRequestState((request.getDaemon() == null || request.getDaemon()) || (request.getInstances() == null || request.getInstances() == 1), "Non-daemons can not be ran on more than one instance");
     checkRequestState(request.getId().length() < MAX_REQUEST_ID_SIZE, String.format("Request id must be less than %s characters, it is %s (%s)", MAX_REQUEST_ID_SIZE, request.getId().length(), request.getId()));
+    checkRequestState(request.getSchedule() != null || request.getNumRetriesOnFailure() == null, "NumRetriesOnFailure can only be set for scheduled tasks");
     
     String schedule = adjustSchedule(request.getSchedule());
     

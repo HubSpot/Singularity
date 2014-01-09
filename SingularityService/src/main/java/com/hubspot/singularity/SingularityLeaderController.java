@@ -87,7 +87,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     return driverManager.getMaster();
   }
   
-  public long getLastOfferTimestamp() {
+  public Optional<Long> getLastOfferTimestamp() {
     return driverManager.getLastOfferTimestamp();
   }
   

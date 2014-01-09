@@ -1,16 +1,26 @@
 # Singularity
 
-Scheduler for running mesos tasks - long running processes, one-off tasks, and scheduled jobs.
+Scheduler for running [mesos](http://mesos.apache.org/) tasks - long running processes, one-off tasks, and scheduled jobs.
 
-## MVN Deployment process
+## Overview
 
-Prereqs
-- sonatype server passwords in ~/.m2/settings.xml for mvn deploy (otherwise, 401)
-- access to the sonatype user/password when browsing to the web ui
-- gpg installed, key generated and shipped, and passphrase available 
+## Requirements
 
-Steps
-- Increment all pom versions
-- mvn deploy
-- In https://oss.sonatype.org/index.html#stagingRepositories, find the release and close it.
-- If close succeeds, Release. 
+- Mesos
+- ZooKeeper
+- MySQL
+
+## Installation & Deployment
+
+- [Database configuration and schema](database.md)
+- Singularity configuration
+
+## Operation & Documentation
+
+- [API Endpoints](SingularityService/api.md)
+- [API Objects](SingularityService/objects.md)
+- Suggested practices (monitoring & HA)
+
+## Developer Info
+
+- [Maven deployment](maven.md)

@@ -136,6 +136,14 @@ public class RequestResource {
     return requestManager.getCleanupRequests();
   }
   
+  @GET
+  @Path("/request/{requestId}")
+  public SingularityRequest getRequest(@PathParam("requestId") String requestId) {
+    SingularityRequest request = fetchRequest(requestId);
+    
+    return request;
+  }
+  
   private SingularityRequest fetchRequest(String requestId) {
     Optional<SingularityRequest> request = requestManager.fetchRequest(requestId);
     

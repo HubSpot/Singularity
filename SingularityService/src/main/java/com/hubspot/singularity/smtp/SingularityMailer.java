@@ -1,39 +1,29 @@
 package com.hubspot.singularity.smtp;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.mail.Address;
-import javax.mail.Message.RecipientType;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import org.apache.mesos.Protos.TaskState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityHostState;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import org.apache.mesos.Protos.TaskState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.mail.*;
+import javax.mail.Message.RecipientType;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class SingularityMailer implements SingularityCloseable {
 
@@ -181,13 +171,30 @@ public class SingularityMailer implements SingularityCloseable {
     
     mailSenderExecutorService.get().submit(cmd);
   }
+
+  private Session createSession(SMTPConfiguration smtpConfiguration, boolean useAuth) {
+    Properties properties = System.getProperties();
+
+    properties.setProperty("mail.smtp.host", smtpConfiguration.getHost());
+
+    if (smtpConfiguration.getPort().isPresent()) {
+      properties.setProperty("mail.smtp.port", Integer.toString(smtpConfiguration.getPort().get()));
+    }
+
+    if (useAuth) {
+      properties.setProperty("mail.smtp.auth", "true");
+      return Session.getInstance(properties, new SMTPAuthenticator(smtpConfiguration.getUsername().get(), smtpConfiguration.getPassword().get()));
+    } else {
+      return Session.getInstance(properties);
+    }
+  }
   
   public void sendMail(List<String> toList, String subject, String body) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.warn(String.format("Couldn't send email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject, body)));
     }
     
-    SMTPConfiguration smtpConfiguration = maybeSmtpConfiguration.get();
+    final SMTPConfiguration smtpConfiguration = maybeSmtpConfiguration.get();
     
     boolean useAuth = false;
     
@@ -198,25 +205,8 @@ public class SingularityMailer implements SingularityCloseable {
     }
     
     try {
-      Properties properties = System.getProperties();
+      final Session session = createSession(maybeSmtpConfiguration.get(), useAuth);
 
-      properties.setProperty("mail.smtp.host", smtpConfiguration.getHost());
-      
-      if (smtpConfiguration.getPort().isPresent()) {
-        properties.setProperty("mail.smtp.port", Integer.toString(smtpConfiguration.getPort().get()));
-      }
-      
-      if (useAuth) {
-        properties.setProperty("mail.smtp.auth", "true");
-      }
-      
-      Session session = Session.getDefaultInstance(properties);
-      Transport transport = session.getTransport("smtp");
-      
-      if (useAuth) {
-        transport.connect(smtpConfiguration.getUsername().get(), smtpConfiguration.getPassword().get());
-      }
-      
       MimeMessage message = new MimeMessage(session);
 
       message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
@@ -238,7 +228,7 @@ public class SingularityMailer implements SingularityCloseable {
       
       LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), message));
 
-      transport.send(message);
+      Transport.send(message);
     } catch (Throwable t) {
       LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject, body)), t);
     }
@@ -257,5 +247,4 @@ public class SingularityMailer implements SingularityCloseable {
     
     return addresses.toArray(new InternetAddress[addresses.size()]);
   }
-
 }

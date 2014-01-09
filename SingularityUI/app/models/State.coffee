@@ -10,7 +10,15 @@ class State extends Model
         _.each state.hostStates, (hostState) ->
             hostState.uptimeHuman = moment.duration(hostState.uptime).humanize()
             hostState.driverStatusHuman = constants.driverStates[hostState.driverStatus]
-            hostState.millisSinceLastOfferHuman = moment(+new Date() - hostState.millisSinceLastOffer).from()
+
+            now = +new Date()
+            if hostState.millisSinceLastOffer?
+                if now - hostState.millisSinceLastOffer > hostState.millisSinceLastOffer
+                    hostState.millisSinceLastOfferHuman = utils.humanTimeAgo(+new Date() - hostState.millisSinceLastOffer)
+                else
+                    hostState.millisSinceLastOfferHuman = utils.humanTimeAgo hostState.millisSinceLastOffer
+            else
+                hostState.millisSinceLastOfferHuman = 'Never'
 
             if hostState.mesosMaster?
                 mesosMaster = hostState.mesosMaster

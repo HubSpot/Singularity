@@ -1,27 +1,21 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.ExecutorID;
-import org.apache.mesos.Protos.FrameworkID;
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.TaskStatus;
-import org.apache.mesos.Scheduler;
-import org.apache.mesos.SchedulerDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.*;
+import org.apache.mesos.Scheduler;
+import org.apache.mesos.SchedulerDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
@@ -42,7 +36,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
   
-  private long lastOfferTimestamp;
+  private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
   
   @Inject
@@ -58,9 +52,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.stateLock = new ReentrantLock();
 
     this.state = SchedulerState.STARTUP;
+    this.lastOfferTimestamp = Optional.absent();
   }
   
-  public long getLastOfferTimestamp() {
+  public Optional<Long> getLastOfferTimestamp() {
     return lastOfferTimestamp;
   }
   
@@ -152,7 +147,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
-    lastOfferTimestamp = System.currentTimeMillis();
+    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     
     if (!isRunning()) {
       LOG.info(String.format("Scheduler is in state %s, declining %s offer(s)", state.name(), offers.size()));

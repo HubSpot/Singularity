@@ -44,6 +44,7 @@
                         <tr>
                             <th>ID</th>
                             <th>State</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,6 +52,7 @@
                             <tr>
                                 <td>{{ id }}</td>
                                 <td>{{ state }}</td>
+                                <td><a data-rack-id="{{ id }}" data-action="remove">Remove</a>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
