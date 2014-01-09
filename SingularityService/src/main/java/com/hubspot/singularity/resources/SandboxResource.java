@@ -29,7 +29,7 @@ public class SandboxResource {
 
   @GET
   @Path("/{taskId}/browse")
-  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") String path) {
+  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path) {
     final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId, true);
 
     if (!maybeTaskHistory.isPresent()) {
@@ -45,8 +45,8 @@ public class SandboxResource {
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String path,
-                                   @QueryParam("offset") long offset, @QueryParam("length") long length) {
+  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path,
+                                   @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
     final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId, true);
 
     if (!maybeTaskHistory.isPresent()) {
@@ -59,6 +59,12 @@ public class SandboxResource {
 
     final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
 
-    return sandboxManager.read(maybeTaskHistory.get().getTask().getOffer().getHostname(), fullPath, offset, length);
+    final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(maybeTaskHistory.get().getTask().getOffer().getHostname(), fullPath, offset, length);
+
+    if (!maybeChunk.isPresent()) {
+      throw new NotFoundException(String.format("File %s does not exist for task ID %s", fullPath, taskId));
+    }
+
+    return maybeChunk.get();
   }
 }
