@@ -93,7 +93,7 @@ public class SandboxResource {
     final String fullPath = new File(maybeTaskHistory.get().getDirectory().get(), path).toString();
 
     try {
-      final URI downloadUri = new URI("http", slaveHostname, "5051", "/files/download.json", String.format("path=%s", fullPath));
+      final URI downloadUri = new URI("http", null, slaveHostname, 5051, "/files/download.json", String.format("path=%s", fullPath), null);
 
       return Response.temporaryRedirect(downloadUri).build();
     } catch (URISyntaxException e) {
