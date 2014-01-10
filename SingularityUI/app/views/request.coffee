@@ -142,4 +142,18 @@ class RequestView extends View
         @$el.find('[data-action="viewObjectJSON"]').unbind('click').click (event) ->
             utils.viewJSON 'request', $(event.target).data('request-id')
 
+        $runNowLinks = @$el.find('[data-action="run-now"]')
+
+        $runNowLinks.unbind('click').on 'click', (e) =>
+            taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
+            row = $(e.target).parents('tr')
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    taskModel.run()
+                    app.collections.tasksScheduled.remove(taskModel)
+                    row.remove()
+
 module.exports = RequestView
