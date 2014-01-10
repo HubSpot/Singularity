@@ -32,17 +32,10 @@ class LogLines extends Backbone.Collection
         "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/read?#{ $.param params }"
 
     fetchEndOffset: =>
-        deferred = Q.defer()
-
-        ajaxPromise = $.getJSON @url()
-
-        ajaxPromise.done (result) ->
-            deferred.resolve(result.offset)
-
-        ajaxPromise.fail (jqXHR, status, error) ->
-            deferred.reject(error)
-        
-        return deferred.promise
+        Q($.getJSON @url()).then (result) ->
+            result.offset
+        , (xhr, status, error) ->
+            error
 
     parse: (result) =>
         offset = result.offset

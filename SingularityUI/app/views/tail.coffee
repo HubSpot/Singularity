@@ -7,10 +7,6 @@ class TailView extends View
     template: require './templates/tail'
 
     initialize: ({@taskId, @path}) ->
-        @tailer = new TailerView
-            taskId: @taskId
-            path: @path
-
         @subfolders = []
 
         pieces = @path.split /\//
@@ -22,12 +18,15 @@ class TailView extends View
 
         @filename = _.last(pieces)
 
-        @tailer.setup()
-
     render: =>
         @$el.html @template {@taskId, @path, @subfolders, @filename}
 
-        @$el.find('div.tail-container').html @tailer.$el
+        @tailer = new TailerView
+            el: @$('.tail-container')
+            taskId: @taskId
+            path: @path
+
+        @tailer.render()
 
         @
 
