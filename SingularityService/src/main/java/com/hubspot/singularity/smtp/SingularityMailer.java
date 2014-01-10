@@ -1,29 +1,38 @@
 package com.hubspot.singularity.smtp;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.*;
-import com.hubspot.singularity.config.SMTPConfiguration;
-import com.hubspot.singularity.data.StateManager;
-import com.hubspot.singularity.data.history.HistoryManager;
-import org.apache.mesos.Protos.TaskState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.mail.*;
-import javax.mail.Message.RecipientType;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import javax.mail.Address;
+import javax.mail.Message.RecipientType;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.mesos.Protos.TaskState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityCloseable;
+import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.SMTPConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.HistoryManager;
 
 public class SingularityMailer implements SingularityCloseable {
 
@@ -34,18 +43,19 @@ public class SingularityMailer implements SingularityCloseable {
   
   private final SingularityCloser closer;
 
-  private final StateManager stateManager;
   private final HistoryManager historyManager;
 
   private final SimpleEmailTemplate taskFailedTemplate;
+  
+  private final Optional<String> uiHostnameAndPath;
 
-  private static final String LOGS_LINK_FORMAT = "http://%s:5050/#/slaves/%s/browse?path=%s";
+  private static final String TASK_LINK_FORMAT = "%s/task/%s";
   
   @Inject
-  public SingularityMailer(Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, StateManager stateManager, HistoryManager historyManager) {
+  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, HistoryManager historyManager) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
-    this.stateManager = stateManager;
+    this.uiHostnameAndPath = configuration.getSingularityUIHostnameAndPath();
     this.historyManager = historyManager;
     
     if (maybeSmtpConfiguration.isPresent()) {
@@ -101,7 +111,7 @@ public class SingularityMailer implements SingularityCloseable {
     builder.put("request_id", request.getId());
     builder.put("task_id", taskId.getId());
     builder.put("status", state.name());
-    builder.put("mesos_logs_link", getMesosLogsLink(taskHistory));
+    builder.put("singularity_task_link", getSingularityTaskLink(taskId));
     
     final String body = taskFailedTemplate.render(builder.build());
     
@@ -120,32 +130,18 @@ public class SingularityMailer implements SingularityCloseable {
   
   private String getSubjectForTaskHistory(SingularityTaskId taskId, TaskState state, Optional<SingularityTaskHistory> taskHistory) {
     if (!taskHistory.isPresent() || !taskEverRan(taskHistory.get())) {
-      return String.format("Task %s never started in mesos (%s)", taskId.toString(), state.name());
+      return String.format("(%s) - Task %s never started in mesos", state.name(), taskId.toString());
     }
     
-    return String.format("Task %s failed after running (%s)", taskId.toString(), state.name());
+    return String.format("(%s) - Task %s failed after running", state.name(), taskId.toString());
   }
   
-  private String getMesosLogsLink(Optional<SingularityTaskHistory> taskHistory) {
-    if (!taskHistory.isPresent() || !taskHistory.get().getDirectory().isPresent()) {
+  private String getSingularityTaskLink(SingularityTaskId taskId) {
+    if (!uiHostnameAndPath.isPresent()) {
       return "";
     }
     
-    String masterHost = null;
-    
-    for (SingularityHostState state : stateManager.getHostStates()) {
-      if (state.isMaster()) {
-        masterHost = state.getHostname();
-      }
-    }
-    
-    if (masterHost == null) {
-      return "";
-    }
-    
-    String slave = taskHistory.get().getTask().getOffer().getSlaveId().getValue();
-    
-    return String.format(LOGS_LINK_FORMAT, masterHost, slave, JavaUtils.urlEncode(taskHistory.get().getDirectory().get()));
+    return String.format(TASK_LINK_FORMAT, uiHostnameAndPath.get(), taskId.getId());
   }
   
   private void queueMail(final List<String> toList, final String subject, final String body) {

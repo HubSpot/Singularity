@@ -25,6 +25,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("hostname")
   private String hostname;
   
+  @JsonProperty("singularityUIHostnameAndPath")
+  private String singularityUIHostnameAndPath;
+  
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -113,6 +116,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHostname(String hostname) {
     this.hostname = hostname;
+  }
+
+  public Optional<String> getSingularityUIHostnameAndPath() {
+    return Optional.fromNullable(singularityUIHostnameAndPath);
+  }
+
+  public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
+    this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
   }
 
 }
