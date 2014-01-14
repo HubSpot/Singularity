@@ -6,6 +6,8 @@ class TasksView extends View
     templateTasksScheduled: require './templates/tasksScheduled'
     templateTasksCleaning: require './templates/tasksCleaning'
 
+    killTaskTemplate = require './templates/vex/killTask'
+
     render: (tasksFilter) =>
         if tasksFilter is 'active'
             @collection = app.collections.tasksActive
@@ -44,7 +46,7 @@ class TasksView extends View
             taskModel = @collection.get($(e.target).data('task-id'))
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to kill this task?</p><pre>#{ taskModel.get('id') }</pre><p>Long running process will be started again instantly, scheduled tasks will behave as if the task failed and may be rescheduled to run in the future depending on whether or not the request has <code>numRetriesOnFailure</code> set.</p>"
+                message: killTaskTemplate(taskId: taskModel.get('id'))
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.destroy()
