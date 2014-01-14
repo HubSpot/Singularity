@@ -136,11 +136,11 @@ class RequestView extends View
             $teebleOuter.html('<center><p>No historical tasks.</p></center>')
 
     setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'task', $(event.target).data('task-id')
+        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'task', $(e.target).data('task-id')
 
-        @$el.find('[data-action="viewObjectJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'request', $(event.target).data('request-id')
+        @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'request', $(e.target).data('request-id')
 
         $runNowLinks = @$el.find('[data-action="run-now"]')
 

@@ -36,8 +36,8 @@ class TasksView extends View
         utils.setupSortableTables()
 
     setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'task', $(event.target).data('task-id')
+        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'task', $(e.target).data('task-id')
 
         $removeLinks = @$el.find('[data-action="remove"]')
 
