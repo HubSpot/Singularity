@@ -6,7 +6,7 @@ class TasksView extends View
     templateTasksScheduled: require './templates/tasksScheduled'
     templateTasksCleaning: require './templates/tasksCleaning'
 
-    killTaskTemplate = require './templates/vex/killTask'
+    killTaskTemplate: require './templates/vex/killTask'
 
     render: (tasksFilter) =>
         if tasksFilter is 'active'
@@ -46,7 +46,7 @@ class TasksView extends View
             taskModel = @collection.get($(e.target).data('task-id'))
 
             vex.dialog.confirm
-                message: killTaskTemplate(taskId: taskModel.get('id'))
+                message: @killTaskTemplate(taskId: taskModel.get('id'))
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.destroy()
