@@ -18,7 +18,7 @@ class State extends Model
                 else
                     hostState.millisSinceLastOfferHuman = utils.humanTimeAgo hostState.millisSinceLastOffer
             else
-                hostState.millisSinceLastOfferHuman = 'Never'
+                hostState.millisSinceLastOfferHuman = '—'
 
             if hostState.mesosMaster?
                 mesosMaster = hostState.mesosMaster
