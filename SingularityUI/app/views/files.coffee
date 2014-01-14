@@ -32,9 +32,28 @@ class FilesView extends View
     render: =>
         return unless @taskHistory.attributes?.task?.id
 
+        breadcrumbs = []
+
+        breadcrumbs.push
+            path: @taskHistory.get('task').id
+            pathRoute: "task/#{ @taskHistory.get('task').id }"
+
+        breadcrumbs.push
+            path: 'files'
+            pathRoute: "task/#{ @taskHistory.get('task').id }/files"
+
+        pathSoFar = []
+        for path in @path.split('/')
+            if path isnt ''
+                pathSoFar.push path
+                breadcrumbs.push
+                    path: path
+                    pathRoute: "task/#{ @taskHistory.get('task').id }/files/#{ pathSoFar.join('/') }"
+
         context =
             taskHistory: @taskHistory.attributes
             taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
+            breadcrumbs: breadcrumbs
 
         partials =
             partials:
