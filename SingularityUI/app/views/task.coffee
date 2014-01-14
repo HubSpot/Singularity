@@ -1,11 +1,14 @@
 View = require './view'
 
+Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
 TaskFiles = require '../collections/TaskFiles'
 
 class TaskView extends View
 
     template: require './templates/task'
+
+    killTaskTemplate: require './templates/vex/killTask'
 
     initialize: =>
         @taskFiles = {}
@@ -37,7 +40,19 @@ class TaskView extends View
         utils.setupSortableTables()
 
     setupEvents: =>
-        @$el.find('[data-action="viewObjectJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'task', $(event.target).data('task-id')
+        @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'task', $(e.target).data('task-id')
+
+        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
+            row = $(e.target).parents('tr')
+            taskModel = new Task id: $(e.target).data('task-id')
+
+            vex.dialog.confirm
+                message: @killTaskTemplate(taskId: taskModel.get('id'))
+                callback: (confirmed) =>
+                    return unless confirmed
+                    taskModel.destroy()
+                    app.router.navigate 'tasks', trigger: true
+
 
 module.exports = TaskView
