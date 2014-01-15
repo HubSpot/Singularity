@@ -8,8 +8,7 @@ class Utils
         if split.length > 1
             return "#{ split[0] }..."
         else
-            if taskId.length > 20
-                return "#{ taskId.substr(0, 20) }..."
+            return _.truncate(taskId, 20)
         return taskId
 
     @stringJSON: (object) ->
