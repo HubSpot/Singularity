@@ -11,6 +11,15 @@ class Utils
             return _.truncate(taskId, 20)
         return taskId
 
+    @getShortTaskIDMiddleEllipsis: (taskId) ->
+        dateRegExp = /\-\d{12,}\-/
+        bigSplit = taskId.split dateRegExp
+
+        if bigSplit.length is 2
+            "#{ utils.getShortTaskID(bigSplit[0]) }#{ taskId.match(dateRegExp)[0] }#{ _.truncate(bigSplit[1], 25) }"
+        else
+            utils.getShortTaskID taskId
+
     @stringJSON: (object) ->
         JSON.stringify object, null, '    '
 
