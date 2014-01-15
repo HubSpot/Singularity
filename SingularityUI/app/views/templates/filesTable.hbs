@@ -20,7 +20,7 @@
                     </td>
                     <td data-value="{{ size }}">{{ sizeHuman }}</td>
                     <td data-value="{{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
-                    <td>
+                    <td class="actions-column">
                         {{#unless isDirectory}}<a href="{{ downloadLink }}" target="_blank">Download</a>{{/unless}}
                     </td>
                 </tr>

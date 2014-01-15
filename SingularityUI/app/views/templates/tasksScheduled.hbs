@@ -38,9 +38,8 @@
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                                 <td data-value="{{ nextRunAt}}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
-                                <td>
+                                <td class="actions-column">
                                     <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    &nbsp;&nbsp;
                                     <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
                                 </td>
                             </tr>

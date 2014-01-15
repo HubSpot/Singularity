@@ -110,9 +110,8 @@ class RequestView extends View
                     ,
                         header: '<th>&nbsp;</th>'
                         cell: '''
-                            <td>
+                            <td class="actions-column">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                &nbsp;&nbsp;
                                 <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                             </td>
                         '''
