@@ -3,6 +3,15 @@ class Utils
     @getHTMLTitleFromHistoryFragment: (fragment) ->
         _.capitalize(fragment.split('\/').join(' '))
 
+    @getShortTaskID: (taskId) ->
+        split = taskId.split(/\-|\:|\./)
+        if split.length > 1
+            return "#{ split[0] }..."
+        else
+            if taskId.length > 20
+                return "#{ taskId.substr(0, 20) }..."
+        return taskId
+
     @stringJSON: (object) ->
         JSON.stringify object, null, '    '
 
