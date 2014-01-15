@@ -97,7 +97,7 @@ class RequestView extends View
                         pagination: HistoryPaginationView
                     partials: [
                         header: '<th class="sorting" data-sort="taskId">Name</th>'
-                        cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>'
+                        cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
                         header: '<th class="sorting" data-sort="lastTaskStatus">Status</th>'
                         cell: '<td>{{ lastStatusHuman }}</td>'
