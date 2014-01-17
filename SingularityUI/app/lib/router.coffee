@@ -53,7 +53,7 @@ class Router extends Backbone.Router
         if not app.views.dashboard?
             app.views.dashboard = new DashboardView
         app.views.current = app.views.dashboard
-        app.views.dashboard.render()
+        app.views.dashboard.render().refresh(fromRoute = true)
 
     search: ->
         if not app.views.search?

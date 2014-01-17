@@ -33,32 +33,38 @@ class DashboardView extends View
         @captureLastStateAttributes()
         app.state.fetch()
 
-    refresh: ->
+    refresh: (fromRoute) ->
         @fetch(@lastTasksFilter).done =>
-            @render(@lastTasksFilter)
+            @render(fromRoute)
 
-    render: =>
+    render: (fromRoute) =>
         changedNumbers = {}
 
-        for numberAttribute in numberAttributes
-            oldNumber = @lastStateAttributes[numberAttribute]
-            newNumber = app.state.attributes[numberAttribute]
-            if oldNumber isnt newNumber
-                changedNumbers[numberAttribute] =
-                    direction: "#{ if newNumber > oldNumber then 'inc' else 'dec' }rease"
-                    difference: "#{ if newNumber > oldNumber then '+' else '-' }#{ Math.abs(newNumber - oldNumber) }"
+        if fromRoute
+            @$el.html @template state: app.state.attributes
 
-        @$el.html @template state: @lastStateAttributes
+        else
+            @$el.html @template state: @lastStateAttributes
 
-        for attributeName, changes of changedNumbers
-            $number = @$el.find(""".number[data-state-attribute="#{ attributeName }"]""")
-            $bigNumber = $number.parents('.big-number-link')
-            changeClassName = "changed-direction-#{ changes.direction }"
-            $bigNumber.addClass changeClassName
-            $bigNumber.find('.well').attr('data-changed-difference', changes.difference)
-            $number.html app.state.attributes[attributeName]
-            do ($bigNumber, changeClassName) -> setTimeout (-> $bigNumber.removeClass changeClassName), 2000
+            for numberAttribute in numberAttributes
+                oldNumber = @lastStateAttributes[numberAttribute]
+                newNumber = app.state.attributes[numberAttribute]
+                if oldNumber isnt newNumber
+                    changedNumbers[numberAttribute] =
+                        direction: "#{ if newNumber > oldNumber then 'inc' else 'dec' }rease"
+                        difference: "#{ if newNumber > oldNumber then '+' else '-' }#{ Math.abs(newNumber - oldNumber) }"
+
+            for attributeName, changes of changedNumbers
+                $number = @$el.find(""".number[data-state-attribute="#{ attributeName }"]""")
+                $bigNumber = $number.parents('.big-number-link')
+                changeClassName = "changed-direction-#{ changes.direction }"
+                $bigNumber.addClass changeClassName
+                $bigNumber.find('.well').attr('data-changed-difference', changes.difference)
+                $number.html app.state.attributes[attributeName]
+                do ($bigNumber, changeClassName) -> setTimeout (-> $bigNumber.removeClass changeClassName), 2000
 
         utils.setupSortableTables()
+
+        @
 
 module.exports = DashboardView
