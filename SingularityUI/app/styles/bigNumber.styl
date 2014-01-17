@@ -1,9 +1,46 @@
 @import nib
 
 .big-number-link
+    position relative
 
     &, &:hover
         text-decoration none
+
+    .well
+        transition background .5s
+
+        &:before
+            transition opacity .5s
+            opacity 0
+            position absolute
+            top 15px
+            right 15px
+            font-size 25px
+            color rgba(0, 0, 0, .3)
+            display block
+            z-index 1
+            pointer-events none
+
+    &.changed-direction-increase, &.changed-direction-decrease
+
+        .well
+            transition background 3s
+
+            &:before
+                content attr(data-changed-difference)
+                opacity 1
+
+    &.changed-direction-decrease .well
+        background #f3dede
+
+        .darkstrap &
+            background #4d2c2c
+
+    &.changed-direction-increase .well
+        background #def3de
+
+        .darkstrap &
+            background #2d442f
 
 .big-number
     height 55px

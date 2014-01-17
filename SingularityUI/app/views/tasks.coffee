@@ -8,22 +8,45 @@ class TasksView extends View
 
     killTaskTemplate: require './templates/vex/killTask'
 
-    render: (tasksFilter) =>
-        if tasksFilter is 'active'
+    initialize: ->
+        @lastTasksFilter = @options.tasksFilter
+
+    fetch: ->
+        if @lastTasksFilter is 'active'
+            @collection = app.collections.tasksActive
+
+        if @lastTasksFilter is 'scheduled'
+            @collection = app.collections.tasksScheduled
+
+        if @lastTasksFilter is 'cleaning'
+            @collection = app.collections.tasksCleaning
+
+        @collection.fetch()
+
+    refresh: ->
+        return if @$el.find('input[type="search"]')?.is(':focus') or @$el.find('input[type="search"]').val() isnt ''
+
+        @fetch(@lastTasksFilter).done =>
+            @render(@lastTasksFilter)
+
+    render: (tasksFilter) ->
+        @lastTasksFilter = tasksFilter
+
+        if @lastTasksFilter is 'active'
             @collection = app.collections.tasksActive
             template = @templateTasksActive
 
-        if tasksFilter is 'scheduled'
+        if @lastTasksFilter is 'scheduled'
             @collection = app.collections.tasksScheduled
             template = @templateTasksScheduled
 
-        if tasksFilter is 'cleaning'
+        if @lastTasksFilter is 'cleaning'
             @collection = app.collections.tasksCleaning
             template = @templateTasksCleaning
 
         tasks = _.pluck(@collection.sort().models, 'attributes')
 
-        if tasksFilter is 'active'
+        if @lastTasksFilter is 'active'
             tasks = tasks.reverse()
 
         context =
@@ -34,6 +57,8 @@ class TasksView extends View
         @setupEvents()
         @setUpSearchEvents()
         utils.setupSortableTables()
+
+        @
 
     setupEvents: ->
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
@@ -68,7 +93,7 @@ class TasksView extends View
                     @collection.remove(taskModel)
                     row.remove()
 
-    setUpSearchEvents: =>
+    setUpSearchEvents: ->
         $search = @$el.find('input[type="search"]')
         $search.focus() if $(window).width() > 568
 

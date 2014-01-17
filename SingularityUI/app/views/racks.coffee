@@ -7,23 +7,25 @@ class RacksView extends View
     template: require './templates/racks'
 
     initialize: ->
-        promises = []
-
         @racksActive = new Racks [], rackType: 'active'
-        promises.push @racksActive.fetch()
-
         @racksDead = new Racks [], rackType: 'dead'
-        promises.push @racksDead.fetch()
-
         @racksDecomissioning = new Racks [], rackType: 'decomissioning'
-        promises.push @racksDecomissioning.fetch()
 
-        $.when(promises...).done =>
+    fetch: ->
+        promises = []
+        promises.push @racksActive.fetch()
+        promises.push @racksDead.fetch()
+        promises.push @racksDecomissioning.fetch()
+        $.when(promises...)
+
+    refresh: ->
+        @fetchDone = false
+        @fetch().done =>
             @fetchDone = true
             @render()
 
     render: ->
-        return unless @fetchDone
+        return @ unless @fetchDone
 
         context =
             racksActive: _.pluck(@racksActive.models, 'attributes')
@@ -35,6 +37,8 @@ class RacksView extends View
         @setupEvents()
 
         utils.setupSortableTables()
+
+        @
 
     setupEvents: ->
         $removeLinks = @$el.find('[data-action="remove"]')

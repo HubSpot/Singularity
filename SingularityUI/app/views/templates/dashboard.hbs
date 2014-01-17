@@ -39,7 +39,7 @@
             <a class="big-number-link" href="/singularity/requests" data-route="requests">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.requests }}</div>
+                        <div class="number" data-state-attribute="requests">{{ state.requests }}</div>
                         <div class="number-label">Active</div>
                     </div>
                 </div>
@@ -49,7 +49,7 @@
             <a class="big-number-link" href="/singularity/requests/paused" data-route="requests/paused">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.pausedRequests }}</div>
+                        <div class="number" data-state-attribute="pausedRequests">{{ state.pausedRequests }}</div>
                         <div class="number-label">Paused</div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
             <a class="big-number-link" href="/singularity/requests/pending" data-route="requests/pending">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.pendingRequests }}</div>
+                        <div class="number" data-state-attribute="pendingRequests">{{ state.pendingRequests }}</div>
                         <div class="number-label">Pending</div>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
             <a class="big-number-link" href="/singularity/requests/cleaning" data-route="requests/cleaning">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.cleaningRequests }}</div>
+                        <div class="number" data-state-attribute="cleaningRequests">{{ state.cleaningRequests }}</div>
                         <div class="number-label">Cleaning</div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@
             <a class="big-number-link" href="/singularity/tasks" data-route="tasks">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.activeTasks }}</div>
+                        <div class="number" data-state-attribute="activeTasks">{{ state.activeTasks }}</div>
                         <div class="number-label">Active</div>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
             <a class="big-number-link" href="/singularity/tasks/scheduled" data-route="tasks/scheduled">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.lateTasks }}</div>
+                        <div class="number" data-state-attribute="lateTasks">{{ state.lateTasks }}</div>
                         <div class="number-label">Overdue</div>
                     </div>
                 </div>
@@ -107,7 +107,7 @@
             <a class="big-number-link" href="/singularity/tasks/scheduled" data-route="tasks/scheduled">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.futureTasks }}</div>
+                        <div class="number" data-state-attribute="futureTasks">{{ state.futureTasks }}</div>
                         <div class="number-label">Future</div>
                     </div>
                 </div>
@@ -117,7 +117,7 @@
             <a class="big-number-link" href="/singularity/tasks/cleaning" data-route="tasks/cleaning">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.cleaningTasks }}</div>
+                        <div class="number" data-state-attribute="cleaningTasks">{{ state.cleaningTasks }}</div>
                         <div class="number-label">Cleaning</div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
             <a class="big-number-link" href="/singularity/racks" data-route="racks">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.activeRacks }}</div>
+                        <div class="number" data-state-attribute="activeRacks">{{ state.activeRacks }}</div>
                         <div class="number-label">Active</div>
                     </div>
                 </div>
@@ -145,7 +145,7 @@
             <a class="big-number-link" href="/singularity/racks" data-route="racks">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.deadRacks }}</div>
+                        <div class="number" data-state-attribute="deadRacks">{{ state.deadRacks }}</div>
                         <div class="number-label">Dead</div>
                     </div>
                 </div>
@@ -155,7 +155,7 @@
             <a class="big-number-link" href="/singularity/racks" data-route="racks">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.decomissioningRacks }}</div>
+                        <div class="number" data-state-attribute="decomissioningRacks">{{ state.decomissioningRacks }}</div>
                         <div class="number-label">Decomissioning</div>
                     </div>
                 </div>
@@ -173,7 +173,7 @@
             <a class="big-number-link" href="/singularity/slaves" data-route="slaves">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.activeSlaves }}</div>
+                        <div class="number" data-state-attribute="activeSlaves">{{ state.activeSlaves }}</div>
                         <div class="number-label">Active</div>
                     </div>
                 </div>
@@ -183,7 +183,7 @@
             <a class="big-number-link" href="/singularity/slaves" data-route="slaves">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.deadSlaves }}</div>
+                        <div class="number" data-state-attribute="deadSlaves">{{ state.deadSlaves }}</div>
                         <div class="number-label">Dead</div>
                     </div>
                 </div>
@@ -193,7 +193,7 @@
             <a class="big-number-link" href="/singularity/slaves" data-route="slaves">
                 <div class="well">
                     <div class="big-number">
-                        <div class="number">{{ state.decomissioningSlaves }}</div>
+                        <div class="number" data-state-attribute="decomissioningSlaves">{{ state.decomissioningSlaves }}</div>
                         <div class="number-label">Decomissioning</div>
                     </div>
                 </div>

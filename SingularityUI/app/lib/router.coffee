@@ -12,10 +12,23 @@ NavigationView = require 'views/navigation'
 FilesView = require 'views/files'
 TailView = require 'views/tail'
 
+Backbone.history.on 'route', ->
+    nav()
+    globalRefresh()
+
 nav = ->
     if not app.views.navigationView?
         app.views.navigationView = new NavigationView
     app.views.navigationView.render()
+
+window.globalRefreshTimeout = undefined
+globalRefresh = =>
+    clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
+    window.globalRefreshTimeout = setInterval ->
+        # TODO - improve the app such that these conditions are not necessary
+        if not $('body > .vex').length and $(window).scrollTop() is 0
+            app.views.current?.refresh?()
+    , 10 * 1000
 
 class Router extends Backbone.Router
 
@@ -37,14 +50,12 @@ class Router extends Backbone.Router
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
-        nav()
         if not app.views.dashboard?
             app.views.dashboard = new DashboardView
         app.views.current = app.views.dashboard
         app.views.dashboard.render()
 
     search: ->
-        nav()
         if not app.views.search?
             app.views.search = new SearchView
         app.views.current = app.views.search
@@ -54,14 +65,12 @@ class Router extends Backbone.Router
         @requestsFiltered 'active'
 
     requestsFiltered: (requestsFilter) ->
-        nav()
         if not app.views.requests?
-            app.views.requests = new RequestsView
+            app.views.requests = new RequestsView requestsFilter: requestsFilter
         app.views.current = app.views.requests
-        app.views.requests.render requestsFilter
+        app.views.requests.render(requestsFilter).refresh()
 
     request: (requestId) ->
-        nav()
         app.views.requestViews = {} if not app.views.requestViews
         if not app.views.requestViews[requestId]
             app.views.requestViews[requestId] = new RequestView requestId: requestId
@@ -72,14 +81,12 @@ class Router extends Backbone.Router
         @tasksFiltered 'active'
 
     tasksFiltered: (tasksFilter) ->
-        nav()
         if not app.views.tasks?
-            app.views.tasks = new TasksView
+            app.views.tasks = new TasksView tasksFilter: tasksFilter
         app.views.current = app.views.tasks
-        app.views.tasks.render tasksFilter
+        app.views.tasks.render(tasksFilter).refresh()
 
     task: (taskId) ->
-        nav()
         app.views.taskViews = {} if not app.views.taskViews
         if not app.views.taskViews[taskId]
             app.views.taskViews[taskId] = new TaskView taskId: taskId
@@ -87,7 +94,6 @@ class Router extends Backbone.Router
         app.views.taskViews[taskId].render()
 
     files: (taskId, path='') ->
-        nav()
         app.views.filesViews = {} if not app.views.filesViews
         if not app.views.filesViews[taskId]
             app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
@@ -97,37 +103,31 @@ class Router extends Backbone.Router
         app.views.filesViews[taskId].render()
 
     tail: (taskId, path='') ->
-        nav()
         app.views.tailViews = {} if not app.views.tailViews
         if not app.views.tailViews[taskId] or app.views.tailViews[taskId].path isnt path
             app.views.tailViews[taskId] = new TailView taskId: taskId, path: path
         app.views.current = app.views.tailViews[taskId]
-
         app.views.tailViews[taskId].render()
 
     racks: ->
-        nav()
         if not app.views.racks?
             app.views.racks = new RacksView
         app.views.current = app.views.racks
-        app.views.racks.render()
+        app.views.racks.render().refresh()
 
     slaves: ->
-        nav()
         if not app.views.slaves?
             app.views.slaves = new SlavesView
         app.views.current = app.views.slaves
-        app.views.slaves.render()
+        app.views.slaves.render().refresh()
 
     webhooks: ->
-        nav()
         if not app.views.webhooks?
             app.views.webhooks = new WebhooksView
         app.views.current = app.views.webhooks
-        app.views.webhooks.render()
+        app.views.webhooks.render().refresh()
 
     templateFromURLFragment: ->
-        nav()
         app.views.current = undefined
 
         template = undefined
@@ -142,7 +142,6 @@ class Router extends Backbone.Router
         @show404()
 
     show404: ->
-        nav()
         if not app.views.pageNotFound?
             app.views.pageNotFound = new PageNotFoundView
         app.views.current = app.views.pageNotFound

@@ -7,28 +7,52 @@ class RequestsView extends View
     templateRequestsPending: require './templates/requestsPending'
     templateRequestsCleaning: require './templates/requestsCleaning'
 
-    render: (requestsFilter) =>
-        return unless requestsFilter
+    initialize: ->
+        @lastRequestsFilter = @options.requestsFilter
 
-        if requestsFilter is 'active'
+    fetch: ->
+        if @lastRequestsFilter is 'active'
+            @collection = app.collections.requestsActive
+
+        if @lastRequestsFilter is 'paused'
+            @collection = app.collections.requestsPaused
+
+        if @lastRequestsFilter is 'pending'
+            @collection = app.collections.requestsPending
+
+        if @lastRequestsFilter is 'cleaning'
+            @collection = app.collections.requestsCleaning
+
+        @collection.fetch()
+
+    refresh: ->
+        return if @$el.find('input[type="search"]')?.is(':focus') or @$el.find('input[type="search"]').val() isnt ''
+
+        @fetch(@lastRequestsFilter).done =>
+            @render(@lastRequestsFilter)
+
+    render: (requestsFilter) =>
+        @lastRequestsFilter = requestsFilter
+
+        if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
             template = @templateRequestsActive
 
-        if requestsFilter is 'paused'
+        if @lastRequestsFilter is 'paused'
             @collection = app.collections.requestsPaused
             template = @templateRequestsPaused
 
-        if requestsFilter is 'pending'
+        if @lastRequestsFilter is 'pending'
             @collection = app.collections.requestsPending
             template = @templateRequestsPending
 
-        if requestsFilter is 'cleaning'
+        if @lastRequestsFilter is 'cleaning'
             @collection = app.collections.requestsCleaning
             template = @templateRequestsCleaning
 
         context = {}
 
-        if requestsFilter in ['active', 'paused']
+        if @lastRequestsFilter in ['active', 'paused']
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled)
             context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
             context.requests.reverse()
@@ -42,6 +66,8 @@ class RequestsView extends View
         @setupEvents()
         @setUpSearchEvents()
         utils.setupSortableTables()
+
+        @
 
     setupEvents: ->
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->

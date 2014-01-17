@@ -7,23 +7,27 @@ class SlavesView extends View
     template: require './templates/slaves'
 
     initialize: ->
-        promises = []
-
         @slavesActive = new Slaves [], slaveType: 'active'
-        promises.push @slavesActive.fetch()
-
         @slavesDead = new Slaves [], slaveType: 'dead'
-        promises.push @slavesDead.fetch()
-
         @slavesDecomissioning = new Slaves [], slaveType: 'decomissioning'
-        promises.push @slavesDecomissioning.fetch()
 
-        $.when(promises...).done =>
+        @fetch()
+
+    fetch: ->
+        promises = []
+        promises.push @slavesActive.fetch()
+        promises.push @slavesDead.fetch()
+        promises.push @slavesDecomissioning.fetch()
+        $.when(promises...)
+
+    refresh: ->
+        @fetchDone = false
+        @fetch().done =>
             @fetchDone = true
             @render()
 
     render: ->
-        return unless @fetchDone
+        return @ unless @fetchDone
 
         context =
             slavesActive: _.pluck(@slavesActive.models, 'attributes')
@@ -35,6 +39,8 @@ class SlavesView extends View
         @setupEvents()
 
         utils.setupSortableTables()
+
+        @
 
     setupEvents: ->
         $removeLinks = @$el.find('[data-action="remove"]')
