@@ -26,7 +26,7 @@ class RequestsView extends View
         @collection.fetch()
 
     refresh: ->
-        return if @$el.find('input[type="search"]')?.is(':focus') or @$el.find('input[type="search"]').val() isnt ''
+        return if @$el.find('input[type="search"]').val() isnt ''
 
         @fetch(@lastRequestsFilter).done =>
             @render(@lastRequestsFilter)

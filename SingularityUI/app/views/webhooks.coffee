@@ -14,7 +14,7 @@ class WebhooksView extends View
         @webhooks.fetch()
 
     refresh: ->
-        return if @$el.find('input[type="search"]')?.is(':focus') or @$el.find('input[type="search"]').val() isnt ''
+        return if @$el.find('input[type="search"]').val() isnt ''
 
         @fetchDone = false
         @fetch().done =>
