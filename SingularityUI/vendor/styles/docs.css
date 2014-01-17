@@ -57,7 +57,7 @@ hr.soften {
   position: relative;
 }
 .jumbotron h1 {
-  margin-bottom: 9px;
+  margin-bottom: 14px;
   font-size: 81px;
   font-weight: bold;
   letter-spacing: -1px;
@@ -108,7 +108,7 @@ hr.soften {
   margin-bottom: 9px;
 }
 .subhead h1 {
-  font-size: 54px;
+  font-size: 45px;
 }
 
 /* Subnav */
@@ -787,7 +787,7 @@ form.well {
 
   /* Scale down the jumbotron content */
   .jumbotron h1 {
-    font-size: 54px;
+    font-size: 45px;
   }
   .jumbotron p {
     margin-right: 0;
@@ -802,11 +802,6 @@ form.well {
   /* Remove any padding from the body */
   body {
     padding-top: 0;
-  }
-
-  /* Scale down the jumbotron content */
-  .jumbotron h1 {
-    font-size: 72px;
   }
 
 }
