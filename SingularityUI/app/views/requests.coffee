@@ -105,7 +105,7 @@ class RequestsView extends View
 
         $unpauseLinks = @$el.find('[data-action="unpause"]')
 
-        $unpauseLinks .unbind('click').on 'click', (e) =>
+        $unpauseLinks.unbind('click').on 'click', (e) =>
             row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
