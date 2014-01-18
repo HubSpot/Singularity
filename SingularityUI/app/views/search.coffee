@@ -57,7 +57,8 @@ class SearchView extends View
             utils.viewJSON 'task', $(e.target).data('task-id')
 
     setUpSearchEvents: ->
-        @$search.focus() if $(window).width() > 568
+        if not app.isMobile
+            @$search.focus()
 
         lastText = _.trim @$search.val()
 
