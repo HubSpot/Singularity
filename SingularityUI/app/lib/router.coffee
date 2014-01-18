@@ -25,8 +25,7 @@ window.globalRefreshTimeout = undefined
 globalRefresh = =>
     clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
     window.globalRefreshTimeout = setInterval ->
-        # TODO - improve the app such that these conditions are not necessary
-        if not $('body > .vex').length and $(window).scrollTop() is 0
+        if not $('body > .vex').length
             app.views.current?.refresh?()
     , 10 * 1000
 
