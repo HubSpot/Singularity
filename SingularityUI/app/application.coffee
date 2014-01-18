@@ -14,6 +14,8 @@ TasksCleaning = require 'collections/TasksCleaning'
 class Application
 
     initialize: =>
+        app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
+
         @views = {}
         @collections = {}
 
