@@ -27,9 +27,9 @@ class TasksView extends View
         return if @$el.find('input[type="search"]').val() isnt ''
 
         @fetch(@lastTasksFilter).done =>
-            @render(@lastTasksFilter)
+            @render(@lastTasksFilter, refresh = true)
 
-    render: (tasksFilter) ->
+    render: (tasksFilter, refresh) ->
         @lastTasksFilter = tasksFilter
 
         if @lastTasksFilter is 'active'
@@ -55,7 +55,7 @@ class TasksView extends View
         @$el.html template context
 
         @setupEvents()
-        @setUpSearchEvents()
+        @setUpSearchEvents(refresh)
         utils.setupSortableTables()
 
         @
@@ -93,9 +93,11 @@ class TasksView extends View
                     @collection.remove(taskModel)
                     row.remove()
 
-    setUpSearchEvents: ->
+    setUpSearchEvents: (refresh) ->
         $search = @$el.find('input[type="search"]')
-        $search.focus() if $(window).width() > 568
+
+        if not app.isMobile and not refresh
+            $search.focus()
 
         $rows = @$el.find('tbody > tr')
 

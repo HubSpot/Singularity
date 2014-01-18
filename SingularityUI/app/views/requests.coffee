@@ -29,9 +29,9 @@ class RequestsView extends View
         return if @$el.find('input[type="search"]').val() isnt ''
 
         @fetch(@lastRequestsFilter).done =>
-            @render(@lastRequestsFilter)
+            @render(@lastRequestsFilter, refresh = true)
 
-    render: (requestsFilter) =>
+    render: (requestsFilter, refresh) =>
         @lastRequestsFilter = requestsFilter
 
         if @lastRequestsFilter is 'active'
@@ -64,7 +64,7 @@ class RequestsView extends View
         @$el.html template context
 
         @setupEvents()
-        @setUpSearchEvents()
+        @setUpSearchEvents(refresh)
         utils.setupSortableTables()
 
         @
@@ -117,11 +117,13 @@ class RequestsView extends View
                     requestModel.unpause().done =>
                         @render()
 
-    setUpSearchEvents: =>
+    setUpSearchEvents: (refresh) ->
         $search = @$el.find('input[type="search"]')
-        $search.focus() if $(window).width() > 568
 
-        $rows = @$el.find('tbody > tr')
+        if not app.isMobile and not refresh
+            $search.focus()
+
+        $rows = @$('tbody > tr')
 
         lastText = _.trim $search.val()
 
