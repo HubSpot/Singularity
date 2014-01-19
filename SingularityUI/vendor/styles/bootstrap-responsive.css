@@ -769,7 +769,6 @@
        -moz-box-shadow: none;
             box-shadow: none;
   }
-  .nav-collapse .dropdown-menu:before,
   .nav-collapse .dropdown-menu:after {
     display: none;
   }
