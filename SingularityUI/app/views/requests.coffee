@@ -66,10 +66,12 @@ class RequestsView extends View
             if app.collections.requestsStarred.get(request.id)?
                 request.starred = true
 
+        searchWasFocused = @$el.find('input[type="search"]').is(':focus')
+
         @$el.html template context
 
         @setupEvents()
-        @setUpSearchEvents(refresh)
+        @setUpSearchEvents(refresh, searchWasFocused)
         utils.setupSortableTables()
 
         @
@@ -137,10 +139,10 @@ class RequestsView extends View
             else
                 $target.attr('data-starred', 'true')
 
-    setUpSearchEvents: (refresh) ->
+    setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
 
-        if not app.isMobile and not refresh
+        if not app.isMobile and (not refresh or searchWasFocused)
             $search.focus()
 
         $rows = @$('tbody > tr')

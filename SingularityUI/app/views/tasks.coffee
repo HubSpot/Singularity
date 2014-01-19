@@ -52,10 +52,12 @@ class TasksView extends View
         context =
             tasks: tasks
 
+        searchWasFocused = @$el.find('input[type="search"]').is(':focus')
+
         @$el.html template context
 
         @setupEvents()
-        @setUpSearchEvents(refresh)
+        @setUpSearchEvents(refresh, searchWasFocused)
         utils.setupSortableTables()
 
         @
@@ -93,10 +95,10 @@ class TasksView extends View
                     @collection.remove(taskModel)
                     $row.remove()
 
-    setUpSearchEvents: (refresh) ->
+    setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
 
-        if not app.isMobile and not refresh
+        if not app.isMobile and (not refresh or searchWasFocused)
             $search.focus()
 
         $rows = @$el.find('tbody > tr')
