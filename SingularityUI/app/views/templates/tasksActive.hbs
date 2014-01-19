@@ -40,7 +40,7 @@
                     <tbody>
                         {{#eachWithFn tasks}}
                             <tr data-task-id="{{ id }}">
-                                <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                                <td><a class="ellipsize-300" title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
                                 <td data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                                 <td>{{ host }}</td>
                                 <td>{{ rack }}</td>
