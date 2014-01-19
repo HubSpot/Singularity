@@ -7,6 +7,8 @@ RequestsPaused = require 'collections/RequestsPaused'
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
 
+RequestsStarred = require 'collections/RequestsStarred'
+
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
 TasksCleaning = require 'collections/TasksCleaning'
@@ -36,6 +38,9 @@ class Application
 
     fetchResources: (success) =>
         @resolveCountdown = 0
+
+        @collections.requestsStarred = new RequestsStarred
+        @collections.requestsStarred.fetch()
 
         resolve = =>
             @resolveCountdown -= 1

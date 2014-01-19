@@ -61,6 +61,11 @@ class RequestsView extends View
         else
             context.requests = _.pluck(@collection.models, 'attributes')
 
+        # Intersect starred requests before rendering
+        for request in context.requests
+            if app.collections.requestsStarred.get(request.id)?
+                request.starred = true
+
         @$el.html template context
 
         @setupEvents()
@@ -76,7 +81,7 @@ class RequestsView extends View
         $removeLinks = @$el.find('[data-action="remove"]')
 
         $removeLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
             vex.dialog.confirm
@@ -86,19 +91,19 @@ class RequestsView extends View
                     requestModel.destroy()
                     delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
                     @collection.remove(requestModel)
-                    row.remove()
+                    $row.remove()
 
         $deletePausedLinks = @$el.find('[data-action="deletePaused"]')
 
         $deletePausedLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
             vex.dialog.confirm
                 message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
-                    row.remove()
+                    $row.remove()
                     requestModel.deletePaused().done =>
                         delete app.allRequests[requestModel.get('id')]
                         @collection.remove(requestModel)
@@ -106,16 +111,31 @@ class RequestsView extends View
         $unpauseLinks = @$el.find('[data-action="unpause"]')
 
         $unpauseLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
             vex.dialog.confirm
                 message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
-                    row.remove()
+                    $row.remove()
                     requestModel.unpause().done =>
                         @render()
+
+        $starLinks = @$el.find('[data-action="starToggle"]')
+
+        $starLinks.unbind('click').on 'click', (e) =>
+            $target = $(e.target)
+
+            requestId = $target.data('request-id')
+            starred = $target.attr('data-starred') is 'true'
+
+            app.collections.requestsStarred.toggle(requestId)
+
+            if starred
+                $target.attr('data-starred', 'false')
+            else
+                $target.attr('data-starred', 'true')
 
     setUpSearchEvents: (refresh) ->
         $search = @$el.find('input[type="search"]')

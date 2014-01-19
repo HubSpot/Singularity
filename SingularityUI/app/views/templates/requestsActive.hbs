@@ -39,6 +39,7 @@
                 <table class="table" data-sortable>
                     <thead>
                         <tr>
+                            <th data-sortable="false"></th>
                             <th>Name</th>
                             <th>Requested</th>
                             <th>Deploy User</th>
@@ -49,6 +50,7 @@
                     <tbody>
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}">
+                                <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}">★</a></td>
                                 <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td>{{ deployUser }}</td>
@@ -78,6 +80,7 @@
                 <table class="table" data-sortable>
                     <thead>
                         <tr>
+                            <th data-sortable="false"></th>
                             <th>Name</th>
                             <th>Requested</th>
                             <th>Deploy User</th>
@@ -88,6 +91,7 @@
                     <tbody>
                         {{#eachWithFn requestsScheduled}}
                             <tr data-request-id="{{ id }}">
+                                <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}">★</a></td>
                                 <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td>{{ deployUser }}</td>

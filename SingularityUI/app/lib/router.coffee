@@ -4,13 +4,14 @@ RequestsView = require 'views/requests'
 RequestView = require 'views/request'
 TasksView = require 'views/tasks'
 TaskView = require 'views/task'
+FilesView = require 'views/files'
+TailView = require 'views/tail'
+StatusView = require 'views/status'
 RacksView = require 'views/racks'
 SlavesView = require 'views/slaves'
 WebhooksView = require 'views/webhooks'
 PageNotFoundView = require 'views/pageNotFound'
 NavigationView = require 'views/navigation'
-FilesView = require 'views/files'
-TailView = require 'views/tail'
 
 Backbone.history.on 'route', ->
     nav()
@@ -43,6 +44,7 @@ class Router extends Backbone.Router
         'task/:taskId/files(/)': 'files'
         'task/:taskId/files/*path': 'files'
         'task/:taskId/tail/*path': 'tail'
+        'status(/)': 'status'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
         'webhooks(/)': 'webhooks'
@@ -52,7 +54,7 @@ class Router extends Backbone.Router
         if not app.views.dashboard?
             app.views.dashboard = new DashboardView
         app.views.current = app.views.dashboard
-        app.views.dashboard.render().refresh(fromRoute = true)
+        app.views.dashboard.render()
 
     search: ->
         if not app.views.search?
@@ -107,6 +109,12 @@ class Router extends Backbone.Router
             app.views.tailViews[taskId] = new TailView taskId: taskId, path: path
         app.views.current = app.views.tailViews[taskId]
         app.views.tailViews[taskId].render()
+
+    status: ->
+        if not app.views.status?
+            app.views.status = new StatusView
+        app.views.current = app.views.status
+        app.views.status.render().refresh(fromRoute = true)
 
     racks: ->
         if not app.views.racks?
