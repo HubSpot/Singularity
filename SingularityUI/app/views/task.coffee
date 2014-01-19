@@ -44,7 +44,6 @@ class TaskView extends View
             utils.viewJSON 'task', $(e.target).data('task-id')
 
         @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
             taskModel = new Task id: $(e.target).data('task-id')
 
             vex.dialog.confirm
@@ -53,6 +52,5 @@ class TaskView extends View
                     return unless confirmed
                     taskModel.destroy()
                     app.router.navigate 'tasks', trigger: true
-
 
 module.exports = TaskView
