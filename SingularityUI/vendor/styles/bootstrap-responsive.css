@@ -745,7 +745,7 @@
   }
   .nav-collapse .nav > li > a:hover,
   .nav-collapse .dropdown-menu a:hover {
-    background-color: #222222;
+    background-color: #444;
   }
   .nav-collapse.in .btn-group {
     padding: 0;

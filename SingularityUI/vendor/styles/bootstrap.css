@@ -3793,7 +3793,7 @@ input[type="submit"].btn.btn-mini {
 .navbar .nav .active > a:hover {
   color: #ffffff;
   text-decoration: none;
-  background-color: #222222;
+  background-color: #444;
 }
 
 .navbar .divider-vertical {
