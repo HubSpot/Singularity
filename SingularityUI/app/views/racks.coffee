@@ -44,7 +44,7 @@ class RacksView extends View
         $removeLinks = @$el.find('[data-action="remove"]')
 
         $removeLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             rackModel = @racksDead.get($(e.target).data('rack-id'))
 
             vex.dialog.confirm
@@ -53,6 +53,6 @@ class RacksView extends View
                     return unless confirmed
                     rackModel.destroy()
                     @racksDead.remove(rackModel)
-                    row.remove()
+                    $row.remove()
 
 module.exports = RacksView

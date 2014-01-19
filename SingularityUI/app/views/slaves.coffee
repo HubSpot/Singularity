@@ -46,7 +46,7 @@ class SlavesView extends View
         $removeLinks = @$el.find('[data-action="remove"]')
 
         $removeLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             slaveModel = @slavesDead.get($(e.target).data('slave-id'))
 
             vex.dialog.confirm
@@ -55,6 +55,6 @@ class SlavesView extends View
                     return unless confirmed
                     slaveModel.destroy()
                     @slavesDead.remove(slaveModel)
-                    row.remove()
+                    $row.remove()
 
 module.exports = SlavesView

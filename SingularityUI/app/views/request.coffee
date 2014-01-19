@@ -145,7 +145,7 @@ class RequestView extends View
 
         $runNowLinks.unbind('click').on 'click', (e) =>
             taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
 
             vex.dialog.confirm
                 message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
@@ -153,6 +153,6 @@ class RequestView extends View
                     return unless confirmed
                     taskModel.run()
                     app.collections.tasksScheduled.remove(taskModel)
-                    row.remove()
+                    $row.remove()
 
 module.exports = RequestView

@@ -67,7 +67,7 @@ class TasksView extends View
         $removeLinks = @$el.find('[data-action="remove"]')
 
         $removeLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             taskModel = @collection.get($(e.target).data('task-id'))
 
             vex.dialog.confirm
@@ -77,13 +77,13 @@ class TasksView extends View
                     taskModel.destroy()
                     delete app.allTasks[taskModel.get('id')] # TODO - move to model on destroy?
                     @collection.remove(taskModel)
-                    row.remove()
+                    $row.remove()
 
         $runNowLinks = @$el.find('[data-action="run-now"]')
 
         $runNowLinks.unbind('click').on 'click', (e) =>
             taskModel = @collection.get($(e.target).data('task-id'))
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
 
             vex.dialog.confirm
                 message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
@@ -91,7 +91,7 @@ class TasksView extends View
                     return unless confirmed
                     taskModel.run()
                     @collection.remove(taskModel)
-                    row.remove()
+                    $row.remove()
 
     setUpSearchEvents: (refresh) ->
         $search = @$el.find('input[type="search"]')
