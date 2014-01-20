@@ -11,9 +11,10 @@ class DashboardView extends View
 
         # Intersect active requests before rendering
         for request in _.pluck(app.collections.requestsStarred.models, 'attributes')
-            activeRequestModel = app.collections.requestsActive.get(request.id)
-            if activeRequestModel?
-                context.requests.push(activeRequestModel.attributes)
+            activeRequestModels = app.collections.requestsActive.filter (r) -> r.get('name') is request.name
+            if activeRequestModels?
+                _.each activeRequestModels, (activeRequestModel) ->
+                    context.requests.push activeRequestModel.attributes
             else
                 context.requestsNotFound.push request
 

@@ -63,7 +63,7 @@ class RequestsView extends View
 
         # Intersect starred requests before rendering
         for request in context.requests
-            if app.collections.requestsStarred.get(request.id)?
+            if app.collections.requestsStarred.findWhere(name: request.name)?
                 request.starred = true
 
         searchWasFocused = @$el.find('input[type="search"]').is(':focus')
@@ -128,16 +128,19 @@ class RequestsView extends View
 
         $starLinks.unbind('click').on 'click', (e) =>
             $target = $(e.target)
+            $table = $target.parents('table')
 
             requestId = $target.data('request-id')
+            requestName = $target.data('request-name')
             starred = $target.attr('data-starred') is 'true'
 
-            app.collections.requestsStarred.toggle(requestId)
+            app.collections.requestsStarred.toggle(requestName)
+            $requests = $table.find("""[data-request-name="#{ requestName }"]""")
 
             if starred
-                $target.attr('data-starred', 'false')
+                $requests.each -> $(@).attr('data-starred', 'false')
             else
-                $target.attr('data-starred', 'true')
+                $requests.each -> $(@).attr('data-starred', 'true')
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')

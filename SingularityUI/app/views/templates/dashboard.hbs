@@ -46,14 +46,14 @@
                 <thead>
                     <tr>
                         <th data-sortable="false"></th>
-                        <th>Request</th>
+                        <th>Name</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#eachWithFn requestsNotFound}}
-                        <tr data-request-id="{{ id }}">
-                            <td><a class="star" data-request-id="{{ id }}" data-action="unstar" data-starred="true">★</a></td>
-                            <td>{{#hardBreak id}}{{/hardBreak}}</td>
+                        <tr>
+                            <td><a class="star" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
+                            <td>{{#hardBreak name}}{{/hardBreak}}</td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>

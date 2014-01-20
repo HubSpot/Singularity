@@ -1,15 +1,15 @@
 class RequestsStarred extends Backbone.Collection
 
-    localStorage: new Backbone.LocalStorage('RequestsStarred')
+    localStorage: new Backbone.LocalStorage('RequestNamesStarred')
 
-    toggle: (requestId) ->
-        model = @get(requestId)
+    toggle: (requestName) ->
+        model = @get(requestName)
 
         if model?
             model.destroy()
         else
             @create
-                id: requestId
+                name: requestName
                 added: + new Date()
 
 module.exports = RequestsStarred
