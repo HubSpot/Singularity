@@ -130,7 +130,6 @@ class RequestsView extends View
             $target = $(e.target)
             $table = $target.parents('table')
 
-            requestId = $target.data('request-id')
             requestName = $target.data('request-name')
             starred = $target.attr('data-starred') is 'true'
 

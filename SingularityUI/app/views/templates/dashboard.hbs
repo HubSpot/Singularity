@@ -21,7 +21,7 @@
                 <tbody>
                     {{#eachWithFn requests}}
                         <tr data-request-id="{{ id }}">
-                            <td><a class="star" data-request-id="{{ id }}" data-action="unstar" data-starred="true">★</a></td>
+                            <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
                             <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
                             <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                             <td>{{ deployUser }}</td>

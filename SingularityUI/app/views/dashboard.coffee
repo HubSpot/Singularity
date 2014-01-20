@@ -27,11 +27,16 @@ class DashboardView extends View
 
     setupEvents: ->
         @$el.find('[data-action="unstar"]').unbind('click').on 'click', (e) =>
-            $row = $(e.target).parents('tr')
-            app.collections.requestsStarred.toggle($(e.target).data('request-id'))
-            if not $row.siblings().length
+            $target = $(e.target)
+            $table = $target.parents('table')
+
+            requestName = $target.data('request-name')
+
+            app.collections.requestsStarred.toggle(requestName)
+
+            $table.find("""[data-request-name="#{ requestName }"]""").each -> $(@).parents('tr').remove()
+
+            if $table.find('tbody tr').length is 0
                 @render()
-            else
-                $row.remove()
 
 module.exports = DashboardView
