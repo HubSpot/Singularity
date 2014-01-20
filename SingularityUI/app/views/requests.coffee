@@ -63,7 +63,7 @@ class RequestsView extends View
 
         # Intersect starred requests before rendering
         for request in context.requests
-            if app.collections.requestsStarred.findWhere(name: request.name)?
+            if app.collections.requestsStarred.get(request.name)?
                 request.starred = true
 
         searchWasFocused = @$el.find('input[type="search"]').is(':focus')
