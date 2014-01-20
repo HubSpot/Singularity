@@ -21,6 +21,8 @@ class SlavesView extends View
         $.when(promises...)
 
     refresh: ->
+        return if @$el.find('[data-sorted-direction]').length
+
         @fetchDone = false
         @fetch().done =>
             @fetchDone = true
