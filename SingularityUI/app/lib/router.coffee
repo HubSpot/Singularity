@@ -28,7 +28,7 @@ globalRefresh = =>
     window.globalRefreshTimeout = setInterval ->
         if not $('body > .vex').length
             app.views.current?.refresh?()
-    , 10 * 1000
+    , 20 * 1000
 
 class Router extends Backbone.Router
 
