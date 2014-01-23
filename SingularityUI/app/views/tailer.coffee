@@ -25,7 +25,7 @@ class TailerView extends Backbone.View
 
             origScrollHeight = @el.scrollHeight
 
-            # add lines at top            
+            # add lines at top
             _.each @lines.first(headIndex), (model) =>
                 head.before @renderLine model
 
@@ -68,7 +68,7 @@ class TailerView extends Backbone.View
         scrollTop = @$el.scrollTop()
         scrollBottom = scrollTop + @$el.height()
         scrollMax = @el.scrollHeight
-        
+
         if scrollTop is 0 and @lines.getMinOffset() > 0
             @page()
         else if scrollBottom is scrollMax
@@ -91,5 +91,7 @@ class TailerView extends Backbone.View
 
             ajaxPromise.fail (jqXHR, status, error) =>
                 @$el.removeClass 'loading'
+
+        @
 
 module.exports = TailerView

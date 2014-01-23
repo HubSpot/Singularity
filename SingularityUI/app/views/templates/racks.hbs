@@ -26,7 +26,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No active racks.</p></center>
+                {{#if fetchDone}}
+                    <center><p>No active racks.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>
@@ -44,7 +48,7 @@
                         <tr>
                             <th>ID</th>
                             <th>State</th>
-                            <th></th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,7 +62,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No dead racks.</p></center>
+                {{#if fetchDone}}
+                    <center><p>No dead racks.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>
@@ -88,7 +96,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No decomissioning racks.</p></center>
+                {{#if fetchDone}}
+                    <center><p>No decomissioning racks.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>

@@ -21,17 +21,18 @@ class SlavesView extends View
         $.when(promises...)
 
     refresh: ->
-        return if @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('[data-sorted-direction]').length
 
         @fetchDone = false
         @fetch().done =>
             @fetchDone = true
             @render()
 
-    render: ->
-        return @ unless @fetchDone
+        @
 
+    render: ->
         context =
+            fetchDone: @fetchDone
             slavesActive: _.pluck(@slavesActive.models, 'attributes')
             slavesDead: _.pluck(@slavesDead.models, 'attributes')
             slavesDecomissioning: _.pluck(@slavesDecomissioning.models, 'attributes')

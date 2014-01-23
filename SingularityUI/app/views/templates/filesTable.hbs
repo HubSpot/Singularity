@@ -28,5 +28,9 @@
         </tbody>
     </table>
 {{else}}
-    <center><p>This directory contains no files.</p></center>
+    {{#if taskFilesFetchDone}}
+        <center><p>This directory contains no files.</p></center>
+    {{else}}
+        <div class="page-loader centered"></div>
+    {{/if}}
 {{/if}}

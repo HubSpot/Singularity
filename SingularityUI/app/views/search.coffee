@@ -22,11 +22,13 @@ class SearchView extends View
     render: ->
         @$el.html @template
 
-        @$searchOptions = $ '.search-options'
-        @$search = @$el.find('input[type="search"]')
+        @$searchOptions = @$ '.search-options'
+        @$search = @$ 'input[type="search"]'
 
         @setupSearchOptions()
         @setUpSearchEvents()
+
+        @
 
     setupSearchOptions: ->
         @$searchOptions.find('select').each (i, select) =>

@@ -19,17 +19,18 @@ class RacksView extends View
         $.when(promises...)
 
     refresh: ->
-        return if @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('[data-sorted-direction]').length
 
         @fetchDone = false
         @fetch().done =>
             @fetchDone = true
             @render()
 
-    render: ->
-        return @ unless @fetchDone
+        @
 
+    render: ->
         context =
+            fetchDone: @fetchDone
             racksActive: _.pluck(@racksActive.models, 'attributes')
             racksDead: _.pluck(@racksDead.models, 'attributes')
             racksDecomissioning: _.pluck(@racksDecomissioning.models, 'attributes')

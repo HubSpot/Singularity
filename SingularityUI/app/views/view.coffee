@@ -3,8 +3,6 @@ require 'lib/view_helper'
 # Base class for all views.
 class View extends Backbone.View
 
-    el: '#page'
-
     events:
         'click a[data-route]': 'routeLink'
 

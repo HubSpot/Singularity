@@ -46,6 +46,8 @@ class RequestView extends View
 
         utils.setupSortableTables()
 
+        @
+
     renderHistoricalTasksPaginated: ->
         @historicalTasks = new HistoricalTasks [],
             requestId: @options.requestId

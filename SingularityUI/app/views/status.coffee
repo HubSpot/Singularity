@@ -37,6 +37,8 @@ class StatusView extends View
         @fetch(@lastTasksFilter).done =>
             @render(fromRoute)
 
+        @
+
     render: (fromRoute) =>
         changedNumbers = {}
 

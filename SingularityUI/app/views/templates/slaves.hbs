@@ -30,7 +30,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No active slaves.</p></center>
+                {{#if fetchDone}}
+                    <center><p>No active slaves.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>
@@ -50,7 +54,7 @@
                             <th>Rack</th>
                             <th>Host</th>
                             <th>State</th>
-                            <th></th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,13 +64,17 @@
                                 <td>{{ rackId }}</td>
                                 <td>{{ host }}</td>
                                 <td>{{ state }}</td>
-                                <td><a data-slave-id="{{ id }}" data-action="remove">Remove</a>
+                                <td class="actions-column"><a data-slave-id="{{ id }}" data-action="remove">Remove</a>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No dead slaves.</p></center>
+                {{#if fetchDone}}
+                    <center><p>No dead slaves.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>
@@ -100,7 +108,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No decomissioning slaves.</p></center>
+                {{#if fetchDone}}
+                    <center><p>No decomissioning slaves.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>

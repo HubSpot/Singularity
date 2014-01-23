@@ -26,10 +26,12 @@ class RequestsView extends View
         @collection.fetch()
 
     refresh: ->
-        return if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastRequestsFilter).done =>
             @render(@lastRequestsFilter, refresh = true)
+
+        @
 
     render: (requestsFilter, refresh) =>
         @lastRequestsFilter = requestsFilter

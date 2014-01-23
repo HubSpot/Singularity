@@ -12,6 +12,7 @@ class NavigationView extends View
         @renderTitle()
         @renderNavLinks()
         @collapse()
+        @
 
     renderTitle: =>
         subtitle = utils.getHTMLTitleFromHistoryFragment(Backbone.history.fragment)

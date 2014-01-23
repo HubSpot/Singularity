@@ -24,10 +24,12 @@ class TasksView extends View
         @collection.fetch()
 
     refresh: ->
-        return if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastTasksFilter).done =>
             @render(@lastTasksFilter, refresh = true)
+
+        @
 
     render: (tasksFilter, refresh) ->
         @lastTasksFilter = tasksFilter
