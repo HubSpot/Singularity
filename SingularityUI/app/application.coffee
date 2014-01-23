@@ -18,6 +18,9 @@ class Application
     initialize: ->
         app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
 
+        app.$page = $('#page')
+        app.page = app.$page[0]
+
         @views = {}
         @collections = {}
 
@@ -35,6 +38,12 @@ class Application
                 root: '/singularity/'
 
             Object.freeze? @
+
+    show: (view) ->
+        if app.page.children.length
+            app.page.replaceChild view.el, app.page.children[0]
+        else
+            app.page.appendChild view.el
 
     fetchResources: (success) ->
         @resolveCountdown = 0
