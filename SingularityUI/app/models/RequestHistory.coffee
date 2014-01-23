@@ -16,6 +16,9 @@ class RequestHistory extends Model
             requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
             requestUpdate.stateHuman = constants.requestStates[requestUpdate.state]
 
+        _.sortBy requestHistory.requestUpdates, (r) -> r.createdAt
+        requestHistory.requestUpdates.reverse()
+
         requestHistory
 
 module.exports = RequestHistory
