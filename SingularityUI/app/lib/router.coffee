@@ -35,6 +35,7 @@ class Router extends Backbone.Router
     routes:
         '(/)': 'dashboard'
         'search(/)': 'search'
+        'status(/)': 'status'
         'requests(/)': 'requests'
         'requests/:requestsFilter(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
@@ -44,7 +45,6 @@ class Router extends Backbone.Router
         'task/:taskId/files(/)': 'files'
         'task/:taskId/files/*path': 'files'
         'task/:taskId/tail/*path': 'tail'
-        'status(/)': 'status'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
         'webhooks(/)': 'webhooks'
