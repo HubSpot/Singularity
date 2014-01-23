@@ -3,25 +3,29 @@
 </header>
 
 <section>
-    <div class="row-fluid">
-        <div class="span12">
-            <table class="table" data-sortable>
-                <thead>
-                    <tr>
-                        <th>Webhook</th>
-                        <th data-sortable="false"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#eachWithFn webhooks}}
+    {{#if fetchDone}}
+        <div class="row-fluid">
+            <div class="span12">
+                <table class="table" data-sortable>
+                    <thead>
                         <tr>
-                            <td><a target="_blank" href="{{ url }}">{{#hardBreak url}}{{/hardBreak}}</a></td>
-                            <td class="actions-column"><a data-action="remove" data-url="{{ url }}">Remove</a></td>
+                            <th>Webhook</th>
+                            <th data-sortable="false"></th>
                         </tr>
-                    {{/eachWithFn}}
-                </tbody>
-            </table>
-            <input type="search" placeholder="Add a webhook..." required />
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn webhooks}}
+                            <tr>
+                                <td><a target="_blank" href="{{ url }}">{{#hardBreak url}}{{/hardBreak}}</a></td>
+                                <td class="actions-column"><a data-action="remove" data-url="{{ url }}">Remove</a></td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+                <input type="search" placeholder="Add a webhook..." required />
+            </div>
         </div>
-    </div>
+    {{else}}
+        <div class="page-loader centered"></div>
+    {{/if}}
 </section>
