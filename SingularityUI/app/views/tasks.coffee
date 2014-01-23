@@ -101,7 +101,7 @@ class TasksView extends View
         $search = @$el.find('input[type="search"]')
 
         if not app.isMobile and (not refresh or searchWasFocused)
-            $search.focus()
+            setTimeout -> $search.focus()
 
         $rows = @$el.find('tbody > tr')
 
