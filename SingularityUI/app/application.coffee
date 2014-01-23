@@ -15,7 +15,7 @@ TasksCleaning = require 'collections/TasksCleaning'
 
 class Application
 
-    initialize: =>
+    initialize: ->
         app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
 
         @views = {}
@@ -36,7 +36,7 @@ class Application
 
             Object.freeze? @
 
-    fetchResources: (success) =>
+    fetchResources: (success) ->
         @resolveCountdown = 0
 
         @collections.requestsStarred = new RequestsStarred
