@@ -2,6 +2,7 @@ View = require './view'
 
 Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
+
 TaskFiles = require '../collections/TaskFiles'
 
 class TaskView extends View

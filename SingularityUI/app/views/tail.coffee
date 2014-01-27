@@ -1,9 +1,11 @@
 View = require './view'
 
 TaskHistory = require '../models/TaskHistory'
+
 TailerView = require './tailer'
 
 class TailView extends View
+
     template: require './templates/tail'
 
     initialize: ({@taskId, @path}) ->
