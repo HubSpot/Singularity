@@ -17,6 +17,7 @@ class Application
 
     initialize: ->
         app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
+        app.setupGlobalErrorHandling()
 
         app.$page = $('#page')
         app.page = app.$page[0]
@@ -39,6 +40,11 @@ class Application
 
             Object.freeze? @
 
+    setupGlobalErrorHandling: ->
+        $(document).on 'ajaxError', (event, jqxhr, settings) ->
+            unless settings.suppressErrors
+                vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ settings.url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.stringJSON jqxhr }</pre>"
+
     show: (view) ->
         if app.page.children.length
             app.page.replaceChild view.el, app.page.children[0]
@@ -58,7 +64,8 @@ class Application
         @resolveCountdown += 1
         @state = new State
         @state.fetch
-            error: => vex.dialog.alert('An error occurred while trying to load the Singularity state.')
+            suppressErrors: true
+            error: -> vex.dialog.alert('An error occurred while trying to load the Singularity state.')
             success: -> resolve()
 
         resources = [{
@@ -95,7 +102,8 @@ class Application
             @resolveCountdown += 1
             @collections[r.collection_key] = new r.collection
             @collections[r.collection_key].fetch
-                error: ->
+                suppressErrors: true
+                error: (e) ->
                     vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
                     resolve()
                 success: ->
