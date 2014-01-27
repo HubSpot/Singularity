@@ -17,6 +17,7 @@ class TaskHistory extends Model
         taskHistory.task.startedAt = taskHistory.task.taskId.startedAt
         taskHistory.task.startedAtHuman = utils.humanTimeAgo taskHistory.task.taskId.startedAt
         taskHistory.task.rack = taskHistory.task.taskId.rackId
+        taskHistory.task.isFinished = false
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
             taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
