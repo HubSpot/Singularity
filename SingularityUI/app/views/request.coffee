@@ -1,5 +1,6 @@
 View = require './view'
 
+Request = require '../models/Request'
 RequestHistory = require '../models/RequestHistory'
 
 RequestTasks = require '../collections/RequestTasks'
@@ -8,6 +9,8 @@ HistoricalTasks = require '../collections/HistoricalTasks'
 class RequestView extends View
 
     template: require './templates/request'
+
+    removeRequestTemplate: require './templates/vex/removeRequest'
 
     initialize: =>
         @request = app.allRequests[@options.requestId]
@@ -142,6 +145,16 @@ class RequestView extends View
 
         @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'request', $(e.target).data('request-id')
+
+        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+
+            vex.dialog.confirm
+                message: @removeRequestTemplate(requestId: requestModel.get('id'))
+                callback: (confirmed) =>
+                    return unless confirmed
+                    requestModel.destroy()
+                    app.router.navigate 'requests', trigger: true
 
         $runNowLinks = @$el.find('[data-action="run-now"]')
 

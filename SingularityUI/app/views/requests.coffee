@@ -7,6 +7,8 @@ class RequestsView extends View
     templateRequestsPending: require './templates/requestsPending'
     templateRequestsCleaning: require './templates/requestsCleaning'
 
+    removeRequestTemplate: require './templates/vex/removeRequest'
+
     initialize: ->
         @lastRequestsFilter = @options.requestsFilter
 
@@ -89,7 +91,7 @@ class RequestsView extends View
             requestModel = @collection.get($(e.target).data('request-id'))
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the request:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: @removeRequestTemplate(requestId: requestModel.get('id'))
                 callback: (confirmed) =>
                     return unless confirmed
                     requestModel.destroy()
