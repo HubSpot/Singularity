@@ -41,7 +41,7 @@ class NavigationView extends View
 
     renderTheme: (theme) =>
         previousTheme = if @theme is 'light' then 'dark' else 'light'
-        $('html').addClass("#{ theme }strap").removeClass("#{ previousTheme }strap")
+        $('html').addClass("#{ theme }-theme").removeClass("#{ previousTheme }-theme")
         $('#theme-changer').html(_.capitalize(previousTheme)).unbind('click').on 'click', =>
             newTheme = if @theme is 'dark' then 'light' else 'dark'
             @theme = newTheme
