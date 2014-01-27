@@ -4,6 +4,10 @@ _.mixin _.string.exports()
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
 
+# Time out requests within 10 seconds
+$.ajaxSetup
+    timeout: 10 * 1000
+
 # Patch jQuery ajax to always use xhrFields.withCredentials true
 _oldAjax = jQuery.ajax
 jQuery.ajax = (opts) ->
