@@ -13,9 +13,19 @@ WebhooksView = require 'views/webhooks'
 PageNotFoundView = require 'views/pageNotFound'
 NavigationView = require 'views/navigation'
 
+currentViewIsTailView = ->
+    Backbone.history.fragment.match(/^task\/.+\/tail\//)?.length is 1
+
+htmlClasses = ->
+    if currentViewIsTailView()
+        $('html').addClass('tail-view')
+    else
+        $('html').removeClass('tail-view')
+
 Backbone.history.on 'route', ->
     nav()
     globalRefresh()
+    htmlClasses()
 
 nav = ->
     if not app.views.navigationView?

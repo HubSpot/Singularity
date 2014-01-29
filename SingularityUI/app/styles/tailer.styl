@@ -1,11 +1,64 @@
-.tail-container
+.tail-outer
     font-family Consolas, "Liberation Mono", Courier, monospace
-    overflow scroll
-    height 500px
+    overflow auto
+    -webkit-overflow-scrolling touch
 
-    > div
-        width 100%
-        white-space pre
+    @media (max-width: 1199px)
+        height 500px
 
-        &:hover
-            background #eee
+    .tail-container
+
+        > div
+            width 100%
+            white-space pre
+
+            &:hover
+                background #eee
+
+@media (min-width: 1200px)
+    html.tail-view
+
+        &, body
+            height 100%
+            overflow hidden
+
+        .navbar-inner .container
+            width 100% !important
+            max-width 100% !important
+            padding-left 20px
+            padding-right 20px
+
+        #page
+            position fixed
+            width: 100%
+            top 40px
+            bottom 0
+            left 0
+            right 0
+
+            header
+                position absolute
+                top 0
+                left 0
+                right 0
+                padding 13px 20px
+                height 100px
+                background #fcfcfc
+                margin 0
+
+            .tail-outer
+                position absolute
+                top 100px
+                left 0
+                right 0
+                bottom 0
+                background #f3f3f3
+
+                .tail-container
+                    display inline-block
+
+                    > div
+                        padding: 0 20px
+
+                        &:hover
+                            background #ccc
