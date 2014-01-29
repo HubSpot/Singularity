@@ -45,7 +45,9 @@ class TailerView extends Backbone.View
         @$el.scrollTop @el.scrollHeight
 
     renderLine: (model) =>
-        @lineTemplate model.toJSON()
+        data = model.toJSON()
+        data.data = $.trim data.data
+        @lineTemplate data
 
     page: =>
         if @lines.getMinOffset() is 0
