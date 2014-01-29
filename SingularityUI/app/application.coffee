@@ -42,7 +42,7 @@ class Application
 
     setupGlobalErrorHandling: ->
         $(document).on 'ajaxError', (event, jqxhr, settings) ->
-            unless settings.suppressErrors
+            if not settings.suppressErrors and jqxhr.statusText isnt 'abort'
                 vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ settings.url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.stringJSON jqxhr }</pre>"
 
     show: (view) ->
