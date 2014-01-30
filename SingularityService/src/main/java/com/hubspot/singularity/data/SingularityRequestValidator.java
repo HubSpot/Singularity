@@ -1,15 +1,14 @@
 package com.hubspot.singularity.data;
 
-import java.util.List;
-import java.util.Map;
-
-import org.quartz.CronExpression;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.SingularityRequest;
+import org.quartz.CronExpression;
+
+import java.util.List;
+import java.util.Map;
 
 public class SingularityRequestValidator {
 
@@ -46,7 +45,7 @@ public class SingularityRequestValidator {
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
         
     return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, Objects.firstNonNull(request.getInstances(), 1), request.getDaemon(), request.getEnv(), 
-        request.getUris(), request.getMetadata(), request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp(), request.getOwners(), request.getNumRetriesOnFailure(), request.getMaxFailuresBeforePausing());
+        request.getUris(), request.getMetadata(), request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp(), request.getOwners(), request.getNumRetriesOnFailure(), request.getMaxFailuresBeforePausing(), request.getPauseOnInitialFailure());
   }
   
   /**
