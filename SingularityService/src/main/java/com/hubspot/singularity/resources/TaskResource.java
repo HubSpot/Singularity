@@ -1,25 +1,16 @@
 package com.hubspot.singularity.resources;
 
-import java.util.List;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
-import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.sun.jersey.api.NotFoundException;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -56,14 +47,18 @@ public class TaskResource {
   
   @DELETE
   @Path("/task/{taskId}")
-  public String deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
+  public SingularityTaskCleanupResult deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
     
     if (!task.isPresent()) {
       throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
     }
+
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId());
     
-    return taskManager.createCleanupTask(new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId())).name();
+    final SingularityCreateResult result = taskManager.createCleanupTask(taskCleanup);
+
+    return new SingularityTaskCleanupResult(result, task.get());
   }
   
 }

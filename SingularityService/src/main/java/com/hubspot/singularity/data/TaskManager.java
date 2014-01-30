@@ -1,22 +1,18 @@
 package com.hubspot.singularity.data;
 
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.hubspot.singularity.*;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskId;
+import java.util.List;
 
 public class TaskManager extends CuratorManager {
 
@@ -183,7 +179,7 @@ public class TaskManager extends CuratorManager {
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getAsBytes(objectMapper));
   }
   
-  public CreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
+  public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
     return create(getCleanupPath(cleanupTask.getTaskId()), Optional.of(cleanupTask.getAsBytes(objectMapper)));
   }
   

@@ -1,34 +1,21 @@
 package com.hubspot.singularity.resources;
 
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.BadRequestException;
-import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
-import com.hubspot.singularity.data.CuratorManager.CreateResult;
-import com.hubspot.singularity.data.CuratorManager.DeleteResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.RequestManager.PersistResult;
 import com.hubspot.singularity.data.SingularityRequestValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.ConflictException;
 import com.sun.jersey.api.NotFoundException;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/requests")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -87,9 +74,9 @@ public class RequestResource {
   public void pause(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
-    CreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
     
-    if (result == CreateResult.CREATED) {
+    if (result == SingularityCreateResult.CREATED) {
       historyManager.saveRequestHistoryUpdate(request, RequestState.PAUSED, user);
     } else {
       throw new ConflictException(String.format("A cleanup/pause request for %s failed to create because it was in state %s", requestId, result));
@@ -166,10 +153,10 @@ public class RequestResource {
     if (!request.isPresent()) {
       throw handleNoMatchingRequest(requestId);
     }
+
+    SingularityDeleteResult result = requestManager.deletePausedRequest(requestId);
     
-    DeleteResult result = requestManager.deletePausedRequest(requestId);
-    
-    if (result != DeleteResult.DELETED) {
+    if (result != SingularityDeleteResult.DELETED) {
       throw handleNoMatchingRequest(requestId);
     }
     

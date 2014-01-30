@@ -1,7 +1,13 @@
 package com.hubspot.singularity.data;
 
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.hubspot.singularity.*;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.sun.jersey.api.ConflictException;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -9,18 +15,7 @@ import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingRequestId;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.sun.jersey.api.ConflictException;
+import java.util.List;
 
 public class RequestManager extends CuratorManager {
   
@@ -84,7 +79,7 @@ public class RequestManager extends CuratorManager {
     delete(getCleanupPath(requestId));
   }
  
-  public CreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
+  public SingularityCreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
     return create(getCleanupPath(cleanupRequest.getRequestId()), Optional.of(cleanupRequest.getAsBytes(objectMapper)));
   }
   
@@ -101,7 +96,7 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public DeleteResult deletePausedRequest(String requestId) {
+  public SingularityDeleteResult deletePausedRequest(String requestId) {
     return delete(getPausedPath(requestId));
   }
   
