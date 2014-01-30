@@ -1,16 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.text.ParseException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.mesos.Protos.TaskState;
-import org.quartz.CronExpression;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -18,21 +7,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRack;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -42,6 +20,16 @@ import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.history.HistoryManager.TaskHistoryOrderBy;
 import com.hubspot.singularity.smtp.SingularityMailer;
+import org.apache.mesos.Protos.TaskState;
+import org.quartz.CronExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.ParseException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 public class SingularityScheduler extends SingularitySchedulerBase {
 
@@ -312,6 +300,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private boolean shouldPause(SingularityRequest request) {
+    if (request.getPauseOnInitialFailure()) {
+      if (historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1).isEmpty()) {
+        LOG.info(String.format("Pausing request %s due to initial failure", request.getId()));
+        return true;
+      }
+    }
+
     if (request.getMaxFailuresBeforePausing() == null) {
       return false;
     }
