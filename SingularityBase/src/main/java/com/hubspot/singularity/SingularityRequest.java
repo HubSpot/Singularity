@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.Resources;
@@ -71,7 +72,7 @@ public class SingularityRequest extends SingularityJsonObject {
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.maxFailuresBeforePausing = maxFailuresBeforePausing;
-    this.pauseOnInitialFailure = pauseOnInitialFailure;
+    this.pauseOnInitialFailure = Objects.firstNonNull(pauseOnInitialFailure, false);
   }
   
   public List<String> getOwners() {
