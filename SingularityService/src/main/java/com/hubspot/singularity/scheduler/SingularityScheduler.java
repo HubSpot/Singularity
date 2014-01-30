@@ -234,7 +234,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
  
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
     
-    if (!maybeRequest.isPresent()) {
+    if (!maybeRequest.isPresent() || maybeRequest.get() == null) {
       LOG.warn(String.format("Not scheduling a new task, due to no existing request for %s", taskId.getRequestId()));
       return;
     }
@@ -300,6 +300,10 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private boolean shouldPause(SingularityRequest request) {
+    if (request == null) {
+      return true;
+    }
+
     if (request.getPauseOnInitialFailure()) {
       if (historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1).isEmpty()) {
         LOG.info(String.format("Pausing request %s due to initial failure", request.getId()));
