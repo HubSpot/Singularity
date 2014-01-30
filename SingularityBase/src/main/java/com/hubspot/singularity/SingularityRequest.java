@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.Resources;
@@ -72,7 +71,7 @@ public class SingularityRequest extends SingularityJsonObject {
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.maxFailuresBeforePausing = maxFailuresBeforePausing;
-    this.pauseOnInitialFailure = Objects.firstNonNull(pauseOnInitialFailure, false);
+    this.pauseOnInitialFailure = pauseOnInitialFailure;
   }
   
   public List<String> getOwners() {
@@ -168,6 +167,11 @@ public class SingularityRequest extends SingularityJsonObject {
   @JsonIgnore
   public boolean isScheduled() {
     return schedule != null;
+  }
+
+  @JsonIgnore
+  public boolean isPauseOnInitialFailure() {
+    return pauseOnInitialFailure != null && pauseOnInitialFailure.booleanValue();
   }
 
   public String getSchedule() {
