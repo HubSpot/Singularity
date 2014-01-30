@@ -61,12 +61,14 @@ class Router extends Backbone.Router
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
+        app.views.current?.remove()
         if not app.views.dashboard?
             app.views.dashboard = new DashboardView
         app.views.current = app.views.dashboard
         app.show app.views.dashboard.render()
 
     search: ->
+        app.views.current?.remove()
         if not app.views.search?
             app.views.search = new SearchView
             app.views.current = app.views.search
@@ -76,6 +78,7 @@ class Router extends Backbone.Router
             app.show app.views.search
 
     status: ->
+        app.views.current?.remove()
         if not app.views.status?
             app.views.status = new StatusView
             app.views.current = app.views.status
@@ -88,12 +91,14 @@ class Router extends Backbone.Router
         @requestsFiltered 'active'
 
     requestsFiltered: (requestsFilter) ->
+        app.views.current?.remove()
         if not app.views.requests?
             app.views.requests = new RequestsView requestsFilter: requestsFilter
         app.views.current = app.views.requests
         app.show app.views.requests.render(requestsFilter).refresh()
 
     request: (requestId) ->
+        app.views.current?.remove()
         app.views.requestViews = {} if not app.views.requestViews
         if not app.views.requestViews[requestId]
             app.views.requestViews[requestId] = new RequestView requestId: requestId
@@ -107,12 +112,14 @@ class Router extends Backbone.Router
         @tasksFiltered 'active'
 
     tasksFiltered: (tasksFilter) ->
+        app.views.current?.remove()
         if not app.views.tasks?
             app.views.tasks = new TasksView tasksFilter: tasksFilter
         app.views.current = app.views.tasks
         app.show app.views.tasks.render(tasksFilter).refresh()
 
     task: (taskId) ->
+        app.views.current?.remove()
         app.views.taskViews = {} if not app.views.taskViews
         if not app.views.taskViews[taskId]
             app.views.taskViews[taskId] = new TaskView taskId: taskId
@@ -123,6 +130,7 @@ class Router extends Backbone.Router
             app.show app.views.taskViews[taskId]
 
     files: (taskId, path='') ->
+        app.views.current?.remove()
         app.views.filesViews = {} if not app.views.filesViews
         if not app.views.filesViews[taskId]
             app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
@@ -132,6 +140,7 @@ class Router extends Backbone.Router
         app.show app.views.filesViews[taskId].render()
 
     tail: (taskId, path='') ->
+        app.views.current?.remove()
         app.views.tailViews = {} if not app.views.tailViews
         if not app.views.tailViews[taskId] or app.views.tailViews[taskId].path isnt path
             app.views.tailViews[taskId] = new TailView taskId: taskId, path: path
@@ -139,6 +148,7 @@ class Router extends Backbone.Router
         app.show app.views.tailViews[taskId].render()
 
     racks: ->
+        app.views.current?.remove()
         if not app.views.racks?
             app.views.racks = new RacksView
             app.views.current = app.views.racks
@@ -148,6 +158,7 @@ class Router extends Backbone.Router
             app.show app.views.racks.refresh()
 
     slaves: ->
+        app.views.current?.remove()
         if not app.views.slaves?
             app.views.slaves = new SlavesView
             app.views.current = app.views.slaves
@@ -157,6 +168,7 @@ class Router extends Backbone.Router
             app.show app.views.slaves.refresh()
 
     webhooks: ->
+        app.views.current?.remove()
         if not app.views.webhooks?
             app.views.webhooks = new WebhooksView
             app.views.current = app.views.webhooks

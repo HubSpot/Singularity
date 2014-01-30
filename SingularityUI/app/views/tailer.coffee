@@ -6,17 +6,28 @@ class TailerView extends Backbone.View
     lineTemplate: require './templates/logline'
 
     readLength: 30000
+    tailInterval: 3000
+
+    events:
+        'scroll': 'handleScroll'
 
     initialize: ->
+        @tailing = null
+
+        @nextPromise = Q {}
+        @prevPromise = Q {}
+
         @lines = LogLines.getInstance @options
 
+        @$container = @$('.tail-container')
+
         @lines.on 'sort', =>
-            children = @$el.children()
+            children = @$container.children()
 
             # append all if tailer element is empty
             if children.length == 0
                 @lines.each (model) =>
-                    @$el.append @renderLine model
+                    @$container.append @renderLine model
                 return
 
             head = children.first()
@@ -36,10 +47,11 @@ class TailerView extends Backbone.View
 
             # add lines at bottom
             _.each @lines.last(@lines.length - tailIndex - 1), (model) =>
-                @$el.append @renderLine model
+                @$container.append @renderLine model
 
-        # page / tail based on scroll events
-        @$el.scroll @handleScroll
+    remove: =>
+        @stopTailing()
+        super
 
     scrollToBottom: =>
         @$el.scrollTop @el.scrollHeight
@@ -49,22 +61,51 @@ class TailerView extends Backbone.View
         data.data = $.trim data.data
         @lineTemplate data
 
-    page: =>
+    fetchPrev: =>
+        # short circuit when we're at the top
         if @lines.getMinOffset() is 0
-            return
+            return Q
+                data: ''
+                offset: 0
 
-        @lines.fetch
-            data: $.param
-                offset: Math.max(@lines.getMinOffset() - @readLength, 0)
-                length: Math.min(@lines.getMinOffset(), @readLength)
-            remove: false
+        if @prevPromise.isFulfilled()
+            @prevPromise = Q @lines.fetch
+                data: $.param
+                    offset: Math.max(@lines.getMinOffset() - @readLength, 0)
+                    length: Math.min(@lines.getMinOffset(), @readLength)
+                remove: false
 
-    tail: =>
-        @lines.fetch
-            data: $.param
-                offset: @lines.getMaxOffset()
-                length: @readLength
-            remove: false
+        @prevPromise
+
+    fetchNext: (offset=null) =>
+        if @nextPromise.isFulfilled()
+            @nextPromise = Q @lines.fetch
+                data: $.param
+                    offset: offset or @lines.getMaxOffset()
+                    length: @readLength
+                remove: false
+
+        @nextPromise
+
+    # if not already tailing, fetch more
+    # if we're at the end, start tailing
+    maybeStartTailing: =>
+        if @tailing is null
+            @fetchNext().then (data) =>
+                if data.data is '\n'
+                    @startTailing()
+
+    startTailing: =>
+        if @tailing is null
+            @tailing = setInterval @tail, @tailInterval
+
+    tail: (offset=null) =>
+        @fetchNext(offset).then @scrollToBottom
+
+    stopTailing: =>
+        if @tailing isnt null
+            clearInterval @tailing
+            @tailing = null
 
     handleScroll: =>
         scrollTop = @$el.scrollTop()
@@ -72,27 +113,21 @@ class TailerView extends Backbone.View
         scrollMax = @el.scrollHeight
 
         if scrollTop is 0 and @lines.getMinOffset() > 0
-            @page()
+            # if at top, fetch previous lines
+            @fetchPrev()
         else if scrollBottom is scrollMax
-            @tail()  # TODO: keep attempting tail if we're at the bottom and theres no more data yet
+            # if at bottom, start tailing if appropriate
+            @maybeStartTailing()
+        else
+            # if somewhere in the middle, stop tailing
+            @stopTailing()
 
     render: =>
         @$el.addClass 'loading'
 
         # seek to the end of the file
         @lines.fetchEndOffset().then (offset) =>
-            ajaxPromise = @lines.fetch
-                data: $.param
-                    offset: Math.max(offset - @readLength, 0)
-                    length: Math.min(offset, @readLength)
-
-            ajaxPromise.done =>
-                @$el.removeClass 'loading'
-                @scrollToBottom()
-                setTimeout @handleScroll
-
-            ajaxPromise.fail (jqXHR, status, error) =>
-                @$el.removeClass 'loading'
+            @tail Math.max(0, offset - @readLength)
 
         @
 

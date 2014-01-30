@@ -20,11 +20,15 @@ class TailView extends View
 
         @filename = _.last(pieces)
 
+    remove: =>
+        @tailer?.remove()
+        super
+
     render: =>
         @$el.html @template {@taskId, @path, @subfolders, @filename}
 
         @tailer = new TailerView
-            el: @$('.tail-container')
+            el: @$('.tail-outer')
             taskId: @taskId
             path: @path
 
