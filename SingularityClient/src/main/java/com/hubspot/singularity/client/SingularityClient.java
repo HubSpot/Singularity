@@ -35,9 +35,10 @@ public class SingularityClient {
 
   private static final String REQUEST_FORMAT = "http://%s/%s/requests";
   private static final String REQUEST_BOUNCE_FORMAT = REQUEST_FORMAT + "/request/%s/bounce";
-  private static final String REQUEST_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s";
+  private static final String REQUEST_ACTIVE_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s";
   private static final String REQUEST_ACTIVE_FORMAT = REQUEST_FORMAT + "/active";
   private static final String REQUEST_PAUSED_FORMAT = REQUEST_FORMAT + "/paused";
+  private static final String REQUEST_PAUSED_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s/paused";
   private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
   private static final String CONTENT_TYPE_JSON = "application/json";
@@ -66,46 +67,6 @@ public class SingularityClient {
 
   private String getHost() {
     return hosts.get(random.nextInt(hosts.size()));
-  }
-  
-  private Response deployToUri(String requestUri, SingularityRequest request) {
-    try {
-      return httpClient.preparePost(requestUri)
-        .setBody(request.getAsBytes(objectMapper))
-        .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
-        .execute().get();
-      
-    } catch (Exception e) {
-      throw new SingularityClientException("Failed to deploy to Singularity due to exception", e);
-    }
-  }
-  
-  public void deploy(SingularityRequest request, Optional<String> user) {
-    final String requestUri = finishUri(String.format(REQUEST_FORMAT, getHost(), contextPath), user);
-    
-    LOG.info(String.format("Deploying %s to (%s)", request.getId(), requestUri));
-  
-    final long start = System.currentTimeMillis();
-    
-    Response response = deployToUri(requestUri, request);
-    
-    checkResponse("deploy", response);
-    
-    LOG.info(String.format("Successfully deployed %s to Singularity in %sms", request.getId(), System.currentTimeMillis() - start));
-  }
-
-  public void bounce(String requestId) {
-    final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
-
-    LOG.info(String.format("Bouncing %s", requestId));
-
-    final long start = System.currentTimeMillis();
-
-    Response response = postUri(requestUri);
-
-    checkResponse("bounce", response);
-
-    LOG.info(String.format("Successfully bounced %s in %sms", requestId, System.currentTimeMillis() - start));
   }
   
   private void checkResponse(String type, Response response) {
@@ -162,14 +123,14 @@ public class SingularityClient {
     }
   }
 
-  private Response postJson(String requestUri, Object data) {
+  private Response postUri(String requestUri, Object data) {
     try {
       return httpClient.preparePost(requestUri)
           .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
           .setBody(objectMapper.writeValueAsBytes(data))
           .execute().get();
     } catch (Exception e) {
-      throw new SingularityClientException("Failed to delete Singularity request due to exception", e);
+      throw new SingularityClientException("Failed to POST due to exception", e);
     }
   }
   
@@ -180,21 +141,41 @@ public class SingularityClient {
     
     return String.format(REQUEST_ADD_USER_FORMAT, uri, user.get());
   }
-  
-  public void remove(String name, Optional<String> user) {
-    final String requestUri = finishUri(String.format(REQUEST_UNDEPLOY_FORMAT, getHost(), contextPath, name), user);
 
-    LOG.info(String.format("Removing %s - (%s)", name, requestUri));
-  
+  //
+  // DEPLOY
+  //
+  public void deploy(SingularityRequest request, Optional<String> user) {
+    final String requestUri = finishUri(String.format(REQUEST_FORMAT, getHost(), contextPath), user);
+
+    LOG.info(String.format("Deploying %s to (%s)", request.getId(), requestUri));
+
     final long start = System.currentTimeMillis();
-    
-    Response deleteResponse = deleteUri(requestUri);
-    
-    checkResponse("remove", deleteResponse);
-    
-    LOG.info(String.format("Successfully removed %s from Singularity in %sms", name, System.currentTimeMillis() - start));
+
+    Response response = postUri(requestUri, request);
+
+    checkResponse("deploy", response);
+
+    LOG.info(String.format("Successfully deployed %s to Singularity in %sms", request.getId(), System.currentTimeMillis() - start));
   }
 
+  public void bounce(String requestId) {
+    final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
+
+    LOG.info(String.format("Bouncing %s", requestId));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = postUri(requestUri);
+
+    checkResponse("bounce", response);
+
+    LOG.info(String.format("Successfully bounced %s in %sms", requestId, System.currentTimeMillis() - start));
+  }
+
+  //
+  // ACTIVE REQUESTS
+  //
   public Collection<SingularityRequest> getActiveRequests() {
     final String requestUri = String.format(REQUEST_ACTIVE_FORMAT, getHost(), contextPath);
 
@@ -214,7 +195,34 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
+  
+  public Optional<SingularityRequest> removeActiveRequest(String id, Optional<String> user) {
+    final String requestUri = finishUri(String.format(REQUEST_ACTIVE_UNDEPLOY_FORMAT, getHost(), contextPath, id), user);
 
+    LOG.info(String.format("Removing active request ID %s - (%s)", id, requestUri));
+  
+    final long start = System.currentTimeMillis();
+    
+    Response deleteResponse = deleteUri(requestUri);
+
+    if (deleteResponse.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+    
+    checkResponse("remove active request", deleteResponse);
+    
+    LOG.info(String.format("Successfully removed active request ID %s from Singularity in %sms", id, System.currentTimeMillis() - start));
+
+    try {
+      return Optional.of(objectMapper.readValue(deleteResponse.getResponseBodyAsStream(), SingularityRequest.class));
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  //
+  // PAUSED REQUESTS
+  //
   public Collection<SingularityRequest> getPausedRequests() {
     final String requestUri = String.format(REQUEST_PAUSED_FORMAT, getHost(), contextPath);
 
@@ -234,6 +242,34 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
+
+  public Optional<SingularityRequest> removePausedRequest(String id, Optional<String> user) {
+    final String requestUri = finishUri(String.format(REQUEST_PAUSED_UNDEPLOY_FORMAT, getHost(), contextPath, id), user);
+
+    LOG.info(String.format("Removing paused request ID %s - (%s)", id, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response deleteResponse = deleteUri(requestUri);
+
+    if (deleteResponse.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    checkResponse("remove paused request", deleteResponse);
+
+    LOG.info(String.format("Successfully removed paused request ID %s from Singularity in %sms", id, System.currentTimeMillis() - start));
+
+    try {
+      return Optional.of(objectMapper.readValue(deleteResponse.getResponseBodyAsStream(), SingularityRequest.class));
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  //
+  // ACTIVE TASKS
+  //
 
   public Collection<SingularityTask> getActiveTasks() {
     final String requestUri = String.format(TASK_ACTIVE_FORMAT, getHost(), contextPath);
@@ -255,6 +291,10 @@ public class SingularityClient {
     }
   }
 
+  //
+  // SCHEDULED TASKS
+  //
+
   public Collection<SingularityTask> getScheduledTasks() {
     final String requestUri = String.format(TASK_SCHEDULED_FORMAT, getHost(), contextPath);
 
@@ -275,19 +315,9 @@ public class SingularityClient {
     }
   }
 
-  public void addWebhook(String url) {
-    final String requestUri = String.format(WEBHOOK_FORMAT, getHost(), contextPath);
-
-    LOG.info(String.format("Adding webhook %s - (%s)", url, requestUri));
-
-    final long start = System.currentTimeMillis();
-
-    Response postResponse = postJson(requestUri, Arrays.asList(url));
-
-    checkResponse("add webhook", postResponse);
-
-    LOG.info(String.format("Successfully added webhook to Singularity in %sms", System.currentTimeMillis() - start));
-  }
+  //
+  // TASK HISTORY
+  //
 
   public Optional<SingularityTaskHistory> getHistoryForTask(String taskId) {
     final String requestUri = String.format(TASK_HISTORY_FORMAT, getHost(), contextPath, taskId);
@@ -329,5 +359,23 @@ public class SingularityClient {
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
+  }
+
+  //
+  // WEBHOOKS
+  //
+
+  public void addWebhook(String url) {
+    final String requestUri = String.format(WEBHOOK_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Adding webhook %s - (%s)", url, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response postResponse = postUri(requestUri, Arrays.asList(url));
+
+    checkResponse("add webhook", postResponse);
+
+    LOG.info(String.format("Successfully added webhook to Singularity in %sms", System.currentTimeMillis() - start));
   }
 }
