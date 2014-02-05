@@ -1,14 +1,17 @@
 package com.hubspot.singularity.data;
 
+import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.quartz.CronExpression;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.SingularityRequest;
-import org.quartz.CronExpression;
-
-import java.util.List;
-import java.util.Map;
 
 public class SingularityRequestValidator {
 
@@ -37,7 +40,7 @@ public class SingularityRequestValidator {
     
     String schedule = adjustSchedule(request.getSchedule());
     
-    checkRequestState(schedule == null || CronExpression.isValidExpression(schedule), "Cron schedule was not parseable");
+    checkRequestState(schedule == null || isValidCronSchedule(schedule), String.format("Cron schedule %s was not parseable", schedule));
     checkRequestState((request.getCommand() != null && request.getExecutorData() == null) || (request.getExecutorData() != null && request.getExecutor() != null && request.getCommand() == null), 
     "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
         
@@ -46,6 +49,25 @@ public class SingularityRequestValidator {
         
     return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, Objects.firstNonNull(request.getInstances(), 1), request.getDaemon(), request.getEnv(), 
         request.getUris(), request.getMetadata(), request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp(), request.getOwners(), request.getNumRetriesOnFailure(), request.getMaxFailuresBeforePausing(), request.getPauseOnInitialFailure());
+  }
+  
+  private boolean isValidCronSchedule(String schedule) {
+    if (!CronExpression.isValidExpression(schedule)) {
+      return false;
+    }
+    
+    try {
+      CronExpression ce = new CronExpression(schedule);
+      
+      if (ce.getNextValidTimeAfter(new Date()) == null) {
+        return false;
+      }
+      
+    } catch (ParseException pe) {
+      return false;
+    }
+     
+    return true;
   }
   
   /**
