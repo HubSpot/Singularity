@@ -425,6 +425,9 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         CronExpression cronExpression = new CronExpression(request.getSchedule());
 
         final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
+
+        LOG.trace(String.format("Calculating nextRunAtDate for %s (schedule: %s): %s (from: %s)", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom));
+
         nextRunAt = nextRunAtDate.getTime();
         
         LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (from: %s)", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom));
