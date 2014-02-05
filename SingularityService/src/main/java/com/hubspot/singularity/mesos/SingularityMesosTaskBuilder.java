@@ -85,7 +85,7 @@ public class SingularityMesosTaskBuilder {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
           .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getExecutor()))
-          .setExecutorId(ExecutorID.newBuilder().setValue(String.format("singularity-%s", taskId.toString())))
+          .setExecutorId(ExecutorID.newBuilder().setValue(String.format("singularity-%s", taskId.toString().replace(':', '_'))))
     );
     
     Object executorData = task.getRequest().getExecutorData();
