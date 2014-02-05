@@ -25,6 +25,11 @@
   </repositories>
 
   <dependencies>
+    <dependency>
+      <groupId>net.kencochrane.raven</groupId>
+      <artifactId>raven-logback</artifactId>
+      <version>4.1.2</version>
+    </dependency>    
 
     <dependency>
       <groupId>com.hubspot</groupId>

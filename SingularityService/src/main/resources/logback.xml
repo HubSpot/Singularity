@@ -1,0 +1,11 @@
+<configuration>
+    <appender name="Sentry" class="net.kencochrane.raven.logback.SentryAppender">
+        <dsn>
+            https://<publickey>:<privatekey>@app.getsentry.com/<id>
+        </dsn>
+    </appender>
+
+    <root level="error">
+        <appender-ref ref="Sentry"/>
+    </root>
+</configuration>
