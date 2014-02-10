@@ -1,11 +1,25 @@
-<configuration>
-    <appender name="Sentry" class="net.kencochrane.raven.logback.SentryAppender">
-        <dsn>
-            https://<publickey>:<privatekey>@app.getsentry.com/<id>
-        </dsn>
-    </appender>
+<configuration debug="true">
 
-    <root level="error">
-        <appender-ref ref="Sentry"/>
-    </root>
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>testFile.log</file>
+		<append>true</append>
+		<!-- encoders are assigned the type
+		 ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+		<encoder>
+			<pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="DEBUG">
+    <appender-ref ref="FILE" />    
+    <appender-ref ref="STDOUT" />    
+  </root>
 </configuration>
