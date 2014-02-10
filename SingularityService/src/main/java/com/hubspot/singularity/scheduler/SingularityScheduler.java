@@ -232,7 +232,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return false;
     }
     
-    return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().toString()) || stateCache.isRackDecomissioning(taskId.getRackId());
+    return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().getValue()) || stateCache.isRackDecomissioning(taskId.getRackId());
   }
   
   public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, String stringTaskId, TaskState state, SingularityScheduleStateCache stateCache) {
