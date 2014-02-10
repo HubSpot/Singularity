@@ -16,6 +16,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
@@ -28,6 +29,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.WebhookManager;
 import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
+import com.hubspot.singularity.scheduler.SingularityScheduleStateCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 public class SingularityMesosScheduler implements Scheduler {
@@ -42,10 +44,12 @@ public class SingularityMesosScheduler implements Scheduler {
   private final WebhookManager webhookManager;
   private final SingularityRackManager rackManager;
   private final SingularityLogSupport logSupport;
+
+  private final Provider<SingularityScheduleStateCache> stateCacheProvider;
   
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport) {
+      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularityScheduleStateCache> stateCacheProvider) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
@@ -54,6 +58,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.webhookManager = webhookManager;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
+    this.stateCacheProvider = stateCacheProvider;
   }
 
   @Override
@@ -72,13 +77,10 @@ public class SingularityMesosScheduler implements Scheduler {
 
     final long start = System.currentTimeMillis();
     
-    final List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIds();
-
-    scheduler.checkForDecomissions(activeTasks);
+    final SingularityScheduleStateCache stateCache = stateCacheProvider.get();
     
-    final List<SingularityTaskId> cleaningTasks = taskManager.getCleanupTaskIds();
-    
-    scheduler.drainPendingQueue(activeTasks, cleaningTasks);
+    scheduler.checkForDecomissions(stateCache);
+    scheduler.drainPendingQueue(stateCache);
     
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
@@ -98,7 +100,7 @@ public class SingularityMesosScheduler implements Scheduler {
       for (Protos.Offer offer : offers) {
         LOG.trace(String.format("Evaluating offer %s", offer));
 
-        Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, activeTasks, cleaningTasks);
+        Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, stateCache);
 
         if (!accepted.isPresent()) {
           driver.declineOffer(offer.getId());
@@ -125,7 +127,7 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
 
-  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, List<SingularityTaskId> activeTasks, List<SingularityTaskId> cleaningTasks) {
+  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularityScheduleStateCache stateCache) {
     for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
 
@@ -136,7 +138,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
           
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
-      final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, activeTasks, cleaningTasks);
+      final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, stateCache);
             
       if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
@@ -193,7 +195,7 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.deleteActiveTask(taskId);
       }
       
-      scheduler.handleCompletedTask(taskId, status.getState());
+      scheduler.handleCompletedTask(maybeActiveTask, taskId, status.getState(), stateCacheProvider.get());
     }
   }
 

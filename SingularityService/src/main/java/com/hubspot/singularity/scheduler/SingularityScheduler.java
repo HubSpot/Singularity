@@ -68,13 +68,15 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     }
   }
   
-  public void checkForDecomissions(List<SingularityTaskId> activeTaskIds) {
+  public void checkForDecomissions(SingularityScheduleStateCache stateCache) {
     final long start = System.currentTimeMillis();
     
     final Set<String> requestIdsToReschedule = Sets.newHashSet();
     final Set<SingularityTaskId> matchingTaskIds = Sets.newHashSet();
     
-    final List<SingularitySlave> slaves = slaveManager.getDecomissioningObjectsFiltered();
+    final List<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
+    
+    final List<SingularitySlave> slaves = slaveManager.getDecomissioningObjectsFiltered(stateCache.getDecomissioningSlaves());
     
     for (SingularitySlave slave : slaves) {
       for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -87,7 +89,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       }
     }
     
-    final List<SingularityRack> racks = rackManager.getDecomissioningObjectsFiltered();
+    final List<SingularityRack> racks = rackManager.getDecomissioningObjectsFiltered(stateCache.getDecomissioningRacks());
     
     for (SingularityRack rack : racks) {
       for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -120,7 +122,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     LOG.info(String.format("Found %s decomissioning slaves, %s decomissioning racks, rescheduling %s requests and scheduling %s tasks for cleanup in %sms", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), System.currentTimeMillis() - start));
   }
   
-  public void drainPendingQueue(final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
+  public void drainPendingQueue(final SingularityScheduleStateCache stateCache) {
     final long start = System.currentTimeMillis();
     
     final List<SingularityPendingRequestId> pendingRequests = requestManager.getPendingRequestIds();
@@ -131,10 +133,6 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return;
     }
     
-    final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
-    final List<String> decomissioningRacks = rackManager.getDecomissioning();
-    final List<SingularitySlave> decomissioningSlaves = slaveManager.getDecomissioningObjects();
-    
     int numScheduledTasks = 0;
     int obsoleteRequests = 0;
     
@@ -142,9 +140,9 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingRequest.getRequestId());
       
       if (maybeRequest.isPresent()) {
-        checkForBounceAndAddToCleaningTasks(pendingRequest, activeTaskIds, cleaningTasks);
+        checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
         
-        numScheduledTasks += scheduleTasks(scheduledTasks, activeTaskIds, cleaningTasks, decomissioningRacks, decomissioningSlaves, maybeRequest.get(), pendingRequest.getPendingTypeEnum());
+        numScheduledTasks += scheduleTasks(stateCache, maybeRequest.get(), pendingRequest.getPendingTypeEnum());
       } else {
         obsoleteRequests++;
       }
@@ -201,15 +199,15 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     }
   }
 
-  public int scheduleTasks(final List<SingularityPendingTaskId> scheduledTaskIds, final List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
-    deleteScheduledTasks(scheduledTaskIds, request.getId());
+  private int scheduleTasks(SingularityScheduleStateCache stateCache, SingularityRequest request, PendingType pendingType) {
+    deleteScheduledTasks(stateCache.getScheduledTasks(), request.getId());
     
-    final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), activeTaskIds, cleaningTasks);
+    final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
     
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request);
 
     if (numMissingInstances > 0) {
-      final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, activeTaskIds, decomissioningRacks, decomissioningSlaves, request, pendingType);
+      final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, pendingType);
       
       taskManager.persistScheduleTasks(scheduledTasks);
     } else if (numMissingInstances < 0) {
@@ -229,7 +227,15 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return numMissingInstances;
   }
   
-  public void handleCompletedTask(String stringTaskId, TaskState state) {
+  private boolean wasDecomissioning(SingularityTaskId taskId, Optional<SingularityTask> maybeActiveTask, SingularityScheduleStateCache stateCache) {
+    if (!maybeActiveTask.isPresent()) {
+      return false;
+    }
+    
+    return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().toString()) || stateCache.isRackDecomissioning(taskId.getRackId());
+  }
+  
+  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, String stringTaskId, TaskState state, SingularityScheduleStateCache stateCache) {
     SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
  
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
@@ -239,13 +245,16 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return;
     }
     
-    SingularityRequest request = maybeRequest.get();
+    final SingularityRequest request = maybeRequest.get();
     
     PendingType pendingType = PendingType.REGULAR;
     
     if (MesosUtils.isTaskFailed(state)) {
-      // TODO send an email every time?
-      mailer.sendTaskFailedMail(taskId, request, state);
+      if (!wasDecomissioning(taskId, maybeActiveTask, stateCache)) {
+        mailer.sendTaskFailedMail(taskId, request, state);
+      } else {
+        LOG.debug(String.format("Not sending a task failure email because task %s was on a decomissioning slave/rack", taskId));
+      }
       
       // TODO how to handle this if there are running tasks that are working?
       if (shouldPause(request)) {
@@ -259,7 +268,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       }
     }
     
-    scheduleOnCompletion(maybeRequest.get(), pendingType);
+    scheduleTasks(stateCache, request, pendingType);
   }
   
   private boolean shouldRetryImmediately(SingularityRequest request) {
@@ -354,23 +363,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return true;
   }
    
-  private void scheduleOnCompletion(SingularityRequest request, PendingType pendingType) {
-    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-    final List<SingularityPendingTaskId> scheduledTasks = taskManager.getScheduledTasks();
-    final List<String> decomissioningRacks = rackManager.getDecomissioning();
-    final List<SingularitySlave> decomissioningSlaves = slaveManager.getDecomissioningObjects();
-    final List<SingularityTaskId> cleaningTasks = taskManager.getCleanupTaskIds();
-    
-    scheduleTasks(scheduledTasks, activeTaskIds, cleaningTasks, decomissioningRacks, decomissioningSlaves, request, pendingType);
-  }
-  
   private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
     final int numInstances = request.getInstances();
     
     return numInstances - matchingTaskIds.size();
   }
   
-  private List<SingularityPendingTaskId> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, List<SingularityTaskId> activeTaskIds, List<String> decomissioningRacks, List<SingularitySlave> decomissioningSlaves, SingularityRequest request, PendingType pendingType) {
+  private List<SingularityPendingTaskId> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, PendingType pendingType) {
     final long nextRunAt = getNextRunAt(request, pendingType);
   
     int highestInstanceNo = 0;
