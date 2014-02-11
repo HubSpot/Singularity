@@ -30,6 +30,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("singularityUIHostnameAndPath")
   private String singularityUIHostnameAndPath;
   
+  @NotNull
+  private String adminEmail;
+  
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -192,6 +195,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
     this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
+  }
+  
+  public String getAdminEmail(){
+    return this.adminEmail;
+  }
+  
+  public void setAdminEmail(String adminEmail){
+    this.adminEmail = adminEmail;
   }
 
 }

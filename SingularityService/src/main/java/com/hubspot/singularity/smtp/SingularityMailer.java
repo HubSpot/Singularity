@@ -114,21 +114,6 @@ public class SingularityMailer implements SingularityCloseable {
     queueMail(to, subject, body);
 }
     
-  public String determineAppropriateAction(TaskState state, String subject){
-    if(state.name() == "TASK_FAILED"){
-      if (subject.contains("failed after running")) {
-        return "Process terminated with non-zero exit code. Diagnosis recommended. Action unnecessary unless error is recurrent.";
-      }
-    } else if(state.name() == "TASK_LOST"){
-      if (subject.contains("never started")) {
-        return "Task lost before it ran. This is most likely an infrastructure issue. Try the PaaS hipchat room for assistance.";
-      } else {
-        return "Task lost while running. Task may still be executing unmonitored. It is recommended you investigate and manually kill the process.";
-      }
-    }
-    return "Something mysterious has happened. Try investigating the process on the slave. Poke the PaaS hipchat room if you need assistance.";
-  }
-  
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {
     final List<String> to = request.getOwners();
     
@@ -140,7 +125,7 @@ public class SingularityMailer implements SingularityCloseable {
     builder.put("request_id", request.getId());
     builder.put("task_id", taskId.getId());
     builder.put("status", state.name());
-    builder.put("action", determineAppropriateAction(state, subject));
+    builder.put("action", determineAppropriateAction(state, taskHistory.get()));
     builder.put("singularity_task_link", getSingularityTaskLink(taskId));
     
     final String body = taskFailedTemplate.render(builder.build());
