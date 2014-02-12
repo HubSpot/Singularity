@@ -32,6 +32,12 @@
     </dependency>    
 
     <dependency>
+      <groupId>net.kencochrane.raven</groupId>
+      <artifactId>raven-getsentry</artifactId>
+      <version>4.1.2</version>
+    </dependency>    
+
+    <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
       <version>0.2.19</version>

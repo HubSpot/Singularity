@@ -31,6 +31,9 @@ logging:
 
   loggers:
 
-    "com.hubspot.singularity" : TRACE 
+    "com.hubspot.singularity" : TRACE
+
+sentry:
+  dsn: "getsentry://<publickey>:<privatekey>@app.getsentry.com/<id>"
 
 appRoot: /v1
