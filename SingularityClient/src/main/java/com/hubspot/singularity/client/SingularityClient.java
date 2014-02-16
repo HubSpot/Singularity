@@ -96,7 +96,7 @@ public class SingularityClient {
   }
   
   private boolean isSuccess(Response response) {
-    return response.getStatusCode() >= 200 || response.getStatusCode() < 300;
+    return response.getStatusCode() >= 200 && response.getStatusCode() < 300;
   }
   
   private Response deleteUri(String requestUri) {
