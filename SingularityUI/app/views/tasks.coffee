@@ -3,8 +3,13 @@ View = require './view'
 class TasksView extends View
 
     templateTasksActive: require './templates/tasksActive'
+    templateTasksActiveTable: require './templates/tasksActiveTable'
+
     templateTasksScheduled: require './templates/tasksScheduled'
+    templateTasksScheduledTable: require './templates/tasksScheduledTable'
+
     templateTasksCleaning: require './templates/tasksCleaning'
+    templateTasksCleaningTable: require './templates/tasksCleaningTable'
 
     killTaskTemplate: require './templates/vex/killTask'
 
@@ -32,21 +37,25 @@ class TasksView extends View
         @
 
     render: (tasksFilter, refresh) ->
+        forceFullRender = tasksFilter isnt @lastTasksFilter
         @lastTasksFilter = tasksFilter
 
         if @lastTasksFilter is 'active'
             @collection = app.collections.tasksActive
             template = @templateTasksActive
+            templateTable = @templateTasksActiveTable
 
         if @lastTasksFilter is 'scheduled'
             @collection = app.collections.tasksScheduled
             template = @templateTasksScheduled
+            templateTable = @templateTasksScheduledTable
 
         if @lastTasksFilter is 'cleaning'
             @collection = app.collections.tasksCleaning
             template = @templateTasksCleaning
+            templateTable = @templateTasksCleaningTable
 
-        tasks = _.pluck(@collection.sort().models, 'attributes')
+        tasks = _.pluck @collection.sort().models, 'attributes'
 
         if @lastTasksFilter is 'active'
             tasks = tasks.reverse()
@@ -54,9 +63,18 @@ class TasksView extends View
         context =
             tasks: tasks
 
+        partials =
+            partials:
+                tasksTable: templateTable
+
         searchWasFocused = @$el.find('input[type="search"]').is(':focus')
 
-        @$el.html template context
+        $tasksTableContainer =  @$el.find('[data-tasks-table-container]')
+
+        if not $tasksTableContainer.length or forceFullRender
+            @$el.html template(context, partials)
+        else
+            $tasksTableContainer.html templateTable context
 
         @setupEvents()
         @setUpSearchEvents(refresh, searchWasFocused)
