@@ -44,8 +44,19 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
   
+  @NotNull
+  private long deltaAfterWhichTasksAreLateMillis = 300;
+  
   public long getCloseWaitSeconds() {
     return closeWaitSeconds;
+  }
+
+  public long getDeltaAfterWhichTasksAreLateMillis() {
+    return deltaAfterWhichTasksAreLateMillis;
+  }
+
+  public void setDeltaAfterWhichTasksAreLateMillis(long deltaAfterWhichTasksAreLateMillis) {
+    this.deltaAfterWhichTasksAreLateMillis = deltaAfterWhichTasksAreLateMillis;
   }
 
   public void setCloseWaitSeconds(long closeWaitSeconds) {
