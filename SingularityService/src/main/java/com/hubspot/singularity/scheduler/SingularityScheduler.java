@@ -204,7 +204,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     
     final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
     
-    final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request);
+    final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingType);
 
     if (numMissingInstances > 0) {
       final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, pendingType);
@@ -363,7 +363,15 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return true;
   }
    
-  private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
+  private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, PendingType pendingType) {
+    if (!request.alwaysRunning()) {
+      if (pendingType == PendingType.ONEOFF) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+    
     final int numInstances = request.getInstances();
     
     return numInstances - matchingTaskIds.size();

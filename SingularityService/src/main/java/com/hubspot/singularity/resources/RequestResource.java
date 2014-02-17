@@ -64,9 +64,19 @@ public class RequestResource {
   @POST
   @Path("/request/{requestId}/run")
   public void scheduleImmediately(@PathParam("requestId") String requestId) {
-    fetchRequest(requestId);
+    SingularityRequest request = fetchRequest(requestId);
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.IMMEDIATE));
+    PendingType pendingType = null;
+    
+    if (request.isScheduled()) {
+      pendingType = PendingType.IMMEDIATE;
+    } else if (!request.alwaysRunning()) {
+      pendingType = PendingType.ONEOFF;
+    } else {
+      throw new BadRequestException(String.format("Can not request an immediate run of a non-scheduled / always running request (%s)", request));
+    }
+    
+    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, pendingType));
   }
   
   @POST
