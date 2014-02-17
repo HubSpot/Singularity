@@ -1,6 +1,7 @@
 package com.hubspot.singularity.config;
 
 import javax.validation.constraints.NotNull;
+import com.google.common.base.Optional;
 
 public class SentryConfiguration {
 
@@ -10,12 +11,12 @@ public class SentryConfiguration {
 	@NotNull
 	private String level;
 	
-	public String getDsn(){
-		return this.dsn;
+	public Optional<String> getDsn(){
+		return Optional.fromNullable(dsn);
 	}
 	
-	public String getLevel(){
-		return this.level;
+	public Optional<String> getLevel(){
+		return Optional.fromNullable(level);
 	}
 	
 }

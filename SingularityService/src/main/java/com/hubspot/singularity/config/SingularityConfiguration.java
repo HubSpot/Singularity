@@ -197,8 +197,8 @@ public class SingularityConfiguration extends Configuration {
     this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
   }
   
-  public SentryConfiguration getSentryConfiguration(){
-    return this.sentryConfiguration;
+  public Optional<SentryConfiguration> getSentryConfiguration(){
+    return Optional.fromNullable(sentryConfiguration);
   }
   
   public void setSentryConfiguration(SentryConfiguration sentryConfiguration){
