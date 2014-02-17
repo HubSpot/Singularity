@@ -73,8 +73,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getObjects(getDecomissioningRoot());
   }
   
-  public List<T> getDecomissioningObjectsFiltered() {
-    List<T> decomissioning = getDecomissioningObjects();
+  public List<T> getDecomissioningObjectsFiltered(List<T> decomissioning) {
     List<T> filtered = Lists.newArrayListWithCapacity(decomissioning.size());
     
     for (T object : decomissioning) {
