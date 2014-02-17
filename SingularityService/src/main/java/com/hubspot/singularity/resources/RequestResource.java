@@ -70,7 +70,7 @@ public class RequestResource {
     
     if (request.isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
-    } else if (!request.alwaysRunning()) {
+    } else if (request.isOneOff()) {
       pendingType = PendingType.ONEOFF;
     } else {
       throw new BadRequestException(String.format("Can not request an immediate run of a non-scheduled / always running request (%s)", request));

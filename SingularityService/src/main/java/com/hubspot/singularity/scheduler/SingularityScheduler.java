@@ -364,7 +364,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
    
   private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, PendingType pendingType) {
-    if (!request.alwaysRunning()) {
+    if (request.isOneOff()) {
       if (pendingType == PendingType.ONEOFF) {
         return 1;
       } else {

@@ -160,8 +160,8 @@ public class SingularityRequest extends SingularityJsonObject {
   }
 
   @JsonIgnore
-  public boolean alwaysRunning() {
-    return (daemon == null || daemon.booleanValue()) && !isScheduled();
+  public boolean isOneOff() {
+    return daemon != null && !daemon.booleanValue() && !isScheduled();
   }
 
   @JsonIgnore
