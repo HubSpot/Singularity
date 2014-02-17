@@ -427,15 +427,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
           }
         }
         
-        scheduleFrom = new Date(Math.max(scheduleFrom.getTime(), now)); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
-        
         CronExpression cronExpression = new CronExpression(request.getSchedule());
 
         final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
 
         LOG.trace(String.format("Calculating nextRunAtDate for %s (schedule: %s): %s (from: %s)", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom));
 
-        nextRunAt = nextRunAtDate.getTime();
+        nextRunAt = Math.max(nextRunAtDate.getTime(), now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
         
         LOG.trace(String.format("Scheduling next run of %s (schedule: %s) at %s (from: %s)", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom));
       } catch (ParseException pe) {
