@@ -18,5 +18,9 @@
         </tbody>
     </table>
 {{else}}
-    <center><p>No cleaning tasks.</p></center>
+    {{#if collectionSynced}}
+        <center><p>No cleaning tasks.</p></center>
+    {{else}}
+        <div class="page-loader centered"></div>
+    {{/if}}
 {{/if}}

@@ -54,7 +54,8 @@ class RequestsView extends View
             @collection = app.collections.requestsCleaning
             template = @templateRequestsCleaning
 
-        context = {}
+        context =
+            collectionSynced: @collection.synced
 
         if @lastRequestsFilter in ['active', 'paused']
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled)

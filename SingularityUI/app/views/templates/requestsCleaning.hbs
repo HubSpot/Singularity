@@ -51,7 +51,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No cleaning requests.</p></center>
+                {{#if collectionSynced}}
+                    <center><p>No cleaning requests.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>

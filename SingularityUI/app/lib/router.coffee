@@ -81,11 +81,8 @@ class Router extends Backbone.Router
         app.views.current?.remove()
         if not app.views.status?
             app.views.status = new StatusView
-            app.views.current = app.views.status
-            app.show app.views.status.render()
-        else
-            app.views.current = app.views.status
-            app.show app.views.status.refresh(fromRoute = true)
+        app.views.current = app.views.status
+        app.show app.views.status.refresh(fromRoute = true)
 
     requests: ->
         @requestsFiltered 'active'

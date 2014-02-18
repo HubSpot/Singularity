@@ -28,17 +28,17 @@ class Application
         @allTasks = {}
         @allRequests = {}
 
-        @fetchResources =>
+        @setupAppCollections()
 
-            $('.page-loader.fixed').hide()
+        $('.page-loader.fixed').hide()
 
-            @router = new Router
+        @router = new Router
 
-            Backbone.history.start
-                pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-                root: '/singularity/'
+        Backbone.history.start
+            pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
+            root: '/singularity/'
 
-            Object.freeze? @
+        Object.freeze? @
 
     setupGlobalErrorHandling: ->
         $(document).on 'ajaxError', (event, jqxhr, settings) ->
@@ -51,22 +51,11 @@ class Application
         else
             app.page.appendChild view.el
 
-    fetchResources: (success) ->
-        @resolveCountdown = 0
-
+    setupAppCollections: ->
         @collections.requestsStarred = new RequestsStarred
-        @collections.requestsStarred.fetch()
+        @collections.requestsStarred.fetch() # Syncronous because it uses localStorage
 
-        resolve = =>
-            @resolveCountdown -= 1
-            success() if @resolveCountdown is 0
-
-        @resolveCountdown += 1
         @state = new State
-        @state.fetch
-            suppressErrors: true
-            error: -> vex.dialog.alert('An error occurred while trying to load the Singularity state.')
-            success: -> resolve()
 
         resources = [{
             collection_key: 'requestsActive'
@@ -99,14 +88,6 @@ class Application
         }]
 
         _.each resources, (r) =>
-            @resolveCountdown += 1
             @collections[r.collection_key] = new r.collection
-            @collections[r.collection_key].fetch
-                suppressErrors: true
-                error: (e) ->
-                    vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
-                    resolve()
-                success: ->
-                    resolve()
 
 module.exports = new Application

@@ -55,12 +55,15 @@ class TasksView extends View
             template = @templateTasksCleaning
             templateTable = @templateTasksCleaningTable
 
+        @refresh() if not @collection.synced
+
         tasks = _.pluck @collection.sort().models, 'attributes'
 
         if @lastTasksFilter is 'active'
             tasks = tasks.reverse()
 
         context =
+            collectionSynced: @collection.synced
             tasks: tasks
 
         partials =
@@ -114,6 +117,7 @@ class TasksView extends View
                     taskModel.run()
                     @collection.remove(taskModel)
                     $row.remove()
+                    @refresh()
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
