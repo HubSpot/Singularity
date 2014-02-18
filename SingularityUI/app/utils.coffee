@@ -36,6 +36,9 @@ class Utils
                 width: 800
             message: "<pre>#{ lookupObject[objectId].JSONString }</pre>"
 
+    @htmlEncode: (value) ->
+        $('<div>').text(value).html()
+
     @setupSortableTables: ->
         sortable.init()
 
