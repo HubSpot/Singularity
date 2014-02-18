@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.2.15</version>
+    <version>0.2.16</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
