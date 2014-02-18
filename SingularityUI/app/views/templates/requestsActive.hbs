@@ -76,6 +76,45 @@
 
 <section>
     <div class="page-header">
+        <h1>On-demand</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if requestsOnDemand.length}}
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th data-sortable="false"></th>
+                            <th>Name</th>
+                            <th data-sortable="false"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requestsOnDemand}}
+                            <tr data-request-id="{{ id }}">
+                                <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
+                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td class="actions-column">
+                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
+                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
+                                </td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                {{#if collectionSynced}}
+                    <center><p>No on-demand requests.</p></center>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
+            {{/if}}
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="page-header">
         <h1>Scheduled</h1>
     </div>
     <div class="row-fluid">

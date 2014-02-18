@@ -58,10 +58,12 @@ class RequestsView extends View
             collectionSynced: @collection.synced
 
         if @lastRequestsFilter in ['active', 'paused']
-            context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled)
+            context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
             context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
+            context.requestsOnDemand = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.onDemand)
             context.requests.reverse()
             context.requestsScheduled.reverse()
+            context.requestsOnDemand.reverse()
 
         else
             context.requests = _.pluck(@collection.models, 'attributes')
