@@ -108,6 +108,9 @@ class TailerView extends Backbone.View
             @tailing = null
 
     handleScroll: =>
+        if not @$el.parents('html').length # Our view ain't in the page no mo
+            return
+
         scrollTop = @$el.scrollTop()
         scrollBottom = scrollTop + @$el.height()
         scrollMax = @el.scrollHeight
