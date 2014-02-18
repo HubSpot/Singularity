@@ -14,7 +14,7 @@ public class MesosFileObject {
 
   @JsonCreator
   public MesosFileObject(@JsonProperty("gid") String gid, @JsonProperty("mode") String mode,
-                         @JsonProperty("motime") long mtime, @JsonProperty("nlink") int nlink,
+                         @JsonProperty("mtime") long mtime, @JsonProperty("nlink") int nlink,
                          @JsonProperty("path") String path, @JsonProperty("size") long size,
                          @JsonProperty("uid") String uid) {
     this.gid = gid;
