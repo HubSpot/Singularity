@@ -116,8 +116,8 @@ class TasksView extends View
                     return unless confirmed
                     taskModel.run()
                     @collection.remove(taskModel)
+                    app.collections.tasksActive.fetch()
                     $row.remove()
-                    @refresh()
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
