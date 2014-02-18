@@ -1,5 +1,7 @@
 View = require './view'
 
+Request = require '../models/Request'
+
 class RequestsView extends View
 
     templateRequestsActive: require './templates/requestsActive'
@@ -87,9 +89,7 @@ class RequestsView extends View
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'request', $(e.target).data('request-id')
 
-        $removeLinks = @$el.find('[data-action="remove"]')
-
-        $removeLinks.unbind('click').on 'click', (e) =>
+        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
@@ -102,9 +102,7 @@ class RequestsView extends View
                     @collection.remove(requestModel)
                     $row.remove()
 
-        $deletePausedLinks = @$el.find('[data-action="deletePaused"]')
-
-        $deletePausedLinks.unbind('click').on 'click', (e) =>
+        @$el.find('[data-action="deletePaused"]').unbind('click').on 'click', (e) =>
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
@@ -117,9 +115,7 @@ class RequestsView extends View
                         delete app.allRequests[requestModel.get('id')]
                         @collection.remove(requestModel)
 
-        $unpauseLinks = @$el.find('[data-action="unpause"]')
-
-        $unpauseLinks.unbind('click').on 'click', (e) =>
+        @$el.find('[data-action="unpause"]').unbind('click').on 'click', (e) =>
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
@@ -131,9 +127,7 @@ class RequestsView extends View
                     requestModel.unpause().done =>
                         @render()
 
-        $starLinks = @$el.find('[data-action="starToggle"]')
-
-        $starLinks.unbind('click').on 'click', (e) =>
+        @$el.find('[data-action="starToggle"]').unbind('click').on 'click', (e) =>
             $target = $(e.target)
             $table = $target.parents('table')
 
@@ -147,6 +141,17 @@ class RequestsView extends View
                 $requests.each -> $(@).attr('data-starred', 'false')
             else
                 $requests.each -> $(@).attr('data-starred', 'true')
+
+        @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+            $row = $(e.target).parents('tr')
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to run a task for this on-demand request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    requestModel.run()
+                    utils.flashRow $row
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
