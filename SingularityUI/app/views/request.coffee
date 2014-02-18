@@ -13,8 +13,6 @@ class RequestView extends View
     removeRequestTemplate: require './templates/vex/removeRequest'
 
     initialize: =>
-        @request = app.allRequests[@options.requestId]
-
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
         @requestHistory.fetch().done =>
             @requestHistory.fetched = true
@@ -26,12 +24,10 @@ class RequestView extends View
             @render()
 
     render: =>
-        if not @request
-            vex.dialog.alert("<p>Could not open a request by that ID.</p><pre>#{ @options.requestId }</pre>")
-            return
-
         context =
-            request: @request
+            request:
+                id: @options.requestId
+                name: utils.getShortRequestID @options.requestId
 
             fetchDoneHistory: @requestHistory.fetched
             requestHistory: @requestHistory.attributes

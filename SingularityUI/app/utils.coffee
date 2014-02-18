@@ -11,6 +11,14 @@ class Utils
             return _.truncate(taskId, 20)
         return taskId
 
+    @getShortRequestID: (requestId) ->
+        split = requestId.split(/\-|\:|\./)
+        if split.length > 1
+            return "#{ split[0] }"
+        else
+            return _.truncate(requestId, 20)
+        return requestId
+
     @getShortTaskIDMiddleEllipsis: (taskId) ->
         dateRegExp = /\-\d{12,}\-/
         bigSplit = taskId.split dateRegExp
