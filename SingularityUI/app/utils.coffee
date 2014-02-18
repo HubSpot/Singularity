@@ -47,4 +47,10 @@ class Utils
         wasJustNow = Math.abs(time.diff(now)) < 120000
         """#{ time.from() } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
 
+    @flashRow: ($row) ->
+        $row.removeClass('flash-prime flash')
+        $row.addClass('flash-prime')
+        $row[0].clientHeight
+        $row.addClass('flash')
+
 module.exports = Utils
