@@ -34,7 +34,7 @@ class Utils
         vex.dialog.alert
             contentCSS:
                 width: 800
-            message: "<pre>#{ lookupObject[objectId].JSONString }</pre>"
+            message: "<pre>#{ utils.htmlEncode lookupObject[objectId].JSONString }</pre>"
 
     @htmlEncode: (value) ->
         $('<div>').text(value).html()
