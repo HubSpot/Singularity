@@ -38,7 +38,7 @@ public class TaskResource {
   }
   
   @GET
-  @Path("/slave/{slaveId}/active")
+  @Path("active/slave/{slaveId}")
   public List<SingularityTask> getTasksForSlave(String slaveId) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
     
