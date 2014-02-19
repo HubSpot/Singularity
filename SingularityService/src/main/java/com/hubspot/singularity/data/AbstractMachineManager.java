@@ -100,7 +100,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getObject(getActivePath(objectId));
   }
   
-  public Optional<T> getDeadSlave(String objectId) {
+  public Optional<T> getDeadObject(String objectId) {
     return getObject(getDeadPath(objectId));
   }
   

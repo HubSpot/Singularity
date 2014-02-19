@@ -5,11 +5,13 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.sun.jersey.api.NotFoundException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
 import java.util.List;
 
 @Path("/tasks")
@@ -18,11 +20,13 @@ public class TaskResource {
   
   private final TaskManager taskManager;
   private final RequestManager requestManager;
-    
+  private final SlaveManager slaveManager;  
+  
   @Inject
-  public TaskResource(TaskManager taskManager, RequestManager requestManager) {
+  public TaskResource(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager) {
     this.taskManager = taskManager;
     this.requestManager = requestManager;
+    this.slaveManager = slaveManager;
   }
   
   @GET
@@ -31,6 +35,26 @@ public class TaskResource {
     final List<SingularityPendingTaskId> taskIds = taskManager.getScheduledTasks();
     
     return requestManager.fetchTasks(taskIds);
+  }
+  
+  @GET
+  @Path("/slave/{slaveId}/active")
+  public List<SingularityTask> getTasksForSlave(String slaveId) {
+    Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
+    
+    if (!maybeSlave.isPresent()) {
+      maybeSlave = slaveManager.getDecomissioning(slaveId);
+    }
+    
+    if (!maybeSlave.isPresent()) {
+      maybeSlave = slaveManager.getDeadObject(slaveId);
+    }
+    
+    if (!maybeSlave.isPresent()) {
+      throw new NotFoundException(String.format("Couldn't find a slave in any state with id %s", slaveId));
+    }
+    
+    return taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get());
   }
   
   @GET

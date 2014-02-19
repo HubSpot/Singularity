@@ -6,6 +6,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.*;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -110,6 +111,21 @@ public class TaskManager extends CuratorManager {
     }
 
     return cleanupTasks;
+  }
+  
+  public List<SingularityTask> getTasksOnSlave(List<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
+    List<SingularityTask> tasks = Lists.newArrayList();
+
+    for (SingularityTaskId activeTaskId : activeTaskIds) {
+      if (activeTaskId.getHost().equals(slave.getHost())) {
+        Optional<SingularityTask> maybeTask = getActiveTask(activeTaskId.getId());
+        if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+          tasks.add(maybeTask.get());
+        }
+      }
+    }
+
+    return tasks;
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {

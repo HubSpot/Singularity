@@ -79,13 +79,8 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     final List<SingularitySlave> slaves = slaveManager.getDecomissioningObjectsFiltered(stateCache.getDecomissioningSlaves());
     
     for (SingularitySlave slave : slaves) {
-      for (SingularityTaskId activeTaskId : activeTaskIds) {
-        if (activeTaskId.getHost().equals(slave.getHost())) {
-          Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
-          if (slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
-            checkTaskForDecomissionCleanup(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), slave.toString());
-          }
-        }
+      for (SingularityTask activeTask : taskManager.getTasksOnSlave(activeTaskIds, slave)) {
+        checkTaskForDecomissionCleanup(requestIdsToReschedule, matchingTaskIds, activeTask, slave.toString());
       }
     }
     
