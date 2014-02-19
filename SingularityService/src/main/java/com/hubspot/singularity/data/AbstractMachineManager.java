@@ -88,6 +88,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private Optional<T> getObject(String path) {
     try {
       byte[] bytes = curator.getData().forPath(path);
+      if (bytes == null || bytes.length == 0) {
+        return Optional.absent();
+      }
       return Optional.of(fromBytes(bytes));
     } catch (NoNodeException nee) {
       return Optional.absent();
