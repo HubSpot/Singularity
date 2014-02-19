@@ -6,58 +6,65 @@
     <div class="page-header">
         <h1>Starred Requests</h1>
     </div>
-    <div class="row-fluid">
-        {{#if requests.length}}
-            <table class="table" data-sortable>
-                <thead>
-                    <tr>
-                        <th data-sortable="false"></th>
-                        <th>Request</th>
-                        <th>Requested</th>
-                        <th>Deploy User</th>
-                        <th>Instances</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#eachWithFn requests}}
-                        <tr data-request-id="{{ id }}">
-                            <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
-                            <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
-                            <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                            <td>{{ deployUser }}</td>
-                            <td>{{ instances }}</td>
-                        </tr>
-                    {{/eachWithFn}}
-                </tbody>
-            </table>
-        {{else}}
-            <center><p>No starred requests.</p></center>
-        {{/if}}
-    </div>
 </section>
 
-{{#if requestsNotFound.length}}
+{{#if collectionSycned}}
     <section>
-        <div class="page-header">
-            <h1>Starred Non-active Requests</h1>
-        </div>
         <div class="row-fluid">
-            <table class="table" data-sortable>
-                <thead>
-                    <tr>
-                        <th data-sortable="false"></th>
-                        <th>Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#eachWithFn requestsNotFound}}
+            {{#if requests.length}}
+                <table class="table" data-sortable>
+                    <thead>
                         <tr>
-                            <td><a class="star" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
-                            <td>{{#hardBreak name}}{{/hardBreak}}</td>
+                            <th data-sortable="false"></th>
+                            <th>Request</th>
+                            <th>Requested</th>
+                            <th>Deploy User</th>
+                            <th>Instances</th>
                         </tr>
-                    {{/eachWithFn}}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requests}}
+                            <tr data-request-id="{{ id }}">
+                                <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
+                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
+                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td>{{ deployUser }}</td>
+                                <td>{{ instances }}</td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                <center><p>No starred requests.</p></center>
+            {{/if}}
         </div>
     </section>
+
+    {{#if requestsNotFound.length}}
+        <section>
+            <div class="page-header">
+                <h1>Starred Non-active Requests</h1>
+            </div>
+            <div class="row-fluid">
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th data-sortable="false"></th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requestsNotFound}}
+                            <tr>
+                                <td><a class="star" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
+                                <td>{{#hardBreak name}}{{/hardBreak}}</td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {{/if}}
+{{else}}
+    <div class="page-loader centered"></div>
 {{/if}}

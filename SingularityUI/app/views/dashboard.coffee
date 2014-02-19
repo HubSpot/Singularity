@@ -5,7 +5,11 @@ class DashboardView extends View
     template: require './templates/dashboard'
 
     render: (fromRoute) =>
+        if not app.collections.requestsActive.synced
+            app.collections.requestsActive.fetch().done => @render()
+
         context =
+            collectionSycned: app.collections.requestsActive.synced
             requests: []
             requestsNotFound: []
 
