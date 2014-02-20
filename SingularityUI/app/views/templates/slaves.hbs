@@ -64,7 +64,7 @@
                                 <td>{{ rackId }}</td>
                                 <td>{{ host }}</td>
                                 <td>{{ state }}</td>
-                                <td class="actions-column"><a data-slave-id="{{ id }}" data-action="remove">Remove</a>
+                                <td class="actions-column"><a data-slave-id="{{ id }}" data-action="remove" data-collection="slavesDead">Remove</a>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -94,6 +94,7 @@
                             <th>Rack</th>
                             <th>Host</th>
                             <th>State</th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -103,6 +104,7 @@
                                 <td>{{ rackId }}</td>
                                 <td>{{ host }}</td>
                                 <td>{{ state }}</td>
+                                <td class="actions-column"><a data-slave-id="{{ id }}" data-action="remove" data-collection="slavesDecomissioning">Remove</a>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

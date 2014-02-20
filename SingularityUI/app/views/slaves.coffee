@@ -46,18 +46,25 @@ class SlavesView extends View
         @
 
     setupEvents: ->
-        $removeLinks = @$el.find('[data-action="remove"]')
-
-        $removeLinks.unbind('click').on 'click', (e) =>
+        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
             $row = $(e.target).parents('tr')
-            slaveModel = @slavesDead.get($(e.target).data('slave-id'))
+
+            collection = undefined
+
+            if $(e.target).data('collection') is 'slavesDead'
+                collection = @slavesDead
+            if $(e.target).data('collection') is 'slavesDecomissioning'
+                collection = @slavesDecomissioning
+            return new Error('No collection specified to find the model.') unless collection
+
+            slaveModel = collection.get($(e.target).data('slave-id'))
 
             vex.dialog.confirm
                 message: "<p>Are you sure you want to delete the slave:</p><pre>#{ slaveModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     slaveModel.destroy()
-                    @slavesDead.remove(slaveModel)
+                    collection.remove(slaveModel)
                     $row.remove()
 
 module.exports = SlavesView
