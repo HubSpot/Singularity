@@ -138,6 +138,8 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
         
         numScheduledTasks += scheduleTasks(stateCache, maybeRequest.get(), pendingRequest.getPendingTypeEnum());
+      
+        LOG.debug(String.format("Pending request %s resulted in %s new scheduled tasks", pendingRequest, numScheduledTasks));
       } else {
         obsoleteRequests++;
       }
@@ -202,7 +204,11 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingType);
 
     if (numMissingInstances > 0) {
+      LOG.debug(String.format("Missing %s instances of request %s (matching tasks: %s), pendingType: %s", numMissingInstances, request.getId(), matchingTaskIds, pendingType));
+      
       final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, pendingType);
+      
+      LOG.trace(String.format("Scheduling tasks: %s", scheduledTasks));
       
       taskManager.persistScheduleTasks(scheduledTasks);
     } else if (numMissingInstances < 0) {
