@@ -1,13 +1,21 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
 public class SingularityTaskHistory {
 
+  private final ObjectMapper mapper = new ObjectMapper();
+  
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
   private final long timestamp;
   private final Optional<String> directory;
@@ -37,6 +45,16 @@ public class SingularityTaskHistory {
     return directory;
   }
 
+  public List<String> getTaskHistoryJade() {
+    List<String> output = new ArrayList<String>();
+    for (SingularityTaskHistoryUpdate s : taskUpdates){
+      Date date = new Date(); 
+      date.setTime(s.getTimestamp());
+      output.add(date.toString() + " || " + s.getStatusUpdate());
+    }
+    return output;
+  }
+  
   @Override
   public String toString() {
     return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", timestamp=" + timestamp + ", directory=" + directory + ", task=" + task + "]";

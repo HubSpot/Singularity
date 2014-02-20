@@ -1,7 +1,10 @@
 package com.hubspot.singularity.smtp;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -20,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -35,6 +37,9 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
 
+import de.neuland.jade4j.Jade4J;
+import de.neuland.jade4j.template.JadeTemplate;
+
 public class SingularityMailer implements SingularityCloseable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
@@ -46,8 +51,8 @@ public class SingularityMailer implements SingularityCloseable {
   private final SingularityCloser closer;
 
   private final HistoryManager historyManager;
-
-  private final SimpleEmailTemplate taskFailedTemplate;
+  
+  private JadeTemplate taskFailedTemplate;
   
   private final Optional<String> uiHostnameAndPath;
 
@@ -67,7 +72,12 @@ public class SingularityMailer implements SingularityCloseable {
       this.mailSenderExecutorService = Optional.absent();
     }
     
-    this.taskFailedTemplate = new SimpleEmailTemplate("task_failed.html");
+    try{
+      this.taskFailedTemplate = Jade4J.getTemplate("./src/main/resources/templates/task_failed.jade");
+    } catch(IOException e) {
+      LOG.error("SingularityMailer: task failed template not found: " + e);
+      this.taskFailedTemplate = new JadeTemplate();
+    }
   }
   
   @Override
@@ -114,23 +124,15 @@ public class SingularityMailer implements SingularityCloseable {
     queueMail(to, subject, body);
 }
     
-  public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {
-    final List<String> to = request.getOwners();
     
+  public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {
     Optional<SingularityTaskHistory> taskHistory = historyManager.getTaskHistory(taskId.getId(), true);
     
+    final List<String> to = request.getOwners();
     final String subject = getSubjectForTaskHistory(taskId, state, taskHistory);
-    
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    builder.put("request_id", request.getId());
-    builder.put("task_id", taskId.getId());
-    builder.put("status", state.name());
-    builder.put("action", determineAppropriateAction(state, taskHistory.get()));
-    builder.put("singularity_task_link", getSingularityTaskLink(taskId));
-    
-    final String body = taskFailedTemplate.render(builder.build());
-    
-    queueMail(to, subject, body);
+    final String emailBody = buildTaskFailedEmail(state, request, taskId, taskHistory);
+      
+    queueMail(to, subject, emailBody);
   }
   
   private boolean taskEverRan(SingularityTaskHistory taskHistory) {
