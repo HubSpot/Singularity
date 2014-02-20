@@ -45,7 +45,7 @@ public class SingularityConfiguration extends Configuration {
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
   
   @NotNull
-  private long deltaAfterWhichTasksAreLateMillis = 300;
+  private long deltaAfterWhichTasksAreLateMillis = 5000;
   
   public long getCloseWaitSeconds() {
     return closeWaitSeconds;
