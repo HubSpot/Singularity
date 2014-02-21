@@ -50,13 +50,19 @@ class Utils
     @setupSortableTables: ->
         sortable.init()
 
-    @humanTimeAgo: (date) ->
+    @humanTime: (date, future = false) ->
         return '' unless date?
         now = moment()
         time = moment(date)
         wasToday = time.date() is now.date() and Math.abs(time.diff(now)) < 86400000
         wasJustNow = Math.abs(time.diff(now)) < 120000
-        """#{ time.from() } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
+        """#{ if future then time.from() else time.fromNow() } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
+
+    @humanTimeAgo: (date) ->
+        utils.humanTime date
+
+    @humanTimeSoon: (date) ->
+        utils.humanTime date, future = true
 
     @flashRow: ($row) ->
         $row.removeClass('flash-prime flash')
