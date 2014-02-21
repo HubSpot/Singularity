@@ -128,6 +128,12 @@ public class TaskManager extends CuratorManager {
     return tasks;
   }
   
+  public boolean isActiveTask(String taskId) {
+    final String path = getActivePath(taskId);
+    
+    return exists(path);
+  }
+  
   public Optional<SingularityTask> getActiveTask(String taskId) {
     final String path = getActivePath(taskId);
     

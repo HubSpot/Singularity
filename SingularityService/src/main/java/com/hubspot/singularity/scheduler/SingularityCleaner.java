@@ -138,6 +138,10 @@ public class SingularityCleaner extends SingularitySchedulerBase {
     drainTaskCleanupQueue();
   }
   
+  private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
+    return taskManager.isActiveTask(cleanupTask.getTaskId());
+  }
+  
   private void drainTaskCleanupQueue() {
     final long start = System.currentTimeMillis();
 
@@ -161,7 +165,10 @@ public class SingularityCleaner extends SingularitySchedulerBase {
     int killedTasks = 0;
     
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
-      if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks)) {
+      if (!isValidTask(cleanupTask)) {
+        LOG.info(String.format("Couldn't find a matching active task for cleanup task %s, deleting..", cleanupTask));
+        taskManager.deleteCleanupTask(cleanupTask.getTaskId());
+      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks)) {
         driverManager.kill(cleanupTask.getTaskId());
         
         taskManager.deleteCleanupTask(cleanupTask.getTaskId());
