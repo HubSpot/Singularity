@@ -91,7 +91,7 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     historyManager.updateTaskDirectory(taskId.getId(), directory.get());
 
-    LOG.trace(String.format("Updated task directory in %sms", System.currentTimeMillis() - now));
+    LOG.trace(String.format("Updated task %s directory in %sms", taskId.getId(), System.currentTimeMillis() - now));
   }
 
   public void checkDirectory(final SingularityTaskId taskId) {

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.config;
 
+import java.util.concurrent.TimeUnit;
+
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
@@ -45,7 +47,7 @@ public class SingularityConfiguration extends Configuration {
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
   
   @NotNull
-  private long deltaAfterWhichTasksAreLateMillis = 5000;
+  private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
   
   @NotNull
   private long warnAfterTasksDoNotRunDefaultSeconds = 300;
