@@ -94,10 +94,16 @@ public class SingularityLogSupport implements SingularityCloseable {
 
       @Override
       public void run() {
-        loadDirectory(taskId, maybeHistory.get());
+        try {
+          loadDirectory(taskId, maybeHistory.get());
+        } catch (Throwable t) {
+          LOG.error(String.format("While fetching directory for task: %s", taskId, t));
+        }
       }
     };
 
+    LOG.trace(String.format("Enqueing a request to fetch directory for task: %s, current queue size: %s", taskId, logLookupExecutorService.getQueue().size()));
+  
     logLookupExecutorService.submit(cmd);
   }
 

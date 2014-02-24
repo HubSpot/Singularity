@@ -171,9 +171,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
-    LOG.debug(String.format("Got a status update: %s", status));
-    
     final String taskId = status.getTaskId().getValue();
+    
+    LOG.debug(String.format("Got a status update for task: %s, status - %s", taskId, status));
     
     Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
     
