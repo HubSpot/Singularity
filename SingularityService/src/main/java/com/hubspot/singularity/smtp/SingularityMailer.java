@@ -14,6 +14,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class SingularityMailer implements SingularityCloseable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
 
+  private final SingularityConfiguration configuration;
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
   private final Optional<ThreadPoolExecutor> mailSenderExecutorService;
   
@@ -55,6 +57,7 @@ public class SingularityMailer implements SingularityCloseable {
   public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, HistoryManager historyManager) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
+    this.configuration = configuration;
     this.uiHostnameAndPath = configuration.getSingularityUIHostnameAndPath();
     this.historyManager = historyManager;
     
@@ -98,6 +101,17 @@ public class SingularityMailer implements SingularityCloseable {
     final String body = String.format("It has failed %s times consecutively. It will not run again until it is manually unpaused or updated.", request.getMaxFailuresBeforePausing());
     
     queueMail(to, subject, body); 
+  }
+  
+  public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
+    final List<String> to = request.getOwners();
+    
+    final String subject = String.format("Task %s has not started yet", taskId.getId());
+    
+    // should have a nicer message, task history and links
+    final String body = String.format("It has been running for %s. It will be killed after %s and a new one will take its place", DurationFormatUtils.formatDurationHMS(duration), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())));
+    
+    queueMail(to, subject, body);
   }
   
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState state) {

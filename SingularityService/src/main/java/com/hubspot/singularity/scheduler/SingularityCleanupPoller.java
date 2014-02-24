@@ -31,7 +31,7 @@ public class SingularityCleanupPoller {
     this.configuration = configuration;
     this.closer = closer;
     
-    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityCleanupPoller-%d").build());
+    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("S-%d").build());
   }
   
   public void start(final SingularityMesosSchedulerDelegator mesosScheduler) {
