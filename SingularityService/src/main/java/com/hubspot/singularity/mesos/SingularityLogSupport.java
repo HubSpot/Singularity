@@ -54,6 +54,11 @@ public class SingularityLogSupport implements SingularityCloseable {
           return Optional.of(executor.getDirectory());
         }
       }
+      for (MesosTaskObject executorTask : executor.getCompletedTasks()) {
+        if (taskId.getId().equals(executorTask.getId())) {
+          return Optional.of(executor.getDirectory());
+        }
+      }
     }
   
     return Optional.absent();
@@ -82,7 +87,7 @@ public class SingularityLogSupport implements SingularityCloseable {
       return;
     }
 
-    LOG.debug(String.format("Found a directory %s for task %s", directory, taskId.getId()));
+    LOG.debug(String.format("Found a directory %s for task %s", directory.get(), taskId.getId()));
 
     historyManager.updateTaskDirectory(taskId.getId(), directory.get());
 
