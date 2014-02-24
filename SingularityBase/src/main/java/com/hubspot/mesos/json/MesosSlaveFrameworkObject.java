@@ -10,10 +10,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class MesosSlaveFrameworkObject {
   
   private final List<MesosExecutorObject> executors;
+  private final List<MesosExecutorObject> completedExecutors;
   
   @JsonCreator
-  public MesosSlaveFrameworkObject(@JsonProperty("executors") List<MesosExecutorObject> executors) {
+  public MesosSlaveFrameworkObject(@JsonProperty("executors") List<MesosExecutorObject> executors, @JsonProperty("completed_executors") List<MesosExecutorObject> completedExecutors) {
     this.executors = executors;
+    this.completedExecutors = completedExecutors;
+  }
+  
+  public List<MesosExecutorObject> getCompletedExecutors() {
+    return completedExecutors;
   }
   
   public List<MesosExecutorObject> getExecutors() {

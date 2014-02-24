@@ -47,6 +47,50 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long deltaAfterWhichTasksAreLateMillis = 5000;
   
+  @NotNull
+  private long warnAfterTasksDoNotRunDefaultSeconds = 300;
+  
+  @NotNull
+  private long killAfterTasksDoNotRunDefaultSeconds = 600;
+  
+  @NotNull
+  private int logFetchCoreThreads = 3;
+  
+  @NotNull
+  private int logFetchMaxThreads = 25;
+    
+  public int getLogFetchCoreThreads() {
+    return logFetchCoreThreads;
+  }
+
+  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
+    this.logFetchCoreThreads = logFetchCoreThreads;
+  }
+
+  public int getLogFetchMaxThreads() {
+    return logFetchMaxThreads;
+  }
+
+  public void setLogFetchMaxThreads(int logFetchMaxThreads) {
+    this.logFetchMaxThreads = logFetchMaxThreads;
+  }
+
+  public long getWarnAfterTasksDoNotRunDefaultSeconds() {
+    return warnAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public void setWarnAfterTasksDoNotRunDefaultSeconds(long warnAfterTasksDoNotRunDefaultSeconds) {
+    this.warnAfterTasksDoNotRunDefaultSeconds = warnAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public long getKillAfterTasksDoNotRunDefaultSeconds() {
+    return killAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public void setKillAfterTasksDoNotRunDefaultSeconds(long killAfterTasksDoNotRunDefaultSeconds) {
+    this.killAfterTasksDoNotRunDefaultSeconds = killAfterTasksDoNotRunDefaultSeconds;
+  }
+
   public long getCloseWaitSeconds() {
     return closeWaitSeconds;
   }
