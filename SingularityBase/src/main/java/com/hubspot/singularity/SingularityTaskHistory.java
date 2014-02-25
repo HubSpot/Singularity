@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularityTaskHistory {
-  
+
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
   private final long timestamp;
   private final Optional<String> directory;

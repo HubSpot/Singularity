@@ -37,6 +37,12 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
 
+import com.hubspot.connect.http.HttpClient;
+import com.hubspot.connect.http.HttpHelper;
+import com.hubspot.connect.http.HttpRequest;
+import com.hubspot.connect.http.HttpRequest.HttpMethod;
+import com.hubspot.connect.http.HttpResponse;
+
 import de.neuland.jade4j.Jade4J;
 import de.neuland.jade4j.template.JadeTemplate;
 
@@ -49,6 +55,8 @@ public class SingularityMailer implements SingularityCloseable {
   private final Optional<ThreadPoolExecutor> mailSenderExecutorService;
   
   private final SingularityCloser closer;
+  
+  private final HttpClient httpClient = HttpHelper.createDefaultClient();
 
   private final HistoryManager historyManager;
   
@@ -124,6 +132,42 @@ public class SingularityMailer implements SingularityCloseable {
     
     queueMail(to, subject, body); 
   }
+
+  
+  public Map<String, List<String>> getTaskStdOutErr(SingularityTaskId taskId) {
+    Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
+    final SingularityTaskHistory taskHistory = maybeTaskHistory.get();
+  
+    final String directory = taskHistory.getDirectory().get();
+    final String slave_hostname = "http://127.0.0.1";
+    
+    Map<String, List<String>> stdouterr = new HashMap<String, List<String>>();
+    
+    for( String file : Arrays.asList("stdout", "stderr") ) {
+      try {
+        HttpResponse response = this.httpClient.execute(HttpRequest.newBuilder()
+            .setUri(slave_hostname + ":5051/files/read.json")
+            .addQueryParam("path", directory + "/" + file)
+            .addQueryParam("offset", "0")
+            .addQueryParam("length", this.maybeSmtpConfiguration.get().getTaskLogLength())
+            .setMethod(HttpMethod.POST)
+            .build());
+        
+        if(response.isError()){
+          LOG.error("Singularity mailer couldn't GET file " + file);
+        } else {
+          String data = response.getAsJsonNode().get("data").toString();
+          if(data != null && data.length() > 0){
+            stdouterr.put(file, Arrays.asList( data.split("[\r\n]+")) );
+          }
+        }
+      } catch(Exception e){
+        LOG.error("Singularity mailer exception: " + e);
+      }
+    }
+    return stdouterr;
+  }
+ 
   
   public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
     final List<String> to = request.getOwners();

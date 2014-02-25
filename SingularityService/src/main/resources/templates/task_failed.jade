@@ -23,3 +23,17 @@ html
         li= task_update
       else
         li No updates
+
+    p StdOut:
+    ul
+      for line in stdout
+        li= line
+      else
+        li No updates
+        
+    p StdErr:
+    ul
+      for line in stderr
+        li= line
+      else
+        li No updates                

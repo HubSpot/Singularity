@@ -16,6 +16,9 @@ public class SMTPConfiguration {
   @JsonProperty
   private String password;
 
+  @JsonProperty
+  private Integer taskLogLength = 400;
+  
   @NotNull
   @JsonProperty
   private String host = "localhost";
@@ -68,6 +71,10 @@ public class SMTPConfiguration {
 
   public void setSmtpLoggingConfiguration(SMTPLoggingConfiguration smtpLoggingConfiguration) {
     this.smtpLoggingConfiguration = smtpLoggingConfiguration;
+  }
+  
+  public int getTaskLogLength(){
+    return taskLogLength;
   }
 
   public Optional<String> getUsername() {
