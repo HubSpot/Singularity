@@ -22,16 +22,8 @@ class TaskView extends View
             @render()
 
             @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
-            # @taskFiles.fetch().done =>
-            #     @taskFilesFetchDone = true
-            #     @render()
-
-            log 'asdasdasd'
-            #log @taskFiles.fetch()
-
             @taskFiles.testSandbox()
                 .done(=>
-                    log 'done'
                     @taskFiles.fetch().done =>
                         @taskFilesFetchDone = true
                         @render()
