@@ -1,36 +1,40 @@
-{{#if taskFiles}}
-    <table class="table" data-sortable>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Size</th>
-                <th>Last modified</th>
-                <th data-sortable="false"></th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#eachWithFn taskFiles}}
-                <tr>
-                    <td>
-                        {{#if isDirectory}}
-                            <a href="/singularity/task/{{ taskId }}/files{{ relPath }}" data-route="/task/{{ taskId }}/files{{ relPath }}">{{ shortPath }}</a>
-                        {{else}}
-                            <a href="/singularity/task/{{ taskId }}/tail{{ relPath }}" data-route="/task/{{ taskId }}/tail{{ relPath }}">{{ shortPath }}</a>
-                        {{/if}}
-                    </td>
-                    <td data-value="{{ size }}">{{ sizeHuman }}</td>
-                    <td data-value="{{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
-                    <td class="actions-column">
-                        {{#unless isDirectory}}<a href="{{ downloadLink }}" target="_blank">Download</a>{{/unless}}
-                    </td>
-                </tr>
-            {{/eachWithFn}}
-        </tbody>
-    </table>
+{{#if taskFilesSandboxUnavailable}}
+    <center><p>The sandbox is unavailable for this task.</p></center>
 {{else}}
-    {{#if taskFilesFetchDone}}
-        <center><p>This directory contains no files.</p></center>
+    {{#if taskFiles}}
+        <table class="table" data-sortable>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Last modified</th>
+                    <th data-sortable="false"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#eachWithFn taskFiles}}
+                    <tr>
+                        <td>
+                            {{#if isDirectory}}
+                                <a href="/singularity/task/{{ taskId }}/files{{ relPath }}" data-route="/task/{{ taskId }}/files{{ relPath }}">{{ shortPath }}</a>
+                            {{else}}
+                                <a href="/singularity/task/{{ taskId }}/tail{{ relPath }}" data-route="/task/{{ taskId }}/tail{{ relPath }}">{{ shortPath }}</a>
+                            {{/if}}
+                        </td>
+                        <td data-value="{{ size }}">{{ sizeHuman }}</td>
+                        <td data-value="{{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
+                        <td class="actions-column">
+                            {{#unless isDirectory}}<a href="{{ downloadLink }}" target="_blank">Download</a>{{/unless}}
+                        </td>
+                    </tr>
+                {{/eachWithFn}}
+            </tbody>
+        </table>
     {{else}}
-        <div class="page-loader centered"></div>
+        {{#if taskFilesFetchDone}}
+            <center><p>This directory contains no files.</p></center>
+        {{else}}
+            <div class="page-loader centered"></div>
+        {{/if}}
     {{/if}}
 {{/if}}
