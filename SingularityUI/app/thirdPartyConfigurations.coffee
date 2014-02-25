@@ -28,3 +28,14 @@ moment.lang 'en',
         lastDay: relativePlus
         lastWeek: relativePlus
         sameElse: relativePlus
+
+# Messenger options
+Messenger.options =
+    extraClasses: 'messenger-fixed messenger-on-top'
+    theme: 'air'
+    hideOnNavigate: true
+    maxMessages: 1
+    messageDefaults:
+        type: 'error'
+        hideAfter: 5
+        showCloseButton: true
