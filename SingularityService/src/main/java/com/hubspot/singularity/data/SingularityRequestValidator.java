@@ -114,12 +114,40 @@ public class SingularityRequestValidator {
     } else if (!dayOfWeek.equals("?")) {
       dayOfMonth = "?";
     }
+    
+    // standard cron is 0-6, quartz is 1-7
+    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday, 
+    // which is sat in quartz. so if we get a value of 7, we should change it to 1.
+    if (isValidInteger(dayOfWeek)) {
+      int dayOfWeekValue = Integer.parseInt(dayOfWeek);
+      
+      if (dayOfWeekValue < 0 || dayOfWeekValue > 7) {
+        throw new BadRequestException(String.format("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue));
+      }
+      
+      if (dayOfWeekValue == 7) {
+        dayOfWeekValue = 1;
+      } else {
+        dayOfWeekValue++;
+      }
+      
+      dayOfWeek = Integer.toString(dayOfWeekValue);
+    }
 
     newSchedule.add(dayOfMonth);
     newSchedule.add(split[indexMod + 3]);
     newSchedule.add(dayOfWeek);
 
     return JOINER.join(newSchedule);
+  }
+  
+  private boolean isValidInteger(String strValue) {
+    try {
+      Integer.parseInt(strValue);
+      return true;
+    } catch (NumberFormatException nfe) {
+      return false;
+    }
   }
   
 }
