@@ -99,15 +99,19 @@ public class SingularityRequest extends SingularityJsonObject {
         .setDaemon(daemon)
         .setInstances(instances)
         .setRackSensitive(rackSensitive)
+
         .setMetadata(metadata == null ? null : Maps.newHashMap(metadata))
         .setVersion(version)
         .setId(id)
         .setTimestamp(timestamp)
-        .setNumRetriesOnFailure(numRetriesOnFailure)
-        .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
         .setEnv(env == null ? null : Maps.newHashMap(env))
         .setUris(uris == null ? null : Lists.newArrayList(uris))
-        .setExecutorData(executorData);  // TODO: find the best way to clone this, maybe force it to be a Map<String, String> ?
+        .setExecutorData(executorData)  // TODO: find the best way to clone this, maybe force it to be a Map<String, String> ?
+
+        .setOwners(owners)
+        .setNumRetriesOnFailure(numRetriesOnFailure)
+        .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
+        .setPauseOnInitialFailure(pauseOnInitialFailure);
   }
 
   public String getId() {
