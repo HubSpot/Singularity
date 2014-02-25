@@ -60,7 +60,18 @@ public class SingularityConfiguration extends Configuration {
   
   @NotNull
   private int logFetchMaxThreads = 25;
-    
+  
+  @NotNull
+  private long zookeeperAsyncTimeout = 5000;
+  
+  public long getZookeeperAsyncTimeout() {
+    return zookeeperAsyncTimeout;
+  }
+
+  public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
+    this.zookeeperAsyncTimeout = zookeeperAsyncTimeout;
+  }
+
   public int getLogFetchCoreThreads() {
     return logFetchCoreThreads;
   }

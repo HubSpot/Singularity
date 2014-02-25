@@ -1,11 +1,6 @@
 package com.hubspot.singularity.data;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.hubspot.singularity.*;
+import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -13,9 +8,20 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class TaskManager extends CuratorManager {
+public class TaskManager extends CuratorAsyncManager<SingularityTask> {
 
   private final static Logger LOG = LoggerFactory.getLogger(TaskManager.class);
   
@@ -28,8 +34,9 @@ public class TaskManager extends CuratorManager {
   private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
     
   @Inject
-  public TaskManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    super(curator);
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper) {
+    super(curator, configuration.getZookeeperAsyncTimeout());
+  
     this.objectMapper = objectMapper;
   }
   
@@ -113,6 +120,10 @@ public class TaskManager extends CuratorManager {
     return cleanupTasks;
   }
   
+  public List<SingularityTask> getActiveTasks() {
+    return getAsyncChildren(ACTIVE_PATH_ROOT);
+  }
+  
   public List<SingularityTask> getTasksOnSlave(List<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
     List<SingularityTask> tasks = Lists.newArrayList();
 
@@ -150,26 +161,9 @@ public class TaskManager extends CuratorManager {
     }
   }
   
-  public List<SingularityTask> getActiveTasks() {
-    List<SingularityTaskId> taskIds = getActiveTaskIds();
-    
-    try {
-      List<SingularityTask> tasks = Lists.newArrayListWithCapacity(taskIds.size());
-      
-      for (SingularityTaskId taskId : taskIds) {
-        Optional<SingularityTask> maybeTask = getActiveTask(taskId.toString());
-        
-        if (maybeTask.isPresent()) {
-          tasks.add(maybeTask.get());
-        } else {
-          LOG.info(String.format("Expected active node %s but it wasn't there", taskId));
-        }
-      }
-
-      return tasks;
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
+  @Override
+  protected SingularityTask fromData(byte[] data) throws Exception {
+    return SingularityTask.fromBytes(data, objectMapper);
   }
 
   public List<SingularityPendingTaskId> getScheduledTasks() {

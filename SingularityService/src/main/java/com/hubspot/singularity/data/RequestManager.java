@@ -1,13 +1,7 @@
 package com.hubspot.singularity.data;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.hubspot.singularity.*;
-import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.sun.jersey.api.ConflictException;
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -15,9 +9,23 @@ import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.sun.jersey.api.ConflictException;
 
-public class RequestManager extends CuratorManager {
+public class RequestManager extends CuratorAsyncManager<SingularityRequest> {
   
   private final static Logger LOG = LoggerFactory.getLogger(RequestManager.class);
   
@@ -26,16 +34,14 @@ public class RequestManager extends CuratorManager {
   private final static String REQUEST_ROOT = "/requests";
     
   private final static String ACTIVE_PATH_ROOT = REQUEST_ROOT + "/active";
-
   private final static String PAUSED_PATH_ROOT = REQUEST_ROOT + "/paused";
-
   private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
-  
   private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
   
   @Inject
-  public RequestManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    super(curator);
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper) {
+    super(curator, configuration.getZookeeperAsyncTimeout());
+    
     this.objectMapper = objectMapper;
   }
  
@@ -201,33 +207,22 @@ public class RequestManager extends CuratorManager {
   }
   
   public List<SingularityRequest> getPausedRequests() {
-    return getRequests(PAUSED_PATH_ROOT);
+    return getAsyncChildren(PAUSED_PATH_ROOT);
   }
   
   public List<SingularityRequest> getActiveRequests() {
-    return getRequests(ACTIVE_PATH_ROOT);
+    return getAsyncChildren(ACTIVE_PATH_ROOT);
   }
   
-  private List<SingularityRequest> getRequests(String parent) {
-    final List<String> requestIds = getChildren(parent);
-    final List<SingularityRequest> requests = Lists.newArrayListWithCapacity(requestIds.size());
-    
-    for (String requestId : requestIds) {
-      Optional<SingularityRequest> request = getRequestFromPath(ZKPaths.makePath(parent, requestId));
-      
-      if (request.isPresent()) {
-        requests.add(request.get());
-      } else {
-        LOG.warn(String.format("While fetching %s requests, expected to find request %s but it was not found", parent, requestId));
-      }
-    }
-    
-    return requests;
-  }  
-    
+  @Override
+  protected SingularityRequest fromData(byte[] data) throws Exception {
+    return SingularityRequest.fromBytes(data, objectMapper);
+  }
+
   private Optional<SingularityRequest> getRequestFromPath(String path) {
     try {
-      SingularityRequest request = SingularityRequest.fromBytes(curator.getData().forPath(path), objectMapper);
+      SingularityRequest request = fromData(curator.getData().forPath(path));
+      
       return Optional.of(request);
     } catch (NoNodeException nee) {
       return Optional.absent();
