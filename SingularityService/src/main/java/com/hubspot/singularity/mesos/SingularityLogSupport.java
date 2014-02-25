@@ -112,7 +112,7 @@ public class SingularityLogSupport implements SingularityCloseable {
         try {
           loadDirectory(taskId, maybeHistory.get());
         } catch (Throwable t) {
-          LOG.error(String.format("While fetching directory for task: %s", taskId, t));
+          LOG.error(String.format("While fetching directory for task: %s", taskId), t);
         }
       }
     };
