@@ -42,14 +42,27 @@ class Application
 
     setupGlobalErrorHandling: ->
         unloading = false
-
         $(window).on 'beforeunload', ->
             unloading = true
             return
 
+        blurred = false
+        $(window).on 'blur', -> blurred = true
+        $(window).on 'focus', -> blurred = false
+
         $(document).on 'ajaxError', (event, jqxhr, settings) ->
-            if not settings.suppressErrors and jqxhr.statusText isnt 'abort' and not unloading
-                vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ settings.url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.htmlEncode utils.stringJSON jqxhr }</pre>"
+            return if settings.suppressErrors
+            return if jqxhr.statusText is 'abort'
+            return if unloading
+            return if blurred and jqxhr.statusText is 'timeout'
+
+            url = settings.url.replace(env.SINGULARITY_BASE, '')
+
+            if jqxhr.statusText is 'timeout'
+                Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
+
+            else
+                vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.htmlEncode utils.stringJSON jqxhr }</pre>"
 
     show: (view) ->
         if app.page.children.length
