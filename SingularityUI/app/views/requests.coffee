@@ -13,6 +13,7 @@ class RequestsView extends View
 
     initialize: ->
         @lastRequestsFilter = @options.requestsFilter
+        @lastRequestsSubFilter = @options.requestsSubFilter
 
     fetch: ->
         if @lastRequestsFilter is 'active'
@@ -33,12 +34,13 @@ class RequestsView extends View
         return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastRequestsFilter).done =>
-            @render(@lastRequestsFilter, refresh = true)
+            @render(@lastRequestsFilter, @lastRequestsSubFilter, refresh = true)
 
         @
 
-    render: (requestsFilter, refresh) =>
+    render: (requestsFilter, requestsSubFilter, refresh) =>
         @lastRequestsFilter = requestsFilter
+        @lastRequestsSubFilter = requestsSubFilter
 
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
@@ -58,6 +60,7 @@ class RequestsView extends View
 
         context =
             collectionSynced: @collection.synced
+            lastRequestsSubFilter: @lastRequestsSubFilter
 
         if @lastRequestsFilter in ['active', 'paused']
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
@@ -146,8 +149,10 @@ class RequestsView extends View
             requestModel = new Request id: $(e.target).data('request-id')
             $row = $(e.target).parents('tr')
 
+            requestType = $(e.target).data('request-type')
+
             vex.dialog.confirm
-                message: "<p>Are you sure you want to run a task for this on-demand request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     requestModel.run()

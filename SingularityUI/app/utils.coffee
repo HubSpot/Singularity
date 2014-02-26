@@ -70,4 +70,10 @@ class Utils
         $row[0].clientHeight
         $row.addClass('flash')
 
+    @isScheduledRequest: (request) ->
+        if _.isString(request.schedule) then true else false
+
+    @isOnDemandRequest: (request) ->
+        not request.daemon and not utils.isScheduledRequest(request)
+
 module.exports = Utils

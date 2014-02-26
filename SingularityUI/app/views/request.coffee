@@ -12,7 +12,7 @@ class RequestView extends View
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
-    initialize: =>
+    initialize: ->
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
         @requestHistory.fetch().done =>
             @requestHistory.fetched = true
@@ -23,11 +23,14 @@ class RequestView extends View
             @requestTasksActive.fetched = true
             @render()
 
-    render: =>
+    render: ->
         context =
             request:
                 id: @options.requestId
                 name: utils.getShortRequestID @options.requestId
+                scheduled: false
+                onDemand: false
+                scheduledOrOnDemand: false
 
             fetchDoneHistory: @requestHistory.fetched
             requestHistory: @requestHistory.attributes
@@ -36,6 +39,12 @@ class RequestView extends View
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
 
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
+
+        if @requestHistory.attributes.requestUpdates?.length
+            requestLikeObject = @requestHistory.attributes.requestUpdates[0].request
+            context.request.scheduled = utils.isScheduledRequest requestLikeObject
+            context.request.onDemand = utils.isOnDemandRequest requestLikeObject
+            context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
         @$el.html @template context
 
@@ -152,9 +161,16 @@ class RequestView extends View
                     requestModel.destroy()
                     app.router.navigate 'requests', trigger: true
 
-        $runNowLinks = @$el.find('[data-action="run-now"]')
+        @$el.find('[data-action="run-request-now"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
 
-        $runNowLinks.unbind('click').on 'click', (e) =>
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to run a task for this request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    @fetchActiveTasks()
+
+        @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
             taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
             $row = $(e.target).parents('tr')
 
