@@ -31,6 +31,7 @@ class RequestView extends View
                 scheduled: false
                 onDemand: false
                 scheduledOrOnDemand: false
+                fullObject: false
 
             fetchDoneHistory: @requestHistory.fetched
             requestHistory: @requestHistory.attributes
@@ -42,6 +43,11 @@ class RequestView extends View
 
         if @requestHistory.attributes.requestUpdates?.length
             requestLikeObject = @requestHistory.attributes.requestUpdates[0].request
+
+            requestLikeObject.JSONString = utils.stringJSON requestLikeObject
+            app.allRequests[requestLikeObject.id] = requestLikeObject
+            context.request.fullObject = true
+
             context.request.scheduled = utils.isScheduledRequest requestLikeObject
             context.request.onDemand = utils.isOnDemandRequest requestLikeObject
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
