@@ -15,6 +15,9 @@ public class SMTPConfiguration {
 
   @JsonProperty
   private String password;
+  
+  @JsonProperty
+  private String SlaveHostnameSuffix = "";
 
   @JsonProperty
   private Integer taskLogLength = 400;
@@ -84,7 +87,15 @@ public class SMTPConfiguration {
   public void setUsername(String username) {
     this.username = username;
   }
+  
+  public String getSlaveHostnameSuffix(){
+    return this.SlaveHostnameSuffix;
+  }
 
+  public void setSlaveHostnameSuffix(String suffix){
+    this.SlaveHostnameSuffix = suffix;
+  }
+  
   public int getMailThreads() {
     return mailThreads;
   }

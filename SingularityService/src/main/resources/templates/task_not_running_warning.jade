@@ -1,0 +1,17 @@
+html
+  head
+    title Task Failed
+  body
+    p Request_id: #{request_id}
+    p Task #{task_id} has not started yet 
+    p It has been running for #{duration_running}. 
+    p It will be killed after #{duration_left} and a new one will take its place.
+    p #{singularity_task_link}
+
+    p Task Update History:
+    ul
+      for task_update in task_updates
+        li= task_update
+      else
+        li No updates
+          
