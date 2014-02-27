@@ -1,9 +1,27 @@
 package com.hubspot.singularity.resources;
 
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.hubspot.singularity.*;
+import com.hubspot.singularity.BadRequestException;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.data.RequestManager;
@@ -12,10 +30,6 @@ import com.hubspot.singularity.data.SingularityRequestValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.ConflictException;
 import com.sun.jersey.api.NotFoundException;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 @Path("/requests")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -42,8 +56,18 @@ public class RequestResource {
       requestManager.deletePausedRequest(request.getId());
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId()));
-  
+    PendingType pendingType = null;
+    
+    if (result == PersistResult.CREATED) {
+      pendingType = PendingType.NEW_REQUEST;
+    } else {
+      pendingType = PendingType.UPDATED_REQUEST;
+    }
+    
+    if (!request.isOneOff()) {
+      requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId(), pendingType));
+    }
+    
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
     
     return request;
@@ -63,8 +87,9 @@ public class RequestResource {
   
   @POST
   @Path("/request/{requestId}/run")
-  public void scheduleImmediately(@PathParam("requestId") String requestId) {
+  public void scheduleImmediately(@PathParam("requestId") String requestId, String commandLineArgs) {
     SingularityRequest request = fetchRequest(requestId);
+    Optional<String> maybeCmdLineArgs = Optional.absent();
     
     PendingType pendingType = null;
     
@@ -72,11 +97,15 @@ public class RequestResource {
       pendingType = PendingType.IMMEDIATE;
     } else if (request.isOneOff()) {
       pendingType = PendingType.ONEOFF;
+      
+      if (!Strings.isNullOrEmpty(commandLineArgs)) {
+        maybeCmdLineArgs = Optional.of(commandLineArgs);
+      }
     } else {
       throw new BadRequestException(String.format("Can not request an immediate run of a non-scheduled / always running request (%s)", request));
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, pendingType));
+    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, pendingType), maybeCmdLineArgs);
   }
   
   @POST

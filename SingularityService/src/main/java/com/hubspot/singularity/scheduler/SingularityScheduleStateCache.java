@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
@@ -22,7 +22,7 @@ public class SingularityScheduleStateCache {
   private final RackManager rackManager;
   
   private Optional<List<SingularityTaskId>> activeTaskIds;
-  private Optional<List<SingularityPendingTaskId>> scheduledTasks;
+  private Optional<List<SingularityPendingTask>> scheduledTasks;
   private Optional<List<SingularityRack>> decomissioningRacks;
   private Optional<Set<String>> decomissioningRackIds;
   private Optional<List<SingularitySlave>> decomissioningSlaves;
@@ -52,7 +52,7 @@ public class SingularityScheduleStateCache {
     return activeTaskIds.get();
   }
 
-  public List<SingularityPendingTaskId> getScheduledTasks() {
+  public List<SingularityPendingTask> getScheduledTasks() {
     if (!scheduledTasks.isPresent()) {
       scheduledTasks = Optional.of(taskManager.getScheduledTasks());
     }

@@ -1,5 +1,16 @@
 package com.hubspot.singularity.scheduler;
 
+import java.text.ParseException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.mesos.Protos.TaskState;
+import org.quartz.CronExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -7,10 +18,22 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.*;
+import com.hubspot.singularity.SingularityPendingRequestId;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRack;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -20,16 +43,6 @@ import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.history.HistoryManager.TaskHistoryOrderBy;
 import com.hubspot.singularity.smtp.SingularityMailer;
-import org.apache.mesos.Protos.TaskState;
-import org.quartz.CronExpression;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.text.ParseException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 public class SingularityScheduler extends SingularitySchedulerBase {
 
@@ -101,7 +114,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     
     for (String requestId : requestIdsToReschedule) {
       LOG.trace(String.format("Rescheduling request %s due to decomissions", requestId));
-      requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId));
+      requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.DECOMISSIONED_SLAVE_OR_RACK));
     }
     
     for (SingularitySlave slave : slaves) {
@@ -128,7 +141,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return;
     }
     
-    int numScheduledTasks = 0;
+    int totalNewScheduledTasks = 0;
     int obsoleteRequests = 0;
     
     for (SingularityPendingRequestId pendingRequest : pendingRequests) {
@@ -137,9 +150,11 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       if (maybeRequest.isPresent()) {
         checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
         
-        numScheduledTasks += scheduleTasks(stateCache, maybeRequest.get(), pendingRequest.getPendingTypeEnum());
+        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get(), pendingRequest.getPendingTypeEnum());
       
         LOG.debug(String.format("Pending request %s resulted in %s new scheduled tasks", pendingRequest, numScheduledTasks));
+      
+        totalNewScheduledTasks += numScheduledTasks;
       } else {
         obsoleteRequests++;
       }
@@ -147,7 +162,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       requestManager.deletePendingRequest(pendingRequest.toString());
     }
     
-    LOG.info(String.format("Scheduled %s requests (%s obsolete) in %sms", numScheduledTasks, obsoleteRequests, System.currentTimeMillis() - start));
+    LOG.info(String.format("Scheduled %s new tasks (%s obsolete requests) in %sms", totalNewScheduledTasks, obsoleteRequests, System.currentTimeMillis() - start));
   }
   
   private void checkForBounceAndAddToCleaningTasks(SingularityPendingRequestId pendingRequest, final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
@@ -172,27 +187,42 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
     
   public List<SingularityTaskRequest> getDueTasks() {
-    final List<SingularityPendingTaskId> tasks = taskManager.getScheduledTasks();
+    final List<SingularityPendingTask> tasks = taskManager.getScheduledTasks();
       
     final long now = System.currentTimeMillis();
     
-    final List<SingularityPendingTaskId> dueTaskIds = Lists.newArrayListWithCapacity(tasks.size());
+    final List<SingularityPendingTask> dueTasks = Lists.newArrayListWithCapacity(tasks.size());
     
-    for (SingularityPendingTaskId task : tasks) {
-      if (task.getNextRunAt() <= now) {
-        dueTaskIds.add(task);
+    for (SingularityPendingTask task : tasks) {
+      if (task.getTaskId().getNextRunAt() <= now) {
+        dueTasks.add(task);
       }
     }
     
-    final List<SingularityTaskRequest> dueTasks = requestManager.fetchTasks(dueTaskIds);
-    Collections.sort(dueTasks);
-  
-    return dueTasks;
+    final List<SingularityTaskRequest> dueTaskRequests = requestManager.getTaskRequests(dueTasks);
+    Collections.sort(dueTaskRequests);
+    
+    checkForStaleScheduledTasks(dueTasks, dueTaskRequests);
+    
+    return dueTaskRequests;
   }
   
-  private void deleteScheduledTasks(final List<SingularityPendingTaskId> scheduledTaskIds, String requestId) {
-    for (SingularityPendingTaskId taskId : SingularityPendingTaskId.filter(scheduledTaskIds, requestId)) {
-      taskManager.deleteScheduledTask(taskId.toString());
+  private void checkForStaleScheduledTasks(List<SingularityPendingTask> pendingTasks, List<SingularityTaskRequest> taskRequests) {
+    final Set<String> foundRequestIds = Sets.newHashSetWithExpectedSize(taskRequests.size());
+    for (SingularityTaskRequest taskRequest : taskRequests) {
+      foundRequestIds.add(taskRequest.getRequest().getId());
+    }
+    for (SingularityPendingTask pendingTask : pendingTasks) {
+      if (!foundRequestIds.contains(pendingTask.getTaskId().getRequestId())) {
+        LOG.info(String.format("Removing stale pending task %s because there was no found request id", pendingTask.getTaskId()));
+        taskManager.deleteScheduledTask(pendingTask.getTaskId().getId());
+      }
+    }
+  }
+  
+  private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId) {
+    for (SingularityPendingTask task : SingularityPendingTask.filter(scheduledTasks, requestId)) {
+      taskManager.deleteScheduledTask(task.getTaskId().getId());
     }
   }
 
@@ -201,12 +231,12 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     
     final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
     
-    final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingType);
+    final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request);
 
     if (numMissingInstances > 0) {
       LOG.debug(String.format("Missing %s instances of request %s (matching tasks: %s), pendingType: %s", numMissingInstances, request.getId(), matchingTaskIds, pendingType));
       
-      final List<SingularityPendingTaskId> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, pendingType);
+      final List<SingularityPendingTask> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, pendingType);
       
       LOG.trace(String.format("Scheduling tasks: %s", scheduledTasks));
       
@@ -248,7 +278,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     
     final SingularityRequest request = maybeRequest.get();
     
-    PendingType pendingType = PendingType.REGULAR;
+    PendingType pendingType = PendingType.TASK_DONE;
     
     if (MesosUtils.isTaskFailed(state)) {
       if (!wasDecomissioning(taskId, maybeActiveTask, stateCache)) {
@@ -269,7 +299,9 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       }
     }
     
-    scheduleTasks(stateCache, request, pendingType);
+    if (!request.isOneOff()) {
+      scheduleTasks(stateCache, request, pendingType);
+    }
   }
   
   private boolean shouldRetryImmediately(SingularityRequest request) {
@@ -364,21 +396,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return true;
   }
    
-  private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, PendingType pendingType) {
-    if (request.isOneOff()) {
-      if (pendingType == PendingType.ONEOFF) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-    
+  private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
     final int numInstances = request.getInstances();
     
     return numInstances - matchingTaskIds.size();
   }
   
-  private List<SingularityPendingTaskId> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, PendingType pendingType) {
+  private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, PendingType pendingType) {
     final long nextRunAt = getNextRunAt(request, pendingType);
   
     int highestInstanceNo = 0;
@@ -389,13 +413,19 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       }
     }
   
-    final List<SingularityPendingTaskId> newTaskIds = Lists.newArrayListWithCapacity(numMissingInstances);
+    Optional<String> maybeCmdLineArgs = Optional.absent();
     
-    for (int i = 0; i < numMissingInstances; i++) {
-      newTaskIds.add(new SingularityPendingTaskId(request.getId(), nextRunAt, i + 1 + highestInstanceNo, pendingType));
+    if (pendingType == PendingType.ONEOFF) {
+      maybeCmdLineArgs = requestManager.getPendingRequestCmdLineArgs(new SingularityPendingRequestId(request.getId(), pendingType).getId());
     }
     
-    return newTaskIds;
+    final List<SingularityPendingTask> newTasks = Lists.newArrayListWithCapacity(numMissingInstances);
+    
+    for (int i = 0; i < numMissingInstances; i++) {
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), nextRunAt, i + 1 + highestInstanceNo, pendingType), maybeCmdLineArgs));
+    }
+    
+    return newTasks;
   }
   
   private long getNextRunAt(SingularityRequest request, PendingType pendingType) {

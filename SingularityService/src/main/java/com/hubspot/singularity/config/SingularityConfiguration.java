@@ -1,9 +1,9 @@
 package com.hubspot.singularity.config;
 
-import java.util.concurrent.TimeUnit;
-
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
+
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

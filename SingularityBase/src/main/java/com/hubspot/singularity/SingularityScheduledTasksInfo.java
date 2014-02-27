@@ -32,15 +32,15 @@ public class SingularityScheduledTasksInfo {
     return timestamp;
   }
 
-  public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTaskId> pendingTaskIds, long millisDeltaForLateTasks) {
+  public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTask> pendingTasks, long millisDeltaForLateTasks) {
     final long now = System.currentTimeMillis();
     
     int numLateTasks = 0;
     int numFutureTasks = 0;
     long maxTaskLag = 0;
     
-    for (SingularityPendingTaskId pendingTaskId : pendingTaskIds) {
-      long delta = now - pendingTaskId.getNextRunAt();
+    for (SingularityPendingTask pendingTask : pendingTasks) {
+      long delta = now - pendingTask.getTaskId().getNextRunAt();
       
       if (delta > millisDeltaForLateTasks) {
         numLateTasks++;

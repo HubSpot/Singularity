@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +107,7 @@ public class SingularityStaleTaskChecker {
       
       final long taskDuration = currentTimestamp - startedAt;
       
-      LOG.trace(String.format("Checking task %s for staleness, duration %sms", taskId, taskDuration));
+      LOG.trace(String.format("Checking task %s for staleness, duration %s", taskId, DurationFormatUtils.formatDurationHMS(taskDuration)));
       
       if (taskDuration > getAsMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())) {
         // check and kill the task
@@ -123,7 +124,7 @@ public class SingularityStaleTaskChecker {
         
         if (taskDurationAsOfLastCheck < getAsMillis(configuration.getWarnAfterTasksDoNotRunDefaultSeconds())) {
           if (!isTaskRunning(taskId)) {
-            LOG.info(String.format("Found a possible stale task %s - sending a warning (duration: %s)", taskId, taskDuration));
+            LOG.info(String.format("Found a possible stale task %s - sending a warning (duration: %s)", taskId, DurationFormatUtils.formatDurationHMS(taskDuration)));
             
             Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
             if (maybeRequest.isPresent()) {

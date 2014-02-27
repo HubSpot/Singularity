@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,19 +12,26 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 
-public class TaskManager extends CuratorAsyncManager<SingularityTask> {
+public class TaskManager extends CuratorAsyncManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(TaskManager.class);
   
   private final ObjectMapper objectMapper;
+  private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
+  private final SingularityTaskTranscoder taskTranscoder;
   
   private final static String TASKS_ROOT = "/tasks";
   
@@ -34,9 +40,11 @@ public class TaskManager extends CuratorAsyncManager<SingularityTask> {
   private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
     
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper) {
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
   
+    this.taskTranscoder = taskTranscoder;
+    this.taskCleanupTranscoder = taskCleanupTranscoder;
     this.objectMapper = objectMapper;
   }
   
@@ -64,20 +72,24 @@ public class TaskManager extends CuratorAsyncManager<SingularityTask> {
     return getNumChildren(SCHEDULED_PATH_ROOT);
   }
   
-  public void persistScheduleTasks(List<SingularityPendingTaskId> taskIds) {
+  public void persistScheduleTasks(List<SingularityPendingTask> tasks) {
     try {
-      for (SingularityPendingTaskId taskId : taskIds) {
-        persistTaskId(taskId);
+      for (SingularityPendingTask task : tasks) {
+        persistTask(task);
       }
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
 
-  private void persistTaskId(SingularityPendingTaskId taskId) throws Exception {
-    final String pendingPath = getScheduledPath(taskId.toString());
+  private void persistTask(SingularityPendingTask task) throws Exception {
+    final String pendingPath = getScheduledPath(task.getTaskId().getId());
 
-    curator.create().creatingParentsIfNeeded().forPath(pendingPath);
+    if (task.getMaybeCmdLineArgs().isPresent()) {
+      curator.create().creatingParentsIfNeeded().forPath(pendingPath, JavaUtils.toBytes(task.getMaybeCmdLineArgs().get()));
+    } else {
+      curator.create().creatingParentsIfNeeded().forPath(pendingPath);
+    }
   }
   
   private List<SingularityTaskId> getTaskIds(String root) {
@@ -101,27 +113,11 @@ public class TaskManager extends CuratorAsyncManager<SingularityTask> {
   }
   
   public List<SingularityTaskCleanup> getCleanupTasks() {
-    List<SingularityTaskId> taskIds = getCleanupTaskIds();
-    
-    List<SingularityTaskCleanup> cleanupTasks = Lists.newArrayListWithCapacity(taskIds.size());
-    
-    for (SingularityTaskId taskId : taskIds) {
-      try {
-        byte[] data = curator.getData().forPath(ZKPaths.makePath(CLEANUP_PATH_ROOT, taskId.getId()));
-        
-        cleanupTasks.add(SingularityTaskCleanup.fromBytes(data, objectMapper));
-      } catch (NoNodeException nne) {
-        LOG.info(String.format("Expected cleanup task %s but it wasn't there", taskId));
-      } catch (Throwable t) {
-        throw Throwables.propagate(t);
-      }
-    }
-
-    return cleanupTasks;
+    return getAsyncChildren(CLEANUP_PATH_ROOT, taskCleanupTranscoder);
   }
   
   public List<SingularityTask> getActiveTasks() {
-    return getAsyncChildren(ACTIVE_PATH_ROOT);
+    return getAsyncChildren(ACTIVE_PATH_ROOT, taskTranscoder);
   }
   
   public List<SingularityTask> getTasksOnSlave(List<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
@@ -148,34 +144,25 @@ public class TaskManager extends CuratorAsyncManager<SingularityTask> {
   public Optional<SingularityTask> getActiveTask(String taskId) {
     final String path = getActivePath(taskId);
     
-    try {
-      byte[] data = curator.getData().forPath(path);
-      
-      SingularityTask task = SingularityTask.fromBytes(data, objectMapper);
-      
-      return Optional.of(task);
-    } catch (NoNodeException nne) {
-      return Optional.absent();
-    } catch (Exception e) {
-      throw Throwables.propagate(e); 
-    }
-  }
-  
-  @Override
-  protected SingularityTask fromData(byte[] data) throws Exception {
-    return SingularityTask.fromBytes(data, objectMapper);
+    return getData(path, taskTranscoder);
   }
 
-  public List<SingularityPendingTaskId> getScheduledTasks() {
-    List<String> taskIds = getChildren(SCHEDULED_PATH_ROOT);
-    List<SingularityPendingTaskId> taskIdsObjs = Lists.newArrayListWithCapacity(taskIds.size());
-
+  public List<SingularityPendingTask> getScheduledTasks() {
+    final List<String> taskIds = getChildren(SCHEDULED_PATH_ROOT);
+    final List<SingularityPendingTask> tasks = Lists.newArrayListWithCapacity(taskIds.size());
+    
     for (String taskId : taskIds) {
       SingularityPendingTaskId taskIdObj = SingularityPendingTaskId.fromString(taskId);
-      taskIdsObjs.add(taskIdObj);
+      Optional<String> maybeCmdLineArgs = Optional.absent();
+      
+      if (taskIdObj.getPendingTypeEnum() == PendingType.ONEOFF) {
+        maybeCmdLineArgs = getStringData(ZKPaths.makePath(SCHEDULED_PATH_ROOT, taskId));
+      }
+      
+      tasks.add(new SingularityPendingTask(taskIdObj, maybeCmdLineArgs));
     }
     
-    return taskIdsObjs;
+    return tasks;
   }
   
   public void launchTask(SingularityTask task) {

@@ -34,7 +34,6 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
-import com.hubspot.singularity.data.CuratorManager;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
@@ -158,11 +157,13 @@ public class SingularityModule extends AbstractModule {
   @Provides
   @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
-    CuratorFramework client = CuratorFrameworkFactory.newClient(
-        config.getQuorum(),
-        config.getSessionTimeoutMillis(),
-        config.getConnectTimeoutMillis(),
-        new ExponentialBackoffRetry(config.getRetryBaseSleepTimeMilliseconds(), config.getRetryMaxTries()));
+    CuratorFramework client = CuratorFrameworkFactory.builder()
+        .defaultData(null)
+        .sessionTimeoutMs(config.getSessionTimeoutMillis())
+        .connectionTimeoutMs(config.getConnectTimeoutMillis())
+        .connectString(config.getQuorum())
+        .retryPolicy(new ExponentialBackoffRetry(config.getRetryBaseSleepTimeMilliseconds(), config.getRetryMaxTries()))
+        .build();
     
     client.start();
     

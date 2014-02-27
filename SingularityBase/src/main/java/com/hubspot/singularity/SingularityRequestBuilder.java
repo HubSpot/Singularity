@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
-import com.hubspot.mesos.Resources;
-
 import java.util.List;
 import java.util.Map;
+
+import com.hubspot.mesos.Resources;
 
 public class SingularityRequestBuilder {
 

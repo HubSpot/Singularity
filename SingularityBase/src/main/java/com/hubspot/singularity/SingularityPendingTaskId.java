@@ -1,12 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
 
@@ -27,16 +24,6 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     this.nextRunAt = nextRunAt;
     this.instanceNo = instanceNo;
     this.pendingType = pendingType;
-  }
-
-  public static List<SingularityPendingTaskId> filter(List<SingularityPendingTaskId> taskIds, String requestId) {
-    List<SingularityPendingTaskId> matching = Lists.newArrayList();
-    for (SingularityPendingTaskId taskId : taskIds) {
-      if (taskId.getRequestId().equals(requestId)) {
-        matching.add(taskId);
-      }
-    }
-    return matching;
   }
   
   public String getRequestId() {

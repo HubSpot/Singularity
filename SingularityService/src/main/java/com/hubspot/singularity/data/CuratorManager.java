@@ -1,9 +1,8 @@
 package com.hubspot.singularity.data;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
@@ -11,8 +10,12 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.List;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.data.transcoders.StringTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class CuratorManager {
 
@@ -91,5 +94,24 @@ public abstract class CuratorManager {
     }
   }
   
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
+    try {
+      byte[] data = curator.getData().forPath(path);
+      
+      if (data == null || data.length == 0) {
+        return Optional.absent();
+      }
+      
+      return Optional.of(transcoder.transcode(data));
+    } catch (NoNodeException nne) {
+      return Optional.absent();
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  protected Optional<String> getStringData(String path) {
+    return getData(path, StringTranscoder.STRING_TRANSCODER);
+  }  
   
 }
