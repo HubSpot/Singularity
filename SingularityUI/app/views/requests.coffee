@@ -16,17 +16,15 @@ class RequestsView extends View
         @lastRequestsSubFilter = @options.requestsSubFilter
 
     fetch: ->
-        if @lastRequestsFilter is 'active'
-            @collection = app.collections.requestsActive
-
-        if @lastRequestsFilter is 'paused'
-            @collection = app.collections.requestsPaused
-
-        if @lastRequestsFilter is 'pending'
-            @collection = app.collections.requestsPending
-
-        if @lastRequestsFilter is 'cleaning'
-            @collection = app.collections.requestsCleaning
+        @collection = switch @lastRequestsFilter
+            when 'active'
+                app.collections.requestsActive
+            when 'paused'
+                app.collections.requestsPaused
+            when 'pending'
+                app.collections.requestsPending
+            when 'cleaning'
+                app.collections.requestsCleaning
 
         @collection.fetch()
 
