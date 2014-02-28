@@ -11,31 +11,49 @@ class TaskView extends View
 
     killTaskTemplate: require './templates/vex/killTask'
 
-    initialize: =>
+    initialize: ->
         @taskFiles = {}
+        @taskHistory = new TaskHistory {}, taskId: @options.taskId
+
+    fetch: ->
+        deferred = $.Deferred()
 
         @taskFilesFetchDone = false
-        @taskFilesSandboxUnavailable = false
+        @taskFilesSandboxUnavailable = true
 
-        @taskHistory = new TaskHistory {}, taskId: @options.taskId
+        neverSynced = not @taskHistory.synced
+
         @taskHistory.fetch().done =>
-            @render()
+            @render() if neverSynced
 
             @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
             @taskFiles.testSandbox()
                 .done(=>
                     @taskFiles.fetch().done =>
                         @taskFilesFetchDone = true
-                        @render()
+                        @taskFilesSandboxUnavailable = false
+                        deferred.resolve()
                 )
                 .error(=>
                     @taskFilesFetchDone = true
                     @taskFilesSandboxUnavailable = true
-                    @render()
+                    deferred.resolve()
                 )
 
-    render: =>
+        deferred
+
+    refresh: ->
+        @fetch().done =>
+            @render()
+
+        @
+
+    render: ->
         return @ unless @taskHistory.attributes?.task?.id
+
+        if @taskHistory.attributes.taskUpdates?.length is 0
+            @taskHistory.attributes.hasNoTaskUpdates = true
+            setTimeout (=> @refresh()), 3 * 1000
 
         context =
             request: @taskHistory.attributes.task.taskRequest.request

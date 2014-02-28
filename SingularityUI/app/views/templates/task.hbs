@@ -32,7 +32,15 @@
             </div>
         </div>
     {{else}}
-        <div class="page-loader centered"></div>
+        {{#if taskHistory.hasNoTaskUpdates}}
+            <center><p>This task has no history yet.</p></center>
+            <br>
+            <div class="page-loader centered"></div>
+            <br>
+            <center><p>Refreshing history...</p></center>
+        {{else}}
+            <div class="page-loader centered"></div>
+        {{/if}}
     {{/if}}
 </section>
 

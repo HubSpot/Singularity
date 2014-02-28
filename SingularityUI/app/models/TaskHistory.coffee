@@ -5,6 +5,7 @@ class TaskHistory extends Model
     url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/task/#{ @taskId }"
 
     initialize: (models, { @taskId }) =>
+        @on 'sync', => @synced = true
 
     parse: (taskHistory) ->
         taskHistory.task.JSONString = utils.stringJSON taskHistory
