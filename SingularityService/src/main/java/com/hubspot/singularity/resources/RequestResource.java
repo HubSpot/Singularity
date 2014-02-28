@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -139,24 +140,28 @@ public class RequestResource {
   }
 
   @GET
+  @PropertyFiltering
   @Path("/active")
   public List<SingularityRequest> getActiveRequests() {
     return requestManager.getActiveRequests();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/paused")
   public List<SingularityRequest> getPausedRequests() {
     return requestManager.getPausedRequests();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/queued/pending")
   public List<SingularityPendingRequestId> getPendingRequests() {
     return requestManager.getPendingRequestIds();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/queued/cleanup")
   public List<SingularityRequestCleanup> getCleanupRequests() {
     return requestManager.getCleanupRequests();

@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularitySlave;
@@ -41,6 +42,7 @@ public class TaskResource {
   }
   
   @GET
+  @PropertyFiltering
   @Path("/scheduled")
   public List<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getScheduledTasks();
@@ -69,12 +71,14 @@ public class TaskResource {
   }
   
   @GET
+  @PropertyFiltering
   @Path("/active")
   public List<SingularityTask> getActiveTasks() {
     return taskManager.getActiveTasks();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/cleaning")
   public List<SingularityTaskCleanup> getCleaningTasks() {
     return taskManager.getCleanupTasks();
