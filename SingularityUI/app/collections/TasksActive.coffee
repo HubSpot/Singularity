@@ -5,7 +5,29 @@ class TasksActive extends Tasks
 
     model: Task
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/active"
+    url: ->
+        properties = [
+            # offer
+            'offer.slaveId'
+            'offer.hostname'
+
+            # taskRequest
+            'taskRequest.request.id'
+            'taskRequest.request.executorData'
+            'taskRequest.request.executorData.ports' # Necessary?
+
+            # taskId
+            'taskId'
+
+            # mesosTask
+            'mesosTask.resources'
+            'mesosTask.executor'
+            'mesosTask.name'
+        ]
+
+        propertiesString = "?property=#{ properties.join('&property=') }"
+
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/active#{ propertiesString }"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>
