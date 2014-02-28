@@ -1,4 +1,64 @@
+@import colors
+
+.tail-wrapper
+
+    .tail-indicator
+        display inline-block
+        font-size 12px
+        line-height 12px
+        margin auto
+        bottom 30px
+        right 30px
+        opacity .8
+        transition opacity .4s
+        background $red
+        color #fff
+        padding .75em .7em .7em
+        font-weight 200
+        letter-spacing .2em
+        border-radius 5px
+        text-transform uppercase
+
+        &:before
+            content "Not tailing"
+
+        .page-loader
+            display none
+            border-top-color inherit
+            border-right-color inherit
+
+        &:hover
+            opacity 1
+
+    &.tailing .tail-indicator
+        background $green
+
+    &.fetchNext, &.fetchPrev
+
+        .tail-indicator
+            background $orange
+
+    &.tailing .tail-indicator:before
+        content "Tailing"
+
+    &.fetchNext .tail-indicator
+
+        .page-loader
+            display block
+
+        &:before
+            content ""
+
+    &.fetchPrev .tail-indicator
+
+        .page-loader
+            display block
+
+        &:before
+            content ""
+
 .tail-outer
+    position relative
     font-family Consolas, "Liberation Mono", Courier, monospace
     overflow auto
     -webkit-overflow-scrolling touch
@@ -16,6 +76,12 @@
                 background #eee
 
 @media (min-width: 1200px)
+
+    .tail-wrapper
+
+        .tail-indicator
+            position absolute
+
     html.tail-view
 
         &, body
@@ -30,7 +96,7 @@
 
         #page
             position fixed
-            width: 100%
+            width 100%
             top 40px
             bottom 0
             left 0
@@ -58,7 +124,7 @@
                     display inline-block
 
                     > div
-                        padding: 0 20px
+                        padding 0 20px
 
                         &:hover
                             background #ccc

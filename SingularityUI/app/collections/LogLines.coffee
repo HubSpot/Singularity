@@ -42,7 +42,7 @@ class LogLines extends Backbone.Collection
 
         # split on newlines
         lines = result.data.split @delimiter
-        
+
         # omit the last element, since it'll either be a blank or incomplete line
         lines = _.initial(lines)
 

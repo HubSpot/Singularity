@@ -8,6 +8,8 @@ class TailView extends View
 
     template: require './templates/tail'
 
+    className: 'tail-wrapper'
+
     initialize: ({@taskId, @path}) ->
         @subfolders = []
 
@@ -31,6 +33,7 @@ class TailView extends View
             el: @$('.tail-outer')
             taskId: @taskId
             path: @path
+            parent: @
 
         @tailer.render()
 

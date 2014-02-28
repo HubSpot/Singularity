@@ -14,6 +14,8 @@ class TailerView extends Backbone.View
     initialize: ->
         @tailing = null
 
+        @parent = @options.parent
+
         @nextPromise = Q {}
         @prevPromise = Q {}
 
@@ -49,6 +51,12 @@ class TailerView extends Backbone.View
             _.each @lines.last(@lines.length - tailIndex - 1), (model) =>
                 @$container.append @renderLine model
 
+        # If the file isn't long enough to generate a sort,
+        # starting tailing immediately
+        @lines.once 'sort', =>
+            if @$container.outerHeight() < @$el.outerHeight()
+                @startTailing()
+
     remove: =>
         @stopTailing()
         super
@@ -63,6 +71,8 @@ class TailerView extends Backbone.View
         @lineTemplate model.toJSON()
 
     fetchPrev: =>
+        @parent.$el.addClass('fetchPrev')
+
         # short circuit when we're at the top
         if @lines.getMinOffset() is 0
             return Q
@@ -76,9 +86,14 @@ class TailerView extends Backbone.View
                     length: Math.min(@lines.getMinOffset(), @readLength)
                 remove: false
 
+            @prevPromise.done =>
+                @parent.$el.removeClass('fetchPrev')
+
         @prevPromise
 
-    fetchNext: (offset=null) =>
+    fetchNext: (offset = null) =>
+        @parent.$el.addClass('fetchNext')
+
         if @nextPromise.isFulfilled()
             @nextPromise = Q @lines.fetch
                 data: $.param
@@ -86,24 +101,24 @@ class TailerView extends Backbone.View
                     length: @readLength
                 remove: false
 
+            @nextPromise.done =>
+                @parent.$el.removeClass('fetchNext')
+
         @nextPromise
 
-    # if not already tailing, fetch more
-    # if we're at the end, start tailing
-    maybeStartTailing: =>
+    startTailing: ->
+        @parent.$el.addClass('tailing')
+
         if @tailing is null
-            @fetchNext().then (data) =>
-                if data.data is '\n'
-                    @startTailing()
+            @tailing = setInterval (=> @tail()), @tailInterval
 
-    startTailing: =>
-        if @tailing is null
-            @tailing = setInterval @tail, @tailInterval
+    tail: (offset = null) ->
+        if app.views.current is @parent
+            @fetchNext(offset).then @scrollToBottom
 
-    tail: (offset=null) =>
-        @fetchNext(offset).then @scrollToBottom
+    stopTailing: ->
+        @parent.$el.removeClass('tailing')
 
-    stopTailing: =>
         if @tailing isnt null
             clearInterval @tailing
             @tailing = null
@@ -121,12 +136,12 @@ class TailerView extends Backbone.View
             @fetchPrev()
         else if scrollBottom is scrollMax
             # if at bottom, start tailing if appropriate
-            @maybeStartTailing()
+            @startTailing()
         else
             # if somewhere in the middle, stop tailing
             @stopTailing()
 
-    render: =>
+    render: ->
         @$el.addClass 'loading'
 
         # seek to the end of the file
