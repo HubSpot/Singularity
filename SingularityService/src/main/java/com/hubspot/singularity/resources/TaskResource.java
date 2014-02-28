@@ -84,6 +84,18 @@ public class TaskResource {
     return taskManager.getCleanupTasks();
   }
   
+  @GET
+  @Path("/task/{taskId}")
+  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
+    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
+  
+    if (!task.isPresent()) {
+      throw new NotFoundException(String.format("No active task with id %s", taskId));
+    }
+    
+    return task.get();
+  }
+  
   @DELETE
   @Path("/task/{taskId}")
   public SingularityTaskCleanupResult deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
