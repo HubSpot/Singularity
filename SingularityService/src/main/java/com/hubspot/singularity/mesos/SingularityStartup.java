@@ -14,8 +14,8 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
-import com.hubspot.singularity.SingularityPendingRequestId;
-import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.RequestManager;
@@ -91,7 +91,7 @@ public class SingularityStartup {
     
     for (SingularityRequest request : requests) {
       if (!request.isOneOff()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId(), PendingType.STARTUP));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), PendingType.STARTUP));
       }
     }
     

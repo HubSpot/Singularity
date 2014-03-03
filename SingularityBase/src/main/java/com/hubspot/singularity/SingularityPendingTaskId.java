@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 
 public class SingularityPendingTaskId extends SingularityId implements Comparable<SingularityPendingTaskId> {
 

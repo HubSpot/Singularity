@@ -19,8 +19,8 @@ import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityPendingRequestId;
-import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
@@ -66,7 +66,7 @@ public class RequestResource {
     }
     
     if (!request.isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId(), pendingType));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), System.currentTimeMillis(), Optional.<String> absent(), user, pendingType));
     }
     
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
@@ -76,19 +76,19 @@ public class RequestResource {
   
   @POST
   @Path("/request/{requestId}/bounce")
-  public void bounce(@PathParam("requestId") String requestId) {
+  public void bounce(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
     if (request.isScheduled()) {
       throw new BadRequestException(String.format("Can not request a bounce of a scheduled request (%s - %s)", request.getId(), request.getSchedule()));
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, PendingType.BOUNCE));
   }
   
   @POST
   @Path("/request/{requestId}/run")
-  public void scheduleImmediately(@PathParam("requestId") String requestId, String commandLineArgs) {
+  public void scheduleImmediately(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user, String commandLineArgs) {
     SingularityRequest request = fetchRequest(requestId);
     Optional<String> maybeCmdLineArgs = Optional.absent();
     
@@ -106,7 +106,7 @@ public class RequestResource {
       throw new BadRequestException(String.format("Can not request an immediate run of a non-scheduled / always running request (%s)", request));
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, pendingType), maybeCmdLineArgs);
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
   }
   
   @POST
@@ -132,7 +132,7 @@ public class RequestResource {
       throw handleNoMatchingRequest(requestId);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.UNPAUSED));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
   
     historyManager.saveRequestHistoryUpdate(request.get(), RequestState.UNPAUSED, user);
   
@@ -156,8 +156,8 @@ public class RequestResource {
   @GET
   @PropertyFiltering
   @Path("/queued/pending")
-  public List<SingularityPendingRequestId> getPendingRequests() {
-    return requestManager.getPendingRequestIds();
+  public List<SingularityPendingRequest> getPendingRequests() {
+    return requestManager.getPendingRequests();
   }
   
   @GET

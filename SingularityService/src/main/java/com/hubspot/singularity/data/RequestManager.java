@@ -16,16 +16,16 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityPendingRequestId;
+import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularityPendingRequestTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityRequestTranscoder;
 import com.sun.jersey.api.ConflictException;
 
@@ -35,6 +35,7 @@ public class RequestManager extends CuratorAsyncManager {
   
   private final ObjectMapper objectMapper;
   private final SingularityRequestTranscoder requestTranscoder;
+  private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
   
   private final static String REQUEST_ROOT = "/requests";
     
@@ -44,10 +45,11 @@ public class RequestManager extends CuratorAsyncManager {
   private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
   
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityRequestTranscoder requestTranscoder) {
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityRequestTranscoder requestTranscoder, SingularityPendingRequestTranscoder pendingRequestTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
   
     this.requestTranscoder = requestTranscoder;
+    this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.objectMapper = objectMapper;
   }
  
@@ -83,8 +85,8 @@ public class RequestManager extends CuratorAsyncManager {
     return getNumChildren(ACTIVE_PATH_ROOT);
   }
   
-  public void deletePendingRequest(String pendingRequestId) {
-    delete(getPendingPath(pendingRequestId));
+  public void deletePendingRequest(SingularityPendingRequest pendingRequest) {
+    delete(getPendingPath(pendingRequest.getRequestId()));
   }
   
   public void deleteCleanRequest(String requestId) {
@@ -128,21 +130,12 @@ public class RequestManager extends CuratorAsyncManager {
     return getRequestFromPath(getPausedPath(requestId));
   }
   
+  public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
+    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId()), Optional.of(pendingRequest.getAsBytes(objectMapper)));
   
-  public void addToPendingQueue(SingularityPendingRequestId pendingRequestId) {
-    addToPendingQueue(pendingRequestId, Optional.<String> absent());
-  }
-  
-  public void addToPendingQueue(SingularityPendingRequestId pendingRequestId, Optional<String> cmdLineArgs) {
-    Optional<byte[]> data = null;
-    
-    if (cmdLineArgs.isPresent()) {
-      data = Optional.of(JavaUtils.toBytes(cmdLineArgs.get()));
-    } else {
-      data = Optional.absent();
-    }
-    
-    create(getPendingPath(pendingRequestId.toString()), data);
+    LOG.info(String.format("(%s) added to pending queue with result: %s", pendingRequest, result));
+
+    return result;
   }
   
   public enum PersistResult {
@@ -178,19 +171,8 @@ public class RequestManager extends CuratorAsyncManager {
     return getChildren(ACTIVE_PATH_ROOT);
   }
   
-  public Optional<String> getPendingRequestCmdLineArgs(String requestId) {
-    return getStringData(getPendingPath(requestId));
-  }
-  
-  public List<SingularityPendingRequestId> getPendingRequestIds() {
-    List<String> pendingStrings = getChildren(PENDING_PATH_ROOT);
-    List<SingularityPendingRequestId> pendingRequestIds = Lists.newArrayListWithCapacity(pendingStrings.size());
-    
-    for (String pendingString : pendingStrings) {
-      pendingRequestIds.add(SingularityPendingRequestId.fromString(pendingString));
-    }
-    
-    return pendingRequestIds;
+  public List<SingularityPendingRequest> getPendingRequests() {
+    return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
   }
   
   public List<String> getCleanupRequestIds() {

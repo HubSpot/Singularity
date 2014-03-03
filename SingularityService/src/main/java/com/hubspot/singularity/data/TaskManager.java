@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -14,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
@@ -26,8 +24,6 @@ import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 
 public class TaskManager extends CuratorAsyncManager {
-
-  private final static Logger LOG = LoggerFactory.getLogger(TaskManager.class);
   
   private final ObjectMapper objectMapper;
   private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
