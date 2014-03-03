@@ -18,76 +18,76 @@ import com.hubspot.singularity.config.SMTPLoggingConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfiguration> {
-  
+
   private final static org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SMTPAppenderBundle.class);
-  
+
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
     Optional<SMTPConfiguration> smtp = configuration.getSmtpConfiguration();
-    
+
     if (!smtp.isPresent()) {
       LOG.info("SMTPAppenderBundle is installed, but there is no SMTP configuration (smtp: in yml)");
       return;
     }
-    
+
     SMTPLoggingConfiguration smtpLoggingConfiguration = smtp.get().getSmtpLoggingConfiguration();
 
     if (!smtpLoggingConfiguration.isEnabled()) {
       LOG.info("SMTPAppenderBundle is installed, but it is not enabled - enable using smtp: logging: enabled: true");
       return;
     }
-    
+
     LOG.info(String.format("Installing an SMTPAppender with LOG threshold %s", smtpLoggingConfiguration.getThreshold()));
-   
+
     final Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    
+
     SMTPAppender appender = buildSMTPAppender(smtp.get(), smtpLoggingConfiguration, root.getLoggerContext());
-    
+
     root.addAppender(appender);
   }
-  
+
   private SMTPAppender buildSMTPAppender(SMTPConfiguration smtp, SMTPLoggingConfiguration smtpLogging, LoggerContext loggerContext) {
     final DropwizardLayout formatter = new DropwizardLayout(loggerContext, smtpLogging.getTimeZone());
-   
+
     if (smtpLogging.getLogFormat().isPresent()) {
       formatter.setPattern(smtpLogging.getLogFormat().get());
     }
-    
+
     formatter.start();
 
     final SMTPAppender appender = new SMTPAppender();
     appender.setContext(loggerContext);
     appender.setLayout(formatter);
-    
+
     final ThresholdFilter filter = new ThresholdFilter();
     filter.setLevel(smtpLogging.getThreshold().toString());
     filter.start();
     appender.addFilter(filter);
-    
+
     appender.setFrom(smtp.getFrom());
-    
+
     for (String to : smtp.getAdmins()) {
       appender.addTo(to);
     }
-    
+
     appender.setSubject(smtpLogging.getSubject());
     appender.setSMTPHost(smtp.getHost());
 
     Optional<Integer> port = smtp.getPort();
-   
+
     if (smtp.isSsl()) {
       appender.setSMTPPort(port.or(465));
     } else {
       appender.setSMTPPort(port.or(25));
     }
-    
+
     if (smtp.getUsername().isPresent()) {
       appender.setUsername(smtp.getUsername().get());
     }
     if (smtp.getPassword().isPresent()) {
       appender.setPassword(smtp.getPassword().get());
     }
-    
+
     appender.setSSL(smtp.isSsl());
     appender.setSTARTTLS(smtp.isStartTLS());
     appender.setCharsetEncoding(smtpLogging.getCharsetEncoding());
@@ -98,6 +98,7 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
   }
 
   @Override
-  public void initialize(Bootstrap<?> bootstrap) {}
+  public void initialize(Bootstrap<?> bootstrap) {
+  }
 
 }

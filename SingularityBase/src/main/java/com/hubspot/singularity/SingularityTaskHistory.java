@@ -1,12 +1,14 @@
 package com.hubspot.singularity;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class SingularityTaskHistory {
 
@@ -16,7 +18,8 @@ public class SingularityTaskHistory {
   private final SingularityTask task;
 
   @JsonCreator
-  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("timestamp") long timestamp, @JsonProperty("task") SingularityTask task, @JsonProperty("directory") Optional<String> directory) {
+  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("timestamp") long timestamp, @JsonProperty("task") SingularityTask task,
+      @JsonProperty("directory") Optional<String> directory) {
     this.taskUpdates = taskUpdates;
     this.timestamp = timestamp;
     this.task = task;
@@ -30,25 +33,28 @@ public class SingularityTaskHistory {
   public long getTimestamp() {
     return timestamp;
   }
-  
+
   public SingularityTask getTask() {
     return task;
   }
-  
+
   public Optional<String> getDirectory() {
     return directory;
   }
 
-  public List<String> getTaskHistoryJade() {
-    List<String> output = new ArrayList<String>();
-    for (SingularityTaskHistoryUpdate s : taskUpdates){
-      Date date = new Date(); 
-      date.setTime(s.getTimestamp());
-      output.add(date.toString() + " || " + s.getStatusUpdate());
+  public List<Map<String, String>> getTaskHistoryJade() {
+    List<Map<String, String>> output = Lists.newArrayList();
+
+    for (SingularityTaskHistoryUpdate taskUpdate : taskUpdates) {
+      Map<String, String> formatted = Maps.newHashMap();
+      Date date = new Date(taskUpdate.getTimestamp());
+      formatted.put("date", date.toString());
+      formatted.put("update", taskUpdate.getStatusUpdate());
+      output.add(formatted);
     }
     return output;
   }
-  
+
   @Override
   public String toString() {
     return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", timestamp=" + timestamp + ", directory=" + directory + ", task=" + task + "]";

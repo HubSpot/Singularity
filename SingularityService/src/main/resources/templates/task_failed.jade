@@ -1,39 +1,52 @@
-html
-  head
-    title Task Failed
-  body
-    p Request_id: #{request_id}
-    p #{task_id} failed with status: #{status}   
-    p #{singularity_task_link}
-     
-    if taskStateFailed
-      if taskEverRan
-        p Recommended course of action: Process terminated with non-zero exit code. This is probably benign unless the problem is recurrent.
-    if taskStateLost
-      if taskEverRan
-        p Recommended course of action: Task lost while running and may still be running unmonitored. It is recommended you investigate and manually kill the process.
-      if !taskEverRan
-        p Recommended course of action: Task lost before running. This is most likely an infrastructure issue. For further assistance email #{adminEmails}.
-    
-    p Directory: #{task_directory}
-    p Slave ran on: #{slave_hostname}
-    p Task Update History:
-    ul
-      for task_update in task_updates
-        li= task_update
-      else
-        li No updates
+table(height="85px", width="100%", style="border: none")
+  tr
+    td(bgcolor="#FFA500")
+      font(size=5)
+        span(style="font-family: Helvetica; padding: 10px") 
+          span(style="color: white") ! #{request_id} has failed 
+          if !taskEverRan || taskStateLost
+            || This is likely an infrastructure issue; no action is required
+          else
+            <span style="color: white"> on its own </span> | Consider investigating your process 
+      font(size=3) 
+        span(style="padding: 10px") <br><br> - Singularity will attempt to restart your task
 
-    p StdOut:
-    ul
-      for line in stdout
-        li= line
-      else
-        li No updates
-        
-    p StdErr:
-    ul
-      for line in stderr
-        li= line
-      else
-        li No updates                
+p <b> Request_id: </b> #{request_id}
+p <b> task id: </b> #{task_id}
+p <b> status: </b> #{status}   
+p #{singularity_task_link}
+ 
+if taskStateFailed
+  if taskEverRan
+    p<b> Recommended course of action: </b> Process terminated with non-zero exit code. <i> This is not an infrastructure issue </i>. You should consider investigating the task. 
+if taskStateLost
+  if taskEverRan
+    p <b> Recommended course of action: </b> Task lost while running. This is likely an infrastructure issue. It is possible, though unlikely, that the task may still be running.
+  if !taskEverRan
+    p <b> Recommended course of action: </b> Task lost before running. This is likely an infrastructure issue. For further assistance email #{adminEmails}.
+
+p <b> Directory: </b> #{task_directory}
+p <b> Slave ran on: </b> #{slave_hostname}
+p: b Task Update History:
+table(style="border:1px solid black; border-collapse: collapse;")
+  tr
+    th(style="border:1px solid black; border-collapse: collapse;") DATETIME
+    th(style="border:1px solid black; border-collapse: collapse;") STATUS UPDATE
+  each task_update, i in task_updates
+    tr
+      td(style="border:1px solid black; border-collapse: collapse;")= task_update.date
+      td(style="border:1px solid black; border-collapse: collapse;")= task_update.update
+
+p: b StdOut:
+ul
+  for line in stdout
+    li= line
+  else
+    li No updates
+    
+p: b StdErr:
+ul
+  for line in stderr
+    li= line
+  else
+    li No updates                

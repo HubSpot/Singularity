@@ -15,13 +15,10 @@ public class SMTPConfiguration {
 
   @JsonProperty
   private String password;
-  
-  @JsonProperty
-  private String SlaveHostnameSuffix = "";
 
   @JsonProperty
-  private Integer taskLogLength = 400;
-  
+  private Integer taskLogLength = 512;
+
   @NotNull
   @JsonProperty
   private String host = "localhost";
@@ -36,11 +33,11 @@ public class SMTPConfiguration {
   @NotNull
   @JsonProperty
   private int mailThreads = 1;
-  
+
   @NotNull
   @JsonProperty
   private int mailMaxThreads = 3;
-  
+
   @NotNull
   @JsonProperty
   private boolean ssl = false;
@@ -67,7 +64,7 @@ public class SMTPConfiguration {
   public void setIncludeAdminsOnAllMails(boolean includeAdminsOnAllMails) {
     this.includeAdminsOnAllMails = includeAdminsOnAllMails;
   }
-  
+
   public SMTPLoggingConfiguration getSmtpLoggingConfiguration() {
     return smtpLoggingConfiguration;
   }
@@ -75,9 +72,13 @@ public class SMTPConfiguration {
   public void setSmtpLoggingConfiguration(SMTPLoggingConfiguration smtpLoggingConfiguration) {
     this.smtpLoggingConfiguration = smtpLoggingConfiguration;
   }
-  
-  public int getTaskLogLength(){
+
+  public int getTaskLogLength() {
     return taskLogLength;
+  }
+
+  public void setTaskLogLength(Integer length) {
+    this.taskLogLength = length;
   }
 
   public Optional<String> getUsername() {
@@ -87,15 +88,7 @@ public class SMTPConfiguration {
   public void setUsername(String username) {
     this.username = username;
   }
-  
-  public String getSlaveHostnameSuffix(){
-    return this.SlaveHostnameSuffix;
-  }
 
-  public void setSlaveHostnameSuffix(String suffix){
-    this.SlaveHostnameSuffix = suffix;
-  }
-  
   public int getMailThreads() {
     return mailThreads;
   }
@@ -111,7 +104,7 @@ public class SMTPConfiguration {
   public void setMailMaxThreads(int mailMaxThreads) {
     this.mailMaxThreads = mailMaxThreads;
   }
-  
+
   public Optional<String> getPassword() {
     return Optional.fromNullable(password);
   }
