@@ -60,7 +60,7 @@ class SearchView extends View
 
     setUpSearchEvents: ->
         if not app.isMobile
-            @$search.focus()
+            setTimeout => @$search.focus()
 
         lastText = _.trim @$search.val()
 
