@@ -121,7 +121,7 @@ class Router extends Backbone.Router
 
     files: (taskId, path = '') ->
         app.views.filesViews = {} if not app.views.filesViews
-        if not app.views.filesViews[taskId]
+        if not app.views.filesViews[taskId] or app.views.filesViews[taskId].path isnt path
             app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
         else
             app.views.filesViews[taskId].browse path
