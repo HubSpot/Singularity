@@ -27,18 +27,30 @@ Backbone.history.on 'route', ->
     globalRefresh()
     htmlClasses()
 
+windowBlurred = false
+
+$(window).on 'blur', ->
+    windowBlurred = true
+
+$(window).on 'focus', ->
+    windowBlurred = false
+    refresh()
+
 nav = ->
     if not app.views.navigationView?
         app.views.navigationView = new NavigationView
     app.views.navigationView.render()
 
 window.globalRefreshTimeout = undefined
-globalRefresh = =>
+globalRefresh = ->
     clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
     window.globalRefreshTimeout = setInterval ->
-        if not $('body > .vex').length
-            app.views.current?.refresh?()
+        refresh()
     , 20 * 1000
+
+refresh = ->
+    if not $('body > .vex').length and not windowBlurred
+        app.views.current?.refresh?()
 
 class Router extends Backbone.Router
 
