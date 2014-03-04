@@ -7,7 +7,7 @@
         <table class="table" data-sortable>
             <thead>
                 <tr>
-                    <th data-sortable="false"></th>
+                    <th><span class="icon icon-directory invisible"></span>Name</a></th>
                     <th>Size</th>
                     <th>Last modified</th>
                     <th data-sortable="false"></th>
@@ -16,7 +16,7 @@
             <tbody>
                 {{#eachWithFn taskFiles}}
                     <tr>
-                        <td>
+                        <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ shortPath }}">
                             {{#if isDirectory}}
                                 <a href="/singularity/task/{{ taskId }}/files{{ relPath }}" data-route="/task/{{ taskId }}/files{{ relPath }}"><span class="icon icon-directory"></span>{{ shortPath }}/</a>
                             {{else}}
@@ -26,7 +26,7 @@
                         <td data-value="{{ size }}">
                             {{#unless isDirectory}}{{ sizeHuman }}{{/unless}}
                         </td>
-                        <td data-value="{{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
+                        <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
                         <td class="actions-column">
                             {{#unless isDirectory}}
                                 <a href="/singularity/task/{{ taskId }}/tail{{ relPath }}" data-route="/task/{{ taskId }}/tail{{ relPath }}">View</a>
