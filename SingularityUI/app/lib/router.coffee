@@ -119,7 +119,7 @@ class Router extends Backbone.Router
         app.views.current = app.views.taskViews[taskId]
         app.show app.views.taskViews[taskId].render().refresh()
 
-    files: (taskId, path='') ->
+    files: (taskId, path = '') ->
         app.views.filesViews = {} if not app.views.filesViews
         if not app.views.filesViews[taskId]
             app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
@@ -128,7 +128,7 @@ class Router extends Backbone.Router
         app.views.current = app.views.filesViews[taskId]
         app.show app.views.filesViews[taskId].render()
 
-    tail: (taskId, path='') ->
+    tail: (taskId, path = '') ->
         app.views.tailViews = {} if not app.views.tailViews
         if not app.views.tailViews[taskId] or app.views.tailViews[taskId].path isnt path
             app.views.tailViews[taskId] = new TailView taskId: taskId, path: path
