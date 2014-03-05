@@ -58,12 +58,14 @@ class Router extends Backbone.Router
         '(/)': 'dashboard'
         'search(/)': 'search'
         'status(/)': 'status'
-        'requests(/)': 'requestsFiltered'
+        'requests/:requestsFilter/:requestsSubFilter/:searchFilter(/)': 'requestsFiltered'
         'requests/:requestsFilter/:requestsSubFilter(/)': 'requestsFiltered'
         'requests/:requestsFilter(/)': 'requestsFiltered'
+        'requests(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
-        'tasks(/)': 'tasks'
+        'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
+        'tasks(/)': 'tasksFiltered'
         'task/:taskId(/)': 'task'
         'task/:taskId/files(/)': 'files'
         'task/:taskId/files/*path': 'files'
@@ -94,16 +96,16 @@ class Router extends Backbone.Router
         app.views.current = app.views.status
         app.show app.views.status.refresh(fromRoute = true)
 
-    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'active') ->
+    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'running', searchFilter = '') ->
         if not app.views.requests?
-            app.views.requests = new RequestsView { requestsFilter, requestsSubFilter }
+            app.views.requests = new RequestsView { requestsFilter, requestsSubFilter, searchFilter }
 
         if app.views.requests is app.views.current and @lastRequestsFilter is requestsFilter
-            app.show app.views.requests.render(requestsFilter, requestsSubFilter)
+            app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter)
         else
             @lastRequestsFilter = requestsFilter
             app.views.current = app.views.requests
-            app.show app.views.requests.render(requestsFilter, requestsSubFilter).refresh()
+            app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter).refresh()
 
     request: (requestId) ->
         app.views.requestViews = {} if not app.views.requestViews
@@ -115,14 +117,11 @@ class Router extends Backbone.Router
             app.views.current = app.views.requestViews[requestId]
             app.show app.views.requestViews[requestId]
 
-    tasks: ->
-        @tasksFiltered 'active'
-
-    tasksFiltered: (tasksFilter) ->
+    tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
         if not app.views.tasks?
-            app.views.tasks = new TasksView tasksFilter: tasksFilter
+            app.views.tasks = new TasksView { tasksFilter, searchFilter }
         app.views.current = app.views.tasks
-        app.show app.views.tasks.render(tasksFilter).refresh()
+        app.show app.views.tasks.render(tasksFilter, searchFilter).refresh()
 
     task: (taskId) ->
         app.views.taskViews = {} if not app.views.taskViews

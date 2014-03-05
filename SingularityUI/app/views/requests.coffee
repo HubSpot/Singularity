@@ -29,16 +29,17 @@ class RequestsView extends View
         @collection.fetch()
 
     refresh: ->
-        return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastRequestsFilter).done =>
-            @render(@lastRequestsFilter, @lastRequestsSubFilter, refresh = true)
+            @render(@lastRequestsFilter, @lastRequestsSubFilter, @lastSearchFilter, refresh = true)
 
         @
 
-    render: (requestsFilter, requestsSubFilter, refresh) =>
+    render: (requestsFilter, requestsSubFilter, searchFilter, refresh) =>
         @lastRequestsFilter = requestsFilter
         @lastRequestsSubFilter = requestsSubFilter
+        @lastSearchFilter = searchFilter
 
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
@@ -58,7 +59,8 @@ class RequestsView extends View
 
         context =
             collectionSynced: @collection.synced
-            lastRequestsSubFilter: @lastRequestsSubFilter
+            requestsSubFilter: requestsSubFilter
+            searchFilter: searchFilter
 
         if @lastRequestsFilter in ['active', 'paused']
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
@@ -164,15 +166,19 @@ class RequestsView extends View
 
         $rows = @$('tbody > tr')
 
-        lastText = _.trim $search.val()
+        lastText = ''
 
-        $search.on 'change keypress paste focus textInput input click keydown', =>
+        $search.unbind().on 'change keypress paste focus textInput input click keydown', =>
             text = _.trim $search.val()
 
             if text is ''
                 $rows.removeClass('filtered')
+                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
 
             if text isnt lastText
+                @lastSearchFilter = text
+                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
+
                 $rows.each ->
                     $row = $(@)
 
