@@ -29,16 +29,17 @@ class TasksView extends View
         @collection.fetch()
 
     refresh: ->
-        return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastTasksFilter).done =>
-            @render(@lastTasksFilter, refresh = true)
+            @render(@lastTasksFilter, @lastSearchFilter, refresh = true)
 
         @
 
-    render: (tasksFilter, refresh) ->
+    render: (tasksFilter, searchFilter, refresh) ->
         forceFullRender = tasksFilter isnt @lastTasksFilter
         @lastTasksFilter = tasksFilter
+        @lastSearchFilter = searchFilter
 
         if @lastTasksFilter is 'active'
             @collection = app.collections.tasksActive
@@ -65,17 +66,23 @@ class TasksView extends View
         context =
             collectionSynced: @collection.synced
             tasks: tasks
+            searchFilter: searchFilter
 
         partials =
             partials:
                 tasksTable: templateTable
 
-        searchWasFocused = @$el.find('input[type="search"]').is(':focus')
+        $search = @$el.find('input[type="search"]')
+        searchWasFocused = $search.is(':focus')
+        previousSearchTerm = $search.val()
 
         $tasksTableContainer =  @$el.find('[data-tasks-table-container]')
 
         if not $tasksTableContainer.length or forceFullRender
             @$el.html template(context, partials)
+
+            if forceFullRender
+                @$el.find('input[type="search"]').val(previousSearchTerm)
         else
             $tasksTableContainer.html templateTable context
 
@@ -127,15 +134,19 @@ class TasksView extends View
 
         $rows = @$el.find('tbody > tr')
 
-        lastText = _.trim $search.val()
+        lastText = ''
 
         $search.unbind().on 'change keypress paste focus textInput input click keydown', =>
             text = _.trim $search.val()
 
             if text is ''
                 $rows.removeClass('filtered')
+                app.router.navigate "/tasks/#{ @lastTasksFilter }", { replace: true }
 
             if text isnt lastText
+                @lastSearchFilter = text
+                app.router.navigate "/tasks/#{ @lastTasksFilter }/#{ @lastSearchFilter }", { replace: true }
+
                 $rows.each ->
                     $row = $(@)
 

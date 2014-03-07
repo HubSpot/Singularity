@@ -21,7 +21,7 @@
 </section>
 
 <section>
-    <input type="search" placeholder="Filter tasks..." required />
+    <input type="search" placeholder="Filter tasks..." value="{{ searchFilter }}" required />
     <div class="row-fluid">
         <div data-tasks-table-container class="span12">
             {{> tasksTable}}

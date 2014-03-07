@@ -5,9 +5,17 @@ Request = require '../models/Request'
 class RequestsView extends View
 
     templateRequestsActive: require './templates/requestsActive'
+    templateRequestsActiveBody: require './templates/requestsActiveBody'
+    templateRequestsActiveNav: require './templates/requestsActiveNav'
+
     templateRequestsPaused: require './templates/requestsPaused'
+    templateRequestsPausedBody: require './templates/requestsPausedBody'
+
     templateRequestsPending: require './templates/requestsPending'
+    templateRequestsPendingBody: require './templates/requestsPendingBody'
+
     templateRequestsCleaning: require './templates/requestsCleaning'
+    templateRequestsCleaningBody: require './templates/requestsCleaningBody'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
@@ -29,36 +37,45 @@ class RequestsView extends View
         @collection.fetch()
 
     refresh: ->
-        return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastRequestsFilter).done =>
-            @render(@lastRequestsFilter, @lastRequestsSubFilter, refresh = true)
+            @render(@lastRequestsFilter, @lastRequestsSubFilter, @lastSearchFilter, refresh = true)
 
         @
 
-    render: (requestsFilter, requestsSubFilter, refresh) =>
+    render: (requestsFilter, requestsSubFilter, searchFilter, refresh) =>
+        forceFullRender = requestsFilter isnt @lastRequestsFilter
+
         @lastRequestsFilter = requestsFilter
         @lastRequestsSubFilter = requestsSubFilter
+        @lastSearchFilter = searchFilter
 
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
             template = @templateRequestsActive
+            templateBody = @templateRequestsActiveBody
+            templateNav = @templateRequestsActiveNav
 
         if @lastRequestsFilter is 'paused'
             @collection = app.collections.requestsPaused
             template = @templateRequestsPaused
+            templateBody = @templateRequestsPausedBody
 
         if @lastRequestsFilter is 'pending'
             @collection = app.collections.requestsPending
             template = @templateRequestsPending
+            templateBody = @templateRequestsPendingBody
 
         if @lastRequestsFilter is 'cleaning'
             @collection = app.collections.requestsCleaning
             template = @templateRequestsCleaning
+            templateBody = @templateRequestsCleaningBody
 
         context =
             collectionSynced: @collection.synced
-            lastRequestsSubFilter: @lastRequestsSubFilter
+            requestsSubFilter: requestsSubFilter
+            searchFilter: searchFilter
 
         if @lastRequestsFilter in ['active', 'paused']
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
@@ -76,9 +93,30 @@ class RequestsView extends View
             if app.collections.requestsStarred.get(request.name)?
                 request.starred = true
 
-        searchWasFocused = @$el.find('input[type="search"]').is(':focus')
+        partials =
+            partials:
+                requestsBody: templateBody
 
-        @$el.html template context
+        $search = @$el.find('input[type="search"]')
+        searchWasFocused = $search.is(':focus')
+        previousSearchTerm = $search.val()
+
+        $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
+
+        if @lastRequestsFilter is 'active'
+            partials.partials.requestsNav = templateNav
+            $requestsNavContainer =  @$el.find('[data-requests-nav-container]')
+
+        if not $requestsBodyContainer.length or forceFullRender
+            @$el.html template(context, partials)
+
+            if forceFullRender
+                @$el.find('input[type="search"]').val(previousSearchTerm)
+        else
+            if @lastRequestsFilter is 'active'
+                $requestsNavContainer.html templateNav context
+
+            $requestsBodyContainer.html templateBody context
 
         @setupEvents()
         @setUpSearchEvents(refresh, searchWasFocused)
@@ -164,15 +202,19 @@ class RequestsView extends View
 
         $rows = @$('tbody > tr')
 
-        lastText = _.trim $search.val()
+        lastText = ''
 
-        $search.on 'change keypress paste focus textInput input click keydown', =>
+        $search.unbind().on 'change keypress paste focus textInput input click keydown', =>
             text = _.trim $search.val()
 
             if text is ''
                 $rows.removeClass('filtered')
+                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
 
             if text isnt lastText
+                @lastSearchFilter = text
+                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
+
                 $rows.each ->
                     $row = $(@)
 
