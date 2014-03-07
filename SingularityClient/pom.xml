@@ -11,6 +11,7 @@
   </parent>
 
   <artifactId>SingularityClient</artifactId>
+  <version>0.2.19.1</version>
 
   <repositories>
     <repository>
