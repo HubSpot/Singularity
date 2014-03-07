@@ -155,4 +155,7 @@ class TasksView extends View
                     else
                         $row.removeClass('filtered')
 
+        if refresh
+            $search.change()
+
 module.exports = TasksView
