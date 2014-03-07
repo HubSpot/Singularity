@@ -5,9 +5,17 @@ Request = require '../models/Request'
 class RequestsView extends View
 
     templateRequestsActive: require './templates/requestsActive'
+    templateRequestsActiveBody: require './templates/requestsActiveBody'
+    templateRequestsActiveNav: require './templates/requestsActiveNav'
+
     templateRequestsPaused: require './templates/requestsPaused'
+    templateRequestsPausedBody: require './templates/requestsPausedBody'
+
     templateRequestsPending: require './templates/requestsPending'
+    templateRequestsPendingBody: require './templates/requestsPendingBody'
+
     templateRequestsCleaning: require './templates/requestsCleaning'
+    templateRequestsCleaningBody: require './templates/requestsCleaningBody'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
@@ -37,6 +45,8 @@ class RequestsView extends View
         @
 
     render: (requestsFilter, requestsSubFilter, searchFilter, refresh) =>
+        forceFullRender = requestsFilter isnt @lastRequestsFilter
+
         @lastRequestsFilter = requestsFilter
         @lastRequestsSubFilter = requestsSubFilter
         @lastSearchFilter = searchFilter
@@ -44,18 +54,23 @@ class RequestsView extends View
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
             template = @templateRequestsActive
+            templateBody = @templateRequestsActiveBody
+            templateNav = @templateRequestsActiveNav
 
         if @lastRequestsFilter is 'paused'
             @collection = app.collections.requestsPaused
             template = @templateRequestsPaused
+            templateBody = @templateRequestsPausedBody
 
         if @lastRequestsFilter is 'pending'
             @collection = app.collections.requestsPending
             template = @templateRequestsPending
+            templateBody = @templateRequestsPendingBody
 
         if @lastRequestsFilter is 'cleaning'
             @collection = app.collections.requestsCleaning
             template = @templateRequestsCleaning
+            templateBody = @templateRequestsCleaningBody
 
         context =
             collectionSynced: @collection.synced
@@ -78,9 +93,30 @@ class RequestsView extends View
             if app.collections.requestsStarred.get(request.name)?
                 request.starred = true
 
-        searchWasFocused = @$el.find('input[type="search"]').is(':focus')
+        partials =
+            partials:
+                requestsBody: templateBody
 
-        @$el.html template context
+        $search = @$el.find('input[type="search"]')
+        searchWasFocused = $search.is(':focus')
+        previousSearchTerm = $search.val()
+
+        $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
+
+        if @lastRequestsFilter is 'active'
+            partials.partials.requestsNav = templateNav
+            $requestsNavContainer =  @$el.find('[data-requests-nav-container]')
+
+        if not $requestsBodyContainer.length or forceFullRender
+            @$el.html template(context, partials)
+
+            if forceFullRender
+                @$el.find('input[type="search"]').val(previousSearchTerm)
+        else
+            if @lastRequestsFilter is 'active'
+                $requestsNavContainer.html templateNav context
+
+            $requestsBodyContainer.html templateBody context
 
         @setupEvents()
         @setUpSearchEvents(refresh, searchWasFocused)
