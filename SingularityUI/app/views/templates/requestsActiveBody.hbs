@@ -16,7 +16,7 @@
                         </thead>
                         <tbody>
                             {{#eachWithFn requests}}
-                                <tr data-request-id="{{ id }}">
+                                <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
                                     <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
                                     <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                     <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
@@ -87,7 +87,7 @@
                         </thead>
                         <tbody>
                             {{#eachWithFn requestsScheduled}}
-                                <tr data-request-id="{{ id }}">
+                                <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
                                     <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
                                     <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                     <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>

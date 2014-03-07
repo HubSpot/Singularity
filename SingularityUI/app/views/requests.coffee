@@ -218,7 +218,7 @@ class RequestsView extends View
                 $rows.each ->
                     $row = $(@)
 
-                    if not _.string.contains $row.data('request-id').toLowerCase(), text.toLowerCase()
+                    if not (_.string.contains $row.data('request-id').toLowerCase(), text.toLowerCase()) and not (_.string.contains $row.data('request-deploy-user')?.toLowerCase(), text.toLowerCase())
                         $row.addClass('filtered')
                     else
                         $row.removeClass('filtered')
