@@ -42,6 +42,7 @@ public class SingularityClient {
   private static final String REQUEST_ACTIVE_FORMAT = REQUEST_FORMAT + "/active";
   private static final String REQUEST_PAUSED_FORMAT = REQUEST_FORMAT + "/paused";
   private static final String REQUEST_PAUSED_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s/paused";
+  private static final String REQUEST_PAUSE_FORMAT = REQUEST_FORMAT + "/request/%s/pause";
   private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
   private static final String CONTENT_TYPE_JSON = "application/json";
@@ -227,7 +228,7 @@ public class SingularityClient {
   // PAUSED REQUESTS
   //
   public void pauseRequest(String id, Optional<String> user) {
-    final String requestUri = finishUri(String.format(REQUEST_PAUSED_UNDEPLOY_FORMAT, getHost(), contextPath, id), user);
+    final String requestUri = finishUri(String.format(REQUEST_PAUSE_FORMAT, getHost(), contextPath, id), user);
 
     LOG.info(String.format("Pausing request ID %s - (%s)", id, requestUri));
 
