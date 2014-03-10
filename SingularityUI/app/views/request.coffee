@@ -148,7 +148,7 @@ class RequestView extends View
         $teebleOuter = $(@historicalTasksView.el)
         $empty = $teebleOuter.find('.teeble_empty')
         if $empty.length
-            $teebleOuter.html('<center><p>No historical tasks.</p></center>')
+            $teebleOuter.html('<div class="empty-table-message"><p>No historical tasks</p></div>')
 
     setupEvents: ->
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->

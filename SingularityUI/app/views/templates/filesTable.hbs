@@ -1,7 +1,8 @@
 {{#if taskFilesSandboxUnavailable}}
-    <div class="page-loader centered"></div>
-    <br>
-    <center><p>Attempting to connect to the sandbox for this task...</p></center>
+    <div class="page-loader-with-message">
+        <div class="page-loader centered"></div>
+        <p>Attempting to connect to the sandbox for this task...</p>
+    </div>
 {{else}}
     {{#if taskFiles}}
         <table class="table" data-sortable>

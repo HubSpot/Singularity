@@ -32,7 +32,7 @@
                     </table>
                 {{else}}
                     {{#if collectionSynced}}
-                        <center><p>No active running requests.</p></center>
+                        <div class="empty-table-message"><p>No active running requests</p></div>
                     {{else}}
                         <div class="page-loader centered"></div>
                     {{/if}}
@@ -66,7 +66,7 @@
                     </table>
                 {{else}}
                     {{#if collectionSynced}}
-                        <center><p>No on-demand requests.</p></center>
+                        <div class="empty-table-message"><p>No on-demand requests</p></div>
                     {{else}}
                         <div class="page-loader centered"></div>
                     {{/if}}
@@ -104,7 +104,7 @@
                     </table>
                 {{else}}
                     {{#if collectionSynced}}
-                        <center><p>No active scheduled requests.</p></center>
+                        <div class="empty-table-message"><p>No active scheduled requests</p></div>
                     {{else}}
                         <div class="page-loader centered"></div>
                     {{/if}}

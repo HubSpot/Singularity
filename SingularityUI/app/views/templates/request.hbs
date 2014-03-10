@@ -45,7 +45,7 @@
         </div>
     {{else}}
         {{#if fetchDoneActive}}
-            <center><p>No active tasks.</p></center>
+            <div class="empty-table-message"><p>No active tasks</p></div>
         {{else}}
             <div class="page-loader centered"></div>
         {{/if}}
@@ -83,7 +83,7 @@
             </div>
         </div>
     {{else}}
-        <center><p>No scheduled tasks.</p></center>
+        <div class="empty-table-message"><p>No scheduled tasks</p></div>
     {{/if}}
 </section>
 
@@ -137,7 +137,7 @@
         </div>
     {{else}}
         {{#if fetchDoneHistory}}
-            <center><p>No request history.</p></center>
+            <div class="empty-table-message"><p>No request history</p></div>
         {{else}}
             <div class="page-loader centered"></div>
         {{/if}}
