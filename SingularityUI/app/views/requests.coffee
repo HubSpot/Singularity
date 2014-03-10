@@ -223,6 +223,9 @@ class RequestsView extends View
                     else
                         $row.removeClass('filtered')
 
+            @$('table').each ->
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', text
+
         if refresh
             $search.change()
 

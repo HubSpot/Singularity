@@ -50,6 +50,32 @@ class Utils
     @setupSortableTables: ->
         sortable.init()
 
+    @handlePotentiallyEmptyFilteredTable: ($table, object = 'object', query = '') ->
+        message = "No #{ object }s found matching "
+
+        emptyTableInnerClass = 'empty-table-message'
+
+        if query is ''
+            message += 'that query'
+        else
+            message += """ "#{ query }" """
+
+        if $table.find('tbody tr:not(".filtered")').length
+            $table.removeClass('filtered').siblings(".#{ emptyTableInnerClass }").remove()
+
+        else
+            $emptyMessage = $table.siblings(".#{ emptyTableInnerClass }")
+
+            if not $emptyMessage.length
+                $table.addClass('filtered').after """
+                    <div class="#{ emptyTableInnerClass }">
+                        <p>#{ message }</p>
+                    </div>
+                """
+
+            else
+                $emptyMessage.find('p').html message
+
     @humanTime: (date, future = false) ->
         return '' unless date?
         now = moment()
