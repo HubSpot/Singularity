@@ -418,9 +418,12 @@ p small {
 
 .lead {
   margin-bottom: 18px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 200;
   line-height: 27px;
+  letter-spacing: .03em;
+  text-rendering: geometricPrecision;
+  color: #888;
 }
 
 h1,
