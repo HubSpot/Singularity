@@ -1,43 +1,13 @@
 <header class="jumbotron subhead" id="overview">
     <h1>{{#hardBreak request.name}}{{/hardBreak}} <small>{{#if request.fullObject}}<a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a>{{/if}} &nbsp; {{#if request.scheduledOrOnDemand}}<a data-request-id="{{ request.id }}" data-action="run-request-now">Run now</a> &nbsp; {{/if}}<a data-request-id="{{ request.id }}" data-action="remove">Remove</a></small></h1>
-    <p class="lead">{{#hardBreak request.id}}{{/hardBreak}}</p>
+    <p class="lead">
+        {{#eachWithFn requestHistory.requestUpdates}}
+            {{#if _first}}
+                <p class="lead">{{ stateHuman }} by {{ userHuman }} <strong>{{ createdAtHuman }}</strong></p>
+            {{/if}}
+        {{/eachWithFn}}
+    </p>
 </header>
-
-<section>
-    <div class="page-header">
-        <h1>History</h1>
-    </div>
-    {{#if requestHistory.requestUpdates}}
-        <div class="row-fluid">
-            <div class="span12">
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>State</th>
-                            <th>User</th>
-                            <th>Created</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requestHistory.requestUpdates}}
-                            <tr>
-                                <td><span title="{{ state }}">{{ stateHuman }}</span></td>
-                                <td><span title="{{ user }}">{{ userHuman }}</span></td>
-                                <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {{else}}
-        {{#if fetchDoneHistory}}
-            <center><p>No request history.</p></center>
-        {{else}}
-            <div class="page-loader centered"></div>
-        {{/if}}
-    {{/if}}
-</section>
 
 <section>
     <div class="page-header">
@@ -122,4 +92,54 @@
         <h1>Historical Tasks</h1>
     </div>
     <div class="historical-tasks-paginated"></div>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Info</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <dl>
+                <dt>Request ID</dt>
+                <dd><pre>{{ request.id }}</pre></dd>
+            </dl>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>History</h1>
+    </div>
+    {{#if requestHistory.requestUpdates}}
+        <div class="row-fluid">
+            <div class="span12">
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>User</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requestHistory.requestUpdates}}
+                            <tr>
+                                <td><span title="{{ state }}">{{ stateHuman }}</span></td>
+                                <td><span title="{{ user }}">{{ userHuman }}</span></td>
+                                <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {{else}}
+        {{#if fetchDoneHistory}}
+            <center><p>No request history.</p></center>
+        {{else}}
+            <div class="page-loader centered"></div>
+        {{/if}}
+    {{/if}}
 </section>

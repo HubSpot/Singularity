@@ -60,11 +60,11 @@ class SearchView extends View
 
     setUpSearchEvents: ->
         if not app.isMobile
-            @$search.focus()
+            setTimeout => @$search.focus()
 
-        lastText = _.trim @$search.val()
+        lastText = ''
 
-        @$search.on 'change keypress paste focus textInput input click keydown', _.debounce =>
+        @$search.unbind().on 'change keypress paste focus textInput input click keydown', _.debounce =>
             text = _.trim @$search.val()
 
             if @forceSearchOnce or text isnt lastText and text.length

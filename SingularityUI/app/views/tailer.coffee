@@ -24,6 +24,8 @@ class TailerView extends Backbone.View
         @$container = @$('.tail-container')
 
         @lines.on 'sort', =>
+            @handleEmpty()
+
             children = @$container.children()
 
             # append all if tailer element is empty
@@ -141,11 +143,19 @@ class TailerView extends Backbone.View
             # if somewhere in the middle, stop tailing
             @stopTailing()
 
+    handleEmpty: (offset = @lines.offset) =>
+        if @lines.length is 0 and offset is 0
+            @$el.addClass 'empty'
+            @startTailing()
+        else
+            @$el.removeClass 'empty'
+
     render: ->
         @$el.addClass 'loading'
 
         # seek to the end of the file
         @lines.fetchEndOffset().then (offset) =>
+            @handleEmpty(offset)
             @tail Math.max(0, offset - @readLength)
 
         @

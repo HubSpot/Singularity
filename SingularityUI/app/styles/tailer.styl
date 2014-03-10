@@ -61,10 +61,28 @@
     position relative
     font-family Consolas, "Liberation Mono", Courier, monospace
     overflow auto
+    overflow-y scroll
+    overflow-x hidden
     -webkit-overflow-scrolling touch
 
     @media (max-width: 1199px)
         height 500px
+
+    &.empty
+        font-family inherit
+        text-align center
+        font-size 1.3em
+
+        &:before
+            content "This file is empty."
+            opacity .7
+            position absolute
+            margin auto
+            top 0
+            left 0
+            right 0
+            bottom 4em
+            height 1em
 
     .tail-container
 
@@ -111,6 +129,11 @@
                 height 100px
                 background #fcfcfc
                 margin 0
+
+                h1
+                    display: block
+                    overflow: hidden
+                    height: 1.1em
 
             .tail-outer
                 position absolute

@@ -1,0 +1,28 @@
+{{#if requests.length}}
+    <table class="table" data-sortable>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Timestamp</th>
+                <th>Cleaning Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#eachWithFn requests}}
+                <tr data-request-id="{{ id }}">
+                    <td>{{#hardBreak id}}{{/hardBreak}}</td>
+                    <td>{{ user }}</td>
+                    <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
+                    <td>{{ cleanupType }}</td>
+                </tr>
+            {{/eachWithFn}}
+        </tbody>
+    </table>
+{{else}}
+    {{#if collectionSynced}}
+        <center><p>No cleaning requests.</p></center>
+    {{else}}
+        <div class="page-loader centered"></div>
+    {{/if}}
+{{/if}}

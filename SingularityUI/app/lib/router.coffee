@@ -27,18 +27,30 @@ Backbone.history.on 'route', ->
     globalRefresh()
     htmlClasses()
 
+windowBlurred = false
+
+$(window).on 'blur', ->
+    windowBlurred = true
+
+$(window).on 'focus', ->
+    windowBlurred = false
+    refresh()
+
 nav = ->
     if not app.views.navigationView?
         app.views.navigationView = new NavigationView
     app.views.navigationView.render()
 
 window.globalRefreshTimeout = undefined
-globalRefresh = =>
+globalRefresh = ->
     clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
     window.globalRefreshTimeout = setInterval ->
-        if not $('body > .vex').length
-            app.views.current?.refresh?()
+        refresh()
     , 20 * 1000
+
+refresh = ->
+    if not $('body > .vex').length and not windowBlurred
+        app.views.current?.refresh?()
 
 class Router extends Backbone.Router
 
@@ -46,12 +58,14 @@ class Router extends Backbone.Router
         '(/)': 'dashboard'
         'search(/)': 'search'
         'status(/)': 'status'
-        'requests(/)': 'requestsFiltered'
+        'requests/:requestsFilter/:requestsSubFilter/:searchFilter(/)': 'requestsFiltered'
         'requests/:requestsFilter/:requestsSubFilter(/)': 'requestsFiltered'
         'requests/:requestsFilter(/)': 'requestsFiltered'
+        'requests(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
-        'tasks(/)': 'tasks'
+        'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
+        'tasks(/)': 'tasksFiltered'
         'task/:taskId(/)': 'task'
         'task/:taskId/files(/)': 'files'
         'task/:taskId/files/*path': 'files'
@@ -82,16 +96,16 @@ class Router extends Backbone.Router
         app.views.current = app.views.status
         app.show app.views.status.refresh(fromRoute = true)
 
-    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'active') ->
+    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'running', searchFilter = '') ->
         if not app.views.requests?
-            app.views.requests = new RequestsView { requestsFilter, requestsSubFilter }
+            app.views.requests = new RequestsView { requestsFilter, requestsSubFilter, searchFilter }
 
         if app.views.requests is app.views.current and @lastRequestsFilter is requestsFilter
-            app.show app.views.requests.render(requestsFilter, requestsSubFilter)
+            app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter)
         else
             @lastRequestsFilter = requestsFilter
             app.views.current = app.views.requests
-            app.show app.views.requests.render(requestsFilter, requestsSubFilter).refresh()
+            app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter).refresh()
 
     request: (requestId) ->
         app.views.requestViews = {} if not app.views.requestViews
@@ -103,14 +117,11 @@ class Router extends Backbone.Router
             app.views.current = app.views.requestViews[requestId]
             app.show app.views.requestViews[requestId]
 
-    tasks: ->
-        @tasksFiltered 'active'
-
-    tasksFiltered: (tasksFilter) ->
+    tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
         if not app.views.tasks?
-            app.views.tasks = new TasksView tasksFilter: tasksFilter
+            app.views.tasks = new TasksView { tasksFilter, searchFilter }
         app.views.current = app.views.tasks
-        app.show app.views.tasks.render(tasksFilter).refresh()
+        app.show app.views.tasks.render(tasksFilter, searchFilter).refresh()
 
     task: (taskId) ->
         app.views.taskViews = {} if not app.views.taskViews
@@ -119,16 +130,16 @@ class Router extends Backbone.Router
         app.views.current = app.views.taskViews[taskId]
         app.show app.views.taskViews[taskId].render().refresh()
 
-    files: (taskId, path='') ->
+    files: (taskId, path = '') ->
         app.views.filesViews = {} if not app.views.filesViews
-        if not app.views.filesViews[taskId]
+        if not app.views.filesViews[taskId] or app.views.filesViews[taskId].path isnt path
             app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
         else
             app.views.filesViews[taskId].browse path
         app.views.current = app.views.filesViews[taskId]
         app.show app.views.filesViews[taskId].render()
 
-    tail: (taskId, path='') ->
+    tail: (taskId, path = '') ->
         app.views.tailViews = {} if not app.views.tailViews
         if not app.views.tailViews[taskId] or app.views.tailViews[taskId].path isnt path
             app.views.tailViews[taskId] = new TailView taskId: taskId, path: path

@@ -1,15 +1,5 @@
 package com.hubspot.singularity.client;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -22,6 +12,15 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 
 public class SingularityClient {
   
@@ -43,6 +42,7 @@ public class SingularityClient {
   private static final String REQUEST_ACTIVE_FORMAT = REQUEST_FORMAT + "/active";
   private static final String REQUEST_PAUSED_FORMAT = REQUEST_FORMAT + "/paused";
   private static final String REQUEST_PAUSED_UNDEPLOY_FORMAT = REQUEST_FORMAT + "/request/%s/paused";
+  private static final String REQUEST_PAUSE_FORMAT = REQUEST_FORMAT + "/request/%s/pause";
   private static final String REQUEST_ADD_USER_FORMAT = "%s?user=%s";
   
   private static final String CONTENT_TYPE_JSON = "application/json";
@@ -227,6 +227,20 @@ public class SingularityClient {
   //
   // PAUSED REQUESTS
   //
+  public void pauseRequest(String id, Optional<String> user) {
+    final String requestUri = finishUri(String.format(REQUEST_PAUSE_FORMAT, getHost(), contextPath, id), user);
+
+    LOG.info(String.format("Pausing request ID %s - (%s)", id, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response postResponse = postUri(requestUri);
+
+    checkResponse("pause request", postResponse);
+
+    LOG.info(String.format("Successfully paused Singularity request ID %s in %sms", id, System.currentTimeMillis() - start));
+  }
+
   public Collection<SingularityRequest> getPausedRequests() {
     final String requestUri = String.format(REQUEST_PAUSED_FORMAT, getHost(), contextPath);
 

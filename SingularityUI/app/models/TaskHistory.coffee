@@ -28,6 +28,9 @@ class TaskHistory extends Model
             if taskUpdate.statusUpdate is 'TASK_FINISHED'
                 taskHistory.task.isFinished = true
 
+        _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
+        taskHistory.taskUpdates.reverse()
+
         # Construct mesos logs link
         taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"
 

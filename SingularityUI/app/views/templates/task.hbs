@@ -1,7 +1,19 @@
 <header class="jumbotron subhead" id="overview">
     <h3><a href="/singularity/request/{{ request.id }}" data-route="request/{{ request.id }}">{{#hardBreak request.id}}{{/hardBreak}}</a></h3>
     <h1>{{#hardBreak taskHistory.task.name}}{{/hardBreak}} <small><a data-task-id="{{ taskHistory.task.id }}" data-action="viewObjectJSON">JSON</a>{{#if taskHistory.task.isFinished}}{{else}} &nbsp; <a data-task-id="{{ taskHistory.task.id }}" data-action="remove">Kill&nbsp;Task</a>{{/if}}</small></h1>
-    <p class="lead">{{#hardBreak taskHistory.task.id}}{{/hardBreak}}</p>
+    {{#if taskHistory.taskUpdates}}
+        {{#eachWithFn taskHistory.taskUpdates}}
+            {{#if _first}}
+                <p class="lead">
+                    {{ statusUpdateHuman }} as of
+                    {{ timestampHuman }}
+                    {{#ifEqual statusMessage "No status message available"}}{{else}}
+                        ({{ statusMessage }})
+                    {{/ifEqual}}
+                </p>
+            {{/if}}
+        {{/eachWithFn}}
+    {{/if}}
 </header>
 
 <section>
@@ -62,12 +74,22 @@
     <div class="row-fluid">
         <div class="span12">
             <dl>
-                <dt>Executor GUID</dt>
-                <dd><pre>{{ taskHistory.task.mesosTask.executor.executorId.value }}</pre></dd>
-                <dt>Directory</dt>
-                <dd><pre>{{ taskHistory.directory }}</pre></dd>
-                <dt>Hostname</dt>
-                <dd><pre>{{ taskHistory.task.offer.hostname }}</pre></dd>
+                {{#if taskHistory.task.id }}
+                    <dt>Task ID</dt>
+                    <dd><pre>{{ taskHistory.task.id }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.task.mesosTask.executor.executorId.value }}
+                    <dt>Executor GUID</dt>
+                    <dd><pre>{{ taskHistory.task.mesosTask.executor.executorId.value }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.directory }}
+                    <dt>Directory</dt>
+                    <dd><pre>{{ taskHistory.directory }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.task.offer.hostname }}
+                    <dt>Hostname</dt>
+                    <dd><pre>{{ taskHistory.task.offer.hostname }}</pre></dd>
+                {{/if}}
                 {{#if taskHistory.task.taskRequest.request.executorData.ports }}
                     <dt>Task request ports</dt>
                     <dd><pre>{{ taskHistory.task.taskRequest.request.executorData.ports }}</pre></dd>
