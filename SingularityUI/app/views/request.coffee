@@ -162,6 +162,10 @@ class RequestView extends View
 
             vex.dialog.confirm
                 message: @removeRequestTemplate(requestId: requestModel.get('id'))
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                    vex.dialog.buttons.NO
+                ]
                 callback: (confirmed) =>
                     return unless confirmed
                     requestModel.destroy()
