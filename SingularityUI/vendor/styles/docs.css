@@ -108,7 +108,10 @@ hr.soften {
   margin-bottom: 9px;
 }
 .subhead h1 {
-  font-size: 45px;
+  font-size: 32px;
+  margin-bottom: 8px;
+  letter-spacing: .008em;
+  text-rendering: geometricPrecision;
 }
 
 /* Subnav */
@@ -653,11 +656,9 @@ form.well {
   /* Adjust the jumbotron */
   .jumbotron h1,
   .jumbotron p {
-    text-align: center;
     margin-right: 0;
   }
   .jumbotron h1 {
-    font-size: 45px;
     margin-right: 0;
   }
   .jumbotron p {
@@ -787,7 +788,6 @@ form.well {
 
   /* Scale down the jumbotron content */
   .jumbotron h1 {
-    font-size: 45px;
   }
   .jumbotron p {
     margin-right: 0;
