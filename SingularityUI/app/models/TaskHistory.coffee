@@ -26,7 +26,6 @@ class TaskHistory extends Model
             taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
             if taskUpdate.statusUpdate in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
-                log 'woot...', taskUpdate.statusUpdate
                 taskHistory.task.isStopped = true
 
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
