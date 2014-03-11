@@ -11,13 +11,15 @@ public class SingularitySchedulerBase {
   @Inject
   public SingularitySchedulerBase() {}
 
-  protected List<SingularityTaskId> getMatchingActiveTaskIds(String requestId, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
+  protected List<SingularityTaskId> getMatchingActiveTaskIds(String requestId, String deployId, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
     List<SingularityTaskId> matchingTaskIds = Lists.newArrayList();
     
     for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestId)) {
-      if (!cleaningTasks.contains(matchingTaskId)) {
-        matchingTaskIds.add(matchingTaskId);
+      if (!matchingTaskId.getDeployId().equals(deployId) || cleaningTasks.contains(matchingTaskId)) {
+        continue;
       }
+       
+      matchingTaskIds.add(matchingTaskId);
     }
     
     return matchingTaskIds;

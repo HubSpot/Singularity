@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -91,7 +92,7 @@ public class SingularityStartup {
     
     for (SingularityRequest request : requests) {
       if (!request.isOneOff()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), PendingType.STARTUP));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), Optional.<String> absent(), PendingType.STARTUP));
       }
     }
     

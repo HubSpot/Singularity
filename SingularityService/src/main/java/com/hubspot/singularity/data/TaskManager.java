@@ -170,7 +170,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private void launchTaskPrivate(SingularityTask task) throws Exception {
-    final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTaskId().toString());
+    final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTask().getTaskId().getId());
     final String activePath = getActivePath(task.getTaskId().toString());
     
     curator.delete().forPath(scheduledPath);

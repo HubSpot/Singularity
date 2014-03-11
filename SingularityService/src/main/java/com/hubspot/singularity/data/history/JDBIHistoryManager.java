@@ -44,7 +44,7 @@ public class JDBIHistoryManager implements HistoryManager {
           task.getTaskId().toString(),
           task.getAsBytes(objectMapper),
           driverStatus,
-          task.getTaskRequest().getPendingTaskId().getPendingType(),
+          task.getTaskRequest().getPendingTask().getTaskId().getPendingType(),
           new Date());
     } catch (SingularityJsonException jpe) {
       LOG.warn(String.format("Couldn't insert task history for task %s due to json exception", task), jpe);

@@ -35,17 +35,23 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     
     LOG.trace(String.format("Fetched %s children from path %s", children.size(), parent));
     
-    return getAsyncThrows(parent, children, transcoder);
+    final List<String> paths = Lists.newArrayListWithCapacity(children.size());
+    
+    for (String child : children) {
+      paths.add(ZKPaths.makePath(parent, child));
+    }
+    
+    return getAsyncThrows(parent, paths, transcoder);
   }
   
-  private <T> List<T> getAsyncThrows(final String parent, final Collection<String> children, final Transcoder<T> transcoder) throws Exception {
-    final List<T> objects = Lists.newArrayListWithCapacity(children.size());
+  private <T> List<T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) throws Exception {
+    final List<T> objects = Lists.newArrayListWithCapacity(paths.size());
     
-    if (children.isEmpty()) {
+    if (paths.isEmpty()) {
       return objects;
     }
     
-    final CountDownLatch latch = new CountDownLatch(children.size());
+    final CountDownLatch latch = new CountDownLatch(paths.size());
     final AtomicInteger missing = new AtomicInteger();
     
     final BackgroundCallback callback = new BackgroundCallback() {
@@ -69,24 +75,22 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     
     final long start = System.currentTimeMillis();
     
-    for (String child : children) {
-      final String path = ZKPaths.makePath(parent, child);
-      
+    for (String path : paths) {
       curator.getData().inBackground(callback).forPath(path);
     }
     
     if (!latch.await(zkAsyncTimeout, TimeUnit.MILLISECONDS)) {
-      throw new IllegalStateException(String.format("Timed out waiting response for objects from %s, waited %s millis", parent, zkAsyncTimeout)); 
+      throw new IllegalStateException(String.format("Timed out waiting response for objects from %s, waited %s millis", pathNameForLogs, zkAsyncTimeout)); 
     }
     
-    LOG.trace(String.format("Fetched %s objects from %s (missing %s) in %s", objects.size(), parent, missing.intValue(), DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start)));
+    LOG.trace(String.format("Fetched %s objects from %s (missing %s) in %s", objects.size(), pathNameForLogs, missing.intValue(), DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start)));
     
     return objects;
   }
   
-  public <T> List<T> getAsync(final String parent, final Collection<String> children, final Transcoder<T> transcoder) {
+  public <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return getAsyncThrows(parent, children, transcoder);
+      return getAsyncThrows(pathNameForLogs, paths, transcoder);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }

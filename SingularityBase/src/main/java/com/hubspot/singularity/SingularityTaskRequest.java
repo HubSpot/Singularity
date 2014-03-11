@@ -8,37 +8,39 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 public class SingularityTaskRequest extends SingularityJsonObject implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
-  private final SingularityPendingTaskId pendingTaskId;
-  private final Optional<String> maybeCmdLineArgs;
-    
+  private final SingularityDeploy deploy;
+  private final SingularityPendingTask pendingTask;
+  
+  public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
+    return objectMapper.readValue(bytes, SingularityTaskRequest.class);
+  }
+  
   @JsonCreator
-  public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs) {
+  public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("deploy") SingularityDeploy deploy, @JsonProperty("pendingTask") SingularityPendingTask pendingTask) {
     this.request = request;
-    this.pendingTaskId = pendingTaskId;
-    this.maybeCmdLineArgs = cmdLineArgs;
+    this.deploy = deploy;
+    this.pendingTask = pendingTask;
   }
   
   public SingularityRequest getRequest() {
     return request;
   }
   
-  // TODO next data migration, this should move to being SingularityPendingTask
-  public SingularityPendingTaskId getPendingTaskId() {
-    return pendingTaskId;
+  public SingularityDeploy getDeploy() {
+    return deploy;
   }
   
-  public Optional<String> getMaybeCmdLineArgs() {
-    return maybeCmdLineArgs;
+  public SingularityPendingTask getPendingTask() {
+    return pendingTask;
   }
-
+  
   @Override
   public int hashCode() {
-    return Objects.hash(pendingTaskId);
+    return Objects.hash(pendingTask.getTaskId());
   }
 
   @Override
@@ -50,26 +52,22 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
     if (getClass() != obj.getClass())
       return false;
     SingularityTaskRequest other = (SingularityTaskRequest) obj;
-    if (pendingTaskId == null) {
-      if (other.pendingTaskId != null)
+    if (pendingTask == null) {
+      if (other.pendingTask != null)
         return false;
-    } else if (!pendingTaskId.equals(other.pendingTaskId))
+    } else if (!pendingTask.getTaskId().equals(other.pendingTask.getTaskId()))
       return false;
     return true;
   }
 
   @Override
   public int compareTo(SingularityTaskRequest o) {
-    return this.getPendingTaskId().compareTo(o.getPendingTaskId());
-  }
-  
-  public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
-    return objectMapper.readValue(bytes, SingularityTaskRequest.class);
+    return this.getPendingTask().getTaskId().compareTo(o.getPendingTask().getTaskId());
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskRequest [request=" + request + ", pendingTaskId=" + pendingTaskId + ", maybeCmdLineArgs=" + maybeCmdLineArgs + "]";
-  }
+    return "SingularityTaskRequest [request=" + request + ", deploy=" + deploy + ", pendingTask=" + pendingTask + "]";
+  }  
 
 }

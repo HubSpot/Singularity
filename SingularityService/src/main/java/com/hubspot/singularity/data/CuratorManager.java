@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.GetDataBuilder;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
@@ -41,16 +42,20 @@ public abstract class CuratorManager {
     return 0;
   }
   
-  protected boolean exists(String path) {
+  protected Optional<Stat> checkExists(String path) {
     try {
-      Stat s = curator.checkExists().forPath(path);
-      return s != null;
+      Stat stat = curator.checkExists().forPath(path);
+      return Optional.of(stat);
     } catch (NoNodeException nne) {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
     
-    return false;
+    return Optional.absent();
+  }
+  
+  protected boolean exists(String path) {
+    return checkExists(path).isPresent();
   }
   
   protected List<String> getChildren(String root) {
@@ -94,9 +99,15 @@ public abstract class CuratorManager {
     }
   }
   
-  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
+  protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder) {
     try {
-      byte[] data = curator.getData().forPath(path);
+      GetDataBuilder bldr = curator.getData();
+      
+      if (stat.isPresent()) {
+        bldr.storingStatIn(stat.get());
+      }
+      
+      byte[] data = bldr.forPath(path);
       
       if (data == null || data.length == 0) {
         return Optional.absent();
@@ -108,6 +119,10 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+  
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
+    return getData(path, Optional.<Stat> absent(), transcoder);
   }
   
   protected Optional<String> getStringData(String path) {

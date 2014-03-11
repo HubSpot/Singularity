@@ -19,10 +19,10 @@ import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
-import com.hubspot.singularity.BadRequestException;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
@@ -49,7 +49,7 @@ public class SandboxResource {
     try {
       taskIdObj = SingularityTaskId.fromString(taskId);
     } catch (InvalidSingularityTaskIdException invalidException) {
-      throw new BadRequestException(invalidException.getMessage());
+      throw WebExceptions.badRequest(invalidException.getMessage());
     }
     
     final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId, true);
@@ -61,7 +61,7 @@ public class SandboxResource {
     if (!maybeTaskHistory.get().getDirectory().isPresent()) {
       logSupport.checkDirectory(taskIdObj);
       
-      throw new BadRequestException(String.format("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId));
+      throw WebExceptions.badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }
     
     return maybeTaskHistory.get();

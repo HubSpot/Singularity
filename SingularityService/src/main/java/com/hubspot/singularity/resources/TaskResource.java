@@ -21,9 +21,9 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.TaskRequestManager;
 import com.sun.jersey.api.NotFoundException;
 
 @Path("/tasks")
@@ -31,13 +31,13 @@ import com.sun.jersey.api.NotFoundException;
 public class TaskResource {
   
   private final TaskManager taskManager;
-  private final RequestManager requestManager;
   private final SlaveManager slaveManager;  
+  private final TaskRequestManager taskRequestManager;
   
   @Inject
-  public TaskResource(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager) {
     this.taskManager = taskManager;
-    this.requestManager = requestManager;
+    this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
   }
   
@@ -47,7 +47,7 @@ public class TaskResource {
   public List<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getScheduledTasks();
     
-    return requestManager.getTaskRequests(tasks);
+    return taskRequestManager.getTaskRequests(tasks);
   }
   
   @GET

@@ -95,9 +95,9 @@ public class SingularityRackManager extends SingularitySchedulerBase {
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
-    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks())) {
+    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks())) {
       if (taskId.getHost().equals(host)) {
-        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTaskId(), host, taskId));
+        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTask().getTaskId(), host, taskId));
         
         return RackCheckState.ALREADY_ON_SLAVE;
       }
@@ -112,7 +112,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
 
     boolean isRackOk = numOnRack < numPerRack;
   
-    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTaskId(), rackId, numPerRack, numOnRack));
+    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTask().getTaskId(), rackId, numPerRack, numOnRack));
     
     if (isRackOk) {
       return RackCheckState.RACK_OK;

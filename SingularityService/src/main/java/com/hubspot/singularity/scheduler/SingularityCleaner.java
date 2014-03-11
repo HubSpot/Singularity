@@ -40,6 +40,7 @@ public class SingularityCleaner extends SingularitySchedulerBase {
     this.killTasksAfterNewestTaskIsAtLeastMillis = TimeUnit.SECONDS.toMillis(configuration.getKillDecomissionedTasksAfterNewTasksSeconds());
   }
 
+  // TODO review this logic along with deploy logic., what types should work how?
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
     if (taskCleanup.getCleanupTypeEnum() == TaskCleanupType.USER_REQUESTED) {
       LOG.debug(String.format("Killing a task %s because it was user requested", taskCleanup));
@@ -54,7 +55,9 @@ public class SingularityCleaner extends SingularitySchedulerBase {
       return true;
     }
     
-    List<SingularityTaskId> matchingTasks = getMatchingActiveTaskIds(taskCleanup.getRequestId(), activeTaskIds, cleaningTasks);
+    SingularityTaskId taskId = SingularityTaskId.fromString(taskCleanup.getTaskId());
+    
+    List<SingularityTaskId> matchingTasks = getMatchingActiveTaskIds(taskCleanup.getRequestId(), taskId.getDeployId(), activeTaskIds, cleaningTasks);
     
     final long now = System.currentTimeMillis();
     long newestTaskDurationMillis = Long.MAX_VALUE;

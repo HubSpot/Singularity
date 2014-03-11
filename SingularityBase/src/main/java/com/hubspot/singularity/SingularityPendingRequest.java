@@ -13,22 +13,24 @@ public class SingularityPendingRequest extends SingularityJsonObject {
   }
   
   private final String requestId;
+  private final Optional<String> deployId;
   private final long timestamp;
   private final Optional<String> user;
   private final PendingType pendingType;
   private final Optional<String> cmdLineArgs;
   
   @JsonCreator
-  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") String pendingType) {
-    this(requestId, timestamp, cmdLineArgs, user, PendingType.valueOf(pendingType));
+  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") Optional<String> deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") String pendingType) {
+    this(requestId, deployId, timestamp, cmdLineArgs, user, PendingType.valueOf(pendingType));
   }
   
-  public SingularityPendingRequest(String requestId, PendingType pendingType) {
-    this(requestId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
+  public SingularityPendingRequest(String requestId, Optional<String> deployId, PendingType pendingType) {
+    this(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
   }
   
-  public SingularityPendingRequest(String requestId, long timestamp, Optional<String> cmdLineArgs, Optional<String> user, PendingType pendingType) {
+  public SingularityPendingRequest(String requestId, Optional<String> deployId, long timestamp, Optional<String> cmdLineArgs, Optional<String> user, PendingType pendingType) {
     this.requestId = requestId;
+    this.deployId = deployId;
     this.timestamp = timestamp;
     this.user = user;
     this.cmdLineArgs = cmdLineArgs;
@@ -41,6 +43,10 @@ public class SingularityPendingRequest extends SingularityJsonObject {
 
   public Optional<String> getCmdLineArgs() {
     return cmdLineArgs;
+  }
+  
+  public Optional<String> getDeployId() {
+    return deployId;
   }
 
   public Optional<String> getUser() {
@@ -66,7 +72,7 @@ public class SingularityPendingRequest extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityPendingRequest [requestId=" + requestId + ", timestamp=" + timestamp + ", user=" + user + ", pendingType=" + pendingType + ", cmdLineArgs=" + cmdLineArgs + "]";
+    return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + ", pendingType=" + pendingType + ", cmdLineArgs=" + cmdLineArgs + "]";
   }
   
 }
