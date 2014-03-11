@@ -16,5 +16,9 @@
         </tbody>
     </table>
 {{else}}
-    <div class="empty-table-message"><p>No pending requests</p></div>
+    {{#if collectionSynced}}
+        <div class="empty-table-message"><p>No pending requests</p></div>
+    {{else}}
+        <div class="page-loader centered cushy"></div>
+    {{/if}}
 {{/if}}
