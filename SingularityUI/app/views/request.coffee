@@ -14,14 +14,29 @@ class RequestView extends View
 
     initialize: ->
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
-        @requestHistory.fetch().done =>
+        @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
+
+    fetch: ->
+        promises = []
+
+        @requestHistory.fetched = false
+        @requestTasksActive.fetched = false
+
+        promises.push @requestHistory.fetch().done =>
             @requestHistory.fetched = true
             @render()
 
-        @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-        @requestTasksActive.fetch().done =>
+        promises.push @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
             @render()
+
+        $.when(promises...)
+
+    refresh: ->
+        @fetch().done =>
+            @render()
+
+        @
 
     render: ->
         context =
@@ -174,11 +189,34 @@ class RequestView extends View
         @$el.find('[data-action="run-request-now"]').unbind('click').on 'click', (e) =>
             requestModel = new Request id: $(e.target).data('request-id')
 
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to run a task for this request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    @fetchActiveTasks()
+            requestType = $(e.target).data 'request-type'
+
+            dialogOptions =
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
+                    vex.dialog.buttons.NO
+                ]
+                callback: (confirmedOrPromptData) =>
+                    # Handle case of prompt submitted empty (since it's optional)
+                    if _.isObject(confirmedOrPromptData) and confirmedOrPromptData?.vex is ''
+                        confirmedOrPromptData = true
+
+                    return unless confirmedOrPromptData
+
+                    requestModel.run(confirmedOrPromptData).done =>
+                        setTimeout =>
+                            @refresh()
+                        , 3000
+
+            if requestType is 'on-demand'
+                dialogType = vex.dialog.prompt
+                dialogOptions.message += '<p>Additional command line input (optional):</p>'
+            else
+                dialogType = vex.dialog.confirm
+
+            dialogType dialogOptions
+
 
         @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
             taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
