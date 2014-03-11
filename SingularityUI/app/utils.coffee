@@ -44,6 +44,17 @@ class Utils
                 width: 800
             message: "<pre>#{ utils.htmlEncode lookupObject[objectId].JSONString }</pre>"
 
+    @scrollPreventDefaultAtBounds: ($scroll) ->
+        $scroll.bind 'mousewheel', (event, delta) ->
+            event.stopPropagation()
+
+            if (@scrollTop is ($scroll[0].scrollHeight - $scroll.outerHeight()) and delta < 0) or (@scrollTop is 0 and delta > 0)
+                event.preventDefault()
+
+    @scrollPreventAlways: ($scroll) ->
+        $scroll.parent().bind 'mousewheel', (event) ->
+            event.preventDefault()
+
     @htmlEncode: (value) ->
         $('<div>').text(value).html()
 
