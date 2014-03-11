@@ -20,7 +20,7 @@
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.2.19</version>
+  <version>0.2.20</version>
   <packaging>pom</packaging>
 
   <repositories>
