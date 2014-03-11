@@ -1,0 +1,50 @@
+table(height="75px", width="100%", style="border: none")
+  tr
+    td(bgcolor="#FFA500")
+      font(size=5)
+        span(style="font-family: Helvetica; padding:10px") 
+          span(style="color: white") ! #{request_id} is paused 
+          || Requires manual intervention
+
+p <b> Request: </b> #{request_id} is paused.
+p It has failed #{num_failures} times consecutively and will not run again until it is manually unpaused or updated.   
+p: b Task Update History:
+
+table(style="border:1px solid black; border-collapse: collapse;")
+  tr
+    th(style="border:1px solid black; border-collapse: collapse;") DATETIME
+    th(style="border:1px solid black; border-collapse: collapse;") STATUS UPDATE
+  each task_update, i in task_updates
+    tr
+      td(style="border:1px solid black; border-collapse: collapse;")= task_update.date
+      td(style="border:1px solid black; border-collapse: collapse;")= task_update.update
+
+p: b Request Update History
+
+table(style="border:1px solid black; border-collapse: collapse;")
+  tr
+    th(style="border:1px solid black; border-collapse: collapse;") TIME
+    th(style="border:1px solid black; border-collapse: collapse;") STATUS UPDATE
+    th(style="border:1px solid black; border-collapse: collapse;") USER
+    th(style="border:1px solid black; border-collapse: collapse;") TASKID
+
+  each request_update, i in request_history
+    tr
+      td(style="border:1px solid black; border-collapse: collapse;")= request_update.date
+      td(style="border:1px solid black; border-collapse: collapse;")= request_update.state
+      td(style="border:1px solid black; border-collapse: collapse;")= request_update.user
+      td(style="border:1px solid black; border-collapse: collapse;")= request_update.request_id
+      
+p: b StdOut:
+ul
+  for line in stdout
+    li= line
+  else
+    li No updates
+    
+p: b StdErr:
+ul
+  for line in stderr
+    li= line
+  else
+    li No updates               

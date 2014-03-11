@@ -291,7 +291,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       
       // TODO how to handle this if there are running tasks that are working?
       if (shouldPause(request)) {
-        mailer.sendRequestPausedMail(request);
+        mailer.sendRequestPausedMail(taskId, request);
         requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), request.getId()));
         return;
       }
