@@ -40,9 +40,14 @@ class Utils
             lookupObject = app.allRequests
 
         vex.dialog.alert
-            contentCSS:
-                width: 800
+            buttons: [
+                $.extend({}, vex.dialog.buttons.YES, text: 'Done')
+            ]
+            className: 'vex-theme-default vex-theme-default-json-view'
             message: "<pre>#{ utils.htmlEncode lookupObject[objectId].JSONString }</pre>"
+            afterOpen: ($vexContent) ->
+                utils.scrollPreventDefaultAtBounds $vexContent.find('pre')
+                utils.scrollPreventAlways $vexContent.parent()
 
     @scrollPreventDefaultAtBounds: ($scroll) ->
         $scroll.bind 'mousewheel', (event, delta) ->
