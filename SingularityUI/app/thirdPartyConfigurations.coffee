@@ -4,6 +4,10 @@ _.mixin _.string.exports()
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
 
+# Set Vex dialog default afterOpen to include scroll prevention
+vex.dialog.defaultOptions.afterOpen = ($vexContent) ->
+    utils.scrollPreventDefaultAtBounds $vexContent.parent()
+
 # Time out requests within 10 seconds
 $.ajaxSetup
     timeout: 10 * 1000
