@@ -2,23 +2,23 @@ table(height="85px", width="100%", style="border: none")
   tr
     td(bgcolor="#FFA500")
       font(size=5)
-        span(style="font-family: Helvetica; padding: 10px") 
-          span(style="color: white") ! #{request_id} has failed 
+        span(style="font-family: Helvetica; padding: 10px")
+          span(style="color: white") ! #{request_id} has failed
           if !taskEverRan || taskStateLost
             || This is likely an infrastructure issue; no action is required
           else
-            <span style="color: white"> on its own </span> | Consider investigating your process 
-      font(size=3) 
+            <span style="color: white"> on its own </span> | Consider investigating your process
+      font(size=3)
         span(style="padding: 10px") <br><br> - Singularity will attempt to restart your task
 
 p <b> Request_id: </b> #{request_id}
 p <b> task id: </b> #{task_id}
-p <b> status: </b> #{status}   
+p <b> status: </b> #{status}
 p #{singularity_task_link}
- 
+
 if taskStateFailed
   if taskEverRan
-    p<b> Recommended course of action: </b> Process terminated with non-zero exit code. <i> This is not an infrastructure issue </i>. You should consider investigating the task. 
+    p<b> Recommended course of action: </b> Process terminated with non-zero exit code. <i> This is not an infrastructure issue </i>. You should consider investigating the task.
 if taskStateLost
   if taskEverRan
     p <b> Recommended course of action: </b> Task lost while running. This is likely an infrastructure issue. It is possible, though unlikely, that the task may still be running.
@@ -43,10 +43,10 @@ ul
     li= line
   else
     li No updates
-    
+
 p: b StdErr:
 ul
   for line in stderr
     li= line
   else
-    li No updates                
+    li No updates

@@ -2,12 +2,12 @@ table(height="75px", width="100%", style="border: none")
   tr
     td(bgcolor="#FFA500")
       font(size=5)
-        span(style="font-family: Helvetica; padding:10px") 
-          span(style="color: white") ! #{request_id} is paused 
+        span(style="font-family: Helvetica; padding:10px")
+          span(style="color: white") ! #{request_id} is paused
           || Requires manual intervention
 
 p <b> Request: </b> #{request_id} is paused.
-p It has failed #{num_failures} times consecutively and will not run again until it is manually unpaused or updated.   
+p It has failed #{num_failures} times consecutively and will not run again until it is manually unpaused or updated.
 p: b Task Update History:
 
 table(style="border:1px solid black; border-collapse: collapse;")
@@ -34,17 +34,17 @@ table(style="border:1px solid black; border-collapse: collapse;")
       td(style="border:1px solid black; border-collapse: collapse;")= request_update.state
       td(style="border:1px solid black; border-collapse: collapse;")= request_update.user
       td(style="border:1px solid black; border-collapse: collapse;")= request_update.request_id
-      
+
 p: b StdOut:
 ul
   for line in stdout
     li= line
   else
     li No updates
-    
+
 p: b StdErr:
 ul
   for line in stderr
     li= line
   else
-    li No updates               
+    li No updates
