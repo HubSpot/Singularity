@@ -88,6 +88,10 @@
     <div class="row-fluid">
         <div class="span12">
             <dl>
+                {{#if taskHistory.task.name }}
+                    <dt>Task Name</dt>
+                    <dd><pre>{{ taskHistory.task.name }}</pre></dd>
+                {{/if}}
                 {{#if taskHistory.task.id }}
                     <dt>Task ID</dt>
                     <dd><pre>{{ taskHistory.task.id }}</pre></dd>
