@@ -1,23 +1,30 @@
-table(height="75px", width="100%", style="border: none")
-  tr
-    td(bgcolor="#FFA500")
-      font(size=5)
-        span(style="font-family: Helvetica; padding: 10px")
-          span(style="color: white") ! #{request_id} has not started
-          || It will be killed and restarted
+div(style="background: #eee")
+  div(style="background: #fff; width: 730px; padding: 20px; max-width: 100%; color: #444; border-radius: 5px; margin: 0 auto")
+    table(height="85px", width="100%", style="border: none")
+      tr
+        td(style="border-top: 10px solid #DF4210; padding: 20px; background: #eee; border-radius: 4px")
 
-p <b> Request_id: </b> #{request_id}
-p <b> Task: </b> #{task_id} has not started yet
-p It has been running for #{duration_running}.
-p It will be killed after #{duration_left} and a new one will take its place.
-p #{singularity_task_link}
+          font(size=5)
+            span(style="font-family: Helvetica; padding: 10px")
+              <p>#{request_id} has not started.</p>
 
-p: b Task Update History:
-table(style="border:1px solid black; border-collapse: collapse;")
-  tr
-    th(style="border:1px solid black; border-collapse: collapse;") DATETIME
-    th(style="border:1px solid black; border-collapse: collapse;") STATUS UPDATE
-  each task_update, i in task_updates
-    tr
-      td(style="border:1px solid black; border-collapse: collapse;")= task_update.date
-      td(style="border:1px solid black; border-collapse: collapse;")= task_update.update
+          font(size=3)
+            span(style="padding: 10px") <br><br> It will be killed and restarted
+
+    p <b>Request ID: </b> #{request_id}
+    p <b>Task ID: </b> #{task_id}
+    p (Task has not started yet.)
+
+    p It has been running for #{duration_running}.
+    p It will be killed after #{duration_left} and a new one will take its place.
+    p #{singularity_task_link}
+
+    p: b Task Update History
+    table(style="border: 0; border-collapse: collapse; background: #eee")
+      tr
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
+      each task_update, i in task_updates
+        tr
+          td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.update
+          td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.date
