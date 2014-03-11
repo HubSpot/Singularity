@@ -18,15 +18,16 @@ class TaskHistory extends Model
         taskHistory.task.startedAt = taskHistory.task.taskId.startedAt
         taskHistory.task.startedAtHuman = utils.humanTimeAgo taskHistory.task.taskId.startedAt
         taskHistory.task.rack = taskHistory.task.taskId.rackId
-        taskHistory.task.isFinished = false
+        taskHistory.task.isStopped = false
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
             taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
             taskUpdate.statusMessage = taskUpdate.statusMessage ? 'No status message available'
             taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
-            if taskUpdate.statusUpdate is 'TASK_FINISHED'
-                taskHistory.task.isFinished = true
+            if taskUpdate.statusUpdate in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
+                log 'woot...', taskUpdate.statusUpdate
+                taskHistory.task.isStopped = true
 
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
         taskHistory.taskUpdates.reverse()
