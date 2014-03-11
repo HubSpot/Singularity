@@ -15,9 +15,9 @@
                 <p class="lead">
                     {{ statusUpdateHuman }} as of
                     {{ timestampHuman }}
-                    {{#ifEqual statusMessage "No status message available"}}{{else}}
+                    {{#if statusMessage}}
                         ({{ statusMessage }})
-                    {{/ifEqual}}
+                    {{/if}}
                 </p>
             {{/if}}
         {{/eachWithFn}}
@@ -43,7 +43,13 @@
                         {{#eachWithFn taskHistory.taskUpdates}}
                             <tr>
                                 <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
-                                <td>{{ statusMessage }}</td>
+                                <td>
+                                    {{#if statusMessage}}
+                                        {{ statusMessage }}
+                                    {{else}}
+                                        &mdash;
+                                    {{/if}}
+                                </td>
                                 <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                             </tr>
                         {{/eachWithFn}}

@@ -22,7 +22,7 @@ class TaskHistory extends Model
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
             taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
-            taskUpdate.statusMessage = taskUpdate.statusMessage ? 'No status message available'
+            taskUpdate.statusMessage = taskUpdate.statusMessage ? ''
             taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
             if taskUpdate.statusUpdate in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
