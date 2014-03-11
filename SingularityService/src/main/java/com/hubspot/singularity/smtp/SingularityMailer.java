@@ -92,9 +92,9 @@ public class SingularityMailer implements SingularityCloseable {
     }
 
     try {
-      this.taskFailedTemplate = Jade4J.getTemplate("./src/main/resources/templates/task_failed.jade");
-      this.requestPausedTemplate = Jade4J.getTemplate("./src/main/resources/templates/request_paused.jade");
-      this.taskNotRunningWarningTemplate = Jade4J.getTemplate("./src/main/resources/templates/task_not_running_warning.jade");
+      this.taskFailedTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/task_failed.jade");
+      this.requestPausedTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/request_paused.jade");
+      this.taskNotRunningWarningTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/task_not_running_warning.jade");
     } catch (IOException e) {
       Throwables.propagate(e);
     }
