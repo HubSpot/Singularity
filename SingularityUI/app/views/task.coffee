@@ -62,6 +62,8 @@ class TaskView extends View
             taskFilesFetchDone: @taskFilesFetchDone
             taskFilesSandboxUnavailable: @taskFilesSandboxUnavailable
 
+        context.taskIdStringLengthTens = Math.floor(context.taskHistory.task.id.length / 10) * 10
+
         partials =
             partials:
                 filesTable: require './templates/filesTable'

@@ -1,6 +1,6 @@
 <header class="jumbotron subhead" id="overview">
     <h3><a href="/singularity/request/{{ request.id }}" data-route="request/{{ request.id }}">{{#hardBreak request.id}}{{/hardBreak}}</a></h3>
-    <h1>
+    <h1 data-string-length-tens="{{ taskIdStringLengthTens }}">
         {{#hardBreak taskHistory.task.id}}{{/hardBreak}}
         <div class="header-actions">
             <a data-task-id="{{ taskHistory.task.id }}" data-action="viewObjectJSON">JSON</a>
