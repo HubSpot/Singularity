@@ -3,18 +3,18 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>User</th>
-                <th>Timestamp</th>
-                <th>Cleaning Type</th>
+                <th class="visible-desktop">User</th>
+                <th class="hidden-phone">Timestamp</th>
+                <th class="visible-desktop">Cleaning Type</th>
             </tr>
         </thead>
         <tbody>
             {{#eachWithFn requests}}
                 <tr data-request-id="{{ id }}">
                     <td>{{#hardBreak id}}{{/hardBreak}}</td>
-                    <td>{{ user }}</td>
-                    <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
-                    <td>{{ cleanupType }}</td>
+                    <td class="visible-desktop">{{ user }}</td>
+                    <td class="hidden-phone" data-value="{{ timestamp }}">{{ timestampHuman }}</td>
+                    <td class="visible-desktop">{{ cleanupType }}</td>
                 </tr>
             {{/eachWithFn}}
         </tbody>
