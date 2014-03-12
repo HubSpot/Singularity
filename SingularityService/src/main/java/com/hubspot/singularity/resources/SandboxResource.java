@@ -58,7 +58,7 @@ public class SandboxResource {
       throw new NotFoundException(String.format("Task %s did not have a history", taskId));
     }
 
-    if (!maybeTaskHistory.get().getDirectory().isPresent()) {
+    if (!maybeTaskHistory.get().getTaskState().getDirectory().isPresent()) {
       logSupport.checkDirectory(taskIdObj);
       
       throw WebExceptions.badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
@@ -73,7 +73,7 @@ public class SandboxResource {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), path).toString();
+    final String fullPath = new File(history.getTaskState().getDirectory().get(), path).toString();
 
     return sandboxManager.browse(slaveHostname, fullPath);
   }
@@ -85,7 +85,7 @@ public class SandboxResource {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), path).toString();
+    final String fullPath = new File(history.getTaskState().getDirectory().get(), path).toString();
 
     final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
 
@@ -102,7 +102,7 @@ public class SandboxResource {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), path).toString();
+    final String fullPath = new File(history.getTaskState().getDirectory().get(), path).toString();
 
     try {
       final URI downloadUri = new URI("http", null, slaveHostname, 5051, "/files/download.json", String.format("path=%s", fullPath), null);

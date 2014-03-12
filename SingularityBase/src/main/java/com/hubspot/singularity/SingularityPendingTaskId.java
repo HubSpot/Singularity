@@ -63,7 +63,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     
     return new SingularityPendingTaskId(requestId, deployId, nextRunAt, instanceNo, pendingType);
   }
-
+ 
   public String toString() {
     return String.format("%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getNextRunAt(), getInstanceNo(), getPendingType());
   }

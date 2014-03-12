@@ -29,7 +29,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.WebhookManager;
 import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
-import com.hubspot.singularity.scheduler.SingularityScheduleStateCache;
+import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
 public class SingularityMesosScheduler implements Scheduler {
@@ -45,11 +45,11 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityRackManager rackManager;
   private final SingularityLogSupport logSupport;
 
-  private final Provider<SingularityScheduleStateCache> stateCacheProvider;
+  private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularityScheduleStateCache> stateCacheProvider) {
+      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
@@ -77,7 +77,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     final long start = System.currentTimeMillis();
     
-    final SingularityScheduleStateCache stateCache = stateCacheProvider.get();
+    final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
     
     scheduler.checkForDecomissions(stateCache);
     scheduler.drainPendingQueue(stateCache);
@@ -127,7 +127,7 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
   }
 
-  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularityScheduleStateCache stateCache) {
+  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularitySchedulerStateCache stateCache) {
     for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
 

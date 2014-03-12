@@ -89,7 +89,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     }
   }
   
-  public void checkForDecomissions(SingularityScheduleStateCache stateCache) {
+  public void checkForDecomissions(SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
     
     final Set<String> requestIdsToReschedule = Sets.newHashSet();
@@ -138,7 +138,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     LOG.info(String.format("Found %s decomissioning slaves, %s decomissioning racks, rescheduling %s requests and scheduling %s tasks for cleanup in %sms", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), System.currentTimeMillis() - start));
   }
   
-  public void drainPendingQueue(final SingularityScheduleStateCache stateCache) {
+  public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
     
     final List<SingularityPendingRequest> pendingRequests = requestManager.getPendingRequests();
@@ -257,7 +257,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return Optional.of(activeDeployMarker.get().getDeployId());
   }
   
-  private int scheduleTasks(SingularityScheduleStateCache stateCache, SingularityRequest request, SingularityPendingRequest pendingRequest) {
+  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, SingularityPendingRequest pendingRequest) {
     deleteScheduledTasks(stateCache.getScheduledTasks(), request.getId());
     
     Optional<String> deployId = getDeployId(pendingRequest);
@@ -296,7 +296,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return numMissingInstances;
   }
   
-  private boolean wasDecomissioning(SingularityTaskId taskId, Optional<SingularityTask> maybeActiveTask, SingularityScheduleStateCache stateCache) {
+  private boolean wasDecomissioning(SingularityTaskId taskId, Optional<SingularityTask> maybeActiveTask, SingularitySchedulerStateCache stateCache) {
     if (!maybeActiveTask.isPresent()) {
       return false;
     }
@@ -304,7 +304,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().getValue()) || stateCache.isRackDecomissioning(taskId.getRackId());
   }
   
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, String stringTaskId, TaskState state, SingularityScheduleStateCache stateCache) {
+  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, String stringTaskId, TaskState state, SingularitySchedulerStateCache stateCache) {
     SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
  
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());

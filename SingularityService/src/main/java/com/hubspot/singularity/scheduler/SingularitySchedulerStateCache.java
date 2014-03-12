@@ -14,7 +14,7 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 
-public class SingularityScheduleStateCache {
+public class SingularitySchedulerStateCache {
 
   private final TaskManager taskManager;
   
@@ -30,7 +30,7 @@ public class SingularityScheduleStateCache {
   private Optional<List<SingularityTaskId>> cleaningTasks;
   
   @Inject
-  public SingularityScheduleStateCache(TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager) {
+  public SingularitySchedulerStateCache(TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager) {
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;

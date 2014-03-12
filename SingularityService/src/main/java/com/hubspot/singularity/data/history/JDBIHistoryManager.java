@@ -17,9 +17,11 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskState;
 
 public class JDBIHistoryManager implements HistoryManager {
 
@@ -141,7 +143,7 @@ public class JDBIHistoryManager implements HistoryManager {
     }
     
     try {
-      return Optional.of(new SingularityTaskHistory(updates, helper.getTimestamp(), SingularityTask.fromBytes(helper.getTaskData(), objectMapper), helper.getDirectory()));
+      return Optional.of(new SingularityTaskHistory(updates, new SingularityTaskState(helper.getTimestamp(), helper.getDirectory(), Optional.<SingularityTaskHealthcheckResult> absent()), SingularityTask.fromBytes(helper.getTaskData(), objectMapper)));
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

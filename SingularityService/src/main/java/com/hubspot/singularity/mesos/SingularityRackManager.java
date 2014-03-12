@@ -25,7 +25,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.scheduler.SingularityScheduleStateCache;
+import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.scheduler.SingularitySchedulerBase;
 
 public class SingularityRackManager extends SingularitySchedulerBase {
@@ -74,7 +74,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     return getHost(offer.getHostname());
   }
   
-  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularityScheduleStateCache stateCache) {
+  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
     final String host = getSlaveHost(offer);
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();

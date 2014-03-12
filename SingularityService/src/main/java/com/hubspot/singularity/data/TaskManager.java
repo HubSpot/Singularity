@@ -1,14 +1,20 @@
 package com.hubspot.singularity.data;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException.NodeExistsException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -18,9 +24,11 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 
 public class TaskManager extends CuratorAsyncManager {
@@ -28,20 +36,34 @@ public class TaskManager extends CuratorAsyncManager {
   private final ObjectMapper objectMapper;
   private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
   private final SingularityTaskTranscoder taskTranscoder;
+  private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
   
   private final static String TASKS_ROOT = "/tasks";
   
   private final static String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private final static String SCHEDULED_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
+  
+  private final static String STATE_KEY = "STATE";
+  private final static String UPDATES_PATH = "/updates";
     
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder) {
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
   
     this.taskTranscoder = taskTranscoder;
     this.taskCleanupTranscoder = taskCleanupTranscoder;
+    this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.objectMapper = objectMapper;
+  }
+  
+  // TODO this.
+  private String getStatePath(String taskId) {
+    return ZKPaths.makePath(getActivePath(taskId), STATE_KEY);
+  }
+  
+  private String getUpdatesPath(String taskId) {
+    return ZKPaths.makePath(getActivePath(taskId), UPDATES_PATH);
   }
   
   private String getActivePath(String taskId) {
@@ -129,6 +151,40 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     return tasks;
+  }
+  
+  public Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
+    List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
+    for (SingularityTaskId taskId : taskIds) {
+      paths.add(getUpdatesPath(taskId.getId()));
+    }
+    
+    List<SingularityTaskHistoryUpdate> updates = getAsync("updates_by_ids", paths, taskHistoryUpdateTranscoder);
+    
+    return Multimaps.index(updates, new Function<SingularityTaskHistoryUpdate, SingularityTaskId>() {
+
+      @Override
+      public SingularityTaskId apply(SingularityTaskHistoryUpdate input) {
+        return SingularityTaskId.fromString(input.getTaskId());
+      }
+      
+    });
+  }
+  
+  public List<SingularityTaskHistoryUpdate> getTaskHistoryForTask(String strTaskId) {
+    return getAsyncChildren(getActivePath(strTaskId), taskHistoryUpdateTranscoder);
+  }
+  
+  public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskId taskId, SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    try {
+      curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath(getUpdatesPath(taskId.getId()), taskHistoryUpdate.getAsBytes(objectMapper));
+    } catch (NodeExistsException nee) {
+      return SingularityCreateResult.EXISTED;
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+    
+    return SingularityCreateResult.CREATED;
   }
   
   public boolean isActiveTask(String taskId) {

@@ -24,6 +24,46 @@ public class SingularityDeployMarker extends SingularityJsonObject {
     this.user = user;
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((deployId == null) ? 0 : deployId.hashCode());
+    result = prime * result + ((requestId == null) ? 0 : requestId.hashCode());
+    result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
+    result = prime * result + ((user == null) ? 0 : user.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    SingularityDeployMarker other = (SingularityDeployMarker) obj;
+    if (deployId == null) {
+      if (other.deployId != null)
+        return false;
+    } else if (!deployId.equals(other.deployId))
+      return false;
+    if (requestId == null) {
+      if (other.requestId != null)
+        return false;
+    } else if (!requestId.equals(other.requestId))
+      return false;
+    if (timestamp != other.timestamp)
+      return false;
+    if (user == null) {
+      if (other.user != null)
+        return false;
+    } else if (!user.equals(other.user))
+      return false;
+    return true;
+  }
+
   public String getRequestId() {
     return requestId;
   }

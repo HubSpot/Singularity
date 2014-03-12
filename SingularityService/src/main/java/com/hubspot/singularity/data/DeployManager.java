@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -13,14 +14,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployState;
-import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityDeployMarkerTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityDeployStateTranscoder;
@@ -54,6 +57,10 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployStateTranscoder = deployStateTranscoder;
   }
   
+  public List<SingularityDeployMarker> getActiveDeploys() {
+    return getAsyncChildren(ACTIVE_ROOT, deployMarkerTranscoder);
+  }
+  
   private String getRequestDeployPath(String requestId) {
     return ZKPaths.makePath(BY_REQUEST_ROOT, requestId);
   }
@@ -66,14 +73,23 @@ public class DeployManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getRequestDeployPath(requestId), DEPLOY_STATE_KEY);
   }
   
-  public List<SingularityDeploy> getDeploys(Collection<SingularityPendingTask> pendingTasks) {
-    List<String> paths = Lists.newArrayListWithCapacity(pendingTasks.size());
+  public Map<SingularityDeployKey, SingularityDeploy> getDeploysForKeys(Collection<SingularityDeployKey> deployKeys) {
+    final List<String> paths = Lists.newArrayListWithCapacity(deployKeys.size());
     
-    for (SingularityPendingTask task : pendingTasks) {
-      paths.add(getDeployPath(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()));
+    for (SingularityDeployKey deployKey : deployKeys) {
+      paths.add(getDeployPath(deployKey.getRequestId(), deployKey.getDeployId()));
     }
     
-    return getAsync("deploys-by-id", paths, deployTranscoder);
+    final List<SingularityDeploy> deploys = getAsync("deploys-by-key", paths, deployTranscoder);
+     
+    final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
+      @Override
+      public SingularityDeployKey apply(SingularityDeploy input) {
+        return SingularityDeployKey.fromDepoy(input);
+      }  
+    });
+    
+    return deployKeyToDeploy;
   }
   
   public ConditionalPersistResult persistDeploy(SingularityDeployMarker deployMarker, SingularityDeploy deploy) {

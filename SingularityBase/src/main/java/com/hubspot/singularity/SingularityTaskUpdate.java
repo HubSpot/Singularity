@@ -11,6 +11,10 @@ public class SingularityTaskUpdate extends SingularityJsonObject {
   private final SingularityTask task;
   private final TaskState state;
 
+  public static SingularityTaskUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityTaskUpdate.class);
+  }
+  
   @JsonCreator
   public SingularityTaskUpdate(@JsonProperty("task") SingularityTask task, @JsonProperty("state") TaskState state) {
     this.task = task;
@@ -23,10 +27,6 @@ public class SingularityTaskUpdate extends SingularityJsonObject {
 
   public TaskState getState() {
     return state;
-  }
-  
-  public static SingularityTaskUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityTaskUpdate.class);
   }
 
   @Override

@@ -23,8 +23,12 @@ public class SingularityDeployBuilder {
   private List<String> uris;
   private Object executorData;
 
+  private String healthcheckUri;
+  private Long healthcheckIntervalSeconds;
+  private Long healthcheckTimeoutSeconds;
+
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, command, executor, resources, env, uris, metadata, executorData, id, version, timestamp);
+    return new SingularityDeploy(requestId, command, executor, resources, env, uris, metadata, executorData, id, version, timestamp, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds);
   }
 
   public String getRequestId() {
@@ -126,10 +130,39 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public String getHealthcheckUri() {
+    return healthcheckUri;
+  }
+
+  public SingularityDeployBuilder setHealthcheckUri(String healthcheckUri) {
+    this.healthcheckUri = healthcheckUri;
+    return this;
+  }
+
+  public Long getHealthcheckIntervalSeconds() {
+    return healthcheckIntervalSeconds;
+  }
+
+  public SingularityDeployBuilder setHealthcheckIntervalSeconds(Long healthcheckIntervalSeconds) {
+    this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
+    return this;
+  }
+
+  public Long getHealthcheckTimeoutSeconds() {
+    return healthcheckTimeoutSeconds;
+  }
+
+  public SingularityDeployBuilder setHealthcheckTimeoutSeconds(Long healthcheckTimeoutSeconds) {
+    this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
-        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
+        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
+        + healthcheckTimeoutSeconds + "]";
   }
+
   
 }

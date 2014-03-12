@@ -97,7 +97,7 @@ public class SingularityLogSupport implements SingularityCloseable {
   public void checkDirectory(final SingularityTaskId taskId) {
     final Optional<SingularityTaskHistory> maybeHistory = historyManager.getTaskHistory(taskId.getId(), false);
 
-    if (maybeHistory.isPresent() && maybeHistory.get().getDirectory().isPresent()) {
+    if (maybeHistory.isPresent() && maybeHistory.get().getTaskState().getDirectory().isPresent()) {
       LOG.debug(String.format("Already had a directory for task %s, skipping lookup", taskId.getId()));
       return;
     } else if (!maybeHistory.isPresent()) {

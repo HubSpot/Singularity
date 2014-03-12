@@ -30,6 +30,10 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final List<String> uris;
   private final Object executorData;
   
+  private final String healthcheckUri;
+  private final Long healthcheckIntervalSeconds;
+  private final Long healthcheckTimeoutSeconds;
+  
   public static SingularityDeployBuilder newBuilder() {
     return new SingularityDeployBuilder();
   }
@@ -41,7 +45,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   @JsonCreator
   public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("command") String command, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources,
       @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris, @JsonProperty("metadata") Map<String, String> metadata,
-      @JsonProperty("executorData") Object executorData, @JsonProperty("id") String id, @JsonProperty("version") String version, @JsonProperty("timestamp") Long timestamp) {
+      @JsonProperty("executorData") Object executorData, @JsonProperty("id") String id, @JsonProperty("version") String version, @JsonProperty("timestamp") Long timestamp, 
+      @JsonProperty("healthcheckUri") String healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Long healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Long healthcheckTimeoutSeconds) {
     this.requestId = requestId;
     
     this.command = command;
@@ -55,6 +60,10 @@ public class SingularityDeploy extends SingularityJsonObject {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+  
+    this.healthcheckUri = healthcheckUri;
+    this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
+    this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
   
   public SingularityDeployBuilder toBuilder() {
@@ -64,6 +73,10 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setResources(resources)
         .setExecutor(executor)
 
+        .setHealthcheckUri(healthcheckUri)
+        .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
+        .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
+        
         .setMetadata(metadata == null ? null : Maps.newHashMap(metadata))
         .setVersion(version)
         .setId(id)
@@ -117,10 +130,23 @@ public class SingularityDeploy extends SingularityJsonObject {
     return command;
   }
 
+  public String getHealthcheckUri() {
+    return healthcheckUri;
+  }
+
+  public Long getHealthcheckIntervalSeconds() {
+    return healthcheckIntervalSeconds;
+  }
+
+  public Long getHealthcheckTimeoutSeconds() {
+    return healthcheckTimeoutSeconds;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
-        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + "]";
+        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
+        + healthcheckTimeoutSeconds + "]";
   }
 
 }

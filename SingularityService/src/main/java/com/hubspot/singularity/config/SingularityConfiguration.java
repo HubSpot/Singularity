@@ -41,7 +41,13 @@ public class SingularityConfiguration extends Configuration {
   private long cleanupEverySeconds = 5;
   
   @NotNull
+  private long checkDeploysEverySeconds = 10;
+  
+  @NotNull
   private long saveStateEverySeconds = 60;
+  
+  @NotNull
+  private long defaultHealthcheckTimeoutSeconds = 5;
   
   @NotNull
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
@@ -64,84 +70,24 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long zookeeperAsyncTimeout = 5000;
   
-  public long getZookeeperAsyncTimeout() {
-    return zookeeperAsyncTimeout;
+  public long getCheckDeploysEverySeconds() {
+    return checkDeploysEverySeconds;
   }
 
-  public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
-    this.zookeeperAsyncTimeout = zookeeperAsyncTimeout;
+  public long getDefaultHealthcheckTimeoutSeconds() {
+    return defaultHealthcheckTimeoutSeconds;
   }
 
-  public int getLogFetchCoreThreads() {
-    return logFetchCoreThreads;
-  }
-
-  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
-    this.logFetchCoreThreads = logFetchCoreThreads;
-  }
-
-  public int getLogFetchMaxThreads() {
-    return logFetchMaxThreads;
-  }
-
-  public void setLogFetchMaxThreads(int logFetchMaxThreads) {
-    this.logFetchMaxThreads = logFetchMaxThreads;
-  }
-
-  public long getWarnAfterTasksDoNotRunDefaultSeconds() {
-    return warnAfterTasksDoNotRunDefaultSeconds;
-  }
-
-  public void setWarnAfterTasksDoNotRunDefaultSeconds(long warnAfterTasksDoNotRunDefaultSeconds) {
-    this.warnAfterTasksDoNotRunDefaultSeconds = warnAfterTasksDoNotRunDefaultSeconds;
-  }
-
-  public long getKillAfterTasksDoNotRunDefaultSeconds() {
-    return killAfterTasksDoNotRunDefaultSeconds;
-  }
-
-  public void setKillAfterTasksDoNotRunDefaultSeconds(long killAfterTasksDoNotRunDefaultSeconds) {
-    this.killAfterTasksDoNotRunDefaultSeconds = killAfterTasksDoNotRunDefaultSeconds;
-  }
-
-  public long getCloseWaitSeconds() {
-    return closeWaitSeconds;
-  }
-
-  public long getDeltaAfterWhichTasksAreLateMillis() {
-    return deltaAfterWhichTasksAreLateMillis;
-  }
-
-  public void setDeltaAfterWhichTasksAreLateMillis(long deltaAfterWhichTasksAreLateMillis) {
-    this.deltaAfterWhichTasksAreLateMillis = deltaAfterWhichTasksAreLateMillis;
-  }
-
-  public void setCloseWaitSeconds(long closeWaitSeconds) {
-    this.closeWaitSeconds = closeWaitSeconds;
-  }
-
-  public long getKillDecomissionedTasksAfterNewTasksSeconds() {
-    return killDecomissionedTasksAfterNewTasksSeconds;
-  }
-
-  public void setKillDecomissionedTasksAfterNewTasksSeconds(long killDecomissionedTasksAfterNewTasksSeconds) {
-    this.killDecomissionedTasksAfterNewTasksSeconds = killDecomissionedTasksAfterNewTasksSeconds;
-  }
-
-  public long getSaveStateEverySeconds() {
-    return saveStateEverySeconds;
-  }
-
-  public void setSaveStateEverySeconds(long saveStateEverySeconds) {
-    this.saveStateEverySeconds = saveStateEverySeconds;
+  public void setDefaultHealthcheckTimeoutSeconds(long defaultHealthcheckTimeoutSeconds) {
+    this.defaultHealthcheckTimeoutSeconds = defaultHealthcheckTimeoutSeconds;
   }
 
   public long getCleanupEverySeconds() {
     return cleanupEverySeconds;
   }
 
-  public void setCleanupEverySeconds(long cleanupEverySeconds) {
-    this.cleanupEverySeconds = cleanupEverySeconds;
+  public long getCloseWaitSeconds() {
+    return closeWaitSeconds;
   }
 
   @JsonProperty("database")
@@ -149,49 +95,125 @@ public class SingularityConfiguration extends Configuration {
     return database;
   }
 
-  @JsonProperty("database")
-  public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
-    this.database = dataSourceFactory;
-  }
-
-  public MesosConfiguration getMesosConfiguration() {
-    return mesosConfiguration;
-  }
-
-  public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
-    this.mesosConfiguration = mesosConfiguration;
-  }
-
-  public ZooKeeperConfiguration getZooKeeperConfiguration() {
-    return zooKeeperConfiguration;
-  }
-
-  public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
-    this.zooKeeperConfiguration = zooKeeperConfiguration;
-  }
-  
-  public Optional<SMTPConfiguration> getSmtpConfiguration() {
-    return Optional.fromNullable(smtpConfiguration);
-  }
-
-  public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
-    this.smtpConfiguration = smtpConfiguration;
+  public long getDeltaAfterWhichTasksAreLateMillis() {
+    return deltaAfterWhichTasksAreLateMillis;
   }
 
   public String getHostname() {
     return hostname;
   }
 
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public long getKillAfterTasksDoNotRunDefaultSeconds() {
+    return killAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public long getKillDecomissionedTasksAfterNewTasksSeconds() {
+    return killDecomissionedTasksAfterNewTasksSeconds;
+  }
+  
+  public int getLogFetchCoreThreads() {
+    return logFetchCoreThreads;
+  }
+
+  public int getLogFetchMaxThreads() {
+    return logFetchMaxThreads;
+  }
+
+  public MesosConfiguration getMesosConfiguration() {
+    return mesosConfiguration;
+  }
+
+  public long getSaveStateEverySeconds() {
+    return saveStateEverySeconds;
   }
 
   public Optional<String> getSingularityUIHostnameAndPath() {
     return Optional.fromNullable(singularityUIHostnameAndPath);
   }
 
+  public Optional<SMTPConfiguration> getSmtpConfiguration() {
+    return Optional.fromNullable(smtpConfiguration);
+  }
+
+  public long getWarnAfterTasksDoNotRunDefaultSeconds() {
+    return warnAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public long getZookeeperAsyncTimeout() {
+    return zookeeperAsyncTimeout;
+  }
+
+  public ZooKeeperConfiguration getZooKeeperConfiguration() {
+    return zooKeeperConfiguration;
+  }
+
+  public void setCheckDeploysEverySeconds(long checkDeploysEverySeconds) {
+    this.checkDeploysEverySeconds = checkDeploysEverySeconds;
+  }
+
+  public void setCleanupEverySeconds(long cleanupEverySeconds) {
+    this.cleanupEverySeconds = cleanupEverySeconds;
+  }
+
+  public void setCloseWaitSeconds(long closeWaitSeconds) {
+    this.closeWaitSeconds = closeWaitSeconds;
+  }
+
+  @JsonProperty("database")
+  public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
+    this.database = dataSourceFactory;
+  }
+
+  public void setDeltaAfterWhichTasksAreLateMillis(long deltaAfterWhichTasksAreLateMillis) {
+    this.deltaAfterWhichTasksAreLateMillis = deltaAfterWhichTasksAreLateMillis;
+  }
+
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
+  }
+
+  public void setKillAfterTasksDoNotRunDefaultSeconds(long killAfterTasksDoNotRunDefaultSeconds) {
+    this.killAfterTasksDoNotRunDefaultSeconds = killAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public void setKillDecomissionedTasksAfterNewTasksSeconds(long killDecomissionedTasksAfterNewTasksSeconds) {
+    this.killDecomissionedTasksAfterNewTasksSeconds = killDecomissionedTasksAfterNewTasksSeconds;
+  }
+
+  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
+    this.logFetchCoreThreads = logFetchCoreThreads;
+  }
+
+  public void setLogFetchMaxThreads(int logFetchMaxThreads) {
+    this.logFetchMaxThreads = logFetchMaxThreads;
+  }
+
+  public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
+    this.mesosConfiguration = mesosConfiguration;
+  }
+  
+  public void setSaveStateEverySeconds(long saveStateEverySeconds) {
+    this.saveStateEverySeconds = saveStateEverySeconds;
+  }
+
   public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
     this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
+  }
+
+  public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
+    this.smtpConfiguration = smtpConfiguration;
+  }
+
+  public void setWarnAfterTasksDoNotRunDefaultSeconds(long warnAfterTasksDoNotRunDefaultSeconds) {
+    this.warnAfterTasksDoNotRunDefaultSeconds = warnAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
+    this.zookeeperAsyncTimeout = zookeeperAsyncTimeout;
+  }
+
+  public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
+    this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
 }
