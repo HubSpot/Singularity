@@ -198,10 +198,6 @@ class RequestsView extends View
                     vex.dialog.buttons.NO
                 ]
                 callback: (confirmedOrPromptData) =>
-                    # Handle case of prompt submitted empty (since it's optional)
-                    if _.isObject(confirmedOrPromptData) and confirmedOrPromptData?.vex is ''
-                        confirmedOrPromptData = true
-
                     return unless confirmedOrPromptData
 
                     requestModel.run(confirmedOrPromptData)
