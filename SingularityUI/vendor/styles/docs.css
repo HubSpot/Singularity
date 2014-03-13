@@ -108,8 +108,43 @@ hr.soften {
   margin-bottom: 9px;
 }
 .subhead h1 {
-  font-size: 45px;
+  font-size: 32px;
+  margin-bottom: 8px;
+  letter-spacing: .008em;
+  text-rendering: geometricPrecision;
 }
+
+.subhead h1[data-string-length-tens] { font-size: 13px; }
+.subhead h1[data-string-length-tens="10"],
+.subhead h1[data-string-length-tens="20"],
+.subhead h1[data-string-length-tens="30"] { font-size: 32px; }
+.subhead h1[data-string-length-tens="40"] { font-size: 31px; }
+.subhead h1[data-string-length-tens="50"] { font-size: 30px; }
+.subhead h1[data-string-length-tens="60"] { font-size: 29px; }
+.subhead h1[data-string-length-tens="70"] { font-size: 28px; }
+.subhead h1[data-string-length-tens="80"] { font-size: 27px; }
+.subhead h1[data-string-length-tens="90"] { font-size: 25px; }
+.subhead h1[data-string-length-tens="100"],
+.subhead h1[data-string-length-tens="110"],
+.subhead h1[data-string-length-tens="120"],
+.subhead h1[data-string-length-tens="130"],
+.subhead h1[data-string-length-tens="140"],
+.subhead h1[data-string-length-tens="150"] { font-size: 23px; }
+.subhead h1[data-string-length-tens="160"],
+.subhead h1[data-string-length-tens="170"],
+.subhead h1[data-string-length-tens="180"],
+.subhead h1[data-string-length-tens="190"],
+.subhead h1[data-string-length-tens="200"] { font-size: 18px; }
+.subhead h1[data-string-length-tens="210"],
+.subhead h1[data-string-length-tens="220"],
+.subhead h1[data-string-length-tens="230"],
+.subhead h1[data-string-length-tens="240"],
+.subhead h1[data-string-length-tens="250"] { font-size: 16px; }
+.subhead h1[data-string-length-tens="260"],
+.subhead h1[data-string-length-tens="270"],
+.subhead h1[data-string-length-tens="280"],
+.subhead h1[data-string-length-tens="290"],
+.subhead h1[data-string-length-tens="300"] { font-size: 14px; }
 
 /* Subnav */
 .subnav {
@@ -653,11 +688,9 @@ form.well {
   /* Adjust the jumbotron */
   .jumbotron h1,
   .jumbotron p {
-    text-align: center;
     margin-right: 0;
   }
   .jumbotron h1 {
-    font-size: 45px;
     margin-right: 0;
   }
   .jumbotron p {
@@ -787,7 +820,6 @@ form.well {
 
   /* Scale down the jumbotron content */
   .jumbotron h1 {
-    font-size: 45px;
   }
   .jumbotron p {
     margin-right: 0;

@@ -31,7 +31,7 @@
                 </table>
             {{else}}
                 {{#if fetchDone}}
-                    <center><p>No active slaves.</p></center>
+                    <div class="empty-table-message"><p>No active slaves</p></div>
                 {{else}}
                     <div class="page-loader centered"></div>
                 {{/if}}
@@ -71,7 +71,7 @@
                 </table>
             {{else}}
                 {{#if fetchDone}}
-                    <center><p>No dead slaves.</p></center>
+                    <div class="empty-table-message"><p>No dead slaves</p></div>
                 {{else}}
                     <div class="page-loader centered"></div>
                 {{/if}}
@@ -111,7 +111,7 @@
                 </table>
             {{else}}
                 {{#if fetchDone}}
-                    <center><p>No decomissioning slaves.</p></center>
+                    <div class="empty-table-message"><p>No decomissioning slaves</p></div>
                 {{else}}
                     <div class="page-loader centered"></div>
                 {{/if}}

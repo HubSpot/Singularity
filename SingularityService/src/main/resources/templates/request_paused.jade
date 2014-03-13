@@ -1,0 +1,54 @@
+div(style="background: #eee")
+  div(style="background: #fff; width: 730px; padding: 20px; max-width: 100%; color: #444; border-radius: 5px; margin: 0 auto")
+    table(height="85px", width="100%", style="border: none")
+      tr
+        td(style="border-top: 10px solid #DF4210; padding: 20px; background: #eee; border-radius: 4px")
+
+          font(size=5)
+            span(style="font-family: Helvetica; padding: 10px")
+              <p>#{request_id} is paused.</p>
+
+          font(size=3)
+            span(style="padding: 10px") <br><br> This requires manual intervention.
+
+    p <b>Request: </b> #{request_id} is paused.
+    p It has failed #{num_failures} times consecutively and will not run again until it is manually unpaused or updated.
+
+    p: b Task Update History
+    table(style="border: 0; border-collapse: collapse; background: #eee")
+      tr
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
+      each task_update, i in task_updates
+        tr
+          td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.update
+          td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.date
+
+    p: b Request Update History
+
+    table(style="border: 0; border-collapse: collapse; background: #eee")
+      tr
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Request ID
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") User
+        th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
+      each request_update, i in request_history
+        tr
+          td(style="border:1px solid black; border-collapse: collapse;")= request_update.request_id
+          td(style="border:1px solid black; border-collapse: collapse;")= request_update.state
+          td(style="border:1px solid black; border-collapse: collapse;")= request_update.user
+          td(style="border:1px solid black; border-collapse: collapse;")= request_update.date
+
+    p: b Standard output:
+    ul
+      for line in stdout
+        li= line
+      else
+        li No updates
+
+    p: b Standard error:
+    ul
+      for line in stderr
+        li= line
+      else
+        li No updates

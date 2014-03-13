@@ -86,6 +86,12 @@
   }
 }
 
+@media (max-width: 1200px) {
+  .visible-large-desktop {
+    display: none !important;
+  }
+}
+
 @media (max-width: 480px) {
   .nav-collapse {
     -webkit-transform: translate3d(0, 0, 0);

@@ -40,15 +40,57 @@ class Utils
             lookupObject = app.allRequests
 
         vex.dialog.alert
-            contentCSS:
-                width: 800
+            buttons: [
+                $.extend({}, vex.dialog.buttons.YES, text: 'Done')
+            ]
+            className: 'vex-theme-default vex-theme-default-json-view'
             message: "<pre>#{ utils.htmlEncode lookupObject[objectId].JSONString }</pre>"
+            afterOpen: ($vexContent) ->
+                utils.scrollPreventDefaultAtBounds $vexContent.find('pre')
+                utils.scrollPreventAlways $vexContent.parent()
+
+    @scrollPreventDefaultAtBounds: ($scroll) ->
+        $scroll.bind 'mousewheel', (event, delta) ->
+            event.stopPropagation()
+
+            if (@scrollTop is ($scroll[0].scrollHeight - $scroll.outerHeight()) and delta < 0) or (@scrollTop is 0 and delta > 0)
+                event.preventDefault()
+
+    @scrollPreventAlways: ($scroll) ->
+        $scroll.parent().bind 'mousewheel', (event) ->
+            event.preventDefault()
 
     @htmlEncode: (value) ->
         $('<div>').text(value).html()
 
     @setupSortableTables: ->
         sortable.init()
+
+    @handlePotentiallyEmptyFilteredTable: ($table, object = 'object', query = '') ->
+        message = "No #{ object }s found matching "
+
+        emptyTableInnerClass = 'empty-table-message'
+
+        if query is ''
+            message += 'that query'
+        else
+            message += """ "#{ query }" """
+
+        if $table.find('tbody tr:not(".filtered")').length
+            $table.removeClass('filtered').siblings(".#{ emptyTableInnerClass }").remove()
+
+        else
+            $emptyMessage = $table.siblings(".#{ emptyTableInnerClass }")
+
+            if not $emptyMessage.length
+                $table.addClass('filtered').after """
+                    <div class="#{ emptyTableInnerClass }">
+                        <p>#{ message }</p>
+                    </div>
+                """
+
+            else
+                $emptyMessage.find('p').html message
 
     @humanTime: (date, future = false) ->
         return '' unless date?

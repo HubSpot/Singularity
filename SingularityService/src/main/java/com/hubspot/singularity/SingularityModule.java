@@ -17,6 +17,8 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.http.client.AsyncHttpClient;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -96,6 +98,12 @@ public class SingularityModule extends AbstractModule {
   @Singleton
   public ObjectMapper getObjectMapper() {
     return OBJECT_MAPPER;
+  }
+  
+  @Provides
+  @Singleton
+  public AsyncHttpClient providesAsyncHTTPClient() {
+    return new AsyncHttpClient();
   }
   
   @Provides

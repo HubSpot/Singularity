@@ -134,6 +134,10 @@ class RequestsView extends View
 
             vex.dialog.confirm
                 message: @removeRequestTemplate(requestId: requestModel.get('id'))
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                    vex.dialog.buttons.NO
+                ]
                 callback: (confirmed) =>
                     return unless confirmed
                     requestModel.destroy()
@@ -168,9 +172,9 @@ class RequestsView extends View
 
         @$el.find('[data-action="starToggle"]').unbind('click').on 'click', (e) =>
             $target = $(e.target)
-            $table = $target.parents('table')
+            $table = $target.parents 'table'
 
-            requestName = $target.data('request-name')
+            requestName = $target.data 'request-name'
             starred = $target.attr('data-starred') is 'true'
 
             app.collections.requestsStarred.toggle(requestName)
@@ -183,16 +187,29 @@ class RequestsView extends View
 
         @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
             requestModel = new Request id: $(e.target).data('request-id')
-            $row = $(e.target).parents('tr')
+            $row = $(e.target).parents 'tr'
 
-            requestType = $(e.target).data('request-type')
+            requestType = $(e.target).data 'request-type'
 
-            vex.dialog.confirm
+            dialogOptions =
                 message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    requestModel.run()
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
+                    vex.dialog.buttons.NO
+                ]
+                callback: (confirmedOrPromptData) =>
+                    return unless confirmedOrPromptData
+
+                    requestModel.run(confirmedOrPromptData)
                     utils.flashRow $row
+
+            if requestType is 'on-demand'
+                dialogType = vex.dialog.prompt
+                dialogOptions.message += '<p>Additional command line input (optional):</p>'
+            else
+                dialogType = vex.dialog.confirm
+
+            dialogType dialogOptions
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
@@ -222,6 +239,9 @@ class RequestsView extends View
                         $row.addClass('filtered')
                     else
                         $row.removeClass('filtered')
+
+            @$('table').each ->
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', text
 
         if refresh
             $search.change()

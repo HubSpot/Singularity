@@ -1,12 +1,22 @@
 <header class="jumbotron subhead" id="overview">
-    <h1>{{#hardBreak request.name}}{{/hardBreak}} <small>{{#if request.fullObject}}<a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a>{{/if}} &nbsp; {{#if request.scheduledOrOnDemand}}<a data-request-id="{{ request.id }}" data-action="run-request-now">Run now</a> &nbsp; {{/if}}<a data-request-id="{{ request.id }}" data-action="remove">Remove</a></small></h1>
-    <p class="lead">
-        {{#eachWithFn requestHistory.requestUpdates}}
-            {{#if _first}}
-                <p class="lead">{{ stateHuman }} by {{ userHuman }} <strong>{{ createdAtHuman }}</strong></p>
+    <h1>
+        {{#hardBreak request.name}}{{/hardBreak}}
+
+        <div class="header-actions">
+            {{#if request.fullObject}}
+                <a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a>
             {{/if}}
-        {{/eachWithFn}}
-    </p>
+            {{#if request.scheduledOrOnDemand}}
+                <a data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">Run now</a>
+            {{/if}}
+            <a data-request-id="{{ request.id }}" data-action="remove">Remove</a>
+        </div>
+    </h1>
+    {{#eachWithFn requestHistory.requestUpdates}}
+        {{#if _first}}
+            <p class="lead">{{ stateHuman }} by {{ userHuman }} {{ createdAtHuman }}</p>
+        {{/if}}
+    {{/eachWithFn}}
 </header>
 
 <section>
@@ -45,7 +55,7 @@
         </div>
     {{else}}
         {{#if fetchDoneActive}}
-            <center><p>No active tasks.</p></center>
+            <div class="empty-table-message"><p>No active tasks</p></div>
         {{else}}
             <div class="page-loader centered"></div>
         {{/if}}
@@ -83,7 +93,7 @@
             </div>
         </div>
     {{else}}
-        <center><p>No scheduled tasks.</p></center>
+        <div class="empty-table-message"><p>No scheduled tasks</p></div>
     {{/if}}
 </section>
 
@@ -137,7 +147,7 @@
         </div>
     {{else}}
         {{#if fetchDoneHistory}}
-            <center><p>No request history.</p></center>
+            <div class="empty-table-message"><p>No request history</p></div>
         {{else}}
             <div class="page-loader centered"></div>
         {{/if}}

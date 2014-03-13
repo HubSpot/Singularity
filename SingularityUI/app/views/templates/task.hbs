@@ -1,15 +1,23 @@
 <header class="jumbotron subhead" id="overview">
     <h3><a href="/singularity/request/{{ request.id }}" data-route="request/{{ request.id }}">{{#hardBreak request.id}}{{/hardBreak}}</a></h3>
-    <h1>{{#hardBreak taskHistory.task.name}}{{/hardBreak}} <small><a data-task-id="{{ taskHistory.task.id }}" data-action="viewObjectJSON">JSON</a>{{#if taskHistory.task.isFinished}}{{else}} &nbsp; <a data-task-id="{{ taskHistory.task.id }}" data-action="remove">Kill&nbsp;Task</a>{{/if}}</small></h1>
+    <h1 data-string-length-tens="{{ taskIdStringLengthTens }}">
+        {{#hardBreak taskHistory.task.id}}{{/hardBreak}}
+        <div class="header-actions">
+            <a data-task-id="{{ taskHistory.task.id }}" data-action="viewObjectJSON">JSON</a>
+            {{#if taskHistory.task.isStopped}}{{else}}
+                <a data-task-id="{{ taskHistory.task.id }}" data-action="remove">Kill task</a>
+            {{/if}}
+        </div>
+    </h1>
     {{#if taskHistory.taskUpdates}}
         {{#eachWithFn taskHistory.taskUpdates}}
             {{#if _first}}
                 <p class="lead">
                     {{ statusUpdateHuman }} as of
                     {{ timestampHuman }}
-                    {{#ifEqual statusMessage "No status message available"}}{{else}}
+                    {{#if statusMessage}}
                         ({{ statusMessage }})
-                    {{/ifEqual}}
+                    {{/if}}
                 </p>
             {{/if}}
         {{/eachWithFn}}
@@ -35,7 +43,13 @@
                         {{#eachWithFn taskHistory.taskUpdates}}
                             <tr>
                                 <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
-                                <td>{{ statusMessage }}</td>
+                                <td>
+                                    {{#if statusMessage}}
+                                        {{ statusMessage }}
+                                    {{else}}
+                                        &mdash;
+                                    {{/if}}
+                                </td>
                                 <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                             </tr>
                         {{/eachWithFn}}
@@ -45,11 +59,11 @@
         </div>
     {{else}}
         {{#if taskHistory.hasNoTaskUpdates}}
-            <center><p>This task has no history yet.</p></center>
-            <br>
-            <div class="page-loader centered"></div>
-            <br>
-            <center><p>Refreshing history...</p></center>
+            <div class="empty-table-message"><p>This task has no history yet.</p></div>
+            <div class="page-loader-with-message">
+                <div class="page-loader centered"></div>
+                <p>Refreshing history...</p>
+            </div>
         {{else}}
             <div class="page-loader centered"></div>
         {{/if}}
@@ -74,6 +88,10 @@
     <div class="row-fluid">
         <div class="span12">
             <dl>
+                {{#if taskHistory.task.name }}
+                    <dt>Task Name</dt>
+                    <dd><pre>{{ taskHistory.task.name }}</pre></dd>
+                {{/if}}
                 {{#if taskHistory.task.id }}
                     <dt>Task ID</dt>
                     <dd><pre>{{ taskHistory.task.id }}</pre></dd>

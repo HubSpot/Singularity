@@ -1,0 +1,44 @@
+@import colors
+
+.subhead h1
+
+    @media (min-width: 767px)
+        position relative
+        padding-right 300px
+
+    .header-actions
+        font-size 0
+        margin 15px 0 10px
+        display block
+
+        @media (min-width: 767px)
+            position absolute
+            bottom 0
+            right 0
+            width 300px
+            text-align right
+            margin 0
+
+        a
+            background #0088cc
+            display inline-block
+            padding 9px 11px
+            color inherit
+            font-size 15px
+            text-decoration none
+            color #fff
+            border-radius 5px
+            white-space nowrap
+            font-weight normal
+            margin 0 14px 0 0
+
+            @media (min-width: 767px)
+                margin 0 0 0 14px
+
+            &[data-action="viewObjectJSON"]
+                background #eee
+                color #888
+
+            &[data-action="remove"]
+                background $removeRed
+                color #fff

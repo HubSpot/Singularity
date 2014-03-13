@@ -418,9 +418,12 @@ p small {
 
 .lead {
   margin-bottom: 18px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 200;
   line-height: 27px;
+  letter-spacing: .03em;
+  text-rendering: geometricPrecision;
+  color: #888;
 }
 
 h1,
@@ -677,12 +680,6 @@ pre {
   margin: 0 0 9px;
   font-size: 12.025px;
   line-height: 18px;
-  /*
-  word-break: break-all;
-  word-wrap: break-word;
-  white-space: pre;
-  white-space: pre-wrap;
-  */
   overflow: auto;
   background-color: #f3f3f3;
   -webkit-border-radius: 4px;
@@ -2821,14 +2818,6 @@ input[type="submit"].btn.btn-mini {
   cursor: pointer;
 }
 
-.nav-tabs .open .dropdown-toggle,
-.nav-pills .open .dropdown-toggle,
-.nav > li.dropdown.open.active > a:hover {
-  color: #ffffff;
-  background-color: #999999;
-  border-color: #999999;
-}
-
 .nav li.dropdown.open .caret,
 .nav li.dropdown.open.active .caret,
 .nav li.dropdown.open a:hover .caret {
@@ -3318,12 +3307,6 @@ input[type="submit"].btn.btn-mini {
   filter: alpha(opacity=100);
 }
 
-.navbar .nav li.dropdown.open > .dropdown-toggle,
-.navbar .nav li.dropdown.active > .dropdown-toggle,
-.navbar .nav li.dropdown.open.active > .dropdown-toggle {
-  background-color: transparent;
-}
-
 .navbar .nav li.dropdown.active > .dropdown-toggle:hover {
   color: #ffffff;
 }
@@ -3392,9 +3375,6 @@ input[type="submit"].btn.btn-mini {
      -moz-border-radius: 3px;
           border-radius: 3px;
   *zoom: 1;
-  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-     -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .pagination li {

@@ -8,10 +8,10 @@
                             <tr>
                                 <th data-sortable="false"></th>
                                 <th>Name</th>
-                                <th>Requested</th>
-                                <th>Deploy User</th>
-                                <th>Instances</th>
-                                <th data-sortable="false"></th>
+                                <th class="hidden-phone">Requested</th>
+                                <th class="visible-desktop">Deploy User</th>
+                                <th class="visible-desktop">Instances</th>
+                                <th class="hidden-phone" data-sortable="false"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -19,10 +19,10 @@
                                 <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
                                     <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
                                     <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                    <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                    <td>{{ deployUser }}</td>
-                                    <td>{{ instances }}</td>
-                                    <td class="actions-column">
+                                    <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                    <td class="visible-desktop">{{ deployUser }}</td>
+                                    <td class="visible-desktop">{{ instances }}</td>
+                                    <td class="actions-column hidden-phone">
                                         <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
                                         <a data-request-id="{{ id }}" data-action="remove">Remove</a>
                                     </td>
@@ -32,9 +32,9 @@
                     </table>
                 {{else}}
                     {{#if collectionSynced}}
-                        <center><p>No active running requests.</p></center>
+                        <div class="empty-table-message"><p>No active running requests</p></div>
                     {{else}}
-                        <div class="page-loader centered"></div>
+                        <div class="page-loader centered cushy"></div>
                     {{/if}}
                 {{/if}}
             {{/ifEqual}}
@@ -45,8 +45,8 @@
                             <tr>
                                 <th data-sortable="false"></th>
                                 <th>Name</th>
-                                <th>Requested</th>
-                                <th data-sortable="false"></th>
+                                <th class="visible-desktop">Requested</th>
+                                <th class="hidden-phone" data-sortable="false"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,8 +54,8 @@
                                 <tr data-request-id="{{ id }}">
                                     <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
                                     <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                    <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                    <td class="actions-column">
+                                    <td class="visible-desktop" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                    <td class="actions-column hidden-phone">
                                         <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
                                         <a data-request-id="{{ id }}" data-request-type="on-demand" data-action="run-now">Run now</a>
                                         <a data-request-id="{{ id }}" data-action="remove">Remove</a>
@@ -66,9 +66,9 @@
                     </table>
                 {{else}}
                     {{#if collectionSynced}}
-                        <center><p>No on-demand requests.</p></center>
+                        <div class="empty-table-message"><p>No on-demand requests</p></div>
                     {{else}}
-                        <div class="page-loader centered"></div>
+                        <div class="page-loader centered cushy"></div>
                     {{/if}}
                 {{/if}}
             {{/ifEqual}}
@@ -79,10 +79,10 @@
                             <tr>
                                 <th data-sortable="false"></th>
                                 <th>Name</th>
-                                <th>Requested</th>
-                                <th>Deploy User</th>
-                                <th>Schedule</th>
-                                <th data-sortable="false"></th>
+                                <th class="visible-desktop">Requested</th>
+                                <th class="visible-large-desktop">Deploy User</th>
+                                <th class="visible-desktop">Schedule</th>
+                                <th class="hidden-phone" data-sortable="false"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,10 +90,10 @@
                                 <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
                                     <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
                                     <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                    <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                    <td>{{ deployUser }}</td>
-                                    <td>{{ schedule }}</td>
-                                    <td class="actions-column">
+                                    <td class="visible-desktop" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                    <td class="visible-large-desktop">{{ deployUser }}</td>
+                                    <td class="visible-desktop">{{ schedule }}</td>
+                                    <td class="actions-column hidden-phone">
                                         <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
                                         <a data-request-id="{{ id }}" data-request-type="scheduled" data-action="run-now">Run now</a>
                                         <a data-request-id="{{ id }}" data-action="remove">Remove</a>
@@ -104,9 +104,9 @@
                     </table>
                 {{else}}
                     {{#if collectionSynced}}
-                        <center><p>No active scheduled requests.</p></center>
+                        <div class="empty-table-message"><p>No active scheduled requests</p></div>
                     {{else}}
-                        <div class="page-loader centered"></div>
+                        <div class="page-loader centered cushy"></div>
                     {{/if}}
                 {{/if}}
             {{/ifEqual}}

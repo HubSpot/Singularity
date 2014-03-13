@@ -155,6 +155,9 @@ class TasksView extends View
                     else
                         $row.removeClass('filtered')
 
+            @$('table').each ->
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'task', text
+
         if refresh
             $search.change()
 

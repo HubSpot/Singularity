@@ -1,5 +1,6 @@
 View = require './view'
 
+TaskHistory = require '../models/TaskHistory'
 LogLines = require '../collections/LogLines'
 
 class TailerView extends Backbone.View
@@ -22,6 +23,8 @@ class TailerView extends Backbone.View
         @lines = LogLines.getInstance @options
 
         @$container = @$('.tail-container')
+
+        @taskHistory = new TaskHistory {}, taskId: @options.taskId
 
         @lines.on 'sort', =>
             @handleEmpty()
@@ -109,6 +112,10 @@ class TailerView extends Backbone.View
         @nextPromise
 
     startTailing: ->
+        if @taskHistory.get('task').isStopped
+            @stopTailing()
+            return
+
         @parent.$el.addClass('tailing')
 
         if @tailing is null
@@ -153,10 +160,11 @@ class TailerView extends Backbone.View
     render: ->
         @$el.addClass 'loading'
 
-        # seek to the end of the file
-        @lines.fetchEndOffset().then (offset) =>
-            @handleEmpty(offset)
-            @tail Math.max(0, offset - @readLength)
+        @taskHistory.fetch().done =>
+            # seek to the end of the file
+            @lines.fetchEndOffset().then (offset) =>
+                @handleEmpty(offset)
+                @tail Math.max(0, offset - @readLength)
 
         @
 

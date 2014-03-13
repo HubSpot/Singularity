@@ -17,9 +17,9 @@
                         <tr>
                             <th data-sortable="false"></th>
                             <th>Request</th>
-                            <th>Requested</th>
-                            <th>Deploy User</th>
-                            <th>Instances</th>
+                            <th class="hidden-phone">Requested</th>
+                            <th class="visible-desktop">Deploy User</th>
+                            <th class="visible-large-desktop">Instances</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -27,15 +27,15 @@
                             <tr data-request-id="{{ id }}">
                                 <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
                                 <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
-                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                <td>{{ deployUser }}</td>
-                                <td>{{ instances }}</td>
+                                <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td class="visible-desktop">{{ deployUser }}</td>
+                                <td class="visible-large-desktop">{{ instances }}</td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No starred requests.</p></center>
+                <div class="empty-table-message"><p>No starred requests</p></div>
             {{/if}}
         </div>
     </section>
@@ -66,5 +66,5 @@
         </section>
     {{/if}}
 {{else}}
-    <div class="page-loader centered"></div>
+    <div class="page-loader centered cushy"></div>
 {{/if}}
