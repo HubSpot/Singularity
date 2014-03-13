@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -47,6 +48,7 @@ public class DeployManager extends CuratorAsyncManager {
   private final static String DEPLOY_STATE_KEY = "STATE";
   private final static String DEPLOY_LIST_KEY = "/ids"; 
   
+  @Inject
   public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityDeployTranscoder deployTranscoder, SingularityDeployMarkerTranscoder deployMarkerTranscoder, SingularityDeployStateTranscoder deployStateTranscoder, ObjectMapper objectMapper) {
     super(curator, configuration.getZookeeperAsyncTimeout());
     

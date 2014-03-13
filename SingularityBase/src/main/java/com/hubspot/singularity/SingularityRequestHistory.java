@@ -1,13 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.Date;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 
 public class SingularityRequestHistory {
 
@@ -48,20 +44,7 @@ public class SingularityRequestHistory {
   public SingularityRequest getRequest() {
     return request;
   }
-
-  public Map<String, String> formatJadeJson() {
-    Date createdFormatted = new Date(createdAt);
-
-    Map<String, String> formatted = Maps.newHashMap();
-    formatted.put("state", state.toString());
-    formatted.put("date", createdFormatted.toString());
-    formatted.put("user", user.toString());
-    formatted.put("request_id", request.getId());
-    formatted.put("request_cmd", request.getCommand());
-
-    return formatted;
-  }
-
+  
   @Override
   public String toString() {
     return "SingularityRequestHistory [createdAt=" + createdAt + ", user=" + user + ", state=" + state + ", request=" + request + "]";

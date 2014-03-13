@@ -6,6 +6,8 @@ import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.setup.Environment;
 
+import java.io.IOException;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.time.DurationFormatUtils;
@@ -16,8 +18,6 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.ning.http.client.AsyncHttpClient;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +41,12 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.smtp.SingularityMailer;
+import com.ning.http.client.AsyncHttpClient;
+
+import de.neuland.jade4j.parser.Parser;
+import de.neuland.jade4j.parser.node.Node;
+import de.neuland.jade4j.template.ClasspathTemplateLoader;
+import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityModule extends AbstractModule {
   
@@ -53,6 +59,10 @@ public class SingularityModule extends AbstractModule {
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
   public static final String UNDERLYING_CURATOR = "curator.base.instance";
+  
+  public static final String TASK_FAILED_TEMPLATE = "task.failed.template";
+  public static final String REQUEST_PAUSED_TEMPLATE = "request.paused.template";
+  public static final String TASK_NOT_RUNNING_WARNING_TEMPLATE = "task.not.running.warning.template";
   
   @Override
   protected void configure() {
@@ -205,4 +215,38 @@ public class SingularityModule extends AbstractModule {
     return dbi.onDemand(HistoryJDBI.class);
   }
   
+  private JadeTemplate getJadeTemplate(String name) throws IOException {
+    ClasspathTemplateLoader ctl = new ClasspathTemplateLoader();
+    Parser parser = new Parser(name, ctl);
+    Node root = parser.parse();
+
+    JadeTemplate jadeTemplate = new JadeTemplate();
+
+    jadeTemplate.setTemplateLoader(ctl);
+    jadeTemplate.setRootNode(root);
+    
+    return jadeTemplate;
+  }
+  
+  @Provides
+  @Singleton
+  @Named(TASK_FAILED_TEMPLATE)
+  public JadeTemplate getTaskFailedTemplate() throws IOException {
+    return getJadeTemplate("task_failed.jade");
+  }
+  
+  @Provides
+  @Singleton
+  @Named(REQUEST_PAUSED_TEMPLATE)
+  public JadeTemplate getRequestPausedTemplate() throws IOException {
+    return getJadeTemplate("request_paused.jade");
+  }
+  
+  @Provides
+  @Singleton
+  @Named(TASK_NOT_RUNNING_WARNING_TEMPLATE)
+  public JadeTemplate getTaskNotRunningWarningTemplate() throws IOException {
+    return getJadeTemplate("task_not_running_warning.jade");
+  }
+
 }

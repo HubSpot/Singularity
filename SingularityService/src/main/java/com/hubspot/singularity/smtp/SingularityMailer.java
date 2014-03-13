@@ -1,6 +1,5 @@
 package com.hubspot.singularity.smtp;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -22,18 +21,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -41,11 +41,10 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
-import com.hubspot.singularity.data.SandboxManager;
-import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.Jade4J;
@@ -63,10 +62,12 @@ public class SingularityMailer implements SingularityCloseable {
 
   private final HistoryManager historyManager;
 
-  private JadeTemplate taskFailedTemplate;
-  private JadeTemplate requestPausedTemplate;
-  private JadeTemplate taskNotRunningWarningTemplate;
-
+  private final JadeTemplate taskFailedTemplate;
+  private final JadeTemplate requestPausedTemplate;
+  private final JadeTemplate taskNotRunningWarningTemplate;
+  
+  private final JadeHelper jadeHelper;
+  
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 
@@ -75,9 +76,11 @@ public class SingularityMailer implements SingularityCloseable {
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
 
   @Inject
-  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, HistoryManager historyManager, AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper) {
+  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, HistoryManager historyManager, AsyncHttpClient asyncHttpClient, 
+      ObjectMapper objectMapper, @Named(SingularityModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityModule.REQUEST_PAUSED_TEMPLATE) JadeTemplate requestPausedTemplate, @Named(SingularityModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
+    this.jadeHelper = jadeHelper;
     this.configuration = configuration;
     this.uiHostnameAndPath = configuration.getSingularityUIHostnameAndPath();
     this.historyManager = historyManager;
@@ -90,14 +93,10 @@ public class SingularityMailer implements SingularityCloseable {
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }
-
-    try {
-      this.taskFailedTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/task_failed.jade");
-      this.requestPausedTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/request_paused.jade");
-      this.taskNotRunningWarningTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/task_not_running_warning.jade");
-    } catch (IOException e) {
-      Throwables.propagate(e);
-    }
+    
+    this.taskFailedTemplate = taskFailedTemplate;
+    this.requestPausedTemplate = requestPausedTemplate;
+    this.taskNotRunningWarningTemplate = taskNotRunningWarningTemplate;
   }
 
   @Override
@@ -137,7 +136,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String slaveHostname = taskHistory.getTask().getOffer().getHostname();
 
-    final String directory = String.format("%s/%s", taskHistory.getDirectory().get(), filename);
+    final String directory = String.format("%s/%s", taskHistory.getTaskState().getDirectory().get(), filename);
 
     final long logLength = this.maybeSmtpConfiguration.get().getTaskLogLength();
 
@@ -176,12 +175,11 @@ public class SingularityMailer implements SingularityCloseable {
     
     if (maybeTaskHistory.isPresent()) {
       final SingularityTaskHistory taskHistory = maybeTaskHistory.get();
-      templateSubs.put("task_updates", taskHistory.getTaskHistoryJade());
-      templateSubs.put("task_directory", taskHistory.getDirectory().or("directory missing"));
+      templateSubs.put("task_updates", jadeHelper.getJadeTaskHistory(taskHistory));
+      templateSubs.put("task_directory", taskHistory.getTaskState().getDirectory().or("directory missing"));
       templateSubs.put("slave_hostname", taskHistory.getTask().getOffer().getHostname());
       templateSubs.put("taskEverRan", taskEverRan(taskHistory));
     }
-    
     
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()){
       templateSubs.put(bindingEntry.getKey(), bindingEntry.getValue());
@@ -233,7 +231,7 @@ public class SingularityMailer implements SingularityCloseable {
     final List<Map<String, String>> requestHistoryFormatted = Lists.newArrayList();
 
     for (SingularityRequestHistory requestHistory : requestHistories) {
-      requestHistoryFormatted.add(requestHistory.formatJadeJson());
+      requestHistoryFormatted.add(jadeHelper.getJadeRequestHistory(requestHistory));
     }
 
     final List<String> to = request.getOwners();
