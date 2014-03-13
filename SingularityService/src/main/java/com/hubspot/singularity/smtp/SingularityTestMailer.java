@@ -60,7 +60,7 @@ public class SingularityTestMailer {
     /*  args[0] = address to send test emails to
      *  args[1] = smtp username
      *  args[2] = smtp password */
-    SingularityTestMailer testMailer = new SingularityTestMailer(args[0], args[1], args[2]);
+    SingularityTestMailer testMailer = new SingularityTestMailer(args[0], args[1], args[2], args[3], Integer.parseInt(args[4]));
     testMailer.sendRequestPausedMail(null, null, Optional.<SingularityTaskHistory>absent());
     testMailer.sendTaskNotRunningWarningEmail(null, (long)10, null, Optional.<SingularityTaskHistory>absent());
     TASK_STATE_FAILED = true;
@@ -77,9 +77,9 @@ public class SingularityTestMailer {
     */
   }
 
-  public SingularityTestMailer(String EMAIL_TO, String SMTP_USERNAME, String SMTP_PASSWORD){
+  public SingularityTestMailer(String EMAIL_TO, String SMTP_USERNAME, String SMTP_PASSWORD, String hostname, int port){
     this.EMAIL_TO.add(EMAIL_TO);
-    this.maybeSmtpConfiguration = Optional.of(generateSmtpConfig(SMTP_USERNAME, SMTP_PASSWORD));
+    this.maybeSmtpConfiguration = Optional.of(generateSmtpConfig(SMTP_USERNAME, SMTP_PASSWORD, hostname, port));
     try {
       this.taskFailedTemplate = Jade4J.getTemplate("./src/main/resources/templates/task_failed.jade");
       this.requestPausedTemplate = Jade4J.getTemplate("./src/main/resources/templates/request_paused.jade");
@@ -96,10 +96,12 @@ public class SingularityTestMailer {
     }
   }
   
-  public SMTPConfiguration generateSmtpConfig(String SMTP_USERNAME, String SMTP_PASSWORD){
+  public SMTPConfiguration generateSmtpConfig(String SMTP_USERNAME, String SMTP_PASSWORD, String hostname, int port){
     SMTPConfiguration smtpConfiguration = new SMTPConfiguration();
     smtpConfiguration.setUsername(SMTP_USERNAME);
     smtpConfiguration.setPassword(SMTP_PASSWORD);
+    smtpConfiguration.setHost(hostname);
+    smtpConfiguration.setPort(port);
     smtpConfiguration.setMailMaxThreads(6);
     smtpConfiguration.setMailThreads(6);
     return smtpConfiguration;
