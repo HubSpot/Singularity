@@ -28,6 +28,7 @@ exports.config =
                     'vendor/scripts/backbone-1.0.0.js'
                     'vendor/scripts/moment-2.1.0.js'
                     'vendor/scripts/humanize-1.4.2.js'
+                    'vendor/scripts/vex-2.0.2.js'
                     'vendor/scripts/tether-0.1.3.js'
                     'vendor/scripts/drop-0.1.5.js'
                     'vendor/scripts/select-0.2.0.js'
