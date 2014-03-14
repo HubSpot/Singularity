@@ -71,7 +71,7 @@
     <dependency>
       <groupId>com.hubspot.jackson</groupId>
       <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
-      <version>0.4.0</version>
+      <version>0.5.0</version>
     </dependency>
 
     <dependency>
