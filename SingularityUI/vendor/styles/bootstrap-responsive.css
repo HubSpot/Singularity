@@ -86,6 +86,12 @@
   }
 }
 
+@media (max-width: 1200px) {
+  .visible-large-desktop {
+    display: none !important;
+  }
+}
+
 @media (max-width: 480px) {
   .nav-collapse {
     -webkit-transform: translate3d(0, 0, 0);
@@ -745,7 +751,7 @@
   }
   .nav-collapse .nav > li > a:hover,
   .nav-collapse .dropdown-menu a:hover {
-    background-color: #222222;
+    background-color: #444;
   }
   .nav-collapse.in .btn-group {
     padding: 0;
@@ -769,7 +775,6 @@
        -moz-box-shadow: none;
             box-shadow: none;
   }
-  .nav-collapse .dropdown-menu:before,
   .nav-collapse .dropdown-menu:after {
     display: none;
   }

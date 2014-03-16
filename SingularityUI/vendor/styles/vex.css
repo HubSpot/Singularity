@@ -555,21 +555,21 @@ body.vex-open {
 }
 
 @keyframes vex-pulse {
-  /* line 104, ../sass/_keyframes.sass */
+  /* line 136, ../sass/_keyframes.sass */
   0% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
     box-shadow: inset 0 0 0 300px transparent;
   }
 
-  /* line 106, ../sass/_keyframes.sass */
+  /* line 138, ../sass/_keyframes.sass */
   70% {
     -webkit-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     -moz-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
   }
 
-  /* line 108, ../sass/_keyframes.sass */
+  /* line 140, ../sass/_keyframes.sass */
   100% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
@@ -578,21 +578,21 @@ body.vex-open {
 }
 
 @-webkit-keyframes vex-pulse {
-  /* line 104, ../sass/_keyframes.sass */
+  /* line 136, ../sass/_keyframes.sass */
   0% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
     box-shadow: inset 0 0 0 300px transparent;
   }
 
-  /* line 106, ../sass/_keyframes.sass */
+  /* line 138, ../sass/_keyframes.sass */
   70% {
     -webkit-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     -moz-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
   }
 
-  /* line 108, ../sass/_keyframes.sass */
+  /* line 140, ../sass/_keyframes.sass */
   100% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
@@ -601,21 +601,21 @@ body.vex-open {
 }
 
 @-moz-keyframes vex-pulse {
-  /* line 104, ../sass/_keyframes.sass */
+  /* line 136, ../sass/_keyframes.sass */
   0% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
     box-shadow: inset 0 0 0 300px transparent;
   }
 
-  /* line 106, ../sass/_keyframes.sass */
+  /* line 138, ../sass/_keyframes.sass */
   70% {
     -webkit-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     -moz-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
   }
 
-  /* line 108, ../sass/_keyframes.sass */
+  /* line 140, ../sass/_keyframes.sass */
   100% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
@@ -624,21 +624,21 @@ body.vex-open {
 }
 
 @-ms-keyframes vex-pulse {
-  /* line 104, ../sass/_keyframes.sass */
+  /* line 136, ../sass/_keyframes.sass */
   0% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
     box-shadow: inset 0 0 0 300px transparent;
   }
 
-  /* line 106, ../sass/_keyframes.sass */
+  /* line 138, ../sass/_keyframes.sass */
   70% {
     -webkit-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     -moz-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
   }
 
-  /* line 108, ../sass/_keyframes.sass */
+  /* line 140, ../sass/_keyframes.sass */
   100% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
@@ -647,21 +647,21 @@ body.vex-open {
 }
 
 @-o-keyframes vex-pulse {
-  /* line 104, ../sass/_keyframes.sass */
+  /* line 136, ../sass/_keyframes.sass */
   0% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
     box-shadow: inset 0 0 0 300px transparent;
   }
 
-  /* line 106, ../sass/_keyframes.sass */
+  /* line 138, ../sass/_keyframes.sass */
   70% {
     -webkit-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     -moz-box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
     box-shadow: inset 0 0 0 300px rgba(255, 255, 255, 0.25);
   }
 
-  /* line 108, ../sass/_keyframes.sass */
+  /* line 140, ../sass/_keyframes.sass */
   100% {
     -webkit-box-shadow: inset 0 0 0 300px transparent;
     -moz-box-shadow: inset 0 0 0 300px transparent;
@@ -701,7 +701,6 @@ body.vex-open {
   border-radius: 5px;
   font-family: "Helvetica Neue", sans-serif;
   background: #f0f0f0;
-  color: #444444;
   padding: 1em;
   position: relative;
   margin: 0 auto;
@@ -709,9 +708,6 @@ body.vex-open {
   width: 450px;
   font-size: 1.1em;
   line-height: 1.5em;
-}
-html.darkstrap .vex.vex-theme-default .vex-content {
-  background: #3F3F3F;
 }
 /* line 36, ../sass/vex-theme-default.sass */
 .vex.vex-theme-default .vex-content h1, .vex.vex-theme-default .vex-content h2, .vex.vex-theme-default .vex-content h3, .vex.vex-theme-default .vex-content h4, .vex.vex-theme-default .vex-content h5, .vex.vex-theme-default .vex-content h6, .vex.vex-theme-default .vex-content p, .vex.vex-theme-default .vex-content ul, .vex.vex-theme-default .vex-content li {
@@ -763,7 +759,7 @@ html.darkstrap .vex.vex-theme-default .vex-content {
   margin-bottom: 1em;
 }
 /* line 73, ../sass/vex-theme-default.sass */
-.vex.vex-theme-default .vex-dialog-form .vex-dialog-input textarea, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="text"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="password"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="email"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="url"] {
+.vex.vex-theme-default .vex-dialog-form .vex-dialog-input textarea, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="date"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="datetime"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="datetime-local"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="email"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="month"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="number"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="password"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="search"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="tel"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="text"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="time"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="url"], .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="week"] {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   -ms-border-radius: 3px;
@@ -780,7 +776,7 @@ html.darkstrap .vex.vex-theme-default .vex-content {
   margin: 0 0 0.25em;
 }
 /* line 85, ../sass/vex-theme-default.sass */
-.vex.vex-theme-default .vex-dialog-form .vex-dialog-input textarea:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="text"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="password"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="email"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="url"]:focus {
+.vex.vex-theme-default .vex-dialog-form .vex-dialog-input textarea:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="date"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="datetime"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="datetime-local"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="email"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="month"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="number"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="password"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="search"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="tel"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="text"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="time"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="url"]:focus, .vex.vex-theme-default .vex-dialog-form .vex-dialog-input input[type="week"]:focus {
   -webkit-box-shadow: inset 0 0 0 2px #8dbdf1;
   -moz-box-shadow: inset 0 0 0 2px #8dbdf1;
   box-shadow: inset 0 0 0 2px #8dbdf1;

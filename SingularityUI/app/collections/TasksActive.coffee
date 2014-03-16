@@ -5,7 +5,29 @@ class TasksActive extends Tasks
 
     model: Task
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/active"
+    url: ->
+        properties = [
+            # offer
+            'offer.slaveId'
+            'offer.hostname'
+
+            # taskRequest
+            'taskRequest.request.id'
+            'taskRequest.request.executorData'
+            'taskRequest.request.executorData.ports' # Necessary?
+
+            # taskId
+            'taskId'
+
+            # mesosTask
+            'mesosTask.resources'
+            'mesosTask.executor'
+            'mesosTask.name'
+        ]
+
+        propertiesString = "?property=#{ properties.join('&property=') }"
+
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/active#{ propertiesString }"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>
@@ -17,7 +39,7 @@ class TasksActive extends Tasks
             task.memoryHuman = if task.resources?.memoryMb? then "#{ task.resources.memoryMb }Mb" else ''
             task.host = task.offer.hostname?.split('.')[0]
             task.startedAt = task.taskId.startedAt
-            task.startedAtHuman = moment(task.taskId.startedAt).from()
+            task.startedAtHuman = utils.humanTimeAgo task.taskId.startedAt
             task.rack = task.taskId.rackId
             tasks[i] = task
             app.allTasks[task.id] = task

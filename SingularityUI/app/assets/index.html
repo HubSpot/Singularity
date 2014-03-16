@@ -24,16 +24,22 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="brand" href="/">Singularity</a>
+                <a class="brand" href="">Singularity</a>
                 <div class="nav-collapse collapse">
                     <ul class="nav">
                         <li><a data-href="">Dashboard</a></li>
+                        <li><a data-href="status">Status</a></li>
                         <li><a data-href="search">Search</a></li>
                         <li><a data-href="requests">Requests</a></li>
                         <li><a data-href="tasks">Tasks</a></li>
-                        <li><a data-href="racks">Racks</a></li>
-                        <li><a data-href="slaves">Slaves</a></li>
-                        <li><a data-href="webhooks">Webhooks</a></li>
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a data-href="racks">Racks</a></li>
+                                <li><a data-href="slaves">Slaves</a></li>
+                                <li><a data-href="webhooks">Webhooks</a></li>
+                            </ul>
+                        </li>
                         <li class="divider-vertical"></li>
                         <li>
                             <a id="theme-changer"></a>

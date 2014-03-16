@@ -7,43 +7,74 @@ RequestsPaused = require 'collections/RequestsPaused'
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
 
+RequestsStarred = require 'collections/RequestsStarred'
+
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
 TasksCleaning = require 'collections/TasksCleaning'
 
 class Application
 
-    initialize: =>
+    initialize: ->
+        app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
+        app.setupGlobalErrorHandling()
+
+        app.$page = $('#page')
+        app.page = app.$page[0]
+
         @views = {}
         @collections = {}
 
         @allTasks = {}
         @allRequests = {}
 
-        @fetchResources =>
+        @setupAppCollections()
 
-            $('.page-loader.fixed').hide()
+        $('.page-loader.fixed').hide()
 
-            @router = new Router
+        @router = new Router
 
-            Backbone.history.start
-                pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-                root: '/singularity/'
+        Backbone.history.start
+            pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
+            root: '/singularity/'
 
-            Object.freeze? @
+        Object.freeze? @
 
-    fetchResources: (success) =>
-        @resolveCountdown = 0
+    setupGlobalErrorHandling: ->
+        unloading = false
+        $(window).on 'beforeunload', ->
+            unloading = true
+            return
 
-        resolve = =>
-            @resolveCountdown -= 1
-            success() if @resolveCountdown is 0
+        blurred = false
+        $(window).on 'blur', -> blurred = true
+        $(window).on 'focus', -> blurred = false
 
-        @resolveCountdown += 1
+        $(document).on 'ajaxError', (event, jqxhr, settings) ->
+            return if settings.suppressErrors
+            return if jqxhr.statusText is 'abort'
+            return if unloading
+            return if blurred and jqxhr.statusText is 'timeout'
+
+            url = settings.url.replace(env.SINGULARITY_BASE, '')
+
+            if jqxhr.statusText is 'timeout'
+                Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
+
+            else
+                vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.htmlEncode utils.stringJSON jqxhr }</pre>"
+
+    show: (view) ->
+        if app.page.children.length
+            app.page.replaceChild view.el, app.page.children[0]
+        else
+            app.page.appendChild view.el
+
+    setupAppCollections: ->
+        @collections.requestsStarred = new RequestsStarred
+        @collections.requestsStarred.fetch() # Syncronous because it uses localStorage
+
         @state = new State
-        @state.fetch
-            error: => vex.dialog.alert('An error occurred while trying to load the Singularity state.')
-            success: -> resolve()
 
         resources = [{
             collection_key: 'requestsActive'
@@ -76,13 +107,6 @@ class Application
         }]
 
         _.each resources, (r) =>
-            @resolveCountdown += 1
             @collections[r.collection_key] = new r.collection
-            @collections[r.collection_key].fetch
-                error: ->
-                    vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
-                    resolve()
-                success: ->
-                    resolve()
 
 module.exports = new Application

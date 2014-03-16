@@ -25,6 +25,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.scheduler.SingularityScheduleStateCache;
 import com.hubspot.singularity.scheduler.SingularitySchedulerBase;
 
 public class SingularityRackManager extends SingularitySchedulerBase {
@@ -73,16 +74,16 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     return getHost(offer.getHostname());
   }
   
-  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTasks, List<SingularityTaskId> cleaningTasks) {
+  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularityScheduleStateCache stateCache) {
     final String host = getSlaveHost(offer);
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();
     
-    if (isSlaveDecomissioning(slaveId)) {
+    if (stateCache.isSlaveDecomissioning(slaveId)) {
       return RackCheckState.SLAVE_DECOMISSIONING;
     }
     
-    if (isRackDecomissioning(rackId)) {
+    if (stateCache.isRackDecomissioning(rackId)) {
       return RackCheckState.RACK_DECOMISSIONING;
     }
     
@@ -94,7 +95,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
-    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), activeTasks, cleaningTasks)) {
+    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks())) {
       if (taskId.getHost().equals(host)) {
         LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTaskId(), host, taskId));
         

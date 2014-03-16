@@ -26,7 +26,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No active racks.</p></center>
+                {{#if fetchDone}}
+                    <div class="empty-table-message"><p>No active racks</p></div>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>
@@ -44,7 +48,7 @@
                         <tr>
                             <th>ID</th>
                             <th>State</th>
-                            <th></th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,13 +56,17 @@
                             <tr>
                                 <td>{{ id }}</td>
                                 <td>{{ state }}</td>
-                                <td><a data-rack-id="{{ id }}" data-action="remove">Remove</a>
+                                <td class="actions-column"><a data-rack-id="{{ id }}" data-action="remove">Remove</a>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No dead racks.</p></center>
+                {{#if fetchDone}}
+                    <div class="empty-table-message"><p>No dead racks</p></div>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>
@@ -88,7 +96,11 @@
                     </tbody>
                 </table>
             {{else}}
-                <center><p>No decomissioning racks.</p></center>
+                {{#if fetchDone}}
+                    <div class="empty-table-message"><p>No decomissioning racks</p></div>
+                {{else}}
+                    <div class="page-loader centered"></div>
+                {{/if}}
             {{/if}}
         </div>
     </div>

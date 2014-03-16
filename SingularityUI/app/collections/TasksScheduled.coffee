@@ -14,7 +14,7 @@ class TasksScheduled extends Tasks
             task.requestId = task.pendingTaskId.requestId
             task.name = task.id
             task.nextRunAt = task.pendingTaskId.nextRunAt
-            task.nextRunAtHuman = moment(task.nextRunAt).fromNow()
+            task.nextRunAtHuman = utils.humanTimeSoon task.nextRunAt
             task.schedule = task.request.schedule
             tasks[i] = task
             app.allTasks[task.id] = task

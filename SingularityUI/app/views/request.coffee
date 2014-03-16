@@ -1,33 +1,73 @@
 View = require './view'
 
-RequestTasks = require '../collections/RequestTasks'
+Request = require '../models/Request'
+RequestHistory = require '../models/RequestHistory'
 
+RequestTasks = require '../collections/RequestTasks'
 HistoricalTasks = require '../collections/HistoricalTasks'
 
 class RequestView extends View
 
     template: require './templates/request'
 
-    initialize: =>
-        @request = app.allRequests[@options.requestId]
+    removeRequestTemplate: require './templates/vex/removeRequest'
 
+    initialize: ->
+        @requestHistory = new RequestHistory {}, requestId: @options.requestId
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-        @requestTasksActive.fetch().done =>
+
+    fetch: ->
+        promises = []
+
+        @requestHistory.fetched = false
+        @requestTasksActive.fetched = false
+
+        promises.push @requestHistory.fetch().done =>
+            @requestHistory.fetched = true
+            @render()
+
+        promises.push @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
             @render()
 
-    render: =>
-        if not @request
-            vex.dialog.alert("<p>Could not open a request by that ID.</p><pre>#{ @options.requestId }</pre>")
-            return
+        $.when(promises...)
 
+    refresh: ->
+        @fetch().done =>
+            @render()
+
+        @
+
+    render: ->
         context =
-            request: @request
+            request:
+                id: @options.requestId
+                name: utils.getRequestNameFromID @options.requestId
+                scheduled: false
+                onDemand: false
+                scheduledOrOnDemand: false
+                fullObject: false
+
+            fetchDoneHistory: @requestHistory.fetched
+            requestHistory: @requestHistory.attributes
 
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
 
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
+
+        if @requestHistory.attributes.requestUpdates?.length
+            requestLikeObject = @requestHistory.attributes.requestUpdates[0].request
+
+            requestLikeObject.JSONString = utils.stringJSON requestLikeObject
+            app.allRequests[requestLikeObject.id] = requestLikeObject
+            context.request.fullObject = true
+
+            context.request.scheduled = utils.isScheduledRequest requestLikeObject
+            context.request.onDemand = utils.isOnDemandRequest requestLikeObject
+            context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
+
+        context.requestNameStringLengthTens = Math.floor(context.request.id.length / 10) * 10
 
         @$el.html @template context
 
@@ -36,6 +76,8 @@ class RequestView extends View
         @setupEvents()
 
         utils.setupSortableTables()
+
+        @
 
     renderHistoricalTasksPaginated: ->
         @historicalTasks = new HistoricalTasks [],
@@ -88,7 +130,7 @@ class RequestView extends View
                         pagination: HistoryPaginationView
                     partials: [
                         header: '<th class="sorting" data-sort="taskId">Name</th>'
-                        cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>'
+                        cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
                         header: '<th class="sorting" data-sort="lastTaskStatus">Status</th>'
                         cell: '<td>{{ lastStatusHuman }}</td>'
@@ -101,9 +143,8 @@ class RequestView extends View
                     ,
                         header: '<th>&nbsp;</th>'
                         cell: '''
-                            <td>
+                            <td class="actions-column">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                &nbsp;&nbsp;
                                 <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                             </td>
                         '''
@@ -124,13 +165,67 @@ class RequestView extends View
         $teebleOuter = $(@historicalTasksView.el)
         $empty = $teebleOuter.find('.teeble_empty')
         if $empty.length
-            $teebleOuter.html('<center><p>No historical tasks.</p></center>')
+            $teebleOuter.html('<div class="empty-table-message"><p>No historical tasks</p></div>')
 
     setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'task', $(event.target).data('task-id')
+        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'task', $(e.target).data('task-id')
 
-        @$el.find('[data-action="viewObjectJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'request', $(event.target).data('request-id')
+        @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'request', $(e.target).data('request-id')
+
+        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+
+            vex.dialog.confirm
+                message: @removeRequestTemplate(requestId: requestModel.get('id'))
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                    vex.dialog.buttons.NO
+                ]
+                callback: (confirmed) =>
+                    return unless confirmed
+                    requestModel.destroy()
+                    app.router.navigate 'requests', trigger: true
+
+        @$el.find('[data-action="run-request-now"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+
+            requestType = $(e.target).data 'request-type'
+
+            dialogOptions =
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
+                    vex.dialog.buttons.NO
+                ]
+                callback: (confirmedOrPromptData) =>
+                    return unless confirmedOrPromptData
+
+                    requestModel.run(confirmedOrPromptData).done =>
+                        setTimeout =>
+                            @refresh()
+                        , 3000
+
+            if requestType is 'on-demand'
+                dialogType = vex.dialog.prompt
+                dialogOptions.message += '<p>Additional command line input (optional):</p>'
+            else
+                dialogType = vex.dialog.confirm
+
+            dialogType dialogOptions
+
+
+        @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
+            taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
+            $row = $(e.target).parents('tr')
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    taskModel.run()
+                    app.collections.tasksScheduled.remove(taskModel)
+                    $row.remove()
 
 module.exports = RequestView

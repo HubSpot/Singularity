@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,10 +12,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityMachineAbstraction.SingularityMachineState;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
-public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction> extends CuratorManager {
+public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction> extends CuratorAsyncManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(AbstractMachineManager.class);
   
@@ -25,17 +27,17 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private static final String DEAD_PATH = "dead";
   
   private final ObjectMapper objectMapper;
+  private final Transcoder<T> transcoder;
   
-  public AbstractMachineManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    super(curator);
+  public AbstractMachineManager(CuratorFramework curator, long zkAsyncTimeout, ObjectMapper objectMapper, Transcoder<T> transcoder) {
+    super(curator, zkAsyncTimeout);
     
     this.objectMapper = objectMapper;
+    this.transcoder = transcoder;
   }
 
   public abstract String getRoot();
-  
-  public abstract T fromBytes(byte[] bytes);
-  
+    
   protected String getActiveRoot() {
     return ZKPaths.makePath(getRoot(), ACTIVE_PATH);
   }
@@ -72,8 +74,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getObjects(getDecomissioningRoot());
   }
   
-  public List<T> getDecomissioningObjectsFiltered() {
-    List<T> decomissioning = getDecomissioningObjects();
+  public List<T> getDecomissioningObjectsFiltered(List<T> decomissioning) {
     List<T> filtered = Lists.newArrayListWithCapacity(decomissioning.size());
     
     for (T object : decomissioning) {
@@ -86,21 +87,14 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
   
   private Optional<T> getObject(String path) {
-    try {
-      byte[] bytes = curator.getData().forPath(path);
-      return Optional.of(fromBytes(bytes));
-    } catch (NoNodeException nee) {
-      return Optional.absent();
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
+    return getData(path, transcoder);
   }
   
   public Optional<T> getActiveObject(String objectId) {
     return getObject(getActivePath(objectId));
   }
   
-  public Optional<T> getDeadSlave(String objectId) {
+  public Optional<T> getDeadObject(String objectId) {
     return getObject(getDeadPath(objectId));
   }
   
@@ -109,26 +103,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
   
   private List<T> getObjects(String root) {
-    List<String> children = getChildren(root);
-    List<T> objects = Lists.newArrayListWithCapacity(children.size());
-    
-    for (String child : children) {
-      final String fullPath = ZKPaths.makePath(root, child);
-      
-      try {
-        byte[] bytes = curator.getData().forPath(fullPath);
-        
-        objects.add(fromBytes(bytes));
-        
-      } catch (NoNodeException nne) {
-        LOG.warn(String.format("Unexpected no node exception while fetching objects on path %s", fullPath));
-      } catch (Exception e) {
-        throw Throwables.propagate(e);
-      }
-      
-    }
-    
-    return objects;    
+    return getAsyncChildren(root, transcoder);
   }
   
   public List<String> getActive() {
@@ -163,13 +138,13 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       return;
     }
  
-    if (delete(getActivePath(objectId)) != DeleteResult.DELETED) {
+    if (delete(getActivePath(objectId)) != SingularityDeleteResult.DELETED) {
       LOG.warn(String.format("Deleting active object at %s failed", getActivePath(objectId)));
     }
   
     activeObject.get().setState(SingularityMachineState.DEAD);
     
-    if (create(getDeadPath(objectId), Optional.of(activeObject.get().getAsBytes(objectMapper))) != CreateResult.CREATED) {
+    if (create(getDeadPath(objectId), Optional.of(activeObject.get().getAsBytes(objectMapper))) != SingularityCreateResult.CREATED) {
       LOG.warn(String.format("Creating dead object at %s failed", getDeadPath(objectId)));
     }
   }
@@ -192,11 +167,11 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     mark(object, getDecomissioningPath(object.getId()), SingularityMachineState.DECOMISSIONED);
   }
   
-  public DeleteResult removeDecomissioning(String objectId) {
+  public SingularityDeleteResult removeDecomissioning(String objectId) {
     return delete(getDecomissioningPath(objectId));
   }
   
-  public DeleteResult removeDead(String objectId) {
+  public SingularityDeleteResult removeDead(String objectId) {
     return delete(getDeadPath(objectId));
   }
   
@@ -248,16 +223,8 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return numCleared;
   }
   
-  public void save(T object) {
-    final String path = getActivePath(object.getId());
-    
-    try {
-      curator.create().creatingParentsIfNeeded().forPath(path, object.getAsBytes(objectMapper));
-    } catch (NodeExistsException nee) {
-      LOG.warn(String.format("Node already existed for object %s at path %s", object, path));
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
+  public SingularityCreateResult save(T object) {
+    return create(getActivePath(object.getId()), Optional.of(object.getAsBytes(objectMapper)));
   }
   
 }

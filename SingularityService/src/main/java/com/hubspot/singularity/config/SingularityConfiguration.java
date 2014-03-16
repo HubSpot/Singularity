@@ -3,6 +3,8 @@ package com.hubspot.singularity.config;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -25,6 +27,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("hostname")
   private String hostname;
   
+  @JsonProperty("singularityUIHostnameAndPath")
+  private String singularityUIHostnameAndPath;
+  
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -41,8 +46,74 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
   
+  @NotNull
+  private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
+  
+  @NotNull
+  private long warnAfterTasksDoNotRunDefaultSeconds = 300;
+  
+  @NotNull
+  private long killAfterTasksDoNotRunDefaultSeconds = 600;
+  
+  @NotNull
+  private int logFetchCoreThreads = 3;
+  
+  @NotNull
+  private int logFetchMaxThreads = 25;
+  
+  @NotNull
+  private long zookeeperAsyncTimeout = 5000;
+  
+  public long getZookeeperAsyncTimeout() {
+    return zookeeperAsyncTimeout;
+  }
+
+  public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
+    this.zookeeperAsyncTimeout = zookeeperAsyncTimeout;
+  }
+
+  public int getLogFetchCoreThreads() {
+    return logFetchCoreThreads;
+  }
+
+  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
+    this.logFetchCoreThreads = logFetchCoreThreads;
+  }
+
+  public int getLogFetchMaxThreads() {
+    return logFetchMaxThreads;
+  }
+
+  public void setLogFetchMaxThreads(int logFetchMaxThreads) {
+    this.logFetchMaxThreads = logFetchMaxThreads;
+  }
+
+  public long getWarnAfterTasksDoNotRunDefaultSeconds() {
+    return warnAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public void setWarnAfterTasksDoNotRunDefaultSeconds(long warnAfterTasksDoNotRunDefaultSeconds) {
+    this.warnAfterTasksDoNotRunDefaultSeconds = warnAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public long getKillAfterTasksDoNotRunDefaultSeconds() {
+    return killAfterTasksDoNotRunDefaultSeconds;
+  }
+
+  public void setKillAfterTasksDoNotRunDefaultSeconds(long killAfterTasksDoNotRunDefaultSeconds) {
+    this.killAfterTasksDoNotRunDefaultSeconds = killAfterTasksDoNotRunDefaultSeconds;
+  }
+
   public long getCloseWaitSeconds() {
     return closeWaitSeconds;
+  }
+
+  public long getDeltaAfterWhichTasksAreLateMillis() {
+    return deltaAfterWhichTasksAreLateMillis;
+  }
+
+  public void setDeltaAfterWhichTasksAreLateMillis(long deltaAfterWhichTasksAreLateMillis) {
+    this.deltaAfterWhichTasksAreLateMillis = deltaAfterWhichTasksAreLateMillis;
   }
 
   public void setCloseWaitSeconds(long closeWaitSeconds) {
@@ -113,6 +184,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHostname(String hostname) {
     this.hostname = hostname;
+  }
+
+  public Optional<String> getSingularityUIHostnameAndPath() {
+    return Optional.fromNullable(singularityUIHostnameAndPath);
+  }
+
+  public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
+    this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
   }
 
 }

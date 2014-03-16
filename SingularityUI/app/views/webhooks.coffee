@@ -8,21 +8,34 @@ class WebhooksView extends View
 
     initialize: =>
         @webhooks = new Webhooks
-
-        @webhooks.fetch().done =>
+        @webhooks.on 'add remove', =>
             @fetchDone = true
             @render()
 
-        @webhooks.on 'add remove', => @render()
+    fetch: ->
+        @webhooks.fetch()
+
+    refresh: ->
+        return @ if (not @$el.find('input[type="search"]').val() in [undefined, '']) or @$el.find('[data-sorted-direction]').length
+
+        @fetchDone = false
+        @fetch().done =>
+            @fetchDone = true
+
+        @
 
     render: =>
-        return unless @fetchDone
+        @$el.html @template
+            fetchDone: @fetchDone
+            webhooks: _.pluck(@webhooks.models, 'attributes')
 
-        @$el.html @template webhooks: _.pluck(@webhooks.models, 'attributes')
+        @$addInput = @$el.find('input[type="search"]')
 
         @setupEvents()
 
         utils.setupSortableTables()
+
+        @
 
     setupEvents: ->
         $addInput = @$el.find('input[type="search"]')

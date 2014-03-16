@@ -7,25 +7,30 @@ class RacksView extends View
     template: require './templates/racks'
 
     initialize: ->
-        promises = []
-
         @racksActive = new Racks [], rackType: 'active'
-        promises.push @racksActive.fetch()
-
         @racksDead = new Racks [], rackType: 'dead'
-        promises.push @racksDead.fetch()
-
         @racksDecomissioning = new Racks [], rackType: 'decomissioning'
-        promises.push @racksDecomissioning.fetch()
 
-        $.when(promises...).done =>
+    fetch: ->
+        promises = []
+        promises.push @racksActive.fetch()
+        promises.push @racksDead.fetch()
+        promises.push @racksDecomissioning.fetch()
+        $.when(promises...)
+
+    refresh: ->
+        return @ if @$el.find('[data-sorted-direction]').length
+
+        @fetchDone = false
+        @fetch().done =>
             @fetchDone = true
             @render()
 
-    render: ->
-        return unless @fetchDone
+        @
 
+    render: ->
         context =
+            fetchDone: @fetchDone
             racksActive: _.pluck(@racksActive.models, 'attributes')
             racksDead: _.pluck(@racksDead.models, 'attributes')
             racksDecomissioning: _.pluck(@racksDecomissioning.models, 'attributes')
@@ -36,11 +41,13 @@ class RacksView extends View
 
         utils.setupSortableTables()
 
+        @
+
     setupEvents: ->
         $removeLinks = @$el.find('[data-action="remove"]')
 
         $removeLinks.unbind('click').on 'click', (e) =>
-            row = $(e.target).parents('tr')
+            $row = $(e.target).parents('tr')
             rackModel = @racksDead.get($(e.target).data('rack-id'))
 
             vex.dialog.confirm
@@ -49,6 +56,6 @@ class RacksView extends View
                     return unless confirmed
                     rackModel.destroy()
                     @racksDead.remove(rackModel)
-                    row.remove()
+                    $row.remove()
 
 module.exports = RacksView

@@ -6,6 +6,8 @@ Handlebars.registerHelper 'pluralize', (number, single, plural) -> if number is 
 
 Handlebars.registerHelper 'hardBreak', (string, options) -> string?.replace(/(:|-)/g, '$1<wbr/>')
 
+Handlebars.registerHelper 'getShortTaskIDMiddleEllipsis', (taskId, options) -> (utils.getShortTaskIDMiddleEllipsis taskId)?.replace(/(:|-)/g, '$1<wbr/>')
+
 Handlebars.registerHelper 'eachWithFn', (items, options) ->
     _(items).map((item, i, items) =>
         item._counter = i

@@ -1,7 +1,9 @@
 <section>
     {{#if requestsResults}}
+        <div class="page-header">
+            <h1>Requests</h1>
+        </div>
         <div class="row-fluid">
-            <h2>Requests</h2>
             <table class="table">
                 <thead>
                     <tr>
@@ -24,14 +26,16 @@
             </table>
         </div>
     {{else}}
-        <center><p>No requests found.</p></center>
+        <div class="empty-table-message"><p>No requests found</p></div>
     {{/if}}
 </section>
 
 <section>
     {{#if tasksResults}}
+        <div class="page-header">
+            <h1>Tasks</h1>
+        </div>
         <div class="row-fluid">
-            <h2>Tasks</h2>
             <table class="table">
                 <thead>
                     <tr>
@@ -54,6 +58,6 @@
             </table>
         </div>
     {{else}}
-        <center><p>No tasks found.</p></center>
+        <div class="empty-table-message"><p>No tasks found</p></div>
     {{/if}}
 </section>

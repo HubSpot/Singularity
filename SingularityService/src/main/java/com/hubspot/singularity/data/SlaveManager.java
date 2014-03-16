@@ -3,21 +3,18 @@ package com.hubspot.singularity.data;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularitySlaveTranscoder;
 
 public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
 
   private static final String SLAVE_ROOT = "slaves";
   
-  private final ObjectMapper objectMapper;
-  
   @Inject
-  public SlaveManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    super(curator, objectMapper);
-  
-    this.objectMapper = objectMapper;
+  public SlaveManager(CuratorFramework curator, ObjectMapper objectMapper, SingularityConfiguration configuration, SingularitySlaveTranscoder slaveTranscoder) {
+    super(curator, configuration.getZookeeperAsyncTimeout(), objectMapper, slaveTranscoder);
   }
   
   @Override
@@ -25,13 +22,4 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
     return SLAVE_ROOT;
   }
   
-  @Override
-  public SingularitySlave fromBytes(byte[] bytes) {
-    try {
-      return SingularitySlave.fromBytes(bytes, objectMapper);
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
-  }
- 
 }

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -13,34 +14,42 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingRequestId;
-import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularityPendingRequestTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityRequestTranscoder;
 import com.sun.jersey.api.ConflictException;
 
-public class RequestManager extends CuratorManager {
+public class RequestManager extends CuratorAsyncManager {
   
   private final static Logger LOG = LoggerFactory.getLogger(RequestManager.class);
   
   private final ObjectMapper objectMapper;
-
+  private final SingularityRequestTranscoder requestTranscoder;
+  private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
+  
   private final static String REQUEST_ROOT = "/requests";
     
   private final static String ACTIVE_PATH_ROOT = REQUEST_ROOT + "/active";
-
   private final static String PAUSED_PATH_ROOT = REQUEST_ROOT + "/paused";
-
   private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
-  
   private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
   
   @Inject
-  public RequestManager(CuratorFramework curator, ObjectMapper objectMapper) {
-    super(curator);
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityRequestTranscoder requestTranscoder, SingularityPendingRequestTranscoder pendingRequestTranscoder) {
+    super(curator, configuration.getZookeeperAsyncTimeout());
+  
+    this.requestTranscoder = requestTranscoder;
+    this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.objectMapper = objectMapper;
   }
  
@@ -76,15 +85,15 @@ public class RequestManager extends CuratorManager {
     return getNumChildren(ACTIVE_PATH_ROOT);
   }
   
-  public void deletePendingRequest(String pendingRequestId) {
-    delete(getPendingPath(pendingRequestId));
+  public void deletePendingRequest(SingularityPendingRequest pendingRequest) {
+    delete(getPendingPath(pendingRequest.getRequestId()));
   }
   
   public void deleteCleanRequest(String requestId) {
     delete(getCleanupPath(requestId));
   }
  
-  public CreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
+  public SingularityCreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
     return create(getCleanupPath(cleanupRequest.getRequestId()), Optional.of(cleanupRequest.getAsBytes(objectMapper)));
   }
   
@@ -101,7 +110,7 @@ public class RequestManager extends CuratorManager {
     }
   }
   
-  public DeleteResult deletePausedRequest(String requestId) {
+  public SingularityDeleteResult deletePausedRequest(String requestId) {
     return delete(getPausedPath(requestId));
   }
   
@@ -121,8 +130,12 @@ public class RequestManager extends CuratorManager {
     return getRequestFromPath(getPausedPath(requestId));
   }
   
-  public void addToPendingQueue(SingularityPendingRequestId pendingRequestId) {
-    create(getPendingPath(pendingRequestId.toString()));
+  public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
+    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId()), Optional.of(pendingRequest.getAsBytes(objectMapper)));
+  
+    LOG.info(String.format("(%s) added to pending queue with result: %s", pendingRequest, result));
+
+    return result;
   }
   
   public enum PersistResult {
@@ -158,15 +171,8 @@ public class RequestManager extends CuratorManager {
     return getChildren(ACTIVE_PATH_ROOT);
   }
   
-  public List<SingularityPendingRequestId> getPendingRequestIds() {
-    List<String> pendingStrings = getChildren(PENDING_PATH_ROOT);
-    List<SingularityPendingRequestId> pendingRequestIds = Lists.newArrayListWithCapacity(pendingStrings.size());
-    
-    for (String pendingString : pendingStrings) {
-      pendingRequestIds.add(SingularityPendingRequestId.fromString(pendingString));
-    }
-    
-    return pendingRequestIds;
+  public List<SingularityPendingRequest> getPendingRequests() {
+    return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
   }
   
   public List<String> getCleanupRequestIds() {
@@ -191,48 +197,38 @@ public class RequestManager extends CuratorManager {
     return cleanupRequests;
   }
   
-  public List<SingularityTaskRequest> fetchTasks(List<SingularityPendingTaskId> taskIds) {
-    final List<SingularityTaskRequest> tasks = Lists.newArrayListWithCapacity(taskIds.size());
+  public List<SingularityTaskRequest> getTaskRequests(List<SingularityPendingTask> tasks) {
+    final Map<String, SingularityPendingTask> requestIdToPendingTaskId = Maps.newHashMapWithExpectedSize(tasks.size());
     
-    for (SingularityPendingTaskId taskId : taskIds) {
-      Optional<SingularityRequest> maybeRequest = fetchRequest(taskId.getRequestId());
-      
-      if (maybeRequest.isPresent()) {
-        tasks.add(new SingularityTaskRequest(maybeRequest.get(), taskId));
-      }
+    for (SingularityPendingTask task : tasks) {
+      requestIdToPendingTaskId.put(task.getTaskId().getRequestId(), task);
     }
     
-    return tasks;
+    final List<SingularityRequest> matchingRequests = getAsync(ACTIVE_PATH_ROOT, requestIdToPendingTaskId.keySet(), requestTranscoder);
+    
+    final List<SingularityTaskRequest> taskRequests = Lists.newArrayListWithCapacity(matchingRequests.size());
+    
+    for (SingularityRequest request : matchingRequests) {
+      SingularityPendingTask task = requestIdToPendingTaskId.get(request.getId());
+    
+      taskRequests.add(new SingularityTaskRequest(request, task.getTaskId(), task.getMaybeCmdLineArgs()));
+    }
+    
+    return taskRequests;
   }
   
   public List<SingularityRequest> getPausedRequests() {
-    return getRequests(PAUSED_PATH_ROOT);
+    return getAsyncChildren(PAUSED_PATH_ROOT, requestTranscoder);
   }
   
   public List<SingularityRequest> getActiveRequests() {
-    return getRequests(ACTIVE_PATH_ROOT);
+    return getAsyncChildren(ACTIVE_PATH_ROOT, requestTranscoder);
   }
   
-  private List<SingularityRequest> getRequests(String parent) {
-    final List<String> requestIds = getChildren(parent);
-    final List<SingularityRequest> requests = Lists.newArrayListWithCapacity(requestIds.size());
-    
-    for (String requestId : requestIds) {
-      Optional<SingularityRequest> request = getRequestFromPath(ZKPaths.makePath(parent, requestId));
-      
-      if (request.isPresent()) {
-        requests.add(request.get());
-      } else {
-        LOG.warn(String.format("While fetching %s requests, expected to find request %s but it was not found", parent, requestId));
-      }
-    }
-    
-    return requests;
-  }  
-    
   private Optional<SingularityRequest> getRequestFromPath(String path) {
     try {
-      SingularityRequest request = SingularityRequest.fromBytes(curator.getData().forPath(path), objectMapper);
+      SingularityRequest request = requestTranscoder.transcode(curator.getData().forPath(path));
+      
       return Optional.of(request);
     } catch (NoNodeException nee) {
       return Optional.absent();

@@ -5,7 +5,7 @@
 <section>
     <div class="row-fluid">
         <div class="span12">
-            <ul class="nav nav-tabs">
+            <ul class="nav nav-pills">
                 <li class="active">
                     <a href="/singularity/tasks" data-route="tasks">Active</a>
                 </li>
@@ -21,43 +21,10 @@
 </section>
 
 <section>
-    <input type="search" placeholder="Filter tasks..." required />
+    <input type="search" placeholder="Filter tasks..." value="{{ searchFilter }}" required />
     <div class="row-fluid">
-        <div class="span12">
-            {{#if tasks.length}}
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Started</th>
-                            <th>Host</th>
-                            <th>Rack</th>
-                            <th>CPUs</th>
-                            <th>Memory</th>
-                            <th data-sortable="false"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn tasks}}
-                            <tr data-task-id="{{ id }}">
-                                <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
-                                <td data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
-                                <td>{{ host }}</td>
-                                <td>{{ rack }}</td>
-                                <td>{{ resources.cpus }}</td>
-                                <td data-value="{{ resources.memoryMb }}">{{ memoryHuman }}</td>
-                                <td>
-                                    <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    &nbsp;&nbsp;
-                                    <a data-task-id="{{ id }}" data-action="remove" data-url="{{ url }}">Remove</a>
-                                </td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            {{else}}
-                <center><p>No active tasks.</p></center>
-            {{/if}}
+        <div data-tasks-table-container class="span12">
+            {{> tasksTable}}
         </div>
     </div>
 </section>

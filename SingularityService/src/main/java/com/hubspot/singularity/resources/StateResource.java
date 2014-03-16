@@ -1,17 +1,23 @@
 package com.hubspot.singularity.resources;
 
-import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityHostState;
-import com.hubspot.singularity.SingularityScheduledTasksInfo;
-import com.hubspot.singularity.SingularityState;
-import com.hubspot.singularity.data.*;
-import com.hubspot.singularity.hooks.WebhookManager;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
+
+import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityHostState;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
+import com.hubspot.singularity.SingularityState;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.RackManager;
+import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.hooks.WebhookManager;
 
 @Path("/state")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -23,15 +29,17 @@ public class StateResource {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   private final StateManager stateManager;
+  private final SingularityConfiguration singularityConfiguration;
   
   @Inject
-  public StateResource(RequestManager requestManager, TaskManager taskManager, StateManager stateManager, WebhookManager webhookManager, SlaveManager slaveManager, RackManager rackManager) {
+  public StateResource(RequestManager requestManager, TaskManager taskManager, StateManager stateManager, WebhookManager webhookManager, SlaveManager slaveManager, RackManager rackManager, SingularityConfiguration singularityConfiguration) {
     this.requestManager = requestManager;
     this.taskManager = taskManager;
     this.stateManager = stateManager;
     this.webhookManager = webhookManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
+    this.singularityConfiguration = singularityConfiguration;
   }
 
   @GET
@@ -40,7 +48,7 @@ public class StateResource {
     final int scheduledTasks = taskManager.getNumScheduledTasks();
     final int cleaningTasks = taskManager.getNumCleanupTasks();
 
-    final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getScheduledTasks());
+    final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getScheduledTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
     
     final int requests = requestManager.getNumRequests();
     final int pendingRequests = requestManager.getSizeOfPendingQueue();

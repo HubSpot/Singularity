@@ -1,28 +1,26 @@
 Collection = require './collection'
 
 class TaskFiles extends Collection
-    getSlaveUrlBase: =>
-        if constants.mesosLogsPortHttps?
-            "https://#{ @offerHostname }:#{ constants.mesosLogsPortHttps }"
-        else
-            "http://#{ @offerHostname }:#{ constants.mesosLogsPort }"
 
-    url: =>
-        fullPath = "#{ @directory }/#{ @path ? ''}"
-        baseUrl = @getSlaveUrlBase()
-        "#{ baseUrl }/files/browse.json?path=#{ escape fullPath }&jsonp=?"
+    url: ->
+        params =
+            path: @path
 
-    initialize: (models, { @taskId, @offerHostname, @directory, @path }) =>
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/browse?#{ $.param params }"
 
-    parse: (taskFiles) =>
-        baseUrl = @getSlaveUrlBase()
+    initialize: (models, { @taskId, @offerHostname, @directory, @path }) ->
+
+    parse: (taskFiles) ->
         _.map taskFiles, (taskLogFile) =>
+            relPath = taskLogFile.path.replace(@directory, '')
+            downloadParams = $.param {path: relPath}
+
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
-            taskLogFile.mtimeHuman = moment(taskLogFile.mtime * 1000).from()
+            taskLogFile.mtimeHuman = utils.humanTimeAgo(taskLogFile.mtime * 1000)
             taskLogFile.sizeHuman = Humanize.fileSize(taskLogFile.size)
-            taskLogFile.downloadLink = "#{ baseUrl }/files/download.json?path=#{ taskLogFile.path }"
+            taskLogFile.downloadLink = "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/download?#{ downloadParams }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
-            taskLogFile.relPath = taskLogFile.path.replace(@directory, '')
+            taskLogFile.relPath = relPath
             taskLogFile.taskId = @taskId
             taskLogFile
 
@@ -32,5 +30,10 @@ class TaskFiles extends Collection
         else if not a.get('isDirectory') and b.get('isDirectory')
             return -1
         return a.get('size') - b.get('size')
+
+    testSandbox: ->
+        $.ajax
+            url: @url()
+            suppressErrors: true
 
 module.exports = TaskFiles

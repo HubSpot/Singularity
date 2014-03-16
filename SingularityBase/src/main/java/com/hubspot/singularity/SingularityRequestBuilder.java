@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
-import com.hubspot.mesos.Resources;
-
 import java.util.List;
 import java.util.Map;
+
+import com.hubspot.mesos.Resources;
 
 public class SingularityRequestBuilder {
 
@@ -31,9 +31,10 @@ public class SingularityRequestBuilder {
   private List<String> owners;
   private Integer numRetriesOnFailure;
   private Integer maxFailuresBeforePausing;
+  private Boolean pauseOnInitialFailure;
   
   public SingularityRequest build() {
-    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure, maxFailuresBeforePausing);
+    return new SingularityRequest(command, name, executor, resources, schedule, instances, daemon, env, uris, metadata, executorData, rackSensitive, id, version, timestamp, owners, numRetriesOnFailure, maxFailuresBeforePausing, pauseOnInitialFailure);
   }
   
   public Integer getMaxFailuresBeforePausing() {
@@ -195,6 +196,15 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setExecutorData(Object executorData) {
     this.executorData = executorData;
+    return this;
+  }
+
+  public Boolean getPauseOnInitialFailure() {
+    return pauseOnInitialFailure;
+  }
+
+  public SingularityRequestBuilder setPauseOnInitialFailure(Boolean pauseOnInitialFailure) {
+    this.pauseOnInitialFailure = pauseOnInitialFailure;
     return this;
   }
 

@@ -53,7 +53,7 @@ public interface HistoryJDBI {
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
-  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, pendingType, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
+  @SqlQuery("SELECT taskId, requestId, createdAt, updatedAt, directory, pendingType, lastTaskStatus FROM taskHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
   List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(@Bind("requestIdLike") String requestIdLike, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityRequestHistoryMapper.class)
@@ -61,7 +61,7 @@ public interface HistoryJDBI {
   List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityRequestHistoryMapper.class)
-  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT('%', CONCAT(:requestIdLike, '%')) ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
+  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
   List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   void close();

@@ -8,24 +8,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 
 public class SingularityTaskRequest extends SingularityJsonObject implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
   private final SingularityPendingTaskId pendingTaskId;
-  
+  private final Optional<String> maybeCmdLineArgs;
+    
   @JsonCreator
-  public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId) {
+  public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs) {
     this.request = request;
     this.pendingTaskId = pendingTaskId;
+    this.maybeCmdLineArgs = cmdLineArgs;
   }
   
   public SingularityRequest getRequest() {
     return request;
   }
   
+  // TODO next data migration, this should move to being SingularityPendingTask
   public SingularityPendingTaskId getPendingTaskId() {
     return pendingTaskId;
+  }
+  
+  public Optional<String> getMaybeCmdLineArgs() {
+    return maybeCmdLineArgs;
   }
 
   @Override
@@ -61,7 +69,7 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
 
   @Override
   public String toString() {
-    return "SingularityTaskRequest [request=" + request + ", pendingtaskId=" + pendingTaskId + "]";
+    return "SingularityTaskRequest [request=" + request + ", pendingTaskId=" + pendingTaskId + ", maybeCmdLineArgs=" + maybeCmdLineArgs + "]";
   }
-  
+
 }

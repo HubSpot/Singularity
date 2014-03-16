@@ -22,11 +22,13 @@ class SearchView extends View
     render: ->
         @$el.html @template
 
-        @$searchOptions = $ '.search-options'
-        @$search = @$el.find('input[type="search"]')
+        @$searchOptions = @$ '.search-options'
+        @$search = @$ 'input[type="search"]'
 
         @setupSearchOptions()
         @setUpSearchEvents()
+
+        @
 
     setupSearchOptions: ->
         @$searchOptions.find('select').each (i, select) =>
@@ -53,21 +55,26 @@ class SearchView extends View
         @$el.find('.results').html @templateResults context
 
     setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').click (event) ->
-            utils.viewJSON 'task', $(event.target).data('task-id')
+        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'task', $(e.target).data('task-id')
 
     setUpSearchEvents: ->
-        @$search.focus() if $(window).width() > 568
+        if not app.isMobile
+            setTimeout => @$search.focus()
 
-        lastText = _.trim @$search.val()
+        lastText = ''
+        showSpinnerTimeout = undefined
+        showSlowSearchAPITimeout = undefined
 
-        @$search.on 'change keypress paste focus textInput input click keydown', _.debounce =>
+        @$search.unbind().on 'change keypress paste focus textInput input click keydown', _.debounce =>
             text = _.trim @$search.val()
 
             if @forceSearchOnce or text isnt lastText and text.length
                 if @lastXhrTasks?
                    @lastXhrTasks.abort()
                    @lastXhrRequests.abort()
+                   clearTimeout showSpinnerTimeout
+                   clearTimeout showSlowSearchAPITimeout
 
                 @forceSearchOnce = false
                 lastText = text
@@ -78,7 +85,18 @@ class SearchView extends View
                 @tasksResults = new TasksSearch [], { query: text, params: @currentSearchOptions['tasks'] }
                 @lastXhrTasks = @tasksResults.fetch()
 
-                $.when(@lastXhrTasks, @lastXhrRequests).done => @renderResults()
+                showSpinnerTimeout = setTimeout =>
+                    @$el.find('.results').html '<br><br><div class="page-loader centered"></div>'
+                , 500
+
+                showSlowSearchAPITimeout = setTimeout =>
+                    @$el.find('.results').html '<br><br><div class="page-loader centered"></div><br><br><center>Sorry the search API is <a href="https://github.com/HubSpot/Singularity/issues/90" target="_blank">so slow</a>...</center>'
+                , 2000
+
+                $.when(@lastXhrTasks, @lastXhrRequests).done =>
+                    clearTimeout showSpinnerTimeout
+                    clearTimeout showSlowSearchAPITimeout
+                    @renderResults()
 
         , 35
 

@@ -1,12 +1,40 @@
 .table tbody tr:hover td, .table tbody tr:hover th
     background-color rgba(0, 0, 0, .05)
 
-html.lightstrap
+.table
+    background #f9f9f9
 
-    .table
-        background #f9f9f9
+.table
 
-html.darkstrip
+    td > span
+        white-space nowrap
 
-    .table
-        background #222
+.table, table, table[data-sortable]
+
+    th, td
+
+        &.actions-column
+            white-space nowrap
+            text-align right
+
+            a
+                margin-left 10px
+
+    .icon
+        margin-right 10px
+
+.empty-table-message
+    text-align center
+    border 3px dashed #e7e7e7
+    padding 2.5em
+    color #888
+    font-size 1.3em
+    font-weight 300
+    letter-spacing .03em
+
+    p:last-child
+        margin-bottom 0
+
+.results > section + section > .empty-table-message, .empty-table-message + .empty-table-message
+    margin-top 0
+    border-top 0

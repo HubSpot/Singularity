@@ -5,7 +5,7 @@
 <section>
     <div class="row-fluid">
         <div class="span12">
-            <ul class="nav nav-tabs">
+            <ul class="nav nav-pills nav-pills-with-nav-pills-below">
                 <li class="active">
                     <a href="/singularity/requests" data-route="requests">Active</a>
                 </li>
@@ -25,76 +25,18 @@
 
 <section>
     <div class="row-fluid">
-        <input type="search" placeholder="Filter requests..." required />
-    </div>
-    <h2>Active</h2>
-    <div class="row-fluid">
-        <div class="span12">
-            {{#if requests.length}}
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Requested</th>
-                            <th>Deploy User</th>
-                            <th>Instances</th>
-                            <th data-sortable="false"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requests}}
-                            <tr data-request-id="{{ id }}">
-                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                <td>{{ deployUser }}</td>
-                                <td>{{ instances }}</td>
-                                <td>
-                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    &nbsp;&nbsp;
-                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
-                                </td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            {{else}}
-                <center><p>No active requests.</p></center>
-            {{/if}}
-        </div>
-    </div>
-    <h2>Scheduled</h2>
-    <div class="row-fluid">
-        <div class="span12">
-            {{#if requestsScheduled.length}}
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Requested</th>
-                            <th>Deploy User</th>
-                            <th>Schedule</th>
-                            <th data-sortable="false"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requestsScheduled}}
-                            <tr data-request-id="{{ id }}">
-                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                <td>{{ deployUser }}</td>
-                                <td>{{ schedule }}</td>
-                                <td>
-                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    &nbsp;&nbsp;
-                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
-                                </td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            {{else}}
-                <center><p>No active scheduled requests.</p></center>
-            {{/if}}
+        <div data-requests-nav-container class="span12">
+            {{> requestsNav}}
         </div>
     </div>
 </section>
+
+<section>
+    <div class="row-fluid">
+        <input type="search" placeholder="Filter requests..." value="{{ searchFilter }}" required />
+    </div>
+</section>
+
+<div data-requests-body-container>
+    {{> requestsBody}}
+</div>

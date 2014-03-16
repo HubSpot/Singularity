@@ -29,11 +29,18 @@ constants =
             isActive: false
             label: 'Lost'
 
-    requestCleanupType:
+    requestStates:
+        CREATED: 'Created'
+        UPDATED: 'Updated'
+        DELETED: 'Deleted'
+        PAUSED: 'Paused'
+        UNPAUSED: 'Unpaused'
+
+    requestCleanupTypes:
         DELETING: 'Deleting'
         PAUSING: 'Pausing'
 
-    taskCleanupType:
+    taskCleanupTypes:
         BOUNCING:
             label: 'Bouncing'
         USER_REQUESTED:

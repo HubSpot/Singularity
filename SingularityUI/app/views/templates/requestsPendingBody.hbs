@@ -1,0 +1,24 @@
+{{#if requests.length}}
+    <table class="table" data-sortable>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Pending Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#eachWithFn requests}}
+                <tr data-request-id="{{ id }}">
+                    <td>{{#hardBreak id}}{{/hardBreak}}</td>
+                    <td>{{ pendingType }}</td>
+                </tr>
+            {{/eachWithFn}}
+        </tbody>
+    </table>
+{{else}}
+    {{#if collectionSynced}}
+        <div class="empty-table-message"><p>No pending requests</p></div>
+    {{else}}
+        <div class="page-loader centered cushy"></div>
+    {{/if}}
+{{/if}}

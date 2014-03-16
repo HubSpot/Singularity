@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDriverManager;
-import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
@@ -88,7 +88,7 @@ public class SingularityCleaner extends SingularitySchedulerBase {
     LOG.info(String.format("Cleaning up %s requests", cleanupRequests.size()));
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getScheduledTasks();
+    final List<SingularityPendingTask> pendingTasks = taskManager.getScheduledTasks();
     
     int numTasksKilled = 0;
     int numScheduledTasksRemoved = 0;
@@ -113,18 +113,16 @@ public class SingularityCleaner extends SingularitySchedulerBase {
         }
       }
       
-      if (killTasks) {
-        
+      if (killTasks) {        
         for (SingularityTaskId matchingTaskId : SingularityTaskId.filter(activeTaskIds, requestId)) {
           driverManager.kill(matchingTaskId.toString());
           numTasksKilled++;
         }
      
-        for (SingularityPendingTaskId matchingTaskId : SingularityPendingTaskId.filter(pendingTaskIds, requestId)) {
-          taskManager.deleteScheduledTask(matchingTaskId.toString());
+        for (SingularityPendingTask matchingTask : SingularityPendingTask.filter(pendingTasks, requestId)) {
+          taskManager.deleteScheduledTask(matchingTask.getTaskId().getId());
           numScheduledTasksRemoved++;
-        }
-        
+        }        
       }
      
       requestManager.deleteCleanRequest(requestId);
@@ -136,6 +134,10 @@ public class SingularityCleaner extends SingularitySchedulerBase {
   public void drainCleanupQueue() {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
+  }
+  
+  private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
+    return taskManager.isActiveTask(cleanupTask.getTaskId());
   }
   
   private void drainTaskCleanupQueue() {
@@ -161,7 +163,10 @@ public class SingularityCleaner extends SingularitySchedulerBase {
     int killedTasks = 0;
     
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
-      if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks)) {
+      if (!isValidTask(cleanupTask)) {
+        LOG.info(String.format("Couldn't find a matching active task for cleanup task %s, deleting..", cleanupTask));
+        taskManager.deleteCleanupTask(cleanupTask.getTaskId());
+      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks)) {
         driverManager.kill(cleanupTask.getTaskId());
         
         taskManager.deleteCleanupTask(cleanupTask.getTaskId());
