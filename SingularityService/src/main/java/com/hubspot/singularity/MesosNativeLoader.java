@@ -1,16 +1,41 @@
 package com.hubspot.singularity;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import org.apache.mesos.MesosNativeLibrary;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Properties;
 import java.util.UUID;
 
 public class MesosNativeLoader {
   public static final String KEY_SINGULARITY_MESOS_TEMPDIR = "singularity.mesos.tempdir";
   public static final String KEY_SINGULARITY_MESOS_USE_SYSTEMLIB = "singularity.mesos.use.systemlib";
+  public static final String KEY_MESOS_VERSION = "mesos.version";
+
+  public static final String VERSION_PROPERTIES_FILENAME = "/version.properties";
 
   private static File nativeLibFile = null;
+
+  private static Optional<String> loadMesosVersion() {
+    Properties props = new Properties();
+
+    try {
+      final InputStream stream = MesosNativeLoader.class.getResourceAsStream(VERSION_PROPERTIES_FILENAME);
+
+      if (stream != null) {
+        props.load(stream);
+        stream.close();
+      }
+    } catch (IOException e) {
+      System.out.println("Caught exception while trying to load Mesos version: " + e);
+    }
+
+    final String mesosVersion = props.getProperty(KEY_MESOS_VERSION);
+
+    return Strings.isNullOrEmpty(mesosVersion) ? Optional.<String>absent() : Optional.of(mesosVersion);
+  }
 
   static void cleanUpExtractedNativeLib() {
     if (nativeLibFile != null && nativeLibFile.exists())
@@ -127,7 +152,11 @@ public class MesosNativeLoader {
       }
     }
 
-    String mesosNativeLibraryName = System.mapLibraryName("mesos");
+    // Attempt to load Mesos version
+    Optional<String> maybeMesosVersion = loadMesosVersion();
+
+    // Build library name
+    String mesosNativeLibraryName = maybeMesosVersion.isPresent() ? System.mapLibraryName("mesos-" + maybeMesosVersion.get()) : System.mapLibraryName("mesos");
 
     // Load an OS-dependent native library inside a jar file
     String mesosNativeLibraryPath = "/native/" + OSInfo.getNativeLibFolderPathForCurrentOS();
@@ -135,7 +164,7 @@ public class MesosNativeLoader {
     if (!hasNativeLib) {
       if (OSInfo.getOSName().equals("Mac")) {
         // Fix for openjdk7 for Mac
-        String altName = "libmesos.jnilib";
+        String altName = maybeMesosVersion.isPresent() ? String.format("libmesos-%s.jnilib", maybeMesosVersion.get()) : "libmesos.jnilib";
         if (hasResource(mesosNativeLibraryPath + "/" + altName)) {
           mesosNativeLibraryName = altName;
           hasNativeLib = true;
@@ -144,7 +173,7 @@ public class MesosNativeLoader {
     }
 
     if (!hasNativeLib) {
-      throw new RuntimeException(String.format("no native library is found for os.name=%s and os.arch=%s", OSInfo.getOSName(), OSInfo.getArchName()));
+      throw new RuntimeException(String.format("No native library found for os.name=%s, os.arch=%s, mesos.version=%s", OSInfo.getOSName(), OSInfo.getArchName(), maybeMesosVersion));
     } else {
       URL url = MesosNativeLoader.class.getResource(mesosNativeLibraryPath + "/" + mesosNativeLibraryName);
       if (url != null && url.getFile() != null) {
