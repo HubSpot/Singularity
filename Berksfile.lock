@@ -1,24 +1,24 @@
 {
   "sources": {
+    "singularity": {
+      "locked_version": "0.1.0",
+      "git": "git://github.com/tpetr/cookbook-singularity.git",
+      "ref": "1675dfd177bfde225695c4453a5fc3849ab48344"
+    },
     "apt": {
       "locked_version": "2.3.0"
     },
     "mysql": {
       "locked_version": "4.0.10"
     },
-    "mesos": {
-      "locked_version": "1.0.1"
-    },
-    "singularity": {
-      "locked_version": "0.1.0",
-      "git": "git://github.com/tpetr/cookbook-singularity.git",
-      "ref": "1675dfd177bfde225695c4453a5fc3849ab48344"
-    },
     "openssl": {
       "locked_version": "1.1.0"
     },
     "build-essential": {
       "locked_version": "1.4.2"
+    },
+    "mesos": {
+      "locked_version": "1.0.1"
     },
     "zookeeper": {
       "locked_version": "1.4.9"
