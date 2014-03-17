@@ -5,6 +5,7 @@ class TaskHistory extends Model
     url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/task/#{ @taskId }"
 
     initialize: (models, { @taskId }) =>
+        @on 'sync', => @synced = true
 
     parse: (taskHistory) ->
         taskHistory.task.JSONString = utils.stringJSON taskHistory
@@ -17,14 +18,18 @@ class TaskHistory extends Model
         taskHistory.task.startedAt = taskHistory.task.taskId.startedAt
         taskHistory.task.startedAtHuman = utils.humanTimeAgo taskHistory.task.taskId.startedAt
         taskHistory.task.rack = taskHistory.task.taskId.rackId
+        taskHistory.task.isStopped = false
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
             taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
-            taskUpdate.statusMessage = taskUpdate.statusMessage ? 'No status message available'
+            taskUpdate.statusMessage = taskUpdate.statusMessage ? ''
             taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
-            if taskUpdate.statusUpdate is 'TASK_FINISHED'
-                taskHistory.task.isFinished = true
+            if taskUpdate.statusUpdate in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
+                taskHistory.task.isStopped = true
+
+        _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
+        taskHistory.taskUpdates.reverse()
 
         # Construct mesos logs link
         taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"

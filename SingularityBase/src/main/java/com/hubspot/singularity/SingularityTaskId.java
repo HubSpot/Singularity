@@ -58,16 +58,24 @@ public class SingularityTaskId extends SingularityId {
     return getRequestId().equals(pendingTaskId.getRequestId());
   }
   
-  public static SingularityTaskId fromString(String string) {
+  public static SingularityTaskId fromString(String string) throws InvalidSingularityTaskIdException {
     final String[] splits = JavaUtils.reverseSplit(string, 5, "-");
     
-    final String requestId = splits[0];
-    final long startedAt = Long.parseLong(splits[1]);
-    final int instanceNo = Integer.parseInt(splits[2]);
-    final String host = splits[3];
-    final String rackId = splits[4];
+    if (splits.length != 5) {
+      throw new InvalidSingularityTaskIdException(String.format("TaskId %s should had split length of %s (instead of 5)", string, splits.length));
+    }
     
-    return new SingularityTaskId(requestId, startedAt, instanceNo, host, rackId);
+    try {
+      final String requestId = splits[0];
+      final long startedAt = Long.parseLong(splits[1]);
+      final int instanceNo = Integer.parseInt(splits[2]);
+      final String host = splits[3];
+      final String rackId = splits[4];
+      
+      return new SingularityTaskId(requestId, startedAt, instanceNo, host, rackId);
+    } catch (NumberFormatException nfe) {
+      throw new InvalidSingularityTaskIdException(String.format("TaskId %s had an invalid number parameter (%s)", string, nfe.getMessage()));
+    }
   }
 
   public String toString() {

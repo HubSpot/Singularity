@@ -1,6 +1,6 @@
 # Singularity
 
-Scheduler for running [mesos](http://mesos.apache.org/) tasks - long running processes, one-off tasks, and scheduled jobs.
+Scheduler (HTTP API and web interface) for running [mesos](http://mesos.apache.org/) tasks - long running processes, one-off tasks, and scheduled jobs.
 
 ## Overview
 

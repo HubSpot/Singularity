@@ -25,30 +25,11 @@
 
 <section>
     <div class="row-fluid">
-        <input type="search" placeholder="Filter requests..." required />
+        <input type="search" placeholder="Filter requests..." value="{{ searchFilter }}" required />
     </div>
     <div class="row-fluid">
-        <div class="span12">
-            {{#if requests.length}}
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Pending Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requests}}
-                            <tr data-request-id="{{ id }}">
-                                <td>{{#hardBreak id}}{{/hardBreak}}</td>
-                                <td>{{ pendingType }}</td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            {{else}}
-                <center><p>No pending requests.</p></center>
-            {{/if}}
+        <div data-requests-body-container class="span12">
+            {{> requestsBody}}
         </div>
     </div>
 </section>

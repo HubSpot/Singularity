@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +19,7 @@ import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
 
 public class SingularityLogSupport implements SingularityCloseable {
@@ -32,17 +34,34 @@ public class SingularityLogSupport implements SingularityCloseable {
   private final SingularityCloser closer;
 
   @Inject
-  public SingularityLogSupport(MesosClient mesosClient, HistoryManager historyManager, SingularityCloser closer) {
+  public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, HistoryManager historyManager, SingularityCloser closer) {
     this.mesosClient = mesosClient;
     this.historyManager = historyManager;
     this.closer = closer;
 
-    this.logLookupExecutorService = new ThreadPoolExecutor(1, 3, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("SingularityDirectoryFetcher-%d").build());
+    this.logLookupExecutorService = new ThreadPoolExecutor(configuration.getLogFetchCoreThreads(), configuration.getLogFetchMaxThreads(), 250L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("SingularityDirectoryFetcher-%d").build());
   }
 
   @Override
   public void close() {
     closer.shutdown(getClass().getName(), logLookupExecutorService);
+  }
+  
+  private Optional<String> findDirectory(SingularityTaskId taskId, List<MesosExecutorObject> executors) {
+    for (MesosExecutorObject executor : executors) {
+      for (MesosTaskObject executorTask : executor.getTasks()) {
+        if (taskId.getId().equals(executorTask.getId())) {
+          return Optional.of(executor.getDirectory());
+        }
+      }
+      for (MesosTaskObject executorTask : executor.getCompletedTasks()) {
+        if (taskId.getId().equals(executorTask.getId())) {
+          return Optional.of(executor.getDirectory());
+        }
+      }
+    }
+  
+    return Optional.absent();
   }
 
   private void loadDirectory(SingularityTaskId taskId, SingularityTaskHistory history) {
@@ -54,29 +73,25 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
 
-    String directory = null;
+    Optional<String> directory = null;
 
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
-      for (MesosExecutorObject executor : slaveFramework.getExecutors()) {
-        for (MesosTaskObject executorTask : executor.getTasks()) {
-          if (taskId.getId().equals(executorTask.getId())) {
-            directory = executor.getDirectory();
-            break;
-          }
-        }
+      directory = findDirectory(taskId, slaveFramework.getExecutors());
+      if (!directory.isPresent()) {
+        directory = findDirectory(taskId, slaveFramework.getCompletedExecutors());
       }
     }
-
-    if (directory == null) {
+   
+    if (!directory.isPresent()) {
       LOG.warn(String.format("Couldn't find matching executor for task %s", taskId.getId()));
       return;
     }
 
-    LOG.debug(String.format("Found a directory %s for task %s", directory, taskId.getId()));
+    LOG.debug(String.format("Found a directory %s for task %s", directory.get(), taskId.getId()));
 
-    historyManager.updateTaskDirectory(taskId.getId(), directory);
+    historyManager.updateTaskDirectory(taskId.getId(), directory.get());
 
-    LOG.trace(String.format("Updated task directory in %sms", System.currentTimeMillis() - now));
+    LOG.trace(String.format("Updated task %s directory in %sms", taskId.getId(), System.currentTimeMillis() - now));
   }
 
   public void checkDirectory(final SingularityTaskId taskId) {
@@ -94,10 +109,16 @@ public class SingularityLogSupport implements SingularityCloseable {
 
       @Override
       public void run() {
-        loadDirectory(taskId, maybeHistory.get());
+        try {
+          loadDirectory(taskId, maybeHistory.get());
+        } catch (Throwable t) {
+          LOG.error(String.format("While fetching directory for task: %s", taskId), t);
+        }
       }
     };
 
+    LOG.trace(String.format("Enqueing a request to fetch directory for task: %s, current queue size: %s", taskId, logLookupExecutorService.getQueue().size()));
+  
     logLookupExecutorService.submit(cmd);
   }
 

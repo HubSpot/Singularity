@@ -1,0 +1,100 @@
+doctype html
+html
+  head
+
+    title
+
+    meta(http-equiv="Content-Type", content="text/html; charset=utf-8")
+    meta(name="viewport", content="width=320, target-densitydpi=device-dpi")
+
+    style(type='text/css')
+      body { margin: 0; padding: 0 }
+      body, * { font-family: "Helvetica Neue", Arial, Helvetica, sans-serif; -webkit-text-size-adjust: 90% }
+      @media (max-width: 800px) {
+        #background { background: #fff !important; padding: 0 !important }
+      }
+      pre { font-size: 12px; line-height: 18px; overflow: auto; white-space: pre; }
+      code, pre, code *, pre * { font-family: Menlo, Monaco, Consolas, "Courier New", monospace; }
+
+  body(style="margin: 0; padding: 0")
+    div#background(style="background: #eee; padding: 20px")
+      div(style="background: #fff; padding: 20px; width: 540px; max-width: 100%; color: #444; border-radius: 5px; margin: 0 auto")
+
+        //- Header
+        div(style="padding-bottom: 20px")
+          div(style="border-top: 10px solid #df4210; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
+            h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ request_id }
+            h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has failed
+            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularity_task_link }") View task
+
+        //- Status
+        div(style="padding-bottom: 20px")
+          div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
+            h3(style="margin: 0; font-size: 20px; line-height: 1") Status
+          p
+            if !taskEverRan || taskStateLost
+              | This is likely an infrastructure issue. No action is required.
+            else
+              | This happened on its own. Consider investigating your process.
+          p Singularity will attempt to restart your task.
+          if taskStateFailed
+            if taskEverRan
+              p <b>Recommended course of action: </b> Process terminated with non-zero exit code. <i>This is not an infrastructure issue.</i> You should consider investigating the task.
+          if taskStateLost
+            if taskEverRan
+              p <b>Recommended course of action: </b> Task lost while running. This is likely an infrastructure issue. It is possible, though unlikely, that the task may still be running.
+            if !taskEverRan
+              p <b>Recommended course of action: </b> Task lost before running. This is likely an infrastructure issue. For further assistance email #{adminEmails}.
+
+        //- History
+        div(style="padding-bottom: 20px")
+          div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
+            h3(style="margin: 0; font-size: 20px; line-height: 1") History
+          table(style="border: 0; border-collapse: collapse; background: #eee")
+            tr
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
+            each task_update, i in task_updates
+              tr
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.update
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.date
+
+        //- Info
+        div(style="padding-bottom: 20px")
+          div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
+            h3(style="margin: 0; font-size: 20px; line-height: 1") Info
+          dl
+            dt(style="font-weight: bold; margin: 0 0 9px") Request ID
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ request_id }
+            dt(style="font-weight: bold; margin: 0 0 9px") Task ID
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ task_id }
+            dt(style="font-weight: bold; margin: 0 0 9px") Status
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ status }
+            dt(style="font-weight: bold; margin: 0 0 9px") Directory
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ task_directory }
+            dt(style="font-weight: bold; margin: 0 0 9px") Hostname task ran on
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slave_hostname }
+
+        //- Files
+        div
+          div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
+            h3(style="margin: 0; font-size: 20px; line-height: 1") Files
+          dl(style="margin-bottom: 0")
+            dt(style="font-weight: bold; margin: 0 0 9px") Standard output
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px 0 14px; border-radius: 3px")
+              if stdout
+                pre(style="white-space: pre; margin: 0")
+                  code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
+                    for line in stdout
+                      div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
+              else
+                | No updates
+            dt(style="font-weight: bold; margin: 0 0 9px") Standard error
+            dd(style="background: #eee; display: block; margin: 0; padding: 10px 14px 0 14px; border-radius: 3px")
+              if stdout
+                pre(style="white-space: pre; margin: 0")
+                  code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
+                    for line in stderr
+                      div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
+              else
+                | No updates

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +40,7 @@ public class SingularityRequestValidator {
     
     String schedule = adjustSchedule(request.getSchedule());
     
-    checkRequestState(schedule == null || CronExpression.isValidExpression(schedule), "Cron schedule was not parseable");
+    checkRequestState(schedule == null || isValidCronSchedule(schedule), String.format("Cron schedule %s was not parseable", schedule));
     checkRequestState((request.getCommand() != null && request.getExecutorData() == null) || (request.getExecutorData() != null && request.getExecutor() != null && request.getCommand() == null), 
     "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
         
@@ -46,7 +48,26 @@ public class SingularityRequestValidator {
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
         
     return new SingularityRequest(request.getCommand(), request.getName(), request.getExecutor(), request.getResources(), schedule, Objects.firstNonNull(request.getInstances(), 1), request.getDaemon(), request.getEnv(), 
-        request.getUris(), request.getMetadata(), request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp(), request.getOwners(), request.getNumRetriesOnFailure(), request.getMaxFailuresBeforePausing());
+        request.getUris(), request.getMetadata(), request.getExecutorData(), request.getRackSensitive(), request.getId(), request.getVersion(), request.getTimestamp(), request.getOwners(), request.getNumRetriesOnFailure(), request.getMaxFailuresBeforePausing(), request.getPauseOnInitialFailure());
+  }
+  
+  private boolean isValidCronSchedule(String schedule) {
+    if (!CronExpression.isValidExpression(schedule)) {
+      return false;
+    }
+    
+    try {
+      CronExpression ce = new CronExpression(schedule);
+      
+      if (ce.getNextValidTimeAfter(new Date()) == null) {
+        return false;
+      }
+      
+    } catch (ParseException pe) {
+      return false;
+    }
+     
+    return true;
   }
   
   /**
@@ -93,12 +114,40 @@ public class SingularityRequestValidator {
     } else if (!dayOfWeek.equals("?")) {
       dayOfMonth = "?";
     }
+    
+    // standard cron is 0-6, quartz is 1-7
+    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday, 
+    // which is sat in quartz. so if we get a value of 7, we should change it to 1.
+    if (isValidInteger(dayOfWeek)) {
+      int dayOfWeekValue = Integer.parseInt(dayOfWeek);
+      
+      if (dayOfWeekValue < 0 || dayOfWeekValue > 7) {
+        throw new BadRequestException(String.format("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue));
+      }
+      
+      if (dayOfWeekValue == 7) {
+        dayOfWeekValue = 1;
+      } else {
+        dayOfWeekValue++;
+      }
+      
+      dayOfWeek = Integer.toString(dayOfWeekValue);
+    }
 
     newSchedule.add(dayOfMonth);
     newSchedule.add(split[indexMod + 3]);
     newSchedule.add(dayOfWeek);
 
     return JOINER.join(newSchedule);
+  }
+  
+  private boolean isValidInteger(String strValue) {
+    try {
+      Integer.parseInt(strValue);
+      return true;
+    } catch (NumberFormatException nfe) {
+      return false;
+    }
   }
   
 }

@@ -33,4 +33,6 @@ logging:
 
     "com.hubspot.singularity" : TRACE 
 
+
 appRoot: /v1
+

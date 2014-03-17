@@ -1,5 +1,8 @@
 package com.hubspot.singularity.data;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -9,9 +12,6 @@ import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
-
-import java.util.Collection;
-import java.util.Collections;
 
 public class SandboxManager {
   private final AsyncHttpClient asyncHttpClient;

@@ -5,7 +5,23 @@ class RequestsActive extends Requests
 
     model: Request
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/active"
+    url: ->
+        properties = [
+            # root
+            'id'
+            'name'
+            'schedule'
+            'daemon'
+            'timestamp'
+            'instances'
+
+            # executorData # TODO - consider using metadata for this instead?
+            'executorData.env'
+        ]
+
+        propertiesString = "?property=#{ properties.join('&property=') }"
+
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/active#{ propertiesString }"
 
     parse: (requests) ->
         _.each requests, (request, i) =>
@@ -14,7 +30,8 @@ class RequestsActive extends Requests
             request.name = request.name ? request.id
             request.deployUser = (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
             request.timestampHuman = utils.humanTimeAgo request.timestamp
-            request.scheduled = if _.isString(request.schedule) then true else false
+            request.scheduled = utils.isScheduledRequest request
+            request.onDemand = utils.isOnDemandRequest request
             requests[i] = request
             app.allRequests[request.id] = request
 

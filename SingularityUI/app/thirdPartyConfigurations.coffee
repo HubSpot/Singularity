@@ -4,6 +4,14 @@ _.mixin _.string.exports()
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
 
+# Set Vex dialog default afterOpen to include scroll prevention
+vex.dialog.defaultOptions.afterOpen = ($vexContent) ->
+    utils.scrollPreventDefaultAtBounds $vexContent.parent()
+
+# Time out requests within 10 seconds
+$.ajaxSetup
+    timeout: 10 * 1000
+
 # Patch jQuery ajax to always use xhrFields.withCredentials true
 _oldAjax = jQuery.ajax
 jQuery.ajax = (opts) ->
@@ -24,3 +32,14 @@ moment.lang 'en',
         lastDay: relativePlus
         lastWeek: relativePlus
         sameElse: relativePlus
+
+# Messenger options
+Messenger.options =
+    extraClasses: 'messenger-fixed messenger-on-top'
+    theme: 'air'
+    hideOnNavigate: true
+    maxMessages: 1
+    messageDefaults:
+        type: 'error'
+        hideAfter: 5
+        showCloseButton: true

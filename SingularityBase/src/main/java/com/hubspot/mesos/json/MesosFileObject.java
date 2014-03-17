@@ -9,13 +9,13 @@ public class MesosFileObject {
   private final long mtime;
   private final int nlink;
   private final String path;
-  private final int size;
+  private final long size;
   private final String uid;
 
   @JsonCreator
   public MesosFileObject(@JsonProperty("gid") String gid, @JsonProperty("mode") String mode,
-                         @JsonProperty("motime") long mtime, @JsonProperty("nlink") int nlink,
-                         @JsonProperty("path") String path, @JsonProperty("size") int size,
+                         @JsonProperty("mtime") long mtime, @JsonProperty("nlink") int nlink,
+                         @JsonProperty("path") String path, @JsonProperty("size") long size,
                          @JsonProperty("uid") String uid) {
     this.gid = gid;
     this.mode = mode;
@@ -46,7 +46,7 @@ public class MesosFileObject {
     return path;
   }
 
-  public int getSize() {
+  public long getSize() {
     return size;
   }
 

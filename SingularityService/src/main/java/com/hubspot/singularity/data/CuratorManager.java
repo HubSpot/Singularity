@@ -12,6 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.data.transcoders.StringTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class CuratorManager {
 
@@ -59,44 +63,55 @@ public abstract class CuratorManager {
     }
   }
   
-  public enum DeleteResult {
-    DELETED, DIDNT_EXIST;
-  }
-  
-  protected DeleteResult delete(String path) {
+  protected SingularityDeleteResult delete(String path) {
     try {
       curator.delete().forPath(path);
-      return DeleteResult.DELETED;
+      return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {
       LOG.warn(String.format("Tried to delete an item at path %s that didn't exist", path));
-      return DeleteResult.DIDNT_EXIST;
+      return SingularityDeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
   
-  public enum CreateResult {
-    CREATED, EXISTED;
-  }
-  
-  protected CreateResult create(String path) {
+  protected SingularityCreateResult create(String path) {
     return create(path, Optional.<byte[]> absent());
   }
   
-  protected CreateResult create(String path, Optional<byte[]> data) {
+  protected SingularityCreateResult create(String path, Optional<byte[]> data) {
     try {
       if (data.isPresent()) {
         curator.create().creatingParentsIfNeeded().forPath(path, data.get());
       } else {
         curator.create().creatingParentsIfNeeded().forPath(path);
       }
-      return CreateResult.CREATED;
+      return SingularityCreateResult.CREATED;
     } catch (NodeExistsException nee) {
-      return CreateResult.EXISTED;
+      return SingularityCreateResult.EXISTED;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
   
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
+    try {
+      byte[] data = curator.getData().forPath(path);
+      
+      if (data == null || data.length == 0) {
+        return Optional.absent();
+      }
+      
+      return Optional.of(transcoder.transcode(data));
+    } catch (NoNodeException nne) {
+      return Optional.absent();
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  protected Optional<String> getStringData(String path) {
+    return getData(path, StringTranscoder.STRING_TRANSCODER);
+  }  
   
 }

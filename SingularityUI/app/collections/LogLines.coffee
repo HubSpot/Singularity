@@ -38,11 +38,11 @@ class LogLines extends Backbone.Collection
             error
 
     parse: (result) =>
-        offset = result.offset
+        @offset = offset = result.offset
 
         # split on newlines
         lines = result.data.split @delimiter
-        
+
         # omit the last element, since it'll either be a blank or incomplete line
         lines = _.initial(lines)
 

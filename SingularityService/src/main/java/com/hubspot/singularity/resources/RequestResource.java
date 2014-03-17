@@ -13,16 +13,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.BadRequestException;
-import com.hubspot.singularity.SingularityPendingRequestId;
-import com.hubspot.singularity.SingularityPendingRequestId.PendingType;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
-import com.hubspot.singularity.data.CuratorManager.CreateResult;
-import com.hubspot.singularity.data.CuratorManager.DeleteResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.RequestManager.PersistResult;
 import com.hubspot.singularity.data.SingularityRequestValidator;
@@ -55,8 +57,18 @@ public class RequestResource {
       requestManager.deletePausedRequest(request.getId());
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(request.getId()));
-  
+    PendingType pendingType = null;
+    
+    if (result == PersistResult.CREATED) {
+      pendingType = PendingType.NEW_REQUEST;
+    } else {
+      pendingType = PendingType.UPDATED_REQUEST;
+    }
+    
+    if (!request.isOneOff()) {
+      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), System.currentTimeMillis(), Optional.<String> absent(), user, pendingType));
+    }
+    
     historyManager.saveRequestHistoryUpdate(request, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
     
     return request;
@@ -64,22 +76,37 @@ public class RequestResource {
   
   @POST
   @Path("/request/{requestId}/bounce")
-  public void bounce(@PathParam("requestId") String requestId) {
+  public void bounce(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
     if (request.isScheduled()) {
       throw new BadRequestException(String.format("Can not request a bounce of a scheduled request (%s - %s)", request.getId(), request.getSchedule()));
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, PendingType.BOUNCE));
   }
   
   @POST
   @Path("/request/{requestId}/run")
-  public void scheduleImmediately(@PathParam("requestId") String requestId) {
-    fetchRequest(requestId);
+  public void scheduleImmediately(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user, String commandLineArgs) {
+    SingularityRequest request = fetchRequest(requestId);
+    Optional<String> maybeCmdLineArgs = Optional.absent();
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.IMMEDIATE));
+    PendingType pendingType = null;
+    
+    if (request.isScheduled()) {
+      pendingType = PendingType.IMMEDIATE;
+    } else if (request.isOneOff()) {
+      pendingType = PendingType.ONEOFF;
+      
+      if (!Strings.isNullOrEmpty(commandLineArgs)) {
+        maybeCmdLineArgs = Optional.of(commandLineArgs);
+      }
+    } else {
+      throw new BadRequestException(String.format("Can not request an immediate run of a non-scheduled / always running request (%s)", request));
+    }
+    
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
   }
   
   @POST
@@ -87,9 +114,9 @@ public class RequestResource {
   public void pause(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
-    CreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
     
-    if (result == CreateResult.CREATED) {
+    if (result == SingularityCreateResult.CREATED) {
       historyManager.saveRequestHistoryUpdate(request, RequestState.PAUSED, user);
     } else {
       throw new ConflictException(String.format("A cleanup/pause request for %s failed to create because it was in state %s", requestId, result));
@@ -105,7 +132,7 @@ public class RequestResource {
       throw handleNoMatchingRequest(requestId);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequestId(requestId, PendingType.UNPAUSED));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
   
     historyManager.saveRequestHistoryUpdate(request.get(), RequestState.UNPAUSED, user);
   
@@ -113,24 +140,28 @@ public class RequestResource {
   }
 
   @GET
+  @PropertyFiltering
   @Path("/active")
   public List<SingularityRequest> getActiveRequests() {
     return requestManager.getActiveRequests();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/paused")
   public List<SingularityRequest> getPausedRequests() {
     return requestManager.getPausedRequests();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/queued/pending")
-  public List<SingularityPendingRequestId> getPendingRequests() {
-    return requestManager.getPendingRequestIds();
+  public List<SingularityPendingRequest> getPendingRequests() {
+    return requestManager.getPendingRequests();
   }
   
   @GET
+  @PropertyFiltering
   @Path("/queued/cleanup")
   public List<SingularityRequestCleanup> getCleanupRequests() {
     return requestManager.getCleanupRequests();
@@ -166,10 +197,10 @@ public class RequestResource {
     if (!request.isPresent()) {
       throw handleNoMatchingRequest(requestId);
     }
+
+    SingularityDeleteResult result = requestManager.deletePausedRequest(requestId);
     
-    DeleteResult result = requestManager.deletePausedRequest(requestId);
-    
-    if (result != DeleteResult.DELETED) {
+    if (result != SingularityDeleteResult.DELETED) {
       throw handleNoMatchingRequest(requestId);
     }
     

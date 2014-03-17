@@ -8,15 +8,21 @@ import io.dropwizard.setup.Environment;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.skife.jdbi.v2.DBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ning.http.client.AsyncHttpClient;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -37,6 +43,8 @@ import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityModule extends AbstractModule {
+  
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityModule.class);
   
   private static final String LEADER_PATH = "/leader";
   
@@ -90,6 +98,12 @@ public class SingularityModule extends AbstractModule {
   @Singleton
   public ObjectMapper getObjectMapper() {
     return OBJECT_MAPPER;
+  }
+  
+  @Provides
+  @Singleton
+  public AsyncHttpClient providesAsyncHTTPClient() {
+    return new AsyncHttpClient();
   }
   
   @Provides
@@ -150,14 +164,25 @@ public class SingularityModule extends AbstractModule {
   @Singleton
   @Provides
   @Named(UNDERLYING_CURATOR)
-  public CuratorFramework provideCurator(ZooKeeperConfiguration config) {
-    CuratorFramework client = CuratorFrameworkFactory.newClient(
-        config.getQuorum(),
-        config.getSessionTimeoutMillis(),
-        config.getConnectTimeoutMillis(),
-        new ExponentialBackoffRetry(config.getRetryBaseSleepTimeMilliseconds(), config.getRetryMaxTries()));
+  public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
+    CuratorFramework client = CuratorFrameworkFactory.builder()
+        .defaultData(null)
+        .sessionTimeoutMs(config.getSessionTimeoutMillis())
+        .connectionTimeoutMs(config.getConnectTimeoutMillis())
+        .connectString(config.getQuorum())
+        .retryPolicy(new ExponentialBackoffRetry(config.getRetryBaseSleepTimeMilliseconds(), config.getRetryMaxTries()))
+        .build();
     
     client.start();
+    
+    LOG.info(String.format("Blocking on startup connection to ZK quorum %s (timeout: %s)", config.getQuorum(), config.getConnectTimeoutMillis()));
+    final long start = System.currentTimeMillis();
+    
+    Preconditions.checkState(client.getZookeeperClient().blockUntilConnectedOrTimedOut());
+    
+    LOG.info(String.format("Connected to ZK after %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start)));
+    
+    // TODO add listener which will shutdown on LOST?
     
     return client;
   }

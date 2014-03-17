@@ -1,10 +1,14 @@
 View = require './view'
 
 TaskHistory = require '../models/TaskHistory'
+
 TailerView = require './tailer'
 
 class TailView extends View
+
     template: require './templates/tail'
+
+    className: 'tail-wrapper'
 
     initialize: ({@taskId, @path}) ->
         @subfolders = []
@@ -18,13 +22,18 @@ class TailView extends View
 
         @filename = _.last(pieces)
 
+    remove: =>
+        @tailer?.remove()
+        super
+
     render: =>
         @$el.html @template {@taskId, @path, @subfolders, @filename}
 
         @tailer = new TailerView
-            el: @$('.tail-container')
+            el: @$('.tail-outer')
             taskId: @taskId
             path: @path
+            parent: @
 
         @tailer.render()
 

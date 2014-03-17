@@ -2,6 +2,7 @@ View = require './view'
 
 Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
+
 TaskFiles = require '../collections/TaskFiles'
 
 class TaskView extends View
@@ -10,28 +11,58 @@ class TaskView extends View
 
     killTaskTemplate: require './templates/vex/killTask'
 
-    initialize: =>
+    initialize: ->
         @taskFiles = {}
+        @taskHistory = new TaskHistory {}, taskId: @options.taskId
+
+    fetch: ->
+        deferred = $.Deferred()
 
         @taskFilesFetchDone = false
+        @taskFilesSandboxUnavailable = true
 
-        @taskHistory = new TaskHistory {}, taskId: @options.taskId
+        neverSynced = not @taskHistory.synced
+
         @taskHistory.fetch().done =>
-            @render()
+            @render() if neverSynced
 
             @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
-            @taskFiles.fetch().done =>
-                @taskFilesFetchDone = true
-                @render()
+            @taskFiles.testSandbox()
+                .done(=>
+                    @taskFiles.fetch().done =>
+                        @taskFilesFetchDone = true
+                        @taskFilesSandboxUnavailable = false
+                        deferred.resolve()
+                )
+                .error(=>
+                    @taskFilesFetchDone = true
+                    @taskFilesSandboxUnavailable = true
+                    deferred.resolve()
+                )
 
-    render: =>
+        deferred
+
+    refresh: ->
+        @fetch().done =>
+            @render()
+
+        @
+
+    render: ->
         return @ unless @taskHistory.attributes?.task?.id
+
+        if @taskHistory.attributes.taskUpdates?.length is 0
+            @taskHistory.attributes.hasNoTaskUpdates = true
+            setTimeout (=> @refresh()), 3 * 1000
 
         context =
             request: @taskHistory.attributes.task.taskRequest.request
             taskHistory: @taskHistory.attributes
             taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
             taskFilesFetchDone: @taskFilesFetchDone
+            taskFilesSandboxUnavailable: @taskFilesSandboxUnavailable
+
+        context.taskIdStringLengthTens = Math.floor(context.taskHistory.task.id.length / 10) * 10
 
         partials =
             partials:

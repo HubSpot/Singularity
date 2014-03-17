@@ -27,7 +27,7 @@
                 </table>
             {{else}}
                 {{#if fetchDone}}
-                    <center><p>No active racks.</p></center>
+                    <div class="empty-table-message"><p>No active racks</p></div>
                 {{else}}
                     <div class="page-loader centered"></div>
                 {{/if}}
@@ -63,7 +63,7 @@
                 </table>
             {{else}}
                 {{#if fetchDone}}
-                    <center><p>No dead racks.</p></center>
+                    <div class="empty-table-message"><p>No dead racks</p></div>
                 {{else}}
                     <div class="page-loader centered"></div>
                 {{/if}}
@@ -97,7 +97,7 @@
                 </table>
             {{else}}
                 {{#if fetchDone}}
-                    <center><p>No decomissioning racks.</p></center>
+                    <div class="empty-table-message"><p>No decomissioning racks</p></div>
                 {{else}}
                     <div class="page-loader centered"></div>
                 {{/if}}

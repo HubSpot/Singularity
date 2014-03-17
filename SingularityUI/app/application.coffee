@@ -17,6 +17,7 @@ class Application
 
     initialize: ->
         app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
+        app.setupGlobalErrorHandling()
 
         app.$page = $('#page')
         app.page = app.$page[0]
@@ -27,17 +28,41 @@ class Application
         @allTasks = {}
         @allRequests = {}
 
-        @fetchResources =>
+        @setupAppCollections()
 
-            $('.page-loader.fixed').hide()
+        $('.page-loader.fixed').hide()
 
-            @router = new Router
+        @router = new Router
 
-            Backbone.history.start
-                pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-                root: '/singularity/'
+        Backbone.history.start
+            pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
+            root: '/singularity/'
 
-            Object.freeze? @
+        Object.freeze? @
+
+    setupGlobalErrorHandling: ->
+        unloading = false
+        $(window).on 'beforeunload', ->
+            unloading = true
+            return
+
+        blurred = false
+        $(window).on 'blur', -> blurred = true
+        $(window).on 'focus', -> blurred = false
+
+        $(document).on 'ajaxError', (event, jqxhr, settings) ->
+            return if settings.suppressErrors
+            return if jqxhr.statusText is 'abort'
+            return if unloading
+            return if blurred and jqxhr.statusText is 'timeout'
+
+            url = settings.url.replace(env.SINGULARITY_BASE, '')
+
+            if jqxhr.statusText is 'timeout'
+                Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
+
+            else
+                vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.htmlEncode utils.stringJSON jqxhr }</pre>"
 
     show: (view) ->
         if app.page.children.length
@@ -45,21 +70,11 @@ class Application
         else
             app.page.appendChild view.el
 
-    fetchResources: (success) ->
-        @resolveCountdown = 0
-
+    setupAppCollections: ->
         @collections.requestsStarred = new RequestsStarred
-        @collections.requestsStarred.fetch()
+        @collections.requestsStarred.fetch() # Syncronous because it uses localStorage
 
-        resolve = =>
-            @resolveCountdown -= 1
-            success() if @resolveCountdown is 0
-
-        @resolveCountdown += 1
         @state = new State
-        @state.fetch
-            error: => vex.dialog.alert('An error occurred while trying to load the Singularity state.')
-            success: -> resolve()
 
         resources = [{
             collection_key: 'requestsActive'
@@ -92,13 +107,6 @@ class Application
         }]
 
         _.each resources, (r) =>
-            @resolveCountdown += 1
             @collections[r.collection_key] = new r.collection
-            @collections[r.collection_key].fetch
-                error: ->
-                    vex.dialog.alert("An error occurred while trying to load Singularity #{ r.error_phrase }.")
-                    resolve()
-                success: ->
-                    resolve()
 
 module.exports = new Application

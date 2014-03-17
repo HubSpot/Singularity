@@ -3,8 +3,13 @@ View = require './view'
 class TasksView extends View
 
     templateTasksActive: require './templates/tasksActive'
+    templateTasksActiveTable: require './templates/tasksActiveTable'
+
     templateTasksScheduled: require './templates/tasksScheduled'
+    templateTasksScheduledTable: require './templates/tasksScheduledTable'
+
     templateTasksCleaning: require './templates/tasksCleaning'
+    templateTasksCleaningTable: require './templates/tasksCleaningTable'
 
     killTaskTemplate: require './templates/vex/killTask'
 
@@ -24,39 +29,62 @@ class TasksView extends View
         @collection.fetch()
 
     refresh: ->
-        return @ if @$el.find('input[type="search"]').val() isnt '' or @$el.find('[data-sorted-direction]').length
+        return @ if @$el.find('[data-sorted-direction]').length
 
         @fetch(@lastTasksFilter).done =>
-            @render(@lastTasksFilter, refresh = true)
+            @render(@lastTasksFilter, @lastSearchFilter, refresh = true)
 
         @
 
-    render: (tasksFilter, refresh) ->
+    render: (tasksFilter, searchFilter, refresh) ->
+        forceFullRender = tasksFilter isnt @lastTasksFilter
         @lastTasksFilter = tasksFilter
+        @lastSearchFilter = searchFilter
 
         if @lastTasksFilter is 'active'
             @collection = app.collections.tasksActive
             template = @templateTasksActive
+            templateTable = @templateTasksActiveTable
 
         if @lastTasksFilter is 'scheduled'
             @collection = app.collections.tasksScheduled
             template = @templateTasksScheduled
+            templateTable = @templateTasksScheduledTable
 
         if @lastTasksFilter is 'cleaning'
             @collection = app.collections.tasksCleaning
             template = @templateTasksCleaning
+            templateTable = @templateTasksCleaningTable
 
-        tasks = _.pluck(@collection.sort().models, 'attributes')
+        @refresh() if not @collection.synced
+
+        tasks = _.pluck @collection.sort().models, 'attributes'
 
         if @lastTasksFilter is 'active'
             tasks = tasks.reverse()
 
         context =
+            collectionSynced: @collection.synced
             tasks: tasks
+            searchFilter: searchFilter
 
-        searchWasFocused = @$el.find('input[type="search"]').is(':focus')
+        partials =
+            partials:
+                tasksTable: templateTable
 
-        @$el.html template context
+        $search = @$el.find('input[type="search"]')
+        searchWasFocused = $search.is(':focus')
+        previousSearchTerm = $search.val()
+
+        $tasksTableContainer =  @$el.find('[data-tasks-table-container]')
+
+        if not $tasksTableContainer.length or forceFullRender
+            @$el.html template(context, partials)
+
+            if forceFullRender
+                @$el.find('input[type="search"]').val(previousSearchTerm)
+        else
+            $tasksTableContainer.html templateTable context
 
         @setupEvents()
         @setUpSearchEvents(refresh, searchWasFocused)
@@ -95,6 +123,7 @@ class TasksView extends View
                     return unless confirmed
                     taskModel.run()
                     @collection.remove(taskModel)
+                    app.collections.tasksActive.fetch()
                     $row.remove()
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
@@ -105,15 +134,19 @@ class TasksView extends View
 
         $rows = @$el.find('tbody > tr')
 
-        lastText = _.trim $search.val()
+        lastText = ''
 
         $search.unbind().on 'change keypress paste focus textInput input click keydown', =>
             text = _.trim $search.val()
 
             if text is ''
                 $rows.removeClass('filtered')
+                app.router.navigate "/tasks/#{ @lastTasksFilter }", { replace: true }
 
             if text isnt lastText
+                @lastSearchFilter = text
+                app.router.navigate "/tasks/#{ @lastTasksFilter }/#{ @lastSearchFilter }", { replace: true }
+
                 $rows.each ->
                     $row = $(@)
 
@@ -121,5 +154,11 @@ class TasksView extends View
                         $row.addClass('filtered')
                     else
                         $row.removeClass('filtered')
+
+            @$('table').each ->
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'task', text
+
+        if refresh
+            $search.change()
 
 module.exports = TasksView

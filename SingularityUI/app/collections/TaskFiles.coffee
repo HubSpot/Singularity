@@ -1,15 +1,16 @@
 Collection = require './collection'
 
 class TaskFiles extends Collection
-    url: =>
+
+    url: ->
         params =
             path: @path
 
         "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/browse?#{ $.param params }"
 
-    initialize: (models, { @taskId, @offerHostname, @directory, @path }) =>
+    initialize: (models, { @taskId, @offerHostname, @directory, @path }) ->
 
-    parse: (taskFiles) =>
+    parse: (taskFiles) ->
         _.map taskFiles, (taskLogFile) =>
             relPath = taskLogFile.path.replace(@directory, '')
             downloadParams = $.param {path: relPath}
@@ -29,5 +30,10 @@ class TaskFiles extends Collection
         else if not a.get('isDirectory') and b.get('isDirectory')
             return -1
         return a.get('size') - b.get('size')
+
+    testSandbox: ->
+        $.ajax
+            url: @url()
+            suppressErrors: true
 
 module.exports = TaskFiles

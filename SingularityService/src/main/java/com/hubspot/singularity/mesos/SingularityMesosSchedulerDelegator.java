@@ -1,21 +1,29 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.ExecutorID;
+import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.Scheduler;
+import org.apache.mesos.SchedulerDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.*;
-import org.apache.mesos.Scheduler;
-import org.apache.mesos.SchedulerDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import com.hubspot.singularity.scheduler.SingularityStaleTaskPoller;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
@@ -35,16 +43,18 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private volatile SchedulerState state;
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
+  private final SingularityStaleTaskPoller stalePoller;
   
   private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
   
   @Inject
-  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller) {
+  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller, SingularityStaleTaskPoller stalePoller) {
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
     this.cleanupPoller = cleanupPoller;
+    this.stalePoller = stalePoller;
     
     this.queuedUpdates = Lists.newArrayList();
 
@@ -77,6 +87,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     LOG.info("Scheduler is moving to stopped, current state: " + state);
     
     cleanupPoller.stop();
+    stalePoller.stop();
+    
     state = SchedulerState.STOPPED;
   
     LOG.info("Scheduler now in state: " + state);
@@ -96,6 +108,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     startup.startup(masterInfo);
 
     cleanupPoller.start(this);
+    stalePoller.start(this);
     
     stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
 

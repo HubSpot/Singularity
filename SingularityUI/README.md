@@ -11,7 +11,7 @@ Next, add a local environment file, called `env.coffee` in `Singularity/Singular
 ```coffeescript
 module.exports =
     env: 'local'
-    SINGULARITY_BASE: 'https://tools.hubteamqa.com'
+    SINGULARITY_BASE: 'http://example.com'
 ```
 
 Then npm install `Singularity/SingularityUI/package.json`:

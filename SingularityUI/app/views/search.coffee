@@ -60,17 +60,21 @@ class SearchView extends View
 
     setUpSearchEvents: ->
         if not app.isMobile
-            @$search.focus()
+            setTimeout => @$search.focus()
 
-        lastText = _.trim @$search.val()
+        lastText = ''
+        showSpinnerTimeout = undefined
+        showSlowSearchAPITimeout = undefined
 
-        @$search.on 'change keypress paste focus textInput input click keydown', _.debounce =>
+        @$search.unbind().on 'change keypress paste focus textInput input click keydown', _.debounce =>
             text = _.trim @$search.val()
 
             if @forceSearchOnce or text isnt lastText and text.length
                 if @lastXhrTasks?
                    @lastXhrTasks.abort()
                    @lastXhrRequests.abort()
+                   clearTimeout showSpinnerTimeout
+                   clearTimeout showSlowSearchAPITimeout
 
                 @forceSearchOnce = false
                 lastText = text
@@ -81,7 +85,18 @@ class SearchView extends View
                 @tasksResults = new TasksSearch [], { query: text, params: @currentSearchOptions['tasks'] }
                 @lastXhrTasks = @tasksResults.fetch()
 
-                $.when(@lastXhrTasks, @lastXhrRequests).done => @renderResults()
+                showSpinnerTimeout = setTimeout =>
+                    @$el.find('.results').html '<br><br><div class="page-loader centered"></div>'
+                , 500
+
+                showSlowSearchAPITimeout = setTimeout =>
+                    @$el.find('.results').html '<br><br><div class="page-loader centered"></div><br><br><center>Sorry the search API is <a href="https://github.com/HubSpot/Singularity/issues/90" target="_blank">so slow</a>...</center>'
+                , 2000
+
+                $.when(@lastXhrTasks, @lastXhrRequests).done =>
+                    clearTimeout showSpinnerTimeout
+                    clearTimeout showSlowSearchAPITimeout
+                    @renderResults()
 
         , 35
 

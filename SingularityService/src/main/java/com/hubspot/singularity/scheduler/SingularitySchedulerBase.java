@@ -21,6 +21,6 @@ public class SingularitySchedulerBase {
     }
     
     return matchingTaskIds;
-  }  
+  }
   
 }
