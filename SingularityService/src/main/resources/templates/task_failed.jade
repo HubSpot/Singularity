@@ -39,12 +39,12 @@ html
           p Singularity will attempt to restart your task.
           if taskStateFailed
             if taskEverRan
-              p <b>Recommended course of action: </b> Process terminated with non-zero exit code. <i>This is not an infrastructure issue.</i> You should consider investigating the task.
+              p(style="margin-bottom: 0") <b>Recommended course of action: </b> Process terminated with non-zero exit code. <i>This is not an infrastructure issue.</i> You should consider investigating the task.
           if taskStateLost
             if taskEverRan
-              p <b>Recommended course of action: </b> Task lost while running. This is likely an infrastructure issue. It is possible, though unlikely, that the task may still be running.
+              p(style="margin-bottom: 0") <b>Recommended course of action: </b> Task lost while running. This is likely an infrastructure issue. It is possible, though unlikely, that the task may still be running.
             if !taskEverRan
-              p <b>Recommended course of action: </b> Task lost before running. This is likely an infrastructure issue. For further assistance email #{adminEmails}.
+              p(style="margin-bottom: 0") <b>Recommended course of action: </b> Task lost before running. This is likely an infrastructure issue. For further assistance email #{ adminEmails }.
 
         //- History
         div(style="padding-bottom: 20px")
