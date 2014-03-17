@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
         :allow_remote_root => true
       },
       :mesos => {
-        :version => "0.17.0"
+        :version => "0.14.0"
       }
     }
   end
