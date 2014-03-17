@@ -1,1 +1,1 @@
-cookbook 'singularity', github: 'tpetr/cookbook-singularity'
+cookbook 'singularity', github: 'HubSpot/cookbook-singularity'

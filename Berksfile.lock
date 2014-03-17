@@ -2,8 +2,8 @@
   "sources": {
     "singularity": {
       "locked_version": "0.1.0",
-      "git": "git://github.com/tpetr/cookbook-singularity.git",
-      "ref": "1675dfd177bfde225695c4453a5fc3849ab48344"
+      "git": "git://github.com/HubSpot/cookbook-singularity.git",
+      "ref": "9a8b0364e518b8b9929806eae9d541e81bf5c1dd"
     },
     "apt": {
       "locked_version": "2.3.0"
