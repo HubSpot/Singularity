@@ -12,9 +12,9 @@ Vagrant.configure("2") do |config|
   config.berkshelf.enabled = true
   config.omnibus.chef_version = :latest
 
-  # if you want to use vagrant-cachier,
-  # please activate below.
-  config.cache.auto_detect = true
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.auto_detect = true
+  end
 
   mysql_password = "mesos7mysql"
   private_ip = '192.168.33.10'
