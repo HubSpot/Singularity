@@ -135,17 +135,22 @@ public class SingularityMailer implements SingularityCloseable {
 
     final SingularityTaskHistory taskHistory = maybeTaskHistory.get();
 
+    if (!taskHistory.getDirectory().isPresent()) {
+      LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
+      return Optional.absent();
+    }
+    
     final String slaveHostname = taskHistory.getTask().getOffer().getHostname();
 
     final String directory = String.format("%s/%s", taskHistory.getDirectory().get(), filename);
 
-    final long logLength = this.maybeSmtpConfiguration.get().getTaskLogLength();
+    final Long logLength = new Long(this.maybeSmtpConfiguration.get().getTaskLogLength());
 
     final SandboxManager sandboxManager = new SandboxManager(this.asyncHttpClient, this.objectMapper);
 
     final Optional<MesosFileChunkObject> logChunkObject;
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, directory, Optional.of((long) 0), Optional.of((long) logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, directory, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error(String.format("Sanboxmanager failed to read %s/%s on slave %s with error %s", directory, filename, slaveHostname, e));
       return Optional.absent();
@@ -161,6 +166,7 @@ public class SingularityMailer implements SingularityCloseable {
 
   private String populateGenericEmailTemplate(JadeTemplate template, SingularityRequest request, SingularityTaskId taskId, Optional<SingularityTaskHistory> maybeTaskHistory, Optional<TaskState> taskState, Map<String, Object> additionalBindings){
     Builder<String, Object> templateSubs = ImmutableMap.<String, Object>builder();
+    
     templateSubs.put("request_id", request.getId());
     templateSubs.put("singularity_task_link", getSingularityTaskLink(taskId));
     templateSubs.put("stdout", getTaskLogFile(taskId, "stdout").or(new String[0]));
@@ -181,7 +187,6 @@ public class SingularityMailer implements SingularityCloseable {
       templateSubs.put("slave_hostname", taskHistory.getTask().getOffer().getHostname());
       templateSubs.put("taskEverRan", taskEverRan(taskHistory));
     }
-    
     
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()){
       templateSubs.put(bindingEntry.getKey(), bindingEntry.getValue());
