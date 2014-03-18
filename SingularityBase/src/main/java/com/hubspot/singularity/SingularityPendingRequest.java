@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 public class SingularityPendingRequest extends SingularityJsonObject {
 
   public enum PendingType {
-    IMMEDIATE, STARTUP, REGULAR, UNPAUSED, RETRY, BOUNCE, ONEOFF, UPDATED_REQUEST, NEW_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE
+    IMMEDIATE, STARTUP, REGULAR, UNPAUSED, RETRY, BOUNCE, ONEOFF, UPDATED_REQUEST, NEW_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, NEW_DEPLOY
   }
   
   private final String requestId;

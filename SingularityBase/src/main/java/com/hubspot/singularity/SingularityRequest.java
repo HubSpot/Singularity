@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -14,16 +15,16 @@ public class SingularityRequest extends SingularityJsonObject {
 
   private final String id;
   
-  private final List<String> owners;
-  private final Integer numRetriesOnFailure;
-  private final Integer maxFailuresBeforePausing;
-  private final Boolean pauseOnInitialFailure;
+  private final Optional<List<String>> owners;
+  private final Optional<Integer> numRetriesOnFailure;
+  private final Optional<Integer> maxFailuresBeforePausing;
+  private final Optional<Boolean> pauseOnInitialFailure;
 
-  private final String schedule;
-  private final Boolean daemon;
+  private final Optional<String> schedule;
+  private final Optional<Boolean> daemon;
   
-  private final Integer instances;
-  private final Boolean rackSensitive;
+  private final Optional<Integer> instances;
+  private final Optional<Boolean> rackSensitive;
   
   public static SingularityRequestBuilder newBuilder() {
     return new SingularityRequestBuilder();
@@ -34,9 +35,9 @@ public class SingularityRequest extends SingularityJsonObject {
   }
   
   @JsonCreator
-  public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") List<String> owners, @JsonProperty("numRetriesOnFailure") Integer numRetriesOnFailure,
-      @JsonProperty("maxFailuresBeforePausing") Integer maxFailuresBeforePausing, @JsonProperty("pauseOnInitialFailure") Boolean pauseOnInitialFailure, 
-      @JsonProperty("schedule") String schedule, @JsonProperty("daemon") Boolean daemon, @JsonProperty("instances") Integer instances, @JsonProperty("rackSensitive") Boolean rackSensitive) {
+  public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
+      @JsonProperty("maxFailuresBeforePausing") Optional<Integer> maxFailuresBeforePausing, @JsonProperty("pauseOnInitialFailure") Optional<Boolean> pauseOnInitialFailure, 
+      @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -55,66 +56,71 @@ public class SingularityRequest extends SingularityJsonObject {
         .setInstances(instances)
         .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
         .setNumRetriesOnFailure(numRetriesOnFailure)
-        .setOwners(owners == null ? null : Lists.newArrayList(owners))
+        .setOwners(owners.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(owners.get())) : owners)
         .setPauseOnInitialFailure(pauseOnInitialFailure)
         .setRackSensitive(rackSensitive)
         .setSchedule(schedule);
-  }
-
-  public Integer getInstances() {
-    return instances;
-  }
-
-  public Boolean getRackSensitive() {
-    return rackSensitive;
   }
 
   public String getId() {
     return id;
   }
 
-  public List<String> getOwners() {
+  public Optional<List<String>> getOwners() {
     return owners;
   }
 
-  public Integer getNumRetriesOnFailure() {
+  public Optional<Integer> getNumRetriesOnFailure() {
     return numRetriesOnFailure;
   }
 
-  public Integer getMaxFailuresBeforePausing() {
+  public Optional<Integer> getMaxFailuresBeforePausing() {
     return maxFailuresBeforePausing;
   }
 
-  public Boolean getPauseOnInitialFailure() {
+  public Optional<Boolean> getPauseOnInitialFailure() {
     return pauseOnInitialFailure;
   }
 
-  public String getSchedule() {
+  public Optional<String> getSchedule() {
     return schedule;
   }
 
-  public Boolean getDaemon() {
+  public Optional<Boolean> getDaemon() {
     return daemon;
+  }
+
+  public Optional<Integer> getInstances() {
+    return instances;
+  }
+
+  public Optional<Boolean> getRackSensitive() {
+    return rackSensitive;
+  }
+
+  @JsonIgnore
+  public boolean isScheduled() {
+    return schedule.isPresent();
   }
   
   @JsonIgnore
-  public boolean isScheduled() {
-    return schedule != null;
+  public boolean isDaemon() {
+    return daemon.or(Boolean.TRUE).booleanValue();
   }
   
   @JsonIgnore
   public boolean isLongRunning() {
-    return !isScheduled() && (daemon == null || daemon.booleanValue());
+    return !isScheduled() && isDaemon();
   }
   
   @JsonIgnore
   public boolean isOneOff() {
-    return !isScheduled() && daemon != null && !daemon.booleanValue();
+    return !isScheduled() && !isDaemon();
   }
-
+  
   @JsonIgnore
   public boolean isRackSensitive() {
-    return (rackSensitive != null && rackSensitive.booleanValue());
+    return rackSensitive.or(Boolean.FALSE).booleanValue();
   }
 
   @Override

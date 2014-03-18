@@ -16,7 +16,7 @@ public class SingularityDeployKey {
   }
 
   public static SingularityDeployKey fromPendingTask(SingularityPendingTask pendingTask) {
-    return new SingularityDeployKey(pendingTask.getTaskId().getRequestId(), pendingTask.getTaskId().getDeployId());
+    return new SingularityDeployKey(pendingTask.getPendingTaskId().getRequestId(), pendingTask.getPendingTaskId().getDeployId());
   }
   
   public static SingularityDeployKey fromDeployMarker(SingularityDeployMarker deployMarker) {

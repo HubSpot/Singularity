@@ -2,86 +2,25 @@ package com.hubspot.singularity;
 
 import java.util.List;
 
+import com.google.common.base.Optional;
+
 public class SingularityRequestBuilder {
 
   private String id;
-
-  private String schedule;
-  private Boolean daemon;
   
-  private List<String> owners;
-  private Integer numRetriesOnFailure;
-  private Integer maxFailuresBeforePausing;
-  private Boolean pauseOnInitialFailure;
- 
-  private Integer instances;
-  private Boolean rackSensitive;
+  private Optional<List<String>> owners;
+  private Optional<Integer> numRetriesOnFailure;
+  private Optional<Integer> maxFailuresBeforePausing;
+  private Optional<Boolean> pauseOnInitialFailure;
+
+  private Optional<String> schedule;
+  private Optional<Boolean> daemon;
+  
+  private Optional<Integer> instances;
+  private Optional<Boolean> rackSensitive;
   
   public SingularityRequest build() {
     return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, pauseOnInitialFailure, schedule, daemon, instances, rackSensitive);
-  }
-
-  public SingularityRequestBuilder setSchedule(String schedule) {
-    this.schedule = schedule;
-    return this;
-  }
-
-  public Integer getInstances() {
-    return instances;
-  }
-
-  public SingularityRequestBuilder setInstances(Integer instances) {
-    this.instances = instances;
-    return this;
-  }
-
-  public Boolean getRackSensitive() {
-    return rackSensitive;
-  }
-
-  public SingularityRequestBuilder setRackSensitive(Boolean rackSensitive) {
-    this.rackSensitive = rackSensitive;
-    return this;
-  }
-
-  public String getSchedule() {
-    return schedule;
-  }
-
-  public Boolean getDaemon() {
-    return daemon;
-  }
-
-  public SingularityRequestBuilder setDaemon(Boolean daemon) {
-    this.daemon = daemon;
-    return this;
-  }
-
-  public Integer getMaxFailuresBeforePausing() {
-    return maxFailuresBeforePausing;
-  }
-
-  public SingularityRequestBuilder setMaxFailuresBeforePausing(Integer maxFailuresBeforePausing) {
-    this.maxFailuresBeforePausing = maxFailuresBeforePausing;
-    return this;
-  }
-
-  public List<String> getOwners() {
-    return owners;
-  }
-
-  public SingularityRequestBuilder setOwners(List<String> owners) {
-    this.owners = owners;
-    return this;
-  }
-
-  public Integer getNumRetriesOnFailure() {
-    return numRetriesOnFailure;
-  }
-
-  public SingularityRequestBuilder setNumRetriesOnFailure(Integer numRetriesOnFailure) {
-    this.numRetriesOnFailure = numRetriesOnFailure;
-    return this;
   }
 
   public String getId() {
@@ -93,19 +32,82 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public Boolean getPauseOnInitialFailure() {
+  public Optional<List<String>> getOwners() {
+    return owners;
+  }
+
+  public SingularityRequestBuilder setOwners(Optional<List<String>> owners) {
+    this.owners = owners;
+    return this;
+  }
+
+  public Optional<Integer> getNumRetriesOnFailure() {
+    return numRetriesOnFailure;
+  }
+
+  public SingularityRequestBuilder setNumRetriesOnFailure(Optional<Integer> numRetriesOnFailure) {
+    this.numRetriesOnFailure = numRetriesOnFailure;
+    return this;
+  }
+
+  public Optional<Integer> getMaxFailuresBeforePausing() {
+    return maxFailuresBeforePausing;
+  }
+
+  public SingularityRequestBuilder setMaxFailuresBeforePausing(Optional<Integer> maxFailuresBeforePausing) {
+    this.maxFailuresBeforePausing = maxFailuresBeforePausing;
+    return this;
+  }
+
+  public Optional<Boolean> getPauseOnInitialFailure() {
     return pauseOnInitialFailure;
   }
 
-  public SingularityRequestBuilder setPauseOnInitialFailure(Boolean pauseOnInitialFailure) {
+  public SingularityRequestBuilder setPauseOnInitialFailure(Optional<Boolean> pauseOnInitialFailure) {
     this.pauseOnInitialFailure = pauseOnInitialFailure;
+    return this;
+  }
+
+  public Optional<String> getSchedule() {
+    return schedule;
+  }
+
+  public SingularityRequestBuilder setSchedule(Optional<String> schedule) {
+    this.schedule = schedule;
+    return this;
+  }
+
+  public Optional<Boolean> getDaemon() {
+    return daemon;
+  }
+
+  public SingularityRequestBuilder setDaemon(Optional<Boolean> daemon) {
+    this.daemon = daemon;
+    return this;
+  }
+
+  public Optional<Integer> getInstances() {
+    return instances;
+  }
+
+  public SingularityRequestBuilder setInstances(Optional<Integer> instances) {
+    this.instances = instances;
+    return this;
+  }
+
+  public Optional<Boolean> getRackSensitive() {
+    return rackSensitive;
+  }
+
+  public SingularityRequestBuilder setRackSensitive(Optional<Boolean> rackSensitive) {
+    this.rackSensitive = rackSensitive;
     return this;
   }
 
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", schedule=" + schedule + ", daemon=" + daemon + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing
-        + ", pauseOnInitialFailure=" + pauseOnInitialFailure + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", pauseOnInitialFailure=" + pauseOnInitialFailure
+        + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
   }
   
 }

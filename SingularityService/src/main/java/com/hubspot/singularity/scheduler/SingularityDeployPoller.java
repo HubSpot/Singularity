@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +23,12 @@ public class SingularityDeployPoller {
   private final ScheduledExecutorService executorService;
   private final SingularityAbort abort;
   private final SingularityCloser closer;
+  private final SingularityDeployChecker deployChecker;
   
   @Inject
-  public SingularityDeployPoller(SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer) {
     this.abort = abort;
+    this.deployChecker = deployChecker;
     this.configuration = configuration;
     this.closer = closer;
     
@@ -42,10 +45,11 @@ public class SingularityDeployPoller {
         mesosScheduler.lock();
         
         try {
-          // check for deploys
-          // check the stauts of all active deploys.
+          final long now = System.currentTimeMillis();
           
-        
+          final int numDeploys = deployChecker.checkDeploys();
+       
+          LOG.info(String.format("Checked %s deploys in %s", numDeploys, DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - now)));
         } catch (Throwable t) {
           LOG.error("Caught an exception while checking deploys -- aborting", t);
           abort.abort();

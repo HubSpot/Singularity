@@ -8,6 +8,7 @@ import java.util.Map;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -31,41 +32,40 @@ public class SingularityValidator {
   }
   
   public SingularityRequest checkSingularityRequest(SingularityRequest request) {
-    // TODO change checks.
+    // TODO change checks. ??
     
     check(request.getId() != null, "Id must not be null");
-    check(request.getInstances() == null || request.getInstances() > 0, "Instances must be greater than 0");
+    check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
     
     String newSchedule = null;
     
     if (request.isScheduled()) {
-      check(request.getDaemon() == null, "Scheduled request must not set a daemon flag");
+      check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
+      check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
-      check(request.getSchedule() != null && (request.getInstances() == null || request.getInstances() == 1), "Scheduled requests must have a schedule and can not be ran on more than one instance");
-
-      newSchedule = adjustSchedule(request.getSchedule());
+      newSchedule = adjustSchedule(request.getSchedule().get());
 
       check(isValidCronSchedule(newSchedule), String.format("Cron schedule %s (adjusted: %s) was not parseable", request.getSchedule(), newSchedule));
     } else {
-      check(request.getNumRetriesOnFailure() == null, "NumRetriesOnFailure can only be set for scheduled requests");
+      check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
     }
     
     if (!request.isLongRunning()) {
-      check(request.getInstances() == null || request.getInstances() == 1, "Non-daemons can not be ran on more than one instance");
+      check(request.getInstances().or(1) == 1, "Non-daemons can not be ran on more than one instance");
     }
     
 //  checkRequestState(request.getId().length() < MAX_REQUEST_ID_SIZE, String.format("Request id must be less than %s characters, it is %s (%s)", MAX_REQUEST_ID_SIZE, request.getId().length(), request.getId()));
 
-    return request.toBuilder().setSchedule(newSchedule).build();
+    return request.toBuilder().setSchedule(Optional.fromNullable(newSchedule)).build();
   }
   
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
-    check(deploy.getId() != null, "Id must not be null");
+    check(deploy.getId() != null && !deploy.getId().contains("-"), "Id must not be null and can not contain - characters");
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
     
-    check((deploy.getCommand() != null && deploy.getExecutorData() == null) || (deploy.getExecutorData() != null && deploy.getExecutor() != null && deploy.getCommand() == null), 
+    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getExecutor().isPresent() && !deploy.getCommand().isPresent()), 
         "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
-    check(deploy.getResources() == null || deploy.getResources().getNumPorts() == 0 || (deploy.getExecutor() == null || (deploy.getExecutorData() != null && deploy.getExecutorData() instanceof Map)), 
+    check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getExecutor().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
   }
   

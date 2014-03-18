@@ -131,8 +131,8 @@ public class SingularityMesosScheduler implements Scheduler {
     for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
 
-      if (taskRequest.getDeploy().getResources() != null) {
-        taskResources = taskRequest.getDeploy().getResources();
+      if (taskRequest.getDeploy().getResources().isPresent()) {
+        taskResources = taskRequest.getDeploy().getResources().get();
       }
 
       LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
@@ -157,7 +157,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack state: %s", offer.getId(), taskRequest.getPendingTask().getTaskId(), matchesResources, rackCheckState));
+        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack state: %s", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState));
       }
     }
 

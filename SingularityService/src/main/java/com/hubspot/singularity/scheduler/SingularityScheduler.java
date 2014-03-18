@@ -48,7 +48,7 @@ import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy
 import com.hubspot.singularity.data.history.HistoryManager.TaskHistoryOrderBy;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
-public class SingularityScheduler extends SingularitySchedulerBase {
+public class SingularityScheduler {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
   
@@ -83,7 +83,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     if (!task.getTaskRequest().getRequest().isScheduled()) {
       LOG.trace(String.format("Scheduling a cleanup task for %s due to decomissioning %s", task.getTaskId(), decomissioningObject));
       
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId().getId(), task.getTaskRequest().getRequest().getId()));
+      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
     } else {
       LOG.trace(String.format("Not adding scheduled task %s to cleanup queue", task.getTaskId()));
     }
@@ -183,12 +183,12 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     final long now = System.currentTimeMillis(); 
     
     // TODO bounce MUST have a depoy ID!
-    final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(pendingRequest.getRequestId(), pendingRequest.getDeployId().get(), activeTaskIds, cleaningTasks);
+    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(activeTaskIds, pendingRequest.getRequestId(), pendingRequest.getDeployId().get(),cleaningTasks);
     
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug(String.format("Adding task %s to cleanup (bounce)", matchingTaskId.getId()));
       
-      taskManager.createCleanupTask(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId.getId(), pendingRequest.getRequestId()));
+      taskManager.createCleanupTask(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId));
       cleaningTasks.add(matchingTaskId);
     }
     
@@ -203,7 +203,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     final List<SingularityPendingTask> dueTasks = Lists.newArrayListWithCapacity(tasks.size());
     
     for (SingularityPendingTask task : tasks) {
-      if (task.getTaskId().getNextRunAt() <= now) {
+      if (task.getPendingTaskId().getNextRunAt() <= now) {
         dueTasks.add(task);
       }
     }
@@ -222,16 +222,16 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       foundRequestIds.add(taskRequest.getRequest().getId());
     }
     for (SingularityPendingTask pendingTask : pendingTasks) {
-      if (!foundRequestIds.contains(pendingTask.getTaskId().getRequestId())) {
-        LOG.info(String.format("Removing stale pending task %s because there was no found request id", pendingTask.getTaskId()));
-        taskManager.deleteScheduledTask(pendingTask.getTaskId().getId());
+      if (!foundRequestIds.contains(pendingTask.getPendingTaskId().getRequestId())) {
+        LOG.info(String.format("Removing stale pending task %s because there was no found request id", pendingTask.getPendingTaskId()));
+        taskManager.deleteScheduledTask(pendingTask.getPendingTaskId().getId());
       }
     }
   }
   
   private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId) {
-    for (SingularityPendingTask task : SingularityPendingTask.filter(scheduledTasks, requestId)) {
-      taskManager.deleteScheduledTask(task.getTaskId().getId());
+    for (SingularityPendingTask task : Iterables.filter(scheduledTasks, SingularityPendingTask.matching(requestId))) {
+      taskManager.deleteScheduledTask(task.getPendingTaskId().getId());
     }
   }
 
@@ -267,7 +267,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
       return 0;
     }
     
-    final List<SingularityTaskId> matchingTaskIds = getMatchingActiveTaskIds(request.getId(), deployId.get(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
+    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), deployId.get(), stateCache.getCleaningTasks());
     
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request);
 
@@ -289,7 +289,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
         
         LOG.info(String.format("Cleaning up task %s due to new request %s - scaling down to %s instances", toCleanup.getId(), request.getId(), request.getInstances()));
     
-        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup.getId(), request.getId()));
+        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
       }
     }
     
@@ -343,13 +343,13 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private boolean shouldRetryImmediately(SingularityRequest request) {
-    if (request.getNumRetriesOnFailure() == null) {
+    if (!request.getNumRetriesOnFailure().isPresent()) {
       return false;
     }
    
     final int numRetriesInARow = getNumRetriesInARow(request);
     
-    if (numRetriesInARow >= request.getNumRetriesOnFailure()) {
+    if (numRetriesInARow >= request.getNumRetriesOnFailure().get()) {
       LOG.debug(String.format("Request %s had %s retries in a row, not retrying again (num retries on failure: %s)", request.getId(), numRetriesInARow, request.getNumRetriesOnFailure()));
       return false;
     }
@@ -362,7 +362,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   private int getNumRetriesInARow(SingularityRequest request) {
     int retries = 0;
     
-    List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, request.getNumRetriesOnFailure());
+    List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, request.getNumRetriesOnFailure().get());
     
     for (SingularityTaskIdHistory history : taskHistory) { 
       if (history.getLastStatus().isPresent()) {
@@ -380,20 +380,20 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
   
   private boolean shouldPause(SingularityRequest request) {
-    if (request.getPauseOnInitialFailure()) {
+    if (request.getPauseOnInitialFailure().or(Boolean.FALSE)) {
       if (historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1).isEmpty()) {
         LOG.info(String.format("Pausing request %s due to initial failure", request.getId()));
         return true;
       }
     }
 
-    if (request.getMaxFailuresBeforePausing() == null) {
+    if (!request.getMaxFailuresBeforePausing().isPresent()) {
       return false;
     }
     
-    final int pauseAfterNumFailedTasks = request.getMaxFailuresBeforePausing() + 1;
+    final int pauseAfterNumFailedTasks = request.getMaxFailuresBeforePausing().get() + 1;
     
-    if (request.getMaxFailuresBeforePausing() > 0) {
+    if (request.getMaxFailuresBeforePausing().get() > 0) {
       SingularityRequestHistory lastUpdate = Iterables.getFirst(historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1), null);
       long lastUpdateAt = 0;
       
@@ -435,7 +435,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
   }
    
   private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
-    final int numInstances = request.getInstances();
+    final int numInstances = request.getInstances().or(1);
     
     return numInstances - matchingTaskIds.size();
   }
@@ -490,7 +490,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
           }
         }
         
-        CronExpression cronExpression = new CronExpression(request.getSchedule());
+        CronExpression cronExpression = new CronExpression(request.getSchedule().get());
 
         final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
 

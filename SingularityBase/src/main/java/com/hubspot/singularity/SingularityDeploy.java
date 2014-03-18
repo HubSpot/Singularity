@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.Resources;
@@ -17,22 +18,22 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final String requestId;
   
   private final String id;
-
-  private final String version;
-  private final Long timestamp;
-  private final Map<String, String> metadata;
-
-  private final String executor;
-  private final Resources resources;
- 
-  private final String command;
-  private final Map<String, String> env;
-  private final List<String> uris;
-  private final Object executorData;
   
-  private final String healthcheckUri;
-  private final Long healthcheckIntervalSeconds;
-  private final Long healthcheckTimeoutSeconds;
+  private final Optional<String> version;
+  private final Optional<Long> timestamp;
+  private final Optional<Map<String, String>> metadata;
+
+  private final Optional<String> executor;
+  private final Optional<Resources> resources;
+ 
+  private final Optional<String> command;
+  private final Optional<Map<String, String>> env;
+  private final Optional<List<String>> uris;
+  private final Optional<Object> executorData;
+  
+  private final Optional<String> healthcheckUri;
+  private final Optional<Long> healthcheckIntervalSeconds;
+  private final Optional<Long> healthcheckTimeoutSeconds;
   
   public static SingularityDeployBuilder newBuilder() {
     return new SingularityDeployBuilder();
@@ -43,10 +44,10 @@ public class SingularityDeploy extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("command") String command, @JsonProperty("executor") String executor, @JsonProperty("resources") Resources resources,
-      @JsonProperty("env") Map<String, String> env, @JsonProperty("uris") List<String> uris, @JsonProperty("metadata") Map<String, String> metadata,
-      @JsonProperty("executorData") Object executorData, @JsonProperty("id") String id, @JsonProperty("version") String version, @JsonProperty("timestamp") Long timestamp, 
-      @JsonProperty("healthcheckUri") String healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Long healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Long healthcheckTimeoutSeconds) {
+  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("executor") Optional<String> executor, @JsonProperty("resources") Optional<Resources> resources,
+      @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
+      @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, 
+      @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds) {
     this.requestId = requestId;
     
     this.command = command;
@@ -77,68 +78,68 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
         .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
         
-        .setMetadata(metadata == null ? null : Maps.newHashMap(metadata))
+        .setMetadata(metadata.isPresent() ? Optional.<Map<String, String>> of(Maps.newHashMap(metadata.get())) : metadata)
         .setVersion(version)
         .setId(id)
         .setTimestamp(timestamp)
-        .setEnv(env == null ? null : Maps.newHashMap(env))
-        .setUris(uris == null ? null : Lists.newArrayList(uris))
+        .setEnv(env.isPresent() ? Optional.<Map<String, String>> of(Maps.newHashMap(env.get())) : env)
+        .setUris(uris.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(uris.get())) : uris)
         .setExecutorData(executorData);  // TODO: find the best way to clone this, maybe force it to be a Map<String, String> ?
+  }
+  
+  public String getRequestId() {
+    return requestId;
   }
 
   public String getId() {
     return id;
   }
 
-  public String getVersion() {
+  public Optional<String> getVersion() {
     return version;
   }
 
-  public String getRequestId() {
-    return requestId;
-  }
-
-  public Long getTimestamp() {
+  public Optional<Long> getTimestamp() {
     return timestamp;
   }
 
-  public Map<String, String> getMetadata() {
+  public Optional<Map<String, String>> getMetadata() {
     return metadata;
   }
 
-  public Map<String, String> getEnv() {
-    return env;
-  }
-
-  public List<String> getUris() {
-    return uris;
-  }
-
-  public Object getExecutorData() {
-    return executorData;
-  }
-
-  public String getExecutor() {
+  public Optional<String> getExecutor() {
     return executor;
   }
 
-  public Resources getResources() {
+  public Optional<Resources> getResources() {
     return resources;
   }
 
-  public String getCommand() {
+  public Optional<String> getCommand() {
     return command;
   }
 
-  public String getHealthcheckUri() {
+  public Optional<Map<String, String>> getEnv() {
+    return env;
+  }
+
+  public Optional<List<String>> getUris() {
+    return uris;
+  }
+
+  public Optional<Object> getExecutorData() {
+    return executorData;
+  }
+
+  public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
   }
 
-  public Long getHealthcheckIntervalSeconds() {
+  public Optional<Long> getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
-  public Long getHealthcheckTimeoutSeconds() {
+  public Optional<Long> getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
 

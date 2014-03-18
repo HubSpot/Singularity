@@ -84,4 +84,9 @@ public class SingularityDeployMarker extends SingularityJsonObject {
     return objectMapper.readValue(bytes, SingularityDeployMarker.class);
   }
 
+  @Override
+  public String toString() {
+    return "SingularityDeployMarker [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + "]";
+  }
+
 }

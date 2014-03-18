@@ -66,11 +66,7 @@ public class SingularityHealthChecker {
       return failedResult(now, Optional.<Long> absent(), "Healthcheck uri or ports not present", task);
     }
     
-    Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds();
-    
-    if (timeoutSeconds == null) {
-      timeoutSeconds = configuration.getDefaultHealthcheckTimeoutSeconds();
-    }
+    final Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds().or(configuration.getDefaultHealthcheckTimeoutSeconds());
     
     ListenableFuture<Response> responseFuture = null;
     

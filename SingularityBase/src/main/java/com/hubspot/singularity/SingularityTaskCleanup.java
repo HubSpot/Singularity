@@ -9,30 +9,28 @@ import com.google.common.base.Optional;
 public class SingularityTaskCleanup extends SingularityJsonObject {
 
   public enum TaskCleanupType {
-    USER_REQUESTED, DECOMISSIONING, SCALING_DOWN, BOUNCING
+    USER_REQUESTED, DECOMISSIONING, SCALING_DOWN, BOUNCING, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED
   }
   
   private final Optional<String> user;
   private final TaskCleanupType cleanupType;
   private final long timestamp;
-  private final String taskId;
-  private final String requestId;
+  private final SingularityTaskId taskId;
+  
+  public static SingularityTaskCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityTaskCleanup.class);
+  }
   
   @JsonCreator
-  public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") String taskId, @JsonProperty("requestId") String requestId) {
-    this(user, TaskCleanupType.valueOf(cleanupType), timestamp, taskId, requestId);
+  public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") SingularityTaskId taskId) {
+    this(user, TaskCleanupType.valueOf(cleanupType), timestamp, taskId);
   }
    
-  public SingularityTaskCleanup(Optional<String> user, TaskCleanupType cleanupType, long timestamp, String taskId, String requestId) {
+  public SingularityTaskCleanup(Optional<String> user, TaskCleanupType cleanupType, long timestamp, SingularityTaskId taskId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.taskId = taskId;
-    this.requestId = requestId;
-  }
-
-  public String getRequestId() {
-    return requestId;
   }
 
   public Optional<String> getUser() {
@@ -48,7 +46,7 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
     return timestamp;
   }
 
-  public String getTaskId() {
+  public SingularityTaskId getTaskId() {
     return taskId;
   }
   
@@ -56,13 +54,9 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
     return cleanupType.name();
   }
   
-  public static SingularityTaskCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityTaskCleanup.class);
-  }
-
   @Override
   public String toString() {
-    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + ", requestId=" + requestId + "]";
-  }  
+    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + "]";
+  }
   
 }

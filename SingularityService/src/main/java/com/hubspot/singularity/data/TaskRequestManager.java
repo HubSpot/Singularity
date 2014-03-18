@@ -32,7 +32,7 @@ public class TaskRequestManager {
     final Map<String, SingularityPendingTask> requestIdToPendingTaskId = Maps.newHashMapWithExpectedSize(tasks.size());
     
     for (SingularityPendingTask task : tasks) {
-      requestIdToPendingTaskId.put(task.getTaskId().getRequestId(), task);
+      requestIdToPendingTaskId.put(task.getPendingTaskId().getRequestId(), task);
     }
     
     final List<SingularityRequest> matchingRequests = requestManager.getRequests(requestIdToPendingTaskId.keySet());

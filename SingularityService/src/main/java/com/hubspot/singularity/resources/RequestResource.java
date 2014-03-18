@@ -114,6 +114,8 @@ public class RequestResource {
       throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getDeployState(requestId).orNull(), deployManager.getDeployMarker(requestId).orNull());
     }
   
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, Optional.of(deployMarker.getDeployId()), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
+    
     // TODO figure out request pausing with deploy model., also schedule ?
     
     return fillEntireRequest(request);

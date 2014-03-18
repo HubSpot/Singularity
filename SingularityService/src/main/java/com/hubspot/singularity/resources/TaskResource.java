@@ -105,7 +105,7 @@ public class TaskResource {
       throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
     }
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId());
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.get().getTaskId());
     
     final SingularityCreateResult result = taskManager.createCleanupTask(taskCleanup);
 

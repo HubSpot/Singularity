@@ -1,6 +1,7 @@
 package com.hubspot.singularity.smtp;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -180,8 +181,8 @@ public class SingularityMailer implements SingularityCloseable {
 
     templateSubs.put("taskScheduled", request.isScheduled());
     
-    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure() != null && request.getNumRetriesOnFailure() > 0);
-    templateSubs.put("num_retries", request.getNumRetriesOnFailure() == null ? "" : request.getNumRetriesOnFailure());
+    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
+    templateSubs.put("num_retries", request.getNumRetriesOnFailure().or(0));
     
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().name());
@@ -204,10 +205,14 @@ public class SingularityMailer implements SingularityCloseable {
     return Jade4J.render(template, templateSubs.build());
   }
 
+  private List<String> getOwners(SingularityRequest request) {
+    return request.getOwners().or(Collections.<String> emptyList());
+  }
+  
   public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
     Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
 
-    final List<String> to = request.getOwners();
+    final List<String> to = getOwners(request);
     final String subject = String.format("Task %s has not started yet", taskId.getId());
 
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder().put("duration_running", DurationFormatUtils.formatDurationHMS(duration)).build();
@@ -220,7 +225,7 @@ public class SingularityMailer implements SingularityCloseable {
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState taskState) {
     Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
 
-    final List<String> to = request.getOwners();
+    final List<String> to = getOwners(request);
     final String subject = getSubjectForTaskHistory(taskId, taskState, maybeTaskHistory);
 
     Joiner joiner = Joiner.on(", ").skipNulls();
@@ -236,7 +241,7 @@ public class SingularityMailer implements SingularityCloseable {
   public void sendRequestPausedMail(SingularityTaskId taskId, SingularityRequest request) {
     Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
 
-    final int maxFailures = request.getMaxFailuresBeforePausing();
+    final int maxFailures = request.getMaxFailuresBeforePausing().or(0);
 
     final List<SingularityRequestHistory> requestHistories = historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, maxFailures);
     final List<Map<String, String>> requestHistoryFormatted = Lists.newArrayList();
@@ -245,7 +250,7 @@ public class SingularityMailer implements SingularityCloseable {
       requestHistoryFormatted.add(jadeHelper.getJadeRequestHistory(requestHistory));
     }
 
-    final List<String> to = request.getOwners();
+    final List<String> to = getOwners(request);
     final String subject = String.format("Request %s is PAUSED", request.getId());
 
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder().put("num_failures", maxFailures).put("request_history", requestHistoryFormatted).build();

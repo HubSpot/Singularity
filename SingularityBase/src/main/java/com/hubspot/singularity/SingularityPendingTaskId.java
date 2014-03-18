@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 
 public class SingularityPendingTaskId extends SingularityId implements Comparable<SingularityPendingTaskId> {
@@ -53,7 +54,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   }
     
   public static SingularityPendingTaskId fromString(String string) {
-    final String[] splits = string.split("-");
+    final String[] splits = JavaUtils.reverseSplit(string, 5, "-");
     
     final String requestId = splits[0];
     final String deployId = splits[1];

@@ -40,12 +40,12 @@ import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.hubspot.singularity.smtp.JadeHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
-import de.neuland.jade4j.template.ClasspathTemplateLoader;
 import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityModule extends AbstractModule {
@@ -216,13 +216,12 @@ public class SingularityModule extends AbstractModule {
   }
   
   private JadeTemplate getJadeTemplate(String name) throws IOException {
-    ClasspathTemplateLoader ctl = new ClasspathTemplateLoader();
-    Parser parser = new Parser(name, ctl);
+    Parser parser = new Parser("templates/" + name, JadeHelper.JADE_LOADER);
     Node root = parser.parse();
 
     JadeTemplate jadeTemplate = new JadeTemplate();
 
-    jadeTemplate.setTemplateLoader(ctl);
+    jadeTemplate.setTemplateLoader(JadeHelper.JADE_LOADER);
     jadeTemplate.setRootNode(root);
     
     return jadeTemplate;

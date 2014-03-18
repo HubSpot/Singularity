@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.SetDataBuilder;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.BadVersionException;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -113,7 +114,7 @@ public class DeployManager extends CuratorAsyncManager {
     
     SingularityDeployState newState = new SingularityDeployState(deploy.getRequestId(), activeDeploy, Optional.of(deployMarker));
     
-    return saveNewDeployState(newState, deployStateStat);
+    return saveNewDeployState(newState, deployStateStat, !deployStateStat.isPresent());
   }
   
   public Optional<SingularityDeploy> getDeploy(String requestId, String deployId) {
@@ -172,14 +173,20 @@ public class DeployManager extends CuratorAsyncManager {
   
   }
   
-  public ConditionalPersistResult saveNewDeployState(SingularityDeployState newDeployState, Optional<Stat> maybeStat) {
+  public ConditionalPersistResult saveNewDeployState(SingularityDeployState newDeployState, Optional<Stat> maybeStat, boolean createNew) {
     final String statePath = getDeployStatePath(newDeployState.getRequestId());
     final byte[] data = newDeployState.getAsBytes(objectMapper);
     
     try {
       
-      if (maybeStat.isPresent()) {
-        curator.setData().withVersion(maybeStat.get().getVersion()).forPath(statePath, data);
+      if (!createNew) {
+        SetDataBuilder setDataBuilder = curator.setData();
+        
+        if (maybeStat.isPresent()) {
+          setDataBuilder.withVersion(maybeStat.get().getVersion());
+        }
+        
+        setDataBuilder.forPath(statePath, data);
       } else {
         curator.create().creatingParentsIfNeeded().forPath(statePath, data);
       }
@@ -201,6 +208,10 @@ public class DeployManager extends CuratorAsyncManager {
   
   private String getDeployMarkerPath(String requestId) {
     return ZKPaths.makePath(ACTIVE_ROOT, requestId);
+  }
+  
+  public void deleteActiveDeploy(SingularityDeployMarker deployMarker) {
+    delete(getDeployMarkerPath(deployMarker.getRequestId()));
   }
   
   public SingularityCreateResult markDeploy(SingularityDeployMarker deployMarker) {

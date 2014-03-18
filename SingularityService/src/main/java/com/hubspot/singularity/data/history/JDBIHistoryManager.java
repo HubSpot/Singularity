@@ -20,6 +20,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskState;
 
@@ -46,7 +47,7 @@ public class JDBIHistoryManager implements HistoryManager {
           task.getTaskId().toString(),
           task.getAsBytes(objectMapper),
           driverStatus,
-          task.getTaskRequest().getPendingTask().getTaskId().getPendingType(),
+          task.getTaskRequest().getPendingTask().getPendingTaskId().getPendingType(),
           new Date());
     } catch (SingularityJsonException jpe) {
       LOG.warn(String.format("Couldn't insert task history for task %s due to json exception", task), jpe);
@@ -143,7 +144,7 @@ public class JDBIHistoryManager implements HistoryManager {
     }
     
     try {
-      return Optional.of(new SingularityTaskHistory(updates, new SingularityTaskState(helper.getTimestamp(), helper.getDirectory(), Optional.<SingularityTaskHealthcheckResult> absent()), SingularityTask.fromBytes(helper.getTaskData(), objectMapper)));
+      return Optional.of(new SingularityTaskHistory(updates, new SingularityTaskState(SingularityTaskId.fromString(taskId), helper.getTimestamp(), helper.getDirectory(), Optional.<SingularityTaskHealthcheckResult> absent()), SingularityTask.fromBytes(helper.getTaskData(), objectMapper)));
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

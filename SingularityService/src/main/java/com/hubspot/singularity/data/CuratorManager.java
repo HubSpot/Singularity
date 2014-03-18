@@ -45,7 +45,7 @@ public abstract class CuratorManager {
   protected Optional<Stat> checkExists(String path) {
     try {
       Stat stat = curator.checkExists().forPath(path);
-      return Optional.of(stat);
+      return Optional.fromNullable(stat);
     } catch (NoNodeException nne) {
     } catch (Throwable t) {
       throw Throwables.propagate(t);

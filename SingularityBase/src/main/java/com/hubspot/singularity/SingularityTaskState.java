@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityTaskState extends SingularityJsonObject {
+public class SingularityTaskState extends SingularityTaskIdHolder {
 
   private final long timestamp;
   private final Optional<String> directory;
@@ -16,7 +16,8 @@ public class SingularityTaskState extends SingularityJsonObject {
   }
   
   @JsonCreator
-  public SingularityTaskState(@JsonProperty("timestamp") long timestamp, @JsonProperty("directory") Optional<String> directory, @JsonProperty("lastHealthcheck") Optional<SingularityTaskHealthcheckResult> lastHealthcheck) {
+  public SingularityTaskState(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("directory") Optional<String> directory, @JsonProperty("lastHealthcheck") Optional<SingularityTaskHealthcheckResult> lastHealthcheck) {
+    super(taskId);
     this.timestamp = timestamp;
     this.directory = directory;
     this.lastHealthcheck = lastHealthcheck;
@@ -36,7 +37,7 @@ public class SingularityTaskState extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityTaskState [timestamp=" + timestamp + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + "]";
+    return "SingularityTaskState [timestamp=" + timestamp + ", taskId=" + getTaskId() + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + "]";
   }
 
 }

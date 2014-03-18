@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 
 public class SingularityDeployBuilder {
@@ -11,24 +12,24 @@ public class SingularityDeployBuilder {
   
   private String id;
 
-  private String version;
-  private Long timestamp;
-  private Map<String, String> metadata;
+  private Optional<String> version;
+  private Optional<Long> timestamp;
+  private Optional<Map<String, String>> metadata;
 
-  private String executor;
-  private Resources resources;
+  private Optional<String> executor;
+  private Optional<Resources> resources;
+ 
+  private Optional<String> command;
+  private Optional<Map<String, String>> env;
+  private Optional<List<String>> uris;
+  private Optional<Object> executorData;
   
-  private String command;
-  private Map<String, String> env;
-  private List<String> uris;
-  private Object executorData;
-
-  private String healthcheckUri;
-  private Long healthcheckIntervalSeconds;
-  private Long healthcheckTimeoutSeconds;
+  private Optional<String> healthcheckUri;
+  private Optional<Long> healthcheckIntervalSeconds;
+  private Optional<Long> healthcheckTimeoutSeconds;
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, command, executor, resources, env, uris, metadata, executorData, id, version, timestamp, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds);
+    return new SingularityDeploy(requestId, id, command, executor, resources, env, uris, metadata, executorData, version, timestamp, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds);
   }
 
   public String getRequestId() {
@@ -49,110 +50,110 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public String getVersion() {
+  public Optional<String> getVersion() {
     return version;
   }
 
-  public SingularityDeployBuilder setVersion(String version) {
+  public SingularityDeployBuilder setVersion(Optional<String> version) {
     this.version = version;
     return this;
   }
 
-  public Long getTimestamp() {
+  public Optional<Long> getTimestamp() {
     return timestamp;
   }
 
-  public SingularityDeployBuilder setTimestamp(Long timestamp) {
+  public SingularityDeployBuilder setTimestamp(Optional<Long> timestamp) {
     this.timestamp = timestamp;
     return this;
   }
 
-  public Map<String, String> getMetadata() {
+  public Optional<Map<String, String>> getMetadata() {
     return metadata;
   }
 
-  public SingularityDeployBuilder setMetadata(Map<String, String> metadata) {
+  public SingularityDeployBuilder setMetadata(Optional<Map<String, String>> metadata) {
     this.metadata = metadata;
     return this;
   }
-  
-  public String getExecutor() {
+
+  public Optional<String> getExecutor() {
     return executor;
   }
 
-  public SingularityDeployBuilder setExecutor(String executor) {
+  public SingularityDeployBuilder setExecutor(Optional<String> executor) {
     this.executor = executor;
     return this;
   }
 
-  public Resources getResources() {
+  public Optional<Resources> getResources() {
     return resources;
   }
 
-  public SingularityDeployBuilder setResources(Resources resources) {
+  public SingularityDeployBuilder setResources(Optional<Resources> resources) {
     this.resources = resources;
     return this;
   }
-  
-  public String getCommand() {
+
+  public Optional<String> getCommand() {
     return command;
   }
 
-  public SingularityDeployBuilder setCommand(String command) {
+  public SingularityDeployBuilder setCommand(Optional<String> command) {
     this.command = command;
     return this;
   }
 
-  public Map<String, String> getEnv() {
+  public Optional<Map<String, String>> getEnv() {
     return env;
   }
 
-  public SingularityDeployBuilder setEnv(Map<String, String> env) {
+  public SingularityDeployBuilder setEnv(Optional<Map<String, String>> env) {
     this.env = env;
     return this;
   }
 
-  public List<String> getUris() {
+  public Optional<List<String>> getUris() {
     return uris;
   }
 
-  public SingularityDeployBuilder setUris(List<String> uris) {
+  public SingularityDeployBuilder setUris(Optional<List<String>> uris) {
     this.uris = uris;
     return this;
   }
-  
-  public Object getExecutorData() {
+
+  public Optional<Object> getExecutorData() {
     return executorData;
   }
 
-  public SingularityDeployBuilder setExecutorData(Object executorData) {
+  public SingularityDeployBuilder setExecutorData(Optional<Object> executorData) {
     this.executorData = executorData;
     return this;
   }
 
-  public String getHealthcheckUri() {
+  public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
   }
 
-  public SingularityDeployBuilder setHealthcheckUri(String healthcheckUri) {
+  public SingularityDeployBuilder setHealthcheckUri(Optional<String> healthcheckUri) {
     this.healthcheckUri = healthcheckUri;
     return this;
   }
 
-  public Long getHealthcheckIntervalSeconds() {
+  public Optional<Long> getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
-  public SingularityDeployBuilder setHealthcheckIntervalSeconds(Long healthcheckIntervalSeconds) {
+  public SingularityDeployBuilder setHealthcheckIntervalSeconds(Optional<Long> healthcheckIntervalSeconds) {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     return this;
   }
 
-  public Long getHealthcheckTimeoutSeconds() {
+  public Optional<Long> getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
 
-  public SingularityDeployBuilder setHealthcheckTimeoutSeconds(Long healthcheckTimeoutSeconds) {
+  public SingularityDeployBuilder setHealthcheckTimeoutSeconds(Optional<Long> healthcheckTimeoutSeconds) {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
     return this;
   }

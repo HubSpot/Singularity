@@ -130,7 +130,7 @@ public class RequestManager extends CuratorAsyncManager {
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
     SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId()), Optional.of(pendingRequest.getAsBytes(objectMapper)));
   
-    LOG.info(String.format("(%s) added to pending queue with result: %s", pendingRequest, result));
+    LOG.info(String.format("%s added to pending queue with result: %s", pendingRequest, result));
 
     return result;
   }
@@ -195,7 +195,12 @@ public class RequestManager extends CuratorAsyncManager {
   }
   
   public List<SingularityRequest> getRequests(Collection<String> requestIds) {
-    return getAsync(RequestManager.ACTIVE_PATH_ROOT, requestIds, requestTranscoder);
+    final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
+    for (String requestId : requestIds) {
+      paths.add(getRequestPath(requestId));
+    }
+    
+    return getAsync(RequestManager.ACTIVE_PATH_ROOT, paths, requestTranscoder);
   }
   
   public List<SingularityRequest> getPausedRequests() {

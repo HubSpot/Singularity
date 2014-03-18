@@ -70,6 +70,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long zookeeperAsyncTimeout = 5000;
   
+  @NotNull
+  private long deployHealthyBySeconds = 30;
+
+  public long getDeployHealthyBySeconds() {
+    return deployHealthyBySeconds;
+  }
+
+  public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
+    this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+
   public long getCheckDeploysEverySeconds() {
     return checkDeploysEverySeconds;
   }

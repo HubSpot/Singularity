@@ -26,9 +26,8 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
-import com.hubspot.singularity.scheduler.SingularitySchedulerBase;
 
-public class SingularityRackManager extends SingularitySchedulerBase {
+public class SingularityRackManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityRackManager.class);
 
@@ -91,13 +90,13 @@ public class SingularityRackManager extends SingularitySchedulerBase {
       return RackCheckState.NOT_RACK_SENSITIVE;
     }
     
-    int numDesiredInstances = taskRequest.getRequest().getInstances();
+    int numDesiredInstances = taskRequest.getRequest().getInstances().or(1);
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
-    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks())) {
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
       if (taskId.getHost().equals(host)) {
-        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTask().getTaskId(), host, taskId));
+        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTask().getPendingTaskId(), host, taskId));
         
         return RackCheckState.ALREADY_ON_SLAVE;
       }
@@ -112,7 +111,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
 
     boolean isRackOk = numOnRack < numPerRack;
   
-    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTask().getTaskId(), rackId, numPerRack, numOnRack));
+    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTask().getPendingTaskId(), rackId, numPerRack, numOnRack));
     
     if (isRackOk) {
       return RackCheckState.RACK_OK;

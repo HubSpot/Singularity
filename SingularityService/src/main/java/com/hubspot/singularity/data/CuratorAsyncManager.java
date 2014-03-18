@@ -59,9 +59,9 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       @Override
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         if (event.getData() == null || event.getData().length == 0) {
-          missing.incrementAndGet();
           LOG.info(String.format("Expected active node %s but it wasn't there", event.getPath()));
-      
+          
+          missing.incrementAndGet();
           latch.countDown();
           
           return;

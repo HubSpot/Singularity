@@ -1,28 +1,30 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
+import com.google.common.base.Predicate;
 
-public class SingularityPendingTask {
+public class SingularityPendingTask extends SingularityJsonObject {
 
   private final SingularityPendingTaskId taskId;
   private final Optional<String> maybeCmdLineArgs;
   
-  public SingularityPendingTask(SingularityPendingTaskId taskId, Optional<String> maybeCmdLineArgs) {
-    this.taskId = taskId;
-    this.maybeCmdLineArgs = maybeCmdLineArgs;
+  public static Predicate<SingularityPendingTask> matching(final String requestId) {
+    return new Predicate<SingularityPendingTask>() {
+
+      @Override
+      public boolean apply(SingularityPendingTask input) {
+        return input.getPendingTaskId().getRequestId().equals(requestId);
+      }
+      
+    };
   }
   
-  public static List<SingularityPendingTask> filter(List<SingularityPendingTask> tasks, String requestId) {
-    List<SingularityPendingTask> matching = Lists.newArrayList();
-    for (SingularityPendingTask task : tasks) {
-      if (task.getTaskId().getRequestId().equals(requestId)) {
-        matching.add(task);
-      }
-    }
-    return matching;
+  @JsonCreator
+  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId taskId, @JsonProperty("cmdLineArgs") Optional<String> maybeCmdLineArgs) {
+    this.taskId = taskId;
+    this.maybeCmdLineArgs = maybeCmdLineArgs;
   }
   
   @Override
@@ -50,7 +52,7 @@ public class SingularityPendingTask {
     return true;
   }
 
-  public SingularityPendingTaskId getTaskId() {
+  public SingularityPendingTaskId getPendingTaskId() {
     return taskId;
   }
 

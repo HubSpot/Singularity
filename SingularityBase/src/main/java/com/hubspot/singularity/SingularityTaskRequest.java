@@ -40,7 +40,7 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
   
   @Override
   public int hashCode() {
-    return Objects.hash(pendingTask.getTaskId());
+    return Objects.hash(pendingTask.getPendingTaskId());
   }
 
   @Override
@@ -55,14 +55,14 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
     if (pendingTask == null) {
       if (other.pendingTask != null)
         return false;
-    } else if (!pendingTask.getTaskId().equals(other.pendingTask.getTaskId()))
+    } else if (!pendingTask.getPendingTaskId().equals(other.pendingTask.getPendingTaskId()))
       return false;
     return true;
   }
 
   @Override
   public int compareTo(SingularityTaskRequest o) {
-    return this.getPendingTask().getTaskId().compareTo(o.getPendingTask().getTaskId());
+    return this.getPendingTask().getPendingTaskId().compareTo(o.getPendingTask().getPendingTaskId());
   }
 
   @Override
