@@ -35,16 +35,19 @@ html
             if !taskEverRan || taskStateLost
               | This is likely an infrastructure issue. No action is required.
             else
-              | This happened on its own. Consider investigating your process.
-          p Singularity will attempt to restart your task.
-          if taskStateFailed
-            if taskEverRan
-              p <b>Recommended course of action: </b> Process terminated with non-zero exit code. <i>This is not an infrastructure issue.</i> You should consider investigating the task.
-          if taskStateLost
-            if taskEverRan
-              p <b>Recommended course of action: </b> Task lost while running. This is likely an infrastructure issue. It is possible, though unlikely, that the task may still be running.
-            if !taskEverRan
-              p <b>Recommended course of action: </b> Task lost before running. This is likely an infrastructure issue. For further assistance email #{adminEmails}.
+              | The task failed with a non-zero exit code. Consider investigating your process to see if there is an application level error.
+          if taskScheduled
+            p Singularity will retry #{ num_retries } times before it resumes this request on its normal schedule.
+          if !taskScheduled
+            p Singularity will continue to restart your task.
+          if !taskEverRan
+              p <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
+          if taskEverRan
+              if taskStateFailed
+                  p <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
+              if taskStateLost
+                  p <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
+            
 
         //- History
         div(style="padding-bottom: 20px")
@@ -88,7 +91,7 @@ html
                     for line in stdout
                       div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
               else
-                | No updates
+                | No stdout available. The task either did not start, output anything, or the slave hosting the log files was unavailable.
             dt(style="font-weight: bold; margin: 0 0 9px") Standard error
             dd(style="background: #eee; display: block; margin: 0; padding: 10px 14px 0 14px; border-radius: 3px")
               if stdout
@@ -97,4 +100,4 @@ html
                     for line in stderr
                       div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
               else
-                | No updates
+                | No stderr available. The task either did not start, output anything, or the slave hosting the log files was unavailable.
