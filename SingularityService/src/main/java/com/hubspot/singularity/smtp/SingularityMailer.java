@@ -137,7 +137,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     final SingularityTaskHistory taskHistory = maybeTaskHistory.get();
 
-    if (!taskHistory.getDirectory().isPresent()) {
+    if (!taskHistory.getTaskState().getDirectory().isPresent()) {
       LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
       return Optional.absent();
     }
