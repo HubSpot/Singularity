@@ -262,10 +262,10 @@ public class SingularityMailer implements SingularityCloseable {
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, TaskState state, Optional<SingularityTaskHistory> taskHistory) {
     if (!taskHistory.isPresent() || !taskEverRan(taskHistory.get())) {
-      return String.format("Task %s never started (State: %s) in mesos — Singularity", taskId.toString(), state.name());
+      return String.format("Task %s never started in mesos (State: %s) — Singularity", taskId.toString(), state.name());
     }
 
-    return String.format("Task %s failed (State: %s) after running — Singularity", taskId.toString(), state.name());
+    return String.format("Task %s failed after running (State: %s) — Singularity", taskId.toString(), state.name());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {
