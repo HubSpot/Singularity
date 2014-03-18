@@ -37,9 +37,12 @@ html
             else
               | The task failed with a non-zero exit code. Consider investigating your process to see if there is an application level error.
           if taskScheduled
-            p Singularity will retry #{ num_retries } times before it resumes this request on its normal schedule.
+              if taskWillRetry
+                  p Singularity will retry the task #{ num_retries } times before it resumes on its normal schedule.
+              if !taskWillRetry
+                  p Singularity will run the task again on its normal schedule.
           if !taskScheduled
-            p Singularity will continue to restart your task.
+              p Singularity will continue to restart your task immediately.
           if !taskEverRan
               p <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
           if taskEverRan
@@ -91,7 +94,7 @@ html
                     for line in stdout
                       div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
               else
-                | No stdout available. The task either did not start, output anything, or the slave hosting the log files was unavailable.
+                | No stdout available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
             dt(style="font-weight: bold; margin: 0 0 9px") Standard error
             dd(style="background: #eee; display: block; margin: 0; padding: 10px 14px 0 14px; border-radius: 3px")
               if stdout
@@ -100,4 +103,4 @@ html
                     for line in stderr
                       div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
               else
-                | No stderr available. The task either did not start, output anything, or the slave hosting the log files was unavailable.
+                | No stderr available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.

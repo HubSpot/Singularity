@@ -180,7 +180,9 @@ public class SingularityMailer implements SingularityCloseable {
     templateSubs.put("task_id", taskId.getId());
 
     templateSubs.put("taskScheduled", request.isScheduled());
-    templateSubs.put("num_retries", request.getNumRetriesOnFailure());
+    
+    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure() != null && request.getNumRetriesOnFailure() > 0);
+    templateSubs.put("num_retries", request.getNumRetriesOnFailure() == null ? "" : request.getNumRetriesOnFailure());
     
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().name());
