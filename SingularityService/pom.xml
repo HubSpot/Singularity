@@ -27,12 +27,6 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.neuland-bfi</groupId>
-      <artifactId>jade4j</artifactId>
-      <version>0.4.0</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
       <version>0.3.0</version>
@@ -45,33 +39,67 @@
     </dependency>
 
     <dependency>
+      <groupId>de.neuland-bfi</groupId>
+      <artifactId>jade4j</artifactId>
+      <version>0.4.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.ning</groupId>
+      <artifactId>async-http-client</artifactId>
+      <version>${ning.async.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-jdbi</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>${dropwizard.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-migrations</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.antlr</groupId>
-      <artifactId>stringtemplate</artifactId>
-      <version>3.2.1</version>
+      <version>${dropwizard.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-assets</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>${dropwizard.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot.jackson</groupId>
       <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
-      <version>0.4.0</version>
+      <version>0.5.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -81,13 +109,23 @@
     </dependency>
 
     <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>stringtemplate</artifactId>
+      <version>3.2.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-recipes</artifactId>
-      <version>2.2.0-incubating</version>
+      <version>${curator.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
           <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -100,18 +138,6 @@
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>com.ning</groupId>
-      <artifactId>async-http-client</artifactId>
-      <version>1.7.20</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
         </exclusion>
       </exclusions>
     </dependency>
