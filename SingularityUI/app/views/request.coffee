@@ -132,18 +132,18 @@ class RequestView extends View
                         header: '<th class="sorting" data-sort="taskId">Name</th>'
                         cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
-                        header: '<th class="sorting" data-sort="lastTaskStatus">Status</th>'
-                        cell: '<td>{{ lastStatusHuman }}</td>'
+                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
+                        cell: '<td class="visible-desktop">{{ lastStatusHuman }}</td>'
                     ,
-                        header: '<th class="sorting" data-sort="createdAt">Created</th>'
-                        cell: '<td>{{ createdAtHuman }}</td>'
+                        header: '<th class="sorting visible-desktop" data-sort="createdAt">Created</th>'
+                        cell: '<td class="visible-desktop">{{ createdAtHuman }}</td>'
                     ,
-                        header: '<th class="sorting" data-sort="updatedAt">Updated</th>'
-                        cell: '<td>{{ updatedAtHuman }}</td>'
+                        header: '<th class="sorting hidden-phone" data-sort="updatedAt">Updated</th>'
+                        cell: '<td class="hidden-phone">{{ updatedAtHuman }}</td>'
                     ,
-                        header: '<th>&nbsp;</th>'
+                        header: '<th class="hidden-phone">&nbsp;</th>'
                         cell: '''
-                            <td class="actions-column">
+                            <td class="actions-column hidden-phone">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                                 <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                             </td>
