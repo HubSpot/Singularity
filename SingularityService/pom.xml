@@ -227,7 +227,7 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- You'll probably want to remove this for your project. I'm just 
+        <!-- You'll probably want to remove this for your project. I'm just
           using it here so that dropwizard-example doesn't get deployed as a library. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
