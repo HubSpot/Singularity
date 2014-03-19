@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskState;
@@ -48,9 +49,12 @@ public class TaskManager extends CuratorAsyncManager {
   private final static String SCHEDULED_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   
-  private final static String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
+  private final static String PENDING_HEALTHCHECK_ROOT = TASKS_ROOT + "/pendinghealthcheck";
   
-  private final static String STATE_KEY = "STATE";
+  private final static String STATE_PATH_ROOT = TASKS_ROOT + "/state";
+  
+  private final static String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
+  private final static String DIRECTORY_KEY = "DIRECTORY";
   private final static String UPDATES_PATH = "/updates";
     
   @Inject
@@ -65,16 +69,20 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   // TODO this.
-  private String getStatePath(String taskId) {
-    return ZKPaths.makePath(getHistoryPath(taskId), STATE_KEY);
+  private String getHealthcheckPath(String taskId) {
+    return ZKPaths.makePath(getStatePath(taskId), LAST_HEALTHCHECK_KEY);
+  }
+  
+  private String getPendingHealthcheckPath(String taskId) {
+    return ZKPaths.makePath(PENDING_HEALTHCHECK_ROOT, taskId);
   }
   
   private String getUpdatesPath(String taskId) {
-    return ZKPaths.makePath(getHistoryPath(taskId), UPDATES_PATH);
+    return ZKPaths.makePath(getStatePath(taskId), UPDATES_PATH);
   }
   
-  private String getHistoryPath(String taskId) {
-    return ZKPaths.makePath(HISTORY_PATH_ROOT, taskId);
+  private String getStatePath(String taskId) {
+    return ZKPaths.makePath(STATE_PATH_ROOT, taskId);
   }
   
   private String getActivePath(String taskId) {
@@ -101,6 +109,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(SCHEDULED_PATH_ROOT);
   }
   
+  public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
+    save(getHealthcheckPath(healthcheckResult.getTaskId()), Optional.of(healthcheckResult.getAsBytes(objectMapper)));
+  }
+  
   public void persistScheduleTasks(List<SingularityPendingTask> tasks) {
     try {
       for (SingularityPendingTask task : tasks) {
@@ -114,11 +126,13 @@ public class TaskManager extends CuratorAsyncManager {
   private void persistTask(SingularityPendingTask task) throws Exception {
     final String pendingPath = getScheduledPath(task.getPendingTaskId().getId());
 
+    Optional<byte[]> data = Optional.absent();
+    
     if (task.getMaybeCmdLineArgs().isPresent()) {
-      curator.create().creatingParentsIfNeeded().forPath(pendingPath, JavaUtils.toBytes(task.getMaybeCmdLineArgs().get()));
-    } else {
-      curator.create().creatingParentsIfNeeded().forPath(pendingPath);
+      data = Optional.of(JavaUtils.toBytes(task.getMaybeCmdLineArgs().get()));
     }
+    
+    create(pendingPath, data);
   }
   
   private List<SingularityTaskId> getTaskIds(String root) {
@@ -242,11 +256,13 @@ public class TaskManager extends CuratorAsyncManager {
 
   private void launchTaskPrivate(SingularityTask task) throws Exception {
     final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
-    final String activePath = getActivePath(task.getTaskId().toString());
+    final String activePath = getActivePath(task.getTaskId().getId());
     
     curator.delete().forPath(scheduledPath);
     
     curator.create().creatingParentsIfNeeded().forPath(activePath, task.getAsBytes(objectMapper));
+    
+    addToPendingHealthcheck(task.getTaskId().getId());
   }
   
   public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
@@ -263,6 +279,14 @@ public class TaskManager extends CuratorAsyncManager {
   
   public void deleteCleanupTask(String taskId) {
     delete(getCleanupPath(taskId));
+  }
+  
+  public void addToPendingHealthcheck(String taskId) {
+    create(getPendingHealthcheckPath(taskId));
+  }
+  
+  public void removeFromPendingHealthcheck(String taskId) {
+    delete(getPendingHealthcheckPath(taskId));
   }
   
 }

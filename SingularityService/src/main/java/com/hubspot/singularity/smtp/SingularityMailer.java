@@ -132,7 +132,7 @@ public class SingularityMailer implements SingularityCloseable {
     final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
 
     if (!maybeTaskHistory.isPresent()) {
-      LOG.error("No task history found for %s. This shouldn't happen.", taskId.getId());
+      LOG.error(String.format("No task history found for %s", taskId.getId()));
       return Optional.absent();
     }
 
@@ -156,7 +156,7 @@ public class SingularityMailer implements SingularityCloseable {
     try {
       logChunkObject = sandboxManager.read(slaveHostname, directory, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
-      LOG.error(String.format("Sanboxmanager failed to read %s/%s on slave %s with error %s", directory, filename, slaveHostname, e));
+      LOG.error(String.format("Sanboxmanager failed to read %s/%s on slave %s", directory, filename, slaveHostname),  e);
       return Optional.absent();
     }
 
@@ -196,6 +196,8 @@ public class SingularityMailer implements SingularityCloseable {
       templateSubs.put("task_directory", taskHistory.getTaskState().getDirectory().or("directory missing"));
       templateSubs.put("slave_hostname", taskHistory.getTask().getOffer().getHostname());
       templateSubs.put("taskEverRan", taskEverRan(taskHistory));
+    } else {
+      templateSubs.put("task_updates", Collections.emptyList());
     }
 
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()) {

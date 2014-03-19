@@ -8,7 +8,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityCreateResult;
 
 public class MetadataManager extends CuratorManager {
 
@@ -42,15 +41,7 @@ public class MetadataManager extends CuratorManager {
     byte[] data = JavaUtils.toBytes(Long.toString(newTimestamp));
     Optional<byte[]> dataOptional = Optional.of(data);    
     
-    SingularityCreateResult result = create(LAST_STALE_CHECK_PATH, dataOptional);
-    
-    if (result == SingularityCreateResult.EXISTED) {
-      try {
-        curator.setData().forPath(LAST_STALE_CHECK_PATH, data);
-      } catch (Throwable t) {
-        throw Throwables.propagate(t);
-      }
-    }
+    save(LAST_STALE_CHECK_PATH, dataOptional);
   }
   
 }

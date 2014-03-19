@@ -68,13 +68,35 @@ public class SingularityConfiguration extends Configuration {
   private int logFetchMaxThreads = 25;
   
   @NotNull
+  private int healthcheckerTimeoutThreads = 3;
+  
+  @NotNull
   private long zookeeperAsyncTimeout = 5000;
   
   @NotNull
   private long deployHealthyBySeconds = 30;
 
+  @NotNull
+  private long sendHealthchecksEverySeconds = 5;
+  
   public long getDeployHealthyBySeconds() {
     return deployHealthyBySeconds;
+  }
+  
+  public long getSendHealthchecksEverySeconds() {
+    return sendHealthchecksEverySeconds;
+  }
+
+  public void setSendHealthchecksEverySeconds(long sendHealthchecksEverySeconds) {
+    this.sendHealthchecksEverySeconds = sendHealthchecksEverySeconds;
+  }
+
+  public int getHealthcheckerTimeoutThreads() {
+    return healthcheckerTimeoutThreads;
+  }
+
+  public void setHealthcheckerTimeoutThreads(int healthcheckerTimeoutThreads) {
+    this.healthcheckerTimeoutThreads = healthcheckerTimeoutThreads;
   }
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {

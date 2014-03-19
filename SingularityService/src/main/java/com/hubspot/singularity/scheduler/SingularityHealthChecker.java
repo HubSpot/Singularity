@@ -9,24 +9,30 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.TaskManager;
 import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.ListenableFuture;
-import com.ning.http.client.Response;
+import com.ning.http.client.PerRequestConfig;
+import com.ning.http.client.RequestBuilder;
 
-public class SingularityHealthChecker {
+@SuppressWarnings("deprecation")
+public class SingularityHealthchecker {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityHealthChecker.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
   private final AsyncHttpClient http;
   private final SingularityConfiguration configuration;
+  private final TaskManager taskManager;
+  private final SingularityAbort abort;
   
   @Inject
-  public SingularityHealthChecker(AsyncHttpClient http, SingularityConfiguration configuration) {
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, TaskManager taskManager, SingularityAbort abort) {
     this.http = http;
     this.configuration = configuration;
+    this.taskManager = taskManager;
+    this.abort = abort;
   }
   
   private Optional<String> getHealthcheckUri(SingularityTask task) {
@@ -54,42 +60,35 @@ public class SingularityHealthChecker {
     return Optional.of(String.format("http://%s:%s/%s", hostname, firstPort, task.getTaskRequest().getDeploy().getHealthcheckUri()));
   }
   
-  private SingularityTaskHealthcheckResult failedResult(long now, Optional<Long> duration, String failureMessage, SingularityTask task) {
-    return new SingularityTaskHealthcheckResult(Optional.<Integer> absent(), duration, now, Optional.<String> absent(), Optional.of(failureMessage), task.getTaskId().getId());
+  private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
+    handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message));
   }
   
-  public SingularityTaskHealthcheckResult healthcheck(SingularityTask task) {
-    final long now = System.currentTimeMillis();
+  public void healthcheck(final SingularityTask task) {
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(taskManager, abort, task);
     final Optional<String> uri = getHealthcheckUri(task);
     
     if (!uri.isPresent()) {
-      return failedResult(now, Optional.<Long> absent(), "Healthcheck uri or ports not present", task);
+      saveFailure(handler, "Healthcheck uri or ports not present");
+      return;
     }
     
     final Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds().or(configuration.getDefaultHealthcheckTimeoutSeconds());
     
-    ListenableFuture<Response> responseFuture = null;
-    
     try {
-      responseFuture = http.prepareGet(uri.get()).execute();
+      PerRequestConfig prc = new PerRequestConfig();
+      prc.setRequestTimeoutInMs((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
       
-      Response response = responseFuture.get(timeoutSeconds, TimeUnit.SECONDS);
+      RequestBuilder builder = new RequestBuilder("GET");
+      builder.setUrl(uri.get());
+      builder.setPerRequestConfig(prc);
       
-      Optional<String> responseBody = Optional.absent();
+      http.prepareRequest(builder.build()).execute(handler);
+    } catch (Throwable t) {
+      LOG.debug(String.format("Exception while preparing healthcheck (%s) for task (%s)", uri, task.getTaskId()), t);
       
-      if (response.hasResponseBody()) {
-        responseBody = Optional.of(response.getResponseBody());
-      }
-      
-      return new SingularityTaskHealthcheckResult(Optional.of(response.getStatusCode()), Optional.of(System.currentTimeMillis() - now), now, responseBody, Optional.<String> absent(), task.getTaskId().getId());
-    } catch (Exception e) {
-      if (responseFuture != null) {
-        responseFuture.cancel(true);
-      }
-      
-      return failedResult(now, Optional.of(System.currentTimeMillis() - now), String.format("Healthcheck failed due to exception: %s", e.getMessage()), task);
+      saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }
-  
   
 }

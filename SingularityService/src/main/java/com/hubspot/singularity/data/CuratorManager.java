@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.GetDataBuilder;
+import org.apache.curator.framework.api.ProtectACLCreateModePathAndBytesable;
+import org.apache.curator.framework.api.SetDataBuilder;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
@@ -86,11 +88,8 @@ public abstract class CuratorManager {
   
   protected SingularityCreateResult create(String path, Optional<byte[]> data) {
     try {
-      if (data.isPresent()) {
-        curator.create().creatingParentsIfNeeded().forPath(path, data.get());
-      } else {
-        curator.create().creatingParentsIfNeeded().forPath(path);
-      }
+      privateCreate(path, data);
+      
       return SingularityCreateResult.CREATED;
     } catch (NodeExistsException nee) {
       return SingularityCreateResult.EXISTED;
@@ -98,6 +97,46 @@ public abstract class CuratorManager {
       throw Throwables.propagate(t);
     }
   }
+  
+  private void privateCreate(String path, Optional<byte[]> data) throws Exception {
+    ProtectACLCreateModePathAndBytesable<String> createBuilder = curator.create().creatingParentsIfNeeded();
+    
+    if (data.isPresent()) {
+      createBuilder.forPath(path, data.get());
+    } else {
+      createBuilder.forPath(path);
+    }
+  }
+  
+  protected SingularityCreateResult save(String path, Optional<byte[]> data) {
+    try {
+      privateCreate(path, data);
+      
+      return SingularityCreateResult.CREATED;
+    } catch (NodeExistsException nee) {
+      return set(path, data);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  protected SingularityCreateResult set(String path, Optional<byte[]> data) {
+    try {
+      SetDataBuilder setDataBuilder = curator.setData();
+      
+      if (data.isPresent()) {
+        setDataBuilder.forPath(path, data.get());
+      } else {
+        setDataBuilder.forPath(path);
+      }
+      
+      return SingularityCreateResult.EXISTED;
+    } catch (NoNodeException nne) {
+      return save(path, data);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }  
   
   protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder) {
     try {
