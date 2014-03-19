@@ -33,7 +33,6 @@ html
             h3(style="margin: 0; font-size: 20px; line-height: 1") Status
           p This requires manual intervention. It has failed #{ num_failures } times consecutively and will not run again until it is manually unpaused or updated.
 
-
         //- Task history
         div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
@@ -63,7 +62,7 @@ html
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= request_update.date
 
         //- Files
-        div
+        div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Files
           dl
