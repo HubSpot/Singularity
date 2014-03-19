@@ -16,6 +16,11 @@
   <properties>
     <mesos.version>0.14.0-rc4</mesos.version>
     <java.abi>1.7</java.abi>
+    <dropwizard.version>0.7.0-rc2</dropwizard.version>
+    <sl4fj.version>1.7.6</sl4fj.version>
+    <jackson.version>2.3.1</jackson.version>
+    <curator.version>2.2.0-incubating</curator.version>
+    <ning.async.version>1.7.20</ning.async.version>
   </properties>
 
   <groupId>com.hubspot</groupId>
