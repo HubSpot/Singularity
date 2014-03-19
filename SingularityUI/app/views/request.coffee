@@ -42,7 +42,7 @@ class RequestView extends View
         context =
             request:
                 id: @options.requestId
-                name: utils.getShortRequestID @options.requestId
+                name: utils.getRequestNameFromID @options.requestId
                 scheduled: false
                 onDemand: false
                 scheduledOrOnDemand: false
@@ -66,6 +66,8 @@ class RequestView extends View
             context.request.scheduled = utils.isScheduledRequest requestLikeObject
             context.request.onDemand = utils.isOnDemandRequest requestLikeObject
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
+
+        context.requestNameStringLengthTens = Math.floor(context.request.id.length / 10) * 10
 
         @$el.html @template context
 
