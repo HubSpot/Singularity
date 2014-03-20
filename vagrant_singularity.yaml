@@ -15,10 +15,10 @@ database:
   driverClass: com.mysql.jdbc.Driver
   user: singularity
   password: 9thlevel
-  url: jdbc:mysql://192.168.33.10:3306/singularity
+  url: jdbc:mysql://vagrant-singularity:3306/singularity
 
 mesos:
-  master: zk://192.168.33.10:2181/mesos
+  master: zk://vagrant-singularity:2181/mesos
   defaultCpus: 1
   defaultMemory: 128
   frameworkName: Singularity
@@ -26,7 +26,7 @@ mesos:
   frameworkFailoverTimeout: 1000000
 
 zookeeper:
-  quorum: 192.168.33.10:2181
+  quorum: vagrant-singularity:2181
   zkNamespace: singularity
   sessionTimeoutMillis: 60000
   connectTimeoutMillis: 5000
