@@ -63,11 +63,16 @@ class SearchView extends View
             setTimeout => @$search.focus()
 
         lastText = ''
+        minimumSearchQuery = 8
         showSpinnerTimeout = undefined
         showSlowSearchAPITimeout = undefined
 
         @$search.unbind().on 'change keypress paste focus textInput input click keydown', _.debounce =>
             text = _.trim @$search.val()
+
+            if text.length < minimumSearchQuery
+                @$el.find('.results').html "<br><br><center>Please type at least #{ minimumSearchQuery } characters to execute a search.</center>"
+                return
 
             if @forceSearchOnce or text isnt lastText and text.length
                 if @lastXhrTasks?

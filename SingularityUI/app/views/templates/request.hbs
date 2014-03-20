@@ -30,20 +30,20 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Updated</th>
-                            <th data-sortable="false"></th>
+                            <th class="visible-desktop">Status</th>
+                            <th class="visible-desktop">Created</th>
+                            <th class="hidden-phone">Updated</th>
+                            <th class="hidden-phone" data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn requestTasksActive}}
                             <tr data-task-id="{{ id }}">
                                 <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
-                                <td>{{ lastStatusHuman }}</td>
-                                <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
-                                <td data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
-                                <td class="actions-column">
+                                <td class="visible-desktop">{{ lastStatusHuman }}</td>
+                                <td class="visible-desktop" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                                <td class="hidden-phone" data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                                <td class="actions-column hidden-phone">
                                     <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                                     <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                                 </td>
@@ -74,7 +74,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Next run</th>
-                            <th data-sortable="false">JSON</th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,7 +101,11 @@
     <div class="page-header">
         <h1>Historical Tasks</h1>
     </div>
-    <div class="historical-tasks-paginated"></div>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="historical-tasks-paginated"></div>
+        </div>
+    </div>
 </section>
 
 <section>

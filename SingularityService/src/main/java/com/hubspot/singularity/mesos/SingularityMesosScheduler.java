@@ -92,9 +92,11 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> tasks = scheduler.getDueTasks();
-
-      LOG.trace(String.format("Got tasks to match with offers %s", tasks));
-
+      
+      for (SingularityTaskRequest taskRequest : tasks) {
+        LOG.trace(String.format("Task %s is due", taskRequest.getPendingTaskId()));
+      }
+      
       numTasksSeen = tasks.size();
 
       for (Protos.Offer offer : offers) {
@@ -143,6 +145,8 @@ public class SingularityMesosScheduler implements Scheduler {
       if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
 
+        LOG.trace(String.format("Accepted and built task %s", task));
+        
         LOG.info(String.format("Launching task %s slot on slave %s (%s)", task.getTaskId(), offer.getSlaveId(), offer.getHostname()));
 
         taskManager.launchTask(task);

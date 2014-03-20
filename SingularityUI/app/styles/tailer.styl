@@ -61,12 +61,16 @@
     position relative
     font-family Consolas, "Liberation Mono", Courier, monospace
     overflow auto
-    overflow-y scroll
-    overflow-x hidden
     -webkit-overflow-scrolling touch
 
     @media (max-width: 1199px)
         height 500px
+
+    .tail-loader
+        display: none
+
+    &.loading .tail-loader
+        display: block
 
     &.empty
         font-family inherit

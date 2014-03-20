@@ -143,7 +143,7 @@ class TailerView extends Backbone.View
         if scrollTop is 0 and @lines.getMinOffset() > 0
             # if at top, fetch previous lines
             @fetchPrev()
-        else if scrollBottom is scrollMax
+        else if scrollBottom >= scrollMax
             # if at bottom, start tailing if appropriate
             @startTailing()
         else
@@ -161,6 +161,8 @@ class TailerView extends Backbone.View
         @$el.addClass 'loading'
 
         @taskHistory.fetch().done =>
+            @$el.removeClass 'loading'
+
             # seek to the end of the file
             @lines.fetchEndOffset().then (offset) =>
                 @handleEmpty(offset)

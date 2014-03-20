@@ -37,20 +37,19 @@ html
             else
               | The task failed with a non-zero exit code. Consider investigating your process to see if there is an application level error.
           if taskScheduled
-              if taskWillRetry
-                  p Singularity will retry the task #{ num_retries } times before it resumes on its normal schedule.
-              if !taskWillRetry
-                  p Singularity will run the task again on its normal schedule.
+            if taskWillRetry
+              p Singularity will retry the task #{ num_retries } times before it resumes on its normal schedule.
+            if !taskWillRetry
+              p Singularity will run the task again on its normal schedule.
           if !taskScheduled
-              p Singularity will continue to restart your task immediately.
+            p Singularity will continue to restart your task immediately.
           if !taskEverRan
-              p <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
+            p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
           if taskEverRan
-              if taskStateFailed
-                  p <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
-              if taskStateLost
-                  p <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
-            
+            if taskStateFailed
+              p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
+            if taskStateLost
+              p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
 
         //- History
         div(style="padding-bottom: 20px")
