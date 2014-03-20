@@ -94,7 +94,7 @@ public class SingularityMesosScheduler implements Scheduler {
       final List<SingularityTaskRequest> tasks = scheduler.getDueTasks();
       
       for (SingularityTaskRequest taskRequest : tasks) {
-        LOG.trace(String.format("Task %s is due", taskRequest.getPendingTaskId()));
+        LOG.trace(String.format("Task %s is due", taskRequest.getPendingTask().getPendingTaskId()));
       }
       
       numTasksSeen = tasks.size();
