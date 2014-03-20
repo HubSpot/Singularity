@@ -161,6 +161,8 @@ class TailerView extends Backbone.View
         @$el.addClass 'loading'
 
         @taskHistory.fetch().done =>
+            @$el.removeClass 'loading'
+
             # seek to the end of the file
             @lines.fetchEndOffset().then (offset) =>
                 @handleEmpty(offset)
