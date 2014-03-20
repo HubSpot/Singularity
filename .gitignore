@@ -20,3 +20,5 @@ SingularityUI/node_modules/*
 SingularityUI/brunchlog
 SingularityUI/app/env.coffee
 SingularityService/src/main/resources/static
+
+.vagrant
