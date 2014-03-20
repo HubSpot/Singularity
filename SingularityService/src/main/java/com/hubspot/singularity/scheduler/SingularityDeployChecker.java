@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.mesos.Protos.TaskState;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -28,6 +26,7 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -144,7 +143,7 @@ public class SingularityDeployChecker {
     
     final long deployDuration = System.currentTimeMillis() - startTime;
 
-    final long allowedTime = TimeUnit.SECONDS.toMillis(deploy.getHealthcheckIntervalSeconds().or(0L) + configuration.getDeployHealthyBySeconds());
+    final long allowedTime = TimeUnit.SECONDS.toMillis(deploy.getHealthcheckIntervalSeconds().or(0L) + deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds()));
     
     if (deployDuration > allowedTime) {
       LOG.error(String.format("Deploy %s is overdue and will be failed (duration: %s), allowed: %s", activeDeployMarker, DurationFormatUtils.formatDurationHMS(deployDuration), DurationFormatUtils.formatDurationHMS(allowedTime)));
@@ -177,20 +176,15 @@ public class SingularityDeployChecker {
     final Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
     
     for (Entry<SingularityTaskId, Collection<SingularityTaskHistoryUpdate>> entry : taskUpdates.asMap().entrySet()) {
-      boolean foundRunning = false;
-          
-      for (SingularityTaskHistoryUpdate taskHistoryUpdate : entry.getValue()) {
-        if (taskHistoryUpdate.getTaskStateEnum() == TaskState.TASK_RUNNING) {
-          foundRunning = true;
-          break;
-        } else if (MesosUtils.isTaskDone(taskHistoryUpdate.getTaskStateEnum())) {
+      SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(entry.getValue());
+      
+      switch (currentState) {
+        case WAITING:
+          return DeployState.WAITING;
+        case DONE:
           LOG.warn(String.format("Found an active task (%s) in done state: %s for deploy: %s", entry.getKey(), entry.getValue(), activeDeployMarker));
           return DeployState.FAILED;
-        }
-      }
-      
-      if (!foundRunning) {
-        return DeployState.WAITING;
+        default:
       }
     }
     

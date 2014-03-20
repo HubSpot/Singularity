@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.hubspot.mesos.MesosUtils;
 
 public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
 
@@ -18,6 +20,24 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
     return objectMapper.readValue(bytes, SingularityTaskHistoryUpdate.class);
   }
 
+  public enum SimplifiedTaskState {
+    WAITING, RUNNING, DONE
+  }
+  
+  public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {
+    SimplifiedTaskState state = SimplifiedTaskState.WAITING;
+    
+    for (SingularityTaskHistoryUpdate update : updates) {
+      if (MesosUtils.isTaskDone(update.getTaskStateEnum())) {
+        return SimplifiedTaskState.DONE;
+      } else if (update.getTaskStateEnum() == TaskState.TASK_RUNNING) {
+        state = SimplifiedTaskState.RUNNING;
+      }
+    }
+    
+    return state;
+  }
+  
   @JsonCreator
   public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("statusUpdate") String statusUpdate, @JsonProperty("statusMessage") Optional<String> statusMessage) {
     super(taskId);

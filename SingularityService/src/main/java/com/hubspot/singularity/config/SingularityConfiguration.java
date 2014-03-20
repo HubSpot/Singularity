@@ -41,13 +41,16 @@ public class SingularityConfiguration extends Configuration {
   private long cleanupEverySeconds = 5;
   
   @NotNull
-  private long checkDeploysEverySeconds = 10;
+  private long checkDeploysEverySeconds = 5;
   
   @NotNull
   private long saveStateEverySeconds = 60;
   
   @NotNull
   private long defaultHealthcheckTimeoutSeconds = 5;
+  
+  @NotNull
+  private long healthcheckIntervalSeconds = 5;
   
   @NotNull
   private long killDecomissionedTasksAfterNewTasksSeconds = 300;
@@ -65,38 +68,35 @@ public class SingularityConfiguration extends Configuration {
   private int logFetchCoreThreads = 3;
   
   @NotNull
-  private int logFetchMaxThreads = 25;
+  private int healthcheckStartThreads = 3;
   
   @NotNull
-  private int healthcheckerTimeoutThreads = 3;
+  private int logFetchMaxThreads = 25;
   
   @NotNull
   private long zookeeperAsyncTimeout = 5000;
   
   @NotNull
   private long deployHealthyBySeconds = 30;
-
-  @NotNull
-  private long sendHealthchecksEverySeconds = 5;
   
+  public long getHealthcheckIntervalSeconds() {
+    return healthcheckIntervalSeconds;
+  }
+
+  public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
+    this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
+  }
+
   public long getDeployHealthyBySeconds() {
     return deployHealthyBySeconds;
   }
   
-  public long getSendHealthchecksEverySeconds() {
-    return sendHealthchecksEverySeconds;
+  public int getHealthcheckStartThreads() {
+    return healthcheckStartThreads;
   }
 
-  public void setSendHealthchecksEverySeconds(long sendHealthchecksEverySeconds) {
-    this.sendHealthchecksEverySeconds = sendHealthchecksEverySeconds;
-  }
-
-  public int getHealthcheckerTimeoutThreads() {
-    return healthcheckerTimeoutThreads;
-  }
-
-  public void setHealthcheckerTimeoutThreads(int healthcheckerTimeoutThreads) {
-    this.healthcheckerTimeoutThreads = healthcheckerTimeoutThreads;
+  public void setHealthcheckStartThreads(int healthcheckStartThreads) {
+    this.healthcheckStartThreads = healthcheckStartThreads;
   }
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {

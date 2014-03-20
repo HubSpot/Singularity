@@ -27,9 +27,11 @@ public class SingularityDeployBuilder {
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
   private Optional<Long> healthcheckTimeoutSeconds;
-
+  
+  private Optional<Long> deployHealthTimeoutSeconds;
+  
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, executor, resources, env, uris, metadata, executorData, version, timestamp, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds);
+    return new SingularityDeploy(requestId, id, command, executor, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds);
   }
 
   public String getRequestId() {
@@ -83,6 +85,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setExecutor(Optional<String> executor) {
     this.executor = executor;
+    return this;
+  }
+
+  public Optional<Long> getDeployHealthTimeoutSeconds() {
+    return deployHealthTimeoutSeconds;
+  }
+
+  public SingularityDeployBuilder setDeployHealthTimeoutSeconds(Optional<Long> deployHealthTimeoutSeconds) {
+    this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
     return this;
   }
 
@@ -162,8 +173,7 @@ public class SingularityDeployBuilder {
   public String toString() {
     return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
         + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
-        + healthcheckTimeoutSeconds + "]";
+        + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
   }
 
-  
 }

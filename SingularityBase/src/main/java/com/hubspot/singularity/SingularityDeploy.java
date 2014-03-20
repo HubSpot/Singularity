@@ -35,6 +35,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<Long> healthcheckIntervalSeconds;
   private final Optional<Long> healthcheckTimeoutSeconds;
   
+  private final Optional<Long> deployHealthTimeoutSeconds;
+  
   public static SingularityDeployBuilder newBuilder() {
     return new SingularityDeployBuilder();
   }
@@ -46,7 +48,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   @JsonCreator
   public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("executor") Optional<String> executor, @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
-      @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, 
+      @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds) {
     this.requestId = requestId;
     
@@ -65,6 +67,8 @@ public class SingularityDeploy extends SingularityJsonObject {
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
+    
+    this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
   }
   
   public SingularityDeployBuilder toBuilder() {
@@ -87,6 +91,11 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setExecutorData(executorData);  // TODO: find the best way to clone this, maybe force it to be a Map<String, String> ?
   }
   
+  
+  public Optional<Long> getDeployHealthTimeoutSeconds() {
+    return deployHealthTimeoutSeconds;
+  }
+
   public String getRequestId() {
     return requestId;
   }
@@ -147,7 +156,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   public String toString() {
     return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
         + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
-        + healthcheckTimeoutSeconds + "]";
+        + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
   }
 
 }

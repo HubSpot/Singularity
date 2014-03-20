@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.hubspot.singularity.SingularityId;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class CuratorAsyncManager extends CuratorManager {
@@ -86,6 +88,10 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     LOG.trace(String.format("Fetched %s objects from %s (missing %s) in %s", objects.size(), pathNameForLogs, missing.intValue(), DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start)));
     
     return objects;
+  }
+  
+  public <T extends SingularityId> List<T> getChildrenAsIds(final String rootPath, final IdTranscoder<T> idTranscoder) {
+    return Lists.transform(getChildren(rootPath), idTranscoder);
   }
   
   public <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
