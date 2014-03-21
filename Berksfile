@@ -1,0 +1,1 @@
+cookbook 'singularity', github: 'HubSpot/cookbook-singularity'

@@ -1,0 +1,81 @@
+{
+  "sources": {
+    "singularity": {
+      "locked_version": "0.1.0",
+      "git": "git://github.com/HubSpot/cookbook-singularity.git",
+      "ref": "8bd72085bb2bf1c762f0ef17fe62cdee21c8d7db"
+    },
+    "apt": {
+      "locked_version": "2.3.0"
+    },
+    "mysql": {
+      "locked_version": "4.0.10"
+    },
+    "openssl": {
+      "locked_version": "1.1.0"
+    },
+    "build-essential": {
+      "locked_version": "1.4.2"
+    },
+    "mesos": {
+      "locked_version": "1.0.1"
+    },
+    "zookeeper": {
+      "locked_version": "1.4.9"
+    },
+    "java": {
+      "locked_version": "1.16.4"
+    },
+    "windows": {
+      "locked_version": "1.11.0"
+    },
+    "chef_handler": {
+      "locked_version": "1.1.4"
+    },
+    "aws": {
+      "locked_version": "1.0.0"
+    },
+    "docker": {
+      "locked_version": "0.27.0"
+    },
+    "git": {
+      "locked_version": "2.9.0"
+    },
+    "dmg": {
+      "locked_version": "2.1.4"
+    },
+    "runit": {
+      "locked_version": "1.5.8"
+    },
+    "yum": {
+      "locked_version": "3.0.2"
+    },
+    "yum-epel": {
+      "locked_version": "0.2.0"
+    },
+    "golang": {
+      "locked_version": "1.2.0"
+    },
+    "lxc": {
+      "locked_version": "1.1.8"
+    },
+    "dpkg_autostart": {
+      "locked_version": "0.1.10"
+    },
+    "modules": {
+      "locked_version": "0.2.0"
+    },
+    "sysctl": {
+      "locked_version": "0.3.5"
+    },
+    "database": {
+      "locked_version": "1.5.2"
+    },
+    "postgresql": {
+      "locked_version": "3.3.4"
+    },
+    "xfs": {
+      "locked_version": "1.1.0"
+    }
+  }
+}
