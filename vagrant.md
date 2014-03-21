@@ -4,7 +4,7 @@ Singularity comes with a Vagrantfile for creating a VM for dependencies (mesos, 
 
 ## Setup
 
-1. Install [Vagrant](http://www.vagrantup.com/downloads.html) and [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
+1. Install [Vagrant <1.5](http://www.vagrantup.com/downloads.html) and [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
 2. Ensure these Vagrant plugins are installed: (You can install vagrant plugins by running `vagrant plugin install PLUGIN_NAME`)
  - vagrant-berkshelf
  - vagrant-omnibus
