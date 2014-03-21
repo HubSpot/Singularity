@@ -46,6 +46,7 @@ public class SingularityTaskId extends SingularityId {
     return Predicates.not(Predicates.in(exclude));
   }
     
+  @SuppressWarnings("unchecked")
   public static List<SingularityTaskId> matchingAndNotIn(Collection<SingularityTaskId> taskIds, String requestId, String deployId, Collection<SingularityTaskId> exclude) {
     return Lists.newArrayList(Iterables.filter(taskIds, Predicates.and(matchingRequest(requestId), matchingDeploy(deployId), notIn(exclude))));
   }

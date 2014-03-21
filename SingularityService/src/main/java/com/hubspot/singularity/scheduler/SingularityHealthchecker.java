@@ -1,8 +1,9 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
@@ -18,8 +20,6 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.ning.http.client.AsyncHttpClient;
@@ -35,6 +35,9 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
+
+  private final Map<String, ScheduledFuture<?>> taskIdToHealthcheck;
+  
   private final ScheduledExecutorService executorService;
   private final SingularityCloser closer;
   
@@ -46,6 +49,8 @@ public class SingularityHealthchecker implements SingularityCloseable {
     this.abort = abort;
     this.closer = closer;
     
+    this.taskIdToHealthcheck = Maps.newConcurrentMap();
+    
     this.executorService = Executors.newScheduledThreadPool(configuration.getHealthcheckStartThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityHealthchecker-%d").build());
   }
   
@@ -55,38 +60,60 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   public void enqueueHealthcheck(SingularityTask task) {
-    enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
+    if (!shouldHealthcheck(task)) {
+      return;
+    }
+
+    ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
+  
+    taskIdToHealthcheck.put(task.getTaskId().getId(), future);
+  }
+
+  public void cancelHealthcheck(String taskId) {
+    ScheduledFuture<?> future = taskIdToHealthcheck.get(taskId);
+    
+    if (future == null) {
+      return;
+    }
+    
+    boolean canceled = future.cancel(false);
+    
+    LOG.trace(String.format("Canceling healthcheck (%s) for task %s", canceled, taskId));
   }
   
-  private void enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
+  private ScheduledFuture<?> enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
     LOG.trace(String.format("Enqueing a healthcheck for task %s with delay %s", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds))));
     
-    executorService.schedule(new Runnable() {
+    return executorService.schedule(new Runnable() {
       
       @Override
       public void run() {
-        checkHealthcheck(task);
+        taskIdToHealthcheck.remove(task.getTaskId().getId());
+        
+        try {
+          asyncHealthcheck(task);
+        } catch (Throwable t) {
+          LOG.error("Uncaught throwable in async healthcheck", t);
+        }
       }
+      
     }, delaySeconds, TimeUnit.SECONDS);
   }
   
-  private void checkHealthcheck(SingularityTask task) {
-    List<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdatesForTask(task.getTaskId());
-    
-    SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(taskHistory);
-    
-    switch (currentState) {
-      case RUNNING:
-        healthcheck(task);
-        break;
-      case WAITING:
-        LOG.debug(String.format("Still waiting to issue a healthcheck for task (%s)", task.getTaskId()));
-        enqueueHealthcheck(task);  
-        break;
-      case DONE:
-        LOG.warn(String.format("Not issuing a healthcheck for done task (%s)", task.getTaskId()));
-    }    
-  }
+//  
+//  private void checkHealthcheck(SingularityTask task) {
+//    List<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdatesForTask(task.getTaskId());
+//    
+//    SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(taskHistory);
+//    
+//    switch (currentState) {
+//    case RUNNING:
+//      healthcheck(task);
+//      break;
+//    default:
+//      LOG.warn(String.format("Not issuing a healthcheck for none-running (%s) task (%s)", currentState, task.getTaskId()));
+//    }
+//  }
   
   private Optional<String> getHealthcheckUri(SingularityTask task) {
     if (task.getTaskRequest().getDeploy().getHealthcheckUri() == null) {
@@ -117,7 +144,15 @@ public class SingularityHealthchecker implements SingularityCloseable {
     handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message));
   }
   
-  private void healthcheck(final SingularityTask task) {
+  private boolean shouldHealthcheck(final SingularityTask task) {
+    if (task.getTaskRequest().getRequest().isScheduled() || !task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
+      return false;
+    }
+    
+    return true;
+  }
+  
+  private void asyncHealthcheck(final SingularityTask task) {
     final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(taskManager, abort, task);
     final Optional<String> uri = getHealthcheckUri(task);
     

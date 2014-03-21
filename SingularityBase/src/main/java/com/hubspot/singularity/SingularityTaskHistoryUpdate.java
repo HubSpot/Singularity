@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.hubspot.mesos.MesosUtils;
 
 public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
@@ -21,17 +20,19 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
   }
 
   public enum SimplifiedTaskState {
-    WAITING, RUNNING, DONE
+    UNKNOWN, WAITING, RUNNING, DONE
   }
   
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {
-    SimplifiedTaskState state = SimplifiedTaskState.WAITING;
+    SimplifiedTaskState state = SimplifiedTaskState.UNKNOWN;
     
     for (SingularityTaskHistoryUpdate update : updates) {
       if (MesosUtils.isTaskDone(update.getTaskStateEnum())) {
         return SimplifiedTaskState.DONE;
       } else if (update.getTaskStateEnum() == TaskState.TASK_RUNNING) {
         state = SimplifiedTaskState.RUNNING;
+      } else if (state == SimplifiedTaskState.UNKNOWN) {
+        state = SimplifiedTaskState.WAITING;
       }
     }
     

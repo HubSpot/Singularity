@@ -17,26 +17,26 @@ import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityLogSupport implements SingularityCloseable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityLogSupport.class);
 
   private final MesosClient mesosClient;
-  private final HistoryManager historyManager;
-
+  private final TaskManager taskManager;
+  
   private final ThreadPoolExecutor logLookupExecutorService;
-
+  
   private final SingularityCloser closer;
 
   @Inject
-  public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, HistoryManager historyManager, SingularityCloser closer) {
+  public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, TaskManager taskManager, SingularityCloser closer) {
     this.mesosClient = mesosClient;
-    this.historyManager = historyManager;
+    this.taskManager = taskManager;
     this.closer = closer;
 
     this.logLookupExecutorService = new ThreadPoolExecutor(configuration.getLogFetchCoreThreads(), configuration.getLogFetchMaxThreads(), 250L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("SingularityDirectoryFetcher-%d").build());
@@ -64,62 +64,70 @@ public class SingularityLogSupport implements SingularityCloseable {
     return Optional.absent();
   }
 
-  private void loadDirectory(SingularityTaskId taskId, SingularityTaskHistory history) {
+  private void loadDirectory(SingularityTask task) {
     final long now = System.currentTimeMillis();
     
-    final String slaveUri = mesosClient.getSlaveUri(history.getTask().getOffer().getHostname());
+    final String slaveUri = mesosClient.getSlaveUri(task.getOffer().getHostname());
 
-    LOG.info(String.format("Fetching slave data to find log directory for task %s from uri %s", taskId.getId(), slaveUri));
+    LOG.info(String.format("Fetching slave data to find log directory for task %s from uri %s", task.getTaskId(), slaveUri));
 
     MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
 
     Optional<String> directory = null;
 
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
-      directory = findDirectory(taskId, slaveFramework.getExecutors());
+      directory = findDirectory(task.getTaskId(), slaveFramework.getExecutors());
       if (!directory.isPresent()) {
-        directory = findDirectory(taskId, slaveFramework.getCompletedExecutors());
+        directory = findDirectory(task.getTaskId(), slaveFramework.getCompletedExecutors());
       }
     }
    
     if (!directory.isPresent()) {
-      LOG.warn(String.format("Couldn't find matching executor for task %s", taskId.getId()));
+      LOG.warn(String.format("Couldn't find matching executor for task %s", task.getTaskId()));
       return;
     }
 
-    LOG.debug(String.format("Found a directory %s for task %s", directory.get(), taskId.getId()));
+    LOG.debug(String.format("Found a directory %s for task %s", directory.get(), task.getTaskId()));
 
-    historyManager.updateTaskDirectory(taskId.getId(), directory.get());
+    taskManager.updateTaskDirectory(task.getTaskId().getId(), directory.get());
 
-    LOG.trace(String.format("Updated task %s directory in %sms", taskId.getId(), System.currentTimeMillis() - now));
+    LOG.trace(String.format("Updated task %s directory in %sms", task.getTaskId(), System.currentTimeMillis() - now));
   }
 
   public void checkDirectory(final SingularityTaskId taskId) {
-    final Optional<SingularityTaskHistory> maybeHistory = historyManager.getTaskHistory(taskId.getId(), false);
-
-    if (maybeHistory.isPresent() && maybeHistory.get().getTaskState().getDirectory().isPresent()) {
-      LOG.debug(String.format("Already had a directory for task %s, skipping lookup", taskId.getId()));
-      return;
-    } else if (!maybeHistory.isPresent()) {
-      LOG.warn(String.format("No history available for task %s, can't locate directory", taskId.getId()));
+    final Optional<String> maybeDirectory = taskManager.getDirectory(taskId.getId());
+    
+    if (maybeDirectory.isPresent()) {
+      LOG.debug(String.format("Already had a directory for task %s, skipping lookup", taskId));
       return;
     }
-
-    Runnable cmd = new Runnable() {
-
-      @Override
-      public void run() {
-        try {
-          loadDirectory(taskId, maybeHistory.get());
-        } catch (Throwable t) {
-          LOG.error(String.format("While fetching directory for task: %s", taskId), t);
-        }
-      }
-    };
+    
+    final Optional<SingularityTask> task = taskManager.getTask(taskId.getId());
+    
+    if (!task.isPresent()) {
+      LOG.warn(String.format("No task found available for task %s, can't locate directory", taskId));
+      return;
+    }
+    
+    Runnable cmd = generateLookupCommand(task.get());
 
     LOG.trace(String.format("Enqueing a request to fetch directory for task: %s, current queue size: %s", taskId, logLookupExecutorService.getQueue().size()));
   
     logLookupExecutorService.submit(cmd);
+  }
+  
+  private Runnable generateLookupCommand(final SingularityTask task) {
+    return new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          loadDirectory(task);
+        } catch (Throwable t) {
+          LOG.error(String.format("While fetching directory for task: %s", task.getTaskId()), t);
+        }
+      }
+    };
   }
 
 }

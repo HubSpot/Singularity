@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Status;
+import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskUpdate;
@@ -29,8 +31,9 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.WebhookManager;
 import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
-import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
+import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
+import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 public class SingularityMesosScheduler implements Scheduler {
 
@@ -42,6 +45,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final HistoryManager historyManager;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final WebhookManager webhookManager;
+  private final SingularityHealthchecker healthchecker;
   private final SingularityRackManager rackManager;
   private final SingularityLogSupport logSupport;
 
@@ -49,7 +53,7 @@ public class SingularityMesosScheduler implements Scheduler {
   
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider) {
+      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
@@ -59,6 +63,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
+    this.healthchecker = healthchecker;
   }
 
   @Override
@@ -183,18 +188,29 @@ public class SingularityMesosScheduler implements Scheduler {
     
     if (maybeActiveTask.isPresent()) {
       webhookManager.notify(new SingularityTaskUpdate(maybeActiveTask.get(), status.getState()));
+      if (status.getState() == TaskState.TASK_RUNNING) {
+        healthchecker.enqueueHealthcheck(maybeActiveTask.get());
+      }
     } else {
       LOG.info(String.format("Got an update for non-active task %s, skipping webhooks", taskId));
     }
 
-    final Date now = new Date();
+    final long now = System.currentTimeMillis();
     
-    historyManager.updateTaskHistory(taskId, status.getState().name(), now);
-    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), now);
+    final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
+    
+    final Date dateNow = new Date(now);
+    
+    taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskIdObj, now, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent()));
+    
+    historyManager.updateTaskHistory(taskId, status.getState().name(), dateNow);
+    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), dateNow);
 
-    logSupport.checkDirectory(SingularityTaskId.fromString(taskId));
+    logSupport.checkDirectory(taskIdObj);
     
     if (MesosUtils.isTaskDone(status.getState())) {
+      healthchecker.cancelHealthcheck(taskId);
+      
       if (maybeActiveTask.isPresent()) {
         taskManager.deleteActiveTask(taskId);
       }

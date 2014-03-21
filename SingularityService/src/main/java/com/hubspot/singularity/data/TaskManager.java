@@ -37,6 +37,7 @@ import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTran
 import com.hubspot.singularity.data.transcoders.SingularityTaskIdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskStateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
+import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
 public class TaskManager extends CuratorAsyncManager {
   
@@ -50,6 +51,8 @@ public class TaskManager extends CuratorAsyncManager {
   
   private final static String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
   private final static String DIRECTORY_KEY = "DIRECTORY";
+  private final static String TASK_KEY = "TASK";
+  
   private final static String UPDATES_PATH = "/updates";
   
   private final SingularityTaskStateTranscoder taskStateTranscoder;
@@ -89,9 +92,16 @@ public class TaskManager extends CuratorAsyncManager {
     };
   }
   
-  // TODO this.
   private String getHealthcheckPath(String taskId) {
     return ZKPaths.makePath(getStatePath(taskId), LAST_HEALTHCHECK_KEY);
+  }
+  
+  private String getTaskPath(String taskId) {
+    return ZKPaths.makePath(getStatePath(taskId), TASK_KEY);
+  }
+  
+  private String getDirectoryPath(String taskId) {
+    return ZKPaths.makePath(getStatePath(taskId), DIRECTORY_KEY);
   }
   
   private String getUpdatesPath(String taskId) {
@@ -124,6 +134,14 @@ public class TaskManager extends CuratorAsyncManager {
   
   public int getNumScheduledTasks() {
     return getNumChildren(SCHEDULED_PATH_ROOT);
+  }
+
+  public void updateTaskDirectory(String taskId, String directory) {
+    save(getDirectoryPath(taskId), Optional.of(JavaUtils.toBytes(directory)));
+  }
+  
+  public Optional<String> getDirectory(String taskId) {
+    return getData(getDirectoryPath(taskId), StringTranscoder.STRING_TRANSCODER);
   }
   
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
@@ -217,9 +235,9 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsyncChildren(getActivePath(strTaskId), taskHistoryUpdateTranscoder);
   }
   
-  public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskId taskId, SingularityTaskHistoryUpdate taskHistoryUpdate) {
+  public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     try {
-      curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath(getUpdatesPath(taskId.getId()), taskHistoryUpdate.getAsBytes(objectMapper));
+      curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath(getUpdatesPath(taskHistoryUpdate.getTaskId().getId()), taskHistoryUpdate.getAsBytes(objectMapper));
     } catch (NodeExistsException nee) {
       return SingularityCreateResult.EXISTED;
     } catch (Throwable t) {
@@ -237,6 +255,12 @@ public class TaskManager extends CuratorAsyncManager {
   
   public Optional<SingularityTask> getActiveTask(String taskId) {
     final String path = getActivePath(taskId);
+    
+    return getData(path, taskTranscoder);
+  }
+  
+  public Optional<SingularityTask> getTask(String taskId) {
+    final String path = getTaskPath(taskId);
     
     return getData(path, taskTranscoder);
   }
@@ -259,9 +283,11 @@ public class TaskManager extends CuratorAsyncManager {
     
     curator.delete().forPath(scheduledPath);
     
-    curator.create().creatingParentsIfNeeded().forPath(activePath, task.getAsBytes(objectMapper));
-  
+    final byte[] data = task.getAsBytes(objectMapper);
     
+    // TODO
+    curator.create().creatingParentsIfNeeded().forPath(activePath, data);
+    curator.create().creatingParentsIfNeeded().forPath(getTaskPath(task.getTaskId().getId()), data);
   }
   
   public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {

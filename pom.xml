@@ -14,7 +14,7 @@
   </parent>
 
   <properties>
-    <mesos.version>0.17.0-rc1</mesos.version>
+    <mesos.version>0.17.0</mesos.version>
     <java.abi>1.7</java.abi>
     <dropwizard.version>0.7.0-rc2</dropwizard.version>
     <sl4fj.version>1.7.6</sl4fj.version>
