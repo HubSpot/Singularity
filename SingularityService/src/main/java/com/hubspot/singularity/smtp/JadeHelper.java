@@ -3,14 +3,15 @@ package com.hubspot.singularity.smtp;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 
 import de.neuland.jade4j.template.TemplateLoader;
@@ -30,15 +31,17 @@ public class JadeHelper {
     }
   };
   
-  public List<Map<String, String>> getJadeTaskHistory(SingularityTaskHistory taskHistory) {
-    List<Map<String, String>> output = Lists.newArrayList();
+  public List<Map<String, String>> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
+    List<Map<String, String>> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
-    for (SingularityTaskHistoryUpdate taskUpdate : taskHistory.getTaskUpdates()) {
-      Map<String, String> formatted = Maps.newHashMap();
+    for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       Date date = new Date(taskUpdate.getTimestamp());
-      formatted.put("date", date.toString());
-      formatted.put("update", taskUpdate.getStatusUpdate());
-      output.add(formatted);
+      
+      output.add(
+          ImmutableMap.<String, String> builder()
+          .put("date", date.toString())
+          .put("update", taskUpdate.getStatusUpdate())
+          .build());
     }
 
     return output;

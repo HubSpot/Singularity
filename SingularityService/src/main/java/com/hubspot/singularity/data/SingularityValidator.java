@@ -31,11 +31,18 @@ public class SingularityValidator {
     }
   }
   
-  public SingularityRequest checkSingularityRequest(SingularityRequest request) {
-    // TODO change checks. ??
-    
+  private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
+    check(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
+    check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
+  }
+  
+  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest) {
     check(request.getId() != null, "Id must not be null");
     check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
+    
+    if (existingRequest.isPresent()) {
+      checkForIllegalChanges(request, existingRequest.get());
+    }
     
     String newSchedule = null;
     

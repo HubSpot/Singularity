@@ -90,7 +90,7 @@ public class SingularityRackManager {
       return RackCheckState.NOT_RACK_SENSITIVE;
     }
     
-    int numDesiredInstances = taskRequest.getRequest().getInstances().or(1);
+    int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 

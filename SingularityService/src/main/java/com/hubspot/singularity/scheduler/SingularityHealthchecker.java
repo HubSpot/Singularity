@@ -122,29 +122,30 @@ public class SingularityHealthchecker implements SingularityCloseable {
     
     final String hostname = task.getOffer().getHostname();
     
-    long firstPort = 0;
+    Optional<Long> firstPort = Optional.absent();
     
     for (Resource resource : task.getMesosTask().getResourcesList()) {
       if (resource.getName().equals(MesosUtils.PORTS)) {
         if (resource.getRanges().getRangeCount() > 0) {
-          firstPort = resource.getRanges().getRange(0).getBegin();
+          firstPort = Optional.of(resource.getRanges().getRange(0).getBegin());
+          break;
         }
       }
     }
     
-    if (firstPort < 0) {
+    if (!firstPort.isPresent() || firstPort.get() < 1L) {
       LOG.warn(String.format("Couldn't find a port for health check for task %s", task));
       return Optional.absent();
     }
     
-    return Optional.of(String.format("http://%s:%s/%s", hostname, firstPort, task.getTaskRequest().getDeploy().getHealthcheckUri()));
+    return Optional.of(String.format("http://%s:%s/%s", hostname, firstPort, task.getTaskRequest().getDeploy().getHealthcheckUri().get()));
   }
   
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
     handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message));
   }
   
-  private boolean shouldHealthcheck(final SingularityTask task) {
+  public boolean shouldHealthcheck(final SingularityTask task) {
     if (task.getTaskRequest().getRequest().isScheduled() || !task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
       return false;
     }
@@ -157,7 +158,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
     final Optional<String> uri = getHealthcheckUri(task);
     
     if (!uri.isPresent()) {
-      saveFailure(handler, "Healthcheck uri or ports not present");
+      saveFailure(handler, "Invalid healthcheck uri or ports not present");
       return;
     }
     

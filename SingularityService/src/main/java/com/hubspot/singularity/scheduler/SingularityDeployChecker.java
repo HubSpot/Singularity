@@ -3,7 +3,6 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
@@ -28,7 +27,6 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
@@ -157,7 +155,7 @@ public class SingularityDeployChecker {
   }
   
   private DeployState checkDeploy(final SingularityRequest request, final SingularityDeployMarker activeDeployMarker, final SingularityDeployKey deployKey, final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
-    if (matchingActiveTasks.size() < request.getInstances().or(1)) {
+    if (matchingActiveTasks.size() < request.getInstancesSafe()) {
       return DeployState.WAITING;
     }
     
@@ -175,16 +173,19 @@ public class SingularityDeployChecker {
   private DeployState getNoHealthcheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks, final SingularityDeployMarker activeDeployMarker) {
     final Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
     
-    for (Entry<SingularityTaskId, Collection<SingularityTaskHistoryUpdate>> entry : taskUpdates.asMap().entrySet()) {
-      SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(entry.getValue());
+    for (SingularityTaskId taskId : matchingActiveTasks) {
+      Collection<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);
+      
+      SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(updates);
       
       switch (currentState) {
-        case WAITING:
-          return DeployState.WAITING;
-        case DONE:
-          LOG.warn(String.format("Found an active task (%s) in done state: %s for deploy: %s", entry.getKey(), entry.getValue(), activeDeployMarker));
-          return DeployState.FAILED;
-        default:
+      case UNKNOWN:
+      case WAITING:
+        return DeployState.WAITING;
+      case DONE:
+        LOG.warn(String.format("Found an active task (%s) in done state: %s for deploy: %s", taskId, updates, activeDeployMarker));
+        return DeployState.FAILED;
+      case RUNNING:
       }
     }
     
@@ -192,29 +193,27 @@ public class SingularityDeployChecker {
   }
   
   private DeployState getHealthCheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks, final SingularityDeployMarker activeDeployMarker) {
-    Map<SingularityTaskId, SingularityTaskState> taskStates = taskManager.getTaskState(matchingActiveTasks);
+    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getHealthcheckResults(matchingActiveTasks);
 
-    for (Entry<SingularityTaskId, SingularityTaskState> taskStateEntry : taskStates.entrySet()) {
-      boolean healthy = false;
+    boolean allHealthy = true;
+    
+    for (SingularityTaskId taskId : matchingActiveTasks) {
+      SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);
       
-      Optional<SingularityTaskHealthcheckResult> healthCheckResult = taskStateEntry.getValue().getLastHealthcheck();
-      
-      if (!healthCheckResult.isPresent()) {
-        LOG.warn("No health check present for %s", taskStateEntry.getKey());
-        healthy = false;
-      } else {
-        if (healthCheckResult.get().getErrorMessage().isPresent()) {
-          LOG.info(String.format("Failing deploy %s due to failed health check: %s", activeDeployMarker, healthCheckResult.get()));
-          return DeployState.FAILED;
-        }
-      }
-      
-      if (!healthy) {
-        return DeployState.WAITING;
+      if (healthcheckResult == null) {
+        LOG.warn(String.format("No health check present for %s", taskId));
+        allHealthy = false;
+      } else if (healthcheckResult.getErrorMessage().isPresent()) {
+        LOG.info(String.format("Failing deploy %s due to failed health check: %s", activeDeployMarker, healthcheckResult));
+        return DeployState.FAILED;
       }
     }
     
-    return DeployState.SUCCEEDED;
+    if (allHealthy) {
+      return DeployState.SUCCEEDED;
+    } else {
+      return DeployState.WAITING;
+    }
   }
   
 }

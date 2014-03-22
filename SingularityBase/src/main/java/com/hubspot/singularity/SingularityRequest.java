@@ -99,6 +99,11 @@ public class SingularityRequest extends SingularityJsonObject {
   }
 
   @JsonIgnore
+  public int getInstancesSafe() {
+    return getInstances().or(1);
+  }
+  
+  @JsonIgnore
   public boolean isScheduled() {
     return schedule.isPresent();
   }

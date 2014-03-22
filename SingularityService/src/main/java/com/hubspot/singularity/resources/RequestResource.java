@@ -59,9 +59,11 @@ public class RequestResource {
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequest submit(SingularityRequest request, @QueryParam("user") Optional<String> user) {
-    // check existing request for illegal changes
+    if (request.getId() == null) {
+      throw WebExceptions.badRequest("Request must have an ID");
+    }
     
-    SingularityRequest newRequest = validator.checkSingularityRequest(request);
+    SingularityRequest newRequest = validator.checkSingularityRequest(request, requestManager.fetchRequest(request.getId()));
     
     PersistResult result = requestManager.persistRequest(newRequest);
     

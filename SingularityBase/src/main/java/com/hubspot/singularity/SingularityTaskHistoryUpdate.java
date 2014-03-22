@@ -26,6 +26,10 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {
     SimplifiedTaskState state = SimplifiedTaskState.UNKNOWN;
     
+    if (updates == null) {
+      return state;
+    }
+    
     for (SingularityTaskHistoryUpdate update : updates) {
       if (MesosUtils.isTaskDone(update.getTaskStateEnum())) {
         return SimplifiedTaskState.DONE;

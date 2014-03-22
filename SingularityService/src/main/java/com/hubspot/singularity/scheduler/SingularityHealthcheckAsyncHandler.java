@@ -50,7 +50,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage) {
     SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody, 
-        errorMessage, task.getTaskId().getId());
+        errorMessage, task.getTaskId());
   
     LOG.trace(String.format("Saving healthcheck result %s", result));
  

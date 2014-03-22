@@ -16,7 +16,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
@@ -43,37 +42,40 @@ public class SingularityCleaner {
 
   // TODO review this logic along with deploy logic., what types should work how?
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
-    if (taskCleanup.getCleanupTypeEnum() == TaskCleanupType.USER_REQUESTED) {
-      LOG.debug(String.format("Killing a task %s because it was user requested", taskCleanup));
-      return true;
-    }
-    
-    // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
-    Optional<SingularityRequest> request = requestManager.fetchRequest(taskCleanup.getTaskId().getRequestId());
-    
-    if (!request.isPresent()) {
-      LOG.debug(String.format("Killing a task %s because the request was missing", taskCleanup));;
-      return true;
-    }
-    
-    List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
-    
-    final long now = System.currentTimeMillis();
-    long newestTaskDurationMillis = Long.MAX_VALUE;
-    
-    for (SingularityTaskId matchingTask : matchingTasks) {
-      long taskDuration = now - matchingTask.getStartedAt();
-      if (taskDuration < newestTaskDurationMillis) {
-        newestTaskDurationMillis = taskDuration;
-      }
-    }
-    
-    boolean hasEnoughTasksWhichAreOldEnoughToKillThisTask = matchingTasks.size() >= request.get().getInstances().or(1) && newestTaskDurationMillis > killTasksAfterNewestTaskIsAtLeastMillis;
-  
-    LOG.debug(String.format("%s a task %s because there are %s active tasks (requirement %s) and the newest task is %sms old (must be at least %sms)", 
-        hasEnoughTasksWhichAreOldEnoughToKillThisTask ? "Killing" : "Not killing", taskCleanup, matchingTasks.size(), request.get().getInstances(), newestTaskDurationMillis, killTasksAfterNewestTaskIsAtLeastMillis));
-    
-    return hasEnoughTasksWhichAreOldEnoughToKillThisTask;
+//    if (taskCleanup.getCleanupTypeEnum() == TaskCleanupType.USER_REQUESTED) {
+//      LOG.debug(String.format("Killing a task %s because it was user requested", taskCleanup));
+//      return true;
+//    }
+//    
+//    // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
+//    Optional<SingularityRequest> request = requestManager.fetchRequest(taskCleanup.getTaskId().getRequestId());
+//    
+//    if (!request.isPresent()) {
+//      LOG.debug(String.format("Killing a task %s because the request was missing", taskCleanup));;
+//      return true;
+//    }
+//    
+//    List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
+//    
+//    // TOOD fix this, fix bounce, etc.
+//    
+//    final long now = System.currentTimeMillis();
+//    long newestTaskDurationMillis = Long.MAX_VALUE;
+//    
+//    for (SingularityTaskId matchingTask : matchingTasks) {
+//      long taskDuration = now - matchingTask.getStartedAt();
+//      if (taskDuration < newestTaskDurationMillis) {
+//        newestTaskDurationMillis = taskDuration;
+//      }
+//    }
+//    
+//    boolean hasEnoughTasksWhichAreOldEnoughToKillThisTask = matchingTasks.size() >= request.get().getInstancesSafe() && newestTaskDurationMillis > killTasksAfterNewestTaskIsAtLeastMillis;
+//  
+//    LOG.debug(String.format("%s a task %s because there are %s active tasks (requirement %s) and the newest task is %sms old (must be at least %sms)", 
+//        hasEnoughTasksWhichAreOldEnoughToKillThisTask ? "Killing" : "Not killing", taskCleanup, matchingTasks.size(), request.get().getInstancesSafe(), newestTaskDurationMillis, killTasksAfterNewestTaskIsAtLeastMillis));
+//    
+//    return hasEnoughTasksWhichAreOldEnoughToKillThisTask;
+    return true;
   }
   
   private void drainRequestCleanupQueue() {

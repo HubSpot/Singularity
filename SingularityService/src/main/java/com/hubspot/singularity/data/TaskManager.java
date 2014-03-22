@@ -6,17 +6,16 @@ import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
+import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -29,13 +28,12 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityPendingTaskIdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityTaskHealthcheckResultTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskIdTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskStateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
@@ -55,7 +53,7 @@ public class TaskManager extends CuratorAsyncManager {
   
   private final static String UPDATES_PATH = "/updates";
   
-  private final SingularityTaskStateTranscoder taskStateTranscoder;
+  private final SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder;
   private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
   private final SingularityTaskTranscoder taskTranscoder;
   private final SingularityTaskIdTranscoder taskIdTranscoder;
@@ -66,10 +64,10 @@ public class TaskManager extends CuratorAsyncManager {
   
   @Inject
   public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder, SingularityTaskIdTranscoder taskIdTranscoder, 
-      SingularityTaskStateTranscoder taskStateTranscoder, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
+      SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
   
-    this.taskStateTranscoder = taskStateTranscoder;
+    this.healthcheckResultTranscoder = healthcheckResultTranscoder;
     this.taskTranscoder = taskTranscoder;
     this.taskCleanupTranscoder = taskCleanupTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
@@ -106,6 +104,10 @@ public class TaskManager extends CuratorAsyncManager {
   
   private String getUpdatesPath(String taskId) {
     return ZKPaths.makePath(getStatePath(taskId), UPDATES_PATH);
+  }
+  
+  private String getUpdatePath(String taskId, TaskState state) {
+    return ZKPaths.makePath(getUpdatesPath(taskId), state.name());
   }
   
   private String getStatePath(String taskId) {
@@ -145,7 +147,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
-    save(getHealthcheckPath(healthcheckResult.getTaskId()), Optional.of(healthcheckResult.getAsBytes(objectMapper)));
+    save(getHealthcheckPath(healthcheckResult.getTaskId().getId()), Optional.of(healthcheckResult.getAsBytes(objectMapper)));
   }
   
   public void persistScheduleTasks(List<SingularityPendingTask> tasks) {
@@ -210,25 +212,24 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
-    List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
+    Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> map = ArrayListMultimap.create();
+    
     for (SingularityTaskId taskId : taskIds) {
-      paths.add(getUpdatesPath(taskId.getId()));
+      map.putAll(taskId, getTaskHistoryUpdatesForTask(taskId));
     }
     
-    List<SingularityTaskHistoryUpdate> updates = getAsync("updates_by_ids", paths, taskHistoryUpdateTranscoder);
-    
-    return Multimaps.index(updates, taskHistoryUpdateTranscoder);
+    return map;
   }
   
-  public Map<SingularityTaskId, SingularityTaskState> getTaskState(Collection<SingularityTaskId> taskIds) {
+  public Map<SingularityTaskId, SingularityTaskHealthcheckResult> getHealthcheckResults(Collection<SingularityTaskId> taskIds) {
     List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
     for (SingularityTaskId taskId : taskIds) {
-      paths.add(getStatePath(taskId.getId()));
+      paths.add(getHealthcheckPath(taskId.getId()));
     }
     
-    List<SingularityTaskState> taskStates = getAsync("states_by_ids", paths, taskStateTranscoder);
+    List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("healthchecks_by_ids", paths, healthcheckResultTranscoder);
     
-    return Maps.uniqueIndex(taskStates, taskStateTranscoder);
+    return Maps.uniqueIndex(healthcheckResults, healthcheckResultTranscoder);
   }
   
   public List<SingularityTaskHistoryUpdate> getTaskHistoryForTask(String strTaskId) {
@@ -236,15 +237,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    try {
-      curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath(getUpdatesPath(taskHistoryUpdate.getTaskId().getId()), taskHistoryUpdate.getAsBytes(objectMapper));
-    } catch (NodeExistsException nee) {
-      return SingularityCreateResult.EXISTED;
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-    
-    return SingularityCreateResult.CREATED;
+    return create(getUpdatePath(taskHistoryUpdate.getTaskId().getId(), taskHistoryUpdate.getTaskStateEnum()), Optional.of(taskHistoryUpdate.getAsBytes(objectMapper)));
   }
   
   public boolean isActiveTask(String taskId) {

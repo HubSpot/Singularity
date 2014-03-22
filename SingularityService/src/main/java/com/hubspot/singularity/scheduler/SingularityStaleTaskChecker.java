@@ -19,7 +19,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityStaleTaskChecker {
