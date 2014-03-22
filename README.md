@@ -16,6 +16,7 @@ Singularity is a scheduler for running long running tasks and scheduled tasks in
 
 ## Installation & Deployment
 
+- [Local development using Vagrant](vagrant.md)
 - [Database configuration and schema](database.md)
 - Singularity configuration
 
