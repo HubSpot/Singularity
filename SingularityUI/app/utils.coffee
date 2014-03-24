@@ -118,4 +118,13 @@ class Utils
     @isOnDemandRequest: (request) ->
         not request.daemon and not utils.isScheduledRequest(request)
 
+    @fuzzySearchMatch: (query, word) ->
+        i = 0
+        for letter in query
+            if letter is ' '
+                continue
+            i = word.indexOf letter, i
+            return false if i is -1
+        return true
+
 module.exports = Utils
