@@ -28,12 +28,12 @@ class NavigationView extends View
         $anchors.each ->
             route = $(@).data('href')
             $(@)
-                .attr('href', "/#{ constants.appName }/#{ route }")
+                .attr('href', "#{ constants.appRoot }#{ route }")
                 .attr('data-route', route)
 
         $nav.find('li').removeClass('active')
 
-        currentTopLevel = "/#{ constants.appName }/#{ Backbone.history.fragment.split('/')[0] }"
+        currentTopLevel = "#{ constants.appRoot }#{ Backbone.history.fragment.split('/')[0] }"
 
         $anchors.each ->
             if $(@).attr('href') in [currentTopLevel, currentTopLevel + 's']
