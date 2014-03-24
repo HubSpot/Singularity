@@ -84,6 +84,5 @@ public class SingularityDeployHealthHelper {
       return DeployHealth.WAITING;
     }
   }
-  
-  
+
 }
