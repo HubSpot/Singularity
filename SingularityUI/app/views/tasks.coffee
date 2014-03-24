@@ -118,7 +118,7 @@ class TasksView extends View
             $row = $(e.target).parents('tr')
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.run()

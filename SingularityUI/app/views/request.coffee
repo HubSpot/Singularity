@@ -194,7 +194,7 @@ class RequestView extends View
             requestType = $(e.target).data 'request-type'
 
             dialogOptions =
-                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
                 buttons: [
                     $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
                     vex.dialog.buttons.NO
@@ -221,7 +221,7 @@ class RequestView extends View
             $row = $(e.target).parents('tr')
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.run()

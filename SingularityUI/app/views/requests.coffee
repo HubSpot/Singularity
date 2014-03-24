@@ -163,7 +163,7 @@ class RequestsView extends View
             requestModel = @collection.get($(e.target).data('request-id'))
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     $row.remove()
@@ -192,7 +192,7 @@ class RequestsView extends View
             requestType = $(e.target).data 'request-type'
 
             dialogOptions =
-                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
                 buttons: [
                     $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
                     vex.dialog.buttons.NO

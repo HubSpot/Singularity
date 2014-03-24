@@ -60,7 +60,7 @@ class SlavesView extends View
             slaveModel = collection.get($(e.target).data('slave-id'))
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the slave:</p><pre>#{ slaveModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to remove the slave?</p><pre>#{ slaveModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     slaveModel.destroy()
