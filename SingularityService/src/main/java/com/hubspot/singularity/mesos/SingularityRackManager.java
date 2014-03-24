@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -96,7 +97,7 @@ public class SingularityRackManager {
 
     for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
       if (taskId.getHost().equals(host)) {
-        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTask().getPendingTaskId(), host, taskId));
+        LOG.trace("Task {} is already on slave {} - {}", taskRequest.getPendingTask().getPendingTaskId(), host, taskId);
         
         return RackCheckState.ALREADY_ON_SLAVE;
       }
@@ -111,7 +112,7 @@ public class SingularityRackManager {
 
     boolean isRackOk = numOnRack < numPerRack;
   
-    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTask().getPendingTaskId(), rackId, numPerRack, numOnRack));
+    LOG.trace("Rack result {} for taskRequest {}, rackId: {}, numPerRack {}, numOnRack {}", isRackOk, taskRequest.getPendingTask().getPendingTaskId(), rackId, numPerRack, numOnRack);
     
     if (isRackOk) {
       return RackCheckState.RACK_OK;
@@ -126,7 +127,7 @@ public class SingularityRackManager {
     int racksCleared = rackManager.clearActive();
     int slavesCleared = slaveManager.clearActive();
   
-    LOG.info(String.format("Cleared %s racks and %s slaves in %sms", racksCleared, slavesCleared, System.currentTimeMillis() - start));
+    LOG.info("Cleared {} racks and {} slaves in {}ms", racksCleared, slavesCleared, Utils.duration(start));
   }
   
   public void slaveLost(SlaveID slaveIdObj) {
@@ -143,7 +144,7 @@ public class SingularityRackManager {
       
       checkRackAfterSlaveLoss(slave.get());
     } else {
-      LOG.warn(String.format("Lost a slave %s, but didn't know about it", slaveId));
+      LOG.warn("Lost a slave {}, but didn't know about it", slaveId);
     } 
   }
   
@@ -158,7 +159,7 @@ public class SingularityRackManager {
       }
     }
     
-    LOG.info(String.format("Found %s slaves left in rack %s", numInRack, lostSlave.getRackId()));
+    LOG.info("Found {} slaves left in rack {}", numInRack, lostSlave.getRackId());
     
     if (numInRack == 0) {
       rackManager.markAsDead(lostSlave.getRackId());
@@ -186,7 +187,7 @@ public class SingularityRackManager {
       }
     }
 
-    LOG.info(String.format("Found %s racks and %s slaves", racks, slaves));
+    LOG.info("Found {} racks and {} slaves", racks, slaves);
   }
 
   public String getRackId(Offer offer) {
@@ -279,13 +280,13 @@ public class SingularityRackManager {
     SaveResult slaveSave = checkSlave(slaveId, host, rackId);
     
     if (slaveSave == SaveResult.NEW) {
-      LOG.info(String.format("Offer revealed a new slave %s", new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE)));
+      LOG.info("Offer revealed a new slave {}", new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE));
     }
     
     SaveResult rackSave = checkRack(rackId);
     
     if (rackSave == SaveResult.NEW) {
-      LOG.info(String.format("Offer revealed a new rack %s", new SingularityRack(rackId, SingularityMachineState.ACTIVE)));
+      LOG.info("Offer revealed a new rack {}", new SingularityRack(rackId, SingularityMachineState.ACTIVE));
     }
   }
 

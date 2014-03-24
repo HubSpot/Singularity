@@ -123,6 +123,16 @@ public class DeployManager extends CuratorAsyncManager {
     return getData(deployPath, deployTranscoder);
   }
   
+  public Optional<String> getInUseDeployId(String requestId) {
+    Optional<SingularityDeployState> deployState = getDeployState(requestId);
+    
+    if (!deployState.isPresent() || (!deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent())) {
+      return Optional.absent();
+    }
+    
+    return Optional.of(deployState.get().getActiveDeploy().or(deployState.get().getPendingDeploy()).get().getDeployId());
+  }
+  
   public Optional<SingularityDeployState> getDeployState(String requestId) {
     Optional<SingularityDeployStateHelper> maybeHelper = getDeployStateHelper(requestId);
     

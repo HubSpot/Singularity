@@ -68,17 +68,17 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void registered(SchedulerDriver driver, Protos.FrameworkID frameworkId, Protos.MasterInfo masterInfo) {
-    LOG.info(String.format("Registered driver %s, with frameworkId %s and master %s", driver, frameworkId, masterInfo));
+    LOG.info("Registered driver {}, with frameworkId {} and master {}", driver, frameworkId, masterInfo);
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, Protos.MasterInfo masterInfo) {
-    LOG.info(String.format("Reregistered driver %s, with master %s", driver, masterInfo));
+    LOG.info("Reregistered driver {}, with master {}", driver, masterInfo);
   }
 
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
-    LOG.info(String.format("Received %s offer(s)", offers.size()));
+    LOG.info("Received {} offer(s)", offers.size());
 
     final long start = System.currentTimeMillis();
     
@@ -99,13 +99,13 @@ public class SingularityMesosScheduler implements Scheduler {
       final List<SingularityTaskRequest> tasks = scheduler.getDueTasks();
       
       for (SingularityTaskRequest taskRequest : tasks) {
-        LOG.trace(String.format("Task %s is due", taskRequest.getPendingTask().getPendingTaskId()));
+        LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
       }
       
       numTasksSeen = tasks.size();
 
       for (Protos.Offer offer : offers) {
-        LOG.trace(String.format("Evaluating offer %s", offer));
+        LOG.trace("Evaluating offer {}", offer);
 
         Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, stateCache);
 
@@ -130,8 +130,8 @@ public class SingularityMesosScheduler implements Scheduler {
       throw t;
     }
 
-    LOG.info(String.format("Finished handling offers (%s), accepted %s, declined %s, outstanding tasks %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(),
-        offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size()));
+    LOG.info("Finished handling offers ({}), accepted {}, declined {}, outstanding tasks {}", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(),
+        offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size());
   }
 
   private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularitySchedulerStateCache stateCache) {
@@ -142,7 +142,7 @@ public class SingularityMesosScheduler implements Scheduler {
         taskResources = taskRequest.getDeploy().getResources().get();
       }
 
-      LOG.trace(String.format("Attempting to match resources %s with offer resources %s", taskResources, offer.getResourcesList()));
+      LOG.trace("Attempting to match resources {} with offer resources {}", taskResources, offer.getResourcesList());
           
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
       final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, stateCache);
@@ -150,23 +150,23 @@ public class SingularityMesosScheduler implements Scheduler {
       if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
 
-        LOG.trace(String.format("Accepted and built task %s", task));
+        LOG.trace("Accepted and built task {}", task);
         
-        LOG.info(String.format("Launching task %s slot on slave %s (%s)", task.getTaskId(), offer.getSlaveId(), offer.getHostname()));
+        LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offer.getSlaveId(), offer.getHostname());
 
         taskManager.launchTask(task);
 
-        LOG.debug(String.format("Launching mesos task: %s", task.getMesosTask()));
+        LOG.debug("Launching mesos task: {}", task.getMesosTask());
 
         Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(task.getMesosTask()));
 
-        LOG.trace(String.format("Task %s launched with status %s", task.getTaskId(), initialStatus.name()));
+        LOG.trace("Task {} launched with status {}", task.getTaskId(), initialStatus.name());
         
         historyManager.saveTaskHistory(task, initialStatus.name());
 
         return Optional.of(task);
       } else {
-        LOG.trace(String.format("Turning down offer %s for task %s; matched resources: %s, rack state: %s", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState));
+        LOG.trace("Turning down offer {} for task {}; matched resources: {}, rack state: {}", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState);
       }
     }
 
@@ -175,14 +175,13 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void offerRescinded(SchedulerDriver driver, Protos.OfferID offerId) {
-    LOG.info(String.format("Offer %s rescinded", offerId));
+    LOG.info("Offer {} rescinded", offerId);
   }
 
   @Override
-  public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
-    final String taskId = status.getTaskId().getValue();
+  public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {    final String taskId = status.getTaskId().getValue();
     
-    LOG.debug(String.format("Got a status update for task: %s, status - %s", taskId, status));
+    LOG.debug("Got a status update for task: {}, status - {}", taskId, status);
     
     Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
     
@@ -192,7 +191,7 @@ public class SingularityMesosScheduler implements Scheduler {
         healthchecker.enqueueHealthcheck(maybeActiveTask.get());
       }
     } else {
-      LOG.info(String.format("Got an update for non-active task %s, skipping webhooks", taskId));
+      LOG.info("Got an update for non-active task {}, skipping webhooks", taskId);
     }
 
     final long now = System.currentTimeMillis();
@@ -221,7 +220,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-    LOG.info(String.format("Framework message from executor %s on slave %s with data %s", executorId, slaveId, JavaUtils.toString(data)));
+    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, JavaUtils.toString(data));
   }
 
   @Override
@@ -231,18 +230,21 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void slaveLost(SchedulerDriver driver, Protos.SlaveID slaveId) {
-    LOG.warn(String.format("Lost a slave %s", slaveId));
+    LOG.warn("Lost a slave {}", slaveId);
 
     rackManager.slaveLost(slaveId);
   }
 
   @Override
   public void executorLost(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, int status) {
-    LOG.warn(String.format("Lost an executor %s on slave %s with status %s", executorId, slaveId, status));
+    LOG.warn("Lost an executor {} on slave {} with status {}", executorId, slaveId, status);
   }
 
   @Override
   public void error(SchedulerDriver driver, String message) {
-    LOG.warn(String.format("Error from mesos: %s", message));
+    LOG.warn("Error from mesos: {}", message);
+    
+    // TODO abort
   }
+
 }

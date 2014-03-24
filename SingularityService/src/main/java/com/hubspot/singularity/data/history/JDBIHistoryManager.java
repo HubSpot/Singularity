@@ -140,7 +140,7 @@ public class JDBIHistoryManager implements HistoryManager {
     List<SingularityTaskHistoryUpdate> updates = Collections.emptyList();
     
     if (fetchUpdates) {
-      updates = Collections.emptyList(); // TODO history.getTaskUpdates(taskId);
+      updates = history.getTaskUpdates(taskId);
     }
     
     try {

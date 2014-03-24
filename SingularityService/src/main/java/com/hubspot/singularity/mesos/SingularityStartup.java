@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -26,6 +27,8 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.Utils;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
@@ -39,11 +42,13 @@ public class SingularityStartup {
   private final SingularityRackManager rackManager;
   private final RequestManager requestManager;
   private final SingularityHealthchecker healthchecker;
+  private final DeployManager deployManager;
   
   @Inject
-  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityHealthchecker healthchecker, SingularityRackManager rackManager, TaskManager taskManager, RequestManager requestManager) {
+  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityHealthchecker healthchecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, RequestManager requestManager) {
     this.mesosClient = mesosClient;
     this.rackManager = rackManager;
+    this.deployManager = deployManager;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.healthchecker = healthchecker;
@@ -73,7 +78,7 @@ public class SingularityStartup {
       throw Throwables.propagate(e);
     }
     
-    LOG.info(String.format("Finished startup after %sms", System.currentTimeMillis() - start));
+    LOG.info("Finished startup after %s", Utils.duration(start));
   }
   
   private void enqueueHealthchecks() {
@@ -108,7 +113,7 @@ public class SingularityStartup {
       }
     }
     
-    LOG.info(String.format("Finishing checking for healthchecks, enqueued %s", enqueuedHealthchecks));
+    LOG.info("Finishing checking for healthchecks, enqueued %s", enqueuedHealthchecks);
   }
   
   private void checkForMissingActiveTasks(MesosMasterStateObject state) {
@@ -130,19 +135,31 @@ public class SingularityStartup {
       taskManager.deleteActiveTask(strTaskId);
     }
     
-    LOG.info(String.format("Finished reconciling active tasks: %s active tasks, %s were deleted", activeTaskIds.size(), strTaskIds.size()));
+    LOG.info("Finished reconciling active tasks: %s active tasks, %s were deleted", activeTaskIds.size(), strTaskIds.size());
   }
   
   private void rescheduleTheWorld() {
+    final long start = System.currentTimeMillis();
+    
     final List<SingularityRequest> requests = requestManager.getActiveRequests();
+    
+    int scheduled = 0;
     
     for (SingularityRequest request : requests) {
       if (!request.isOneOff()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), Optional.<String> absent(), PendingType.STARTUP));
+        Optional<String> deployId = deployManager.getInUseDeployId(request.getId());
+        
+        if (deployId.isPresent()) {
+          if (requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), deployId.get(), PendingType.STARTUP)) == SingularityCreateResult.CREATED) {
+            scheduled++;
+          }
+        } else {
+          LOG.debug("No deployid for request %s, not scheduling at startup", request);
+        }
       }
     }
     
-    LOG.info(String.format("Put %s requests into pending queue", requests.size()));
+    LOG.info("Put %s out of %s requests into pending queue in %s", scheduled, requests.size(), Utils.duration(start));
   }
   
 }

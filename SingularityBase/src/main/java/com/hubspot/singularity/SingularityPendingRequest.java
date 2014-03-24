@@ -13,22 +13,26 @@ public class SingularityPendingRequest extends SingularityJsonObject {
   }
   
   private final String requestId;
-  private final Optional<String> deployId;
+  private final String deployId;
   private final long timestamp;
-  private final Optional<String> user;
   private final PendingType pendingType;
+  private final Optional<String> user;
   private final Optional<String> cmdLineArgs;
   
+  public static SingularityPendingRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityPendingRequest.class);
+  }
+  
   @JsonCreator
-  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") Optional<String> deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") String pendingType) {
+  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") String pendingType) {
     this(requestId, deployId, timestamp, cmdLineArgs, user, PendingType.valueOf(pendingType));
   }
   
-  public SingularityPendingRequest(String requestId, Optional<String> deployId, PendingType pendingType) {
+  public SingularityPendingRequest(String requestId, String deployId, PendingType pendingType) {
     this(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
   }
   
-  public SingularityPendingRequest(String requestId, Optional<String> deployId, long timestamp, Optional<String> cmdLineArgs, Optional<String> user, PendingType pendingType) {
+  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> cmdLineArgs, Optional<String> user, PendingType pendingType) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -45,7 +49,7 @@ public class SingularityPendingRequest extends SingularityJsonObject {
     return cmdLineArgs;
   }
   
-  public Optional<String> getDeployId() {
+  public String getDeployId() {
     return deployId;
   }
 
@@ -64,10 +68,6 @@ public class SingularityPendingRequest extends SingularityJsonObject {
   
   public String getPendingType() {
     return pendingType.name();
-  }
-
-  public static SingularityPendingRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityPendingRequest.class);
   }
 
   @Override

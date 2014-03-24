@@ -60,18 +60,50 @@ public class RequestResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequest submit(SingularityRequest request, @QueryParam("user") Optional<String> user) {
     if (request.getId() == null) {
-      throw WebExceptions.badRequest("Request must have an ID");
+      throw WebExceptions.badRequest("Request must have an Id");
     }
     
-    SingularityRequest newRequest = validator.checkSingularityRequest(request, requestManager.fetchRequest(request.getId()));
+    Optional<SingularityRequest> maybeOldRequest = requestManager.fetchRequest(request.getId());
+    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest);
     
     PersistResult result = requestManager.persistRequest(newRequest);
     
+    if (requestManager.isRequestPaused(request.getId())) {
+      requestManager.deletePausedRequest(request.getId());
+    }
+    
     historyManager.saveRequestHistoryUpdate(newRequest, result == PersistResult.CREATED ? RequestState.CREATED : RequestState.UPDATED, user);
     
-    // TODO schedule request if necessary.. figure it out
+    checkReschedule(newRequest, maybeOldRequest);
     
     return newRequest;
+  }
+  
+  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest) {
+    if (!maybeOldRequest.isPresent()) {
+      return;
+    }
+    
+    if (shouldReschedule(newRequest, maybeOldRequest.get())) {
+      Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
+      
+      if (maybeDeployId.isPresent()) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), PendingType.UPDATED_REQUEST));
+      }   
+    }
+  }
+  
+  private boolean shouldReschedule(SingularityRequest newRequest, SingularityRequest oldRequest) {
+    if (newRequest.getInstancesSafe() != oldRequest.getInstancesSafe()) {
+      return true;
+    }
+    if (newRequest.isScheduled() && oldRequest.isScheduled()) {
+      if (!newRequest.getSchedule().get().equals(oldRequest.getSchedule().get())) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   private Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {
@@ -116,23 +148,42 @@ public class RequestResource {
       throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getDeployState(requestId).orNull(), deployManager.getDeployMarker(requestId).orNull());
     }
   
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, Optional.of(deployMarker.getDeployId()), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
-    
-    // TODO figure out request pausing with deploy model., also schedule ?
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
     
     return fillEntireRequest(request);
   }
+  
+  @DELETE
+  @Path("/request/{requestId}/deploy/{deployId}")
+  public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {
+    SingularityRequest request = fetchRequest(requestId);
     
+//    deployManager.deleteActiveDeploy(deployMarker);
+    
+    
+    return fillEntireRequest(request);
+  }
+  
+  private String getAndCheckDeployId(String requestId) {
+    Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
+    
+    if (!maybeDeployId.isPresent()) {
+      throw WebExceptions.badRequest("Can not schedule a request (%s) with no deploy", requestId);
+    }
+    
+    return maybeDeployId.get();
+  }
+  
   @POST
   @Path("/request/{requestId}/bounce")
   public void bounce(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
     if (request.isScheduled()) {
-      throw WebExceptions.badRequest("Can not request a bounce of a scheduled request (%s)", request);
+      throw WebExceptions.badRequest("Can not bounce a scheduled request (%s)", request);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId,Optional.<String> absent(), PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), PendingType.BOUNCE));
   }
   
   @POST
@@ -155,7 +206,7 @@ public class RequestResource {
       throw WebExceptions.badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", request);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, Optional.<String> absent(), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
   }
   
   @POST
@@ -181,7 +232,11 @@ public class RequestResource {
       throw handleNoMatchingRequest(requestId);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, Optional.<String> absent(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
+    Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
+    
+    if (maybeDeployId.isPresent()) {
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
+    }
   
     historyManager.saveRequestHistoryUpdate(request.get(), RequestState.UNPAUSED, user);
   

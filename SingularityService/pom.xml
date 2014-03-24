@@ -25,22 +25,29 @@
   </repositories>
 
   <dependencies>
-      <dependency>
-          <groupId>com.google.protobuf</groupId>
-          <artifactId>protobuf-java</artifactId>
-          <version>2.5.0</version>
-      </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
       <version>0.3.0</version>
     </dependency>
+    
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${sl4fj.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guice</artifactId>
       <version>0.7.0-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -232,7 +239,7 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- You'll probably want to remove this for your project. I'm just
+        <!-- You'll probably want to remove this for your project. I'm just 
           using it here so that dropwizard-example doesn't get deployed as a library. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
