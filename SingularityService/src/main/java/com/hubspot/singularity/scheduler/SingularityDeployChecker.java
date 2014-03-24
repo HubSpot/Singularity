@@ -14,7 +14,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -24,15 +23,13 @@ import com.hubspot.singularity.SingularityDeployState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 
 public class SingularityDeployChecker {
   
@@ -40,12 +37,14 @@ public class SingularityDeployChecker {
 
   private final DeployManager deployManager;
   private final TaskManager taskManager;
+  private final SingularityDeployHealthHelper deployHealthHelper;
   private final RequestManager requestManager;
   private final SingularityConfiguration configuration;
   
   @Inject
-  public SingularityDeployChecker(DeployManager deployManager, RequestManager requestManager, TaskManager taskManager, SingularityConfiguration configuration) {
+  public SingularityDeployChecker(DeployManager deployManager, SingularityDeployHealthHelper deployHealthHelper, RequestManager requestManager, TaskManager taskManager, SingularityConfiguration configuration) {
     this.configuration = configuration;
+    this.deployHealthHelper = deployHealthHelper;
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.taskManager = taskManager;
@@ -195,10 +194,16 @@ public class SingularityDeployChecker {
       return DeployState.WAITING;
     }
     
-    if (!deploy.getHealthcheckUri().isPresent()) {
-      return getNoHealthcheckDeployState(matchingActiveTasks, activeDeployMarker);
-    } else {
-      return getHealthCheckDeployState(matchingActiveTasks, activeDeployMarker); 
+    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(Optional.of(deploy), matchingActiveTasks);
+    
+    switch (deployHealth) {
+    case WAITING:
+      return DeployState.WAITING;
+    case HEALTHY:
+      return DeployState.SUCCEEDED;
+    case UNHEALTHY:
+    default:
+      return DeployState.FAILED;
     }
   }
   
@@ -213,50 +218,5 @@ public class SingularityDeployChecker {
     
   }
   
-  private DeployState getNoHealthcheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks, final SingularityDeployMarker activeDeployMarker) {
-    final Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
-    
-    for (SingularityTaskId taskId : matchingActiveTasks) {
-      Collection<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);
-      
-      SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(updates);
-      
-      switch (currentState) {
-      case UNKNOWN:
-      case WAITING:
-        return DeployState.WAITING;
-      case DONE:
-        LOG.warn("Found an active task ({}) in done state: {} for deploy: {}", taskId, updates, activeDeployMarker);
-        return DeployState.FAILED;
-      case RUNNING:
-      }
-    }
-    
-    return DeployState.SUCCEEDED;
-  }
-  
-  private DeployState getHealthCheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks, final SingularityDeployMarker activeDeployMarker) {
-    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getHealthcheckResults(matchingActiveTasks);
 
-    boolean allHealthy = true;
-    
-    for (SingularityTaskId taskId : matchingActiveTasks) {
-      SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);
-      
-      if (healthcheckResult == null) {
-        LOG.warn("No health check present for {}", taskId);
-        allHealthy = false;
-      } else if (healthcheckResult.getErrorMessage().isPresent()) {
-        LOG.info("Failing deploy {} due to failed health check: {}", activeDeployMarker, healthcheckResult);
-        return DeployState.FAILED;
-      }
-    }
-    
-    if (allHealthy) {
-      return DeployState.SUCCEEDED;
-    } else {
-      return DeployState.WAITING;
-    }
-  }
-  
 }

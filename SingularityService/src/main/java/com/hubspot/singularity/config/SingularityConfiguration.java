@@ -53,7 +53,7 @@ public class SingularityConfiguration extends Configuration {
   private long healthcheckIntervalSeconds = 5;
   
   @NotNull
-  private long killDecomissionedTasksAfterNewTasksSeconds = 300;
+  private long killScheduledTasksWithAreDecomissionedAfterSeconds = 300;
   
   @NotNull
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
@@ -85,6 +85,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
+  }
+  
+  public long getKillScheduledTasksWithAreDecomissionedAfterSeconds() {
+    return killScheduledTasksWithAreDecomissionedAfterSeconds;
+  }
+
+  public void setKillScheduledTasksWithAreDecomissionedAfterSeconds(long killScheduledTasksWithAreDecomissionedAfterSeconds) {
+    this.killScheduledTasksWithAreDecomissionedAfterSeconds = killScheduledTasksWithAreDecomissionedAfterSeconds;
   }
 
   public long getDeployHealthyBySeconds() {
@@ -138,10 +146,6 @@ public class SingularityConfiguration extends Configuration {
 
   public long getKillAfterTasksDoNotRunDefaultSeconds() {
     return killAfterTasksDoNotRunDefaultSeconds;
-  }
-
-  public long getKillDecomissionedTasksAfterNewTasksSeconds() {
-    return killDecomissionedTasksAfterNewTasksSeconds;
   }
   
   public int getLogFetchCoreThreads() {
@@ -207,10 +211,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setKillAfterTasksDoNotRunDefaultSeconds(long killAfterTasksDoNotRunDefaultSeconds) {
     this.killAfterTasksDoNotRunDefaultSeconds = killAfterTasksDoNotRunDefaultSeconds;
-  }
-
-  public void setKillDecomissionedTasksAfterNewTasksSeconds(long killDecomissionedTasksAfterNewTasksSeconds) {
-    this.killDecomissionedTasksAfterNewTasksSeconds = killDecomissionedTasksAfterNewTasksSeconds;
   }
 
   public void setLogFetchCoreThreads(int logFetchCoreThreads) {
