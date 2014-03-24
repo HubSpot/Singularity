@@ -140,7 +140,7 @@ class TasksView extends View
 
         lastText = ''
 
-        $search.unbind().on 'change keypress paste focus textInput input click keydown', =>
+        onChange = =>
             text = _.trim $search.val()
 
             if text is ''
@@ -162,7 +162,11 @@ class TasksView extends View
             @$('table').each ->
                 utils.handlePotentiallyEmptyFilteredTable $(@), 'task', text
 
+        onChangeDebounced = _.debounce onChange, 200
+
+        $search.unbind().on 'change keypress paste focus textInput input click keydown', onChangeDebounced
+
         if refresh
-            $search.change()
+            onChange()
 
 module.exports = TasksView

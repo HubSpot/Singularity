@@ -684,6 +684,15 @@
   }
 }
 
+@media (min-width: 1440px) {
+  .container,
+  .navbar-fixed-top .container,
+  .navbar-fixed-bottom .container {
+    width: 96%;
+    max-width: 1500px
+  }
+}
+
 @media (max-width: 979px) {
   body {
     padding-top: 0;
