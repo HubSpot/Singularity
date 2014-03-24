@@ -51,7 +51,7 @@ class RacksView extends View
             rackModel = @racksDead.get($(e.target).data('rack-id'))
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the rack:</p><pre>#{ rackModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to delete the rack?</p><pre>#{ rackModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     rackModel.destroy()

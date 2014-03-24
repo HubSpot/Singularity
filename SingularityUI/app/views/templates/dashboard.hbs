@@ -26,7 +26,7 @@
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}">
                                 <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
-                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
                                 <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-desktop">{{ deployUser }}</td>
                                 <td class="visible-large-desktop">{{ instances }}</td>

@@ -1,3 +1,5 @@
+Handlebars.registerHelper 'appRoot', -> constants.appRoot
+
 Handlebars.registerHelper 'ifEqual', (v1, v2, options) -> if v1 is v2 then options.fn @ else options.inverse @
 Handlebars.registerHelper 'ifLT', (v1, v2, options) -> if v1 < v2 then options.fn @ else options.inverse @
 Handlebars.registerHelper 'ifGT', (v1, v2, options) -> if v1 > v2 then options.fn @ else options.inverse @

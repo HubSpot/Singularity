@@ -36,7 +36,7 @@ class Application
 
         Backbone.history.start
             pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-            root: '/singularitytest/'
+            root: constants.appRoot
 
         Object.freeze? @
 

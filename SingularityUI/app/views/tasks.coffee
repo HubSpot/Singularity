@@ -103,6 +103,10 @@ class TasksView extends View
             taskModel = @collection.get($(e.target).data('task-id'))
 
             vex.dialog.confirm
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Kill task', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                    vex.dialog.buttons.NO
+                ]
                 message: @killTaskTemplate(taskId: taskModel.get('id'))
                 callback: (confirmed) =>
                     return unless confirmed
@@ -118,7 +122,7 @@ class TasksView extends View
             $row = $(e.target).parents('tr')
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.run()

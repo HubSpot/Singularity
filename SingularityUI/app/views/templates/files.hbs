@@ -9,7 +9,7 @@
             {{#if _last}}
                 <li class="active">{{ path }}</li>
             {{else}}
-                <li><a href="/singularity/{{ pathRoute }}" data-route="{{ pathRoute }}">{{ path }}</a></li>
+                <li><a href="{{#appRoot}}{{/appRoot}}{{ pathRoute }}" data-route="{{ pathRoute }}">{{ path }}</a></li>
             {{/if}}
         {{/eachWithFn}}
     </ol>

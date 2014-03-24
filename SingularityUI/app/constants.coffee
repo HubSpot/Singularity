@@ -1,6 +1,6 @@
 constants =
 
-    appName: 'singularity'
+    appRoot: '/singularity/'
     apiBase: 'singularity/v1'
 
     mesosLogsPort: '5051'

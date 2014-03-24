@@ -130,7 +130,7 @@ class RequestView extends View
                         pagination: HistoryPaginationView
                     partials: [
                         header: '<th class="sorting" data-sort="taskId">Name</th>'
-                        cell: '<td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
+                        cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
                         header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
                         cell: '<td class="visible-desktop">{{ lastStatusHuman }}</td>'
@@ -145,7 +145,7 @@ class RequestView extends View
                         cell: '''
                             <td class="actions-column hidden-phone">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
+                                <a href="{{#appRoot}}{{/appRoot}}task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                             </td>
                         '''
                     ]
@@ -194,7 +194,7 @@ class RequestView extends View
             requestType = $(e.target).data 'request-type'
 
             dialogOptions =
-                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
                 buttons: [
                     $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
                     vex.dialog.buttons.NO
@@ -221,7 +221,7 @@ class RequestView extends View
             $row = $(e.target).parents('tr')
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to run this task immediately:</p><pre>#{ taskModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.run()

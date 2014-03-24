@@ -18,14 +18,14 @@
                     <tbody>
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
-                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-desktop">{{ deployUser }}</td>
                                 <td class="visible-desktop">{{ instances }}</td>
                                 <td class="actions-column hidden-phone">
                                     <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    <a data-request-id="{{ id }}" data-action="deletePaused">Remove</a>
                                     <a data-request-id="{{ id }}" data-action="unpause">Unpause</a>
+                                    <a data-request-id="{{ id }}" data-action="remove" data-action-remove-type="deletePaused">Remove</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}
@@ -62,7 +62,7 @@
                         {{#eachWithFn requestsOnDemand}}
                             <tr data-request-id="{{ id }}">
                                 <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
-                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td class="visible-desktop" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="actions-column hidden-phone">
                                     <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
@@ -104,14 +104,14 @@
                     <tbody>
                         {{#eachWithFn requestsScheduled}}
                             <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
-                                <td><span title="{{ id }}"><a href="/singularity/request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td class="visible-desktop" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-large-desktop">{{ deployUser }}</td>
                                 <td class="visible-desktop">{{ schedule }}</td>
                                 <td class="actions-column hidden-phone">
                                     <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    <a data-request-id="{{ id }}" data-action="deletePaused">Remove</a>
                                     <a data-request-id="{{ id }}" data-action="unpause">Unpause</a>
+                                    <a data-request-id="{{ id }}" data-action="remove" data-action-remove-type="deletePaused">Remove</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}

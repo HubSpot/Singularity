@@ -14,7 +14,7 @@
         <tbody>
             {{#eachWithFn tasks}}
                 <tr data-task-id="{{ id }}">
-                    <td><a class="ellipsize-300" title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                    <td><a class="ellipsize-300" title="{{ id }}" href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
                     <td class="hidden-phone" data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                     <td class="visible-desktop">{{ host }}</td>
                     <td class="visible-large-desktop">{{ rack }}</td>
@@ -22,7 +22,7 @@
                     <td class="visible-desktop" data-value="{{ resources.memoryMb }}">{{ memoryHuman }}</td>
                     <td class="actions-column hidden-phone">
                         <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                        <a data-task-id="{{ id }}" data-action="remove">Kill&nbsp;Task</a>
+                        <a data-task-id="{{ id }}" data-action="remove">Kill task</a>
                     </td>
                 </tr>
             {{/eachWithFn}}

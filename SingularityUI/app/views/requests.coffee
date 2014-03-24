@@ -132,38 +132,36 @@ class RequestsView extends View
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
-            vex.dialog.confirm
-                message: @removeRequestTemplate(requestId: requestModel.get('id'))
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                    vex.dialog.buttons.NO
-                ]
-                callback: (confirmed) =>
-                    return unless confirmed
-                    requestModel.destroy()
-                    delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
-                    @collection.remove(requestModel)
-                    $row.remove()
+            if $(e.target).data('action-remove-type') is 'deletePaused'
+                vex.dialog.confirm
+                    message: "<p>Are you sure you want to delete the paused request?</p><pre>#{ requestModel.get('id') }</pre>"
+                    callback: (confirmed) =>
+                        return unless confirmed
+                        $row.remove()
+                        requestModel.deletePaused().done =>
+                            delete app.allRequests[requestModel.get('id')]
+                            @collection.remove(requestModel)
 
-        @$el.find('[data-action="deletePaused"]').unbind('click').on 'click', (e) =>
-            $row = $(e.target).parents('tr')
-            requestModel = @collection.get($(e.target).data('request-id'))
-
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    $row.remove()
-                    requestModel.deletePaused().done =>
-                        delete app.allRequests[requestModel.get('id')]
+            else
+                vex.dialog.confirm
+                    message: @removeRequestTemplate(requestId: requestModel.get('id'))
+                    buttons: [
+                        $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                        vex.dialog.buttons.NO
+                    ]
+                    callback: (confirmed) =>
+                        return unless confirmed
+                        requestModel.destroy()
+                        delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
                         @collection.remove(requestModel)
+                        $row.remove()
 
         @$el.find('[data-action="unpause"]').unbind('click').on 'click', (e) =>
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the paused request:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     $row.remove()
@@ -192,7 +190,7 @@ class RequestsView extends View
             requestType = $(e.target).data 'request-type'
 
             dialogOptions =
-                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately:</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
                 buttons: [
                     $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
                     vex.dialog.buttons.NO

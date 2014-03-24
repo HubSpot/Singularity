@@ -39,13 +39,13 @@
                     <tbody>
                         {{#eachWithFn requestTasksActive}}
                             <tr data-task-id="{{ id }}">
-                                <td><span title="{{ id }}"><a href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
                                 <td class="visible-desktop">{{ lastStatusHuman }}</td>
                                 <td class="visible-desktop" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
                                 <td class="hidden-phone" data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                                 <td class="actions-column hidden-phone">
                                     <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    <a href="/singularity/task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
+                                    <a href="{{#appRoot}}{{/appRoot}}task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
                                 </td>
                             </tr>
                         {{/eachWithFn}}
