@@ -1,3 +1,5 @@
+@import colors
+
 .table tbody tr:hover td, .table tbody tr:hover th
     background-color rgba(0, 0, 0, .05)
 
@@ -13,12 +15,43 @@
 
     th, td
 
+        // Regular links
+
         &.actions-column
             white-space nowrap
             text-align right
 
             a
                 margin-left 10px
+
+        // Link buttons
+
+        &.actions-column
+            padding-top 0
+            padding-bottom 0
+            padding-right 0
+            font-size 0
+
+            a
+                position relative
+                overflow hidden
+                padding .6em
+                display inline-block
+                background transparent
+                text-decoration none
+                font-size 13px
+                line-height 1.8em
+                margin 0 0 -13px
+
+                &:hover
+                    color #fff
+                    background $linkBlue
+                    box-shadow 0 -1px $linkBlue
+                    text-decoration none
+
+                &[data-action="remove"]:hover
+                    background $red
+                    box-shadow 0 -1px $red
 
     .icon
         margin-right 10px
