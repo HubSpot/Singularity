@@ -51,6 +51,10 @@ class WebhooksView extends View
             webhookModel = @webhooks.find((w) -> w.get('url') is $(e.target).data('url'))
 
             vex.dialog.confirm
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                    vex.dialog.buttons.NO
+                ]
                 message: "<p>Are you sure you want to remove the webhook?</p><pre>#{ webhookModel.get('url') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed

@@ -60,6 +60,10 @@ class SlavesView extends View
             slaveModel = collection.get($(e.target).data('slave-id'))
 
             vex.dialog.confirm
+                buttons: [
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                    vex.dialog.buttons.NO
+                ]
                 message: "<p>Are you sure you want to remove the slave?</p><pre>#{ slaveModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
