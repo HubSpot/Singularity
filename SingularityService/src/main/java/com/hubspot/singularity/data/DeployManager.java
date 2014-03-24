@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -44,6 +45,8 @@ public class DeployManager extends CuratorAsyncManager {
   private final static String DEPLOY_ROOT = "/deploys";
   
   private final static String ACTIVE_ROOT = DEPLOY_ROOT + "/active";
+  private final static String CANCEL_ROOT = DEPLOY_ROOT + "/cancel";
+ 
   private final static String BY_REQUEST_ROOT = DEPLOY_ROOT + "/requests";
   
   private final static String DEPLOY_STATE_KEY = "STATE";
@@ -58,6 +61,10 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployTranscoder = deployTranscoder;
     this.deployMarkerTranscoder = deployMarkerTranscoder;
     this.deployStateTranscoder = deployStateTranscoder;
+  }
+  
+  public List<SingularityDeployMarker> getCancelDeploys() {
+    return getAsyncChildren(CANCEL_ROOT, deployMarkerTranscoder);
   }
   
   public List<SingularityDeployMarker> getActiveDeploys() {
@@ -220,8 +227,20 @@ public class DeployManager extends CuratorAsyncManager {
     return ZKPaths.makePath(ACTIVE_ROOT, requestId);
   }
   
-  public void deleteActiveDeploy(SingularityDeployMarker deployMarker) {
-    delete(getDeployMarkerPath(deployMarker.getRequestId()));
+  private String getCancelDeployPath(SingularityDeployMarker deployMarker) {
+    return ZKPaths.makePath(CANCEL_ROOT, String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId()));
+  }
+  
+  public SingularityCreateResult cancelDeploy(SingularityDeployMarker deployMarker) {
+    return create(getCancelDeployPath(deployMarker), Optional.of(deployMarker.getAsBytes(objectMapper)));
+  }
+  
+  public SingularityDeleteResult deleteActiveDeploy(SingularityDeployMarker deployMarker) {
+    return delete(getDeployMarkerPath(deployMarker.getRequestId()));
+  }
+  
+  public SingularityDeleteResult deleteCancelRequest(SingularityDeployMarker deployMarker) {
+    return delete(getCancelDeployPath(deployMarker));
   }
   
   public SingularityCreateResult markDeploy(SingularityDeployMarker deployMarker) {

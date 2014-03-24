@@ -158,8 +158,13 @@ public class RequestResource {
   public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
-//    deployManager.deleteActiveDeploy(deployMarker);
+    Optional<SingularityDeployState> deployState = deployManager.getDeployState(request.getId());
     
+    if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId)) {
+      throw WebExceptions.badRequest("Request id %s does not have a pending deploy with id %s", requestId, deployId);
+    }
+    
+    deployManager.cancelDeploy(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user));
     
     return fillEntireRequest(request);
   }
