@@ -154,10 +154,14 @@ class TasksView extends View
                 $rows.each ->
                     $row = $(@)
 
-                    if not _.string.contains $row.data('task-id').toLowerCase(), text.toLowerCase()
-                        $row.addClass('filtered')
-                    else
+                    rowText = $row.data('task-id')
+                    host = $row.data('task-host')
+                    rowText = "#{ host } #{ rowText } #{ host }" if host?
+
+                    if utils.fuzzySearchMatch(text.toLowerCase(), rowText.toLowerCase())
                         $row.removeClass('filtered')
+                    else
+                        $row.addClass('filtered')
 
             @$('table').each ->
                 utils.handlePotentiallyEmptyFilteredTable $(@), 'task', text

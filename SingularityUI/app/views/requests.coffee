@@ -233,10 +233,14 @@ class RequestsView extends View
                 $rows.each ->
                     $row = $(@)
 
-                    if not (_.string.contains $row.data('request-id').toLowerCase(), text.toLowerCase()) and not (_.string.contains $row.data('request-deploy-user')?.toLowerCase(), text.toLowerCase())
-                        $row.addClass('filtered')
-                    else
+                    rowText = $row.data('request-id')
+                    user = $row.data('request-deploy-user')
+                    rowText = "#{ user } #{ rowText } #{ user }" if user?
+
+                    if utils.fuzzySearchMatch(text.toLowerCase(), rowText.toLowerCase())
                         $row.removeClass('filtered')
+                    else
+                        $row.addClass('filtered')
 
             @$('table').each ->
                 utils.handlePotentiallyEmptyFilteredTable $(@), 'request', text
