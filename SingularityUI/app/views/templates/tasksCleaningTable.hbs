@@ -10,7 +10,7 @@
         <tbody>
             {{#eachWithFn tasks}}
                 <tr data-task-id="{{ id }}">
-                    <td><a title="{{ id }}" href="/singularity/task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                    <td><a title="{{ id }}" href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
                     <td>{{ cleanupTypeHuman }}</span></td>
                     <td class="actions-column"><a data-task-id="{{ id }}" data-action="viewJSON">JSON</a></td>
                 </tr>
