@@ -6,7 +6,6 @@ class NavigationView extends View
 
     initialize: =>
         $('#top-level-nav').dblclick -> window.scrollTo 0, 0
-        @theme = 'light'
 
     render: =>
         @renderTitle()
@@ -22,8 +21,6 @@ class NavigationView extends View
     renderNavLinks: =>
         $nav = @$el
 
-        @renderTheme @theme
-
         $anchors = $nav.find('ul.nav a[data-href]')
         $anchors.each ->
             route = $(@).data('href')
@@ -38,14 +35,6 @@ class NavigationView extends View
         $anchors.each ->
             if $(@).attr('href') in [currentTopLevel, currentTopLevel + 's']
                 $(@).parents('li').addClass('active')
-
-    renderTheme: (theme) =>
-        previousTheme = if @theme is 'light' then 'dark' else 'light'
-        $('html').addClass("#{ theme }-theme").removeClass("#{ previousTheme }-theme")
-        $('#theme-changer').html(_.capitalize(previousTheme)).unbind('click').on 'click', =>
-            newTheme = if @theme is 'dark' then 'light' else 'dark'
-            @theme = newTheme
-            @renderTheme @theme
 
     collapse: =>
         $collapse = $('#top-level-nav .nav-collapse')
