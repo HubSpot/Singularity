@@ -29,6 +29,11 @@ public class SentryAppenderBundle implements ConfiguredBundle<SingularityConfigu
       return;
     }
 
+    if(!maybeSentryConfiguration.get().getDsn().isPresent()){
+      LOG.warn("SentryAppenderBundle is installed and sentry config exists but DSN is missing");
+      return;
+    }
+    
     String dsn = maybeSentryConfiguration.get().getDsn().get();
     Raven raven = RavenFactory.ravenInstance(dsn);
     SentryAppender sentryAppender = new SentryAppender(raven);

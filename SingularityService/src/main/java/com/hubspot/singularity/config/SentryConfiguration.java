@@ -14,9 +14,4 @@ public class SentryConfiguration {
 	public Optional<String> getDsn(){
 		return Optional.fromNullable(dsn);
 	}
-	
-	public Optional<String> getLevel(){
-		return Optional.fromNullable(level);
-	}
-	
 }
