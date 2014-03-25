@@ -200,7 +200,7 @@ class RequestView extends View
                     vex.dialog.buttons.NO
                 ]
                 callback: (confirmedOrPromptData) =>
-                    return unless confirmedOrPromptData
+                    return if confirmedOrPromptData is false
 
                     requestModel.run(confirmedOrPromptData).done =>
                         setTimeout =>
