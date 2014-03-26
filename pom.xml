@@ -15,6 +15,7 @@
 
   <properties>
     <mesos.version>0.14.0-rc4</mesos.version>
+    <sentry.version>4.1.2</sentry.version>
     <java.abi>1.7</java.abi>
   </properties>
 

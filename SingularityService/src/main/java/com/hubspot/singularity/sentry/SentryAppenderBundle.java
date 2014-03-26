@@ -24,13 +24,8 @@ public class SentryAppenderBundle implements ConfiguredBundle<SingularityConfigu
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
     Optional<SentryConfiguration> maybeSentryConfiguration = configuration.getSentryConfiguration();
 
-    if (!maybeSentryConfiguration.isPresent()) {
-      LOG.info("SentryAppenderBundle is installed, but there is no sentry configuration ");
-      return;
-    }
-
-    if(!maybeSentryConfiguration.get().getDsn().isPresent()){
-      LOG.warn("SentryAppenderBundle is installed and sentry config exists but DSN is missing");
+    if (!maybeSentryConfiguration.isPresent() || !maybeSentryConfiguration.get().getDsn().isPresent()) {
+      LOG.warn("SentryAppenderBundle is installed, sentry configuration is missing");
       return;
     }
     
