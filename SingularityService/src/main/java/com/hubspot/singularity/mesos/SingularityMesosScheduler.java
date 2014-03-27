@@ -1,10 +1,8 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskState;
@@ -26,9 +24,9 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskUpdate;
+import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.WebhookManager;
 import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
@@ -42,7 +40,6 @@ public class SingularityMesosScheduler implements Scheduler {
   private final Resources DEFAULT_RESOURCES;
   private final TaskManager taskManager;
   private final SingularityScheduler scheduler;
-  private final HistoryManager historyManager;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final WebhookManager webhookManager;
   private final SingularityHealthchecker healthchecker;
@@ -52,13 +49,12 @@ public class SingularityMesosScheduler implements Scheduler {
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, HistoryManager historyManager, WebhookManager webhookManager, SingularityRackManager rackManager,
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, WebhookManager webhookManager, SingularityRackManager rackManager,
       SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
     this.scheduler = scheduler;
-    this.historyManager = historyManager;
     this.webhookManager = webhookManager;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
@@ -130,7 +126,7 @@ public class SingularityMesosScheduler implements Scheduler {
       throw t;
     }
 
-    LOG.info("Finished handling offers ({}), accepted {}, declined {}, outstanding tasks {}", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start), acceptedOffers.size(),
+    LOG.info("Finished handling offers ({}), accepted {}, declined {}, outstanding tasks {}", Utils.duration(start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size());
   }
 
@@ -162,8 +158,6 @@ public class SingularityMesosScheduler implements Scheduler {
 
         LOG.trace("Task {} launched with status {}", task.getTaskId(), initialStatus.name());
         
-        historyManager.saveTaskHistory(task, initialStatus.name());
-
         return Optional.of(task);
       } else {
         LOG.trace("Turning down offer {} for task {}; matched resources: {}, rack state: {}", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState);
@@ -180,7 +174,6 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {    final String taskId = status.getTaskId().getValue();
-    
     LOG.debug("Got a status update for task: {}, status - {}", taskId, status);
     
     Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
@@ -198,12 +191,7 @@ public class SingularityMesosScheduler implements Scheduler {
     
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
     
-    final Date dateNow = new Date(now);
-    
     taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskIdObj, now, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent()));
-    
-    historyManager.updateTaskHistory(taskId, status.getState().name(), dateNow);
-    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), dateNow);
 
     logSupport.checkDirectory(taskIdObj);
     
@@ -243,8 +231,6 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void error(SchedulerDriver driver, String message) {
     LOG.warn("Error from mesos: {}", message);
-    
-    // TODO abort
   }
 
 }

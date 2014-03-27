@@ -4,7 +4,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +11,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 
@@ -36,7 +36,7 @@ public class SingularityDeployPoller {
   }
   
   public void start(final SingularityMesosSchedulerDelegator mesosScheduler) {
-    LOG.info(String.format("Starting a deploy poller with a %s second delay", configuration.getCheckDeploysEverySeconds()));
+    LOG.info("Starting a deploy poller with a {} second delay", configuration.getCheckDeploysEverySeconds());
     
     executorService.scheduleWithFixedDelay(new Runnable() {
       
@@ -45,11 +45,11 @@ public class SingularityDeployPoller {
         mesosScheduler.lock();
         
         try {
-          final long now = System.currentTimeMillis();
+          final long start = System.currentTimeMillis();
           
           final int numDeploys = deployChecker.checkDeploys();
        
-          LOG.info(String.format("Checked %s deploys in %s", numDeploys, DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - now)));
+          LOG.info("Checked {} deploys in {}", numDeploys, Utils.duration(start));
         } catch (Throwable t) {
           LOG.error("Caught an exception while checking deploys -- aborting", t);
           abort.abort();

@@ -47,10 +47,6 @@ public class SingularityRackManager {
     this.slaveManager = slaveManager;
   }
   
-  public void loadCache() {
-    
-  }
-  
   public enum RackCheckState {
     ALREADY_ON_SLAVE (false), RACK_SATURATED (false), RACK_OK (true), NOT_RACK_SENSITIVE (true), SLAVE_DECOMISSIONING (false), RACK_DECOMISSIONING (false);
 
@@ -127,7 +123,7 @@ public class SingularityRackManager {
     int racksCleared = rackManager.clearActive();
     int slavesCleared = slaveManager.clearActive();
   
-    LOG.info("Cleared {} racks and {} slaves in {}ms", racksCleared, slavesCleared, Utils.duration(start));
+    LOG.info("Cleared {} racks and {} slaves in {}", racksCleared, slavesCleared, Utils.duration(start));
   }
   
   public void slaveLost(SlaveID slaveIdObj) {

@@ -134,14 +134,14 @@ public class SingularityMailer implements SingularityCloseable {
   }
 
   private Optional<String[]> getTaskLogFile(SingularityTaskId taskId, String filename) {
-    final Optional<SingularityTask> task = taskManager.getTask(taskId.getId());
+    final Optional<SingularityTask> task = taskManager.getTask(taskId);
     
     if (!task.isPresent()) {
       LOG.error(String.format("No task found for %s", taskId.getId()));
       return Optional.absent();
     }
     
-    final Optional<String> directory = taskManager.getDirectory(taskId.getId());
+    final Optional<String> directory = taskManager.getDirectory(taskId);
     
     if (!directory.isPresent()) {
       LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
@@ -195,11 +195,11 @@ public class SingularityMailer implements SingularityCloseable {
       templateSubs.put("taskStateFailed", (taskState.get() == TaskState.TASK_FAILED));
     }
 
-    templateSubs.put("task_directory", taskManager.getDirectory(taskId.getId()).or("directory missing"));
+    templateSubs.put("task_directory", taskManager.getDirectory(taskId).or("directory missing"));
     templateSubs.put("task_updates", jadeHelper.getJadeTaskHistory(taskHistory));
     templateSubs.put("taskEverRan", taskEverRan(taskHistory));
     
-    Optional<SingularityTask> task = taskManager.getTask(taskId.getId());
+    Optional<SingularityTask> task = taskManager.getTask(taskId);
         
     if (task.isPresent()) {
       templateSubs.put("slave_hostname", task.get().getOffer().getHostname());
@@ -217,7 +217,7 @@ public class SingularityMailer implements SingularityCloseable {
   }
   
   public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
-    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryForTask(taskId.getId());
+    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
     final List<String> to = getOwners(request);
     final String subject = String.format("Task %s has not started yet", taskId.getId());
@@ -232,7 +232,7 @@ public class SingularityMailer implements SingularityCloseable {
   }
 
   public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState taskState) {
-    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryForTask(taskId.getId());
+    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
     final List<String> to = getOwners(request);
     final String subject = getSubjectForTaskHistory(taskId, taskState, taskHistory);
@@ -250,7 +250,7 @@ public class SingularityMailer implements SingularityCloseable {
   }
 
   public void sendRequestPausedMail(SingularityTaskId taskId, SingularityRequest request) {
-    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryForTask(taskId.getId());
+    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
     
     final int maxFailures = request.getMaxFailuresBeforePausing().or(0);
 

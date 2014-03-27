@@ -27,9 +27,11 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityDeployMarkerTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityDeployStateTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityDeployStatisticsTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityDeployTranscoder;
 
 public class DeployManager extends CuratorAsyncManager {
@@ -41,6 +43,7 @@ public class DeployManager extends CuratorAsyncManager {
   private final SingularityDeployTranscoder deployTranscoder;
   private final SingularityDeployMarkerTranscoder deployMarkerTranscoder;
   private final SingularityDeployStateTranscoder deployStateTranscoder;
+  private final SingularityDeployStatisticsTranscoder deployStatisticsTranscoder;
   
   private final static String DEPLOY_ROOT = "/deploys";
   
@@ -52,13 +55,16 @@ public class DeployManager extends CuratorAsyncManager {
   private final static String DEPLOY_STATE_KEY = "STATE";
   private final static String DEPLOY_LIST_KEY = "/ids"; 
   
+  private final static String DEPLOY_STATISTICS_KEY = "STATISTICS";
+  
   @Inject
-  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityDeployTranscoder deployTranscoder, SingularityDeployMarkerTranscoder deployMarkerTranscoder, SingularityDeployStateTranscoder deployStateTranscoder, ObjectMapper objectMapper) {
+  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityDeployTranscoder deployTranscoder, SingularityDeployMarkerTranscoder deployMarkerTranscoder, SingularityDeployStatisticsTranscoder deployStatisticsTranscoder, SingularityDeployStateTranscoder deployStateTranscoder, ObjectMapper objectMapper) {
     super(curator, configuration.getZookeeperAsyncTimeout());
     
     this.objectMapper = objectMapper;
       
     this.deployTranscoder = deployTranscoder;
+    this.deployStatisticsTranscoder = deployStatisticsTranscoder;
     this.deployMarkerTranscoder = deployMarkerTranscoder;
     this.deployStateTranscoder = deployStateTranscoder;
   }
@@ -73,6 +79,10 @@ public class DeployManager extends CuratorAsyncManager {
   
   private String getRequestDeployPath(String requestId) {
     return ZKPaths.makePath(BY_REQUEST_ROOT, requestId);
+  }
+  
+  private String getDeployStatisticsPath(String requestId, String deployId) {
+    return ZKPaths.makePath(getDeployPath(requestId, deployId), DEPLOY_STATISTICS_KEY);
   }
   
   private String getDeployPath(String requestId, String deployId) {
@@ -221,6 +231,14 @@ public class DeployManager extends CuratorAsyncManager {
     }
     
     return ConditionalPersistResult.STATE_CHANGED;
+  }
+  
+  public Optional<SingularityDeployStatistics> getDeployStatistics(String requestId, String deployId) {
+    return getData(getDeployStatisticsPath(requestId, deployId), deployStatisticsTranscoder);
+  }
+  
+  public SingularityCreateResult saveDeployStatistics(SingularityDeployStatistics newDeployStatistics) {
+    return save(getDeployStatisticsPath(newDeployStatistics.getRequestId(), newDeployStatistics.getDeployId()), Optional.of(newDeployStatistics.getAsBytes(objectMapper))); 
   }
   
   private String getDeployMarkerPath(String requestId) {

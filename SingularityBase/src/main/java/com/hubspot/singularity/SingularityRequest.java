@@ -18,7 +18,6 @@ public class SingularityRequest extends SingularityJsonObject {
   private final Optional<List<String>> owners;
   private final Optional<Integer> numRetriesOnFailure;
   private final Optional<Integer> maxFailuresBeforePausing;
-  private final Optional<Boolean> pauseOnInitialFailure;
 
   private final Optional<String> schedule;
   private final Optional<Boolean> daemon;
@@ -36,13 +35,12 @@ public class SingularityRequest extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
-      @JsonProperty("maxFailuresBeforePausing") Optional<Integer> maxFailuresBeforePausing, @JsonProperty("pauseOnInitialFailure") Optional<Boolean> pauseOnInitialFailure, 
-      @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive) {
+      @JsonProperty("maxFailuresBeforePausing") Optional<Integer> maxFailuresBeforePausing, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, 
+      @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.maxFailuresBeforePausing = maxFailuresBeforePausing;
-    this.pauseOnInitialFailure = pauseOnInitialFailure;
     this.schedule = schedule;
     this.daemon = daemon;
     this.rackSensitive = rackSensitive;
@@ -57,7 +55,6 @@ public class SingularityRequest extends SingularityJsonObject {
         .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
         .setNumRetriesOnFailure(numRetriesOnFailure)
         .setOwners(owners.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(owners.get())) : owners)
-        .setPauseOnInitialFailure(pauseOnInitialFailure)
         .setRackSensitive(rackSensitive)
         .setSchedule(schedule);
   }
@@ -76,10 +73,6 @@ public class SingularityRequest extends SingularityJsonObject {
 
   public Optional<Integer> getMaxFailuresBeforePausing() {
     return maxFailuresBeforePausing;
-  }
-
-  public Optional<Boolean> getPauseOnInitialFailure() {
-    return pauseOnInitialFailure;
   }
 
   public Optional<String> getSchedule() {
@@ -130,7 +123,7 @@ public class SingularityRequest extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", pauseOnInitialFailure=" + pauseOnInitialFailure
+    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing
         + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
   }
   

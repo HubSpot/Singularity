@@ -4,26 +4,39 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 
 public class SingularityTaskHistory extends SingularityJsonObject {
 
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
-  private final SingularityTaskState taskState;
+  private final Optional<String> directory;
+  private final Optional<SingularityTaskHealthcheckResult> lastHealthcheck;
   private final SingularityTask task;
 
+  public static SingularityTaskHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityTaskHistory.class);
+  }
+  
   @JsonCreator
-  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("taskState") SingularityTaskState taskState, @JsonProperty("task") SingularityTask task) {
+  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("lastHealthcheck") Optional<SingularityTaskHealthcheckResult> lastHealthcheck, 
+      @JsonProperty("task") SingularityTask task) {
     this.taskUpdates = taskUpdates;
-    this.taskState = taskState;
+    this.lastHealthcheck = lastHealthcheck;
+    this.directory = directory;
     this.task = task;
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
     return taskUpdates;
   }
-
-  public SingularityTaskState getTaskState() {
-    return taskState;
+  
+  public Optional<SingularityTaskHealthcheckResult> getLastHealthcheck() {
+    return lastHealthcheck;
+  }
+  
+  public Optional<String> getDirectory() {
+    return directory;
   }
 
   public SingularityTask getTask() {
@@ -32,7 +45,7 @@ public class SingularityTaskHistory extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", taskState=" + taskState + ", task=" + task + "]";
+    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + ", task=" + task + "]";
   }
   
 }

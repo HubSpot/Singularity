@@ -22,14 +22,12 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager;
 
 public class SingularityLogSupport implements SingularityCloseable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityLogSupport.class);
 
   private final MesosClient mesosClient;
-  private final HistoryManager historyManager;
   private final TaskManager taskManager;
   
   private final ThreadPoolExecutor logLookupExecutorService;
@@ -37,10 +35,9 @@ public class SingularityLogSupport implements SingularityCloseable {
   private final SingularityCloser closer;
 
   @Inject
-  public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, TaskManager taskManager, HistoryManager historyManager, SingularityCloser closer) {
+  public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, TaskManager taskManager, SingularityCloser closer) {
     this.mesosClient = mesosClient;
     this.taskManager = taskManager;
-    this.historyManager = historyManager;
     this.closer = closer;
 
     this.logLookupExecutorService = new ThreadPoolExecutor(configuration.getLogFetchCoreThreads(), configuration.getLogFetchMaxThreads(), 250L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("SingularityDirectoryFetcher-%d").build());
@@ -93,21 +90,20 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     LOG.debug("Found a directory {} for task {}", directory.get(), task.getTaskId());
 
-    taskManager.updateTaskDirectory(task.getTaskId().getId(), directory.get());
-    historyManager.updateTaskDirectory(task.getTaskId().getId(), directory.get());
+    taskManager.updateTaskDirectory(task.getTaskId(), directory.get());
     
     LOG.trace("Updated task {} directory in {}", task.getTaskId(), Utils.duration(start));
   }
 
   public void checkDirectory(final SingularityTaskId taskId) {
-    final Optional<String> maybeDirectory = taskManager.getDirectory(taskId.getId());
+    final Optional<String> maybeDirectory = taskManager.getDirectory(taskId);
     
     if (maybeDirectory.isPresent()) {
       LOG.debug("Already had a directory for task {}, skipping lookup", taskId);
       return;
     }
     
-    final Optional<SingularityTask> task = taskManager.getTask(taskId.getId());
+    final Optional<SingularityTask> task = taskManager.getTask(taskId);
     
     if (!task.isPresent()) {
       LOG.warn("No task found available for task {}, can't locate directory", taskId);

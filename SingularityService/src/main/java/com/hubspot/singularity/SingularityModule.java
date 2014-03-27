@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -177,6 +176,8 @@ public class SingularityModule extends AbstractModule {
   @Provides
   @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
+    LOG.info("Creating curator/ZK client and blocking on connection to ZK quorum {} (timeout: {})", config.getQuorum(), config.getConnectTimeoutMillis());
+    
     CuratorFramework client = CuratorFrameworkFactory.builder()
         .defaultData(null)
         .sessionTimeoutMs(config.getSessionTimeoutMillis())
@@ -187,14 +188,11 @@ public class SingularityModule extends AbstractModule {
     
     client.start();
     
-    LOG.info(String.format("Blocking on startup connection to ZK quorum %s (timeout: %s)", config.getQuorum(), config.getConnectTimeoutMillis()));
     final long start = System.currentTimeMillis();
     
     Preconditions.checkState(client.getZookeeperClient().blockUntilConnectedOrTimedOut());
     
-    LOG.info(String.format("Connected to ZK after %s", DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start)));
-    
-    // TODO add listener which will shutdown on LOST?
+    LOG.info("Connected to ZK after {}", Utils.duration(start));
     
     return client;
   }

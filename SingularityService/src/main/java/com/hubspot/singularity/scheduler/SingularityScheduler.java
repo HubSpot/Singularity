@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -45,7 +46,6 @@ import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
-import com.hubspot.singularity.data.history.HistoryManager.TaskHistoryOrderBy;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityScheduler {
@@ -298,6 +298,8 @@ public class SingularityScheduler {
       return;
     }
     
+    final String activeDeployId = requestDeployState.get().getActiveDeploy().get().getDeployId();
+    
     PendingType pendingType = PendingType.TASK_DONE;
     
     if (MesosUtils.isTaskFailed(state)) {
@@ -308,34 +310,38 @@ public class SingularityScheduler {
       }
       
       // TODO how to handle this if there are running tasks that are working?
-      if (shouldPause(request)) {
+      if (shouldPause(request, activeDeployId)) {
         mailer.sendRequestPausedMail(taskId, request);
         requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), request.getId()));
         return;
       }
       
-      if (request.isScheduled() && shouldRetryImmediately(request)) {
+      if (request.isScheduled() && shouldRetryImmediately(request, activeDeployId)) {
         pendingType = PendingType.RETRY;
       }
     }
     
     if (!request.isOneOff()) {
-      Optional<String> maybeDeployId = deployManager.getInUseDeployId(taskId.getRequestId());
-      
-      if (maybeDeployId.isPresent()) {
-        scheduleTasks(stateCache, request, new SingularityPendingRequest(request.getId(), maybeDeployId.get(), pendingType));
-      } else {
-        LOG.warn("Not scheduling new tasks for task {} because of no active deploy", taskId);
-      }
+      scheduleTasks(stateCache, request, new SingularityPendingRequest(request.getId(), activeDeployId, pendingType));
     }
   }
   
-  private boolean shouldRetryImmediately(SingularityRequest request) {
+  private final int getNumRetriesInARow(SingularityRequest request, String activeDeployId) {
+    Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(request.getId(), activeDeployId);
+    
+    if (!deployStatistics.isPresent()) {
+      return 0;
+    }
+    
+    return deployStatistics.get().getNumSequentialRetries();
+  }
+  
+  private boolean shouldRetryImmediately(SingularityRequest request, String activeDeployId) {
     if (!request.getNumRetriesOnFailure().isPresent()) {
       return false;
     }
-   
-    final int numRetriesInARow = getNumRetriesInARow(request);
+    
+    final int numRetriesInARow = getNumRetriesInARow(request, activeDeployId);
     
     if (numRetriesInARow >= request.getNumRetriesOnFailure().get()) {
       LOG.debug("Request {} had {} retries in a row, not retrying again (num retries on failure: {})", request.getId(), numRetriesInARow, request.getNumRetriesOnFailure());
@@ -347,34 +353,7 @@ public class SingularityScheduler {
     return true;
   } 
   
-  private int getNumRetriesInARow(SingularityRequest request) {
-    int retries = 0;
-    
-    List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, request.getNumRetriesOnFailure().get());
-    
-    for (SingularityTaskIdHistory history : taskHistory) { 
-      if (history.getLastStatus().isPresent()) {
-        TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
-        
-        if (MesosUtils.isTaskFailed(taskState) && PendingType.valueOf(history.getPendingType()) == PendingType.RETRY) {
-          retries++;
-        } else {
-          break;
-        }
-      }
-    }
-    
-    return retries;
-  }
-  
-  private boolean shouldPause(SingularityRequest request) {
-    if (request.getPauseOnInitialFailure().or(Boolean.FALSE)) {
-      if (historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1).isEmpty()) {
-        LOG.info("Pausing request {} due to initial failure", request.getId());
-        return true;
-      }
-    }
-
+  private boolean shouldPause(SingularityRequest request, String activeDeployId) {
     if (!request.getMaxFailuresBeforePausing().isPresent()) {
       return false;
     }
@@ -382,38 +361,16 @@ public class SingularityScheduler {
     final int pauseAfterNumFailedTasks = request.getMaxFailuresBeforePausing().get() + 1;
     
     if (request.getMaxFailuresBeforePausing().get() > 0) {
-      SingularityRequestHistory lastUpdate = Iterables.getFirst(historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1), null);
-      long lastUpdateAt = 0;
+      Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(request.getId(), activeDeployId);
       
-      if (lastUpdate != null) {
-        lastUpdateAt = lastUpdate.getCreatedAt();
-      } else {
-        LOG.warn("Couldn't find a historical request for {}", request.getId());
-      }
-            
-      List<SingularityTaskIdHistory> taskHistory = historyManager.getTaskHistoryForRequest(request.getId(), Optional.of(TaskHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, pauseAfterNumFailedTasks);
-      
-      LOG.trace("Found {} historical tasks for request {}", taskHistory.size(), request.getId());
-      
-      if (taskHistory.size() < pauseAfterNumFailedTasks) {
+      if (!deployStatistics.isPresent()) {
         return false;
       }
       
-      for (SingularityTaskIdHistory history : taskHistory) {
-        if (lastUpdateAt > history.getCreatedAt()) {
-          LOG.debug("Not pausing request {} because task {} was launched at {}, before the last request update ({})", request.getId(), history.getTaskId(), history.getCreatedAt(), lastUpdateAt);
-          return false;
-        }
-        
-        if (history.getLastStatus().isPresent()) {
-          TaskState taskState = TaskState.valueOf(history.getLastStatus().get());
-          
-          if (!MesosUtils.isTaskFailed(taskState)) {
-            LOG.debug("Task {} was not a failure ({}), so request {} is not paused", history.getTaskId(), taskState, request.getId()); 
-                
-            return false;
-          }
-        }
+      LOG.trace("Found {} failures in a row for request {}", deployStatistics.get().getNumSequentialFailures(), request.getId());
+      
+      if (deployStatistics.get().getNumSequentialFailures() < pauseAfterNumFailedTasks) {
+        return false;
       }
     }
   
@@ -448,7 +405,7 @@ public class SingularityScheduler {
     return newTasks;
   }
   
-  private long getNextRunAt(SingularityRequest request, PendingType pendingType) {
+  private long getNextRunAt(SingularityRequest request, String deployId, PendingType pendingType) {
     final long now = System.currentTimeMillis();
     
     long nextRunAt = now;
@@ -464,6 +421,15 @@ public class SingularityScheduler {
         Date scheduleFrom = new Date(now);
         
         // find out what the last time the task ran at was.
+
+        // don't reschedule scheduled tasks on startup.
+        
+        // reschedule them from when then, ?
+        
+        // treat the different cases differnetly, if it's a bounce/decomission, etc. .. .. 
+        // if the schedule changes, we schedule from now
+        // if it's just the next run, we schedule from the time the job started?
+        
         Optional<SingularityTaskIdHistory> history = historyManager.getLastTaskForRequest(request.getId());
         if (history.isPresent()) {
           scheduleFrom = new Date(history.get().getCreatedAt());

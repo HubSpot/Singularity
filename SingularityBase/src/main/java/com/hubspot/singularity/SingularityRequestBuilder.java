@@ -11,7 +11,6 @@ public class SingularityRequestBuilder {
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
   private Optional<Integer> maxFailuresBeforePausing;
-  private Optional<Boolean> pauseOnInitialFailure;
 
   private Optional<String> schedule;
   private Optional<Boolean> daemon;
@@ -20,7 +19,7 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> rackSensitive;
   
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, pauseOnInitialFailure, schedule, daemon, instances, rackSensitive);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, schedule, daemon, instances, rackSensitive);
   }
 
   public String getId() {
@@ -56,15 +55,6 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setMaxFailuresBeforePausing(Optional<Integer> maxFailuresBeforePausing) {
     this.maxFailuresBeforePausing = maxFailuresBeforePausing;
-    return this;
-  }
-
-  public Optional<Boolean> getPauseOnInitialFailure() {
-    return pauseOnInitialFailure;
-  }
-
-  public SingularityRequestBuilder setPauseOnInitialFailure(Optional<Boolean> pauseOnInitialFailure) {
-    this.pauseOnInitialFailure = pauseOnInitialFailure;
     return this;
   }
 
@@ -106,7 +96,7 @@ public class SingularityRequestBuilder {
 
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", pauseOnInitialFailure=" + pauseOnInitialFailure
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing
         + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
   }
   

@@ -88,7 +88,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   }
   
   public void notifyStopping() {
-    LOG.info("Scheduler is moving to stopped, current state: " + state);
+    LOG.info("Scheduler is moving to stopped, current state: {}", state);
     
     cleanupPoller.stop();
     stalePoller.stop();
@@ -96,7 +96,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     
     state = SchedulerState.STOPPED;
   
-    LOG.info("Scheduler now in state: " + state);
+    LOG.info("Scheduler now in state: {}", state);
   }
   
   private void handleUncaughtSchedulerException(Throwable t) {
@@ -192,6 +192,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void offerRescinded(SchedulerDriver driver, OfferID offerId) {
     if (!isRunning()) {
+      LOG.info("Ignoring offer rescind message {} because scheduler isn't running ({})", offerId, state);
       return;
     }
     
@@ -212,7 +213,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
     try {
       if (!isRunning()) {
-        LOG.info(String.format("Scheduler is in state %s, queueing an update %s - %s queued updates so far", state.name(), status, queuedUpdates.size()));
+        LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.name(), status, queuedUpdates.size());
 
         queuedUpdates.add(status);
 
@@ -236,6 +237,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void frameworkMessage(SchedulerDriver driver, ExecutorID executorId, SlaveID slaveId, byte[] data) {
     if (!isRunning()) {
+      LOG.info("Ignoring framework message because scheduler isn't running ({})", state);
       return;
     }
     
@@ -253,6 +255,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void disconnected(SchedulerDriver driver) {
     if (!isRunning()) {
+      LOG.info("Ignoring disconnect because scheduler isn't running ({})", state);
       return;
     }
     
@@ -270,6 +273,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void slaveLost(SchedulerDriver driver, SlaveID slaveId) {
     if (!isRunning()) {
+      LOG.info("Ignoring slave lost {} because scheduler isn't running ({})", slaveId, state);
       return;
     }
     
@@ -287,6 +291,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void executorLost(SchedulerDriver driver, ExecutorID executorId, SlaveID slaveId, int status) {
     if (!isRunning()) {
+      LOG.info("Ignoring executor lost {} because scheduler isn't running ({})", executorId, state);
       return;
     }
     
@@ -304,6 +309,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   @Override
   public void error(SchedulerDriver driver, String message) {
     if (!isRunning()) {
+      LOG.info("Ignoring error {} because scheduler isn't running ({})", message, state);
       return;
     }
     
@@ -311,6 +317,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     
     try {
       scheduler.error(driver, message);
+      
+      LOG.error("Aborting due to error: {}", message);
+      
+      abort.abort();
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {

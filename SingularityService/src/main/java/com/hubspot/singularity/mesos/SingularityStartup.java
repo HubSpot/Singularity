@@ -78,7 +78,7 @@ public class SingularityStartup {
       throw Throwables.propagate(e);
     }
     
-    LOG.info("Finished startup after %s", Utils.duration(start));
+    LOG.info("Finished startup after {}", Utils.duration(start));
   }
   
   private void enqueueHealthchecks() {
@@ -113,7 +113,7 @@ public class SingularityStartup {
       }
     }
     
-    LOG.info("Finishing checking for healthchecks, enqueued %s", enqueuedHealthchecks);
+    LOG.info("Finishing checking for healthchecks, enqueued {}", enqueuedHealthchecks);
   }
   
   private void checkForMissingActiveTasks(MesosMasterStateObject state) {
@@ -135,7 +135,7 @@ public class SingularityStartup {
       taskManager.deleteActiveTask(strTaskId);
     }
     
-    LOG.info("Finished reconciling active tasks: %s active tasks, %s were deleted", activeTaskIds.size(), strTaskIds.size());
+    LOG.info("Finished reconciling active tasks: {} active tasks, {} were deleted", activeTaskIds.size(), strTaskIds.size());
   }
   
   private void rescheduleTheWorld() {
@@ -154,12 +154,12 @@ public class SingularityStartup {
             scheduled++;
           }
         } else {
-          LOG.debug("No deployid for request %s, not scheduling at startup", request);
+          LOG.debug("No deployid for request {}, not scheduling at startup", request);
         }
       }
     }
     
-    LOG.info("Put %s out of %s requests into pending queue in %s", scheduled, requests.size(), Utils.duration(start));
+    LOG.info("Put {} out of {} requests into pending queue in {}", scheduled, requests.size(), Utils.duration(start));
   }
   
 }

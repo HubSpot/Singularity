@@ -4,7 +4,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +12,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
@@ -40,7 +40,7 @@ public class SingularityStaleTaskPoller {
   }
   
   public void start(final SingularityMesosSchedulerDelegator mesosScheduler) {
-    LOG.info(String.format("Starting a stale task poller with a %s second delay", configuration.getWarnAfterTasksDoNotRunDefaultSeconds()));
+    LOG.info("Starting a stale task poller with a {} second delay", configuration.getWarnAfterTasksDoNotRunDefaultSeconds());
     
     executorService.scheduleWithFixedDelay(new Runnable() {
       
@@ -56,7 +56,7 @@ public class SingularityStaleTaskPoller {
         Optional<Long> lastTimestamp = metadataManager.getLastCheckTimestamp();
         long now = System.currentTimeMillis();
         
-        LOG.debug(String.format("Checking tasks for staleness, last check at %s, current time %s", lastTimestamp, now));
+        LOG.debug("Checking tasks for staleness, last check at {}, current time {}", lastTimestamp, now);
         
         try {
           numStaleTasks = staleTaskChecker.checkForStaleTasks(lastTimestamp, now);
@@ -68,7 +68,7 @@ public class SingularityStaleTaskPoller {
         } finally {
           mesosScheduler.release();
         
-          LOG.info(String.format("Found %s stale tasks in %s", numStaleTasks, DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start)));
+          LOG.info("Found {} stale tasks in {}", numStaleTasks, Utils.duration(start));
         }
       }
     }, 

@@ -52,7 +52,7 @@ public class SingularityStaleTaskChecker {
   
   // TODO refactor this to be in memory.
   private boolean isTaskRunning(SingularityTaskId taskId) {
-    SimplifiedTaskState taskState = SingularityTaskHistoryUpdate.getCurrentState(taskManager.getTaskHistoryUpdatesForTask(taskId));
+    SimplifiedTaskState taskState = SingularityTaskHistoryUpdate.getCurrentState(taskManager.getTaskHistoryUpdates(taskId));
     
     return taskState == SimplifiedTaskState.RUNNING;
   }

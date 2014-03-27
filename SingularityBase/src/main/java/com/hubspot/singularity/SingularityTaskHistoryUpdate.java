@@ -7,9 +7,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.MesosUtils;
 
-public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
+public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implements Comparable<SingularityTaskHistoryUpdate> {
 
   private final long timestamp;
   private final TaskState statusUpdate;
@@ -49,6 +50,14 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder {
     this.timestamp = timestamp;
     this.statusUpdate = TaskState.valueOf(statusUpdate);
     this.statusMessage = statusMessage;
+  }
+
+  @Override
+  public int compareTo(SingularityTaskHistoryUpdate o) {
+    return ComparisonChain.start()
+        .compare(timestamp, o.getTimestamp())
+        .compare(getTaskId().getId(), o.getTaskId().getId())
+        .result();
   }
 
   public long getTimestamp() {

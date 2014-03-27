@@ -17,6 +17,10 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   private final long timestamp;
   private final String requestId;
   
+  public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
+  }
+  
   @JsonCreator
   public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("requestId") String requestId) {
     this(user, RequestCleanupType.valueOf(cleanupType), timestamp, requestId);
@@ -50,10 +54,6 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
     return cleanupType.name();
   }
   
-  public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
-  }
-
   @Override
   public String toString() {
     return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", requestId=" + requestId + "]";
