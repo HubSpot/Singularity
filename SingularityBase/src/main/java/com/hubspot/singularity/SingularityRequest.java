@@ -117,6 +117,11 @@ public class SingularityRequest extends SingularityJsonObject {
   }
   
   @JsonIgnore
+  public boolean isDeployable() {
+    return !isScheduled() && !isOneOff();
+  }
+  
+  @JsonIgnore
   public boolean isRackSensitive() {
     return rackSensitive.or(Boolean.FALSE).booleanValue();
   }

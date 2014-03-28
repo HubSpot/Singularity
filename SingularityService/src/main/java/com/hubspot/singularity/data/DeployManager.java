@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployState;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityDeployMarkerTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityDeployStateTranscoder;
@@ -112,24 +113,30 @@ public class DeployManager extends CuratorAsyncManager {
     return deployKeyToDeploy;
   }
   
-  public ConditionalPersistResult persistDeploy(SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
-    SingularityCreateResult deploySaveResult = create(getDeployPath(deploy.getRequestId(), deploy.getId()), Optional.of(deploy.getAsBytes(objectMapper)));
+  public ConditionalPersistResult persistDeploy(SingularityRequest request, SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
+    final SingularityCreateResult deploySaveResult = create(getDeployPath(deploy.getRequestId(), deploy.getId()), Optional.of(deploy.getAsBytes(objectMapper)));
     
     if (deploySaveResult == SingularityCreateResult.EXISTED) {
       LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));
     }
     
-    Optional<SingularityDeployStateHelper> currentState = getDeployStateHelper(deploy.getRequestId());
+    final Optional<SingularityDeployStateHelper> currentState = getDeployStateHelper(deploy.getRequestId());
+    
+    final Optional<Stat> deployStateStat = currentState.isPresent() ? Optional.of(currentState.get().getStat()) : Optional.<Stat> absent();
     
     Optional<SingularityDeployMarker> activeDeploy = Optional.absent();
-    Optional<Stat> deployStateStat = Optional.absent();
+    Optional<SingularityDeployMarker> pendingDeploy = Optional.absent();
     
-    if (currentState.isPresent()) {
-      activeDeploy = currentState.get().getDeployState().getActiveDeploy();
-      deployStateStat = Optional.of(currentState.get().getStat());
+    if (request.isDeployable()) {
+      if (currentState.isPresent()) {
+        activeDeploy = currentState.get().getDeployState().getActiveDeploy();
+      }
+      pendingDeploy = Optional.of(deployMarker);
+    } else {
+      activeDeploy = Optional.of(deployMarker);
     }
     
-    SingularityDeployState newState = new SingularityDeployState(deploy.getRequestId(), activeDeploy, Optional.of(deployMarker));
+    final SingularityDeployState newState = new SingularityDeployState(deploy.getRequestId(), activeDeploy, pendingDeploy);
     
     return saveNewDeployState(newState, deployStateStat, !deployStateStat.isPresent());
   }

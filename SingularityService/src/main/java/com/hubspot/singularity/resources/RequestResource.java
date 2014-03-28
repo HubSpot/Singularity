@@ -142,12 +142,16 @@ public class RequestResource {
       throw WebExceptions.conflict("Deploy already existed for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getDeployMarker(requestId).orNull());
     }
     
-    ConditionalPersistResult persistResult = deployManager.persistDeploy(deployMarker, pendingDeploy);
+    ConditionalPersistResult persistResult = deployManager.persistDeploy(request, deployMarker, pendingDeploy);
     
     if (persistResult == ConditionalPersistResult.STATE_CHANGED) {
       throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getDeployState(requestId).orNull(), deployManager.getDeployMarker(requestId).orNull());
     }
-  
+    
+    if (!request.isDeployable()) {
+      deployManager.deleteActiveDeploy(deployMarker);
+    }
+    
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
     
     return fillEntireRequest(request);

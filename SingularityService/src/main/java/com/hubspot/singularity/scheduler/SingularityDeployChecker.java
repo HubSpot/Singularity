@@ -93,7 +93,7 @@ public class SingularityDeployChecker {
           continue;
         } else {
           LOG.warn("Failing deploy {} because it failed to save deploy state", activeDeployMarker);
-          deployState = DeployState.OVERDUE;
+          deployState = DeployState.FAILED_INTERNAL_STATE;
         }
       } else if (deployState == DeployState.WAITING) {
         continue;
@@ -140,10 +140,10 @@ public class SingularityDeployChecker {
     } else {
       ConditionalPersistResult deployStatePersistResult = deployManager.saveNewDeployState(new SingularityDeployState(deployState.get().getRequestId(), newActiveDeploy.or(deployState.get().getActiveDeploy()), Optional.<SingularityDeployMarker> absent()), Optional.<Stat> absent(), false);
       
-      if (deployStatePersistResult != ConditionalPersistResult.SAVED) {
-        LOG.error("Expected deploy save state {} for deploy marker: {} but instead got {}", ConditionalPersistResult.SAVED, activeDeployMarker, deployStatePersistResult);
-      } else {
+      if (deployStatePersistResult == ConditionalPersistResult.SAVED) {
         persistSuccess = true;
+      } else {
+        LOG.error("Expected deploy save state {} for deploy marker: {} but instead got {}", ConditionalPersistResult.SAVED, activeDeployMarker, deployStatePersistResult);
       }
     }
     
@@ -184,6 +184,12 @@ public class SingularityDeployChecker {
       LOG.info("Canceling a deploy {} due to cancel request {}", activeDeployMarker, cancelRequest.get());
       
       return DeployState.CANCELED;
+    }
+    
+    if (!request.isDeployable()) {
+      LOG.info("Succeeding a deploy {} because the request {} was not deployable", activeDeployMarker, request);
+      
+      return DeployState.SUCCEEDED;
     }
     
     if (matchingActiveTasks.size() < request.getInstancesSafe()) {

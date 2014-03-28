@@ -41,8 +41,6 @@ public class RequestManager extends CuratorAsyncManager {
   private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
   private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
   
-  private final static String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
-  
   @Inject
   public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityRequestTranscoder requestTranscoder, SingularityPendingRequestTranscoder pendingRequestTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
