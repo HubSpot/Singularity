@@ -55,9 +55,9 @@ public class SingularityStartup {
   }
   
   public void startup(MasterInfo masterInfo) {
-    final String uri = mesosClient.getMasterUri(masterInfo);
-    
     final long start = System.currentTimeMillis();
+    
+    final String uri = mesosClient.getMasterUri(masterInfo);
     
     LOG.info("Starting up... fetching state data from: " + uri);
     
@@ -146,7 +146,7 @@ public class SingularityStartup {
     int scheduled = 0;
     
     for (SingularityRequest request : requests) {
-      if (!request.isOneOff()) {
+      if (!request.isOneOff() && !request.isScheduled()) {
         Optional<String> deployId = deployManager.getInUseDeployId(request.getId());
         
         if (deployId.isPresent()) {

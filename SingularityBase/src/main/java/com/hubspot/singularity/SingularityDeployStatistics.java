@@ -20,7 +20,6 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   private final int numSequentialSuccess;
   private final int numSequentialFailures;
   
-  private final Optional<Long> lastStartAt;
   private final Optional<Long> lastFinishAt;
   private final Optional<String> lastTaskStatus;
   
@@ -30,20 +29,30 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures, 
-      @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastStartAt") Optional<Long> lastStartAt, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskStatus") Optional<String> lastTaskStatus,
+      @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskStatus") Optional<String> lastTaskStatus,
       @JsonProperty("numSequentialSuccess") int numSequentialSuccess, @JsonProperty("numSequentialFailures") int numSequentialFailures) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
     this.numFailures = numFailures;
-    this.numSequentialRetries = numSequentialRetries;
-    this.lastStartAt = lastStartAt;
     this.lastFinishAt = lastFinishAt;
     this.lastTaskStatus = lastTaskStatus;
+    this.numSequentialRetries = numSequentialRetries;
     this.numSequentialFailures = numSequentialFailures;
     this.numSequentialSuccess = numSequentialFailures;
   }
 
+  public SingularityDeployStatisticsBuilder toBuilder() {
+    return new SingularityDeployStatisticsBuilder(requestId, deployId)
+      .setLastFinishAt(lastFinishAt)
+      .setLastTaskStatus(lastTaskStatus)
+      .setNumSequentialFailures(numSequentialFailures)
+      .setNumSequentialRetries(numSequentialRetries)
+      .setNumSequentialSuccess(numSequentialSuccess)
+      .setNumFailures(numFailures)
+      .setNumSuccess(numSuccess);
+  }
+  
   public String getRequestId() {
     return requestId;
   }
@@ -58,10 +67,6 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
 
   public int getNumFailures() {
     return numFailures;
-  }
-
-  public Optional<Long> getLastStartAt() {
-    return lastStartAt;
   }
 
   public Optional<Long> getLastFinishAt() {
@@ -95,7 +100,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries + ", numSequentialSuccess="
-        + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastStartAt=" + lastStartAt + ", lastFinishAt=" + lastFinishAt + ", lastTaskStatus=" + lastTaskStatus + "]";
+        + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskStatus=" + lastTaskStatus + "]";
   }
   
 }

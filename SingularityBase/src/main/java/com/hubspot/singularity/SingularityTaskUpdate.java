@@ -1,6 +1,6 @@
 package com.hubspot.singularity;
 
-import org.apache.mesos.Protos.TaskState;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,30 +8,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SingularityTaskUpdate extends SingularityJsonObject {
 
-  private final SingularityTask task;
-  private final TaskState state;
-
+  private final List<SingularityTask> healthyTasks;
+  private final List<SingularityTask> unhealthyTasks;
+  
   public static SingularityTaskUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
     return objectMapper.readValue(bytes, SingularityTaskUpdate.class);
   }
-  
+
   @JsonCreator
-  public SingularityTaskUpdate(@JsonProperty("task") SingularityTask task, @JsonProperty("state") TaskState state) {
-    this.task = task;
-    this.state = state;
+  public SingularityTaskUpdate(@JsonProperty("healthyTasks") List<SingularityTask> healthyTasks, @JsonProperty("unhealthyTasks") List<SingularityTask> unhealthyTasks) {
+    this.healthyTasks = healthyTasks;
+    this.unhealthyTasks = unhealthyTasks;
   }
 
-  public SingularityTask getTask() {
-    return task;
+  public List<SingularityTask> getHealthyTasks() {
+    return healthyTasks;
   }
 
-  public TaskState getState() {
-    return state;
+  public List<SingularityTask> getUnhealthyTasks() {
+    return unhealthyTasks;
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskUpdate [task=" + task + ", state=" + state + "]";
+    return "SingularityTaskUpdate [healthyTasks=" + healthyTasks + ", unhealthyTasks=" + unhealthyTasks + "]";
   }
   
 }

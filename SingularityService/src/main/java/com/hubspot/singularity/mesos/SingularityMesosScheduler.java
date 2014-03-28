@@ -23,11 +23,9 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SingularityTaskUpdate;
 import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.hooks.WebhookManager;
 import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -41,7 +39,6 @@ public class SingularityMesosScheduler implements Scheduler {
   private final TaskManager taskManager;
   private final SingularityScheduler scheduler;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
-  private final WebhookManager webhookManager;
   private final SingularityHealthchecker healthchecker;
   private final SingularityRackManager rackManager;
   private final SingularityLogSupport logSupport;
@@ -49,13 +46,12 @@ public class SingularityMesosScheduler implements Scheduler {
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, WebhookManager webhookManager, SingularityRackManager rackManager,
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularityRackManager rackManager,
       SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.rackManager = rackManager;
     this.scheduler = scheduler;
-    this.webhookManager = webhookManager;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
@@ -178,13 +174,8 @@ public class SingularityMesosScheduler implements Scheduler {
     
     Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
     
-    if (maybeActiveTask.isPresent()) {
-      webhookManager.notify(new SingularityTaskUpdate(maybeActiveTask.get(), status.getState()));
-      if (status.getState() == TaskState.TASK_RUNNING) {
-        healthchecker.enqueueHealthcheck(maybeActiveTask.get());
-      }
-    } else {
-      LOG.info("Got an update for non-active task {}, skipping webhooks", taskId);
+    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
+      healthchecker.enqueueHealthcheck(maybeActiveTask.get());
     }
 
     final long now = System.currentTimeMillis();
