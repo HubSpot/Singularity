@@ -68,13 +68,13 @@ class SearchView extends View
         showSlowSearchAPITimeout = undefined
 
         @$search.unbind().on 'change keypress paste focus textInput input click keydown', _.debounce =>
-            text = _.trim @$search.val()
+            searchText = _.trim @$search.val()
 
-            if text.length < minimumSearchQuery
+            if searchText.length < minimumSearchQuery
                 @$el.find('.results').html "<br><br><center>Please type at least #{ minimumSearchQuery } characters to execute a search.</center>"
                 return
 
-            if @forceSearchOnce or text isnt lastText and text.length
+            if @forceSearchOnce or searchText isnt lastText and searchText.length
                 if @lastXhrTasks?
                    @lastXhrTasks.abort()
                    @lastXhrRequests.abort()
@@ -82,12 +82,12 @@ class SearchView extends View
                    clearTimeout showSlowSearchAPITimeout
 
                 @forceSearchOnce = false
-                lastText = text
+                lastText = searchText
 
-                @requestsResults = new RequestsSearch [], { query: text, params: @currentSearchOptions['requests'] }
+                @requestsResults = new RequestsSearch [], { query: searchText, params: @currentSearchOptions['requests'] }
                 @lastXhrRequests = @requestsResults.fetch()
 
-                @tasksResults = new TasksSearch [], { query: text, params: @currentSearchOptions['tasks'] }
+                @tasksResults = new TasksSearch [], { query: searchText, params: @currentSearchOptions['tasks'] }
                 @lastXhrTasks = @tasksResults.fetch()
 
                 showSpinnerTimeout = setTimeout =>

@@ -220,14 +220,14 @@ class RequestsView extends View
         lastText = ''
 
         onChange = =>
-            text = _.trim $search.val()
+            searchText = _.trim $search.val()
 
-            if text is ''
+            if searchText is ''
                 $rows.removeClass('filtered')
                 app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
 
-            if text isnt lastText
-                @lastSearchFilter = text
+            if searchText isnt lastText
+                @lastSearchFilter = searchText
                 app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
 
                 $rows.each ->
@@ -235,15 +235,15 @@ class RequestsView extends View
 
                     rowText = $row.data('request-id')
                     user = $row.data('request-deploy-user')
-                    rowText = "#{ user } #{ rowText } #{ user }" if user?
+                    rowText = "#{ rowText } #{ user }" if user?
 
-                    if utils.fuzzySearchMatch(text.toLowerCase(), rowText.toLowerCase())
+                    if utils.matchWordsInWords(searchText, rowText)
                         $row.removeClass('filtered')
                     else
                         $row.addClass('filtered')
 
             @$('table').each ->
-                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', text
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', searchText
 
         onChangeDebounced = _.debounce onChange, 200
 
