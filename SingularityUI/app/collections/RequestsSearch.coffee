@@ -14,6 +14,7 @@ class RequestsSearch extends Requests
             request.deployUser = (request.request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
             request.instances = request.request?.instances
             request.daemon = request.request?.daemon
+            request.daemon = if _.isNull(request.daemon) then true else request.daemon
             request.timestamp = request.request?.timestamp
             request.timestampHuman = utils.humanTimeAgo request.timestamp
             request.createdAtHuman = utils.humanTimeAgo request.createdAt
