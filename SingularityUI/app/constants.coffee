@@ -1,7 +1,7 @@
 constants =
 
-    appRoot: '/singularity/'
-    apiBase: 'singularity/v1'
+    appRoot: '/singularitytest/'
+    apiBase: 'singularitytest/v1'
 
     mesosLogsPort: '5051'
     mesosLogsPortHttps: '5151'
