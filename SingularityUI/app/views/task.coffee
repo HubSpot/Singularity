@@ -12,6 +12,7 @@ class TaskView extends View
     killTaskTemplate: require './templates/vex/killTask'
 
     initialize: ->
+        @sandboxTries = 0
         @taskFiles = {}
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
 
@@ -29,6 +30,7 @@ class TaskView extends View
             @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
             @taskFiles.testSandbox()
                 .done(=>
+                    @sandboxTries = 0
                     @taskFiles.fetch().done =>
                         @taskFilesFetchDone = true
                         @taskFilesSandboxUnavailable = false
@@ -39,6 +41,7 @@ class TaskView extends View
                     @taskFilesSandboxUnavailable = true
                     deferred.resolve()
                 )
+            @sandboxTries += 1
 
         deferred
 
@@ -53,7 +56,7 @@ class TaskView extends View
 
         if @taskHistory.attributes.taskUpdates?.length is 0
             @taskHistory.attributes.hasNoTaskUpdates = true
-            setTimeout (=> @refresh()), 3 * 1000
+            setTimeout (=> @refresh()), (1 + Math.pow(1.5, @sandboxTries)) * 1000
 
         context =
             request: @taskHistory.attributes.task.taskRequest.request
