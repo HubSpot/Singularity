@@ -11,7 +11,7 @@ public class SingularityDeployKey {
   private final String requestId;
   private final String deployId;
 
-  public static SingularityDeployKey fromDepoy(SingularityDeploy deploy) {
+  public static SingularityDeployKey fromDeploy(SingularityDeploy deploy) {
     return new SingularityDeployKey(deploy.getRequestId(), deploy.getId());
   }
 
@@ -27,7 +27,7 @@ public class SingularityDeployKey {
     return Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
       public SingularityDeployKey apply(SingularityDeploy input) {
-        return SingularityDeployKey.fromDepoy(input);
+        return SingularityDeployKey.fromDeploy(input);
       }
     });
   }

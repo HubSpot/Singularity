@@ -51,8 +51,6 @@ public class SingularityDeployChecker {
   }
   
   public int checkDeploys() {
-    // a deploy is successful if the tasks get to TASK_RUNNING and they pass health checks. if there are no health checks, they simply need to hit TASK_RUNNING
-    
     final List<SingularityDeployMarker> activeDeploys = deployManager.getActiveDeploys();
     final List<SingularityDeployMarker> cancelDeploys = deployManager.getCancelDeploys();
     
@@ -64,43 +62,7 @@ public class SingularityDeployChecker {
     for (SingularityDeployMarker activeDeployMarker : activeDeploys) {
       LOG.debug("Checking a deploy {}", activeDeployMarker);
       
-      Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(activeDeployMarker.getRequestId());
-      
-      if (!maybeRequest.isPresent()) {
-        LOG.warn("Deploy {} was missing a request, removing deploy", activeDeployMarker);
-        removeActiveDeployMarker(activeDeployMarker);
-        continue;
-      }
-
-      final Optional<SingularityDeployMarker> cancelRequest = findCancel(cancelDeploys, activeDeployMarker);
-      
-      final SingularityRequest request = maybeRequest.get();
-      
-      final SingularityDeployKey deployKey = markerToKey.get(activeDeployMarker);
-      final SingularityDeploy deploy = deployKeyToDeploy.get(deployKey);
-
-      final Iterable<SingularityTaskId> requestMatchingActiveTasks = Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(activeDeployMarker.getRequestId()));
-      
-      final List<SingularityTaskId> deployMatchingTasks = Lists.newArrayList(Iterables.filter(requestMatchingActiveTasks, SingularityTaskId.matchingDeploy(activeDeployMarker.getDeployId())));
-
-      DeployState deployState = checkDeploy(request, cancelRequest, activeDeployMarker, deployKey, deploy, deployMatchingTasks);
-
-      LOG.info("Deploy {} had state {} after {}", activeDeployMarker, deployState, DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - activeDeployMarker.getTimestamp()));
-      
-      if (deployState == DeployState.SUCCEEDED) {
-        if (saveNewDeployState(activeDeployMarker, Optional.of(activeDeployMarker))) {
-          finishDeploy(activeDeployMarker, Iterables.filter(requestMatchingActiveTasks, Predicates.not(SingularityTaskId.matchingDeploy(activeDeployMarker.getDeployId()))), deployState);
-          continue;
-        } else {
-          LOG.warn("Failing deploy {} because it failed to save deploy state", activeDeployMarker);
-          deployState = DeployState.FAILED_INTERNAL_STATE;
-        }
-      } else if (deployState == DeployState.WAITING) {
-        continue;
-      }
-      
-      // success case is handled, handle failure cases:
-      finishDeploy(activeDeployMarker, deployMatchingTasks, deployState);
+      checkDeploy(activeDeployMarker, cancelDeploys, markerToKey, deployKeyToDeploy, activeTaskIds);
     }
     
     for (SingularityDeployMarker cancelDeploy : cancelDeploys) {
@@ -110,6 +72,46 @@ public class SingularityDeployChecker {
     }
     
     return activeDeploys.size();
+  }
+  
+  private void checkDeploy(final SingularityDeployMarker activeDeployMarker, final List<SingularityDeployMarker> cancelDeploys, final Map<SingularityDeployMarker, SingularityDeployKey> markerToKey, final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy, final List<SingularityTaskId> activeTaskIds) {
+    Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(activeDeployMarker.getRequestId());
+    
+    if (!maybeRequest.isPresent()) {
+      LOG.warn("Deploy {} was missing a request, removing deploy", activeDeployMarker);
+      removeActiveDeployMarker(activeDeployMarker);
+      return;
+    }
+
+    final Optional<SingularityDeployMarker> cancelRequest = findCancel(cancelDeploys, activeDeployMarker);
+    
+    final SingularityRequest request = maybeRequest.get();
+    
+    final SingularityDeployKey deployKey = markerToKey.get(activeDeployMarker);
+    final SingularityDeploy deploy = deployKeyToDeploy.get(deployKey);
+
+    final Iterable<SingularityTaskId> requestMatchingActiveTasks = Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(activeDeployMarker.getRequestId()));
+    
+    final List<SingularityTaskId> deployMatchingTasks = Lists.newArrayList(Iterables.filter(requestMatchingActiveTasks, SingularityTaskId.matchingDeploy(activeDeployMarker.getDeployId())));
+
+    DeployState deployState = getDeployState(request, cancelRequest, activeDeployMarker, deployKey, deploy, deployMatchingTasks);
+
+    LOG.info("Deploy {} had state {} after {}", activeDeployMarker, deployState, DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - activeDeployMarker.getTimestamp()));
+    
+    if (deployState == DeployState.SUCCEEDED) {
+      if (saveNewDeployState(activeDeployMarker, Optional.of(activeDeployMarker))) {
+        finishDeploy(activeDeployMarker, Iterables.filter(requestMatchingActiveTasks, Predicates.not(SingularityTaskId.matchingDeploy(activeDeployMarker.getDeployId()))), deployState);
+        return;
+      } else {
+        LOG.warn("Failing deploy {} because it failed to save deploy state", activeDeployMarker);
+        deployState = DeployState.FAILED_INTERNAL_STATE;
+      }
+    } else if (deployState == DeployState.WAITING) {
+      return;
+    }
+    
+    // success case is handled, handle failure cases:
+    finishDeploy(activeDeployMarker, deployMatchingTasks, deployState);
   }
   
   private Optional<SingularityDeployMarker> findCancel(List<SingularityDeployMarker> cancelDeploys, SingularityDeployMarker activeDeploy) {
@@ -179,7 +181,7 @@ public class SingularityDeployChecker {
     }
   }
   
-  private DeployState checkDeploy(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityDeployMarker activeDeployMarker, final SingularityDeployKey deployKey, final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
+  private DeployState getDeployState(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityDeployMarker activeDeployMarker, final SingularityDeployKey deployKey, final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
     if (cancelRequest.isPresent()) {
       LOG.info("Canceling a deploy {} due to cancel request {}", activeDeployMarker, cancelRequest.get());
       

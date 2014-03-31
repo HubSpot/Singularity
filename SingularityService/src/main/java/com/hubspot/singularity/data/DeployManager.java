@@ -106,7 +106,7 @@ public class DeployManager extends CuratorAsyncManager {
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
       public SingularityDeployKey apply(SingularityDeploy input) {
-        return SingularityDeployKey.fromDepoy(input);
+        return SingularityDeployKey.fromDeploy(input);
       }  
     });
     
