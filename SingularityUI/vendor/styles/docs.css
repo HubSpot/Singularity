@@ -115,6 +115,7 @@ hr.soften {
 }
 
 .subhead h1[data-string-length-tens] { font-size: 13px; }
+.subhead h1[data-string-length-tens="0"],
 .subhead h1[data-string-length-tens="10"],
 .subhead h1[data-string-length-tens="20"],
 .subhead h1[data-string-length-tens="30"] { font-size: 32px; }
