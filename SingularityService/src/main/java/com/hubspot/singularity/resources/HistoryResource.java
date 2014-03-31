@@ -151,7 +151,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final int numFromZk = idHistories.size() - limitStart;
     
     final Integer numFromHistory = limitCount - numFromZk;
-    final Integer historyStart = limitStart - idHistories.size();
+    final Integer historyStart = Math.max(0, limitStart - idHistories.size());
     
     List<SingularityTaskIdHistory> returned = Lists.newArrayListWithCapacity(limitCount);
     
