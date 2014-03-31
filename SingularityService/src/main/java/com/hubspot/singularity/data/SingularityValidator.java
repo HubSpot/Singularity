@@ -10,20 +10,24 @@ import org.quartz.CronExpression;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityValidator {
 
   private static final Joiner JOINER = Joiner.on(" ");
   
-  // TODO max ID sizes?
-//  private final int maxDeployIdSize;
-//  
-//  public SingularityDeployValidator(SingularityConfiguration configuration) {
-//    this.request = request;
-//  }
+  private final int maxDeployIdSize;
+  private final int maxRequestIdSize;
+  
+  @Inject
+  public SingularityValidator(SingularityConfiguration configuration) {
+    this.maxDeployIdSize = configuration.getMaxDeployIdSize();
+    this.maxRequestIdSize = configuration.getMaxRequestIdSize();
+  }
   
   private void check(boolean expression, String message) {
     if (!expression) {
@@ -38,6 +42,7 @@ public class SingularityValidator {
   
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest) {
     check(request.getId() != null, "Id must not be null");
+    check(request.getId().length() < maxRequestIdSize, String.format("Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId()));
     check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
     
     if (existingRequest.isPresent()) {
@@ -61,13 +66,12 @@ public class SingularityValidator {
       check(request.getInstances().or(1) == 1, "Non-daemons can not be ran on more than one instance");
     }
     
-//  checkRequestState(request.getId().length() < MAX_REQUEST_ID_SIZE, String.format("Request id must be less than %s characters, it is %s (%s)", MAX_REQUEST_ID_SIZE, request.getId().length(), request.getId()));
-
     return request.toBuilder().setSchedule(Optional.fromNullable(newSchedule)).build();
   }
   
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
     check(deploy.getId() != null && !deploy.getId().contains("-"), "Id must not be null and can not contain - characters");
+    check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
     
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getExecutor().isPresent() && !deploy.getCommand().isPresent()), 

@@ -82,6 +82,28 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long deployHealthyBySeconds = 30;
   
+  @NotNull
+  private int maxRequestIdSize = 100;
+  
+  @NotNull
+  private int maxDeployIdSize = 50;
+  
+  public int getMaxRequestIdSize() {
+    return maxRequestIdSize;
+  }
+
+  public void setMaxRequestIdSize(int maxRequestIdSize) {
+    this.maxRequestIdSize = maxRequestIdSize;
+  }
+
+  public int getMaxDeployIdSize() {
+    return maxDeployIdSize;
+  }
+
+  public void setMaxDeployIdSize(int maxDeployIdSize) {
+    this.maxDeployIdSize = maxDeployIdSize;
+  }
+
   public long getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
