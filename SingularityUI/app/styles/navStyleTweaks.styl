@@ -70,5 +70,11 @@ html
 .navbar-fixed-top .brand
     transition none
 
-.navbar .nav > li > a
-    padding 10px 10px 11px
+.navbar .nav > li
+
+    > a
+        padding 10px 10px 11px
+
+    @media (min-width: 979px)
+        &:first-child:not(.active) > a
+            padding-left 0
