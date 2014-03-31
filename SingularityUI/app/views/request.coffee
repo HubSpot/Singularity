@@ -13,14 +13,20 @@ class RequestView extends View
     removeRequestTemplate: require './templates/vex/removeRequest'
 
     initialize: ->
+        @requestModel = new Request id: @options.requestId
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
 
     fetch: ->
         promises = []
 
+        @requestModel.fetched = false
         @requestHistory.fetched = false
         @requestTasksActive.fetched = false
+
+        promises.push @requestModel.fetch().done =>
+            @requestModel.fetched = true
+            @render()
 
         promises.push @requestHistory.fetch().done =>
             @requestHistory.fetched = true
@@ -55,6 +61,8 @@ class RequestView extends View
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
 
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
+
+        _.extend context.request, @requestModel.attributes
 
         if @requestHistory.attributes.requestUpdates?.length
             requestLikeObject = @requestHistory.attributes.requestUpdates[0].request
