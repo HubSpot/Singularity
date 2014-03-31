@@ -7,16 +7,17 @@ class RequestsActive extends Requests
 
     url: ->
         properties = [
-            # root
             'id'
-            'name'
+            'owners'
+            'numRetriesOnFailure'
+            'maxFailuresBeforePausing'
             'schedule'
             'daemon'
-            'timestamp'
             'instances'
-
-            # executorData # TODO - consider using metadata for this instead?
-            'executorData.env'
+            'rackSensitive'
+            'deployState'
+            'activeDeploy'
+            'pendingDeploy'
         ]
 
         propertiesString = "?property=#{ properties.join('&property=') }"
@@ -29,7 +30,9 @@ class RequestsActive extends Requests
             request.id = request.id
             request.name = request.name ? request.id
             request.daemon = if _.isNull(request.daemon) then true else request.daemon
-            request.deployUser = (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
+            request.deployUser = (request.deployState?.activeDeploy?.user ? '').split('@')[0]
+            request.deployId = request.deployState?.activeDeploy?.deployId
+            request.timestamp = request.deployState?.activeDeploy?.timestamp
             request.timestampHuman = utils.humanTimeAgo request.timestamp
             request.scheduled = utils.isScheduledRequest request
             request.onDemand = utils.isOnDemandRequest request
