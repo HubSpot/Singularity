@@ -56,7 +56,6 @@ class Router extends Backbone.Router
 
     routes:
         '(/)': 'dashboard'
-        'search(/)': 'search'
         'status(/)': 'status'
         'requests/:requestsFilter/:requestsSubFilter/:searchFilter(/)': 'requestsFiltered'
         'requests/:requestsFilter/:requestsSubFilter(/)': 'requestsFiltered'
