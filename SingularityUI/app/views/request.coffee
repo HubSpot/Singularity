@@ -135,6 +135,9 @@ class RequestView extends View
                         header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
                         cell: '<td class="visible-desktop">{{ lastStatusHuman }}</td>'
                     ,
+                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Deploy ID</th>'
+                        cell: '<td class="visible-desktop">{{ deployId }}</td>'
+                    ,
                         header: '<th class="sorting visible-desktop" data-sort="createdAt">Created</th>'
                         cell: '<td class="visible-desktop">{{ createdAtHuman }}</td>'
                     ,

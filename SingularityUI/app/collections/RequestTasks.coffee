@@ -14,6 +14,7 @@ class RequestTasks extends Collection
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.name = task.id
+            task.deployId = task.taskId.deployId
             task.updatedAtHuman = utils.humanTimeAgo task.updatedAt
             task.createdAtHuman = utils.humanTimeAgo task.createdAt
             task.lastStatusHuman = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].label else ''
