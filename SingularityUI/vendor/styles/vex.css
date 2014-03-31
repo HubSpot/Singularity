@@ -803,9 +803,6 @@ body.vex-open {
   float: right;
   margin: 0 0 0 0.5em;
   font-family: inherit;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.8em;
   line-height: 1em;
   padding: 0.75em 2em;
 }
@@ -836,7 +833,7 @@ body.vex-open {
 }
 /* line 116, ../sass/vex-theme-default.sass */
 .vex.vex-theme-default .vex-dialog-button.vex-dialog-button-primary {
-  background: #3288e6;
+  background: #08c;
   color: white;
 }
 /* line 120, ../sass/vex-theme-default.sass */

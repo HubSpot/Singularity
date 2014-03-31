@@ -13,7 +13,7 @@
         </thead>
         <tbody>
             {{#eachWithFn tasks}}
-                <tr data-task-id="{{ id }}">
+                <tr data-task-id="{{ id }}" data-task-host="{{ host }}">
                     <td><a class="ellipsize-300" title="{{ id }}" href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
                     <td class="hidden-phone" data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                     <td class="visible-desktop">{{ host }}</td>

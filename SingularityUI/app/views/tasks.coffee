@@ -141,26 +141,30 @@ class TasksView extends View
         lastText = ''
 
         onChange = =>
-            text = _.trim $search.val()
+            searchText = _.trim $search.val()
 
-            if text is ''
+            if searchText is ''
                 $rows.removeClass('filtered')
                 app.router.navigate "/tasks/#{ @lastTasksFilter }", { replace: true }
 
-            if text isnt lastText
-                @lastSearchFilter = text
+            if searchText isnt lastText
+                @lastSearchFilter = searchText
                 app.router.navigate "/tasks/#{ @lastTasksFilter }/#{ @lastSearchFilter }", { replace: true }
 
                 $rows.each ->
                     $row = $(@)
 
-                    if not _.string.contains $row.data('task-id').toLowerCase(), text.toLowerCase()
-                        $row.addClass('filtered')
-                    else
+                    rowText = $row.data('task-id')
+                    host = $row.data('task-host')
+                    rowText = "#{ rowText } #{ host }" if host?
+
+                    if utils.matchWordsInWords(searchText, rowText)
                         $row.removeClass('filtered')
+                    else
+                        $row.addClass('filtered')
 
             @$('table').each ->
-                utils.handlePotentiallyEmptyFilteredTable $(@), 'task', text
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'task', searchText
 
         onChangeDebounced = _.debounce onChange, 200
 

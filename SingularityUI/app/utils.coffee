@@ -118,4 +118,23 @@ class Utils
     @isOnDemandRequest: (request) ->
         not request.daemon and not utils.isScheduledRequest(request)
 
+    @spacifyObjectID: (id) ->
+        id.replace(/([a-z]|(?:(?:^|[a-z])[AI])|^)([A-Z])/g, (match, first, second) -> "#{ first } #{ second }").replace(/[_:-]/g, ' ')
+
+    @matchWordsInWords: (query, string) ->
+        queryWords = utils.spacifyObjectID(query).toLowerCase().split(' ')
+        stringWords = utils.spacifyObjectID(string).toLowerCase().split(' ')
+
+        for word in queryWords
+            found = false
+            for stringWord in stringWords
+                if _.string.contains stringWord, word
+                    found = true
+                    break
+            if found is true
+                found is false
+            else
+                return false
+        return true
+
 module.exports = Utils

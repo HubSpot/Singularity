@@ -220,26 +220,30 @@ class RequestsView extends View
         lastText = ''
 
         onChange = =>
-            text = _.trim $search.val()
+            searchText = _.trim $search.val()
 
-            if text is ''
+            if searchText is ''
                 $rows.removeClass('filtered')
                 app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
 
-            if text isnt lastText
-                @lastSearchFilter = text
+            if searchText isnt lastText
+                @lastSearchFilter = searchText
                 app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
 
                 $rows.each ->
                     $row = $(@)
 
-                    if not (_.string.contains $row.data('request-id').toLowerCase(), text.toLowerCase()) and not (_.string.contains $row.data('request-deploy-user')?.toLowerCase(), text.toLowerCase())
-                        $row.addClass('filtered')
-                    else
+                    rowText = $row.data('request-id')
+                    user = $row.data('request-deploy-user')
+                    rowText = "#{ rowText } #{ user }" if user?
+
+                    if utils.matchWordsInWords(searchText, rowText)
                         $row.removeClass('filtered')
+                    else
+                        $row.addClass('filtered')
 
             @$('table').each ->
-                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', text
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', searchText
 
         onChangeDebounced = _.debounce onChange, 200
 
