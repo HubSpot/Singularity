@@ -119,6 +119,10 @@
             <dl>
                 <dt>Request ID</dt>
                 <dd><pre>{{ request.id }}</pre></dd>
+                {{#if request.activeDeploy.id }}
+                    <dt>Active deploy ID</dt>
+                    <dd><pre>{{ request.activeDeploy.id }}</pre></dd>
+                {{/if}}
             </dl>
         </div>
     </div>
