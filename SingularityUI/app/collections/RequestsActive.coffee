@@ -28,6 +28,7 @@ class RequestsActive extends Requests
             request.JSONString = utils.stringJSON request
             request.id = request.id
             request.name = request.name ? request.id
+            request.daemon = if _.isNull(request.daemon) then true else request.daemon
             request.deployUser = (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
             request.timestampHuman = utils.humanTimeAgo request.timestamp
             request.scheduled = utils.isScheduledRequest request
