@@ -90,7 +90,7 @@ public class SingularityDeployChecker {
       LOG.warn("Deploy {} was missing a request, removing deploy", pendingDeploy);
       
       if (shouldCancelLoadBalancer(pendingDeploy)) {
-        cancelLoadBalancer(pendingDeploy.getDeployMarker());
+        cancelLoadBalancer(pendingDeploy);
       }
       
       removePendingDeploy(pendingDeploy);
@@ -251,11 +251,15 @@ public class SingularityDeployChecker {
     }
   }
   
-  private DeployState cancelLoadBalancer(SingularityDeployMarker deploy) {
-    final Optional<LoadBalancerState> lbState = lbClient.cancel(deploy.getLoadBalancerRequestId());
+  private DeployState cancelLoadBalancer(SingularityPendingDeploy pendingDeploy) {
+    final Optional<LoadBalancerState> lbState = lbClient.cancel(pendingDeploy.getDeployMarker().getLoadBalancerRequestId());
+    
+    if (lbState.isPresent()) {
+      updatePendingDeploy(new SingularityPendingDeploy(pendingDeploy.getDeployMarker(), lbState));
+    }
     
     final Optional<DeployState> deployState = interpretLoadBalancerState(lbState);
-    
+        
     return deployState.or(DeployState.WAITING);
   }
   
@@ -286,7 +290,7 @@ public class SingularityDeployChecker {
     if (isCancelRequestPresent || isDeployOverdue) {
       if (request.isLoadBalanced()) {
         if (shouldCancelLoadBalancer(pendingDeploy)) {
-          return cancelLoadBalancer(pendingDeploy.getDeployMarker());
+          return cancelLoadBalancer(pendingDeploy);
         }
         
         return DeployState.WAITING;
@@ -297,6 +301,11 @@ public class SingularityDeployChecker {
       }
       
       return DeployState.CANCELED;
+    }
+    
+    if (pendingDeploy.getLoadBalancerState().isPresent()) {
+      // we need to check this twice because we need to check overdue + cancels above, at this stage we're waiting.
+      return DeployState.WAITING;
     }
 
     if (matchingActiveTasks.size() < request.getInstancesSafe()) {
