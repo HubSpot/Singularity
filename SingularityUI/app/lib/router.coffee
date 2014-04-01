@@ -104,6 +104,10 @@ class Router extends Backbone.Router
         else
             @lastRequestsFilter = requestsFilter
             app.views.current = app.views.requests
+
+            if requestsFilter is 'active' and app.views.requests.lastRequestsActiveSubFilter
+                requestsSubFilter = app.views.requests.lastRequestsActiveSubFilter
+
             app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter).refresh()
 
     request: (requestId) ->

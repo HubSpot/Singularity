@@ -6,7 +6,7 @@ class RequestsView extends View
 
     templateRequestsActive: require './templates/requestsActive'
     templateRequestsActiveBody: require './templates/requestsActiveBody'
-    templateRequestsActiveNav: require './templates/requestsActiveNav'
+    templateRequestsActiveFilter: require './templates/requestsActiveFilter'
 
     templateRequestsPaused: require './templates/requestsPaused'
     templateRequestsPausedBody: require './templates/requestsPausedBody'
@@ -22,6 +22,9 @@ class RequestsView extends View
     initialize: ->
         @lastRequestsFilter = @options.requestsFilter
         @lastRequestsSubFilter = @options.requestsSubFilter
+
+        if @lastRequestsFilter is 'active'
+            @lastRequestsActiveSubFilter = @lastRequestsSubFilter
 
     fetch: ->
         @collection = switch @lastRequestsFilter
@@ -48,14 +51,18 @@ class RequestsView extends View
         forceFullRender = requestsFilter isnt @lastRequestsFilter
 
         @lastRequestsFilter = requestsFilter
-        @lastRequestsSubFilter = requestsSubFilter
         @lastSearchFilter = searchFilter
+
+        if @lastRequestsFilter is 'active'
+            @lastRequestsSubFilter = @lastRequestsActiveSubFilter
+        else
+            @lastRequestsSubFilter = requestsSubFilter
 
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
             template = @templateRequestsActive
             templateBody = @templateRequestsActiveBody
-            templateNav = @templateRequestsActiveNav
+            templateFilter = @templateRequestsActiveFilter
 
         if @lastRequestsFilter is 'paused'
             @collection = app.collections.requestsPaused
@@ -77,13 +84,40 @@ class RequestsView extends View
             requestsSubFilter: requestsSubFilter
             searchFilter: searchFilter
 
-        if @lastRequestsFilter in ['active', 'paused']
+        if @lastRequestsFilter is 'paused'
             context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
             context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
-            context.requestsOnDemand = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.onDemand)
             context.requests.reverse()
             context.requestsScheduled.reverse()
-            context.requestsOnDemand.reverse()
+
+        if @lastRequestsFilter is 'active'
+            if requestsSubFilter is 'running-on-demand-scheduled'
+                context.requests = _.pluck(@collection.models, 'attributes')
+
+            else
+                filterFunction = => false
+
+                if requestsSubFilter is 'running'
+                    filterFunction = (r) => not r.scheduled and not r.onDemand
+
+                if requestsSubFilter is 'running-on-demand'
+                    filterFunction = (r) => not r.scheduled
+
+                if requestsSubFilter is 'running-scheduled'
+                    filterFunction = (r) => not r.onDemand
+
+                if requestsSubFilter is 'on-demand'
+                    filterFunction = (r) => r.onDemand
+
+                if requestsSubFilter is 'on-demand-scheduled'
+                    filterFunction = (r) => r.onDemand or r.scheduled
+
+                if requestsSubFilter is 'scheduled'
+                    filterFunction = (r) => r.scheduled
+
+                context.requests = _.filter(_.pluck(@collection.models, 'attributes'), filterFunction)
+
+            context.requests.reverse()
 
         else
             context.requests = _.pluck(@collection.models, 'attributes')
@@ -104,8 +138,8 @@ class RequestsView extends View
         $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
 
         if @lastRequestsFilter is 'active'
-            partials.partials.requestsNav = templateNav
-            $requestsNavContainer =  @$el.find('[data-requests-nav-container]')
+            partials.partials.requestsFilter = templateFilter
+            $requestsFilterContainer =  @$el.find('[data-requests-filter-container]')
 
         if not $requestsBodyContainer.length or forceFullRender
             @$el.html template(context, partials)
@@ -114,8 +148,9 @@ class RequestsView extends View
                 @$el.find('input[type="search"]').val(previousSearchTerm)
         else
             if @lastRequestsFilter is 'active'
-                $requestsNavContainer.html templateNav context
+                $requestsFilterContainer.html templateFilter context
 
+            context.searchFilter = previousSearchTerm
             $requestsBodyContainer.html templateBody context
 
         @setupEvents()
@@ -208,6 +243,13 @@ class RequestsView extends View
                 dialogType = vex.dialog.confirm
 
             dialogType dialogOptions
+
+        @$el.find('[data-requests-active-filter]').unbind('click').on 'click', (e) =>
+            e.preventDefault()
+            requestsActiveFilter = $(e.target).data('requests-active-filter')
+            @lastRequestsActiveSubFilter = requestsActiveFilter
+            @lastSearchFilter = _.trim @$el.find('input[type="search"]').val()
+            app.router.navigate "/requests/active/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
