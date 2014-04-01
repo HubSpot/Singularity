@@ -149,7 +149,6 @@ class RequestsView extends View
 
         else
             if @lastRequestsFilter is 'active'
-                log 'redner... 2... ', context.searchFilter, @lastSearchFilter
                 $requestsFilterContainer.html templateFilter context
 
             $requestsBodyContainer.html templateBody context
