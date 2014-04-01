@@ -54,7 +54,8 @@ class RequestsView extends View
         @lastSearchFilter = searchFilter
 
         if @lastRequestsFilter is 'active'
-            @lastRequestsSubFilter = @lastRequestsActiveSubFilter
+            if @lastRequestsActiveSubFilter
+                @lastRequestsSubFilter = @lastRequestsActiveSubFilter
         else
             @lastRequestsSubFilter = requestsSubFilter
 
