@@ -160,11 +160,6 @@ public class SingularityDeploy extends SingularityJsonObject {
   }
   
   @JsonIgnore
-  public String getLoadBalancerRequestId() {
-    return String.format("%s-%s", getRequestId(), getId());
-  }
-  
-  @JsonIgnore
   public boolean isLoadBalanced() {
     return loadBalanced.or(Boolean.FALSE).booleanValue();
   }

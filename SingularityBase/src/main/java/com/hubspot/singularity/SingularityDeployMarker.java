@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -80,6 +81,11 @@ public class SingularityDeployMarker extends SingularityJsonObject {
 
   public Optional<String> getUser() {
     return user;
+  }
+  
+  @JsonIgnore
+  public String getLoadBalancerRequestId() {
+    return String.format("%s-%s", getRequestId(), getDeployId());
   }
   
   @Override
