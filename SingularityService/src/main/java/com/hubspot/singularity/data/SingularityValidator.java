@@ -38,6 +38,7 @@ public class SingularityValidator {
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     check(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
     check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
+    check(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
   
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest) {
@@ -74,7 +75,7 @@ public class SingularityValidator {
     check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
     
-    if (deploy.isLoadBalanced()) {
+    if (request.isLoadBalanced()) {
       check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
     }
     

@@ -25,6 +25,8 @@ public class SingularityRequest extends SingularityJsonObject {
   private final Optional<Integer> instances;
   private final Optional<Boolean> rackSensitive;
   
+  private final Optional<Boolean> loadBalanced;
+  
   public static SingularityRequestBuilder newBuilder() {
     return new SingularityRequestBuilder();
   }
@@ -36,7 +38,7 @@ public class SingularityRequest extends SingularityJsonObject {
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
       @JsonProperty("maxFailuresBeforePausing") Optional<Integer> maxFailuresBeforePausing, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, 
-      @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive) {
+      @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -45,6 +47,7 @@ public class SingularityRequest extends SingularityJsonObject {
     this.daemon = daemon;
     this.rackSensitive = rackSensitive;
     this.instances = instances;
+    this.loadBalanced = loadBalanced;
   }
   
   public SingularityRequestBuilder toBuilder() {
@@ -125,11 +128,11 @@ public class SingularityRequest extends SingularityJsonObject {
   public boolean isRackSensitive() {
     return rackSensitive.or(Boolean.FALSE).booleanValue();
   }
-
-  @Override
-  public String toString() {
-    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing
-        + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
+  
+  @JsonIgnore
+  public boolean isLoadBalanced() {
+    return loadBalanced.or(Boolean.FALSE).booleanValue();
   }
+
   
 }

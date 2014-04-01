@@ -18,8 +18,19 @@ public class SingularityRequestBuilder {
   private Optional<Integer> instances;
   private Optional<Boolean> rackSensitive;
   
+  private Optional<Boolean> loadBalanced;
+  
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, schedule, daemon, instances, rackSensitive);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, schedule, daemon, instances, rackSensitive, loadBalanced);
+  }
+  
+  public Optional<Boolean> getLoadBalanced() {
+    return loadBalanced;
+  }
+
+  public SingularityRequestBuilder setLoadBalanced(Optional<Boolean> loadBalanced) {
+    this.loadBalanced = loadBalanced;
+    return this;
   }
 
   public String getId() {
@@ -96,8 +107,8 @@ public class SingularityRequestBuilder {
 
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing
-        + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", schedule=" + schedule + ", daemon=" + daemon
+        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", loadBalanced=" + loadBalanced + "]";
   }
   
 }

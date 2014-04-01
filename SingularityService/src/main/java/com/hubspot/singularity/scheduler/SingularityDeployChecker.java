@@ -283,7 +283,7 @@ public class SingularityDeployChecker {
     final boolean isDeployOverdue = isDeployOverdue(pendingDeploy, deploy);
     
     if (isCancelRequestPresent || isDeployOverdue) {
-      if (deploy.isLoadBalanced()) {
+      if (request.isLoadBalanced()) {
         if (shouldCancelLoadBalancer(pendingDeploy)) {
           return cancelLoadBalancer(pendingDeploy.getDeployMarker());
         }
@@ -308,7 +308,7 @@ public class SingularityDeployChecker {
     case WAITING:
       return DeployState.WAITING;
     case HEALTHY:
-      if (deploy.isLoadBalanced()) {
+      if (request.isLoadBalanced()) {
         return enqueSwitchLoadBalancer(pendingDeploy, matchingActiveTasks, allOtherTasks);
       } else {
         return DeployState.SUCCEEDED;
