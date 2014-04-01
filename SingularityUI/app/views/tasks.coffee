@@ -40,6 +40,7 @@ class TasksView extends View
         forceFullRender = tasksFilter isnt @lastTasksFilter
         @lastTasksFilter = tasksFilter
         @lastSearchFilter = searchFilter
+        @$el.find('input[type="search"]').val searchFilter
 
         if @lastTasksFilter is 'active'
             @collection = app.collections.tasksActive
@@ -74,15 +75,12 @@ class TasksView extends View
 
         $search = @$el.find('input[type="search"]')
         searchWasFocused = $search.is(':focus')
-        previousSearchTerm = $search.val()
 
         $tasksTableContainer =  @$el.find('[data-tasks-table-container]')
 
         if not $tasksTableContainer.length or forceFullRender
             @$el.html template(context, partials)
 
-            if forceFullRender
-                @$el.find('input[type="search"]').val(previousSearchTerm)
         else
             $tasksTableContainer.html templateTable context
 
