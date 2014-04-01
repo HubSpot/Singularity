@@ -10,10 +10,6 @@ public class SingularityPendingDeploy extends SingularityJsonObject {
   private final SingularityDeployMarker deployMarker;
   private final Optional<LoadBalancerState> loadBalancerState;
   
-  public enum LoadBalancerState {
-    FAILED, WAITING, SUCCESS, CANCELING, CANCELED; 
-  }
-
   public static SingularityPendingDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
     return objectMapper.readValue(bytes, SingularityPendingDeploy.class);
   }
