@@ -16,7 +16,7 @@ public class SingularityLoadBalancerResponse extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityLoadBalancerResponse(@JsonProperty("loadBalancerRequestId") String loadBalancerRequestId, @JsonProperty("loadBalancerState") String loadBalancerState) {
-    this(loadBalancerRequestId, LoadBalancerState.valueOf(loadBalancerRequestId));
+    this(loadBalancerRequestId, LoadBalancerState.valueOf(loadBalancerState));
   }
   
   public SingularityLoadBalancerResponse(String loadBalancerRequestId, LoadBalancerState loadBalancerState) {
