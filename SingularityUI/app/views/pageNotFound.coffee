@@ -6,5 +6,6 @@ class PageNotFoundView extends View
 
     render: =>
         @$el.html @template fragment: Backbone.history.fragment
+        @
 
 module.exports = PageNotFoundView

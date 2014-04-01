@@ -191,7 +191,7 @@ class Router extends Backbone.Router
         if not app.views.pageNotFound?
             app.views.pageNotFound = new PageNotFoundView
             app.views.current = app.views.pageNotFound
-            app.show app.views.PageNotFoundView.render()
+            app.show app.views.pageNotFound.render()
         else
             app.views.current = app.views.pageNotFound
             app.show app.views.pageNotFound
