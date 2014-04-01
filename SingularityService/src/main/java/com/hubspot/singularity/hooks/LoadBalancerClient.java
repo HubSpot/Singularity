@@ -120,10 +120,13 @@ public class LoadBalancerClient {
     return response.getStatusCode() > 199 && response.getStatusCode() < 300;
   }
   
-  public void cancel() {
+  public Optional<LoadBalancerState> cancel(String loadBalancerRequestId) {
+    final String uri = getLoadBalancerUri(loadBalancerRequestId);
     
+    final Request request = httpClient.prepareDelete(uri)
+        .build();
+    
+    return request(uri, request, Optional.<LoadBalancerState> absent());
   }
-  
-  
   
 }
