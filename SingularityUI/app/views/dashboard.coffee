@@ -4,7 +4,12 @@ class DashboardView extends View
 
     template: require './templates/dashboard'
 
+    initialize: =>
+        app.user.on 'change', @render, @
+
     render: (fromRoute) =>
+        deployUser = app.user.get('deployUser')
+
         if not app.collections.requestsActive.synced
             app.collections.requestsActive.fetch().done => @render()
 
@@ -12,6 +17,7 @@ class DashboardView extends View
             collectionSycned: app.collections.requestsActive.synced
             requests: []
             requestsNotFound: []
+            deployUser: deployUser
 
         # Intersect active requests before rendering
         for request in _.pluck(app.collections.requestsStarred.models, 'attributes')
@@ -21,6 +27,15 @@ class DashboardView extends View
                     context.requests.push activeRequestModel.attributes
             else
                 context.requestsNotFound.push request
+
+        userRequestTotals = {}
+        userRequests = app.collections.requestsActive.filter((r) -> r.get('deployUser') is deployUser)
+        userRequestTotals.all = userRequests.length
+        userRequestTotals.running = userRequests.filter((r) -> not r.get('scheduled') and not r.get('onDemand')).length
+        userRequestTotals.onDemand = userRequests.filter((r) -> r.get('onDemand')).length
+        userRequestTotals.scheduled = userRequests.filter((r) -> r.get('scheduled')).length
+
+        _.extend context, { userRequestTotals }
 
         @$el.html @template context
 
@@ -42,5 +57,23 @@ class DashboardView extends View
 
             if $table.find('tbody tr').length is 0
                 @render()
+
+        @$el.find('[data-requests-active-filter]').unbind('click').on 'click', (e) =>
+            e.preventDefault()
+
+            $link = $(e.target)
+            $link = $(e.target).parents('a') if $(e.target).parents('a').length
+
+            lastRequestsActiveSubFilter = $link.data('requests-active-filter')
+            lastSearchFilter = app.user.get('deployUser')
+
+            if app.views.requests?
+                app.views.requests.lastRequestsActiveSubFilter = lastRequestsActiveSubFilter
+                app.views.requests.lastSearchFilter = lastSearchFilter
+
+            app.router.navigate "/requests/active/#{ lastRequestsActiveSubFilter }/#{ lastSearchFilter }", trigger: true
+
+        @$el.find('[data-action="change-user"]').unbind('click').on 'click', (e) =>
+            app.deployUserPrompt()
 
 module.exports = DashboardView

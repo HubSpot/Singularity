@@ -48,10 +48,13 @@ class RequestsView extends View
         @
 
     render: (requestsFilter, requestsSubFilter, searchFilter, refresh) =>
+        return @ unless @ is app.views.current
+
         forceFullRender = requestsFilter isnt @lastRequestsFilter
 
         @lastRequestsFilter = requestsFilter
         @lastSearchFilter = searchFilter
+        @$el.find('input[type="search"]').val searchFilter
 
         if @lastRequestsFilter is 'active'
             if @lastRequestsActiveSubFilter
@@ -134,7 +137,6 @@ class RequestsView extends View
 
         $search = @$el.find('input[type="search"]')
         searchWasFocused = $search.is(':focus')
-        previousSearchTerm = $search.val()
 
         $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
 
@@ -145,14 +147,14 @@ class RequestsView extends View
         if not $requestsBodyContainer.length or forceFullRender
             @$el.html template(context, partials)
 
-            if forceFullRender
-                @$el.find('input[type="search"]').val(previousSearchTerm)
         else
             if @lastRequestsFilter is 'active'
+                log 'redner... 2... ', context.searchFilter, @lastSearchFilter
                 $requestsFilterContainer.html templateFilter context
 
-            context.searchFilter = previousSearchTerm
             $requestsBodyContainer.html templateBody context
+
+            @$el.find('input[type="search"]').val context.searchFilter
 
         @setupEvents()
         @setUpSearchEvents(refresh, searchWasFocused)
@@ -260,33 +262,35 @@ class RequestsView extends View
 
         $rows = @$('tbody > tr')
 
-        lastText = ''
+        previousLastSearchFilter = ''
 
         onChange = =>
-            searchText = _.trim $search.val()
+            return unless @ is app.views.current
 
-            if searchText is ''
+            @lastSearchFilter = _.trim $search.val()
+
+            if @lastSearchFilter is ''
                 $rows.removeClass('filtered')
                 app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
 
-            if searchText isnt lastText
-                @lastSearchFilter = searchText
+            if previousLastSearchFilter isnt @lastSearchFilter
                 app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
+                previousLastSearchFilter = @lastSearchFilter
 
-                $rows.each ->
-                    $row = $(@)
+                $rows.each (i, row) =>
+                    $row = $(row)
 
                     rowText = $row.data('request-id')
                     user = $row.data('request-deploy-user')
                     rowText = "#{ rowText } #{ user }" if user?
 
-                    if utils.matchWordsInWords(searchText, rowText)
+                    if utils.matchWordsInWords(@lastSearchFilter, rowText)
                         $row.removeClass('filtered')
                     else
                         $row.addClass('filtered')
 
             @$('table').each ->
-                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', searchText
+                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', @lastSearchFilter
 
         onChangeDebounced = _.debounce onChange, 200
 

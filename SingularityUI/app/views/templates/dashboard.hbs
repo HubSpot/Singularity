@@ -1,6 +1,84 @@
 <header class="jumbotron subhead" id="overview">
-    <h1>Singularity</h1>
+    {{#if deployUser}}
+        <h1>{{ deployUser }} <small><a data-action="change-user">change</a></small></h1>
+    {{else}}
+        <h1>Singularity</h1>
+    {{/if}}
 </header>
+
+{{#if deployUser}}
+    <section>
+        <div class="page-header">
+            <h1>Requests</h1>
+        </div>
+        <div class="row-fluid">
+            <div class="span3">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/running-on-demand-scheduled/{{ deployUser }}" data-requests-active-filter="running-on-demand-scheduled">
+                    <div class="well">
+                        <div class="big-number">
+                            <div class="number" data-state-attribute="requests">
+                                {{#if collectionSycned}}
+                                    {{ userRequestTotals.all }}
+                                {{else}}
+                                    &nbsp;
+                                {{/if}}
+                            </div>
+                            <div class="number-label">total</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="span3">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/running/{{ deployUser }}" data-requests-active-filter="running">
+                    <div class="well">
+                        <div class="big-number">
+                            <div class="number" data-state-attribute="requests">
+                                {{#if collectionSycned}}
+                                    {{ userRequestTotals.running }}
+                                {{else}}
+                                    &nbsp;
+                                {{/if}}
+                            </div>
+                            <div class="number-label">running</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="span3">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/on-demand/{{ deployUser }}" data-requests-active-filter="on-demand">
+                    <div class="well">
+                        <div class="big-number">
+                            <div class="number" data-state-attribute="requests">
+                                {{#if collectionSycned}}
+                                    {{ userRequestTotals.onDemand }}
+                                {{else}}
+                                    &nbsp;
+                                {{/if}}
+                            </div>
+                            <div class="number-label">on demand</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="span3">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/scheduled/{{ deployUser }}" data-requests-active-filter="scheduled">
+                    <div class="well">
+                        <div class="big-number">
+                            <div class="number" data-state-attribute="requests">
+                                {{#if collectionSycned}}
+                                    {{ userRequestTotals.scheduled }}
+                                {{else}}
+                                    &nbsp;
+                                {{/if}}
+                            </div>
+                            <div class="number-label">scheduled</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+{{/if}}
 
 <section>
     <div class="page-header">

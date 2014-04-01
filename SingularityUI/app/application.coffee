@@ -1,5 +1,6 @@
 Router = require 'lib/router'
 
+User = require 'models/User'
 State = require 'models/State'
 
 RequestsActive = require 'collections/RequestsActive'
@@ -16,11 +17,13 @@ TasksCleaning = require 'collections/TasksCleaning'
 class Application
 
     initialize: ->
-        app.isMobile = touchDevice = 'ontouchstart' of document.documentElement
-        app.setupGlobalErrorHandling()
+        @isMobile = touchDevice = 'ontouchstart' of document.documentElement
+        @setupGlobalErrorHandling()
 
-        app.$page = $('#page')
-        app.page = app.$page[0]
+        @setupUser()
+
+        @$page = $('#page')
+        @page = @$page[0]
 
         @views = {}
         @collections = {}
@@ -65,10 +68,10 @@ class Application
                 vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.htmlEncode utils.stringJSON jqxhr }</pre>"
 
     show: (view) ->
-        if app.page.children.length
-            app.page.replaceChild view.el, app.page.children[0]
+        if @page.children.length
+            @page.replaceChild view.el, @page.children[0]
         else
-            app.page.appendChild view.el
+            @page.appendChild view.el
 
     setupAppCollections: ->
         @collections.requestsStarred = new RequestsStarred
@@ -108,5 +111,30 @@ class Application
 
         _.each resources, (r) =>
             @collections[r.collection_key] = new r.collection
+
+    setupUser: ->
+        @user = new User
+        @user.fetch() # Syncronous because it uses localStorage
+        @user.set(@user.get('0')) # Hack because the Backbone.LocalStorage adapter I use is jank
+
+        if not @user.get('deployUser')
+            Backbone.history.once 'route', =>
+                setTimeout (=> @deployUserPrompt(welcome = true)), 1000
+
+    deployUserPrompt: (welcome) ->
+        vex.dialog.prompt
+            message: """
+                <h2>Set a deploy user</h2>
+                #{ if welcome then '<p>Now you can set your deploy user (as a cookie) for a more tailored experience!</p>' else '' }
+                <p>What deploy user would you like to view Singularity as?</p>
+            """
+            value: @user.get('deployUser')
+            placeholder: 'user'
+            afterOpen: ($vexContent) ->
+                $vexContent.find('input[type="text"]').focus()
+            callback: (user) =>
+                if _.isString(user) and user isnt ''
+                    @user.set('deployUser', @user.deployUser = user)
+                    @user.save()
 
 module.exports = new Application
