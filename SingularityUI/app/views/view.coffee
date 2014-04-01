@@ -1,6 +1,5 @@
 require 'lib/view_helper'
 
-# Base class for all views.
 class View extends Backbone.View
 
     events:
