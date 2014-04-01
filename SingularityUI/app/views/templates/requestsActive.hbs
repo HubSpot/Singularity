@@ -5,7 +5,7 @@
 <section>
     <div class="row-fluid">
         <div class="span12">
-            <ul class="nav nav-pills nav-pills-with-nav-pills-below">
+            <ul class="nav nav-pills">
                 <li class="active">
                     <a href="{{#appRoot}}{{/appRoot}}requests" data-route="requests">Active</a>
                 </li>
@@ -25,15 +25,10 @@
 
 <section>
     <div class="row-fluid">
-        <div data-requests-nav-container class="span12">
-            {{> requestsNav}}
-        </div>
-    </div>
-</section>
-
-<section>
-    <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." value="{{ searchFilter }}" required />
+        <div data-requests-filter-container class="requests-filter-container">
+            {{> requestsFilter}}
+        </div>
     </div>
 </section>
 

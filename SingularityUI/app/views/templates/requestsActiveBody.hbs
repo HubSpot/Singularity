@@ -1,115 +1,61 @@
 <section>
     <div class="row-fluid">
         <div class="span12">
-            {{#ifEqual requestsSubFilter "running"}}
-                {{#if requests.length}}
-                    <table class="table" data-sortable>
-                        <thead>
-                            <tr>
-                                <th data-sortable="false"></th>
-                                <th>Name</th>
-                                <th class="hidden-phone">Requested</th>
-                                <th class="visible-desktop">Deploy user</th>
-                                <th class="visible-desktop">Instances</th>
-                                <th class="hidden-phone" data-sortable="false"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#eachWithFn requests}}
-                                <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
-                                    <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
-                                    <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                    <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                    <td class="visible-desktop">{{ deployUser }}</td>
-                                    <td class="visible-desktop">{{ instances }}</td>
-                                    <td class="actions-column hidden-phone">
-                                        <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                        <a data-request-id="{{ id }}" data-action="remove">Remove</a>
-                                    </td>
-                                </tr>
-                            {{/eachWithFn}}
-                        </tbody>
-                    </table>
-                {{else}}
-                    {{#if collectionSynced}}
-                        <div class="empty-table-message"><p>No active running requests</p></div>
-                    {{else}}
-                        <div class="page-loader centered cushy"></div>
-                    {{/if}}
-                {{/if}}
-            {{/ifEqual}}
-            {{#ifEqual requestsSubFilter "on-demand"}}
-                {{#if requestsOnDemand.length}}
-                    <table class="table" data-sortable>
-                        <thead>
-                            <tr>
-                                <th data-sortable="false"></th>
-                                <th>Name</th>
-                                <th class="visible-desktop">Requested</th>
-                                <th class="hidden-phone" data-sortable="false"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#eachWithFn requestsOnDemand}}
-                                <tr data-request-id="{{ id }}">
-                                    <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
-                                    <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                    <td class="visible-desktop" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                    <td class="actions-column hidden-phone">
-                                        <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
+            {{#if requests.length}}
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th data-sortable="false"></th>
+                            <th>Name</th>
+                            <th class="hidden-phone">Requested</th>
+                            <th class="visible-large-desktop">Deploy user</th>
+                            <th class="visible-large-desktop">Instances</th>
+
+                            {{#ifEqual requestsSubFilter "running"}}{{else}}
+                            {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
+                            {{#ifEqual requestsSubFilter "running-on-demand"}}{{else}}
+                                <th class="visible-large-desktop">Schedule</th>
+                            {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+
+                            <th class="hidden-phone" data-sortable="false"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requests}}
+                            <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}" {{#ifFilteredRequest this ../searchFilter}}class="filtered"{{/ifFilteredRequest}}>
+                                <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                                <td class="visible-large-desktop">{{ deployUser }}</td>
+                                <td class="visible-large-desktop">{{ instances }}</td>
+
+                                {{#ifEqual requestsSubFilter "running"}}{{else}}
+                                {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
+                                {{#ifEqual requestsSubFilter "running-on-demand"}}{{else}}
+                                    <td class="visible-large-desktop">{{ schedule }}</td>
+                                {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+
+                                <td class="actions-column hidden-phone">
+                                    {{#if onDemand}}
                                         <a data-request-id="{{ id }}" data-request-type="on-demand" data-action="run-now">Run now</a>
-                                        <a data-request-id="{{ id }}" data-action="remove">Remove</a>
-                                    </td>
-                                </tr>
-                            {{/eachWithFn}}
-                        </tbody>
-                    </table>
-                {{else}}
-                    {{#if collectionSynced}}
-                        <div class="empty-table-message"><p>No on-demand requests</p></div>
-                    {{else}}
-                        <div class="page-loader centered cushy"></div>
-                    {{/if}}
-                {{/if}}
-            {{/ifEqual}}
-            {{#ifEqual requestsSubFilter "scheduled"}}
-                {{#if requestsScheduled.length}}
-                    <table class="table" data-sortable>
-                        <thead>
-                            <tr>
-                                <th data-sortable="false"></th>
-                                <th>Name</th>
-                                <th class="visible-desktop">Requested</th>
-                                <th class="visible-large-desktop">Deploy user</th>
-                                <th class="visible-desktop">Schedule</th>
-                                <th class="hidden-phone" data-sortable="false"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#eachWithFn requestsScheduled}}
-                                <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
-                                    <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
-                                    <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
-                                    <td class="visible-desktop" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
-                                    <td class="visible-large-desktop">{{ deployUser }}</td>
-                                    <td class="visible-desktop">{{ schedule }}</td>
-                                    <td class="actions-column hidden-phone">
-                                        <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
+                                    {{/if}}
+                                    {{#if scheduled}}
                                         <a data-request-id="{{ id }}" data-request-type="scheduled" data-action="run-now">Run now</a>
-                                        <a data-request-id="{{ id }}" data-action="remove">Remove</a>
-                                    </td>
-                                </tr>
-                            {{/eachWithFn}}
-                        </tbody>
-                    </table>
+                                    {{/if}}
+                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
+                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
+                                </td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                {{#if collectionSynced}}
+                    <div class="empty-table-message"><p>No requests</p></div>
                 {{else}}
-                    {{#if collectionSynced}}
-                        <div class="empty-table-message"><p>No active scheduled requests</p></div>
-                    {{else}}
-                        <div class="page-loader centered cushy"></div>
-                    {{/if}}
+                    <div class="page-loader centered cushy"></div>
                 {{/if}}
-            {{/ifEqual}}
+            {{/if}}
         </div>
     </div>
 </section>
