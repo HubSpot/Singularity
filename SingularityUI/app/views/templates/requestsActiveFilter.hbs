@@ -14,6 +14,7 @@
             {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="on-demand-scheduled"             {{else}}
                 data-requests-active-filter="running"
             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+            data-requests-active-filter-shift="running"
         >Running</a>
     </li>
     <li
@@ -31,6 +32,7 @@
             {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="running-scheduled"               {{else}}
                 data-requests-active-filter="on-demand"
             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+            data-requests-active-filter-shift="on-demand"
         >On-demand</a>
     </li>
     <li
@@ -48,6 +50,7 @@
             {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="running-on-demand"               {{else}}
                 data-requests-active-filter="scheduled"
             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+            data-requests-active-filter-shift="scheduled"
         >Scheduled</a>
     </li>
 </ul>
