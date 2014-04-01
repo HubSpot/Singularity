@@ -208,7 +208,7 @@ public class SingularityDeployChecker {
   
   private DeployState enqueSwitchLoadBalancer(SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
     if (!lbClient.hasValidUri()) {
-      LOG.warn("Deploy % required a load balancer URI but it wasn't set", pendingDeploy);
+      LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
       return DeployState.FAILED;
     }
     
