@@ -1,53 +1,56 @@
 <ul class="nav nav-pills nav-pills-multi-select">
     <li
-        {{#ifEqual requestsSubFilter "running"}}                             class="active" {{/ifEqual}}
-        {{#ifEqual requestsSubFilter "running-on-demand"}}               class="active" {{/ifEqual}}
-        {{#ifEqual requestsSubFilter "running-scheduled"}}               class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "running"}}                     class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "running-on-demand"}}           class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "running-scheduled"}}           class="active" {{/ifEqual}}
         {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} class="active" {{/ifEqual}}
     >
         <a href="{{#appRoot}}{{/appRoot}}requests"
-            {{#ifEqual requestsSubFilter "on-demand"}}                           data-requests-active-filter="running-on-demand"               {{else}}
-            {{#ifEqual requestsSubFilter "scheduled"}}                           data-requests-active-filter="running-scheduled"               {{else}}
-            {{#ifEqual requestsSubFilter "on-demand-scheduled"}}             data-requests-active-filter="running-on-demand-scheduled" {{else}}
-            {{#ifEqual requestsSubFilter "running-on-demand"}}               data-requests-active-filter="on-demand"                           {{else}}
-            {{#ifEqual requestsSubFilter "running-scheduled"}}               data-requests-active-filter="scheduled"                           {{else}}
-            {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="on-demand-scheduled"             {{else}}
+            {{#ifEqual requestsSubFilter "on-demand"}}                   data-requests-active-filter="running-on-demand"           {{else}}
+            {{#ifEqual requestsSubFilter "scheduled"}}                   data-requests-active-filter="running-scheduled"           {{else}}
+            {{#ifEqual requestsSubFilter "on-demand-scheduled"}}         data-requests-active-filter="running-on-demand-scheduled" {{else}}
+            {{#ifEqual requestsSubFilter "running-on-demand"}}           data-requests-active-filter="on-demand"                   {{else}}
+            {{#ifEqual requestsSubFilter "running-scheduled"}}           data-requests-active-filter="scheduled"                   {{else}}
+            {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="on-demand-scheduled"         {{else}}
                 data-requests-active-filter="running"
             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+            data-requests-active-filter-shift="running"
         >Running</a>
     </li>
     <li
-        {{#ifEqual requestsSubFilter "on-demand"}}                           class="active" {{/ifEqual}}
-        {{#ifEqual requestsSubFilter "running-on-demand"}}               class="active" {{/ifEqual}}
-        {{#ifEqual requestsSubFilter "on-demand-scheduled"}}             class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "on-demand"}}                   class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "running-on-demand"}}           class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "on-demand-scheduled"}}         class="active" {{/ifEqual}}
         {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} class="active" {{/ifEqual}}
     >
         <a href="{{#appRoot}}{{/appRoot}}requests/active/on-demand"
-            {{#ifEqual requestsSubFilter "running"}}                             data-requests-active-filter="running-on-demand"               {{else}}
-            {{#ifEqual requestsSubFilter "scheduled"}}                           data-requests-active-filter="on-demand-scheduled"             {{else}}
-            {{#ifEqual requestsSubFilter "running-scheduled"}}               data-requests-active-filter="running-on-demand-scheduled" {{else}}
-            {{#ifEqual requestsSubFilter "running-on-demand"}}               data-requests-active-filter="running"                             {{else}}
-            {{#ifEqual requestsSubFilter "on-demand-scheduled"}}             data-requests-active-filter="scheduled"                           {{else}}
-            {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="running-scheduled"               {{else}}
+            {{#ifEqual requestsSubFilter "running"}}                     data-requests-active-filter="running-on-demand"           {{else}}
+            {{#ifEqual requestsSubFilter "scheduled"}}                   data-requests-active-filter="on-demand-scheduled"         {{else}}
+            {{#ifEqual requestsSubFilter "running-scheduled"}}           data-requests-active-filter="running-on-demand-scheduled" {{else}}
+            {{#ifEqual requestsSubFilter "running-on-demand"}}           data-requests-active-filter="running"                     {{else}}
+            {{#ifEqual requestsSubFilter "on-demand-scheduled"}}         data-requests-active-filter="scheduled"                   {{else}}
+            {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="running-scheduled"           {{else}}
                 data-requests-active-filter="on-demand"
             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+            data-requests-active-filter-shift="on-demand"
         >On-demand</a>
     </li>
     <li
-        {{#ifEqual requestsSubFilter "scheduled"}}                           class="active" {{/ifEqual}}
-        {{#ifEqual requestsSubFilter "running-scheduled"}}               class="active" {{/ifEqual}}
-        {{#ifEqual requestsSubFilter "on-demand-scheduled"}}             class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "scheduled"}}                   class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "running-scheduled"}}           class="active" {{/ifEqual}}
+        {{#ifEqual requestsSubFilter "on-demand-scheduled"}}         class="active" {{/ifEqual}}
         {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} class="active" {{/ifEqual}}
     >
         <a href="{{#appRoot}}{{/appRoot}}requests/active/scheduled"
-            {{#ifEqual requestsSubFilter "running"}}                             data-requests-active-filter="running-scheduled"               {{else}}
-            {{#ifEqual requestsSubFilter "on-demand"}}                           data-requests-active-filter="on-demand-scheduled"             {{else}}
-            {{#ifEqual requestsSubFilter "running-on-demand"}}               data-requests-active-filter="running-on-demand-scheduled" {{else}}
-            {{#ifEqual requestsSubFilter "running-scheduled"}}               data-requests-active-filter="running"                             {{else}}
-            {{#ifEqual requestsSubFilter "on-demand-scheduled"}}             data-requests-active-filter="on-demand"                           {{else}}
-            {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="running-on-demand"               {{else}}
+            {{#ifEqual requestsSubFilter "running"}}                     data-requests-active-filter="running-scheduled"           {{else}}
+            {{#ifEqual requestsSubFilter "on-demand"}}                   data-requests-active-filter="on-demand-scheduled"         {{else}}
+            {{#ifEqual requestsSubFilter "running-on-demand"}}           data-requests-active-filter="running-on-demand-scheduled" {{else}}
+            {{#ifEqual requestsSubFilter "running-scheduled"}}           data-requests-active-filter="running"                     {{else}}
+            {{#ifEqual requestsSubFilter "on-demand-scheduled"}}         data-requests-active-filter="on-demand"                   {{else}}
+            {{#ifEqual requestsSubFilter "running-on-demand-scheduled"}} data-requests-active-filter="running-on-demand"           {{else}}
                 data-requests-active-filter="scheduled"
             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+            data-requests-active-filter-shift="scheduled"
         >Scheduled</a>
     </li>
 </ul>

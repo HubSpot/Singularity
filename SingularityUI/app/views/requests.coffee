@@ -149,7 +149,6 @@ class RequestsView extends View
 
         else
             if @lastRequestsFilter is 'active'
-                log 'redner... 2... ', context.searchFilter, @lastSearchFilter
                 $requestsFilterContainer.html templateFilter context
 
             $requestsBodyContainer.html templateBody context
@@ -250,6 +249,8 @@ class RequestsView extends View
         @$el.find('[data-requests-active-filter]').unbind('click').on 'click', (e) =>
             e.preventDefault()
             requestsActiveFilter = $(e.target).data('requests-active-filter')
+            if e.metaKey or e.ctrlKey or e.shiftKey
+                requestsActiveFilter = $(e.target).data('requests-active-filter-shift')
             @lastRequestsActiveSubFilter = requestsActiveFilter
             @lastSearchFilter = _.trim @$el.find('input[type="search"]').val()
             app.router.navigate "/requests/active/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
