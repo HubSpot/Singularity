@@ -125,6 +125,7 @@ public class SingularityDeployChecker {
     }
     
     // success case is handled, handle failure cases:
+    saveNewDeployState(pendingDeployMarker, Optional.<SingularityDeployMarker> absent());
     finishDeploy(pendingDeploy, deployMatchingTasks, deployState);
   }
   
@@ -146,20 +147,20 @@ public class SingularityDeployChecker {
     }
   }
   
-  private boolean saveNewDeployState(SingularityDeployMarker activeDeployMarker, Optional<SingularityDeployMarker> newActiveDeploy) {
-    Optional<SingularityDeployState> deployState = deployManager.getDeployState(activeDeployMarker.getRequestId());
+  private boolean saveNewDeployState(SingularityDeployMarker pendingDeployMarker, Optional<SingularityDeployMarker> newActiveDeploy) {
+    Optional<SingularityDeployState> deployState = deployManager.getDeployState(pendingDeployMarker.getRequestId());
     
     boolean persistSuccess = false;
     
     if (!deployState.isPresent()) {
-      LOG.error("Expected deploy state for deploy marker: {} but didn't find it", activeDeployMarker);
+      LOG.error("Expected deploy state for deploy marker: {} but didn't find it", pendingDeployMarker);
     } else {
       ConditionalPersistResult deployStatePersistResult = deployManager.saveNewDeployState(new SingularityDeployState(deployState.get().getRequestId(), newActiveDeploy.or(deployState.get().getActiveDeploy()), Optional.<SingularityDeployMarker> absent()), Optional.<Stat> absent(), false);
       
       if (deployStatePersistResult == ConditionalPersistResult.SAVED) {
         persistSuccess = true;
       } else {
-        LOG.error("Expected deploy save state {} for deploy marker: {} but instead got {}", ConditionalPersistResult.SAVED, activeDeployMarker, deployStatePersistResult);
+        LOG.error("Expected deploy save state {} for deploy marker: {} but instead got {}", ConditionalPersistResult.SAVED, pendingDeployMarker, deployStatePersistResult);
       }
     }
     

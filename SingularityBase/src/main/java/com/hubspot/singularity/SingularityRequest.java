@@ -54,6 +54,7 @@ public class SingularityRequest extends SingularityJsonObject {
     return new SingularityRequestBuilder()
         .setDaemon(daemon)
         .setId(id)
+        .setLoadBalanced(loadBalanced)
         .setInstances(instances)
         .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
         .setNumRetriesOnFailure(numRetriesOnFailure)
@@ -92,6 +93,10 @@ public class SingularityRequest extends SingularityJsonObject {
 
   public Optional<Boolean> getRackSensitive() {
     return rackSensitive;
+  }
+  
+  public Optional<Boolean> getLoadBalanced() {
+    return loadBalanced;
   }
 
   @JsonIgnore
@@ -134,5 +139,10 @@ public class SingularityRequest extends SingularityJsonObject {
     return loadBalanced.or(Boolean.FALSE).booleanValue();
   }
 
+  @Override
+  public String toString() {
+    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", schedule=" + schedule + ", daemon=" + daemon + ", instances="
+        + instances + ", rackSensitive=" + rackSensitive + ", loadBalanced=" + loadBalanced + "]";
+  }
   
 }

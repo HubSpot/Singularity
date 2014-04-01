@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -14,7 +15,11 @@ public class SingularityLoadBalancerResponse extends SingularityJsonObject {
   }
   
   @JsonCreator
-  public SingularityLoadBalancerResponse(@JsonProperty("loadBalancerRequestId") String loadBalancerRequestId, @JsonProperty("loadBalancerState") LoadBalancerState loadBalancerState) {
+  public SingularityLoadBalancerResponse(@JsonProperty("loadBalancerRequestId") String loadBalancerRequestId, @JsonProperty("loadBalancerState") String loadBalancerState) {
+    this(loadBalancerRequestId, LoadBalancerState.valueOf(loadBalancerRequestId));
+  }
+  
+  public SingularityLoadBalancerResponse(String loadBalancerRequestId, LoadBalancerState loadBalancerState) {
     this.loadBalancerRequestId = loadBalancerRequestId;
     this.loadBalancerState = loadBalancerState;
   }
@@ -23,8 +28,13 @@ public class SingularityLoadBalancerResponse extends SingularityJsonObject {
     return loadBalancerRequestId;
   }
 
-  public LoadBalancerState getLoadBalancerState() {
+  @JsonIgnore
+  public LoadBalancerState getLoadBalancerStateEnum() {
     return loadBalancerState;
+  }
+  
+  public String getLoadBalancerState() {
+    return loadBalancerState.name();
   }
 
   @Override
