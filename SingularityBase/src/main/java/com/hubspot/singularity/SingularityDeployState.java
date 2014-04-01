@@ -28,7 +28,7 @@ public class SingularityDeployState extends SingularityJsonObject {
   public Optional<SingularityDeployMarker> getActiveDeploy() {
     return activeDeploy;
   }
-
+  
   public Optional<SingularityDeployMarker> getPendingDeploy() {
     return pendingDeploy;
   }

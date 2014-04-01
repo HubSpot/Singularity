@@ -74,6 +74,10 @@ public class SingularityValidator {
     check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
     
+    if (deploy.isLoadBalanced()) {
+      check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
+    }
+    
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getExecutor().isPresent() && !deploy.getCommand().isPresent()), 
         "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
     check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getExecutor().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 

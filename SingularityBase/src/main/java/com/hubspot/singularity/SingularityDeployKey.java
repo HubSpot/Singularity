@@ -41,11 +41,11 @@ public class SingularityDeployKey {
     });
   }
   
-  public static Map<SingularityDeployMarker, SingularityDeployKey> fromDeployMarkers(Collection<SingularityDeployMarker> pendingTasks) {
-    return Maps.toMap(pendingTasks, new Function<SingularityDeployMarker, SingularityDeployKey>() {
+  public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(Collection<SingularityPendingDeploy> pendingDeploys) {
+    return Maps.toMap(pendingDeploys, new Function<SingularityPendingDeploy, SingularityDeployKey>() {
       @Override
-      public SingularityDeployKey apply(SingularityDeployMarker input) {
-        return SingularityDeployKey.fromDeployMarker(input);
+      public SingularityDeployKey apply(SingularityPendingDeploy input) {
+        return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
       }
     });
   }

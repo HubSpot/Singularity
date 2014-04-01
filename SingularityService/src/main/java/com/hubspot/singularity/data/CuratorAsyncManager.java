@@ -137,7 +137,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     return objects;
   }
   
-  public <T extends SingularityId> List<T> getChildrenAsIdsForParents(final String pathNameforLogs, final Collection<String> parents, final IdTranscoder<T> idTranscoder) {
+  protected <T extends SingularityId> List<T> getChildrenAsIdsForParents(final String pathNameforLogs, final Collection<String> parents, final IdTranscoder<T> idTranscoder) {
     try {
       return getChildrenAsIdsForParentsThrows(pathNameforLogs, parents, idTranscoder);
     } catch (Throwable t) {
@@ -145,7 +145,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
   
-  public <T extends SingularityId> List<T> getChildrenAsIds(final String rootPath, final IdTranscoder<T> idTranscoder) {
+  protected <T extends SingularityId> List<T> getChildrenAsIds(final String rootPath, final IdTranscoder<T> idTranscoder) {
     return Lists.transform(getChildren(rootPath), idTranscoder);
   }
   
@@ -188,7 +188,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   }
   
   
-  public <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
+  protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
     try {
       return existsThrows(pathNameForLogs, paths, idTranscoder);
     } catch (Throwable t) {
@@ -196,7 +196,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
   
-  public <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
+  protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
       return getAsyncThrows(pathNameForLogs, paths, transcoder);
     } catch (Throwable t) {
@@ -204,7 +204,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
   
-  public <T> List<T> getAsyncChildren(final String parent, final Transcoder<T> transcoder) {
+  protected <T> List<T> getAsyncChildren(final String parent, final Transcoder<T> transcoder) {
     try {
       return getAsyncChildrenThrows(parent, transcoder);
     } catch (Throwable t) {

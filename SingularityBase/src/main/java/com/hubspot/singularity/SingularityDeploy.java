@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<String> executor;
   private final Optional<Resources> resources;
  
+  private final Optional<Boolean> loadBalanced;
   private final Optional<String> command;
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
@@ -47,7 +49,7 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   @JsonCreator
   public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("executor") Optional<String> executor, @JsonProperty("resources") Optional<Resources> resources,
-      @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
+      @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds) {
     this.requestId = requestId;
@@ -56,6 +58,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     this.resources = resources;
     this.executor = executor;
 
+    this.loadBalanced = loadBalanced;
     this.metadata = metadata;
     this.version = version;
     this.id = id;
@@ -139,6 +142,10 @@ public class SingularityDeploy extends SingularityJsonObject {
   public Optional<Object> getExecutorData() {
     return executorData;
   }
+  
+  public Optional<Boolean> getLoadBalanced() {
+    return loadBalanced;
+  }
 
   public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
@@ -151,12 +158,22 @@ public class SingularityDeploy extends SingularityJsonObject {
   public Optional<Long> getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
+  
+  @JsonIgnore
+  public String getLoadBalancerRequestId() {
+    return String.format("%s-%s", getRequestId(), getId());
+  }
+  
+  @JsonIgnore
+  public boolean isLoadBalanced() {
+    return loadBalanced.or(Boolean.FALSE).booleanValue();
+  }
 
   @Override
   public String toString() {
-    return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
-        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
-        + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
+    return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", loadBalanced="
+        + loadBalanced + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds
+        + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
   }
 
 }

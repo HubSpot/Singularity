@@ -327,6 +327,16 @@ public class TaskManager extends CuratorAsyncManager {
     }
   }
 
+  public Map<SingularityTaskId, SingularityTask> getTasks(Iterable<SingularityTaskId> taskIds) {
+    final List<String> paths = Lists.newArrayList();
+    
+    for (SingularityTaskId taskId : taskIds) {
+      paths.add(getTaskPath(taskId));
+    }
+    
+    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder), taskTranscoder);
+  }
+  
   private void launchTaskPrivate(SingularityTask task) throws Exception {
     final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
     final String activePath = getActivePath(task.getTaskId().getId());

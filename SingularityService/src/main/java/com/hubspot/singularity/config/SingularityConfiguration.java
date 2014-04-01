@@ -29,6 +29,9 @@ public class SingularityConfiguration extends Configuration {
   
   @JsonProperty("singularityUIHostnameAndPath")
   private String singularityUIHostnameAndPath;
+
+  @JsonProperty("loadBalancerUri")
+  private String loadBalancerUri;
   
   @Valid
   @NotNull
@@ -88,6 +91,25 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private int maxDeployIdSize = 50;
   
+  @NotNull
+  private long loadBalancerRequestTimeoutMillis = 2000;
+  
+  public long getLoadBalancerRequestTimeoutMillis() {
+    return loadBalancerRequestTimeoutMillis;
+  }
+
+  public void setLoadBalancerRequestTimeoutMillis(long loadBalancerRequestTimeoutMillis) {
+    this.loadBalancerRequestTimeoutMillis = loadBalancerRequestTimeoutMillis;
+  }
+
+  public String getLoadBalancerUri() {
+    return loadBalancerUri;
+  }
+
+  public void setLoadBalancerUri(String loadBalancerUri) {
+    this.loadBalancerUri = loadBalancerUri;
+  }
+
   public int getMaxRequestIdSize() {
     return maxRequestIdSize;
   }

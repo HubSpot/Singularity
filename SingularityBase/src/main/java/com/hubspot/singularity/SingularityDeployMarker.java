@@ -1,12 +1,10 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityDeployMarker extends SingularityJsonObject {
 
   private final String requestId;
@@ -15,6 +13,10 @@ public class SingularityDeployMarker extends SingularityJsonObject {
 
   private final long timestamp;
   private final Optional<String> user;
+  
+  public static SingularityDeployMarker fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
+    return objectMapper.readValue(bytes, SingularityDeployMarker.class);
+  }
   
   @JsonCreator
   public SingularityDeployMarker(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user) {
@@ -80,10 +82,6 @@ public class SingularityDeployMarker extends SingularityJsonObject {
     return user;
   }
   
-  public static SingularityDeployMarker fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityDeployMarker.class);
-  }
-
   @Override
   public String toString() {
     return "SingularityDeployMarker [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + "]";
