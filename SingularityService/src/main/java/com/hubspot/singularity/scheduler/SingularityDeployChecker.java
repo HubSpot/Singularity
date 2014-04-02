@@ -181,10 +181,6 @@ public class SingularityDeployChecker {
   
   // TODO history this?
   private void finishDeploy(SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, DeployState deployState) {
-    for (SingularityTaskId taskId : tasksToKill) {
-      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, Optional.of(LoadBalancerState.SUCCESS));
-    }
-    
     cleanupTasks(tasksToKill, deployState.cleanupType);
     
     removePendingDeploy(pendingDeploy);
