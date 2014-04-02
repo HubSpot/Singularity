@@ -31,7 +31,7 @@ class DashboardView extends View
         userRequestTotals = {}
         userRequests = app.collections.requestsActive.filter((r) -> r.get('deployUser') is deployUser)
         userRequestTotals.all = userRequests.length
-        userRequestTotals.running = userRequests.filter((r) -> not r.get('scheduled') and not r.get('onDemand')).length
+        userRequestTotals.daemon = userRequests.filter((r) -> not r.get('scheduled') and not r.get('onDemand')).length
         userRequestTotals.onDemand = userRequests.filter((r) -> r.get('onDemand')).length
         userRequestTotals.scheduled = userRequests.filter((r) -> r.get('scheduled')).length
 

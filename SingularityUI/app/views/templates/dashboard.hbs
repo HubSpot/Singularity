@@ -13,7 +13,7 @@
         </div>
         <div class="row-fluid">
             <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/running-on-demand-scheduled/{{ deployUser }}" data-requests-active-filter="running-on-demand-scheduled">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/all/{{ deployUser }}" data-requests-active-filter="all">
                     <div class="well">
                         <div class="big-number">
                             <div class="number" data-state-attribute="requests">
@@ -29,17 +29,17 @@
                 </a>
             </div>
             <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/running/{{ deployUser }}" data-requests-active-filter="running">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/daemon/{{ deployUser }}" data-requests-active-filter="daemon">
                     <div class="well">
                         <div class="big-number">
                             <div class="number" data-state-attribute="requests">
                                 {{#if collectionSycned}}
-                                    {{ userRequestTotals.running }}
+                                    {{ userRequestTotals.daemon }}
                                 {{else}}
                                     &nbsp;
                                 {{/if}}
                             </div>
-                            <div class="number-label">running</div>
+                            <div class="number-label">daemon</div>
                         </div>
                     </div>
                 </a>
