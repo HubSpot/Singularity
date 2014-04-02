@@ -68,6 +68,10 @@ public class JavaUtils {
     return reverseSplit;
   }
 
+  public static boolean isHttpSuccess(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
+  }
+  
   public static String getHostAddress() throws Exception {
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
     while (interfaces.hasMoreElements()) {

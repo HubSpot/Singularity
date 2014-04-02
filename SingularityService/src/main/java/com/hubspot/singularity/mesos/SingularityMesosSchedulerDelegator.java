@@ -24,7 +24,6 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
 import com.hubspot.singularity.scheduler.SingularityDeployPoller;
-import com.hubspot.singularity.scheduler.SingularityStaleTaskPoller;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
@@ -45,19 +44,17 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
-  private final SingularityStaleTaskPoller stalePoller;
   private final SingularityDeployPoller deployPoller;
   
   private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
   
   @Inject
-  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller, SingularityStaleTaskPoller stalePoller) {
+  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller) {
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
     this.cleanupPoller = cleanupPoller;
-    this.stalePoller = stalePoller;
     this.deployPoller = deployPoller;
     
     this.queuedUpdates = Lists.newArrayList();
@@ -91,7 +88,6 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     LOG.info("Scheduler is moving to stopped, current state: {}", state);
     
     cleanupPoller.stop();
-    stalePoller.stop();
     deployPoller.stop();
     
     state = SchedulerState.STOPPED;
@@ -113,7 +109,6 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     startup.startup(masterInfo);
 
     cleanupPoller.start(this);
-    stalePoller.start(this);
     deployPoller.start(this);
     
     stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.

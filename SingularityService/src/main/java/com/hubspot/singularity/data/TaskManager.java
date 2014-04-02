@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
@@ -31,6 +32,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.LoadBalancerStateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityPendingTaskIdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHealthcheckResultTranscoder;
@@ -50,6 +52,7 @@ public class TaskManager extends CuratorAsyncManager {
   private final static String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
   
   private final static String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
+  private final static String LOAD_BALANCER_STATE_KEY = "LOAD_BALANCER_STATE";
   private final static String DIRECTORY_KEY = "DIRECTORY";
   private final static String TASK_KEY = "TASK";
   
@@ -100,6 +103,10 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getHistoryPath(taskId), TASK_KEY);
   }
   
+  private String getLoadBalancerStatePath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), LOAD_BALANCER_STATE_KEY);
+  }
+  
   private String getDirectoryPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), DIRECTORY_KEY);
   }
@@ -142,6 +149,10 @@ public class TaskManager extends CuratorAsyncManager {
   
   public int getNumScheduledTasks() {
     return getNumChildren(SCHEDULED_PATH_ROOT);
+  }
+  
+  public void saveLoadBalancerState(SingularityTaskId taskId, LoadBalancerState loadBalancerState) {
+    save(getLoadBalancerStatePath(taskId), Optional.of(LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER.getBytes(loadBalancerState)));
   }
 
   public void updateTaskDirectory(SingularityTaskId taskId, String directory) {
@@ -299,8 +310,13 @@ public class TaskManager extends CuratorAsyncManager {
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
     Optional<String> directory = getDirectory(taskId);
     Optional<SingularityTaskHealthcheckResult> lastHealthcheckResult = getHealthcheckResult(taskId);
-
-    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, lastHealthcheckResult, task.get()));
+    Optional<LoadBalancerState> loadBalancerState = getLoadBalancerState(taskId);
+    
+    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, lastHealthcheckResult, task.get(), loadBalancerState));
+  }
+  
+  public Optional<LoadBalancerState> getLoadBalancerState(SingularityTaskId taskId) {
+    return getData(getLoadBalancerStatePath(taskId), LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER);
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {

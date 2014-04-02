@@ -53,6 +53,12 @@ public class SingularityConfiguration extends Configuration {
   private long defaultHealthcheckTimeoutSeconds = 5;
   
   @NotNull
+  private long checkNewTasksEverySeconds = 5;
+  
+  @NotNull
+  private int checkNewTasksScheduledThreads = 3;
+  
+  @NotNull
   private long healthcheckIntervalSeconds = 5;
   
   @NotNull
@@ -63,9 +69,6 @@ public class SingularityConfiguration extends Configuration {
   
   @NotNull
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
-  
-  @NotNull
-  private long warnAfterTasksDoNotRunDefaultSeconds = 300;
   
   @NotNull
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
@@ -94,6 +97,22 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long loadBalancerRequestTimeoutMillis = 2000;
   
+  public long getCheckNewTasksEverySeconds() {
+    return checkNewTasksEverySeconds;
+  }
+
+  public void setCheckNewTasksEverySeconds(long checkNewTasksEverySeconds) {
+    this.checkNewTasksEverySeconds = checkNewTasksEverySeconds;
+  }
+
+  public int getCheckNewTasksScheduledThreads() {
+    return checkNewTasksScheduledThreads;
+  }
+
+  public void setCheckNewTasksScheduledThreads(int checkNewTasksScheduledThreads) {
+    this.checkNewTasksScheduledThreads = checkNewTasksScheduledThreads;
+  }
+
   public long getLoadBalancerRequestTimeoutMillis() {
     return loadBalancerRequestTimeoutMillis;
   }
@@ -227,10 +246,6 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(smtpConfiguration);
   }
 
-  public long getWarnAfterTasksDoNotRunDefaultSeconds() {
-    return warnAfterTasksDoNotRunDefaultSeconds;
-  }
-
   public long getZookeeperAsyncTimeout() {
     return zookeeperAsyncTimeout;
   }
@@ -290,10 +305,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
     this.smtpConfiguration = smtpConfiguration;
-  }
-
-  public void setWarnAfterTasksDoNotRunDefaultSeconds(long warnAfterTasksDoNotRunDefaultSeconds) {
-    this.warnAfterTasksDoNotRunDefaultSeconds = warnAfterTasksDoNotRunDefaultSeconds;
   }
 
   public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {

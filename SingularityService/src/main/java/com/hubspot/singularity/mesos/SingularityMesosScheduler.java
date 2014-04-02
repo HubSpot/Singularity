@@ -19,15 +19,18 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityRackManager.RackCheckState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
+import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
@@ -37,19 +40,23 @@ public class SingularityMesosScheduler implements Scheduler {
 
   private final Resources DEFAULT_RESOURCES;
   private final TaskManager taskManager;
+  private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularityHealthchecker healthchecker;
+  private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityRackManager rackManager;
   private final SingularityLogSupport logSupport;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularityRackManager rackManager,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker) {
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularityRackManager rackManager, SingularityNewTaskChecker newTaskChecker,
+      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager) {
     DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
+    this.deployManager = deployManager;
+    this.newTaskChecker = newTaskChecker;
     this.rackManager = rackManager;
     this.scheduler = scheduler;
     this.mesosTaskBuilder = mesosTaskBuilder;
@@ -169,7 +176,8 @@ public class SingularityMesosScheduler implements Scheduler {
   }
 
   @Override
-  public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {    final String taskId = status.getTaskId().getValue();
+  public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {    
+    final String taskId = status.getTaskId().getValue();
     LOG.debug("Got a status update for task: {}, status - {}", taskId, status);
     
     Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
@@ -188,13 +196,21 @@ public class SingularityMesosScheduler implements Scheduler {
     
     if (MesosUtils.isTaskDone(status.getState())) {
       healthchecker.cancelHealthcheck(taskId);
+      newTaskChecker.cancelNewTaskCheck(taskId);
       
       if (maybeActiveTask.isPresent()) {
         taskManager.deleteActiveTask(taskId);
       }
       
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, status.getState(), stateCacheProvider.get());
+    } else if (maybeActiveTask.isPresent()) {
+      Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      
+      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+        newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
+      } 
     }
+    
   }
 
   @Override

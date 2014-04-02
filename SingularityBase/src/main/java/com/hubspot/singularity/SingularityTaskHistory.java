@@ -13,18 +13,20 @@ public class SingularityTaskHistory extends SingularityJsonObject {
   private final Optional<String> directory;
   private final Optional<SingularityTaskHealthcheckResult> lastHealthcheck;
   private final SingularityTask task;
-
+  private final Optional<LoadBalancerState> loadBalancerState;
+  
   public static SingularityTaskHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
     return objectMapper.readValue(bytes, SingularityTaskHistory.class);
   }
   
   @JsonCreator
   public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("lastHealthcheck") Optional<SingularityTaskHealthcheckResult> lastHealthcheck, 
-      @JsonProperty("task") SingularityTask task) {
+      @JsonProperty("task") SingularityTask task, @JsonProperty("loadBalancerState") Optional<LoadBalancerState> loadBalancerState) {
     this.taskUpdates = taskUpdates;
     this.lastHealthcheck = lastHealthcheck;
     this.directory = directory;
     this.task = task;
+    this.loadBalancerState = loadBalancerState;
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
@@ -33,6 +35,10 @@ public class SingularityTaskHistory extends SingularityJsonObject {
   
   public Optional<SingularityTaskHealthcheckResult> getLastHealthcheck() {
     return lastHealthcheck;
+  }
+  
+  public Optional<LoadBalancerState> getLoadBalancerState() {
+    return loadBalancerState;
   }
   
   public Optional<String> getDirectory() {
@@ -45,7 +51,7 @@ public class SingularityTaskHistory extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + ", task=" + task + "]";
+    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + ", task=" + task + ", loadBalancerState=" + loadBalancerState + "]";
   }
-  
+
 }

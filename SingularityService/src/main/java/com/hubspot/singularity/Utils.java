@@ -10,5 +10,8 @@ public class Utils {
     return DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, DURATION_FORMAT);
   }
   
+  public static String durationFromMillis(final long millis) {
+    return DurationFormatUtils.formatDuration(millis, DURATION_FORMAT);
+  }
   
 }
