@@ -12,9 +12,9 @@
                             <th class="visible-large-desktop">Deploy ID</th>
                             <th class="visible-large-desktop">Instances</th>
 
-                            {{#ifEqual requestsSubFilter "running"}}{{else}}
+                            {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                             {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
-                            {{#ifEqual requestsSubFilter "running-on-demand"}}{{else}}
+                            {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
                                 <th class="visible-large-desktop">Schedule</th>
                             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
 
@@ -31,9 +31,9 @@
                                 <td class="visible-large-desktop">{{ deployId }}</td>
                                 <td class="visible-large-desktop">{{ instances }}</td>
 
-                                {{#ifEqual requestsSubFilter "running"}}{{else}}
+                                {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                                 {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
-                                {{#ifEqual requestsSubFilter "running-on-demand"}}{{else}}
+                                {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
                                     <td class="visible-large-desktop">{{ schedule }}</td>
                                 {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
 

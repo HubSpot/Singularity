@@ -95,19 +95,19 @@ class RequestsView extends View
             context.requestsScheduled.reverse()
 
         if @lastRequestsFilter is 'active'
-            if requestsSubFilter is 'running-on-demand-scheduled'
+            if requestsSubFilter is 'all'
                 context.requests = _.pluck(@collection.models, 'attributes')
 
             else
                 filterFunction = => false
 
-                if requestsSubFilter is 'running'
+                if requestsSubFilter is 'daemon'
                     filterFunction = (r) => not r.scheduled and not r.onDemand
 
-                if requestsSubFilter is 'running-on-demand'
+                if requestsSubFilter is 'daemon-on-demand'
                     filterFunction = (r) => not r.scheduled
 
-                if requestsSubFilter is 'running-scheduled'
+                if requestsSubFilter is 'daemon-scheduled'
                     filterFunction = (r) => not r.onDemand
 
                 if requestsSubFilter is 'on-demand'
