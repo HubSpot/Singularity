@@ -15,6 +15,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -114,6 +115,11 @@ public class SingularityDeployChecker {
     
     if (deployState == DeployState.SUCCEEDED) {
       if (saveNewDeployState(pendingDeployMarker, Optional.of(pendingDeployMarker))) {
+        if (request.isLoadBalanced()) {
+          updateLoadBalancerStateForTasks(deployMatchingTasks, LoadBalancerRequestType.ADD, Optional.of(LoadBalancerState.SUCCESS));
+          updateLoadBalancerStateForTasks(allOtherMatchingTasks, LoadBalancerRequestType.REMOVE, Optional.of(LoadBalancerState.SUCCESS));
+        }
+        
         finishDeploy(pendingDeploy, allOtherMatchingTasks, deployState);
         return;
       } else {
@@ -138,7 +144,13 @@ public class SingularityDeployChecker {
     
     return Optional.absent();
   }
-    
+  
+  private void updateLoadBalancerStateForTasks(List<SingularityTaskId> taskIds, LoadBalancerRequestType type, Optional<LoadBalancerState> lbState) {
+    for (SingularityTaskId taskId : taskIds) {
+      taskManager.saveLoadBalancerState(taskId, type, lbState);
+    }
+  }
+  
   private void cleanupTasks(Iterable<SingularityTaskId> tasksToKill, TaskCleanupType cleanupType) {
     final long now = System.currentTimeMillis();
     
@@ -169,6 +181,10 @@ public class SingularityDeployChecker {
   
   // TODO history this?
   private void finishDeploy(SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, DeployState deployState) {
+    for (SingularityTaskId taskId : tasksToKill) {
+      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, Optional.of(LoadBalancerState.SUCCESS));
+    }
+    
     cleanupTasks(tasksToKill, deployState.cleanupType);
     
     removePendingDeploy(pendingDeploy);
@@ -207,7 +223,7 @@ public class SingularityDeployChecker {
     return tasks;
   }
   
-  private DeployState enqueSwitchLoadBalancer(SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
+  private DeployState enqueueSwitchLoadBalancer(SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
     if (!lbClient.hasValidUri()) {
       LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
       return DeployState.FAILED;
@@ -246,9 +262,9 @@ public class SingularityDeployChecker {
       return Optional.of(DeployState.FAILED);
     case CANCELING:
     case WAITING:
-    default:
-      return Optional.absent();
     }
+    
+    return Optional.absent();
   }
   
   private DeployState cancelLoadBalancer(SingularityPendingDeploy pendingDeploy) {
@@ -319,14 +335,14 @@ public class SingularityDeployChecker {
       return DeployState.WAITING;
     case HEALTHY:
       if (request.isLoadBalanced()) {
-        return enqueSwitchLoadBalancer(pendingDeploy, matchingActiveTasks, allOtherTasks);
+        return enqueueSwitchLoadBalancer(pendingDeploy, matchingActiveTasks, allOtherTasks);
       } else {
         return DeployState.SUCCEEDED;
       }
     case UNHEALTHY:
-    default:
-      return DeployState.FAILED;
     }
+    
+    return DeployState.FAILED;
   }
   
   private enum DeployState {

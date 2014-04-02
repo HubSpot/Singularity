@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +11,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployState;
 import com.hubspot.singularity.SingularityDriverManager;
@@ -17,6 +20,7 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.Utils;
@@ -24,6 +28,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 
 public class SingularityCleaner {
@@ -35,12 +40,15 @@ public class SingularityCleaner {
   private final RequestManager requestManager;
   private final SingularityDriverManager driverManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final LoadBalancerClient lbClient;
   
   private final long killScheduledTasksAfterDecomissionedMillis;
   
   @Inject
-  public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager, SingularityDriverManager driverManager, SingularityConfiguration configuration) {
+  public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager, 
+      SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient) {
     this.taskManager = taskManager;
+    this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -171,6 +179,7 @@ public class SingularityCleaner {
   public void drainCleanupQueue() {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
+    drainLBCleanupQueue();
   }
   
   private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
@@ -215,4 +224,70 @@ public class SingularityCleaner {
     LOG.info("Killed {} tasks in {}", killedTasks, Utils.duration(start));
   }
 
+  private void drainLBCleanupQueue() {
+    final long start = System.currentTimeMillis();
+
+    final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
+    
+    LOG.debug("LB task cleanup queue had {} tasks", lbCleanupTasks.size());
+    
+    if (lbCleanupTasks.isEmpty()) {
+      return;
+    }
+    
+    int cleanedTasks = 0;
+    int ignoredTasks = 0;
+    
+    for (SingularityTaskId taskId : lbCleanupTasks) {
+      Optional<LoadBalancerState> lbAddState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+      
+      if (!lbAddState.isPresent() || lbAddState.get() != LoadBalancerState.SUCCESS) {
+        ignoredTasks++;
+        taskManager.deleteLBCleanupTask(taskId);
+        continue;
+      }
+      
+      Optional<LoadBalancerState> lbRemoveState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
+       
+      final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(taskId, LoadBalancerRequestType.REMOVE);
+        
+      if (!lbRemoveState.isPresent()) {
+        final Optional<SingularityTask> task = taskManager.getTask(taskId);
+        
+        if (!task.isPresent()) {
+          LOG.error("Missing task {}", taskId);
+          taskManager.deleteLBCleanupTask(taskId);
+          continue;
+        }
+        
+        lbRemoveState = lbClient.enqueue(loadBalancerRequestId, Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
+        
+        taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
+      } else if (lbRemoveState.get() == LoadBalancerState.WAITING) {
+        lbRemoveState = lbClient.getState(loadBalancerRequestId);
+
+        taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
+      }
+      
+      if (lbRemoveState.isPresent()) {
+        switch (lbRemoveState.get()) {
+        case WAITING:
+          LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
+          break;
+        case FAILED:
+        case CANCELED:
+        case CANCELING:
+          LOG.error("LB request {} is in an invalid, unexpected state {}", loadBalancerRequestId, lbRemoveState.get());
+        case SUCCESS:
+          taskManager.deleteLBCleanupTask(taskId);
+          cleanedTasks++;
+          break;
+        }
+      }
+    }
+    
+    LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, Utils.duration(start));
+    
+  }
+  
 }

@@ -15,6 +15,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
@@ -196,7 +197,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
       return CheckTaskState.HEALTHY;
     } 
     
-    Optional<LoadBalancerState> lbState = taskManager.getLoadBalancerState(task.getTaskId());
+    Optional<LoadBalancerState> lbState = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     
     if (!lbState.isPresent()) {
       lbState = lbClient.enqueue(task.getTaskId().getId(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
@@ -205,7 +206,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     }
     
     if (lbState.isPresent()) {
-      taskManager.saveLoadBalancerState(task.getTaskId(), lbState.get());
+      taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD, lbState);
       
       switch (lbState.get()) {
       case SUCCESS:

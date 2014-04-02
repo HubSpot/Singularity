@@ -202,17 +202,19 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.deleteActiveTask(taskId);
       }
       
+      taskManager.createLBCleanupTask(taskIdObj);
+      
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, status.getState(), stateCacheProvider.get());
     } else if (maybeActiveTask.isPresent()) {
       Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
       
       if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
         newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
-      } 
+      }
     }
     
   }
-
+  
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
     LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, JavaUtils.toString(data));

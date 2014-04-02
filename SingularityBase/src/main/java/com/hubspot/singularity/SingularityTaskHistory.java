@@ -13,7 +13,8 @@ public class SingularityTaskHistory extends SingularityJsonObject {
   private final Optional<String> directory;
   private final Optional<SingularityTaskHealthcheckResult> lastHealthcheck;
   private final SingularityTask task;
-  private final Optional<LoadBalancerState> loadBalancerState;
+  private final Optional<LoadBalancerState> addLoadBalancerState;
+  private final Optional<LoadBalancerState> removeLoadBalancerState;
   
   public static SingularityTaskHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
     return objectMapper.readValue(bytes, SingularityTaskHistory.class);
@@ -21,12 +22,13 @@ public class SingularityTaskHistory extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("lastHealthcheck") Optional<SingularityTaskHealthcheckResult> lastHealthcheck, 
-      @JsonProperty("task") SingularityTask task, @JsonProperty("loadBalancerState") Optional<LoadBalancerState> loadBalancerState) {
+      @JsonProperty("task") SingularityTask task, @JsonProperty("addLoadBalancerState") Optional<LoadBalancerState> addLoadBalancerState, @JsonProperty("removeLoadBalancerState") Optional<LoadBalancerState> removeLoadBalancerState) {
     this.taskUpdates = taskUpdates;
     this.lastHealthcheck = lastHealthcheck;
     this.directory = directory;
     this.task = task;
-    this.loadBalancerState = loadBalancerState;
+    this.addLoadBalancerState = addLoadBalancerState;
+    this.removeLoadBalancerState = removeLoadBalancerState;
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
@@ -37,10 +39,14 @@ public class SingularityTaskHistory extends SingularityJsonObject {
     return lastHealthcheck;
   }
   
-  public Optional<LoadBalancerState> getLoadBalancerState() {
-    return loadBalancerState;
+  public Optional<LoadBalancerState> getAddLoadBalancerState() {
+    return addLoadBalancerState;
   }
-  
+
+  public Optional<LoadBalancerState> getRemoveLoadBalancerState() {
+    return removeLoadBalancerState;
+  }
+
   public Optional<String> getDirectory() {
     return directory;
   }
@@ -51,7 +57,8 @@ public class SingularityTaskHistory extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + ", task=" + task + ", loadBalancerState=" + loadBalancerState + "]";
+    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + ", task=" + task + ", addLoadBalancerState=" + addLoadBalancerState + ", removeLoadBalancerState="
+        + removeLoadBalancerState + "]";
   }
 
 }
