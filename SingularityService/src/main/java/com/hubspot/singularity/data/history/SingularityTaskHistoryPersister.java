@@ -68,11 +68,15 @@ public class SingularityTaskHistoryPersister {
     
     final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
     final Set<SingularityTaskId> allTaskIds = Sets.newHashSet(taskManager.getAllTaskIds());
+    final Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
     
     int numTotal = 0;
     int numTransferred = 0;
     
     for (SingularityTaskId inactiveTaskId : Sets.difference(allTaskIds, activeTaskIds)) {
+      if (lbCleaningTaskIds.contains(inactiveTaskId)) {
+        continue;
+      }
       if (transferToHistoryDB(inactiveTaskId)) {
         numTransferred++;
       }

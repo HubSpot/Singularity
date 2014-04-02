@@ -212,7 +212,7 @@ public class SingularityCleaner {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
-      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks)) {
+      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.kill(cleanupTask.getTaskId().getId());
         
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
@@ -224,6 +224,72 @@ public class SingularityCleaner {
     LOG.info("Killed {} tasks in {}", killedTasks, Utils.duration(start));
   }
 
+  private boolean checkLBStateAndShouldKillTask(SingularityTaskCleanup cleanupTask) {
+    final long start = System.currentTimeMillis();
+    
+    CheckLBState checkLbState = checkLbState(cleanupTask.getTaskId());
+    
+    LOG.debug("TaskCleanup {} had LB state {} after {}", cleanupTask, checkLbState, Utils.duration(start));
+    
+    switch (checkLbState) {
+    case DONE:
+    case NOT_LOAD_BALANCED:
+    case MISSING_TASK:
+      return true;
+    case WAITING:
+    }
+    
+    return false;
+  }
+  
+  private enum CheckLBState {
+    NOT_LOAD_BALANCED, MISSING_TASK, WAITING, DONE;
+  }
+  
+  private CheckLBState checkLbState(SingularityTaskId taskId) {
+    Optional<LoadBalancerState> lbAddState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+    
+    if (!lbAddState.isPresent() || lbAddState.get() != LoadBalancerState.SUCCESS) {
+      return CheckLBState.NOT_LOAD_BALANCED;
+    }
+    
+    Optional<LoadBalancerState> lbRemoveState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
+     
+    final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(taskId, LoadBalancerRequestType.REMOVE);
+      
+    if (!lbRemoveState.isPresent()) {
+      final Optional<SingularityTask> task = taskManager.getTask(taskId);
+      
+      if (!task.isPresent()) {
+        LOG.error("Missing task {}", taskId);
+        return CheckLBState.MISSING_TASK;
+      }
+      
+      lbRemoveState = lbClient.enqueue(loadBalancerRequestId, Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
+      
+      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
+    } else if (lbRemoveState.get() == LoadBalancerState.WAITING) {
+      lbRemoveState = lbClient.getState(loadBalancerRequestId);
+
+      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
+    }
+    
+    if (lbRemoveState.isPresent()) {
+      switch (lbRemoveState.get()) {
+      case FAILED:
+      case CANCELED:
+      case CANCELING:
+        LOG.error("LB request {} is in an invalid, unexpected state {}", loadBalancerRequestId, lbRemoveState.get());
+      case SUCCESS:
+        return CheckLBState.DONE;
+      case WAITING:
+        LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
+      }
+    }
+    
+    return CheckLBState.WAITING;
+  }
+  
   private void drainLBCleanupQueue() {
     final long start = System.currentTimeMillis();
 
@@ -239,55 +305,27 @@ public class SingularityCleaner {
     int ignoredTasks = 0;
     
     for (SingularityTaskId taskId : lbCleanupTasks) {
-      Optional<LoadBalancerState> lbAddState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+      final long checkStart = System.currentTimeMillis();
       
-      if (!lbAddState.isPresent() || lbAddState.get() != LoadBalancerState.SUCCESS) {
-        ignoredTasks++;
-        taskManager.deleteLBCleanupTask(taskId);
+      final CheckLBState checkLbState = checkLbState(taskId);
+      
+      LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, Utils.duration(checkStart));
+      
+      switch (checkLbState) {
+      case WAITING:
         continue;
+      case DONE:
+      case MISSING_TASK:
+        cleanedTasks++;
+        break;
+      case NOT_LOAD_BALANCED:
+        ignoredTasks++;
       }
       
-      Optional<LoadBalancerState> lbRemoveState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
-       
-      final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(taskId, LoadBalancerRequestType.REMOVE);
-        
-      if (!lbRemoveState.isPresent()) {
-        final Optional<SingularityTask> task = taskManager.getTask(taskId);
-        
-        if (!task.isPresent()) {
-          LOG.error("Missing task {}", taskId);
-          taskManager.deleteLBCleanupTask(taskId);
-          continue;
-        }
-        
-        lbRemoveState = lbClient.enqueue(loadBalancerRequestId, Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
-        
-        taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
-      } else if (lbRemoveState.get() == LoadBalancerState.WAITING) {
-        lbRemoveState = lbClient.getState(loadBalancerRequestId);
-
-        taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
-      }
-      
-      if (lbRemoveState.isPresent()) {
-        switch (lbRemoveState.get()) {
-        case WAITING:
-          LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
-          break;
-        case FAILED:
-        case CANCELED:
-        case CANCELING:
-          LOG.error("LB request {} is in an invalid, unexpected state {}", loadBalancerRequestId, lbRemoveState.get());
-        case SUCCESS:
-          taskManager.deleteLBCleanupTask(taskId);
-          cleanedTasks++;
-          break;
-        }
-      }
+      taskManager.deleteLBCleanupTask(taskId);
     }
     
     LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, Utils.duration(start));
-    
   }
   
 }
