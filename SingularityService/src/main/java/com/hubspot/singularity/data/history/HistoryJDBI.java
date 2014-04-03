@@ -27,8 +27,8 @@ public interface HistoryJDBI {
   @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :deployState, :bytes)")
   void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("deployState") String deployState,  @Bind("bytes") byte[] bytes);
   
-  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, createdAt, updatedAt, lastTaskStatus) VALUES (:requestId, :taskId, :bytes, :createdAt, :updatedAt, :lastTaskStatus)")
-  void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("bytes") byte[] bytes, @Bind("createdAt") Date createdAt, @Bind("updatedAt") Date updatedAt, @Bind("lastTaskStatus") String lastTaskStatus);
+  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus)")
+  void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("bytes") byte[] bytes, @Bind("updatedAt") Date updatedAt, @Bind("lastTaskStatus") String lastTaskStatus);
   
   @Mapper(SingularityBytesMapper.class)
   @SqlQuery("SELECT bytes FROM taskHistory WHERE taskId = :taskId")

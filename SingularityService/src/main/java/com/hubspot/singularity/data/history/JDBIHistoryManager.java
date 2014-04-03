@@ -92,7 +92,7 @@ public class JDBIHistoryManager implements HistoryManager {
       lastTaskStatus = taskIdHistory.getLastTaskState().get().name();
     }
     
-    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getTaskId().getStartedAt()), new Date(taskIdHistory.getUpdatedAt()), lastTaskStatus);
+    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()), lastTaskStatus);
   }
 
   @Override
