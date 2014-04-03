@@ -44,7 +44,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     this.lastTaskState = lastTaskState;
     this.numSequentialRetries = numSequentialRetries;
     this.numSequentialFailures = numSequentialFailures;
-    this.numSequentialSuccess = numSequentialFailures;
+    this.numSequentialSuccess = numSequentialSuccess;
   }
 
   public SingularityDeployStatisticsBuilder toBuilder() {

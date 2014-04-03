@@ -91,7 +91,7 @@ public class RequestResource {
       
       if (maybeDeployId.isPresent()) {
         requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), PendingType.UPDATED_REQUEST));
-      }   
+      }
     }
   }
   
