@@ -202,25 +202,41 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     if (!lbState.isPresent()) {
       lbState = lbClient.enqueue(task.getTaskId().getId(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
     } else {
+      Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbState.get());
+      
+      if (maybeCheckTaskState.isPresent()) {
+        return maybeCheckTaskState.get();
+      }
+      
       lbState = lbClient.getState(task.getTaskId().getId());
     }
     
     if (lbState.isPresent()) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD, lbState);
       
-      switch (lbState.get()) {
-      case SUCCESS:
-        return CheckTaskState.HEALTHY;
-      case CANCELED:
-      case FAILED:
-        return CheckTaskState.UNHEALTHY_KILL_TASK;
-      case CANCELING:
-      case WAITING:
-        break;
+      Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbState.get());
+      
+      if (maybeCheckTaskState.isPresent()) {
+        return maybeCheckTaskState.get();
       }
     }
     
     return CheckTaskState.LB_IN_PROGRESS_CHECK_AGAIN;
+  }
+  
+  private Optional<CheckTaskState> checkLbState(LoadBalancerState lbState) {
+    switch (lbState) {
+    case SUCCESS:
+      return Optional.of(CheckTaskState.HEALTHY);
+    case CANCELED:
+    case FAILED:
+      return Optional.of(CheckTaskState.UNHEALTHY_KILL_TASK);
+    case CANCELING:
+    case WAITING:
+      break;
+    }
+    
+    return Optional.absent();
   }
   
   private boolean isOverdue(SingularityTask task) {

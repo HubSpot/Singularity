@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -31,24 +32,25 @@ public class SingularityTaskHistoryPersister {
     
     final long start = System.currentTimeMillis();
     
+    final List<SingularityTaskId> allTaskIds = taskManager.getAllTaskIds();
+     
     final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
-    final Set<SingularityTaskId> allTaskIds = Sets.newHashSet(taskManager.getAllTaskIds());
     final Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
     
     int numTotal = 0;
     int numTransferred = 0;
     
-    for (SingularityTaskId inactiveTaskId : Sets.difference(allTaskIds, activeTaskIds)) {
-      if (lbCleaningTaskIds.contains(inactiveTaskId)) {
+    for (SingularityTaskId taskId : allTaskIds) {
+      if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId)) {
         continue;
       }
-      if (transferToHistoryDB(inactiveTaskId)) {
+      if (transferToHistoryDB(taskId)) {
         numTransferred++;
       }
       numTotal++;
     }
     
-    LOG.info("Transferred {} out of {} inactive task ids in {}", numTransferred, numTotal, Utils.duration(start));
+    LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), Utils.duration(start));
   }
   
   private boolean transferToHistoryDB(SingularityTaskId inactiveTaskId) {

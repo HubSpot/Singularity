@@ -124,12 +124,11 @@ public class SingularityCleaner {
 
     final List<SingularityRequestCleanup> cleanupRequests = requestManager.getCleanupRequests();
     
-    LOG.debug("Request cleanup queue had {} requests", cleanupRequests.size());
-    
     if (cleanupRequests.isEmpty()) {
+      LOG.trace("Request cleanup queue is empty");
       return;
     }
-    
+
     LOG.info("Cleaning up {} requests", cleanupRequests.size());
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
@@ -191,9 +190,8 @@ public class SingularityCleaner {
 
     final List<SingularityTaskCleanup> cleanupTasks = taskManager.getCleanupTasks();
     
-    LOG.debug("Task cleanup queue had {} tasks", cleanupTasks.size());
-    
     if (cleanupTasks.isEmpty()) {
+      LOG.trace("Task cleanup queue is empty");
       return;
     }
     
@@ -295,11 +293,12 @@ public class SingularityCleaner {
 
     final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
     
-    LOG.debug("LB task cleanup queue had {} tasks", lbCleanupTasks.size());
-    
     if (lbCleanupTasks.isEmpty()) {
+      LOG.trace("LB task cleanup queue is empty");
       return;
     }
+
+    LOG.info("LB task cleanup queue had {} tasks", lbCleanupTasks.size());
     
     int cleanedTasks = 0;
     int ignoredTasks = 0;

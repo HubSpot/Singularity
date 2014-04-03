@@ -9,11 +9,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class SingularityHistoryPersister {
+public class SingularityHistoryPersister implements SingularityCloseable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
   
@@ -33,7 +34,8 @@ public class SingularityHistoryPersister {
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityHistoryPersister-%d").build());
   }
   
-  public void stop() {
+  @Override
+  public void close() {
     closer.shutdown(getClass().getName(), executorService, 1);
   }
   

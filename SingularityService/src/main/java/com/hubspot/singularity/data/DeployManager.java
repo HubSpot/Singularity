@@ -130,7 +130,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   private String getDeployParentPath(String requestId, String deployId) {
-    return ZKPaths.makePath(getRequestDeployPath(requestId), ZKPaths.makePath(DEPLOY_LIST_KEY, deployId));
+    return ZKPaths.makePath(getRequestDeployPath(requestId), ZKPaths.makePath(DEPLOY_LIST_KEY, new SingularityDeployKey(requestId, deployId).getId()));
   }
   
   private String getDeployDataPath(String requestId, String deployId) {
