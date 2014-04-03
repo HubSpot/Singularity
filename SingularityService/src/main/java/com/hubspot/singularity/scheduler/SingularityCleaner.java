@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
@@ -82,7 +82,7 @@ public class SingularityCleaner {
     
     final String requestId = request.get().getId();
     
-    final Optional<SingularityDeployState> deployState = deployManager.getDeployState(requestId);
+    final Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
     
     if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
       LOG.debug("Killing a task {} immediately because there is no active deploy state {}", taskCleanup, deployState);

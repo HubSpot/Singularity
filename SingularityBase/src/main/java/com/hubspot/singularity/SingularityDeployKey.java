@@ -5,8 +5,9 @@ import java.util.Map;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import com.hubspot.mesos.JavaUtils;
 
-public class SingularityDeployKey {
+public class SingularityDeployKey extends SingularityId {
 
   private final String requestId;
   private final String deployId;
@@ -62,36 +63,19 @@ public class SingularityDeployKey {
   public String getDeployId() {
     return deployId;
   }
-
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((deployId == null) ? 0 : deployId.hashCode());
-    result = prime * result + ((requestId == null) ? 0 : requestId.hashCode());
-    return result;
+  
+  public static SingularityDeployKey fromString(String string) {
+    final String[] splits = JavaUtils.reverseSplit(string, 2, "-");
+    
+    final String requestId = splits[0];
+    final String deployId = splits[1];
+    
+    return new SingularityDeployKey(requestId, deployId);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    SingularityDeployKey other = (SingularityDeployKey) obj;
-    if (deployId == null) {
-      if (other.deployId != null)
-        return false;
-    } else if (!deployId.equals(other.deployId))
-      return false;
-    if (requestId == null) {
-      if (other.requestId != null)
-        return false;
-    } else if (!requestId.equals(other.requestId))
-      return false;
-    return true;
+  public String toString() {
+    return String.format("%s-%s", getRequestId(), getDeployId());
   }
 
 }

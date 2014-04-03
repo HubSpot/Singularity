@@ -21,7 +21,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -117,17 +117,17 @@ public class RequestResource {
   }
   
   private SingularityRequestParent fillEntireRequest(SingularityRequest request) {
-    Optional<SingularityDeployState> deployState = deployManager.getDeployState(request.getId());
+    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
     
     Optional<SingularityDeploy> activeDeploy = Optional.absent();
     Optional<SingularityDeploy> pendingDeploy = Optional.absent();
     
-    if (deployState.isPresent()) {
-      activeDeploy = fillDeploy(deployState.get().getActiveDeploy());
-      pendingDeploy = fillDeploy(deployState.get().getPendingDeploy());
+    if (requestDeployState.isPresent()) {
+      activeDeploy = fillDeploy(requestDeployState.get().getActiveDeploy());
+      pendingDeploy = fillDeploy(requestDeployState.get().getPendingDeploy());
     }
     
-    return new SingularityRequestParent(request, deployState, activeDeploy, pendingDeploy);
+    return new SingularityRequestParent(request, requestDeployState, activeDeploy, pendingDeploy);
   }
   
   @POST
@@ -148,7 +148,7 @@ public class RequestResource {
     ConditionalPersistResult persistResult = deployManager.persistDeploy(request, deployMarker, pendingDeploy);
     
     if (persistResult == ConditionalPersistResult.STATE_CHANGED) {
-      throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getDeployState(requestId).orNull(), deployManager.getPendingDeploy(requestId).orNull());
+      throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getRequestDeployState(requestId).orNull(), deployManager.getPendingDeploy(requestId).orNull());
     }
     
     if (!request.isDeployable()) {
@@ -165,7 +165,7 @@ public class RequestResource {
   public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
-    Optional<SingularityDeployState> deployState = deployManager.getDeployState(request.getId());
+    Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(request.getId());
     
     if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId)) {
       throw WebExceptions.badRequest("Request id %s does not have a pending deploy with id %s", requestId, deployId);

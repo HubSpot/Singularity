@@ -65,7 +65,7 @@ public class SingularityConfiguration extends Configuration {
   private long killScheduledTasksWithAreDecomissionedAfterSeconds = 300;
   
   @NotNull
-  private long persistTaskHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
+  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
   
   @NotNull
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
@@ -176,14 +176,6 @@ public class SingularityConfiguration extends Configuration {
     return deployHealthyBySeconds;
   }
   
-  public long getPersistTaskHistoryEverySeconds() {
-    return persistTaskHistoryEverySeconds;
-  }
-
-  public void setPersistTaskHistoryEverySeconds(long persistTaskHistoryEverySeconds) {
-    this.persistTaskHistoryEverySeconds = persistTaskHistoryEverySeconds;
-  }
-
   public int getHealthcheckStartThreads() {
     return healthcheckStartThreads;
   }
@@ -194,6 +186,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+  
+  public long getPersistHistoryEverySeconds() {
+    return persistHistoryEverySeconds;
+  }
+
+  public void setPersistHistoryEverySeconds(long persistHistoryEverySeconds) {
+    this.persistHistoryEverySeconds = persistHistoryEverySeconds;
   }
 
   public long getCheckDeploysEverySeconds() {

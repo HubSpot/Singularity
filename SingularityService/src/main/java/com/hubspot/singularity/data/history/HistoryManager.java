@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.List;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityDeployHistoryLite;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
@@ -23,6 +25,12 @@ public interface HistoryManager {
   
   void saveTaskHistory(SingularityTaskHistory taskHistory);
   
+  void saveDeployHistory(SingularityDeployHistory deployHistory);
+  
+  Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId);
+  
+  List<SingularityDeployHistoryLite> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
+
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
 
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);

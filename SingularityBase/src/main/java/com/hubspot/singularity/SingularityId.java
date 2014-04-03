@@ -1,9 +1,11 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class SingularityId {
+public abstract class SingularityId {
 
   private String id;
   
@@ -16,10 +18,7 @@ public class SingularityId {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-    return result;
+    return Objects.hashCode(id);
   }
 
   @Override
@@ -31,12 +30,13 @@ public class SingularityId {
     if (getClass() != obj.getClass())
       return false;
     SingularityId other = (SingularityId) obj;
-    if (getId() == null) {
-      if (other.getId() != null)
+    if (id == null) {
+      if (other.id != null)
         return false;
-    } else if (!getId().equals(other.getId()))
+    } else if (!id.equals(other.id))
       return false;
     return true;
   }
-
+  
+  
 }

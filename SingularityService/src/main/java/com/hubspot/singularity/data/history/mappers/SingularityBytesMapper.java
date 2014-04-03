@@ -6,10 +6,10 @@ import java.sql.SQLException;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-public class SingularityTaskHistoryMapper implements ResultSetMapper<byte[]> {
+public class SingularityBytesMapper implements ResultSetMapper<byte[]> {
   
   public byte[] map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-    return r.getBytes("taskHistory");
+    return r.getBytes("bytes");
   }
 
 }

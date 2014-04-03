@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -285,7 +285,7 @@ public class SingularityScheduler {
     
     final SingularityRequest request = maybeRequest.get();
     
-    final Optional<SingularityDeployState> requestDeployState = deployManager.getDeployState(request.getId());
+    final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
     
     if (!requestDeployState.isPresent() || !requestDeployState.get().getActiveDeploy().isPresent() || !requestDeployState.get().getActiveDeploy().get().getDeployId().equals(taskId.getDeployId())) {
       LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId(), requestDeployState);
