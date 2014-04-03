@@ -33,15 +33,14 @@ public class WebhookManager extends CuratorManager {
   private final AsyncCompletionHandler<Response> handler;
   
   // TODO watch/cache
-  // TODO one async htp client?
   
   @Inject
-  public WebhookManager(CuratorFramework curator, ObjectMapper objectMapper) {
+  public WebhookManager(CuratorFramework curator, ObjectMapper objectMapper, AsyncHttpClient httpClient) {
     super(curator);
     
     this.objectMapper = objectMapper;
     
-    asyncHttpClient = new AsyncHttpClient();
+    asyncHttpClient = httpClient;
     handler = new AsyncCompletionHandler<Response>() {
 
       @Override
