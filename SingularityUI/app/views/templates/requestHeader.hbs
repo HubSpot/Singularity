@@ -1,0 +1,18 @@
+<h1 data-string-length-tens="{{ requestNameStringLengthTens }}">
+    {{#hardBreak request.name}}{{/hardBreak}}
+
+    <div class="header-actions">
+        {{#if request.fullObject}}
+            <a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a>
+        {{/if}}
+        {{#if request.scheduledOrOnDemand}}
+            <a data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">Run now</a>
+        {{/if}}
+        <a data-request-id="{{ request.id }}" data-action="remove">Remove</a>
+    </div>
+</h1>
+{{#eachWithFn requestHistory.requestUpdates}}
+    {{#if _first}}
+        <p class="lead">{{ stateHuman }} by {{ userHuman }} {{ createdAtHuman }}</p>
+    {{/if}}
+{{/eachWithFn}}

@@ -1,0 +1,29 @@
+{{#if requestTasksScheduled}}
+    <div class="row-fluid">
+        <div class="span12">
+            <table class="table" data-sortable>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Next run</th>
+                        <th data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn requestTasksScheduled}}
+                        <tr data-task-id="{{ id }}">
+                            <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
+                            <td data-value="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                            <td class="actions-column">
+                                <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
+                                <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
+                            </td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{else}}
+    <div class="empty-table-message"><p>No scheduled tasks</p></div>
+{{/if}}
