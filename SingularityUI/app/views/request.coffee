@@ -10,6 +10,11 @@ class RequestView extends View
 
     template: require './templates/request'
 
+    requestHeaderTemplate: require './templates/requestHeader'
+    requestTasksActiveTableTemplate: require './templates/requestTasksActiveTable'
+    requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
+    requestHistoryTemplate: require './templates/requestHistory'
+
     removeRequestTemplate: require './templates/vex/removeRequest'
 
     initialize: ->
@@ -28,6 +33,10 @@ class RequestView extends View
 
         promises.push @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
+            @render()
+
+        promises.push app.collections.tasksScheduled.fetch().done =>
+            app.collections.tasksScheduled.fetched = true
             @render()
 
         $.when(promises...)
@@ -54,6 +63,7 @@ class RequestView extends View
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
 
+            fetchDoneScheduled: app.collections.tasksScheduled.fetched
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
 
         if @requestHistory.attributes.requestUpdates?.length
@@ -69,9 +79,26 @@ class RequestView extends View
 
         context.requestNameStringLengthTens = Math.floor(context.request.id.length / 10) * 10
 
-        @$el.html @template context
+        $requestHeader = @$el.find('[data-request-header]')
+        $requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
+        $requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
+        $requestHistory = @$el.find('[data-request-history]')
 
-        @renderHistoricalTasksPaginated()
+        partials =
+            partials:
+                requestHeader: @requestHeaderTemplate
+                requestTasksActiveTable: @requestTasksActiveTableTemplate
+                requestTasksScheduledTable: @requestTasksScheduledTableTemplate
+                requestHistory: @requestHistoryTemplate
+
+        if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
+            @$el.html @template context, partials
+            @renderHistoricalTasksPaginated()
+        else
+            $requestHeader.html @requestHeaderTemplate context
+            $requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
+            $requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
+            $requestHistory.html @requestHistoryTemplate context
 
         @setupEvents()
 
@@ -215,10 +242,10 @@ class RequestView extends View
 
             dialogType dialogOptions
 
-
         @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
             taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
             $row = $(e.target).parents('tr')
+            $containingTable = $row.parents('table')
 
             vex.dialog.confirm
                 message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
@@ -227,5 +254,6 @@ class RequestView extends View
                     taskModel.run()
                     app.collections.tasksScheduled.remove(taskModel)
                     $row.remove()
+                    utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
 
 module.exports = RequestView

@@ -1,100 +1,23 @@
-<header class="jumbotron subhead" id="overview">
-    <h1 data-string-length-tens="{{ requestNameStringLengthTens }}">
-        {{#hardBreak request.name}}{{/hardBreak}}
-
-        <div class="header-actions">
-            {{#if request.fullObject}}
-                <a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a>
-            {{/if}}
-            {{#if request.scheduledOrOnDemand}}
-                <a data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">Run now</a>
-            {{/if}}
-            <a data-request-id="{{ request.id }}" data-action="remove">Remove</a>
-        </div>
-    </h1>
-    {{#eachWithFn requestHistory.requestUpdates}}
-        {{#if _first}}
-            <p class="lead">{{ stateHuman }} by {{ userHuman }} {{ createdAtHuman }}</p>
-        {{/if}}
-    {{/eachWithFn}}
+<header class="jumbotron subhead" id="overview" data-request-header>
+    {{> requestHeader}}
 </header>
 
 <section>
     <div class="page-header">
         <h1>Active Tasks</h1>
     </div>
-    {{#if requestTasksActive}}
-        <div class="row-fluid">
-            <div class="span12">
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th class="visible-desktop">Status</th>
-                            <th class="visible-desktop">Created</th>
-                            <th class="hidden-phone">Updated</th>
-                            <th class="hidden-phone" data-sortable="false"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requestTasksActive}}
-                            <tr data-task-id="{{ id }}">
-                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
-                                <td class="visible-desktop">{{ lastStatusHuman }}</td>
-                                <td class="visible-desktop" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
-                                <td class="hidden-phone" data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
-                                <td class="actions-column hidden-phone">
-                                    <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    <a href="{{#appRoot}}{{/appRoot}}task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
-                                </td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {{else}}
-        {{#if fetchDoneActive}}
-            <div class="empty-table-message"><p>No active tasks</p></div>
-        {{else}}
-            <div class="page-loader centered"></div>
-        {{/if}}
-    {{/if}}
+    <div data-request-tasks-active-table-container>
+        {{> requestTasksActiveTable}}
+    </div>
 </section>
 
 <section>
     <div class="page-header">
         <h1>Scheduled Tasks</h1>
     </div>
-    {{#if requestTasksScheduled}}
-        <div class="row-fluid">
-            <div class="span12">
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Next run</th>
-                            <th data-sortable="false"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requestTasksScheduled}}
-                            <tr data-task-id="{{ id }}">
-                                <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
-                                <td data-value="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
-                                <td class="actions-column">
-                                    <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                    <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
-                                </td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {{else}}
-        <div class="empty-table-message"><p>No scheduled tasks</p></div>
-    {{/if}}
+    <div data-request-tasks-scheduled-table-container>
+        {{> requestTasksScheduledTable}}
+    </div>
 </section>
 
 <section>
@@ -126,34 +49,7 @@
     <div class="page-header">
         <h1>History</h1>
     </div>
-    {{#if requestHistory.requestUpdates}}
-        <div class="row-fluid">
-            <div class="span12">
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th>State</th>
-                            <th>User</th>
-                            <th>Created</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requestHistory.requestUpdates}}
-                            <tr>
-                                <td><span title="{{ state }}">{{ stateHuman }}</span></td>
-                                <td><span title="{{ user }}">{{ userHuman }}</span></td>
-                                <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {{else}}
-        {{#if fetchDoneHistory}}
-            <div class="empty-table-message"><p>No request history</p></div>
-        {{else}}
-            <div class="page-loader centered"></div>
-        {{/if}}
-    {{/if}}
+    <div data-request-history>
+        {{> requestHistory}}
+    </div>
 </section>

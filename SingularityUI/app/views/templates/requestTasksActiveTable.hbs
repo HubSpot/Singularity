@@ -1,0 +1,37 @@
+{{#if requestTasksActive}}
+    <div class="row-fluid">
+        <div class="span12">
+            <table class="table" data-sortable>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th class="visible-desktop">Status</th>
+                        <th class="visible-desktop">Created</th>
+                        <th class="hidden-phone">Updated</th>
+                        <th class="hidden-phone" data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn requestTasksActive}}
+                        <tr data-task-id="{{ id }}">
+                            <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
+                            <td class="visible-desktop">{{ lastStatusHuman }}</td>
+                            <td class="visible-desktop" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                            <td class="hidden-phone" data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                            <td class="actions-column hidden-phone">
+                                <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
+                                <a href="{{#appRoot}}{{/appRoot}}task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
+                            </td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{else}}
+    {{#if fetchDoneActive}}
+        <div class="empty-table-message"><p>No active tasks</p></div>
+    {{else}}
+        <div class="page-loader centered"></div>
+    {{/if}}
+{{/if}}
