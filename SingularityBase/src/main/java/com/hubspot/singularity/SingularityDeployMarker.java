@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,8 +17,12 @@ public class SingularityDeployMarker extends SingularityJsonObject {
   private final long timestamp;
   private final Optional<String> user;
   
-  public static SingularityDeployMarker fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityDeployMarker.class);
+  public static SingularityDeployMarker fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityDeployMarker.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   @JsonCreator

@@ -2,6 +2,8 @@ package com.hubspot.singularity;
 
 import java.util.Collection;
 
+import org.apache.mesos.Protos.TaskState;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -12,26 +14,26 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
 
   private final SingularityTaskId taskId;
   private final long updatedAt;
-  private final Optional<String> lastStatus;
+  private final Optional<TaskState> lastTaskState;
   
   public static SingularityTaskIdHistory fromTaskIdAndUpdates(SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> updates) {
-    String lastTaskStatus = null;
+    TaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
     
     if (updates != null && !updates.isEmpty()) {
       SingularityTaskHistoryUpdate lastUpdate = Ordering.natural().max(updates);
-      lastTaskStatus = lastUpdate.getStatusUpdate();
+      lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }
     
-    return new SingularityTaskIdHistory(taskId, updatedAt, Optional.fromNullable(lastTaskStatus));
+    return new SingularityTaskIdHistory(taskId, updatedAt, Optional.fromNullable(lastTaskState));
   }
   
   @JsonCreator
-  public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("updatedAt") long updatedAt, @JsonProperty("lastStatus") Optional<String> lastStatus) {
+  public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("updatedAt") long updatedAt, @JsonProperty("lastStatus") Optional<TaskState> lastTaskState) {
     this.taskId = taskId;
     this.updatedAt = updatedAt;
-    this.lastStatus = lastStatus;
+    this.lastTaskState = lastTaskState;
   }
 
   @Override
@@ -45,18 +47,18 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   public SingularityTaskId getTaskId() {
     return taskId;
   }
-
-  public Optional<String> getLastStatus() {
-    return lastStatus;
-  }
   
+  public Optional<TaskState> getLastTaskState() {
+    return lastTaskState;
+  }
+
   public long getUpdatedAt() {
     return updatedAt;
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskIdHistory [taskId=" + taskId + ", updatedAt=" + updatedAt + ", lastStatus=" + lastStatus + "]";
+    return "SingularityTaskIdHistory [taskId=" + taskId + ", updatedAt=" + updatedAt + ", lastTaskState=" + lastTaskState + "]";
   }
   
 }

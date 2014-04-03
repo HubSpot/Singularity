@@ -14,8 +14,13 @@ public class SingularityTaskHistoryUpdateTranscoder extends SingularityTaskIdHol
   }
 
   @Override
-  public SingularityTaskHistoryUpdate transcode(byte[] data) throws Exception {
+  public SingularityTaskHistoryUpdate transcode(byte[] data) {
     return SingularityTaskHistoryUpdate.fromBytes(data, objectMapper);
+  }
+
+  @Override
+  public byte[] toBytes(SingularityTaskHistoryUpdate object) {
+    return object.getAsBytes(objectMapper);
   }
   
 }

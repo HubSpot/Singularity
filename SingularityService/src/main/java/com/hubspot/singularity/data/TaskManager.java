@@ -88,7 +88,7 @@ public class TaskManager extends CuratorAsyncManager {
       public SingularityPendingTask apply(SingularityPendingTaskId input) {
         Optional<String> maybeCmdLineArgs = Optional.absent();
         
-        if (input.getPendingTypeEnum() == PendingType.ONEOFF) {
+        if (input.getPendingType() == PendingType.ONEOFF) {
           maybeCmdLineArgs = getStringData(ZKPaths.makePath(SCHEDULED_PATH_ROOT, input.getId()));
         }
         
@@ -156,7 +156,7 @@ public class TaskManager extends CuratorAsyncManager {
   public void saveLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType, Optional<LoadBalancerState> loadBalancerState) {
     Optional<byte[]> data = Optional.absent();
     if (loadBalancerState.isPresent()) {
-      data = Optional.of(LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER.getBytes(loadBalancerState.get()));
+      data = Optional.of(LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER.toBytes(loadBalancerState.get()));
     }
     
     save(getLoadBalancerStatePath(taskId, requestType), data);
@@ -267,7 +267,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskStateEnum()), Optional.of(taskHistoryUpdate.getAsBytes(objectMapper)));
+    return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), Optional.of(taskHistoryUpdate.getAsBytes(objectMapper)));
   }
   
   public boolean isActiveTask(String taskId) {
@@ -367,7 +367,7 @@ public class TaskManager extends CuratorAsyncManager {
     
     curator.delete().forPath(scheduledPath);
     
-    final byte[] data = task.getAsBytes(objectMapper);
+    final byte[] data = taskTranscoder.toBytes(task);
     
     // TODO - what if it fails also
 

@@ -1,9 +1,10 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -21,22 +22,26 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   private final int numSequentialFailures;
   
   private final Optional<Long> lastFinishAt;
-  private final Optional<String> lastTaskStatus;
-  
-  public static SingularityDeployStatistics fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityDeployStatistics.class);
+  private final Optional<TaskState> lastTaskState;
+
+  public static SingularityDeployStatistics fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityDeployStatistics.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures, 
-      @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskStatus") Optional<String> lastTaskStatus,
+      @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<TaskState> lastTaskState,
       @JsonProperty("numSequentialSuccess") int numSequentialSuccess, @JsonProperty("numSequentialFailures") int numSequentialFailures) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
     this.numFailures = numFailures;
     this.lastFinishAt = lastFinishAt;
-    this.lastTaskStatus = lastTaskStatus;
+    this.lastTaskState = lastTaskState;
     this.numSequentialRetries = numSequentialRetries;
     this.numSequentialFailures = numSequentialFailures;
     this.numSequentialSuccess = numSequentialFailures;
@@ -45,7 +50,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   public SingularityDeployStatisticsBuilder toBuilder() {
     return new SingularityDeployStatisticsBuilder(requestId, deployId)
       .setLastFinishAt(lastFinishAt)
-      .setLastTaskStatus(lastTaskStatus)
+      .setLastTaskState(lastTaskState)
       .setNumSequentialFailures(numSequentialFailures)
       .setNumSequentialRetries(numSequentialRetries)
       .setNumSequentialSuccess(numSequentialSuccess)
@@ -73,16 +78,8 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     return lastFinishAt;
   }
 
-  public Optional<String> getLastTaskStatus() {
-    return lastTaskStatus;
-  }
-  
-  @JsonIgnore
-  public Optional<TaskState> getLastTaskStatusEnum() {
-    if (lastTaskStatus.isPresent()) {
-      return Optional.of(TaskState.valueOf(lastTaskStatus.get()));
-    }
-    return Optional.absent();
+  public Optional<TaskState> getLastTaskState() {
+    return lastTaskState;
   }
 
   public int getNumSequentialRetries() {
@@ -100,7 +97,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries + ", numSequentialSuccess="
-        + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskStatus=" + lastTaskStatus + "]";
+        + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
   
 }

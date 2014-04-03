@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,8 +12,12 @@ public class SingularityPendingDeploy extends SingularityJsonObject {
   private final SingularityDeployMarker deployMarker;
   private final Optional<LoadBalancerState> loadBalancerState;
   
-  public static SingularityPendingDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityPendingDeploy.class);
+  public static SingularityPendingDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityPendingDeploy.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
 
   @JsonCreator

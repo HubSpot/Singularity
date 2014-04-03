@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -31,8 +32,12 @@ public class SingularityRequest extends SingularityJsonObject {
     return new SingularityRequestBuilder();
   }
 
-  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityRequest.class);
+  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityRequest.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   @JsonCreator

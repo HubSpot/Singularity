@@ -87,7 +87,7 @@ public class LoadBalancerClient {
       LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
       
       if (isSuccess(response)) {
-        returnState = Optional.of(readResponse(response).getLoadBalancerStateEnum());
+        returnState = Optional.of(readResponse(response).getLoadBalancerState());
       } else {
         returnState = onFailure;
       }

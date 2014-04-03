@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
@@ -16,11 +15,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   private final PendingType pendingType;
 
   @JsonCreator
-  public SingularityPendingTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long nextRunAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("pendingType") String pendingType) {
-    this(requestId, deployId, nextRunAt, instanceNo, PendingType.valueOf(pendingType));
-  }
-  
-  public SingularityPendingTaskId(String requestId, String deployId, long nextRunAt, int instanceNo, PendingType pendingType) {
+  public SingularityPendingTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long nextRunAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("pendingType") PendingType pendingType) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.nextRunAt = nextRunAt;
@@ -44,12 +39,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     return instanceNo;
   }
   
-  public String getPendingType() {
-    return pendingType.name();
-  }
-  
-  @JsonIgnore
-  public PendingType getPendingTypeEnum() {
+  public PendingType getPendingType() {
     return pendingType;
   }
     

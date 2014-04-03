@@ -16,19 +16,21 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryTranscoder;
 
 public class JDBIHistoryManager implements HistoryManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(JDBIHistoryManager.class);
   
   private final HistoryJDBI history;
+  private final SingularityTaskHistoryTranscoder taskHistoryTranscoder;
   private final ObjectMapper objectMapper;
 
-  // TODO jdbi timeouts? should this be synchronous?
-  // TODO review exception handling
+  // TODO jdbi timeouts? 
   
   @Inject
-  public JDBIHistoryManager(HistoryJDBI history, ObjectMapper objectMapper) {
+  public JDBIHistoryManager(HistoryJDBI history, ObjectMapper objectMapper, SingularityTaskHistoryTranscoder taskHistoryTranscoder) {
+    this.taskHistoryTranscoder = taskHistoryTranscoder;
     this.history = history;
     this.objectMapper = objectMapper;
   }
@@ -70,7 +72,11 @@ public class JDBIHistoryManager implements HistoryManager {
     SingularityTaskIdHistory taskIdHistory = SingularityTaskIdHistory.fromTaskIdAndUpdates(taskHistory.getTask().getTaskId(), taskHistory.getTaskUpdates());
     
     try {
-      history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistory.getAsBytes(objectMapper), new Date(taskIdHistory.getTaskId().getStartedAt()), new Date(taskIdHistory.getUpdatedAt()), taskIdHistory.getLastStatus().orNull());
+      String lastTaskStatus = null;
+      if (taskIdHistory.getLastTaskState().isPresent()) {
+        lastTaskStatus = taskIdHistory.getLastTaskState().get().name();
+      }
+      history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getTaskId().getStartedAt()), new Date(taskIdHistory.getUpdatedAt()), lastTaskStatus);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
@@ -78,7 +84,13 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    return Optional.fromNullable(history.getTaskHistoryForTask(taskId));
+    byte[] historyBytes = history.getTaskHistoryForTask(taskId);
+    
+    if (historyBytes == null) {
+      return Optional.absent();
+    }
+    
+    return Optional.of(taskHistoryTranscoder.transcode(historyBytes));
   }
   
 }

@@ -177,7 +177,7 @@ public class SingularityScheduler {
   }
   
   private void checkForBounceAndAddToCleaningTasks(SingularityPendingRequest pendingRequest, final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
-    if (pendingRequest.getPendingTypeEnum() != PendingType.BOUNCE) {
+    if (pendingRequest.getPendingType() != PendingType.BOUNCE) {
       return;
     }
     
@@ -336,7 +336,7 @@ public class SingularityScheduler {
     }
     
     bldr.setLastFinishAt(Optional.of(failTime));
-    bldr.setLastTaskStatus(Optional.of(state.name()));
+    bldr.setLastTaskState(Optional.of(state));
     
     if (MesosUtils.isTaskFailed(state)) {
       bldr.setNumSequentialFailures(bldr.getNumSequentialFailures() + 1);
@@ -417,7 +417,7 @@ public class SingularityScheduler {
   }
   
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, String deployId, SingularityPendingRequest pendingRequest) {
-    final long nextRunAt = getNextRunAt(request, pendingRequest.getPendingTypeEnum());
+    final long nextRunAt = getNextRunAt(request, pendingRequest.getPendingType());
   
     int highestInstanceNo = 0;
 
@@ -430,7 +430,7 @@ public class SingularityScheduler {
     final List<SingularityPendingTask> newTasks = Lists.newArrayListWithCapacity(numMissingInstances);
     
     for (int i = 0; i < numMissingInstances; i++) {
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, i + 1 + highestInstanceNo, pendingRequest.getPendingTypeEnum()), pendingRequest.getCmdLineArgs()));
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, i + 1 + highestInstanceNo, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
     }
     
     return newTasks;

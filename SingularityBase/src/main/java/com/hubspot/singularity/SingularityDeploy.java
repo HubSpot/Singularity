@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +42,12 @@ public class SingularityDeploy extends SingularityJsonObject {
     return new SingularityDeployBuilder();
   }
   
-  public static SingularityDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityDeploy.class);
+  public static SingularityDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityDeploy.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
 
   @JsonCreator

@@ -11,7 +11,6 @@ import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.mappers.SingularityRequestHistoryMapper;
 import com.hubspot.singularity.data.history.mappers.SingularityTaskHistoryMapper;
@@ -28,7 +27,7 @@ public interface HistoryJDBI {
   
   @Mapper(SingularityTaskHistoryMapper.class)
   @SqlQuery("SELECT taskHistory FROM taskHistory WHERE taskId = :taskId")
-  SingularityTaskHistory getTaskHistoryForTask(@Bind("taskId") String taskId);
+  byte[] getTaskHistoryForTask(@Bind("taskId") String taskId);
 
   @Mapper(SingularityTaskIdHistoryMapper.class)
   @SqlQuery("SELECT taskId, requestId, updatedAt, lastTaskStatus FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limitStart, :limitCount")

@@ -14,8 +14,13 @@ public class SingularityDeployStateTranscoder implements Transcoder<SingularityD
   }
 
   @Override
-  public SingularityDeployState transcode(byte[] data) throws Exception {
+  public SingularityDeployState transcode(byte[] data) {
     return SingularityDeployState.fromBytes(data, objectMapper);
+  }
+  
+  @Override
+  public byte[] toBytes(SingularityDeployState object) {
+    return object.getAsBytes(objectMapper);
   }
   
 }

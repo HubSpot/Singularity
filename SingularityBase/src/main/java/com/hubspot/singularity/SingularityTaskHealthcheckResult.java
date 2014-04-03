@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,8 +17,12 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder {
   private final Optional<String> errorMessage;
   private final long timestamp;
   
-  public static SingularityTaskHealthcheckResult fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityTaskHealthcheckResult.class);
+  public static SingularityTaskHealthcheckResult fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityTaskHealthcheckResult.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
 
   @JsonCreator

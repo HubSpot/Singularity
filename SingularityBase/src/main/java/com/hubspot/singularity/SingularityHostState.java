@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +20,14 @@ public class SingularityHostState extends SingularityJsonObject {
   private final String hostname;
   
   private final String mesosMaster;
+
+  public static SingularityHostState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityHostState.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
+  }
   
   @JsonCreator
   public SingularityHostState(@JsonProperty("master") boolean master, @JsonProperty("uptime") long uptime, @JsonProperty("driverStatus") String driverStatus, @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer, @JsonProperty("hostAddress") String hostAddress, @JsonProperty("hostname") String hostname, @JsonProperty("mesosMaster") String mesosMaster) {
@@ -56,10 +66,6 @@ public class SingularityHostState extends SingularityJsonObject {
   
   public String getMesosMaster() {
     return mesosMaster;
-  }
-
-  public static SingularityHostState fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityHostState.class);
   }
 
   @Override

@@ -58,7 +58,7 @@ public class SingularityCleaner {
   }
   
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
-    if (taskCleanup.getCleanupTypeEnum().shouldKillInstantly()) {
+    if (taskCleanup.getCleanupType().shouldKillInstantly()) {
       LOG.debug("Killing a task {} immediately because of its cleanup type", taskCleanup);
       return true;
     }
@@ -144,14 +144,14 @@ public class SingularityCleaner {
       
       boolean killTasks = true;
       
-      if (requestCleanup.getCleanupTypeEnum() == RequestCleanupType.PAUSING) {
+      if (requestCleanup.getCleanupType() == RequestCleanupType.PAUSING) {
         if (request.isPresent()) {
           requestManager.pause(request.get());
         } else {
           killTasks = false;
           LOG.info("Not pausing {}, because it didn't exist in active requests", requestId);
         }
-      } else if (requestCleanup.getCleanupTypeEnum() == RequestCleanupType.DELETING) {
+      } else if (requestCleanup.getCleanupType() == RequestCleanupType.DELETING) {
         if (request.isPresent()) {        
           killTasks = false;
           LOG.info("Not cleaning {}, because it existed", requestId);

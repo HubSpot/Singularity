@@ -78,7 +78,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     List<T> filtered = Lists.newArrayListWithCapacity(decomissioning.size());
     
     for (T object : decomissioning) {
-      if (object.getStateEnum() == SingularityMachineState.DECOMISSIONING) {
+      if (object.getState() == SingularityMachineState.DECOMISSIONING) {
         filtered.add(object);
       }
     }

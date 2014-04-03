@@ -97,6 +97,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long loadBalancerRequestTimeoutMillis = 2000;
   
+  @NotNull
+  private boolean compressLargeDataObjects = true;
+  
+  public boolean isCompressLargeDataObjects() {
+    return compressLargeDataObjects;
+  }
+
+  public void setCompressLargeDataObjects(boolean compressLargeDataObjects) {
+    this.compressLargeDataObjects = compressLargeDataObjects;
+  }
+
   public long getCheckNewTasksEverySeconds() {
     return checkNewTasksEverySeconds;
   }

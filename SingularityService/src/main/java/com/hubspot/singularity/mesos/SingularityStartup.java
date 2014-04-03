@@ -87,7 +87,6 @@ public class SingularityStartup {
     LOG.info("Finished startup after {}", Utils.duration(start));
   }
   
-  // TODO this should be done when the master changes, too =/
   private void enqueueHealthAndNewTaskchecks() {
     final long start = System.currentTimeMillis();
     
@@ -169,7 +168,7 @@ public class SingularityStartup {
             scheduled++;
           }
         } else {
-          LOG.debug("No deployid for request {}, not scheduling at startup", request);
+          LOG.debug("No deployId for request {}, not scheduling at startup", request);
         }
       }
     }

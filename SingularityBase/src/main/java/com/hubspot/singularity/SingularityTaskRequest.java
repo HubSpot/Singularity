@@ -5,8 +5,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SingularityTaskRequest extends SingularityJsonObject implements Comparable<SingularityTaskRequest> {
@@ -15,8 +13,12 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
   private final SingularityDeploy deploy;
   private final SingularityPendingTask pendingTask;
   
-  public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
-    return objectMapper.readValue(bytes, SingularityTaskRequest.class);
+  public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityTaskRequest.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   @JsonCreator

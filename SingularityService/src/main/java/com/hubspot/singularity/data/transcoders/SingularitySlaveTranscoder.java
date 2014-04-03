@@ -14,8 +14,13 @@ public class SingularitySlaveTranscoder implements Transcoder<SingularitySlave> 
   }
 
   @Override
-  public SingularitySlave transcode(byte[] data) throws Exception {
+  public SingularitySlave transcode(byte[] data) {
     return SingularitySlave.fromBytes(data, objectMapper);
+  }
+
+  @Override
+  public byte[] toBytes(SingularitySlave object) {
+    return object.getAsBytes(objectMapper);
   }
   
 }

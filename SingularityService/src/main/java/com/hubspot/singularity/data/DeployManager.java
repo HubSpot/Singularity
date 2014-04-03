@@ -118,7 +118,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   public ConditionalPersistResult persistDeploy(SingularityRequest request, SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
-    final SingularityCreateResult deploySaveResult = create(getDeployPath(deploy.getRequestId(), deploy.getId()), Optional.of(deploy.getAsBytes(objectMapper)));
+    final SingularityCreateResult deploySaveResult = create(getDeployPath(deploy.getRequestId(), deploy.getId()), Optional.of(deployTranscoder.toBytes(deploy)));
     
     if (deploySaveResult == SingularityCreateResult.EXISTED) {
       LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));

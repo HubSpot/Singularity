@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -13,8 +14,12 @@ public class SingularityLoadBalancerRequest extends SingularityJsonObject {
   private final List<SingularityTask> add;
   private final List<SingularityTask> remove;
   
-  public static SingularityLoadBalancerRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityLoadBalancerRequest.class);
+  public static SingularityLoadBalancerRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityLoadBalancerRequest.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   @JsonCreator
