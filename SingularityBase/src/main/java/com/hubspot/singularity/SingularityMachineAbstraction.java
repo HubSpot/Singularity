@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public abstract class SingularityMachineAbstraction extends SingularityJsonObject {
   
@@ -20,14 +19,9 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
   public String getId() {
     return id;
   }
-
-  @JsonIgnore
-  public SingularityMachineState getStateEnum() {
-    return state;
-  }
   
-  public String getState() {
-    return state.name();
+  public SingularityMachineState getState() {
+    return state;
   }
   
   public void setState(SingularityMachineState state) {

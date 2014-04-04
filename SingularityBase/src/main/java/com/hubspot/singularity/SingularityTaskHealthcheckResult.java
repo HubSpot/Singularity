@@ -1,9 +1,13 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder {
 
@@ -13,8 +17,12 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder {
   private final Optional<String> errorMessage;
   private final long timestamp;
   
-  public static SingularityTaskHealthcheckResult fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityTaskHealthcheckResult.class);
+  public static SingularityTaskHealthcheckResult fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityTaskHealthcheckResult.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
 
   @JsonCreator
@@ -47,6 +55,11 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder {
   
   public Optional<String> getResponseBody() {
     return responseBody;
+  }
+  
+  @JsonIgnore
+  public boolean isFailed() {
+    return getErrorMessage().isPresent() || (getStatusCode().isPresent() && !JavaUtils.isHttpSuccess(getStatusCode().get()));
   }
   
   @Override

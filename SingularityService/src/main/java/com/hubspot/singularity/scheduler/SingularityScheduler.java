@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -177,7 +177,7 @@ public class SingularityScheduler {
   }
   
   private void checkForBounceAndAddToCleaningTasks(SingularityPendingRequest pendingRequest, final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
-    if (pendingRequest.getPendingTypeEnum() != PendingType.BOUNCE) {
+    if (pendingRequest.getPendingType() != PendingType.BOUNCE) {
       return;
     }
     
@@ -285,7 +285,7 @@ public class SingularityScheduler {
     
     final SingularityRequest request = maybeRequest.get();
     
-    final Optional<SingularityDeployState> requestDeployState = deployManager.getDeployState(request.getId());
+    final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
     
     if (!requestDeployState.isPresent() || !requestDeployState.get().getActiveDeploy().isPresent() || !requestDeployState.get().getActiveDeploy().get().getDeployId().equals(taskId.getDeployId())) {
       LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId(), requestDeployState);
@@ -336,7 +336,7 @@ public class SingularityScheduler {
     }
     
     bldr.setLastFinishAt(Optional.of(failTime));
-    bldr.setLastTaskStatus(Optional.of(state.name()));
+    bldr.setLastTaskState(Optional.of(state));
     
     if (MesosUtils.isTaskFailed(state)) {
       bldr.setNumSequentialFailures(bldr.getNumSequentialFailures() + 1);
@@ -417,7 +417,7 @@ public class SingularityScheduler {
   }
   
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, String deployId, SingularityPendingRequest pendingRequest) {
-    final long nextRunAt = getNextRunAt(request, pendingRequest.getPendingTypeEnum());
+    final long nextRunAt = getNextRunAt(request, pendingRequest.getPendingType());
   
     int highestInstanceNo = 0;
 
@@ -430,7 +430,7 @@ public class SingularityScheduler {
     final List<SingularityPendingTask> newTasks = Lists.newArrayListWithCapacity(numMissingInstances);
     
     for (int i = 0; i < numMissingInstances; i++) {
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, i + 1 + highestInstanceNo, pendingRequest.getPendingTypeEnum()), pendingRequest.getCmdLineArgs()));
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, i + 1 + highestInstanceNo, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
     }
     
     return newTasks;

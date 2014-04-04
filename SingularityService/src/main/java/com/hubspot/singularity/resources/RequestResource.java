@@ -16,11 +16,13 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -89,7 +91,7 @@ public class RequestResource {
       
       if (maybeDeployId.isPresent()) {
         requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), PendingType.UPDATED_REQUEST));
-      }   
+      }
     }
   }
   
@@ -115,17 +117,17 @@ public class RequestResource {
   }
   
   private SingularityRequestParent fillEntireRequest(SingularityRequest request) {
-    Optional<SingularityDeployState> deployState = deployManager.getDeployState(request.getId());
+    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
     
     Optional<SingularityDeploy> activeDeploy = Optional.absent();
     Optional<SingularityDeploy> pendingDeploy = Optional.absent();
     
-    if (deployState.isPresent()) {
-      activeDeploy = fillDeploy(deployState.get().getActiveDeploy());
-      pendingDeploy = fillDeploy(deployState.get().getPendingDeploy());
+    if (requestDeployState.isPresent()) {
+      activeDeploy = fillDeploy(requestDeployState.get().getActiveDeploy());
+      pendingDeploy = fillDeploy(requestDeployState.get().getPendingDeploy());
     }
     
-    return new SingularityRequestParent(request, deployState, activeDeploy, pendingDeploy);
+    return new SingularityRequestParent(request, requestDeployState, activeDeploy, pendingDeploy);
   }
   
   @POST
@@ -137,19 +139,20 @@ public class RequestResource {
     validator.checkDeploy(request, pendingDeploy);
 
     SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, pendingDeploy.getId(), System.currentTimeMillis(), user);
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<LoadBalancerState> absent());
     
-    if (deployManager.markDeploy(deployMarker) == SingularityCreateResult.EXISTED) {
-      throw WebExceptions.conflict("Deploy already existed for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getDeployMarker(requestId).orNull());
+    if (deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED) {
+      throw WebExceptions.conflict("Deploy already existed for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
     }
     
     ConditionalPersistResult persistResult = deployManager.persistDeploy(request, deployMarker, pendingDeploy);
     
     if (persistResult == ConditionalPersistResult.STATE_CHANGED) {
-      throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getDeployState(requestId).orNull(), deployManager.getDeployMarker(requestId).orNull());
+      throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getRequestDeployState(requestId).orNull(), deployManager.getPendingDeploy(requestId).orNull());
     }
     
     if (!request.isDeployable()) {
-      deployManager.deleteActiveDeploy(deployMarker);
+      deployManager.deletePendingDeploy(pendingDeployObj);
     }
     
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
@@ -162,7 +165,7 @@ public class RequestResource {
   public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
-    Optional<SingularityDeployState> deployState = deployManager.getDeployState(request.getId());
+    Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(request.getId());
     
     if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId)) {
       throw WebExceptions.badRequest("Request id %s does not have a pending deploy with id %s", requestId, deployId);

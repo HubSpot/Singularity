@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -20,6 +19,7 @@ import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -31,7 +31,9 @@ import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
+import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 
 public class SingularityStartup {
 
@@ -42,16 +44,20 @@ public class SingularityStartup {
   private final SingularityRackManager rackManager;
   private final RequestManager requestManager;
   private final SingularityHealthchecker healthchecker;
+  private final SingularityNewTaskChecker newTaskChecker;
   private final DeployManager deployManager;
+  private final SingularityTaskTranscoder taskTranscoder;
   
   @Inject
-  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityHealthchecker healthchecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, RequestManager requestManager) {
+  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityTaskTranscoder taskTranscoder, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, RequestManager requestManager) {
     this.mesosClient = mesosClient;
     this.rackManager = rackManager;
     this.deployManager = deployManager;
+    this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.healthchecker = healthchecker;
+    this.taskTranscoder = taskTranscoder;
   }
   
   public void startup(MasterInfo masterInfo) {
@@ -71,7 +77,7 @@ public class SingularityStartup {
       // 2- we need to reschedule the world.
       
       checkForMissingActiveTasks(state);
-      enqueueHealthchecks();
+      enqueueHealthAndNewTaskchecks();
       rescheduleTheWorld();
       
     } catch (Exception e) {
@@ -81,39 +87,47 @@ public class SingularityStartup {
     LOG.info("Finished startup after {}", Utils.duration(start));
   }
   
-  private void enqueueHealthchecks() {
-    List<SingularityTask> activeTasks = taskManager.getActiveTasks();
-    Map<SingularityTaskId, SingularityTask> activeTaskMap = Maps.uniqueIndex(activeTasks, new Function<SingularityTask, SingularityTaskId>() {
-      @Override
-      public SingularityTaskId apply(SingularityTask input) {
-        return input.getTaskId();
-      }
-    });;
+  private void enqueueHealthAndNewTaskchecks() {
+    final long start = System.currentTimeMillis();
     
-    Set<SingularityTaskId> taskIdsToPossiblyHealthcheck = Sets.newHashSetWithExpectedSize(activeTasks.size());
+    final List<SingularityTask> activeTasks = taskManager.getActiveTasks();
+    final Map<SingularityTaskId, SingularityTask> activeTaskMap = Maps.uniqueIndex(activeTasks, taskTranscoder);
     
-    for (SingularityTask activeTask : activeTasks) {
-      if (healthchecker.shouldHealthcheck(activeTask)) {
-        taskIdsToPossiblyHealthcheck.add(activeTask.getTaskId());
-      }
-    }
+    final Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> taskUpdates = taskManager.getTaskHistoryUpdates(activeTaskMap.keySet());
     
-    taskIdsToPossiblyHealthcheck.removeAll(taskManager.getHealthcheckResults(taskIdsToPossiblyHealthcheck).keySet());
+    final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
     
-    Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> taskUpdates = taskManager.getTaskHistoryUpdates(taskIdsToPossiblyHealthcheck);
-    
+    int enqueuedNewTaskChecks = 0;
     int enqueuedHealthchecks = 0;
     
-    for (SingularityTaskId taskId : taskIdsToPossiblyHealthcheck) {
+    for (SingularityTaskId taskId : activeTaskMap.keySet()) {
       SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(taskUpdates.get(taskId));
+      SingularityTask task = activeTaskMap.get(taskId);
       
-      if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
-        healthchecker.enqueueHealthcheck(activeTaskMap.get(taskId));
-        enqueuedHealthchecks++;
+      if (simplifiedTaskState != SimplifiedTaskState.DONE) {
+        if (!hasMatchingPendingDeploy(pendingDeploys, taskId)) {
+          newTaskChecker.enqueueNewTaskCheck(task);
+          enqueuedNewTaskChecks++;
+        }
+      } else if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
+        if (healthchecker.shouldHealthcheck(task)) {
+          healthchecker.enqueueHealthcheck(task);
+          enqueuedHealthchecks++;
+        }
       }
     }
     
-    LOG.info("Finishing checking for healthchecks, enqueued {}", enqueuedHealthchecks);
+    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), Utils.duration(start));
+  }
+  
+  private boolean hasMatchingPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
+    for (SingularityPendingDeploy pendingDeploy : pendingDeploys) {
+      if (pendingDeploy.getDeployMarker().getRequestId().equals(taskId.getRequestId()) && pendingDeploy.getDeployMarker().getDeployId().equals(taskId.getDeployId())) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   private void checkForMissingActiveTasks(MesosMasterStateObject state) {
@@ -154,7 +168,7 @@ public class SingularityStartup {
             scheduled++;
           }
         } else {
-          LOG.debug("No deployid for request {}, not scheduling at startup", request);
+          LOG.debug("No deployId for request {}, not scheduling at startup", request);
         }
       }
     }

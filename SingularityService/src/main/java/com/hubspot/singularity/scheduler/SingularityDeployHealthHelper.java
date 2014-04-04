@@ -72,7 +72,7 @@ public class SingularityDeployHealthHelper {
       if (healthcheckResult == null) {
         LOG.warn("No health check present for {}", taskId);
         allHealthy = false;
-      } else if (healthcheckResult.getErrorMessage().isPresent()) {
+      } else if (healthcheckResult.isFailed()) {
         LOG.info("Found a failed health check: {}", healthcheckResult);
         return DeployHealth.UNHEALTHY;
       }

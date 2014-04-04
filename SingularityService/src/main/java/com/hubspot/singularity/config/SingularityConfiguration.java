@@ -29,6 +29,9 @@ public class SingularityConfiguration extends Configuration {
   
   @JsonProperty("singularityUIHostnameAndPath")
   private String singularityUIHostnameAndPath;
+
+  @JsonProperty("loadBalancerUri")
+  private String loadBalancerUri;
   
   @Valid
   @NotNull
@@ -50,19 +53,22 @@ public class SingularityConfiguration extends Configuration {
   private long defaultHealthcheckTimeoutSeconds = 5;
   
   @NotNull
+  private long checkNewTasksEverySeconds = 5;
+  
+  @NotNull
+  private int checkNewTasksScheduledThreads = 3;
+  
+  @NotNull
   private long healthcheckIntervalSeconds = 5;
   
   @NotNull
   private long killScheduledTasksWithAreDecomissionedAfterSeconds = 300;
   
   @NotNull
-  private long persistTaskHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
+  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
   
   @NotNull
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
-  
-  @NotNull
-  private long warnAfterTasksDoNotRunDefaultSeconds = 300;
   
   @NotNull
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
@@ -88,6 +94,52 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private int maxDeployIdSize = 50;
   
+  @NotNull
+  private long loadBalancerRequestTimeoutMillis = 2000;
+  
+  @NotNull
+  private boolean compressLargeDataObjects = true;
+  
+  public boolean isCompressLargeDataObjects() {
+    return compressLargeDataObjects;
+  }
+
+  public void setCompressLargeDataObjects(boolean compressLargeDataObjects) {
+    this.compressLargeDataObjects = compressLargeDataObjects;
+  }
+
+  public long getCheckNewTasksEverySeconds() {
+    return checkNewTasksEverySeconds;
+  }
+
+  public void setCheckNewTasksEverySeconds(long checkNewTasksEverySeconds) {
+    this.checkNewTasksEverySeconds = checkNewTasksEverySeconds;
+  }
+
+  public int getCheckNewTasksScheduledThreads() {
+    return checkNewTasksScheduledThreads;
+  }
+
+  public void setCheckNewTasksScheduledThreads(int checkNewTasksScheduledThreads) {
+    this.checkNewTasksScheduledThreads = checkNewTasksScheduledThreads;
+  }
+
+  public long getLoadBalancerRequestTimeoutMillis() {
+    return loadBalancerRequestTimeoutMillis;
+  }
+
+  public void setLoadBalancerRequestTimeoutMillis(long loadBalancerRequestTimeoutMillis) {
+    this.loadBalancerRequestTimeoutMillis = loadBalancerRequestTimeoutMillis;
+  }
+
+  public String getLoadBalancerUri() {
+    return loadBalancerUri;
+  }
+
+  public void setLoadBalancerUri(String loadBalancerUri) {
+    this.loadBalancerUri = loadBalancerUri;
+  }
+
   public int getMaxRequestIdSize() {
     return maxRequestIdSize;
   }
@@ -124,14 +176,6 @@ public class SingularityConfiguration extends Configuration {
     return deployHealthyBySeconds;
   }
   
-  public long getPersistTaskHistoryEverySeconds() {
-    return persistTaskHistoryEverySeconds;
-  }
-
-  public void setPersistTaskHistoryEverySeconds(long persistTaskHistoryEverySeconds) {
-    this.persistTaskHistoryEverySeconds = persistTaskHistoryEverySeconds;
-  }
-
   public int getHealthcheckStartThreads() {
     return healthcheckStartThreads;
   }
@@ -142,6 +186,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+  
+  public long getPersistHistoryEverySeconds() {
+    return persistHistoryEverySeconds;
+  }
+
+  public void setPersistHistoryEverySeconds(long persistHistoryEverySeconds) {
+    this.persistHistoryEverySeconds = persistHistoryEverySeconds;
   }
 
   public long getCheckDeploysEverySeconds() {
@@ -205,10 +257,6 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(smtpConfiguration);
   }
 
-  public long getWarnAfterTasksDoNotRunDefaultSeconds() {
-    return warnAfterTasksDoNotRunDefaultSeconds;
-  }
-
   public long getZookeeperAsyncTimeout() {
     return zookeeperAsyncTimeout;
   }
@@ -268,10 +316,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
     this.smtpConfiguration = smtpConfiguration;
-  }
-
-  public void setWarnAfterTasksDoNotRunDefaultSeconds(long warnAfterTasksDoNotRunDefaultSeconds) {
-    this.warnAfterTasksDoNotRunDefaultSeconds = warnAfterTasksDoNotRunDefaultSeconds;
   }
 
   public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {

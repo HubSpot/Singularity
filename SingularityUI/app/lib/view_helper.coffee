@@ -22,3 +22,15 @@ Handlebars.registerHelper 'eachWithFn', (items, options) ->
         _.isFunction(options.hash.fn) and options.hash.fn.apply options, [item, i, items]
         options.fn(item)
     ).join('')
+
+Handlebars.registerHelper 'ifFilteredRequest', (request, searchFilter, options) ->
+    return options.inverse(@) unless request and searchFilter
+
+    rowText = request.id
+    user = request.deployUser
+    rowText = "#{ rowText } #{ user }" if user?
+
+    if utils.matchWordsInWords searchFilter, rowText
+        options.inverse @
+    else
+        options.fn @

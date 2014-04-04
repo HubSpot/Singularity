@@ -23,7 +23,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<String, String>> env;
   private Optional<List<String>> uris;
   private Optional<Object> executorData;
-  
+ 
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
   private Optional<Long> healthcheckTimeoutSeconds;
@@ -175,5 +175,5 @@ public class SingularityDeployBuilder {
         + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
         + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
   }
-
+  
 }

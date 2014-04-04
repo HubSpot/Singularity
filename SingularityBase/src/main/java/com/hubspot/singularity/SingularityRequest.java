@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -25,18 +26,24 @@ public class SingularityRequest extends SingularityJsonObject {
   private final Optional<Integer> instances;
   private final Optional<Boolean> rackSensitive;
   
+  private final Optional<Boolean> loadBalanced;
+  
   public static SingularityRequestBuilder newBuilder() {
     return new SingularityRequestBuilder();
   }
 
-  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityRequest.class);
+  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityRequest.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
       @JsonProperty("maxFailuresBeforePausing") Optional<Integer> maxFailuresBeforePausing, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, 
-      @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive) {
+      @JsonProperty("instances") Optional<Integer> instances, @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -45,12 +52,14 @@ public class SingularityRequest extends SingularityJsonObject {
     this.daemon = daemon;
     this.rackSensitive = rackSensitive;
     this.instances = instances;
+    this.loadBalanced = loadBalanced;
   }
   
   public SingularityRequestBuilder toBuilder() {
     return new SingularityRequestBuilder()
         .setDaemon(daemon)
         .setId(id)
+        .setLoadBalanced(loadBalanced)
         .setInstances(instances)
         .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
         .setNumRetriesOnFailure(numRetriesOnFailure)
@@ -90,6 +99,10 @@ public class SingularityRequest extends SingularityJsonObject {
   public Optional<Boolean> getRackSensitive() {
     return rackSensitive;
   }
+  
+  public Optional<Boolean> getLoadBalanced() {
+    return loadBalanced;
+  }
 
   @JsonIgnore
   public int getInstancesSafe() {
@@ -125,11 +138,16 @@ public class SingularityRequest extends SingularityJsonObject {
   public boolean isRackSensitive() {
     return rackSensitive.or(Boolean.FALSE).booleanValue();
   }
+  
+  @JsonIgnore
+  public boolean isLoadBalanced() {
+    return loadBalanced.or(Boolean.FALSE).booleanValue();
+  }
 
   @Override
   public String toString() {
-    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing
-        + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + "]";
+    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", schedule=" + schedule + ", daemon=" + daemon + ", instances="
+        + instances + ", rackSensitive=" + rackSensitive + ", loadBalanced=" + loadBalanced + "]";
   }
   
 }

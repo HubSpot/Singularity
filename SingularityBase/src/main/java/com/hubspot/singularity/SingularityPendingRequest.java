@@ -1,7 +1,8 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -19,20 +20,20 @@ public class SingularityPendingRequest extends SingularityJsonObject {
   private final Optional<String> user;
   private final Optional<String> cmdLineArgs;
   
-  public static SingularityPendingRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityPendingRequest.class);
-  }
-  
-  @JsonCreator
-  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") String pendingType) {
-    this(requestId, deployId, timestamp, cmdLineArgs, user, PendingType.valueOf(pendingType));
+  public static SingularityPendingRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityPendingRequest.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   public SingularityPendingRequest(String requestId, String deployId, PendingType pendingType) {
     this(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
   }
   
-  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> cmdLineArgs, Optional<String> user, PendingType pendingType) {
+  @JsonCreator
+  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -61,15 +62,10 @@ public class SingularityPendingRequest extends SingularityJsonObject {
     return requestId;
   }
   
-  @JsonIgnore
-  public PendingType getPendingTypeEnum() {
+  public PendingType getPendingType() {
     return pendingType;
   }
   
-  public String getPendingType() {
-    return pendingType.name();
-  }
-
   @Override
   public String toString() {
     return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + ", pendingType=" + pendingType + ", cmdLineArgs=" + cmdLineArgs + "]";

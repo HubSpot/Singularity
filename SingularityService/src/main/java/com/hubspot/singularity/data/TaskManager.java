@@ -19,8 +19,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
@@ -31,6 +33,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.LoadBalancerStateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityPendingTaskIdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHealthcheckResultTranscoder;
@@ -46,12 +49,14 @@ public class TaskManager extends CuratorAsyncManager {
   private final static String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private final static String SCHEDULED_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
-    
+  private final static String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";  
+  
   private final static String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
   
   private final static String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
   private final static String DIRECTORY_KEY = "DIRECTORY";
   private final static String TASK_KEY = "TASK";
+  private final static String LOAD_BALANCER_PRE_KEY = "LOAD_BALANCER_";
   
   private final static String UPDATES_PATH = "/updates";
   
@@ -83,7 +88,7 @@ public class TaskManager extends CuratorAsyncManager {
       public SingularityPendingTask apply(SingularityPendingTaskId input) {
         Optional<String> maybeCmdLineArgs = Optional.absent();
         
-        if (input.getPendingTypeEnum() == PendingType.ONEOFF) {
+        if (input.getPendingType() == PendingType.ONEOFF) {
           maybeCmdLineArgs = getStringData(ZKPaths.makePath(SCHEDULED_PATH_ROOT, input.getId()));
         }
         
@@ -98,6 +103,10 @@ public class TaskManager extends CuratorAsyncManager {
   
   private String getTaskPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), TASK_KEY);
+  }
+  
+  private String getLoadBalancerStatePath(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
+    return ZKPaths.makePath(getHistoryPath(taskId), LOAD_BALANCER_PRE_KEY + requestType.name());
   }
   
   private String getDirectoryPath(SingularityTaskId taskId) {
@@ -143,6 +152,15 @@ public class TaskManager extends CuratorAsyncManager {
   public int getNumScheduledTasks() {
     return getNumChildren(SCHEDULED_PATH_ROOT);
   }
+  
+  public void saveLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType, Optional<LoadBalancerState> loadBalancerState) {
+    Optional<byte[]> data = Optional.absent();
+    if (loadBalancerState.isPresent()) {
+      data = Optional.of(LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER.toBytes(loadBalancerState.get()));
+    }
+    
+    save(getLoadBalancerStatePath(taskId, requestType), data);
+  }
 
   public void updateTaskDirectory(SingularityTaskId taskId, String directory) {
     save(getDirectoryPath(taskId), Optional.of(JavaUtils.toBytes(directory)));
@@ -180,8 +198,13 @@ public class TaskManager extends CuratorAsyncManager {
   
   public List<SingularityTaskId> getAllTaskIds() {
     final List<String> requestIds = getChildren(HISTORY_PATH_ROOT);
+    final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
     
-    return getChildrenAsIdsForParents(HISTORY_PATH_ROOT, requestIds, taskIdTranscoder);
+    for (String requestId : requestIds) {
+      paths.add(getRequestPath(requestId));
+    }
+    
+    return getChildrenAsIdsForParents(HISTORY_PATH_ROOT, paths, taskIdTranscoder);
   }
   
   private List<SingularityTaskId> getTaskIds(String root) {
@@ -249,7 +272,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskStateEnum()), Optional.of(taskHistoryUpdate.getAsBytes(objectMapper)));
+    return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), Optional.of(taskHistoryUpdate.getAsBytes(objectMapper)));
   }
   
   public boolean isActiveTask(String taskId) {
@@ -299,8 +322,14 @@ public class TaskManager extends CuratorAsyncManager {
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
     Optional<String> directory = getDirectory(taskId);
     Optional<SingularityTaskHealthcheckResult> lastHealthcheckResult = getHealthcheckResult(taskId);
-
-    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, lastHealthcheckResult, task.get()));
+    Optional<LoadBalancerState> addLoadBalancerState = getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+    Optional<LoadBalancerState> removeLoadBalancerState = getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
+    
+    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, lastHealthcheckResult, task.get(), addLoadBalancerState, removeLoadBalancerState));
+  }
+  
+  public Optional<LoadBalancerState> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
+    return getData(getLoadBalancerStatePath(taskId, requestType), LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER);
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {
@@ -327,18 +356,44 @@ public class TaskManager extends CuratorAsyncManager {
     }
   }
 
+  public Map<SingularityTaskId, SingularityTask> getTasks(Iterable<SingularityTaskId> taskIds) {
+    final List<String> paths = Lists.newArrayList();
+    
+    for (SingularityTaskId taskId : taskIds) {
+      paths.add(getTaskPath(taskId));
+    }
+    
+    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder), taskTranscoder);
+  }
+  
   private void launchTaskPrivate(SingularityTask task) throws Exception {
     final String scheduledPath = getScheduledPath(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
     final String activePath = getActivePath(task.getTaskId().getId());
     
     curator.delete().forPath(scheduledPath);
     
-    final byte[] data = task.getAsBytes(objectMapper);
+    final byte[] data = taskTranscoder.toBytes(task);
     
     // TODO - what if it fails also
 
     curator.create().creatingParentsIfNeeded().forPath(getTaskPath(task.getTaskId()), data);
     curator.create().creatingParentsIfNeeded().forPath(activePath, data);
+  }
+  
+  public List<SingularityTaskId> getLBCleanupTasks() {
+    return getChildrenAsIds(LB_CLEANUP_PATH_ROOT, taskIdTranscoder);
+  }
+  
+  private String getLBCleanupPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(LB_CLEANUP_PATH_ROOT, taskId.getId());
+  }
+  
+  public void deleteLBCleanupTask(SingularityTaskId taskId) {
+    delete(getLBCleanupPath(taskId));
+  }
+  
+  public SingularityCreateResult createLBCleanupTask(SingularityTaskId taskId) {
+    return create(getLBCleanupPath(taskId));
   }
   
   public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {

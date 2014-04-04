@@ -78,8 +78,13 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
       directory = findDirectory(task.getTaskId(), slaveFramework.getExecutors());
-      if (!directory.isPresent()) {
-        directory = findDirectory(task.getTaskId(), slaveFramework.getCompletedExecutors());
+      if (directory.isPresent()) {
+        break;
+      }
+      
+      directory = findDirectory(task.getTaskId(), slaveFramework.getCompletedExecutors());
+      if (directory.isPresent()) {
+        break;
       }
     }
    

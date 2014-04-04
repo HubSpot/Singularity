@@ -40,7 +40,7 @@ public class JadeHelper {
       output.add(
           ImmutableMap.<String, String> builder()
           .put("date", date.toString())
-          .put("update", taskUpdate.getStatusUpdate())
+          .put("update", taskUpdate.getTaskState().name())
           .build());
     }
 
@@ -52,7 +52,7 @@ public class JadeHelper {
     Date createdFormatted = new Date(requestHistory.getCreatedAt());
 
     Map<String, String> formatted = Maps.newHashMap();
-    formatted.put("state", requestHistory.getState());
+    formatted.put("state", requestHistory.getState().name());
     formatted.put("date", createdFormatted.toString());
     formatted.put("user", requestHistory.getUser().orNull());
     formatted.put("request_id", requestHistory.getRequest().getId());

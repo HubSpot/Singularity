@@ -72,10 +72,10 @@ public abstract class CuratorManager {
   
   protected SingularityDeleteResult delete(String path) {
     try {
-      curator.delete().forPath(path);
+      curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Tried to delete an item at path %s that didn't exist", path));
+      LOG.warn("Tried to delete an item at path {} that didn't exist", path);
       return SingularityDeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);

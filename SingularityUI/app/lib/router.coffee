@@ -95,7 +95,10 @@ class Router extends Backbone.Router
         app.views.current = app.views.status
         app.show app.views.status.refresh(fromRoute = true)
 
-    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'running', searchFilter = '') ->
+    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'all', searchFilter = '') ->
+        if requestsSubFilter is 'running'
+            requestsSubFilter = 'daemon' # Front end URL migration :P
+
         if not app.views.requests?
             app.views.requests = new RequestsView { requestsFilter, requestsSubFilter, searchFilter }
 
@@ -104,6 +107,10 @@ class Router extends Backbone.Router
         else
             @lastRequestsFilter = requestsFilter
             app.views.current = app.views.requests
+
+            if requestsFilter is 'active' and app.views.requests.lastRequestsActiveSubFilter
+                requestsSubFilter = app.views.requests.lastRequestsActiveSubFilter
+
             app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter).refresh()
 
     request: (requestId) ->
@@ -190,7 +197,7 @@ class Router extends Backbone.Router
         if not app.views.pageNotFound?
             app.views.pageNotFound = new PageNotFoundView
             app.views.current = app.views.pageNotFound
-            app.show app.views.PageNotFoundView.render()
+            app.show app.views.pageNotFound.render()
         else
             app.views.current = app.views.pageNotFound
             app.show app.views.pageNotFound

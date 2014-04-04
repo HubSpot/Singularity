@@ -14,7 +14,12 @@ public class SingularityTaskHealthcheckResultTranscoder extends SingularityTaskI
   }
 
   @Override
-  public SingularityTaskHealthcheckResult transcode(byte[] data) throws Exception {
+  public byte[] toBytes(SingularityTaskHealthcheckResult object) {
+    return object.getAsBytes(objectMapper);
+  }
+
+  @Override
+  public SingularityTaskHealthcheckResult transcode(byte[] data) {
     return SingularityTaskHealthcheckResult.fromBytes(data, objectMapper);
   }
   

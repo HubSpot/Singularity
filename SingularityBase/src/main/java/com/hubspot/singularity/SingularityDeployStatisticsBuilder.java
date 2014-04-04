@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import org.apache.mesos.Protos.TaskState;
+
 import com.google.common.base.Optional;
 
 public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
@@ -15,7 +17,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   private int numSequentialFailures;
   
   private Optional<Long> lastFinishAt;
-  private Optional<String> lastTaskStatus;
+  private Optional<TaskState> lastTaskState;
   
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
@@ -23,7 +25,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   }
   
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskStatus, numSequentialSuccess, numSequentialFailures);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, numSequentialSuccess, numSequentialFailures);
   }
   
   public int getNumSuccess() {
@@ -80,12 +82,12 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
     return this;
   }
 
-  public Optional<String> getLastTaskStatus() {
-    return lastTaskStatus;
+  public Optional<TaskState> getLastTaskState() {
+    return lastTaskState;
   }
 
-  public SingularityDeployStatisticsBuilder setLastTaskStatus(Optional<String> lastTaskStatus) {
-    this.lastTaskStatus = lastTaskStatus;
+  public SingularityDeployStatisticsBuilder setLastTaskState(Optional<TaskState> lastTaskState) {
+    this.lastTaskState = lastTaskState;
     return this;
   }
 
@@ -100,7 +102,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries
-        + ", numSequentialSuccess=" + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskStatus=" + lastTaskStatus + "]";
+        + ", numSequentialSuccess=" + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
 
 }

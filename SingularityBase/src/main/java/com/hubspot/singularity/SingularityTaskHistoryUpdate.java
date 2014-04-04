@@ -1,9 +1,10 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -13,11 +14,15 @@ import com.hubspot.mesos.MesosUtils;
 public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implements Comparable<SingularityTaskHistoryUpdate> {
 
   private final long timestamp;
-  private final TaskState statusUpdate;
+  private final TaskState taskState;
   private final Optional<String> statusMessage;
 
-  public static SingularityTaskHistoryUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityTaskHistoryUpdate.class);
+  public static SingularityTaskHistoryUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityTaskHistoryUpdate.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
 
   public enum SimplifiedTaskState {
@@ -32,9 +37,9 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     }
     
     for (SingularityTaskHistoryUpdate update : updates) {
-      if (MesosUtils.isTaskDone(update.getTaskStateEnum())) {
+      if (MesosUtils.isTaskDone(update.getTaskState())) {
         return SimplifiedTaskState.DONE;
-      } else if (update.getTaskStateEnum() == TaskState.TASK_RUNNING) {
+      } else if (update.getTaskState() == TaskState.TASK_RUNNING) {
         state = SimplifiedTaskState.RUNNING;
       } else if (state == SimplifiedTaskState.UNKNOWN) {
         state = SimplifiedTaskState.WAITING;
@@ -45,10 +50,10 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   }
   
   @JsonCreator
-  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("statusUpdate") String statusUpdate, @JsonProperty("statusMessage") Optional<String> statusMessage) {
+  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") TaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage) {
     super(taskId);
     this.timestamp = timestamp;
-    this.statusUpdate = TaskState.valueOf(statusUpdate);
+    this.taskState = taskState;
     this.statusMessage = statusMessage;
   }
 
@@ -64,13 +69,8 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return timestamp;
   }
 
-  public String getStatusUpdate() {
-    return statusUpdate.name();
-  }
-
-  @JsonIgnore
-  public TaskState getTaskStateEnum() {
-    return statusUpdate;
+  public TaskState getTaskState() {
+    return taskState;
   }
 
   public Optional<String> getStatusMessage() {
@@ -79,7 +79,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   @Override
   public String toString() {
-    return "SingularityTaskHistoryUpdate [taskId=" + getTaskId() + ", timestamp=" + timestamp + ", statusUpdate=" + statusUpdate + ", statusMessage=" + statusMessage + "]";
+    return "SingularityTaskHistoryUpdate [timestamp=" + timestamp + ", taskState=" + taskState + ", statusMessage=" + statusMessage + "]";
   }
-
+  
 }

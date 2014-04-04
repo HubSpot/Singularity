@@ -100,21 +100,6 @@ public class SingularityHealthchecker implements SingularityCloseable {
     }, delaySeconds, TimeUnit.SECONDS);
   }
   
-//  
-//  private void checkHealthcheck(SingularityTask task) {
-//    List<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdatesForTask(task.getTaskId());
-//    
-//    SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(taskHistory);
-//    
-//    switch (currentState) {
-//    case RUNNING:
-//      healthcheck(task);
-//      break;
-//    default:
-//      LOG.warn(String.format("Not issuing a healthcheck for none-running (%s) task (%s)", currentState, task.getTaskId()));
-//    }
-//  }
-  
   private Optional<String> getHealthcheckUri(SingularityTask task) {
     if (task.getTaskRequest().getDeploy().getHealthcheckUri() == null) {
       return Optional.absent();

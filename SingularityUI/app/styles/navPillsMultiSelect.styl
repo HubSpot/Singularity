@@ -1,0 +1,43 @@
+@import colors
+
+.nav.nav-pills.nav-pills-multi-select
+    margin-bottom 0
+
+    li
+        position relative
+
+        a
+            padding-left 29px
+            color #aaa
+            border-radius 0
+            margin 0 !important
+
+            &:hover
+                box-shadow none
+                background #f3f3f3
+
+            &:before
+                content url("data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%' viewBox='-0.5 0 20 15'><rect fill='#aaa' stroke='none' transform='rotate(45 4.0033 8.87436)' height='5' width='6.32304' y='6.37436' x='0.84178'></rect><rect fill='#aaa' stroke='none' transform='rotate(45 11.1776 7.7066)' width='5' height='16.79756' y='-0.69218' x='8.67764'></rect></svg>")
+                position absolute
+                left 11px
+                top 0
+                bottom 2px
+                height 13px
+                width 13px
+                margin auto
+
+        &.active
+
+            a
+                background #f3f3f3
+                color #444
+
+                &:before
+                    content url("data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%' viewBox='-0.5 0 20 15'><rect fill='#444' stroke='none' transform='rotate(45 4.0033 8.87436)' height='5' width='6.32304' y='6.37436' x='0.84178'></rect><rect fill='#444' stroke='none' transform='rotate(45 11.1776 7.7066)' width='5' height='16.79756' y='-0.69218' x='8.67764'></rect></svg>")
+
+        &.tip
+            color #aaa
+            font-size 11px
+            letter-spacing .01em
+            font-style italic
+            padding 6px 10px 5px 24px
