@@ -25,6 +25,7 @@ Singularity makes a DELETE request to request a cancel of a previously requested
 - Singularity may make a DELETE request to an LBR ID which has already succeeded, in which case the LB API should return SUCCESS, which is the state of the LBR, not the response to the DELETE request.
 - Singularity may make a POST request to add a task on a different LBR ID then the LBR ID it uses to remove that task. 
 - Singularity assumes that CANCELED = FAILED in terms of the final result of the LBR.
+- Singularity make request a removal of a task that is not actually load balanced or has already been removed. In this case, the LB API should return a status code of SUCCESS for this operation.
 
 ## When it works
 
@@ -38,7 +39,7 @@ Singularity will poll (a GET on the LBR) until it receives either a SUCCESS, FAI
 
 When a new task starts for reasons other than a new deploy, such as to replace a failed task or due to scaling, Singularity will attempt to add that task to the LB API as part of its NewTaskChecker process. The NewTaskChecker ensures that new tasks eventually make it into TASK_RUNNING and are added to the LB API (if loadBalanced is true for that Request.) Once a new task has passed healthchecks (if necessary), Singularity will make a POST request to the LBR with the LBR ID taskId-ADD. 
 
-Singularity will poll the GET request for this LBR until it receives a final state. If it gets a CANCELED or FAILED it will kill the new request (the scheduler should request a new one to take its place.)
+Singularity will poll the GET request for this LBR until it receives a final state. If it gets a CANCELED or FAILED it will kill the new task (the scheduler should request a new one to take its place.)
 
 ### Task failures
 
