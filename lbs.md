@@ -25,7 +25,7 @@ Singularity makes a DELETE request to request a cancel of a previously requested
 - Singularity may make a DELETE request to an LBR ID which has already succeeded, in which case the LB API should return SUCCESS, which is the state of the LBR, not the response to the DELETE request.
 - Singularity may make a POST request to add a task on a different LBR ID then the LBR ID it uses to remove that task. 
 - Singularity assumes that CANCELED = FAILED in terms of the final result of the LBR.
-- Singularity make request a removal of a task that is not actually load balanced or has already been removed. In this case, the LB API should return a status code of SUCCESS for this operation.
+- Singularity may request removal of a task that is not actually load balanced or has already been removed from load balancers. In this case, the LB API should return a status code of SUCCESS to indicate that all is well.
 
 ## When it works
 
