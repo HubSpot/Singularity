@@ -168,8 +168,8 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           return;
         }
         
-        objects.add(idTranscoder.apply(event.getPath()));
-       
+        objects.add(idTranscoder.apply(ZKPaths.getNodeFromPath(event.getPath())));
+        
         latch.countDown();
       }
     };
