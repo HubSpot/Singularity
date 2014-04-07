@@ -176,7 +176,7 @@ public class SingularityClient {
   // ACTIONS ON A SINGLE SINGULARITY REQUEST
   //
 
-  public Optional<SingularityRequest> getSingularityRequest(String requestId) {
+  public Optional<SingularityRequestParent> getSingularityRequest(String requestId) {
     checkNotNull(requestId, "You should provide a request id");
     final String singularityApiRequestUri = String.format(REQUEST_GET_FORMAT, getHost(), contextPath, requestId);
 
@@ -189,13 +189,13 @@ public class SingularityClient {
     if (isSuccess(getResponse)) {
       LOG.info(String.format("Successfully got Singularity Request with id: '%s', in %sms", requestId, System.currentTimeMillis() - start));
       try {
-        return Optional.fromNullable(objectMapper.readValue(getResponse.getResponseBodyAsStream(), SingularityRequest.class));
+        return Optional.fromNullable(objectMapper.readValue(getResponse.getResponseBodyAsStream(), SingularityRequestParent.class));
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
     }
     else if (getResponse.getStatusCode() == 404) {
-      return Optional.<SingularityRequest>absent();
+      return Optional.<SingularityRequestParent>absent();
     }
     else {
       throw fail("Get 'Singularity Request' failed", getResponse);
