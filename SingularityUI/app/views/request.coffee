@@ -2,6 +2,7 @@ View = require './view'
 
 Request = require '../models/Request'
 RequestHistory = require '../models/RequestHistory'
+RequestDeployHistory = require '../models/RequestDeployHistory'
 
 RequestTasks = require '../collections/RequestTasks'
 HistoricalTasks = require '../collections/HistoricalTasks'
@@ -13,6 +14,7 @@ class RequestView extends View
     requestHeaderTemplate: require './templates/requestHeader'
     requestTasksActiveTableTemplate: require './templates/requestTasksActiveTable'
     requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
+    requestDeployHistoryTemplate: require './templates/requestDeployHistory'
     requestHistoryTemplate: require './templates/requestHistory'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
@@ -20,6 +22,7 @@ class RequestView extends View
     initialize: ->
         @requestModel = new Request id: @options.requestId
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
+        @requestDeployHistory = new RequestDeployHistory {}, requestId: @options.requestId
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
 
     fetch: ->
@@ -27,6 +30,7 @@ class RequestView extends View
 
         @requestModel.fetched = false
         @requestHistory.fetched = false
+        @requestDeployHistory.fetched = false
         @requestTasksActive.fetched = false
 
         promises.push @requestModel.fetch().done =>
@@ -35,6 +39,10 @@ class RequestView extends View
 
         promises.push @requestHistory.fetch().done =>
             @requestHistory.fetched = true
+            @render()
+
+        promises.push @requestDeployHistory.fetch().done =>
+            @requestDeployHistory.fetched = true
             @render()
 
         promises.push @requestTasksActive.fetch().done =>
@@ -66,6 +74,9 @@ class RequestView extends View
             fetchDoneHistory: @requestHistory.fetched
             requestHistory: @requestHistory.attributes
 
+            fetchDoneDeployHistory: @requestDeployHistory.fetched
+            requestDeployHistory: @requestDeployHistory.attributes
+
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
 
@@ -91,6 +102,7 @@ class RequestView extends View
         $requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
         $requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
         $requestHistory = @$el.find('[data-request-history]')
+        $requestDeployHistory = @$el.find('[data-request-deploy-history]')
 
         partials =
             partials:
@@ -98,8 +110,9 @@ class RequestView extends View
                 requestTasksActiveTable: @requestTasksActiveTableTemplate
                 requestTasksScheduledTable: @requestTasksScheduledTableTemplate
                 requestHistory: @requestHistoryTemplate
+                requestDeployHistory: @requestDeployHistoryTemplate
 
-        if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
+        if not $requestTasksActiveTableContainer.length
             @$el.html @template context, partials
             @renderHistoricalTasksPaginated()
         else
@@ -107,6 +120,7 @@ class RequestView extends View
             $requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
             $requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
             $requestHistory.html @requestHistoryTemplate context
+            $requestDeployHistory.html @requestDeployHistoryTemplate context
 
         @setupEvents()
 
@@ -168,13 +182,13 @@ class RequestView extends View
                         cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
                         header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
-                        cell: '<td class="visible-desktop">{{ lastStatusHuman }}</td>'
+                        cell: '<td class="visible-desktop">{{ lastTaskStateHuman }}</td>'
                     ,
                         header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Deploy ID</th>'
                         cell: '<td class="visible-desktop">{{ deployId }}</td>'
                     ,
-                        header: '<th class="sorting visible-desktop" data-sort="createdAt">Created</th>'
-                        cell: '<td class="visible-desktop">{{ createdAtHuman }}</td>'
+                        header: '<th class="sorting visible-desktop" data-sort="startedAt">Started</th>'
+                        cell: '<td class="visible-desktop">{{ startedAtHuman }}</td>'
                     ,
                         header: '<th class="sorting hidden-phone" data-sort="updatedAt">Updated</th>'
                         cell: '<td class="hidden-phone">{{ updatedAtHuman }}</td>'
@@ -206,6 +220,9 @@ class RequestView extends View
             $teebleOuter.html('<div class="empty-table-message"><p>No historical tasks</p></div>')
 
     setupEvents: ->
+        @$el.find('[data-action="viewDeployJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'deploy', $(e.target).data('deploy-id')
+
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'task', $(e.target).data('task-id')
 
