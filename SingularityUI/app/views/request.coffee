@@ -69,6 +69,9 @@ class RequestView extends View
         if @requestHistory.attributes.requestUpdates?.length
             requestLikeObject = @requestHistory.attributes.requestUpdates[0].request
 
+            if @requestHistory.attributes.requestUpdates[0].state is 'PAUSED'
+                context.request.paused = true
+
             requestLikeObject.JSONString = utils.stringJSON requestLikeObject
             app.allRequests[requestLikeObject.id] = requestLikeObject
             context.request.fullObject = true
@@ -241,6 +244,20 @@ class RequestView extends View
                 dialogType = vex.dialog.confirm
 
             dialogType dialogOptions
+
+        @$el.find('[data-action="pause"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+
+            unpause = $(e.target).data('action-unpause') is true
+
+            vex.dialog.confirm
+                message: "<p>Are you sure you want to pause this request?</p><pre>#{ requestModel.get('id') }</pre>"
+                callback: (confirmed) =>
+                    return unless confirmed
+                    if unpause
+                        requestModel.unpause().done => @refresh()
+                    else
+                        requestModel.pause().done => @refresh()
 
         @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
             taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
