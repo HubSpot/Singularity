@@ -1,14 +1,16 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ComparisonChain;
 
-public class SingularityDeployMarker extends SingularityJsonObject {
+public class SingularityDeployMarker extends SingularityJsonObject implements Comparable<SingularityDeployMarker> {
 
   private final String requestId;
   
@@ -34,14 +36,16 @@ public class SingularityDeployMarker extends SingularityJsonObject {
   }
 
   @Override
+  public int compareTo(SingularityDeployMarker o) {
+    return ComparisonChain.start()
+        .compare(timestamp, o.getTimestamp())
+        .compare(deployId, o.getDeployId())
+        .result();
+  }
+  
+  @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((deployId == null) ? 0 : deployId.hashCode());
-    result = prime * result + ((requestId == null) ? 0 : requestId.hashCode());
-    result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
-    result = prime * result + ((user == null) ? 0 : user.hashCode());
-    return result;
+    return Objects.hash(requestId, deployId);
   }
 
   @Override
@@ -62,13 +66,6 @@ public class SingularityDeployMarker extends SingularityJsonObject {
       if (other.requestId != null)
         return false;
     } else if (!requestId.equals(other.requestId))
-      return false;
-    if (timestamp != other.timestamp)
-      return false;
-    if (user == null) {
-      if (other.user != null)
-        return false;
-    } else if (!user.equals(other.user))
       return false;
     return true;
   }

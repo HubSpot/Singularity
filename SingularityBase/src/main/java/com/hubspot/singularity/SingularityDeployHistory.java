@@ -7,11 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityDeployHistory extends SingularityJsonObject {
+public class SingularityDeployHistory extends SingularityJsonObject implements Comparable<SingularityDeployHistory> {
   
   private final Optional<DeployState> deployState;
   private final SingularityDeployMarker deployMarker;
-  private final SingularityDeploy deploy;
+  private final Optional<SingularityDeploy> deploy;
   private final Optional<SingularityDeployStatistics> deployStatistics;
   
   public static SingularityDeployHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) {
@@ -24,11 +24,16 @@ public class SingularityDeployHistory extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityDeployHistory(@JsonProperty("deployState") Optional<DeployState> deployState, @JsonProperty("deployMarker") SingularityDeployMarker deployMarker, 
-      @JsonProperty("deploy") SingularityDeploy deploy, @JsonProperty("deployStatistics") Optional<SingularityDeployStatistics> deployStatistics) {
+      @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("deployStatistics") Optional<SingularityDeployStatistics> deployStatistics) {
     this.deployState = deployState;
     this.deployMarker = deployMarker;
     this.deploy = deploy;
     this.deployStatistics = deployStatistics;
+  }
+  
+  @Override
+  public int compareTo(SingularityDeployHistory o) {
+    return getDeployMarker().compareTo(o.getDeployMarker());
   }
 
   public Optional<DeployState> getDeployState() {
@@ -39,7 +44,7 @@ public class SingularityDeployHistory extends SingularityJsonObject {
     return deployMarker;
   }
 
-  public SingularityDeploy getDeploy() {
+  public Optional<SingularityDeploy> getDeploy() {
     return deploy;
   }
 

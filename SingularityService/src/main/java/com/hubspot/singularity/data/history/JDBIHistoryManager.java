@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityDeployHistoryLite;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
@@ -61,7 +60,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityDeployHistoryLite> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
+  public List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
     return history.getDeployHistoryForRequest(requestId, limitStart, limitCount);
   }
 

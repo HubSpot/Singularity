@@ -1,7 +1,6 @@
 package com.hubspot.singularity.resources;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -14,32 +13,34 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
 @Path("/history")
 @Produces({ MediaType.APPLICATION_JSON })
 public class HistoryResource extends AbstractHistoryResource {
   
   private final HistoryManager historyManager;
+  private final DeployManager deployManager;
   private final TaskManager taskManager;
   
   @Inject
-  public HistoryResource(HistoryManager historyManager, TaskManager taskManager) {
+  public HistoryResource(HistoryManager historyManager, DeployManager deployManager, TaskManager taskManager) {
     super(historyManager, taskManager);
     
+    this.deployManager = deployManager;
     this.historyManager = historyManager;
     this.taskManager = taskManager;
   }
@@ -121,23 +122,8 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {    
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
     
-    return getHistoriesFor(activeTaskIds);
+    return new TaskHistoryHelper(requestId, taskManager, historyManager).getHistoriesFor(activeTaskIds);
   }
-  
-  private List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
-    Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> map = taskManager.getTaskHistoryUpdates(taskIds);
-    
-    List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
-    
-    for (SingularityTaskId taskId : taskIds) {
-      Collection<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
-      
-      histories.add(SingularityTaskIdHistory.fromTaskIdAndUpdates(taskId, historyUpdates));
-    }
-    
-    return Ordering.natural().sortedCopy(histories);
-  }
-  
   
   @GET
   @Path("/request/{requestId}/tasks")
@@ -145,25 +131,16 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
   
-    final List<SingularityTaskId> inactiveTasksInZk = taskManager.getInActiveTaskIdsForRequest(requestId);
-    final List<SingularityTaskIdHistory> idHistories = getHistoriesFor(inactiveTasksInZk);
-
-    final int numFromZk = idHistories.size() - limitStart;
-    
-    final Integer numFromHistory = limitCount - numFromZk;
-    final Integer historyStart = Math.max(0, limitStart - idHistories.size());
-    
-    List<SingularityTaskIdHistory> returned = Lists.newArrayListWithCapacity(limitCount);
-    
-    if (numFromZk > 0) {
-      returned.addAll(idHistories.subList(limitStart, limitStart + numFromZk));
-    }
-    
-    if (numFromHistory > 0) {
-      returned.addAll(historyManager.getTaskHistoryForRequest(requestId, historyStart, numFromHistory));
-    }
-      
-    return returned;
+    return new TaskHistoryHelper(requestId, taskManager, historyManager).getBlendedHistory(limitCount, limitStart);
+  }
+  
+  @GET
+  @Path("/request/{requestId}/deploys")
+  public List<SingularityDeployHistory> getDeploys(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+    final Integer limitCount = getLimitCount(count);
+    final Integer limitStart = getLimitStart(limitCount, page);
+  
+    return new DeployHistoryHelper(requestId, deployManager, historyManager).getBlendedHistory(limitCount, limitStart);
   }
   
   @GET

@@ -10,7 +10,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
-import com.hubspot.singularity.SingularityDeployHistoryLite;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.mappers.SingularityBytesMapper;
@@ -40,7 +40,7 @@ public interface HistoryJDBI {
   
   @Mapper(SingularityDeployHistoryLiteMapper.class)
   @SqlQuery("SELECT requestId, deployId, createdAt, user, deployState FROM deployHistory WHERE requestId = :requestId ORDER BY createdAt DESC LIMIT :limitStart, :limitCount")
-  List<SingularityDeployHistoryLite> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  List<SingularityDeployHistory> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)
   @SqlQuery("SELECT taskId, requestId, updatedAt, lastTaskStatus FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limitStart, :limitCount")

@@ -87,12 +87,16 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployKeyTranscoder = deployKeyTranscoder;
   }
   
+  public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
+    return getChildrenAsIds(getDeployIdPath(requestId), deployKeyTranscoder);
+  }
+  
   public List<SingularityDeployKey> getAllDeployIds() {
     final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
     
     for (String requestId : requestIds) {
-      paths.add(ZKPaths.makePath(getRequestDeployPath(requestId), DEPLOY_LIST_KEY));
+      paths.add(getDeployIdPath(requestId));
     }
     
     return getChildrenAsIdsForParents(BY_REQUEST_ROOT, paths, deployKeyTranscoder);
@@ -129,8 +133,12 @@ public class DeployManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getDeployParentPath(requestId, deployId), DEPLOY_RESULT_KEY);
   }
   
+  private String getDeployIdPath(String requestId) {
+    return ZKPaths.makePath(getRequestDeployPath(requestId), DEPLOY_LIST_KEY);
+  }
+  
   private String getDeployParentPath(String requestId, String deployId) {
-    return ZKPaths.makePath(getRequestDeployPath(requestId), ZKPaths.makePath(DEPLOY_LIST_KEY, new SingularityDeployKey(requestId, deployId).getId()));
+    return ZKPaths.makePath(getDeployIdPath(requestId), new SingularityDeployKey(requestId, deployId).getId());
   }
   
   private String getDeployDataPath(String requestId, String deployId) {
@@ -194,19 +202,27 @@ public class DeployManager extends CuratorAsyncManager {
     return saveNewRequestDeployState(newState, deployStateStat, !deployStateStat.isPresent());
   }
   
-  public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
-    
-    Optional<SingularityDeployStatistics> deployStatistics = getDeployStatistics(requestId, deployId);
-    Optional<DeployState> deployState = getDeployState(requestId, deployId);
-   
+  public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId, boolean loadEntireHistory) {
     Optional<SingularityDeployMarker> deployMarker = getData(getDeployMarkerPath(requestId, deployId), deployMarkerTranscoder);
     
-    if (!deploy.isPresent() || !deployMarker.isPresent()) {
+    if (!deployMarker.isPresent()) {
       return Optional.absent();
     }
     
-    return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), deploy.get(), deployStatistics));
+    if (!loadEntireHistory) {
+      return Optional.of(new SingularityDeployHistory(Optional.<DeployState> absent(), deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics >absent()));
+    }
+    
+    Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
+    
+    if (!deploy.isPresent()) {
+      return Optional.absent();
+    }
+    
+    Optional<SingularityDeployStatistics> deployStatistics = getDeployStatistics(requestId, deployId);
+    Optional<DeployState> deployState = getDeployState(requestId, deployId);
+    
+    return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), deploy, deployStatistics));
   }
   
   public Optional<SingularityDeploy> getDeploy(String requestId, String deployId) {

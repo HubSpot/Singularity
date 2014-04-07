@@ -85,7 +85,7 @@ public class SingularityDeployHistoryPersister {
   private boolean transferToHistoryDB(SingularityDeployKey deployKey) {
     final long start = System.currentTimeMillis();
     
-    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId());
+    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
     
     if (!deployHistory.isPresent()) {
       LOG.info("Deploy history for key {} not found", deployKey);
