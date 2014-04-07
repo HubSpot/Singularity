@@ -14,6 +14,11 @@ class Request extends Model
             url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/unpause"
             type: 'POST'
 
+    pause: =>
+        $.ajax
+            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/pause"
+            type: 'POST'
+
     run: (confirmedOrPromptData) ->
         options =
             url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/run"
