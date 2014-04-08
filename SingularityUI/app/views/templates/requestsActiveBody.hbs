@@ -9,6 +9,7 @@
                             <th>Name</th>
                             <th class="hidden-phone">Requested</th>
                             <th class="visible-large-desktop">Deploy user</th>
+                            <th class="visible-large-desktop">Deploy ID</th>
                             <th class="visible-large-desktop">Instances</th>
 
                             {{#ifEqual requestsSubFilter "daemon"}}{{else}}
@@ -27,6 +28,7 @@
                                 <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-large-desktop">{{ deployUser }}</td>
+                                <td class="visible-large-desktop">{{ deployId }}</td>
                                 <td class="visible-large-desktop">{{ instances }}</td>
 
                                 {{#ifEqual requestsSubFilter "daemon"}}{{else}}

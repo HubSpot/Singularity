@@ -40,8 +40,21 @@
             <dl>
                 <dt>Request ID</dt>
                 <dd><pre>{{ request.id }}</pre></dd>
+                {{#if request.activeDeploy.id }}
+                    <dt>Active deploy ID</dt>
+                    <dd><pre>{{ request.activeDeploy.id }}</pre></dd>
+                {{/if}}
             </dl>
         </div>
+    </div>
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>Deploy History</h1>
+    </div>
+    <div data-request-deploy-history>
+        {{> requestDeployHistory}}
     </div>
 </section>
 

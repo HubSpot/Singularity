@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -14,7 +15,7 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 
-public class SingularityScheduleStateCache {
+public class SingularitySchedulerStateCache {
 
   private final TaskManager taskManager;
   
@@ -30,7 +31,7 @@ public class SingularityScheduleStateCache {
   private Optional<List<SingularityTaskId>> cleaningTasks;
   
   @Inject
-  public SingularityScheduleStateCache(TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager) {
+  public SingularitySchedulerStateCache(TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager) {
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
@@ -100,7 +101,8 @@ public class SingularityScheduleStateCache {
   
   public List<SingularityTaskId> getCleaningTasks() {
     if (!cleaningTasks.isPresent()) {
-      cleaningTasks = Optional.of(taskManager.getCleanupTaskIds());
+      List<SingularityTaskId> mutableList = Lists.newArrayList(taskManager.getCleanupTaskIds());
+      cleaningTasks = Optional.of(mutableList);
     }
     
     return cleaningTasks.get();   

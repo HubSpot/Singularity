@@ -1,7 +1,8 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -17,12 +18,16 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   private final long timestamp;
   private final String requestId;
   
-  @JsonCreator
-  public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("requestId") String requestId) {
-    this(user, RequestCleanupType.valueOf(cleanupType), timestamp, requestId);
+  public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
   }
-   
-  public SingularityRequestCleanup(Optional<String> user, RequestCleanupType cleanupType, long timestamp, String requestId) {
+  
+  @JsonCreator
+  public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("requestId") String requestId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
@@ -37,8 +42,7 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
     return user;
   }
 
-  @JsonIgnore
-  public RequestCleanupType getCleanupTypeEnum() {
+  public RequestCleanupType getCleanupType() {
     return cleanupType;
   }
 
@@ -46,14 +50,6 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
     return timestamp;
   }
   
-  public String getCleanupType() {
-    return cleanupType.name();
-  }
-  
-  public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
-  }
-
   @Override
   public String toString() {
     return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", requestId=" + requestId + "]";

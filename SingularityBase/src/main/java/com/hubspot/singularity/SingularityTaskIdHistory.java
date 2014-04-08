@@ -1,61 +1,64 @@
 package com.hubspot.singularity;
 
+import java.util.Collection;
+
+import org.apache.mesos.Protos.TaskState;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
-public class SingularityTaskIdHistory {
+public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
 
   private final SingularityTaskId taskId;
-  private final String requestId;
-  private final Optional<String> lastStatus;
-  private final long createdAt;
-  private final Optional<Long> updatedAt;
-  private final Optional<String> directory;
-  private final String pendingType;
+  private final long updatedAt;
+  private final Optional<TaskState> lastTaskState;
+  
+  public static SingularityTaskIdHistory fromTaskIdAndUpdates(SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> updates) {
+    TaskState lastTaskState = null;
+    long updatedAt = taskId.getStartedAt();
+    
+    if (updates != null && !updates.isEmpty()) {
+      SingularityTaskHistoryUpdate lastUpdate = Ordering.natural().max(updates);
+      lastTaskState = lastUpdate.getTaskState();
+      updatedAt = lastUpdate.getTimestamp();
+    }
+    
+    return new SingularityTaskIdHistory(taskId, updatedAt, Optional.fromNullable(lastTaskState));
+  }
   
   @JsonCreator
-  public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("requestId") String requestId, @JsonProperty("lastStatus") Optional<String> lastStatus, @JsonProperty("createdAt") long createdAt, @JsonProperty("updatedAt") Optional<Long> updatedAt, @JsonProperty("directory") Optional<String> directory, @JsonProperty("pendingType") String pendingType) {
+  public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("updatedAt") long updatedAt, @JsonProperty("lastStatus") Optional<TaskState> lastTaskState) {
     this.taskId = taskId;
-    this.lastStatus = lastStatus;
-    this.createdAt = createdAt;
     this.updatedAt = updatedAt;
-    this.directory = directory;
-    this.requestId = requestId;
-    this.pendingType = pendingType;
+    this.lastTaskState = lastTaskState;
   }
-  
-  public String getPendingType() {
-    return pendingType;
-  }
-  
-  public String getRequestId() {
-    return requestId;
+
+  @Override
+  public int compareTo(SingularityTaskIdHistory o) {
+    return ComparisonChain.start()
+        .compare(updatedAt, o.getUpdatedAt())
+        .compare(taskId.getId(), o.getTaskId().getId())
+        .result();
   }
 
   public SingularityTaskId getTaskId() {
     return taskId;
   }
-
-  public Optional<String> getLastStatus() {
-    return lastStatus;
-  }
-
-  public Optional<Long> getUpdatedAt() {
-    return updatedAt;
-  }
   
-  public Optional<String> getDirectory() {
-    return directory;
+  public Optional<TaskState> getLastTaskState() {
+    return lastTaskState;
   }
 
-  public long getCreatedAt() {
-    return createdAt;
+  public long getUpdatedAt() {
+    return updatedAt;
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskIdHistory [taskId=" + taskId + ", requestId=" + requestId + ", lastStatus=" + lastStatus + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", directory=" + directory + ", pendingType=" + pendingType + "]";
+    return "SingularityTaskIdHistory [taskId=" + taskId + ", updatedAt=" + updatedAt + ", lastTaskState=" + lastTaskState + "]";
   }
-
+  
 }

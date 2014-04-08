@@ -1,7 +1,7 @@
 constants =
 
-    appRoot: '/singularity/'
-    apiBase: 'singularity/v1'
+    appRoot: '/singularitytest/'
+    apiBase: 'singularitytest/v1'
 
     mesosLogsPort: '5051'
     mesosLogsPortHttps: '5151'
@@ -41,17 +41,22 @@ constants =
         PAUSING: 'Pausing'
 
     taskCleanupTypes:
-        BOUNCING:
-            label: 'Bouncing'
-        USER_REQUESTED:
-            label: 'User requested'
-        DECOMISSIONING:
-            label: 'Decomissioning'
+        BOUNCING: 'Bouncing'
+        USER_REQUESTED: 'User requested'
+        DECOMISSIONING: 'Decomissioning'
 
     driverStates:
         DRIVER_ABORTED: 'aborted'
         DRIVER_NOT_STARTED: 'not started'
         DRIVER_RUNNING: 'running'
         DRIVER_STOPPED: 'stopped'
+
+    deployStates:
+        SUCCEEDED: 'Succeeded'
+        FAILED_INTERNAL_STATE: 'Failed internal state'
+        WAITING: 'Waiting'
+        OVERDUE: 'Overdue'
+        FAILED: 'Failed'
+        CANCELED: 'Canceled'
 
 module.exports = constants

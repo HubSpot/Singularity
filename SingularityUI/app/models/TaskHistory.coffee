@@ -21,11 +21,11 @@ class TaskHistory extends Model
         taskHistory.task.isStopped = false
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
-            taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
+            taskUpdate.taskStateHuman = if constants.taskStates[taskUpdate.taskState] then constants.taskStates[taskUpdate.taskState].label else ''
             taskUpdate.statusMessage = taskUpdate.statusMessage ? ''
             taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
-            if taskUpdate.statusUpdate in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
+            if taskUpdate.taskState in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
                 taskHistory.task.isStopped = true
 
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp

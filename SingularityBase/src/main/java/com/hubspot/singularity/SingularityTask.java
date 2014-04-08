@@ -7,8 +7,6 @@ import org.apache.mesos.Protos.TaskInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SingularityTask extends SingularityJsonObject {
@@ -18,6 +16,14 @@ public class SingularityTask extends SingularityJsonObject {
   private final Offer offer;
   private final TaskInfo mesosTask;
 
+  public static SingularityTask fromBytes(byte[] bytes, ObjectMapper objectMapper) throws SingularityJsonException {
+    try {
+      return objectMapper.readValue(bytes, SingularityTask.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
+  }
+  
   @JsonCreator
   public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("mesosTask") TaskInfo task) {
     this.taskRequest = taskRequest;
@@ -40,10 +46,6 @@ public class SingularityTask extends SingularityJsonObject {
 
   public TaskInfo getMesosTask() {
     return mesosTask;
-  }
-
-  public static SingularityTask fromBytes(byte[] bytes, ObjectMapper objectMapper) throws JsonParseException, JsonMappingException, IOException {
-    return objectMapper.readValue(bytes, SingularityTask.class);
   }
 
   @Override

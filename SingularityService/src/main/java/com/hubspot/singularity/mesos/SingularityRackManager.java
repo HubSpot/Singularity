@@ -21,14 +21,14 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.scheduler.SingularityScheduleStateCache;
-import com.hubspot.singularity.scheduler.SingularitySchedulerBase;
+import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
-public class SingularityRackManager extends SingularitySchedulerBase {
+public class SingularityRackManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityRackManager.class);
 
@@ -45,10 +45,6 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
-  }
-  
-  public void loadCache() {
-    
   }
   
   public enum RackCheckState {
@@ -74,7 +70,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     return getHost(offer.getHostname());
   }
   
-  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularityScheduleStateCache stateCache) {
+  public RackCheckState checkRack(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
     final String host = getSlaveHost(offer);
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();
@@ -91,13 +87,13 @@ public class SingularityRackManager extends SingularitySchedulerBase {
       return RackCheckState.NOT_RACK_SENSITIVE;
     }
     
-    int numDesiredInstances = taskRequest.getRequest().getInstances();
+    int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
 
     Map<String, Integer> rackUsage = Maps.newHashMap();
 
-    for (SingularityTaskId taskId : getMatchingActiveTaskIds(taskRequest.getRequest().getId(), stateCache.getActiveTaskIds(), stateCache.getCleaningTasks())) {
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
       if (taskId.getHost().equals(host)) {
-        LOG.trace(String.format("Task %s is already on slave %s - %s", taskRequest.getPendingTaskId(), host, taskId));
+        LOG.trace("Task {} is already on slave {} - {}", taskRequest.getPendingTask().getPendingTaskId(), host, taskId);
         
         return RackCheckState.ALREADY_ON_SLAVE;
       }
@@ -112,7 +108,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
 
     boolean isRackOk = numOnRack < numPerRack;
   
-    LOG.trace(String.format("Rack result %s for taskRequest %s, rackId: %s, numPerRack %s, numOnRack %s", isRackOk, taskRequest.getPendingTaskId(), rackId, numPerRack, numOnRack));
+    LOG.trace("Rack result {} for taskRequest {}, rackId: {}, numPerRack {}, numOnRack {}", isRackOk, taskRequest.getPendingTask().getPendingTaskId(), rackId, numPerRack, numOnRack);
     
     if (isRackOk) {
       return RackCheckState.RACK_OK;
@@ -127,7 +123,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     int racksCleared = rackManager.clearActive();
     int slavesCleared = slaveManager.clearActive();
   
-    LOG.info(String.format("Cleared %s racks and %s slaves in %sms", racksCleared, slavesCleared, System.currentTimeMillis() - start));
+    LOG.info("Cleared {} racks and {} slaves in {}", racksCleared, slavesCleared, Utils.duration(start));
   }
   
   public void slaveLost(SlaveID slaveIdObj) {
@@ -144,7 +140,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
       
       checkRackAfterSlaveLoss(slave.get());
     } else {
-      LOG.warn(String.format("Lost a slave %s, but didn't know about it", slaveId));
+      LOG.warn("Lost a slave {}, but didn't know about it", slaveId);
     } 
   }
   
@@ -159,7 +155,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
       }
     }
     
-    LOG.info(String.format("Found %s slaves left in rack %s", numInRack, lostSlave.getRackId()));
+    LOG.info("Found {} slaves left in rack {}", numInRack, lostSlave.getRackId());
     
     if (numInRack == 0) {
       rackManager.markAsDead(lostSlave.getRackId());
@@ -187,7 +183,7 @@ public class SingularityRackManager extends SingularitySchedulerBase {
       }
     }
 
-    LOG.info(String.format("Found %s racks and %s slaves", racks, slaves));
+    LOG.info("Found {} racks and {} slaves", racks, slaves);
   }
 
   public String getRackId(Offer offer) {
@@ -280,13 +276,13 @@ public class SingularityRackManager extends SingularitySchedulerBase {
     SaveResult slaveSave = checkSlave(slaveId, host, rackId);
     
     if (slaveSave == SaveResult.NEW) {
-      LOG.info(String.format("Offer revealed a new slave %s", new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE)));
+      LOG.info("Offer revealed a new slave {}", new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE));
     }
     
     SaveResult rackSave = checkRack(rackId);
     
     if (rackSave == SaveResult.NEW) {
-      LOG.info(String.format("Offer revealed a new rack %s", new SingularityRack(rackId, SingularityMachineState.ACTIVE)));
+      LOG.info("Offer revealed a new rack {}", new SingularityRack(rackId, SingularityMachineState.ACTIVE));
     }
   }
 

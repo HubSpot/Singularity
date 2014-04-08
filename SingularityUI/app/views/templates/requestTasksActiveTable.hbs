@@ -6,7 +6,8 @@
                     <tr>
                         <th>Name</th>
                         <th class="visible-desktop">Status</th>
-                        <th class="visible-desktop">Created</th>
+                        <th class="visible-desktop">Deploy ID</th>
+                        <th class="visible-desktop">Started</th>
                         <th class="hidden-phone">Updated</th>
                         <th class="hidden-phone" data-sortable="false"></th>
                     </tr>
@@ -15,8 +16,9 @@
                     {{#eachWithFn requestTasksActive}}
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
-                            <td class="visible-desktop">{{ lastStatusHuman }}</td>
-                            <td class="visible-desktop" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                            <td class="visible-desktop">{{ lastTaskStateHuman }}</td>
+                            <td class="visible-desktop">{{ deployId }}</td>
+                            <td class="visible-desktop" data-value="{{ startedAt }}">{{ startedAtHuman }}</td>
                             <td class="hidden-phone" data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
                             <td class="actions-column hidden-phone">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>

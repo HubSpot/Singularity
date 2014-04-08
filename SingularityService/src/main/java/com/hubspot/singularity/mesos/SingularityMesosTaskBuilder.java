@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -47,7 +46,7 @@ public class SingularityMesosTaskBuilder {
     final String rackId = rackManager.getRackId(offer);
     final String host = rackManager.getSlaveHost(offer);
     
-    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTaskId().getRequestId(), System.currentTimeMillis(), taskRequest.getPendingTaskId().getInstanceNo(), host, rackId);
+    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(), taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), host, rackId);
     
     final TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
@@ -60,7 +59,7 @@ public class SingularityMesosTaskBuilder {
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), resources.getNumPorts()));
     }
     
-    if (taskRequest.getRequest().getExecutor() != null) {
+    if (taskRequest.getDeploy().getExecutor().isPresent()) {
       prepareCustomExecutor(bldr, taskId, taskRequest, ports);
     } else {
       prepareCommand(bldr, taskId, taskRequest, ports);
@@ -86,24 +85,24 @@ public class SingularityMesosTaskBuilder {
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
-          .setCommand(CommandInfo.newBuilder().setValue(task.getRequest().getExecutor()))
+          .setCommand(CommandInfo.newBuilder().setValue(task.getDeploy().getExecutor().get()))
           .setExecutorId(ExecutorID.newBuilder().setValue(String.format("singularity-%s", taskId.toString().replace(':', '_'))))
     );
     
-    Object executorData = task.getRequest().getExecutorData();
-    
-    if (executorData != null) {
+    if (task.getDeploy().getExecutorData().isPresent()) {
+      Object executorData = task.getDeploy().getExecutorData().get();
+      
       if (executorData instanceof String) {
         bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
         
         if (ports.isPresent()) {
           LOG.warn(String.format("Unable to add ports (%s) to executorData %s for task %s because executorData is a string", Arrays.toString(ports.get()), executorData, taskId.getId()));
         }
-        if (task.getMaybeCmdLineArgs().isPresent()) {
-          LOG.warn(String.format("Unable to add cmd line args (%s) to executorData %s for task %s because executorData is a string", task.getMaybeCmdLineArgs().get(), executorData, taskId.getId()));
+        if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
+          LOG.warn(String.format("Unable to add cmd line args (%s) to executorData %s for task %s because executorData is a string", task.getPendingTask().getMaybeCmdLineArgs().get(), executorData, taskId.getId()));
         }
       } else {
-        if (ports.isPresent() || task.getMaybeCmdLineArgs().isPresent()) {
+        if (ports.isPresent() || task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
           try {
             Map<String, Object> executorDataMap = (Map<String, Object>) executorData;
           
@@ -112,12 +111,12 @@ public class SingularityMesosTaskBuilder {
               LOG.trace(String.format("Adding ports %s to task %s executorData", ports.get(), taskId.getId()));
             }
             
-            if (task.getMaybeCmdLineArgs().isPresent()) {
-              executorDataMap.put("extraCmdLineArgs", task.getMaybeCmdLineArgs().get());
-              LOG.trace(String.format("Adding cmd line args %s to task %s executorData", task.getMaybeCmdLineArgs().get(), taskId.getId()));
+            if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
+              executorDataMap.put("extraCmdLineArgs", task.getPendingTask().getMaybeCmdLineArgs().get());
+              LOG.trace(String.format("Adding cmd line args %s to task %s executorData", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId()));
             }
           } catch (ClassCastException cce) {
-            LOG.warn(String.format("Unable to add ports (%s) or cmd line args (%s) to executor data %s for task %s because executor data wasn't a map", ports, task.getMaybeCmdLineArgs(), executorData, taskId.getId()), cce);
+            LOG.warn(String.format("Unable to add ports (%s) or cmd line args (%s) to executor data %s for task %s because executor data wasn't a map", ports, task.getPendingTask().getMaybeCmdLineArgs(), executorData, taskId.getId()), cce);
           }
         }
         
@@ -135,11 +134,11 @@ public class SingularityMesosTaskBuilder {
   }
   
   private String getCommand(final SingularityTaskId taskId, final SingularityTaskRequest task) {
-    String cmd = task.getRequest().getCommand();
+    String cmd = task.getDeploy().getCommand().get();
     
-    if (task.getMaybeCmdLineArgs().isPresent()) {
-      cmd = String.format("%s %s", cmd, task.getMaybeCmdLineArgs().get());
-      LOG.info(String.format("Adding command line args (%s) to task %s - new cmd: %s", task.getMaybeCmdLineArgs().get(), taskId.getId(), cmd));
+    if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
+      cmd = String.format("%s %s", cmd, task.getPendingTask().getMaybeCmdLineArgs().get());
+      LOG.info(String.format("Adding command line args (%s) to task %s - new cmd: %s", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId(), cmd));
     }
     
     return cmd;
@@ -150,18 +149,16 @@ public class SingularityMesosTaskBuilder {
     
     commandBldr.setValue(getCommand(taskId, task));
     
-    if (task.getRequest().getUris() != null) {
-      for (String uri : task.getRequest().getUris()) {
-        commandBldr.addUris(URI.newBuilder().setValue(uri).build());
-      }
+    for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
+      commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
-    
+  
     bldr.setCommand(commandBldr);
     
-    if (task.getRequest().getEnv() != null || ports != null) {
+    if (task.getDeploy().getEnv().isPresent() || ports.isPresent()) {
       Environment.Builder envBldr = Environment.newBuilder();
       
-      for (Entry<String, String> envEntry : Objects.firstNonNull(task.getRequest().getEnv(), Collections.<String, String>emptyMap()).entrySet()) {
+      for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
         envBldr.addVariables(Variable.newBuilder()
             .setName(envEntry.getKey())
             .setValue(envEntry.getValue())

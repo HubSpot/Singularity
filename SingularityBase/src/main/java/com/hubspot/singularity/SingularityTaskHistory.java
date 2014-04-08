@@ -1,63 +1,69 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Date;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
-public class SingularityTaskHistory {
+public class SingularityTaskHistory extends SingularityJsonObject {
 
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
-  private final long timestamp;
   private final Optional<String> directory;
+  private final Optional<SingularityTaskHealthcheckResult> lastHealthcheck;
   private final SingularityTask task;
-
+  private final Optional<LoadBalancerState> addLoadBalancerState;
+  private final Optional<LoadBalancerState> removeLoadBalancerState;
+  
+  public static SingularityTaskHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityTaskHistory.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
+  }
+  
   @JsonCreator
-  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("timestamp") long timestamp, @JsonProperty("task") SingularityTask task,
-      @JsonProperty("directory") Optional<String> directory) {
+  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("lastHealthcheck") Optional<SingularityTaskHealthcheckResult> lastHealthcheck, 
+      @JsonProperty("task") SingularityTask task, @JsonProperty("addLoadBalancerState") Optional<LoadBalancerState> addLoadBalancerState, @JsonProperty("removeLoadBalancerState") Optional<LoadBalancerState> removeLoadBalancerState) {
     this.taskUpdates = taskUpdates;
-    this.timestamp = timestamp;
-    this.task = task;
+    this.lastHealthcheck = lastHealthcheck;
     this.directory = directory;
+    this.task = task;
+    this.addLoadBalancerState = addLoadBalancerState;
+    this.removeLoadBalancerState = removeLoadBalancerState;
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
     return taskUpdates;
   }
-
-  public long getTimestamp() {
-    return timestamp;
+  
+  public Optional<SingularityTaskHealthcheckResult> getLastHealthcheck() {
+    return lastHealthcheck;
+  }
+  
+  public Optional<LoadBalancerState> getAddLoadBalancerState() {
+    return addLoadBalancerState;
   }
 
-  public SingularityTask getTask() {
-    return task;
+  public Optional<LoadBalancerState> getRemoveLoadBalancerState() {
+    return removeLoadBalancerState;
   }
 
   public Optional<String> getDirectory() {
     return directory;
   }
 
-  public List<Map<String, String>> getTaskHistoryJade() {
-    List<Map<String, String>> output = Lists.newArrayList();
-
-    for (SingularityTaskHistoryUpdate taskUpdate : taskUpdates) {
-      Map<String, String> formatted = Maps.newHashMap();
-      Date date = new Date(taskUpdate.getTimestamp());
-      formatted.put("date", date.toString());
-      formatted.put("update", taskUpdate.getStatusUpdate());
-      output.add(formatted);
-    }
-    return output;
+  public SingularityTask getTask() {
+    return task;
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", timestamp=" + timestamp + ", directory=" + directory + ", task=" + task + "]";
+    return "SingularityTaskHistory [taskUpdates=" + taskUpdates + ", directory=" + directory + ", lastHealthcheck=" + lastHealthcheck + ", task=" + task + ", addLoadBalancerState=" + addLoadBalancerState + ", removeLoadBalancerState="
+        + removeLoadBalancerState + "]";
   }
 
 }
