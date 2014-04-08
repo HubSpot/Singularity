@@ -102,15 +102,27 @@ public class DeployManager extends CuratorAsyncManager {
     return getChildrenAsIdsForParents(BY_REQUEST_ROOT, paths, deployKeyTranscoder);
   }
   
-  public List<SingularityRequestDeployState> getAllRequestDeployStates() {
-    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(List<String> requestIds) {
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
     
     for (String requestId : requestIds) {
       paths.add(getRequestDeployStatePath(requestId));
     }
+
+    return Maps.uniqueIndex(getAsync("request_deploy_states", paths, requestDeployStateTranscoder), new Function<SingularityRequestDeployState, String>() {
+
+      @Override
+      public String apply(SingularityRequestDeployState input) {
+        return input.getRequestId();
+      }
+      
+    });
+  }
+  
+  public Map<String, SingularityRequestDeployState> getAllRequestDeployStatesByRequestId() {
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
     
-    return getAsync("request_deploy_states", paths, requestDeployStateTranscoder);
+    return getRequestDeployStatesByRequestIds(requestIds);
   }
   
   public List<SingularityDeployMarker> getCancelDeploys() {

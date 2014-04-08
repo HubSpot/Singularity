@@ -6,9 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -35,15 +33,7 @@ public class SingularityDeployHistoryPersister {
     final long start = System.currentTimeMillis();
     
     final List<SingularityDeployKey> allDeployIds = deployManager.getAllDeployIds();
-    final List<SingularityRequestDeployState> allRequestDeployStates = deployManager.getAllRequestDeployStates();
-    final Map<String, SingularityRequestDeployState> byRequestId = Maps.uniqueIndex(allRequestDeployStates, new Function<SingularityRequestDeployState, String>() {
-
-      @Override
-      public String apply(SingularityRequestDeployState input) {
-        return input.getRequestId();
-      }
-      
-    });
+    final Map<String, SingularityRequestDeployState> byRequestId = deployManager.getAllRequestDeployStatesByRequestId();
     
     int numTotal = 0;
     int numTransferred = 0;

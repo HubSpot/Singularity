@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
@@ -24,13 +26,13 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployState;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.WebExceptions;
@@ -281,15 +283,33 @@ public class RequestResource {
   @GET
   @PropertyFiltering
   @Path("/active")
-  public List<SingularityRequest> getActiveRequests() {
-    return requestManager.getActiveRequests();
+  public List<SingularityRequestParent> getActiveRequests() {
+    return getRequestsWithDeployState(requestManager.getActiveRequests());
+  }
+  
+  private List<SingularityRequestParent> getRequestsWithDeployState(List<SingularityRequest> requests) {
+    List<String> requestIds = Lists.newArrayListWithCapacity(requests.size());
+    for (SingularityRequest request : requests) {
+      requestIds.add(request.getId());
+    }
+    
+    List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requests.size());
+  
+    Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
+    
+    for (SingularityRequest request : requests) {
+      Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(request.getId()));
+      parents.add(new SingularityRequestParent(request, deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent()));
+    }
+    
+    return parents;  
   }
   
   @GET
   @PropertyFiltering
   @Path("/paused")
-  public List<SingularityRequest> getPausedRequests() {
-    return requestManager.getPausedRequests();
+  public List<SingularityRequestParent> getPausedRequests() {
+    return getRequestsWithDeployState(requestManager.getPausedRequests());
   }
   
   @GET
