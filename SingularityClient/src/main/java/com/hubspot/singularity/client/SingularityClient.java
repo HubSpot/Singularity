@@ -105,7 +105,7 @@ public class SingularityClient {
       LOG.warn("Unable to read uri", wtf);
     }
     
-    throw new SingularityClientException(String.format("Failed %s action on Singularity (%s) - code: %s, %s", type, uri, response.getStatusCode(), body));
+    throw new SingularityClientException(String.format("Failed '%s' action on Singularity (%s) - code: %s, %s", type, uri, response.getStatusCode(), body), response.getStatusCode());
   }
   
   private boolean isSuccess(Response response) {
