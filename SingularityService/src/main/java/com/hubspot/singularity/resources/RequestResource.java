@@ -25,7 +25,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -157,7 +157,7 @@ public class RequestResource {
     }
     
     if (!request.isDeployable()) {
-      deployManager.saveDeployState(deployMarker, new SingularityDeployState(DeployState.SUCCEEDED, deployMarker.getTimestamp()));
+      deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED, deployMarker.getTimestamp()));
       
       deployManager.deletePendingDeploy(pendingDeployObj);
     }

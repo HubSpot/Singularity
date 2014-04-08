@@ -43,4 +43,9 @@ public class SingularityRequestDeployState extends SingularityJsonObject {
     return pendingDeploy;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityRequestDeployState [requestId=" + requestId + ", activeDeploy=" + activeDeploy + ", pendingDeploy=" + pendingDeploy + "]";
+  }
+  
 }

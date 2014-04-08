@@ -8,14 +8,14 @@ import com.google.common.base.Optional;
 public class SingularityRequestParent extends SingularityJsonObject {
 
   private final SingularityRequest request;
-  private final Optional<SingularityRequestDeployState> deployState;
+  private final Optional<SingularityRequestDeployState> requestDeployState;
   private final Optional<SingularityDeploy> activeDeploy;
   private final Optional<SingularityDeploy> pendingDeploy;
   
   @JsonCreator
-  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request, @JsonProperty("deployState") Optional<SingularityRequestDeployState> deployState, @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy, @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy) {
+  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request, @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState, @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy, @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy) {
     this.request = request;
-    this.deployState = deployState;
+    this.requestDeployState = requestDeployState;
     this.activeDeploy = activeDeploy;
     this.pendingDeploy = pendingDeploy;
   }
@@ -24,8 +24,8 @@ public class SingularityRequestParent extends SingularityJsonObject {
     return request;
   }
 
-  public Optional<SingularityRequestDeployState> getDeployState() {
-    return deployState;
+  public Optional<SingularityRequestDeployState> getRequestDeployState() {
+    return requestDeployState;
   }
 
   public Optional<SingularityDeploy> getActiveDeploy() {

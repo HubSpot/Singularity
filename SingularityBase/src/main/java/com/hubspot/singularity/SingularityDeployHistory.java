@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 
 public class SingularityDeployHistory extends SingularityJsonObject implements Comparable<SingularityDeployHistory> {
   
-  private final Optional<SingularityDeployState> deployState;
+  private final Optional<SingularityDeployResult> deployResult;
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityDeploy> deploy;
   private final Optional<SingularityDeployStatistics> deployStatistics;
@@ -23,9 +23,9 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
   }
   
   @JsonCreator
-  public SingularityDeployHistory(@JsonProperty("deployState") Optional<SingularityDeployState> deployState, @JsonProperty("deployMarker") SingularityDeployMarker deployMarker, 
+  public SingularityDeployHistory(@JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult, @JsonProperty("deployMarker") SingularityDeployMarker deployMarker, 
       @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("deployStatistics") Optional<SingularityDeployStatistics> deployStatistics) {
-    this.deployState = deployState;
+    this.deployResult = deployResult;
     this.deployMarker = deployMarker;
     this.deploy = deploy;
     this.deployStatistics = deployStatistics;
@@ -36,8 +36,8 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
     return getDeployMarker().compareTo(o.getDeployMarker());
   }
 
-  public Optional<SingularityDeployState> getDeployState() {
-    return deployState;
+  public Optional<SingularityDeployResult> getDeployResult() {
+    return deployResult;
   }
 
   public SingularityDeployMarker getDeployMarker() {
@@ -54,7 +54,7 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
 
   @Override
   public String toString() {
-    return "SingularityDeployHistory [deployState=" + deployState + ", deployMarker=" + deployMarker + ", deploy=" + deploy + ", deployStatistics=" + deployStatistics + "]";
+    return "SingularityDeployHistory [deployResult=" + deployResult + ", deployMarker=" + deployMarker + ", deploy=" + deploy + ", deployStatistics=" + deployStatistics + "]";
   }
   
 }

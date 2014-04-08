@@ -6,21 +6,21 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityDeployState extends SingularityJsonObject {
+public class SingularityDeployResult extends SingularityJsonObject {
 
   private final DeployState deployState;
   private final long timestamp;
 
-  public static SingularityDeployState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+  public static SingularityDeployResult fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
-      return objectMapper.readValue(bytes, SingularityDeployState.class);
+      return objectMapper.readValue(bytes, SingularityDeployResult.class);
     } catch (IOException e) {
       throw new SingularityJsonException(e);
     }
   }
 
   @JsonCreator
-  public SingularityDeployState(@JsonProperty("deployState") DeployState deployState, @JsonProperty("timestamp") long timestamp) {
+  public SingularityDeployResult(@JsonProperty("deployState") DeployState deployState, @JsonProperty("timestamp") long timestamp) {
     this.deployState = deployState;
     this.timestamp = timestamp;
   }

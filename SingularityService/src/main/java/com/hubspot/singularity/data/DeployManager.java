@@ -27,7 +27,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -221,7 +221,7 @@ public class DeployManager extends CuratorAsyncManager {
       return Optional.absent();
     }
     
-    Optional<SingularityDeployState> deployState = getDeployState(requestId, deployId);
+    Optional<SingularityDeployResult> deployState = getDeployState(requestId, deployId);
     
     if (!loadEntireHistory) {
       return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics >absent()));
@@ -381,11 +381,11 @@ public class DeployManager extends CuratorAsyncManager {
     return getData(getPendingDeployPath(requestId), pendingDeployTranscoder);
   }
   
-  public SingularityCreateResult saveDeployState(SingularityDeployMarker deploy, SingularityDeployState state) {
-    return save(getDeployResultPath(deploy.getRequestId(), deploy.getDeployId()), Optional.of(deployStateTranscoder.toBytes(state)));
+  public SingularityCreateResult saveDeployResult(SingularityDeployMarker deploy, SingularityDeployResult result) {
+    return save(getDeployResultPath(deploy.getRequestId(), deploy.getDeployId()), Optional.of(deployStateTranscoder.toBytes(result)));
   }
   
-  public Optional<SingularityDeployState> getDeployState(String requestId, String deployId) {
+  public Optional<SingularityDeployResult> getDeployState(String requestId, String deployId) {
     return getData(getDeployResultPath(requestId, deployId), deployStateTranscoder);
   }
 

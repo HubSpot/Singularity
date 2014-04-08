@@ -22,7 +22,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployState;
+import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -184,7 +184,7 @@ public class SingularityDeployChecker {
     
     cleanupTasks(tasksToKill, deployState.getCleanupType(), now);
   
-    deployManager.saveDeployState(pendingDeploy.getDeployMarker(), new SingularityDeployState(deployState, now));
+    deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), new SingularityDeployResult(deployState, now));
     
     removePendingDeploy(pendingDeploy);
   }
