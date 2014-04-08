@@ -67,7 +67,9 @@ class RequestView extends View
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
 
         if @requestHistory.attributes.requestUpdates?.length
-            requestLikeObject = @requestHistory.attributes.requestUpdates[0].request
+            requestLikeObject = $.extend {}, @requestHistory.attributes.requestUpdates[0].request
+            delete requestLikeObject.JSONString
+            delete requestLikeObject.localRequestHistoryId
 
             if @requestHistory.attributes.requestUpdates[0].state is 'PAUSED'
                 context.request.paused = true
@@ -203,6 +205,9 @@ class RequestView extends View
 
         @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'request', $(e.target).data('request-id')
+
+        @$el.find('[data-action="viewRequestHistoryJSON"]').unbind('click').on 'click', (e) ->
+            utils.viewJSON 'requestHistory', $(e.target).data('local-request-history-id')
 
         @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
             requestModel = new Request id: $(e.target).data('request-id')

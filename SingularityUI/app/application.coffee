@@ -30,6 +30,7 @@ class Application
 
         @allTasks = {}
         @allRequests = {}
+        @allRequestHistories = {}
 
         @setupAppCollections()
 

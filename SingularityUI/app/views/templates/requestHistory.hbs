@@ -7,14 +7,16 @@
                         <th>State</th>
                         <th>User</th>
                         <th>Created</th>
+                        <th data-sortable="false"></th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#eachWithFn requestHistory.requestUpdates}}
                         <tr>
-                            <td><span title="{{ state }}">{{ stateHuman }}</span></td>
-                            <td><span title="{{ user }}">{{ userHuman }}</span></td>
-                            <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
+                            <td>{{ stateHuman }}</td>
+                            <td>{{ userHuman }}</td>
+                            <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                            <td class="actions-column"><a data-local-request-history-id="{{ request.localRequestHistoryId }}" data-action="viewRequestHistoryJSON">JSON</a>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>
