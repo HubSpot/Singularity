@@ -58,10 +58,13 @@ class RequestHistoricalTasksTableView extends View
                         cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
                         header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
-                        cell: '<td class="visible-desktop">{{ lastStatusHuman }}</td>'
+                        cell: '<td class="visible-desktop">{{ lastTaskStateHuman }}</td>'
                     ,
-                        header: '<th class="sorting visible-desktop" data-sort="createdAt">Created</th>'
-                        cell: '<td class="visible-desktop">{{ createdAtHuman }}</td>'
+                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Deploy ID</th>'
+                        cell: '<td class="visible-desktop">{{ deployId }}</td>'
+                    ,
+                        header: '<th class="sorting visible-desktop" data-sort="startedAt">Started</th>'
+                        cell: '<td class="visible-desktop">{{ startedAtHuman }}</td>'
                     ,
                         header: '<th class="sorting hidden-phone" data-sort="updatedAt">Updated</th>'
                         cell: '<td class="hidden-phone">{{ updatedAtHuman }}</td>'
