@@ -156,23 +156,6 @@ public class SingularityClient {
   }
 
   //
-  // DEPLOY
-  //
-  public void deploy(SingularityRequest request, Optional<String> user) {
-    final String requestUri = finishUri(String.format(REQUESTS_FORMAT, getHost(), contextPath), user);
-
-    LOG.info(String.format("Deploying %s to (%s)", request.getId(), requestUri));
-
-    final long start = System.currentTimeMillis();
-
-    Response response = postUri(requestUri, request);
-
-    checkResponse("deploy", response);
-
-    LOG.info(String.format("Successfully deployed %s to Singularity in %sms", request.getId(), System.currentTimeMillis() - start));
-  }
-
-  //
   // ACTIONS ON A SINGLE SINGULARITY REQUEST
   //
 
@@ -371,25 +354,25 @@ public class SingularityClient {
     }
   }
   
-  public SingularityRequestParent deleteDeployForSingularityRequest(String requestId, String deployId, Optional<String> user) {
+  public SingularityRequestParent cancelPendingDeployForSingularityRequest(String requestId, String deployId, Optional<String> user) {
     final String requestUri = finishUri(String.format(REQUEST_DELETE_DEPLOY_FORMAT, getHost(), contextPath, requestId, deployId), user);
 
-    LOG.info(String.format("Deleting (canceling execution) of deploy with id: '%s' for singularity request with id: '%s' - (POST %s)", deployId, requestId, requestUri));
+    LOG.info(String.format("Canceling pending deploy with id: '%s' for singularity request with id: '%s' - (DELETE %s)", deployId, requestId, requestUri));
 
     final long start = System.currentTimeMillis();
 
-    Response response = postUri(requestUri);
+    Response response = deleteUri(requestUri);
 
-    checkResponse("delete deploy for singularity request", response);
+    checkResponse("cancel pending deploy", response);
 
-    LOG.info(String.format("Successfully deleted deploy with id: '%s' for singularity request with id: '%s', in %sms", deployId, requestId, System.currentTimeMillis() - start));
+    LOG.info(String.format("Successfully canceled pending deploy with id: '%s' for singularity request with id: '%s', in %sms", deployId, requestId, System.currentTimeMillis() - start));
     
     try {
       SingularityRequestParent singularityRequestParent = objectMapper.readValue(response.getResponseBodyAsStream(), SingularityRequestParent.class);
       
       String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent())? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy";
       String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent())? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy";
-      LOG.info(String.format("The status for the deleted deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'", 
+      LOG.info(String.format("The status for the canceled deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'", 
           requestId, pendingDeployId, activeDeployId));
       
       return singularityRequestParent;
