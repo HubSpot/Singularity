@@ -220,7 +220,7 @@ public class SingularityMailer implements SingularityCloseable {
     Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
     final List<String> to = getOwners(request);
-    final String subject = String.format("Task %s has not started yet", taskId.getId());
+    final String subject = String.format("Task %s has not started yet — Singularity", taskId.getId());
 
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
         .put("duration_running", DurationFormatUtils.formatDurationHMS(duration))
@@ -262,7 +262,7 @@ public class SingularityMailer implements SingularityCloseable {
     }
 
     final List<String> to = getOwners(request);
-    final String subject = String.format("Request %s is PAUSED", request.getId());
+    final String subject = String.format("Request %s is paused — Singularity", request.getId());
 
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
         .put("num_failures", maxFailures)
@@ -282,10 +282,10 @@ public class SingularityMailer implements SingularityCloseable {
   
   private String getSubjectForTaskHistory(SingularityTaskId taskId, TaskState state, Collection<SingularityTaskHistoryUpdate> history) {
     if (!taskEverRan(history)) {
-      return String.format("(%s) - Task %s never started in mesos", state.name(), taskId.toString());
+      return String.format("Task %s never started in mesos (State: %s) — Singularity", taskId.toString(), state.name());
     }
 
-    return String.format("(%s) - Task %s failed after running", state.name(), taskId.toString());
+    return String.format("Task %s failed after running (State: %s) — Singularity", taskId.toString(), state.name());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {

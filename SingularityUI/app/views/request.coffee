@@ -115,7 +115,7 @@ class RequestView extends View
                 requestHistory: @requestHistoryTemplate
                 requestDeployHistory: @requestDeployHistoryTemplate
 
-        if not $requestTasksActiveTableContainer.length
+        if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
             @$el.html @template context, partials
             @renderHistoricalTasksPaginated()
         else

@@ -12,9 +12,9 @@
                 <tbody>
                     {{#eachWithFn requestHistory.requestUpdates}}
                         <tr>
-                            <td>{{ stateHuman }}</td>
-                            <td>{{ userHuman }}</td>
-                            <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                            <td><span title="{{ state }}">{{ stateHuman }}</span></td>
+                            <td><span title="{{ user }}">{{ userHuman }}</span></td>
+                            <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
                         </tr>
                     {{/eachWithFn}}
                 </tbody>
