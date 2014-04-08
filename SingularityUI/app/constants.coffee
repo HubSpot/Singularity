@@ -41,12 +41,9 @@ constants =
         PAUSING: 'Pausing'
 
     taskCleanupTypes:
-        BOUNCING:
-            label: 'Bouncing'
-        USER_REQUESTED:
-            label: 'User requested'
-        DECOMISSIONING:
-            label: 'Decomissioning'
+        BOUNCING: 'Bouncing'
+        USER_REQUESTED: 'User requested'
+        DECOMISSIONING: 'Decomissioning'
 
     driverStates:
         DRIVER_ABORTED: 'aborted'
