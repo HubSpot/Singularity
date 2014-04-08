@@ -4,6 +4,7 @@ RequestHistoricalTasksTableView = require './requestHistoricalTasksTable'
 
 Request = require '../models/Request'
 RequestHistory = require '../models/RequestHistory'
+RequestActiveDeploy = require '../models/RequestActiveDeploy'
 RequestDeployHistory = require '../models/RequestDeployHistory'
 
 RequestTasks = require '../collections/RequestTasks'
@@ -18,6 +19,8 @@ class RequestView extends View
     requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
     requestDeployHistoryTemplate: require './templates/requestDeployHistory'
     requestHistoryTemplate: require './templates/requestHistory'
+    requestActiveDeployTemplate: require './templates/requestActiveDeploy'
+    requestInfoTemplate: require './templates/requestInfo'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
@@ -26,6 +29,7 @@ class RequestView extends View
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
         @requestDeployHistory = new RequestDeployHistory {}, requestId: @options.requestId
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
+        @requestActiveDeploy = { attributes: {} }
 
     fetch: ->
         promises = []
@@ -38,6 +42,13 @@ class RequestView extends View
         promises.push @requestModel.fetch().done =>
             @requestModel.fetched = true
             @render()
+
+            if @requestModel.get('activeDeploy')?
+                @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
+                @requestActiveDeploy.fetched = false
+                @requestActiveDeploy.fetch().done =>
+                    @requestActiveDeploy.fetched = true
+                    @render()
 
         promises.push @requestHistory.fetch().done =>
             @requestHistory.fetched = true
@@ -72,6 +83,9 @@ class RequestView extends View
                 onDemand: false
                 scheduledOrOnDemand: false
                 fullObject: false
+
+            fetchDoneRequestActiveDeploy: @requestActiveDeploy.fetched
+            requestActiveDeploy: @requestActiveDeploy.attributes
 
             requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
 
@@ -109,6 +123,8 @@ class RequestView extends View
         $requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
         $requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
         $requestHistory = @$el.find('[data-request-history]')
+        $requestActiveDeploy = @$el.find('[data-request-active-deploy]')
+        $requestInfo = @$el.find('[data-request-info]')
         $requestDeployHistory = @$el.find('[data-request-deploy-history]')
 
         partials =
@@ -117,6 +133,8 @@ class RequestView extends View
                 requestTasksActiveTable: @requestTasksActiveTableTemplate
                 requestTasksScheduledTable: @requestTasksScheduledTableTemplate
                 requestHistory: @requestHistoryTemplate
+                requestActiveDeploy: @requestActiveDeployTemplate
+                requestInfo: @requestInfoTemplate
                 requestDeployHistory: @requestDeployHistoryTemplate
 
         if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
@@ -127,6 +145,8 @@ class RequestView extends View
             $requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
             $requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
             $requestHistory.html @requestHistoryTemplate context
+            $requestActiveDeploy.html @requestActiveDeployTemplate context
+            $requestInfo.html @requestInfoTemplate context
             $requestDeployHistory.html @requestDeployHistoryTemplate context
 
         @setupEvents()

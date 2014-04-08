@@ -2,6 +2,10 @@
     {{> requestHeader}}
 </header>
 
+<div data-request-active-deploy>
+    {{> requestActiveDeploy}}
+</div>
+
 <section>
     <div class="page-header">
         <h1>Active Tasks</h1>
@@ -35,17 +39,7 @@
     <div class="page-header">
         <h1>Info</h1>
     </div>
-    <div class="row-fluid">
-        <div class="span12">
-            <dl>
-                <dt>Request ID</dt>
-                <dd><pre>{{ request.id }}</pre></dd>
-                {{#if request.activeDeploy.id }}
-                    <dt>Active deploy ID</dt>
-                    <dd><pre>{{ request.activeDeploy.id }}</pre></dd>
-                {{/if}}
-            </dl>
-        </div>
+    <div data-request-info>
     </div>
 </section>
 
