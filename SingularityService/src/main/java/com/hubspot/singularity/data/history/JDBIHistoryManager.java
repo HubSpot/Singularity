@@ -74,8 +74,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
-    return history.getRequestHistoryLike(requestIdLike, orderBy.or(RequestHistoryOrderBy.requestId).name(), getOrderDirection(orderDirection), limitStart, limitCount);
+  public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
+    return history.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
   
   @Override

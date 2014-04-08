@@ -13,10 +13,11 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.data.history.mappers.SingularityBytesMapper;
-import com.hubspot.singularity.data.history.mappers.SingularityDeployHistoryLiteMapper;
-import com.hubspot.singularity.data.history.mappers.SingularityRequestHistoryMapper;
-import com.hubspot.singularity.data.history.mappers.SingularityTaskIdHistoryMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityBytesMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityDeployHistoryLiteMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestHistoryMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityTaskIdHistoryMapper;
 
 @UseStringTemplate3StatementLocator
 public interface HistoryJDBI {
@@ -50,9 +51,9 @@ public interface HistoryJDBI {
   @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId = :requestId ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
   List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
-  @Mapper(SingularityRequestHistoryMapper.class)
-  @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
-  List<SingularityRequestHistory> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  @Mapper(SingularityRequestIdMapper.class)
+  @SqlQuery("SELECT DISTINCT requestId FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') LIMIT :limitStart, :limitCount")
+  List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   void close();
   

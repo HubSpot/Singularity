@@ -156,13 +156,11 @@ public class HistoryResource extends AbstractHistoryResource {
   
   @GET
   @Path("/requests/search")
-  public List<SingularityRequestHistory> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  public List<String> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     Integer limitCount = getLimitCount(count);
     Integer limitStart = getLimitStart(limitCount, page);
-    Optional<RequestHistoryOrderBy> requestOrderBy = getRequestHistoryOrderBy(orderBy);
-    Optional<OrderDirection> maybeOrderDirection = getOrderDirection(orderDirection);
     
-    return historyManager.getRequestHistoryLike(requestIdLike, requestOrderBy, maybeOrderDirection, limitStart, limitCount);
+    return historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
   
 }
