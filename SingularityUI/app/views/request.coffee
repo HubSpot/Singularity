@@ -1,5 +1,7 @@
 View = require './view'
 
+RequestHistoricalTasksTableView = require './requestHistoricalTasksTable'
+
 Request = require '../models/Request'
 RequestHistory = require '../models/RequestHistory'
 RequestDeployHistory = require '../models/RequestDeployHistory'
@@ -71,6 +73,8 @@ class RequestView extends View
                 scheduledOrOnDemand: false
                 fullObject: false
 
+            requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
+
             fetchDoneHistory: @requestHistory.fetched
             requestHistory: @requestHistory.attributes
 
@@ -100,8 +104,6 @@ class RequestView extends View
             context.request.scheduled = utils.isScheduledRequest requestLikeObject
             context.request.onDemand = utils.isOnDemandRequest requestLikeObject
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
-
-        context.requestNameStringLengthTens = Math.floor(context.request.id.length / 10) * 10
 
         $requestHeader = @$el.find('[data-request-header]')
         $requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
@@ -134,95 +136,11 @@ class RequestView extends View
         @
 
     renderHistoricalTasksPaginated: ->
-        @historicalTasks = new HistoricalTasks [],
+        requestHistoricalTasksTable = new RequestHistoricalTasksTableView
             requestId: @options.requestId
-            active: false
-            sortColumn: 'updatedAt'
-            sortDirection: 'asc'
+            count: 10
 
-        $.extend @historicalTasks,
-            totalPages: 100
-            totalRecords: 1000
-            currentPage: 1
-            firstPage: 1
-            perPage: 10
-
-        class HistoryPaginationView extends Teeble.PaginationView
-            template: '''
-                <div class="<%= pagination_class %>">
-                    <ul>
-                        <li>
-                            <a href="#" class="pagination-previous previous <% if (prev_disabled){ %><%= pagination_disabled %><% } %>">
-                                <span class="left"></span>
-                                Previous
-                            </a>
-                        </li>
-                        <% _.each(pages, function(page) { %>
-                            <li>
-                                <a href="#" class="pagination-page <% if (page.active){ %><%= pagination_active %><% } %>" data-page="<%= page.number %>"><%= page.number %></a>
-                            </li>
-                        <% }); %>
-                        <li>
-                            <a href="#" class="pagination-next next <% if(next_disabled){ %><%= pagination_disabled %><% } %>">
-                                Next
-                                <span class="right"></span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            '''
-
-        @historicalTasks.pager
-            reset: true
-            success: =>
-                @historicalTasksView = new Teeble.TableView
-                    compile: Handlebars.compile
-                    collection: @historicalTasks
-                    pagination: true
-                    table_class: 'table teeble-table'
-                    subviews: $.extend {}, @subviews,
-                        pagination: HistoryPaginationView
-                    partials: [
-                        header: '<th class="sorting" data-sort="taskId">Name</th>'
-                        cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
-                    ,
-                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
-                        cell: '<td class="visible-desktop">{{ lastTaskStateHuman }}</td>'
-                    ,
-                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Deploy ID</th>'
-                        cell: '<td class="visible-desktop">{{ deployId }}</td>'
-                    ,
-                        header: '<th class="sorting visible-desktop" data-sort="startedAt">Started</th>'
-                        cell: '<td class="visible-desktop">{{ startedAtHuman }}</td>'
-                    ,
-                        header: '<th class="sorting hidden-phone" data-sort="updatedAt">Updated</th>'
-                        cell: '<td class="hidden-phone">{{ updatedAtHuman }}</td>'
-                    ,
-                        header: '<th class="hidden-phone">&nbsp;</th>'
-                        cell: '''
-                            <td class="actions-column hidden-phone">
-                                <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                <a href="{{#appRoot}}{{/appRoot}}task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
-                            </td>
-                        '''
-                    ]
-
-                @historicalTasksView.setElement $('.historical-tasks-paginated')[0]
-
-                @historicalTasksView.render()
-                @postHistoricalTasksViewRender()
-
-                @historicalTasks.on 'sync', =>
-                    @historicalTasksView.render()
-                    @postHistoricalTasksViewRender()
-
-                @setupEvents()
-
-    postHistoricalTasksViewRender: ->
-        $teebleOuter = $(@historicalTasksView.el)
-        $empty = $teebleOuter.find('.teeble_empty')
-        if $empty.length
-            $teebleOuter.html('<div class="empty-table-message"><p>No historical tasks</p></div>')
+        @$el.find('.historical-tasks-paginated').html requestHistoricalTasksTable.render().$el
 
     setupEvents: ->
         @$el.find('[data-action="viewDeployJSON"]').unbind('click').on 'click', (e) ->

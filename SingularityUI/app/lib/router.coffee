@@ -2,6 +2,7 @@ DashboardView = require 'views/dashboard'
 SearchView = require 'views/search'
 RequestsView = require 'views/requests'
 RequestView = require 'views/request'
+RequestHistoricalTasksView = require 'views/requestHistoricalTasks'
 TasksView = require 'views/tasks'
 TaskView = require 'views/task'
 FilesView = require 'views/files'
@@ -62,6 +63,7 @@ class Router extends Backbone.Router
         'requests/:requestsFilter(/)': 'requestsFiltered'
         'requests(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
+        'request/:requestId/historical-tasks': 'requestHistoricalTasks'
         'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
         'tasks(/)': 'tasksFiltered'
@@ -122,6 +124,16 @@ class Router extends Backbone.Router
         else
             app.views.current = app.views.requestViews[requestId]
             app.show app.views.requestViews[requestId].refresh()
+
+    requestHistoricalTasks: (requestId) ->
+        app.views.requestHistoricalTasksViews = {} if not app.views.requestHistoricalTasksViews
+        if not app.views.requestHistoricalTasksViews[requestId]
+            app.views.requestHistoricalTasksViews[requestId] = new RequestHistoricalTasksView requestId: requestId
+            app.views.current = app.views.requestHistoricalTasksViews[requestId]
+            app.show app.views.requestHistoricalTasksViews[requestId].render().refresh()
+        else
+            app.views.current = app.views.requestHistoricalTasksViews[requestId]
+            app.show app.views.requestHistoricalTasksViews[requestId].refresh()
 
     tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
         if not app.views.tasks?
