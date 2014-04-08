@@ -40,6 +40,8 @@ class Utils
             lookupObject = app.allRequests
         if type is 'deploy'
             lookupObject = app.allDeploys
+        if type is 'requestHistory'
+            lookupObject = app.allRequestHistories
 
         vex.dialog.alert
             buttons: [
