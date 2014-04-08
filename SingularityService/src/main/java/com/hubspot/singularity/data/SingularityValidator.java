@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.HistoryManager;
 
 public class SingularityValidator {
 
@@ -22,11 +23,15 @@ public class SingularityValidator {
   
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
+  private final HistoryManager historyManager;
+  private final DeployManager deployManager;
   
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
+    this.deployManager = deployManager;
+    this.historyManager = historyManager;
   }
   
   private void check(boolean expression, String message) {
@@ -83,6 +88,8 @@ public class SingularityValidator {
         "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
     check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getExecutor().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
+    
+    check(!deployManager.getDeploy(request.getId(), deploy.getId()).isPresent() && !historyManager.getDeployHistory(request.getId(), deploy.getId()).isPresent(), "Can not deploy a deploy that has already been deployed");
   }
   
   private boolean isValidCronSchedule(String schedule) {
