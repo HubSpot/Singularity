@@ -116,7 +116,7 @@ public class SingularityClient {
     try {
       return httpClient.prepareDelete(requestUri).execute().get();
     } catch (Exception e) {
-      throw new SingularityClientException("Failed to delete Singularity request due to exception", e);
+      throw new SingularityClientException("Failed to send delete request to Singularity due to exception", e);
     }
   }
 
