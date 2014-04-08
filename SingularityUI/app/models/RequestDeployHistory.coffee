@@ -13,6 +13,8 @@ class RequestDeployHistory extends Model
 
         _.each requestDeployHistory.deploys, (deploy, i) =>
             deploy.JSONString = utils.stringJSON deploy
+            if deploy.deployResult?
+                deploy.deployResult.deployStateHuman = constants.deployStates[deploy.deployResult.deployState]
             deploy.deployId = deploy.deployMarker.deployId
             deploy.timestamp = deploy.deployMarker.timestamp
             deploy.timestampHuman = utils.humanTimeAgo deploy.timestamp

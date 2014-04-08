@@ -5,6 +5,7 @@
                 <thead>
                     <tr>
                         <th>Deploy ID</th>
+                        <th>Status</th>
                         <th>User</th>
                         <th>Timestamp</th>
                         <th data-sortable="false"></th>
@@ -14,6 +15,7 @@
                     {{#eachWithFn requestDeployHistory.deploys}}
                         <tr>
                             <td>{{ deployId }}</span></td>
+                            <td>{{ deployResult.deployStateHuman }}</td>
                             <td>{{ user }}</td>
                             <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
                             <td class="actions-column">
