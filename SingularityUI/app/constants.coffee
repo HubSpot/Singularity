@@ -51,4 +51,12 @@ constants =
         DRIVER_RUNNING: 'running'
         DRIVER_STOPPED: 'stopped'
 
+    deployStates:
+        SUCCEEDED: 'Succeeded'
+        FAILED_INTERNAL_STATE: 'Failed internal state'
+        WAITING: 'Waiting'
+        OVERDUE: 'Overdue'
+        FAILED: 'Failed'
+        CANCELED: 'Canceled'
+
 module.exports = constants
