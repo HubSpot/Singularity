@@ -13,7 +13,7 @@
         {{#eachWithFn taskHistory.taskUpdates}}
             {{#if _first}}
                 <p class="lead">
-                    {{ statusUpdateHuman }} as of
+                    {{ taskStateHuman }} as of
                     {{ timestampHuman }}
                     {{#if statusMessage}}
                         ({{ statusMessage }})
@@ -42,7 +42,7 @@
                     <tbody>
                         {{#eachWithFn taskHistory.taskUpdates}}
                             <tr>
-                                <td><span title="{{ statusUpdate }}">{{ statusUpdateHuman }}</span></td>
+                                <td><span title="{{ statusUpdate }}">{{ taskStateHuman }}</span></td>
                                 <td>
                                     {{#if statusMessage}}
                                         {{ statusMessage }}
