@@ -16,12 +16,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployState;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -153,6 +155,8 @@ public class RequestResource {
     }
     
     if (!request.isDeployable()) {
+      deployManager.saveDeployState(deployMarker, new SingularityDeployState(DeployState.SUCCEEDED, deployMarker.getTimestamp()));
+      
       deployManager.deletePendingDeploy(pendingDeployObj);
     }
     
