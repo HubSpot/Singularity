@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 
 public class SingularityDeployHistory extends SingularityJsonObject implements Comparable<SingularityDeployHistory> {
   
-  private final Optional<DeployState> deployState;
+  private final Optional<SingularityDeployState> deployState;
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityDeploy> deploy;
   private final Optional<SingularityDeployStatistics> deployStatistics;
@@ -23,7 +23,7 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
   }
   
   @JsonCreator
-  public SingularityDeployHistory(@JsonProperty("deployState") Optional<DeployState> deployState, @JsonProperty("deployMarker") SingularityDeployMarker deployMarker, 
+  public SingularityDeployHistory(@JsonProperty("deployState") Optional<SingularityDeployState> deployState, @JsonProperty("deployMarker") SingularityDeployMarker deployMarker, 
       @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("deployStatistics") Optional<SingularityDeployStatistics> deployStatistics) {
     this.deployState = deployState;
     this.deployMarker = deployMarker;
@@ -36,7 +36,7 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
     return getDeployMarker().compareTo(o.getDeployMarker());
   }
 
-  public Optional<DeployState> getDeployState() {
+  public Optional<SingularityDeployState> getDeployState() {
     return deployState;
   }
 

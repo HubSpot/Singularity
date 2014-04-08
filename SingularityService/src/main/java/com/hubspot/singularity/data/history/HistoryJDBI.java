@@ -24,8 +24,8 @@ public interface HistoryJDBI {
   @SqlUpdate("INSERT INTO requestHistory (requestId, request, createdAt, requestState, user) VALUES (:requestId, :request, :createdAt, :requestState, :user)")
   void insertRequestHistory(@Bind("requestId") String requestId, @Bind("request") byte[] request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState, @Bind("user") String user);
 
-  @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :deployState, :bytes)")
-  void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("deployState") String deployState,  @Bind("bytes") byte[] bytes);
+  @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, deployStateAt, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :deployStateAt, :deployState, :bytes)")
+  void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("deployStateAt") Date deployStateAt, @Bind("deployState") String deployState, @Bind("bytes") byte[] bytes);
   
   @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus)")
   void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("bytes") byte[] bytes, @Bind("updatedAt") Date updatedAt, @Bind("lastTaskStatus") String lastTaskStatus);
@@ -39,7 +39,7 @@ public interface HistoryJDBI {
   byte[] getDeployHistoryForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
   
   @Mapper(SingularityDeployHistoryLiteMapper.class)
-  @SqlQuery("SELECT requestId, deployId, createdAt, user, deployState FROM deployHistory WHERE requestId = :requestId ORDER BY createdAt DESC LIMIT :limitStart, :limitCount")
+  @SqlQuery("SELECT requestId, deployId, createdAt, user, deployStateAt, deployState FROM deployHistory WHERE requestId = :requestId ORDER BY createdAt DESC LIMIT :limitStart, :limitCount")
   List<SingularityDeployHistory> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
   
   @Mapper(SingularityTaskIdHistoryMapper.class)

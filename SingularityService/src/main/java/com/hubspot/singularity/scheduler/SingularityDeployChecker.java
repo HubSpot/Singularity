@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployState;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -152,11 +153,9 @@ public class SingularityDeployChecker {
     }
   }
   
-  private void cleanupTasks(Iterable<SingularityTaskId> tasksToKill, TaskCleanupType cleanupType) {
-    final long now = System.currentTimeMillis();
-    
+  private void cleanupTasks(Iterable<SingularityTaskId> tasksToKill, TaskCleanupType cleanupType, long timestamp) {
     for (SingularityTaskId matchingTask : tasksToKill) {
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), cleanupType, now, matchingTask));
+      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), cleanupType, timestamp, matchingTask));
     }
   }
   
@@ -181,9 +180,11 @@ public class SingularityDeployChecker {
   }
   
   private void finishDeploy(SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, DeployState deployState) {
-    cleanupTasks(tasksToKill, deployState.getCleanupType());
+    final long now = System.currentTimeMillis();
+    
+    cleanupTasks(tasksToKill, deployState.getCleanupType(), now);
   
-    deployManager.saveDeployState(pendingDeploy.getDeployMarker(), deployState);
+    deployManager.saveDeployState(pendingDeploy.getDeployMarker(), new SingularityDeployState(deployState, now));
     
     removePendingDeploy(pendingDeploy);
   }

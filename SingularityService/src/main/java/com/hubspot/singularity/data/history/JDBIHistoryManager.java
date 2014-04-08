@@ -45,7 +45,7 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public void saveDeployHistory(SingularityDeployHistory deployHistory) {
     history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(), deployHistory.getDeployMarker().getDeployId(), new Date(deployHistory.getDeployMarker().getTimestamp()), deployHistory.getDeployMarker().getUser().orNull(), 
-        deployHistory.getDeployState().get().name(), deployHistoryTranscoder.toBytes(deployHistory));
+        new Date(deployHistory.getDeployState().get().getTimestamp()), deployHistory.getDeployState().get().getDeployState().name(), deployHistoryTranscoder.toBytes(deployHistory));
   }
 
   @Override

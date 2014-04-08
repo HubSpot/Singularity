@@ -16,6 +16,7 @@ CREATE TABLE deployHistory (
   deployId VARCHAR(100) NOT NULL,
   createdAt TIMESTAMP NOT NULL DEFAULT '1971-01-01 00:00:01',
   user VARCHAR(100) NULL,
+  deployStateAt TIMESTAMP NOT NULL DEFAULT '1971-01-01 00:00:01',
   deployState VARCHAR(25) NOT NULL,
   bytes BLOB NOT NULL,
   PRIMARY KEY (requestId, deployId),
