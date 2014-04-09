@@ -183,6 +183,7 @@ public class SingularityMailer implements SingularityCloseable {
     templateSubs.put("stderr", getTaskLogFile(taskId, "stderr").or(new String[0]));
     templateSubs.put("duration_left", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())));
     templateSubs.put("task_id", taskId.getId());
+    templateSubs.put("deploy_id", taskId.getDeployId());
 
     templateSubs.put("taskScheduled", request.isScheduled());
     
@@ -282,10 +283,10 @@ public class SingularityMailer implements SingularityCloseable {
   
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
     if (!taskEverRan(history)) {
-      return String.format("Task %s (%s) - never started in mesos — Singularity", state.getDisplayName(), taskId.toString());
+      return String.format("Task %s (%s) never started — Singularity", state.getDisplayName(), taskId.toString());
     }
 
-    return String.format("Task %s (%s) - after running — Singularity", state.getDisplayName(), taskId.toString());
+    return String.format("Task %s (%s) after running — Singularity", state.getDisplayName(), taskId.toString());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {

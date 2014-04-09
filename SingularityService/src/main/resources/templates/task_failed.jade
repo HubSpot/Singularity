@@ -58,10 +58,12 @@ html
           table(style="border: 0; border-collapse: collapse; background: #eee")
             tr
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
             each task_update, i in task_updates
               tr
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.update
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.message
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.date
 
         //- Info
@@ -71,13 +73,15 @@ html
           dl
             dt(style="font-weight: bold; margin: 0 0 9px") Request ID
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ request_id }
+            dt(style="font-weight: bold; margin: 0 0 9px") Deploy ID
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ deploy_id }
             dt(style="font-weight: bold; margin: 0 0 9px") Task ID
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ task_id }
             dt(style="font-weight: bold; margin: 0 0 9px") Status
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ status }
             dt(style="font-weight: bold; margin: 0 0 9px") Directory
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ task_directory }
-            dt(style="font-weight: bold; margin: 0 0 9px") Hostname task ran on
+            dt(style="font-weight: bold; margin: 0 0 9px") Hostname of slave task ran on
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slave_hostname }
 
         //- Files
