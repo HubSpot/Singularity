@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import org.apache.mesos.Protos.TaskState;
-
 import com.google.common.base.Optional;
 
 public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
@@ -17,7 +15,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   private int numSequentialFailures;
   
   private Optional<Long> lastFinishAt;
-  private Optional<TaskState> lastTaskState;
+  private Optional<ExtendedTaskState> lastTaskState;
   
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
@@ -82,11 +80,11 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
     return this;
   }
 
-  public Optional<TaskState> getLastTaskState() {
+  public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
 
-  public SingularityDeployStatisticsBuilder setLastTaskState(Optional<TaskState> lastTaskState) {
+  public SingularityDeployStatisticsBuilder setLastTaskState(Optional<ExtendedTaskState> lastTaskState) {
     this.lastTaskState = lastTaskState;
     return this;
   }

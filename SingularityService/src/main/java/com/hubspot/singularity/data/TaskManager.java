@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
@@ -19,10 +18,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
@@ -117,7 +117,7 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getHistoryPath(taskId), UPDATES_PATH);
   }
   
-  private String getUpdatePath(SingularityTaskId taskId, TaskState state) {
+  private String getUpdatePath(SingularityTaskId taskId, ExtendedTaskState state) {
     return ZKPaths.makePath(getUpdatesPath(taskId), state.name());
   }
   
@@ -397,6 +397,15 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
+    StringBuilder msg = new StringBuilder(cleanupTask.getCleanupType().name());
+    
+    if (cleanupTask.getUser().isPresent()) {
+      msg.append(" - ");
+      msg.append(cleanupTask.getUser().get());
+    }
+        
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanupTask.getTaskId(), cleanupTask.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
+    
     return create(getCleanupPath(cleanupTask.getTaskId().getId()), Optional.of(cleanupTask.getAsBytes(objectMapper)));
   }
   

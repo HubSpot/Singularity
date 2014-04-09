@@ -2,8 +2,6 @@ package com.hubspot.singularity;
 
 import java.util.Collection;
 
-import org.apache.mesos.Protos.TaskState;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -14,10 +12,10 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
 
   private final SingularityTaskId taskId;
   private final long updatedAt;
-  private final Optional<TaskState> lastTaskState;
+  private final Optional<ExtendedTaskState> lastTaskState;
   
   public static SingularityTaskIdHistory fromTaskIdAndUpdates(SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> updates) {
-    TaskState lastTaskState = null;
+    ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
     
     if (updates != null && !updates.isEmpty()) {
@@ -30,7 +28,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   }
   
   @JsonCreator
-  public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("updatedAt") long updatedAt, @JsonProperty("lastStatus") Optional<TaskState> lastTaskState) {
+  public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("updatedAt") long updatedAt, @JsonProperty("lastStatus") Optional<ExtendedTaskState> lastTaskState) {
     this.taskId = taskId;
     this.updatedAt = updatedAt;
     this.lastTaskState = lastTaskState;
@@ -48,7 +46,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
     return taskId;
   }
   
-  public Optional<TaskState> getLastTaskState() {
+  public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
 

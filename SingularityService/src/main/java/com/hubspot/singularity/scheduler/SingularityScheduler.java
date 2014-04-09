@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.mesos.Protos.TaskState;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +16,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -29,6 +27,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -275,7 +274,7 @@ public class SingularityScheduler {
     return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().getValue()) || stateCache.isRackDecomissioning(taskId.getRackId());
   }
   
-  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, TaskState state, Optional<SingularityDeployStatistics> deployStatistics, long failTime, SingularitySchedulerStateCache stateCache) {
+  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, Optional<SingularityDeployStatistics> deployStatistics, long failTime, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
     
     if (!maybeRequest.isPresent()) {
@@ -294,7 +293,7 @@ public class SingularityScheduler {
     
     PendingType pendingType = PendingType.TASK_DONE;
     
-    if (MesosUtils.isTaskFailed(state)) {
+    if (state.isFailed()) {
       if (!wasDecomissioning(taskId, maybeActiveTask, stateCache)) {
         mailer.sendTaskFailedMail(taskId, request, state);
       } else {
@@ -321,9 +320,15 @@ public class SingularityScheduler {
     return Optional.absent();
   }
   
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, TaskState state, SingularitySchedulerStateCache stateCache) {
+  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
     final long failTime = System.currentTimeMillis();
+    
+    if (maybeActiveTask.isPresent()) {
+      taskManager.deleteActiveTask(taskId.getId());
+    }
+
+    taskManager.createLBCleanupTask(taskId);
     
     final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, state, deployStatistics, failTime, stateCache);
     
@@ -338,7 +343,7 @@ public class SingularityScheduler {
     bldr.setLastFinishAt(Optional.of(failTime));
     bldr.setLastTaskState(Optional.of(state));
     
-    if (MesosUtils.isTaskFailed(state)) {
+    if (state.isDone()) {
       bldr.setNumSequentialFailures(bldr.getNumSequentialFailures() + 1);
       bldr.setNumSequentialSuccess(0);
       bldr.setNumFailures(bldr.getNumFailures() + 1);

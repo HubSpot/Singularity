@@ -19,6 +19,7 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -189,22 +190,17 @@ public class SingularityMesosScheduler implements Scheduler {
     final long now = System.currentTimeMillis();
     
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
+    final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
     
-    taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskIdObj, now, status.getState(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent()));
+    taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskIdObj, now, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent()));
 
     logSupport.checkDirectory(taskIdObj);
     
-    if (MesosUtils.isTaskDone(status.getState())) {
+    if (taskState.isDone()) {
       healthchecker.cancelHealthcheck(taskId);
       newTaskChecker.cancelNewTaskCheck(taskId);
       
-      if (maybeActiveTask.isPresent()) {
-        taskManager.deleteActiveTask(taskId);
-      }
-      
-      taskManager.createLBCleanupTask(taskIdObj);
-      
-      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, status.getState(), stateCacheProvider.get());
+      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, taskState, stateCacheProvider.get());
     } else if (maybeActiveTask.isPresent()) {
       Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
       

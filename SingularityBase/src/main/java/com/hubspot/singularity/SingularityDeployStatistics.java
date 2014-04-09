@@ -2,8 +2,6 @@ package com.hubspot.singularity;
 
 import java.io.IOException;
 
-import org.apache.mesos.Protos.TaskState;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +20,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   private final int numSequentialFailures;
   
   private final Optional<Long> lastFinishAt;
-  private final Optional<TaskState> lastTaskState;
+  private final Optional<ExtendedTaskState> lastTaskState;
 
   public static SingularityDeployStatistics fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
@@ -34,7 +32,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures, 
-      @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<TaskState> lastTaskState,
+      @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
       @JsonProperty("numSequentialSuccess") int numSequentialSuccess, @JsonProperty("numSequentialFailures") int numSequentialFailures) {
     this.requestId = requestId;
     this.deployId = deployId;
@@ -78,7 +76,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     return lastFinishAt;
   }
 
-  public Optional<TaskState> getLastTaskState() {
+  public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
 

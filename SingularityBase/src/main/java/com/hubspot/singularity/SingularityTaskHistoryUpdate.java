@@ -2,19 +2,16 @@ package com.hubspot.singularity;
 
 import java.io.IOException;
 
-import org.apache.mesos.Protos.TaskState;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
-import com.hubspot.mesos.MesosUtils;
 
 public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implements Comparable<SingularityTaskHistoryUpdate> {
 
   private final long timestamp;
-  private final TaskState taskState;
+  private final ExtendedTaskState taskState;
   private final Optional<String> statusMessage;
 
   public static SingularityTaskHistoryUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) {
@@ -37,9 +34,9 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     }
     
     for (SingularityTaskHistoryUpdate update : updates) {
-      if (MesosUtils.isTaskDone(update.getTaskState())) {
+      if (update.getTaskState().isDone()) {
         return SimplifiedTaskState.DONE;
-      } else if (update.getTaskState() == TaskState.TASK_RUNNING) {
+      } else if (update.getTaskState() == ExtendedTaskState.TASK_RUNNING) {
         state = SimplifiedTaskState.RUNNING;
       } else if (state == SimplifiedTaskState.UNKNOWN) {
         state = SimplifiedTaskState.WAITING;
@@ -50,7 +47,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   }
   
   @JsonCreator
-  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") TaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage) {
+  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage) {
     super(taskId);
     this.timestamp = timestamp;
     this.taskState = taskState;
@@ -69,7 +66,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return timestamp;
   }
 
-  public TaskState getTaskState() {
+  public ExtendedTaskState getTaskState() {
     return taskState;
   }
 

@@ -3,12 +3,12 @@ package com.hubspot.singularity.data.history;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.mesos.Protos.TaskState;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -17,9 +17,9 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestState;
 
 public class SingularityMappers {
 
@@ -53,10 +53,10 @@ public class SingularityMappers {
     public SingularityTaskIdHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       String lastTaskStatus = r.getString("lastTaskStatus");
 
-      Optional<TaskState> lastTaskState = Optional.absent();
+      Optional<ExtendedTaskState> lastTaskState = Optional.absent();
 
       if (lastTaskStatus != null) {
-        lastTaskState = Optional.of(TaskState.valueOf(lastTaskStatus));
+        lastTaskState = Optional.of(ExtendedTaskState.valueOf(lastTaskStatus));
       }
 
       return new SingularityTaskIdHistory(SingularityTaskId.fromString(r.getString("taskId")), r.getTimestamp("updatedAt").getTime(), lastTaskState);
