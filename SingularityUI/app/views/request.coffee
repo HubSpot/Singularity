@@ -52,6 +52,9 @@ class RequestView extends View
                 @requestActiveDeploy.fetch().done =>
                     @requestActiveDeploy.fetched = true
                     @render()
+            else
+                @requestActiveDeploy.fetched = true
+                @requestActiveDeploy.noData = true
 
         promises.push @requestHistory.fetch().done =>
             @requestHistory.fetched = true
@@ -88,6 +91,7 @@ class RequestView extends View
                 fullObject: false
 
             fetchDoneRequestActiveDeploy: @requestActiveDeploy.fetched
+            noDataRequestActiveDeploy: @requestActiveDeploy.noData
             requestActiveDeploy: @requestActiveDeploy.attributes
 
             requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
