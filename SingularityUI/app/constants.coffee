@@ -28,6 +28,12 @@ constants =
         TASK_LOST:
             isActive: false
             label: 'Lost'
+        TASK_CLEANING:
+            isActive: false
+            label: 'Cleaning' # Trying to be killed?
+        TASK_LOST_WHILE_DOWN:
+            isActive: false
+            label: 'Lost while down'
 
     requestStates:
         CREATED: 'Created'
