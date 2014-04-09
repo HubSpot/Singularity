@@ -139,6 +139,8 @@ class TasksView extends View
         lastText = ''
 
         onChange = =>
+            return unless @ is app.views.current
+
             searchText = _.trim $search.val()
 
             if searchText is ''
