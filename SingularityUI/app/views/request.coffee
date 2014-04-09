@@ -26,26 +26,29 @@ class RequestView extends View
 
     initialize: ->
         @requestModel = new Request id: @options.requestId
+        @requestModel.fetched = false
+
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
+        @requestHistory.fetched = false
+
         @requestDeployHistory = new RequestDeployHistory {}, requestId: @options.requestId
+        @requestDeployHistory.fetched = false
+
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-        @requestActiveDeploy = { attributes: {} }
+        @requestTasksActive.fetched = false
+
+        @requestActiveDeploy = { attributes: {}, mock: true }
 
     fetch: ->
         promises = []
-
-        @requestModel.fetched = false
-        @requestHistory.fetched = false
-        @requestDeployHistory.fetched = false
-        @requestTasksActive.fetched = false
 
         promises.push @requestModel.fetch().done =>
             @requestModel.fetched = true
             @render()
 
             if @requestModel.get('activeDeploy')?
-                @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
-                @requestActiveDeploy.fetched = false
+                if @requestActiveDeploy.mock
+                    @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
                 @requestActiveDeploy.fetch().done =>
                     @requestActiveDeploy.fetched = true
                     @render()
