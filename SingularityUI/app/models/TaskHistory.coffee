@@ -29,7 +29,6 @@ class TaskHistory extends Model
                 taskHistory.task.isStopped = true
 
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
-        taskHistory.taskUpdates.reverse()
 
         # Construct mesos logs link
         taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"
