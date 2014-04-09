@@ -95,6 +95,6 @@ class TaskView extends View
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.destroy()
-                    app.router.navigate 'tasks', trigger: true
+                    setTimeout (=> @refresh()), 500
 
 module.exports = TaskView
