@@ -343,7 +343,7 @@ public class SingularityScheduler {
     bldr.setLastFinishAt(Optional.of(failTime));
     bldr.setLastTaskState(Optional.of(state));
     
-    if (state.isDone()) {
+    if (state.isFailed()) {
       bldr.setNumSequentialFailures(bldr.getNumSequentialFailures() + 1);
       bldr.setNumSequentialSuccess(0);
       bldr.setNumFailures(bldr.getNumFailures() + 1);
