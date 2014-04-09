@@ -20,7 +20,7 @@ class RequestHistory extends Model
                 localRequestHistoryIdNumber += 1
                 app.allRequestHistories[requestUpdate.request.localRequestHistoryId] = requestUpdate.request
 
-            requestUpdate.userHuman = requestUpdate.user?.split('@')[0] ? '—'
+            requestUpdate.userHuman = requestUpdate.user
             requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
             requestUpdate.stateHuman = constants.requestStates[requestUpdate.state]
 

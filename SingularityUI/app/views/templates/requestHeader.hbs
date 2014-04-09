@@ -20,6 +20,6 @@
 </h1>
 {{#eachWithFn requestHistory.requestUpdates}}
     {{#if _first}}
-        <p class="lead">{{ stateHuman }} by {{ userHuman }} {{ createdAtHuman }}</p>
+        <p class="lead">{{ stateHuman }} {{#if userHuman}}by {{ userHuman }}{{/if}} {{ createdAtHuman }}</p>
     {{/if}}
 {{/eachWithFn}}
