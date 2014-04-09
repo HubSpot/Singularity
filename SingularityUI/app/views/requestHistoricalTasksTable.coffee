@@ -5,6 +5,8 @@ HistoricalTasks = require '../collections/HistoricalTasks'
 class RequestHistoricalTasksTableView extends View
 
     render: ->
+        @$el.html '<div class="page-loader centered cushy"></div>'
+
         @historicalTasks = new HistoricalTasks [],
             requestId: @options.requestId
             active: false
