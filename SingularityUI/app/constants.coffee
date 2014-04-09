@@ -65,4 +65,9 @@ constants =
         FAILED: 'Failed'
         CANCELED: 'Canceled'
 
+constants.inactiveTaskStates = []
+for state, stateObj of constants.taskStates
+    if stateObj.isActive is false
+        constants.inactiveTaskStates.push state
+
 module.exports = constants
