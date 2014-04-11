@@ -54,15 +54,15 @@ class Utils
                 utils.scrollPreventAlways $vexContent.parent()
 
     @scrollPreventDefaultAtBounds: ($scroll) ->
-        $scroll.bind 'mousewheel', (event, delta) ->
-            event.stopPropagation()
+        $scroll.bind 'mousewheel', (e, delta) ->
+            e.stopPropagation()
 
             if (@scrollTop >= ($scroll[0].scrollHeight - $scroll.outerHeight()) and delta < 0) or (@scrollTop is 0 and delta > 0)
-                event.preventDefault()
+                e.preventDefault()
 
     @scrollPreventAlways: ($scroll) ->
-        $scroll.bind 'mousewheel', (event) ->
-            event.preventDefault()
+        $scroll.bind 'mousewheel', (e) ->
+            e.preventDefault()
 
     @htmlEncode: (value) ->
         $('<div>').text(value).html()

@@ -34,6 +34,7 @@ class Application
         @allRequestHistories = {}
 
         @setupAppCollections()
+        @setupGlobalSearchView()
 
         $('.page-loader.fixed').hide()
 
@@ -55,7 +56,7 @@ class Application
         $(window).on 'blur', -> blurred = true
         $(window).on 'focus', -> blurred = false
 
-        $(document).on 'ajaxError', (event, jqxhr, settings) ->
+        $(document).on 'ajaxError', (e, jqxhr, settings) ->
             return if settings.suppressErrors
             return if jqxhr.statusText is 'abort'
             return if unloading
@@ -138,5 +139,44 @@ class Application
                 if _.isString(user) and user isnt ''
                     @user.set('deployUser', @user.deployUser = user)
                     @user.save()
+
+    setupGlobalSearchView: ->
+        $globalSearch = $('.global-search')
+
+        app.collections.requestsActive.fetch().done =>
+            $(window).keydown (e) =>
+                if e.keyCode is 84 # t
+                    toggleGlobalSearch()
+                    e.preventDefault()
+                if e.keyCode is 27 # ESC
+                    hideGlobalSearch()
+
+            $globalSearch.find('input').keydown (e) ->
+                if e.keyCode is 84 # t
+                    e.stopPropagation()
+                if e.keyCode is 27 # ESC
+                    e.preventDefault()
+                    hideGlobalSearch()
+
+            $globalSearch.find('input').removeData('typeahead').typeahead
+                source: _.pluck(app.collections.requestsActive.models, 'attributes')
+                itemSelected: (id) =>
+                    app.router.navigate "/request/#{ id }", { trigger: true }
+                    toggleGlobalSearch()
+
+        toggleGlobalSearch = ->
+            if $('body').hasClass('global-search-active')
+                hideGlobalSearch()
+            else
+                showGlobalSearch()
+
+        showGlobalSearch = ->
+            $globalSearch.find('input').val('')
+
+            $('body').addClass('global-search-active')
+            $globalSearch.find('input').focus()
+
+        hideGlobalSearch = ->
+            $('body').removeClass('global-search-active')
 
 module.exports = new Application

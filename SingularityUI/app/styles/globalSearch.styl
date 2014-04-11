@@ -1,0 +1,56 @@
+.global-search
+    display none
+    position fixed
+    z-index 99999
+    top 0
+    left 0
+    bottom 0
+    right 0
+    background rgba(255, 255, 255, .9)
+
+    body.global-search-active &
+        display block
+
+    input[type="search"][required]
+        position absolute
+        width 60rem
+        max-width 80%
+        top 8rem
+        left 0
+        right 0
+        margin-left auto
+        margin-right auto
+        height 2.5em
+        font-size 2em
+        padding .5em
+        margin-bottom 0
+        background #eee
+
+        &::-webkit-search-cancel-button:after
+            font-size 1.7em
+            height 1.6em
+            line-height 1.6em
+            right .7em
+            top 0
+            bottom 0
+            margin auto
+
+.typeahead.dropdown-menu
+    display none
+
+    body.global-search-active &
+        display block
+        z-index 999999
+        background transparent
+        width 60rem
+        max-width 80%
+        box-shadow none
+        font-size 2em
+        margin-top 0
+        padding-top 0
+
+        a
+            line-height 2em
+
+        li:not(.active) a
+            color #666
