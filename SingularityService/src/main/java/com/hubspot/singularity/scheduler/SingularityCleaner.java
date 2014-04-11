@@ -11,19 +11,19 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -172,7 +172,7 @@ public class SingularityCleaner {
       requestManager.deleteCleanRequest(requestId);
     }
     
-    LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled, numScheduledTasksRemoved, Utils.duration(start));
+    LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled, numScheduledTasksRemoved, JavaUtils.duration(start));
   }
   
   public void drainCleanupQueue() {
@@ -219,7 +219,7 @@ public class SingularityCleaner {
       }
     }
     
-    LOG.info("Killed {} tasks in {}", killedTasks, Utils.duration(start));
+    LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
   }
 
   private boolean checkLBStateAndShouldKillTask(SingularityTaskCleanup cleanupTask) {
@@ -227,7 +227,7 @@ public class SingularityCleaner {
     
     CheckLBState checkLbState = checkLbState(cleanupTask.getTaskId());
     
-    LOG.debug("TaskCleanup {} had LB state {} after {}", cleanupTask, checkLbState, Utils.duration(start));
+    LOG.debug("TaskCleanup {} had LB state {} after {}", cleanupTask, checkLbState, JavaUtils.duration(start));
     
     switch (checkLbState) {
     case DONE:
@@ -308,7 +308,7 @@ public class SingularityCleaner {
       
       final CheckLBState checkLbState = checkLbState(taskId);
       
-      LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, Utils.duration(checkStart));
+      LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, JavaUtils.duration(checkStart));
       
       switch (checkLbState) {
       case WAITING:
@@ -324,7 +324,7 @@ public class SingularityCleaner {
       taskManager.deleteLBCleanupTask(taskId);
     }
     
-    LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, Utils.duration(start));
+    LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, JavaUtils.duration(start));
   }
   
 }

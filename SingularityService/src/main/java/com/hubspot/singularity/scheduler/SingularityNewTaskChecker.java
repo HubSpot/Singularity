@@ -15,6 +15,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCloseable;
@@ -25,7 +26,6 @@ import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -136,7 +136,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     
     final CheckTaskState state = getTaskState(task);
     
-    LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), Utils.duration(start));
+    LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), JavaUtils.duration(start));
     
     boolean reEnqueue = false;
     
@@ -245,7 +245,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     final boolean isOverdue = taskDuration > killAfterUnhealthyMillis;
   
     if (isOverdue) {
-      LOG.debug("Task {} is overdue (duration: {}), allowed limit {}", task.getTaskId(), Utils.durationFromMillis(taskDuration), Utils.durationFromMillis(killAfterUnhealthyMillis));
+      LOG.debug("Task {} is overdue (duration: {}), allowed limit {}", task.getTaskId(), JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(killAfterUnhealthyMillis));
     }
     
     return isOverdue;

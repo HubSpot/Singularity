@@ -59,7 +59,7 @@ public class SingularityMesosTaskBuilder {
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), resources.getNumPorts()));
     }
     
-    if (taskRequest.getDeploy().getExecutor().isPresent()) {
+    if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
       prepareCustomExecutor(bldr, taskId, taskRequest, ports);
     } else {
       prepareCommand(bldr, taskId, taskRequest, ports);
@@ -85,8 +85,8 @@ public class SingularityMesosTaskBuilder {
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
-          .setCommand(CommandInfo.newBuilder().setValue(task.getDeploy().getExecutor().get()))
-          .setExecutorId(ExecutorID.newBuilder().setValue(String.format("singularity-%s", taskId.toString().replace(':', '_'))))
+          .setCommand(CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get()))
+          .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(String.format("singularity-%s", taskId.toString().replace(':', '_')))))
     );
     
     if (task.getDeploy().getExecutorData().isPresent()) {

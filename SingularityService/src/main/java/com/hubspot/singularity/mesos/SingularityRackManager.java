@@ -14,6 +14,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityMachineAbstraction.SingularityMachineState;
@@ -21,7 +22,6 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -123,7 +123,7 @@ public class SingularityRackManager {
     int racksCleared = rackManager.clearActive();
     int slavesCleared = slaveManager.clearActive();
   
-    LOG.info("Cleared {} racks and {} slaves in {}", racksCleared, slavesCleared, Utils.duration(start));
+    LOG.info("Cleared {} racks and {} slaves in {}", racksCleared, slavesCleared, JavaUtils.duration(start));
   }
   
   public void slaveLost(SlaveID slaveIdObj) {

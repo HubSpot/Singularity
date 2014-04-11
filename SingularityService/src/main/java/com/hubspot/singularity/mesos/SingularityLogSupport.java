@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosExecutorObject;
 import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
@@ -19,7 +20,6 @@ import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -97,7 +97,7 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     taskManager.updateTaskDirectory(task.getTaskId(), directory.get());
     
-    LOG.trace("Updated task {} directory in {}", task.getTaskId(), Utils.duration(start));
+    LOG.trace("Updated task {} directory in {}", task.getTaskId(), JavaUtils.duration(start));
   }
 
   public void checkDirectory(final SingularityTaskId taskId) {

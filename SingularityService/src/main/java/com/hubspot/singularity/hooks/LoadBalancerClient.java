@@ -11,11 +11,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityLoadBalancerRequest;
 import com.hubspot.singularity.SingularityLoadBalancerResponse;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
@@ -98,7 +98,7 @@ public class LoadBalancerClient {
       LOG.error("LB {} request {} to {} threw error", request.getMethod(), loadBalancerRequestId, request.getUrl(), t);
       returnState = onFailure;
     } finally {
-      LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, returnState, Utils.duration(start));
+      LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, returnState, JavaUtils.duration(start));
     }
     
     return returnState;

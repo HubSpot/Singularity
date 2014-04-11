@@ -8,6 +8,8 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Enumeration;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import com.google.common.base.Throwables;
 
 public class JavaUtils {
@@ -71,7 +73,7 @@ public class JavaUtils {
   public static boolean isHttpSuccess(int statusCode) {
     return statusCode >= 200 && statusCode < 300;
   }
-  
+
   public static String getHostAddress() throws Exception {
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
     while (interfaces.hasMoreElements()) {
@@ -90,7 +92,7 @@ public class JavaUtils {
     }
     throw new RuntimeException("Couldn't deduce host address");
   }
-  
+
   public static String getHostName() {
     try {
       InetAddress addr = InetAddress.getLocalHost();
@@ -102,5 +104,15 @@ public class JavaUtils {
       return null;
     }
   }
-  
+
+  private final static String DURATION_FORMAT = "mm:ss.S";
+
+  public static String duration(final long start) {
+    return DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, DURATION_FORMAT);
+  }
+
+  public static String durationFromMillis(final long millis) {
+    return DurationFormatUtils.formatDuration(millis, DURATION_FORMAT);
+  }
+
 }

@@ -16,6 +16,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
@@ -34,7 +35,6 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -135,7 +135,7 @@ public class SingularityScheduler {
       rackManager.markAsDecomissioned(rack);
     }
 
-    LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), Utils.duration(start));
+    LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
   }
   
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
@@ -172,7 +172,7 @@ public class SingularityScheduler {
       requestManager.deletePendingRequest(pendingRequest);
     }
     
-    LOG.info("Scheduled {} new tasks ({} obsolete requests) in {}", totalNewScheduledTasks, obsoleteRequests, Utils.duration(start));
+    LOG.info("Scheduled {} new tasks ({} obsolete requests) in {}", totalNewScheduledTasks, obsoleteRequests, JavaUtils.duration(start));
   }
   
   private void checkForBounceAndAddToCleaningTasks(SingularityPendingRequest pendingRequest, final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
@@ -191,7 +191,7 @@ public class SingularityScheduler {
       cleaningTasks.add(matchingTaskId);
     }
     
-    LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), pendingRequest.getRequestId(), Utils.duration(now));
+    LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), pendingRequest.getRequestId(), JavaUtils.duration(now));
   }
     
   public List<SingularityTaskRequest> getDueTasks() {

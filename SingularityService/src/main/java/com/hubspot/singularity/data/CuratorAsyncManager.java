@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityId;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -84,7 +84,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     
     checkLatch(latch, pathNameForLogs);
     
-    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameForLogs, missing.intValue(), Utils.duration(start));
+    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameForLogs, missing.intValue(), JavaUtils.duration(start));
     
     return objects;
   }
@@ -132,7 +132,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     
     checkLatch(latch, pathNameforLogs);
     
-    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameforLogs, missing.intValue(), Utils.duration(start));
+    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameforLogs, missing.intValue(), JavaUtils.duration(start));
     
     return objects;
   }
@@ -182,7 +182,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     
     checkLatch(latch, pathNameforLogs);
     
-    LOG.trace("Found {} objects out of {} from {} in {}", objects.size(), paths.size(), pathNameforLogs, Utils.duration(start));
+    LOG.trace("Found {} objects out of {} from {} in {}", objects.size(), paths.size(), pathNameforLogs, JavaUtils.duration(start));
     
     return objects;
   }

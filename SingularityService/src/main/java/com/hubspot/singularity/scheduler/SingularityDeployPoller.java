@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 
@@ -49,7 +49,7 @@ public class SingularityDeployPoller {
           
           final int numDeploys = deployChecker.checkDeploys();
        
-          LOG.info("Checked {} deploys in {}", numDeploys, Utils.duration(start));
+          LOG.info("Checked {} deploys in {}", numDeploys, JavaUtils.duration(start));
         } catch (Throwable t) {
           LOG.error("Caught an exception while checking deploys -- aborting", t);
           abort.abort();
