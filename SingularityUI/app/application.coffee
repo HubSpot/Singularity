@@ -145,6 +145,7 @@ class Application
 
         app.collections.requestsActive.fetch().done =>
             $(window).keydown (e) =>
+                return unless $(e.target).is('body')
                 if e.keyCode is 84 # t
                     toggleGlobalSearch()
                     e.preventDefault()
@@ -152,8 +153,6 @@ class Application
                     hideGlobalSearch()
 
             $globalSearch.find('input').keydown (e) ->
-                if e.keyCode is 84 # t
-                    e.stopPropagation()
                 if e.keyCode is 27 # ESC
                     e.preventDefault()
                     hideGlobalSearch()
