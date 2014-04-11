@@ -34,6 +34,7 @@ exports.config =
                     'vendor/scripts/select-0.2.0.js'
                     'vendor/scripts/backbone.paginator-0.9.0.js'
                     'vendor/scripts/teeble-0.3.6.js'
+                    'vendor/scripts/bootstrap-typeahead-2.0.0.js'
                 ]
 
         stylesheets:
