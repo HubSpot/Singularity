@@ -196,7 +196,7 @@ public class SingularityClient {
     
     Response postResponse = postUri(singularityApiRequestsUri, request);
 
-    checkResponse("get Singularity Request", postResponse);
+    checkResponse("create or update a SingularityRequest instance", postResponse);
     
     LOG.info(String.format("Successfully posted Singularity Request with id: '%s', in %sms", request.getId(), System.currentTimeMillis() - start));
   }
