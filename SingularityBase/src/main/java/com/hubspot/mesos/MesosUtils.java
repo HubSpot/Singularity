@@ -1,25 +1,23 @@
 package com.hubspot.mesos;
 
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.Value;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.net.InetAddresses;
+import org.apache.mesos.Protos.*;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
 
-import com.google.common.base.Throwables;
-import com.google.common.net.InetAddresses;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 
 public class MesosUtils {
 
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
+
+  private MesosUtils() { }
 
   private static int getScalar(Resource r) {
     return (int) r.getScalar().getValue();
@@ -173,5 +171,15 @@ public class MesosUtils {
     }
   }
   
-  
+  public static Optional<Long> getFirstPort(Offer offer) {
+    for (Resource resource : offer.getResourcesList()) {
+      if (resource.getName().equals(MesosUtils.PORTS)) {
+        if (resource.getRanges().getRangeCount() > 0) {
+          return Optional.of(resource.getRanges().getRange(0).getBegin());
+        }
+      }
+    }
+
+    return Optional.absent();
+  }
 }
