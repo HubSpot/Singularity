@@ -158,7 +158,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         LOG.debug("Launching mesos task: {}", task.getMesosTask());
 
-        Status initialStatus = driver.launchTasks(offer.getId(), ImmutableList.of(task.getMesosTask()));
+        Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), ImmutableList.of(task.getMesosTask()));
 
         LOG.trace("Task {} launched with status {}", task.getTaskId(), initialStatus.name());
         
