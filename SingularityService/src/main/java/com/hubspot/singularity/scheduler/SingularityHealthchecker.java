@@ -123,7 +123,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       return Optional.absent();
     }
     
-    return Optional.of(String.format("http://%s:%s/%s", hostname, firstPort, task.getTaskRequest().getDeploy().getHealthcheckUri().get()));
+    return Optional.of(String.format("http://%s:%d/%s", hostname, firstPort.get(), task.getTaskRequest().getDeploy().getHealthcheckUri().get()));
   }
   
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
