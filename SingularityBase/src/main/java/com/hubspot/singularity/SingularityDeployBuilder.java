@@ -1,10 +1,10 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
+
+import java.util.List;
+import java.util.Map;
 
 public class SingularityDeployBuilder {
 
@@ -29,9 +29,12 @@ public class SingularityDeployBuilder {
   private Optional<Long> healthcheckTimeoutSeconds;
   
   private Optional<Long> deployHealthTimeoutSeconds;
+
+  private Optional<String> loadBalancerBaseUri;
+  private Optional<List<String>> loadBalancerGroups;
   
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, executor, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds);
+    return new SingularityDeploy(requestId, id, command, executor, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, loadBalancerBaseUri, loadBalancerGroups);
   }
 
   public String getRequestId() {
@@ -169,11 +172,42 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getLoadBalancerBaseUri() {
+    return loadBalancerBaseUri;
+  }
+
+  public void setLoadBalancerBaseUri(Optional<String> loadBalancerBaseUri) {
+    this.loadBalancerBaseUri = loadBalancerBaseUri;
+  }
+
+  public Optional<List<String>> getLoadBalancerGroups() {
+    return loadBalancerGroups;
+  }
+
+  public void setLoadBalancerGroups(Optional<List<String>> loadBalancerGroups) {
+    this.loadBalancerGroups = loadBalancerGroups;
+  }
+
   @Override
   public String toString() {
-    return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
-        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
-        + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
+    return "SingularityDeployBuilder [" +
+        "requestId='" + requestId + '\'' +
+        ", id='" + id + '\'' +
+        ", version=" + version +
+        ", timestamp=" + timestamp +
+        ", metadata=" + metadata +
+        ", executor=" + executor +
+        ", resources=" + resources +
+        ", command=" + command +
+        ", env=" + env +
+        ", uris=" + uris +
+        ", executorData=" + executorData +
+        ", healthcheckUri=" + healthcheckUri +
+        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+        ", loadBalancerBaseUri=" + loadBalancerBaseUri +
+        ", loadBalancerGroups=" + loadBalancerGroups +
+        ']';
   }
-  
 }

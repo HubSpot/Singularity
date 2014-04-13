@@ -1,35 +1,12 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.LoadBalancerState;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployResult;
-import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
@@ -37,6 +14,15 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
+import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SingularityDeployChecker {
   
@@ -235,8 +221,10 @@ public class SingularityDeployChecker {
     }
     
     final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(Iterables.concat(deployTasks, allOtherTasks));
+
+    final SingularityTaskRequest taskRequest = tasks.get(deployTasks.iterator().next()).getTaskRequest();  // TODO: kinda grody, maybe switch to List<>
     
-    Optional<LoadBalancerState> enqueueResult = lbClient.enqueue(pendingDeploy.getDeployMarker().getLoadBalancerRequestId(), getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
+    Optional<LoadBalancerState> enqueueResult = lbClient.enqueue(pendingDeploy.getDeployMarker().getLoadBalancerRequestId(), taskRequest, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
     
     Optional<DeployState> deployState = interpretLoadBalancerState(enqueueResult);
     

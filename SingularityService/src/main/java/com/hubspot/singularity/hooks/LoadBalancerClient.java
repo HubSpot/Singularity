@@ -1,26 +1,23 @@
 package com.hubspot.singularity.hooks;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.hubspot.singularity.LoadBalancerState;
-import com.hubspot.singularity.SingularityLoadBalancerRequest;
-import com.hubspot.singularity.SingularityLoadBalancerResponse;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.Utils;
+import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class LoadBalancerClient {
 
@@ -104,11 +101,19 @@ public class LoadBalancerClient {
     return returnState;
   }
   
-  public Optional<LoadBalancerState> enqueue(String loadBalancerRequestId, List<SingularityTask> add, List<SingularityTask> remove) {
-    final String uri = getLoadBalancerUri(loadBalancerRequestId);
-    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId, add, remove);
+  public Optional<LoadBalancerState> enqueue(String loadBalancerRequestId, SingularityTaskRequest taskRequest, List<SingularityTask> add, List<SingularityTask> remove) {
+    final Optional<SingularityLoadBalancerService> maybeService = SingularityLoadBalancerService.fromTaskRequest(taskRequest);
+
+    if (!maybeService.isPresent()) {
+      return Optional.absent();  // TODO: right thing to return?
+    }
+
+    final List<String> addUpstreams = transformTasksToUpstreams(add);
+    final List<String> removeUpstreams = transformTasksToUpstreams(remove);
+
+    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId, maybeService.get(), addUpstreams, removeUpstreams);
     
-    final Request request = httpClient.preparePost(uri)
+    final Request request = httpClient.preparePost(loadBalancerUri)
       .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
       .setBody(loadBalancerRequest.getAsBytes(objectMapper))
       .build();
@@ -118,6 +123,20 @@ public class LoadBalancerClient {
   
   private boolean isSuccess(Response response) {
     return response.getStatusCode() > 199 && response.getStatusCode() < 300;
+  }
+
+  private List<String> transformTasksToUpstreams(List<SingularityTask> tasks) {
+    final List<String> upstreams = Lists.newArrayListWithCapacity(tasks.size());
+
+    for (SingularityTask task : tasks) {
+      final Optional<Long> maybeFirstPort = MesosUtils.getFirstPort(task.getOffer());
+
+      if (maybeFirstPort.isPresent()) {
+        upstreams.add(String.format("%s:%d", task.getOffer().getHostname(), maybeFirstPort.get()));
+      }
+    }
+
+    return upstreams;
   }
   
   public Optional<LoadBalancerState> cancel(String loadBalancerRequestId) {

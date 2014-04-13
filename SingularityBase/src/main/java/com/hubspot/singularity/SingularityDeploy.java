@@ -1,9 +1,5 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,6 +8,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.Resources;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityDeploy extends SingularityJsonObject {
@@ -37,6 +37,9 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<Long> healthcheckTimeoutSeconds;
   
   private final Optional<Long> deployHealthTimeoutSeconds;
+
+  private final Optional<String> loadBalancerBaseUri;
+  private final Optional<List<String>> loadBalancerGroups;
   
   public static SingularityDeployBuilder newBuilder() {
     return new SingularityDeployBuilder();
@@ -54,7 +57,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("executor") Optional<String> executor, @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
-      @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds) {
+      @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
+      @JsonProperty("loadBalancerBaseUri") Optional<String> loadBalancerBaseUri, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups) {
     this.requestId = requestId;
     
     this.command = command;
@@ -74,6 +78,9 @@ public class SingularityDeploy extends SingularityJsonObject {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
     
     this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
+
+    this.loadBalancerBaseUri = loadBalancerBaseUri;
+    this.loadBalancerGroups = loadBalancerGroups;
   }
   
   public SingularityDeployBuilder toBuilder() {
@@ -156,11 +163,34 @@ public class SingularityDeploy extends SingularityJsonObject {
     return healthcheckTimeoutSeconds;
   }
 
+  public Optional<String> getLoadBalancerBaseUri() {
+    return loadBalancerBaseUri;
+  }
+
+  public Optional<List<String>> getLoadBalancerGroups() {
+    return loadBalancerGroups;
+  }
+
   @Override
   public String toString() {
-    return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", executor=" + executor + ", resources=" + resources + ", command=" + command
-        + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
-        + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + "]";
+    return "SingularityDeploy [" +
+        "requestId='" + requestId + '\'' +
+        ", id='" + id + '\'' +
+        ", version=" + version +
+        ", timestamp=" + timestamp +
+        ", metadata=" + metadata +
+        ", executor=" + executor +
+        ", resources=" + resources +
+        ", command=" + command +
+        ", env=" + env +
+        ", uris=" + uris +
+        ", executorData=" + executorData +
+        ", healthcheckUri=" + healthcheckUri +
+        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+        ", loadBalancerBaseUri=" + loadBalancerBaseUri +
+        ", loadBalancerGroups=" + loadBalancerGroups +
+        ']';
   }
-  
 }

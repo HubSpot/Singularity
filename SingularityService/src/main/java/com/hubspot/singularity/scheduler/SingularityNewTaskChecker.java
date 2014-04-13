@@ -1,34 +1,25 @@
 package com.hubspot.singularity.scheduler;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.hubspot.singularity.*;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
+import org.apache.commons.lang.time.DurationFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang.time.DurationFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.LoadBalancerState;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
-import com.hubspot.singularity.Utils;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.hooks.LoadBalancerClient;
 
 public class SingularityNewTaskChecker implements SingularityCloseable {
   
@@ -200,7 +191,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     Optional<LoadBalancerState> lbState = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     
     if (!lbState.isPresent()) {
-      lbState = lbClient.enqueue(task.getTaskId().getId(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
+      lbState = lbClient.enqueue(task.getTaskId().getId(), task.getTaskRequest(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
     } else {
       Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbState.get());
       
