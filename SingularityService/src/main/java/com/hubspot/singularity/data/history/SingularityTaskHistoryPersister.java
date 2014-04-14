@@ -10,8 +10,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityTaskHistoryPersister {
@@ -19,12 +21,14 @@ public class SingularityTaskHistoryPersister {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
   
   private final TaskManager taskManager;
+  private final DeployManager deployManager;
   private final HistoryManager historyManager;
   
   @Inject
-  public SingularityTaskHistoryPersister(TaskManager taskManager, HistoryManager historyManager) {
+  public SingularityTaskHistoryPersister(TaskManager taskManager, DeployManager deployManager, HistoryManager historyManager) {
     this.taskManager = taskManager;
     this.historyManager = historyManager;
+    this.deployManager = deployManager;
   }
   
   public void checkInactiveTaskIds() {
@@ -33,15 +37,16 @@ public class SingularityTaskHistoryPersister {
     final long start = System.currentTimeMillis();
     
     final List<SingularityTaskId> allTaskIds = taskManager.getAllTaskIds();
-     
+    
     final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
     final Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
+    final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
     
     int numTotal = 0;
     int numTransferred = 0;
     
     for (SingularityTaskId taskId : allTaskIds) {
-      if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId)) {
+      if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartofPendingDeploy(pendingDeploys, taskId)) {
         continue;
       }
       if (transferToHistoryDB(taskId)) {
@@ -51,6 +56,16 @@ public class SingularityTaskHistoryPersister {
     }
     
     LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), JavaUtils.duration(start));
+  }
+  
+  private boolean isPartofPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
+    for (SingularityPendingDeploy pendingDeploy : pendingDeploys) {
+      if (pendingDeploy.getDeployMarker().getDeployId().equals(taskId.getDeployId()) && pendingDeploy.getDeployMarker().getRequestId().equals(taskId.getRequestId())) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   private boolean transferToHistoryDB(SingularityTaskId inactiveTaskId) {

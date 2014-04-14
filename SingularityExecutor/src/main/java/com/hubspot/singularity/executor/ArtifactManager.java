@@ -1,42 +1,36 @@
 package com.hubspot.singularity.executor;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.hubspot.deploy.ArtifactInfo;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
-@Singleton
 public class ArtifactManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(ArtifactManager.class);
-
   private final Path cacheDirectory;
-  
-  @Inject
-  public ArtifactManager(@Named(SingularityExecutorModule.ARTIFACT_CACHE_DIRECTORY) String cacheDirectory) {
-    this.cacheDirectory = Paths.get(cacheDirectory);
-  }
+  private final Path executorOut;
+  private final Logger log;
     
+  public ArtifactManager(SingularityExecutorConfiguration configuration, String taskId, Logger log) {
+    this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
+    this.executorOut = configuration.getExecutorBashLogPath(taskId);
+    this.log = log;
+  }
+
   private long getSize(Path path) {
     try {
       return Files.size(path);
@@ -59,7 +53,7 @@ public class ArtifactManager {
     }
 
     if (!md5Matches(artifactInfo, path)) {
-      throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifactInfo.getMd5sum()));
+      throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifactInfo.getMd5sum().get()));
     }
   }
   
@@ -99,17 +93,17 @@ public class ArtifactManager {
   
   private boolean checkCached(ArtifactInfo artifactInfo, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
-      LOG.debug(String.format("Cached %s did not exist", cachedPath));
+      log.debug("Cached {} did not exist", cachedPath);
       return false;
     }
     
     if (!filesSizeMatches(artifactInfo, cachedPath)) {
-      LOG.debug(String.format("Cached %s (%s) did not match file size %s", cachedPath, getSize(cachedPath), artifactInfo.getFilesize()));
+      log.debug("Cached {} ({}) did not match file size {}", cachedPath, getSize(cachedPath), artifactInfo.getFilesize());
       return false;
     }
     
     if (!md5Matches(artifactInfo, cachedPath)) {
-      LOG.debug(String.format("Cached %s (%s) did not match md5 %s", cachedPath, calculateMd5sum(cachedPath), artifactInfo.getMd5sum().get()));
+      log.debug("Cached {} ({}) did not match md5 {}", cachedPath, calculateMd5sum(cachedPath), artifactInfo.getMd5sum().get());
       return false;
     }
     
@@ -122,6 +116,8 @@ public class ArtifactManager {
     
     if (!checkCached(artifactInfo, cachedPath)) {
       downloadAndCache(artifactInfo, filename);
+    } else {
+      log.info("Using cached file {}", getFullPath(cachedPath));
     }
   
     return cachedPath;
@@ -131,7 +127,9 @@ public class ArtifactManager {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
     try {
-      processBuilder.inheritIO();
+      final File outputFile = executorOut.toFile();
+      processBuilder.redirectError(outputFile);
+      processBuilder.redirectOutput(outputFile);
       
       final int exitCode = processBuilder.start().waitFor();
       
@@ -147,7 +145,7 @@ public class ArtifactManager {
   }
   
   private void downloadUri(String uri, Path path) {
-    LOG.info(String.format("Downloading %s to %s", uri, getFullPath(path)));
+    log.info(String.format("Downloading %s to %s", uri, getFullPath(path)));
 
     final List<String> command = Lists.newArrayList();
     command.add("wget");
@@ -161,7 +159,7 @@ public class ArtifactManager {
   }
 
   public void untar(Path source, Path destination) {
-    LOG.info(String.format("Untarring %s to %s", getFullPath(source), getFullPath(destination)));
+    log.info(String.format("Untarring %s to %s", getFullPath(source), getFullPath(destination)));
     
     final List<String> command = Lists.newArrayList();
     command.add("tar");
@@ -175,17 +173,10 @@ public class ArtifactManager {
 
   private String calculateMd5sum(Path path) {
     try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] buffer = new byte[8192];
+      HashCode hc = com.google.common.io.Files.hash(path.toFile(), Hashing.md5());
       
-      try (InputStream is = Files.newInputStream(path)) {
-        DigestInputStream dis = new DigestInputStream(is, md);
-        while (dis.read(buffer) != -1) {}
-      }
-      byte[] digest = md.digest();
-      
-      return JavaUtils.toString(digest);
-    } catch (NoSuchAlgorithmException | IOException e) {
+      return hc.toString();
+    } catch (IOException e) {
       throw Throwables.propagate(e);
     }
   }

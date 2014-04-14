@@ -9,7 +9,6 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -18,33 +17,28 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
+import com.hubspot.singularity.executor.config.SingularityTaskBuilder;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutor implements Executor {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
-  private final ObjectMapper yamlObjectMapper;
-  private final ObjectMapper jsonObjectMapper;
-  
-  private final ArtifactManager artifactManager;
-  private final TemplateManager templateManager;
-  private final String deployEnv;
-
   private final Map<String, SingularityExecutorTask> tasks;
   private final ListeningExecutorService taskRunner;
   
+  private final SingularityTaskBuilder taskBuilder;
+  private final ExecutorUtils executorUtils;
+
+  private final SingularityExecutorLogging logging;
+  
   @Inject
-  public SingularityExecutor(@Named(SingularityExecutorModule.YAML_MAPPER) ObjectMapper yamlObjectMapper, @Named(SingularityExecutorModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, 
-      ArtifactManager artifactManager, TemplateManager templateManager, @Named(SingularityExecutorModule.DEPLOY_ENV) String deployEnv) {
-    this.yamlObjectMapper = yamlObjectMapper;
-    this.jsonObjectMapper = jsonObjectMapper;
-    this.templateManager = templateManager;
-    this.artifactManager = artifactManager;
-    this.deployEnv = deployEnv;
+  public SingularityExecutor(ExecutorUtils executorUtils, SingularityTaskBuilder taskBuilder, SingularityExecutorLogging logging ) {
+    this.taskBuilder = taskBuilder;
+    this.executorUtils = executorUtils;
+    this.logging = logging;
     
     tasks = Maps.newConcurrentMap();
     
@@ -89,40 +83,48 @@ public class SingularityExecutor implements Executor {
   @Override
   public void launchTask(final ExecutorDriver executorDriver, final Protos.TaskInfo taskInfo) {
     final String taskId = taskInfo.getTaskId().getValue();
-
+    
     LOG.info("Asked to launch task {}", taskId);
 
     if (taskRunner.isShutdown()) {
       LOG.warn("Can't launch task {}, executor service is shut down!", taskInfo);
 
-      ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Executor service was shut down");
+      executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Executor service was shut down", LOG);
       
       return;
     }
     
-    try {
-      final SingularityExecutorTask executorTask = new SingularityExecutorTask(executorDriver, deployEnv, artifactManager, templateManager, jsonObjectMapper, yamlObjectMapper, taskId, taskInfo);
+    if (tasks.containsKey(taskId)) {
+      LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
     
-      ListenableFuture<Integer> taskResult = taskRunner.submit(executorTask);
+      return;
+    }
+     
+    try {
+      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
+      final SingularityExecutorTask executorTask = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
+    
+      final ListenableFuture<Integer> taskResult = taskRunner.submit(executorTask);
    
       Futures.addCallback(taskResult, new FutureCallback<Integer>() {
         
+        // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
         public void onSuccess(Integer exitCode) {
           if (exitCode == 0) {
-            ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "");
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "", taskLog);
           } else {
-            ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode);
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode, taskLog);
           }
           
-          onFinish(executorTask);
+          onFinish(executorTask, taskLog);
         }
         
         public void onFailure(Throwable t) {
-          LOG.error("Task {} failed with", executorTask, t);
+          taskLog.error("Task {} failed with", executorTask, t);
           
-          ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While running task: " + t.getMessage());
+          executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While running task: " + t.getMessage(), taskLog);
           
-          onFinish(executorTask);
+          onFinish(executorTask, taskLog);
         }
       });
       
@@ -131,12 +133,14 @@ public class SingularityExecutor implements Executor {
     } catch (Throwable t) {
       LOG.error("Couldn't launch task {} because of", taskId, t);
     
-      ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While launching task: " + t.getMessage());
+      executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While launching task: " + t.getMessage(), LOG);
     }
   }
   
-  private void onFinish(SingularityExecutorTask task) {
+  private void onFinish(SingularityExecutorTask task, ch.qos.logback.classic.Logger taskLog) {
     tasks.remove(task.getTaskId());
+    
+    logging.stopTaskLogger(task.getTaskId(), taskLog);
   }
   
   /**

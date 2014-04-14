@@ -39,7 +39,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   
   @Override
   protected List<SingularityTaskIdHistory> getFromZk() {
-    final List<SingularityTaskId> inactiveTasksInZk = taskManager.getInActiveTaskIdsForRequest(requestId);
+    final List<SingularityTaskId> inactiveTasksInZk = taskManager.getInactiveTaskIdsForRequest(requestId);
     
     return getHistoriesFor(inactiveTasksInZk);
   }
