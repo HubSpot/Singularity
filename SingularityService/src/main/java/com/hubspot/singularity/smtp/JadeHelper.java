@@ -64,6 +64,4 @@ public class JadeHelper {
     return formatted;
   }
 
-  
-  
 }
