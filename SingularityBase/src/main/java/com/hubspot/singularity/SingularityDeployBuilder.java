@@ -176,16 +176,18 @@ public class SingularityDeployBuilder {
     return loadBalancerBaseUri;
   }
 
-  public void setLoadBalancerBaseUri(Optional<String> loadBalancerBaseUri) {
+  public SingularityDeployBuilder setLoadBalancerBaseUri(Optional<String> loadBalancerBaseUri) {
     this.loadBalancerBaseUri = loadBalancerBaseUri;
+    return this;
   }
 
   public Optional<List<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
   }
 
-  public void setLoadBalancerGroups(Optional<List<String>> loadBalancerGroups) {
+  public SingularityDeployBuilder setLoadBalancerGroups(Optional<List<String>> loadBalancerGroups) {
     this.loadBalancerGroups = loadBalancerGroups;
+    return this;
   }
 
   @Override
