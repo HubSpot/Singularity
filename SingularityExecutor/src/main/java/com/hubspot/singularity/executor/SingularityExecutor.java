@@ -9,7 +9,6 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -18,33 +17,30 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
+import com.hubspot.singularity.executor.config.SingularityTaskBuilder;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutor implements Executor {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
-  private final ObjectMapper yamlObjectMapper;
-  private final ObjectMapper jsonObjectMapper;
-  
-  private final ArtifactManager artifactManager;
-  private final TemplateManager templateManager;
-  private final String deployEnv;
-
-  private final Map<String, SingularityExecutorTask> tasks;
+  private final Map<String, SingularityExecutorTaskHolder> tasks;
   private final ListeningExecutorService taskRunner;
   
+  private final SingularityTaskBuilder taskBuilder;
+  private final ExecutorUtils executorUtils;
+
+  private final SingularityExecutorLogging logging;
+  private final SingularityExecutorKiller killer;
+  
   @Inject
-  public SingularityExecutor(@Named(SingularityExecutorModule.YAML_MAPPER) ObjectMapper yamlObjectMapper, @Named(SingularityExecutorModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, 
-      ArtifactManager artifactManager, TemplateManager templateManager, @Named(SingularityExecutorModule.DEPLOY_ENV) String deployEnv) {
-    this.yamlObjectMapper = yamlObjectMapper;
-    this.jsonObjectMapper = jsonObjectMapper;
-    this.templateManager = templateManager;
-    this.artifactManager = artifactManager;
-    this.deployEnv = deployEnv;
+  public SingularityExecutor(ExecutorUtils executorUtils, SingularityTaskBuilder taskBuilder, SingularityExecutorLogging logging, SingularityExecutorKiller killer) {
+    this.taskBuilder = taskBuilder;
+    this.executorUtils = executorUtils;
+    this.logging = logging;
+    this.killer = killer;
     
     tasks = Maps.newConcurrentMap();
     
@@ -89,54 +85,70 @@ public class SingularityExecutor implements Executor {
   @Override
   public void launchTask(final ExecutorDriver executorDriver, final Protos.TaskInfo taskInfo) {
     final String taskId = taskInfo.getTaskId().getValue();
-
+    
     LOG.info("Asked to launch task {}", taskId);
 
     if (taskRunner.isShutdown()) {
       LOG.warn("Can't launch task {}, executor service is shut down!", taskInfo);
 
-      ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Executor service was shut down");
+      executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Executor service was shut down", LOG);
       
       return;
     }
     
-    try {
-      final SingularityExecutorTask executorTask = new SingularityExecutorTask(executorDriver, deployEnv, artifactManager, templateManager, jsonObjectMapper, yamlObjectMapper, taskId, taskInfo);
+    if (tasks.containsKey(taskId)) {
+      LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
     
-      ListenableFuture<Integer> taskResult = taskRunner.submit(executorTask);
+      return;
+    }
+     
+    try {
+      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
+      final SingularityExecutorTask executorTask = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
+    
+      final ListenableFuture<Integer> future = taskRunner.submit(executorTask);
    
-      Futures.addCallback(taskResult, new FutureCallback<Integer>() {
+      Futures.addCallback(future, new FutureCallback<Integer>() {
         
+        // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
         public void onSuccess(Integer exitCode) {
-          if (exitCode == 0) {
-            ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "");
+          if (executorTask.wasKilled()) {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, "Process was killed, but exited normally with code: " + exitCode, taskLog);
+          } else if (exitCode == 0) {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "Process exited normally", taskLog);
           } else {
-            ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode);
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode, taskLog);
           }
           
-          onFinish(executorTask);
+          onFinish(executorTask, taskLog);
         }
         
         public void onFailure(Throwable t) {
-          LOG.error("Task {} failed with", executorTask, t);
+          if (executorTask.wasKilled()) {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, "Task killed, caught expected exception: " + t.getMessage(), taskLog);
+          } else {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Exception running task: " + t.getMessage(), taskLog);
+          }
+
+          taskLog.error("Task {} failed with", executorTask, t);
           
-          ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While running task: " + t.getMessage());
-          
-          onFinish(executorTask);
+          onFinish(executorTask, taskLog);
         }
       });
       
-      tasks.put(taskId, executorTask);
+      tasks.put(taskId, new SingularityExecutorTaskHolder(executorTask, future));
         
     } catch (Throwable t) {
       LOG.error("Couldn't launch task {} because of", taskId, t);
     
-      ExecutorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While launching task: " + t.getMessage());
+      executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While launching task: " + t.getMessage(), LOG);
     }
   }
   
-  private void onFinish(SingularityExecutorTask task) {
+  private void onFinish(SingularityExecutorTask task, ch.qos.logback.classic.Logger taskLog) {
     tasks.remove(task.getTaskId());
+    
+    logging.stopTaskLogger(task.getTaskId(), taskLog);
   }
   
   /**
@@ -152,14 +164,14 @@ public class SingularityExecutor implements Executor {
     
     LOG.info("Asked to kill task {}", taskId);
 
-    SingularityExecutorTask task = tasks.get(taskId);
+    SingularityExecutorTaskHolder taskHolder = tasks.get(taskId);
     
-    if (task == null) {
+    if (taskHolder == null) {
       LOG.warn("Asked to kill unknown task {}, ignoring...", taskId);
       return;
     }
     
-    task.kill();
+    killer.kill(taskHolder);
   }
   
   @Override
@@ -180,9 +192,11 @@ public class SingularityExecutor implements Executor {
 
     taskRunner.shutdown();  // dont accept any more tasks
     
-    for (SingularityExecutorTask task : tasks.values()) {
-      task.kill();
+    for (SingularityExecutorTaskHolder task : tasks.values()) {
+      killer.kill(task);
     }
+    
+    killer.shutdown();
     
     LOG.info("Stopping driver...");
     executorDriver.stop();

@@ -285,25 +285,35 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildrenAsIds(getRequestPath(requestId), taskIdTranscoder);
   }
   
-  public List<SingularityTaskId> getInActiveTaskIdsForRequest(String requestId) {
-    return getTaskIdsForRequest(requestId, false);
+  private enum TaskFilter {
+    ACTIVE, INACTIVE;
+  }
+  
+  public List<SingularityTaskId> getInactiveTaskIdsForRequest(String requestId) {
+    return getTaskIdsForRequest(requestId, TaskFilter.INACTIVE);
   }
 
   public List<SingularityTaskId> getActiveTaskIdsForRequest(String requestId) {
-    return getTaskIdsForRequest(requestId, true);
+    return getTaskIdsForRequest(requestId, TaskFilter.ACTIVE);
   }
   
-  private List<SingularityTaskId> getTaskIdsForRequest(String requestId, boolean active) {
-    final List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId);
-    final List<String> paths = Lists.newArrayListWithCapacity(requestTaskIds.size());
+  public List<SingularityTaskId> filterActiveTaskIds(List<SingularityTaskId> taskIds) {
+    final List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
     
-    for (SingularityTaskId taskId : requestTaskIds) {
+    for (SingularityTaskId taskId : taskIds) {
       paths.add(getActivePath(taskId.getId()));
     }
     
     final List<SingularityTaskId> activeTaskIds = exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
+  
+    return activeTaskIds;
+  }
+  
+  private List<SingularityTaskId> getTaskIdsForRequest(String requestId, TaskFilter taskFilter) {
+    final List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId);
+    final List<SingularityTaskId> activeTaskIds = filterActiveTaskIds(requestTaskIds);
     
-    if (active) {
+    if (taskFilter == TaskFilter.ACTIVE) {
       return activeTaskIds;
     }
     

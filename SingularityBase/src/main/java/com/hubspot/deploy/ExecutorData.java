@@ -21,27 +21,25 @@ public class ExecutorData {
   private final Optional<ArtifactInfo> deployConfig;
   private final Collection<Integer> exitCodes;
   private final Optional<String> runningSentinel;
+  private final Optional<String> user;
 
   @JsonCreator
   public static ExecutorData fromString(String value) {
-    return new ExecutorData(value, Collections.<String>emptyList(), Collections.<String, String>emptyMap(), null, null, null, null);
+    return new ExecutorData(value, Collections.<String> emptyList(), Collections.<String, String> emptyMap(), null, null, null, null, null);
   }
 
   @JsonCreator
-  public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("uris") Collection<String> uris,
-                             @JsonProperty("env") Map<String, String> env,
-                             @JsonProperty("artifact") ArtifactInfo artifact,
-                             @JsonProperty("deployConfig") ArtifactInfo deployConfig,
-                             @JsonProperty("exitCodes") Collection<Integer> exitCodes,
-                             @JsonProperty("runningSentinel") String runningSentinel) {
+  public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("uris") Collection<String> uris, @JsonProperty("env") Map<String, String> env, @JsonProperty("artifact") ArtifactInfo artifact,
+      @JsonProperty("deployConfig") ArtifactInfo deployConfig, @JsonProperty("exitCodes") Collection<Integer> exitCodes, @JsonProperty("user") String user, @JsonProperty("runningSentinel") String runningSentinel) {
     this.cmd = cmd;
     this.uris = Objects.firstNonNull(uris, Collections.<String>emptyList());
     this.env = Objects.firstNonNull(env, Collections.<String, String>emptyMap());
     this.artifact = Optional.fromNullable(artifact);
     this.deployConfig = Optional.fromNullable(deployConfig);
+    this.user = Optional.fromNullable(user);
     this.exitCodes = Objects.firstNonNull(exitCodes, Collections.singletonList(0));
 
-    this.runningSentinel = Strings.isNullOrEmpty(runningSentinel) ? Optional.<String>absent() : Optional.of(runningSentinel);
+    this.runningSentinel = Strings.isNullOrEmpty(runningSentinel) ? Optional.<String> absent() : Optional.of(runningSentinel);
   }
 
   public String getCmd() {
@@ -72,12 +70,17 @@ public class ExecutorData {
     return runningSentinel;
   }
 
+  public Optional<String> getUser() {
+    return user;
+  }
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
         .add("cmd", cmd)
         .add("uris", uris)
         .add("env", env)
+        .add("user", user)
         .add("artifact", artifact)
         .add("deployConfig", deployConfig)
         .add("exitCodes", exitCodes)

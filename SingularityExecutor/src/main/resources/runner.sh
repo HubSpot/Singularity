@@ -1,10 +1,8 @@
 #!/bin/bash
 #
 # This script was automatically generated.
-# Task ID: {{ task_id }}
+# Task ID: {{ taskId }}
 #
-
-#cd $(dirname "$0")
 
 # load system-wide profile.d
 if [[ -d /etc/profile.d ]]; then
@@ -17,14 +15,14 @@ else
 fi
 
 # load env vars
-if [[ -f ../deploy.env ]]; then
-  source ../deploy.env
+if [[ -f deploy.env ]]; then
+  source deploy.env
   echo "Sourced deploy-specific environment variables"
 else
   echo "No deploy-specific environment variables"
 fi
 
-cd ../app/
+cd app/
 
 # load artifact's profile.d
 if [[ -d .profile.d ]]; then
@@ -42,6 +40,4 @@ if [[ "$USE_ULIMIT" == "1" ]]; then
 fi
 
 # execute command
-exec {% if user %}su - {{ user }}{% endif %} -c {{ cmd }} >> {{ logfile }} 2>&1
-
-#exec daemon-runner {% if user %}-u {{ user }}{% endif %} -o {{ stdout }} -e {{ stderr }} -w {{ app_dir }} -p {{ pid_file }} -c {{ cmd }} $@
+exec su - {{ user }} -c {{ cmd }} >> ../{{ logfile }} 2>&1

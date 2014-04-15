@@ -64,15 +64,17 @@ public class SingularityDeployChecker {
     final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
     final List<SingularityDeployMarker> cancelDeploys = deployManager.getCancelDeploys();
     
+    if (pendingDeploys.isEmpty() && cancelDeploys.isEmpty()) {
+      return 0;
+    }
+    
     final Map<SingularityPendingDeploy, SingularityDeployKey> pendingDeployToKey = SingularityDeployKey.fromPendingDeploys(pendingDeploys);
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = deployManager.getDeploysForKeys(pendingDeployToKey.values());
-
-    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
     for (SingularityPendingDeploy pendingDeploy : pendingDeploys) {
       LOG.debug("Checking a deploy {}", pendingDeploy);
       
-      checkDeploy(pendingDeploy, cancelDeploys, pendingDeployToKey, deployKeyToDeploy, activeTaskIds);
+      checkDeploy(pendingDeploy, cancelDeploys, pendingDeployToKey, deployKeyToDeploy);
     }
     
     for (SingularityDeployMarker cancelDeploy : cancelDeploys) {
@@ -84,7 +86,7 @@ public class SingularityDeployChecker {
     return pendingDeploys.size();
   }
   
-  private void checkDeploy(final SingularityPendingDeploy pendingDeploy, final List<SingularityDeployMarker> cancelDeploys, final Map<SingularityPendingDeploy, SingularityDeployKey> pendingDeployToKey, final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy, final List<SingularityTaskId> activeTaskIds) {
+  private void checkDeploy(final SingularityPendingDeploy pendingDeploy, final List<SingularityDeployMarker> cancelDeploys, final Map<SingularityPendingDeploy, SingularityDeployKey> pendingDeployToKey, final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy) {
     final SingularityDeployKey deployKey = pendingDeployToKey.get(pendingDeploy);
     final Optional<SingularityDeploy> deploy = Optional.fromNullable(deployKeyToDeploy.get(deployKey));
     
@@ -107,12 +109,14 @@ public class SingularityDeployChecker {
     
     final SingularityRequest request = maybeRequest.get();
     
-    final Iterable<SingularityTaskId> requestMatchingActiveTasks = Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(pendingDeployMarker.getRequestId()));
+    final List<SingularityTaskId> requestTasks = taskManager.getTaskIdsForRequest(request.getId());
+    final List<SingularityTaskId> activeTasks = taskManager.filterActiveTaskIds(requestTasks);    
     
-    final List<SingularityTaskId> deployMatchingTasks = Lists.newArrayList(Iterables.filter(requestMatchingActiveTasks, SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId())));
-    final List<SingularityTaskId> allOtherMatchingTasks = Lists.newArrayList(Iterables.filter(requestMatchingActiveTasks, Predicates.not(SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId()))));
+    final List<SingularityTaskId> inactiveDeployMatchingTasks = SingularityTaskId.matchingAndNotIn(requestTasks, pendingDeployMarker.getRequestId(), pendingDeployMarker.getDeployId(), activeTasks);
+    final List<SingularityTaskId> deployMatchingTasks = Lists.newArrayList(Iterables.filter(activeTasks, SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId())));
+    final List<SingularityTaskId> allOtherMatchingTasks = Lists.newArrayList(Iterables.filter(activeTasks, Predicates.not(SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId()))));
     
-    DeployState deployState = getDeployState(request, cancelRequest, pendingDeploy, deployKey, deploy, deployMatchingTasks, allOtherMatchingTasks);
+    DeployState deployState = getDeployState(request, cancelRequest, pendingDeploy, deployKey, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
 
     LOG.info("Deploy {} had state {} after {}", pendingDeployMarker, deployState, DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - pendingDeployMarker.getTimestamp()));
     
@@ -291,7 +295,8 @@ public class SingularityDeployChecker {
     return pendingDeploy.getLoadBalancerState().isPresent() && pendingDeploy.getLoadBalancerState().get() == LoadBalancerState.WAITING;
   }
   
-  private DeployState getDeployState(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy, final SingularityDeployKey deployKey, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> matchingActiveTasks, final Collection<SingularityTaskId> allOtherTasks) {
+  private DeployState getDeployState(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy, final SingularityDeployKey deployKey, final Optional<SingularityDeploy> deploy,
+      final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks, final Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
     if (!request.isDeployable()) {
       LOG.info("Succeeding a deploy {} because the request {} was not deployable", pendingDeploy, request);
       
@@ -330,8 +335,12 @@ public class SingularityDeployChecker {
       // we need to check this twice because we need to check overdue + cancels above, at this stage we're waiting.
       return DeployState.WAITING;
     }
-
-    if (matchingActiveTasks.size() < request.getInstancesSafe()) {
+    
+    if (!inactiveDeployMatchingTasks.isEmpty()) {
+      return DeployState.FAILED;
+    }
+    
+    if (deployActiveTasks.size() < request.getInstancesSafe()) {
       return DeployState.WAITING;
     }
     
@@ -339,14 +348,14 @@ public class SingularityDeployChecker {
       return DeployState.WAITING;
     }
     
-    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, matchingActiveTasks);
+    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks);
     
     switch (deployHealth) {
     case WAITING:
       return DeployState.WAITING;
     case HEALTHY:
       if (request.isLoadBalanced()) {
-        return enqueueSwitchLoadBalancer(pendingDeploy, matchingActiveTasks, allOtherTasks);
+        return enqueueSwitchLoadBalancer(pendingDeploy, deployActiveTasks, otherActiveTasks);
       } else {
         return DeployState.SUCCEEDED;
       }
