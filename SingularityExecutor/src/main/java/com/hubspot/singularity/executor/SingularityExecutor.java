@@ -26,19 +26,21 @@ public class SingularityExecutor implements Executor {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
-  private final Map<String, SingularityExecutorTask> tasks;
+  private final Map<String, SingularityExecutorTaskHolder> tasks;
   private final ListeningExecutorService taskRunner;
   
   private final SingularityTaskBuilder taskBuilder;
   private final ExecutorUtils executorUtils;
 
   private final SingularityExecutorLogging logging;
+  private final SingularityExecutorKiller killer;
   
   @Inject
-  public SingularityExecutor(ExecutorUtils executorUtils, SingularityTaskBuilder taskBuilder, SingularityExecutorLogging logging ) {
+  public SingularityExecutor(ExecutorUtils executorUtils, SingularityTaskBuilder taskBuilder, SingularityExecutorLogging logging, SingularityExecutorKiller killer) {
     this.taskBuilder = taskBuilder;
     this.executorUtils = executorUtils;
     this.logging = logging;
+    this.killer = killer;
     
     tasks = Maps.newConcurrentMap();
     
@@ -104,14 +106,16 @@ public class SingularityExecutor implements Executor {
       final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
       final SingularityExecutorTask executorTask = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
     
-      final ListenableFuture<Integer> taskResult = taskRunner.submit(executorTask);
+      final ListenableFuture<Integer> future = taskRunner.submit(executorTask);
    
-      Futures.addCallback(taskResult, new FutureCallback<Integer>() {
+      Futures.addCallback(future, new FutureCallback<Integer>() {
         
         // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
         public void onSuccess(Integer exitCode) {
-          if (exitCode == 0) {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "", taskLog);
+          if (executorTask.wasKilled()) {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, "Process was killed, but exited normally with code: " + exitCode, taskLog);
+          } else if (exitCode == 0) {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "Process exited normally", taskLog);
           } else {
             executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode, taskLog);
           }
@@ -120,15 +124,19 @@ public class SingularityExecutor implements Executor {
         }
         
         public void onFailure(Throwable t) {
+          if (executorTask.wasKilled()) {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, "Task killed, caught expected exception: " + t.getMessage(), taskLog);
+          } else {
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Exception running task: " + t.getMessage(), taskLog);
+          }
+
           taskLog.error("Task {} failed with", executorTask, t);
-          
-          executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While running task: " + t.getMessage(), taskLog);
           
           onFinish(executorTask, taskLog);
         }
       });
       
-      tasks.put(taskId, executorTask);
+      tasks.put(taskId, new SingularityExecutorTaskHolder(executorTask, future));
         
     } catch (Throwable t) {
       LOG.error("Couldn't launch task {} because of", taskId, t);
@@ -156,14 +164,14 @@ public class SingularityExecutor implements Executor {
     
     LOG.info("Asked to kill task {}", taskId);
 
-    SingularityExecutorTask task = tasks.get(taskId);
+    SingularityExecutorTaskHolder taskHolder = tasks.get(taskId);
     
-    if (task == null) {
+    if (taskHolder == null) {
       LOG.warn("Asked to kill unknown task {}, ignoring...", taskId);
       return;
     }
     
-    task.kill();
+    killer.kill(taskHolder);
   }
   
   @Override
@@ -184,9 +192,11 @@ public class SingularityExecutor implements Executor {
 
     taskRunner.shutdown();  // dont accept any more tasks
     
-    for (SingularityExecutorTask task : tasks.values()) {
-      task.kill();
+    for (SingularityExecutorTaskHolder task : tasks.values()) {
+      killer.kill(task);
     }
+    
+    killer.shutdown();
     
     LOG.info("Stopping driver...");
     executorDriver.stop();

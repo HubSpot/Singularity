@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -20,6 +21,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.singularity.executor.SingularityExecutorKiller;
 
 public class SingularityExecutorModule extends AbstractModule {
 
@@ -39,16 +41,32 @@ public class SingularityExecutorModule extends AbstractModule {
   
   public static final String DEFAULT_USER = "default.user";
   
+  public static final String HARD_KILL_AFTER_MILLIS = "executor.hard.kill.after.millis";
+  public static final String NUM_CORE_KILL_THREADS = "executor.num.core.kill.threads";
+  
+  public static final String MAX_TASK_MESSAGE_LENGTH = "executor.status.update.max.task.message.length";
+  
   @Override
   protected void configure() {
     bindPropertiesFile("/etc/singularity.executor.properties");
     
     bind(SingularityExecutorLogging.class).in(Scopes.SINGLETON);
     bind(SingularityTaskBuilder.class).in(Scopes.SINGLETON);
+    bind(SingularityExecutorKiller.class).in(Scopes.SINGLETON);
+  }
+  
+  private void bindDefaults(Properties properties) {
+    properties.put(TASK_EXECUTOR_BASH_LOG_PATH, "executor.bash.log");
+    properties.put(TASK_EXECUTOR_JAVA_LOG_PATH, "executor.java.log");
+    properties.put(TASK_SERVICE_LOG_PATH, "service.log");
+    properties.put(HARD_KILL_AFTER_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(3)));
+    properties.put(NUM_CORE_KILL_THREADS, "1");
+    properties.put(MAX_TASK_MESSAGE_LENGTH, "80");
   }
   
   private void bindPropertiesFile(String file) {
     Properties properties = new Properties();
+    bindDefaults(properties);
     try (BufferedReader br = Files.newBufferedReader(Paths.get(file), Charset.defaultCharset())) {
       properties.load(br);
     } catch (Throwable t) {

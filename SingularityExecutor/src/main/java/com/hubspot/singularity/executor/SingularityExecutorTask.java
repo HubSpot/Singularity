@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.executor.utils.ProcessUtils;
 
 public class SingularityExecutorTask implements Callable<Integer> {
 
@@ -40,6 +42,8 @@ public class SingularityExecutorTask implements Callable<Integer> {
   private final Path executorOut;
 
   private final Logger log;
+  
+  private AtomicBoolean killed;
 
   public SingularityExecutorTask(ExecutorDriver driver, SingularityExecutorConfiguration configuration, ExecutorUtils executorUtils, String taskId, TaskInfo taskInfo, ObjectMapper jsonObjectMapper, ObjectMapper yamlObjectMapper, 
       ArtifactManager artifactManager, TemplateManager templateManager, Logger log) {
@@ -56,6 +60,8 @@ public class SingularityExecutorTask implements Callable<Integer> {
     
     this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
     this.executorOut = configuration.getExecutorBashLogPath(taskId);
+    
+    this.killed = new AtomicBoolean(false);
   }
 
   @Override
@@ -132,12 +138,37 @@ public class SingularityExecutorTask implements Callable<Integer> {
     
     return processBuilder;
   }
-  
-  public void kill() {
-    // TODO handle process kill if process doesn't exist.
+    
+  public void killSoft() {
+    log.info("Asked to kill task gently");
+    
+    Preconditions.checkState(!killed.get(), "Task %s is already killed", taskId);
+    
+    killed.set(true);
+    
     if (process == null) {
+      log.info("Checking artifact process for task");
+      artifactManager.destroyProcessIfActive();
+    } else {
+      log.info("Gracefully killing main process for task");
+      ProcessUtils.gracefulKillUnixProcess(process);
+    }
+  }
+  
+  public boolean wasKilled() {
+    return killed.get();
+  }
+  
+  public void killHard() {
+    log.info("Asked to kill task hard");
+    
+    if (process == null) {
+      log.info("Task did not have a process to kill hard");
       return;
     }
+    
+    log.info("Destroying process for task");
+    
     process.destroy();
   }
 

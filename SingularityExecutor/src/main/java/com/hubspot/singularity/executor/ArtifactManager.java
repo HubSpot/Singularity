@@ -8,9 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -24,13 +27,45 @@ public class ArtifactManager {
   private final Path cacheDirectory;
   private final Path executorOut;
   private final Logger log;
+  private final String taskId;
+  
+  private final Lock processLock;
+  private volatile Optional<String> currentProcessCmd;
+  private volatile Optional<Process> currentProcess;
     
   public ArtifactManager(SingularityExecutorConfiguration configuration, String taskId, Logger log) {
     this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
     this.executorOut = configuration.getExecutorBashLogPath(taskId);
     this.log = log;
+    this.taskId = taskId;
+    
+    this.currentProcessCmd = Optional.absent();
+    this.currentProcess = Optional.absent();
+    
+    this.processLock = new ReentrantLock();
   }
 
+  public void destroyProcessIfActive() {
+    this.processLock.lock();
+    
+    try {
+      if (currentProcess.isPresent()) {
+        log.info("Destroying a process {}", currentProcessCmd);
+        
+        currentProcess.get().destroy();
+        
+        clearCurrentProcessUnsafe();
+      }
+    } finally {
+      this.processLock.unlock();
+    }
+  }
+  
+  private void clearCurrentProcessUnsafe() {
+    currentProcess = Optional.absent();
+    currentProcessCmd = Optional.absent();
+  }
+  
   private long getSize(Path path) {
     try {
       return Files.size(path);
@@ -93,7 +128,7 @@ public class ArtifactManager {
   
   private boolean checkCached(ArtifactInfo artifactInfo, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
-      log.debug("Cached {} did not exist", cachedPath);
+      log.debug("Cached {} did not exist", taskId, cachedPath);
       return false;
     }
     
@@ -123,6 +158,21 @@ public class ArtifactManager {
     return cachedPath;
   }
   
+  private void setCurrentProcess(Optional<String> newProcessCmd, Optional<Process> newProcess) {
+    try {
+      processLock.lockInterruptibly();
+    } catch (InterruptedException e) {
+      throw Throwables.propagate(e);
+    } 
+    
+    try {
+      currentProcessCmd = newProcessCmd;
+      currentProcess = newProcess;
+    } finally {
+      processLock.unlock();
+    }
+  }
+  
   private void runCommand(final List<String> command) {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
@@ -131,10 +181,16 @@ public class ArtifactManager {
       processBuilder.redirectError(outputFile);
       processBuilder.redirectOutput(outputFile);
       
-      final int exitCode = processBuilder.start().waitFor();
+      final Process process = processBuilder.start();
       
+      setCurrentProcess(Optional.of(command.get(0)), Optional.of(process));
+      
+      final int exitCode = process.waitFor();
+        
       Preconditions.checkState(exitCode == 0, "Got exit code %d while running command %s", exitCode, command);
-      
+
+      setCurrentProcess(Optional.<String> absent(), Optional.<Process> absent());
+
     } catch (Throwable t) {
       throw new RuntimeException(String.format("While running %s", command), t);
     }
@@ -145,7 +201,7 @@ public class ArtifactManager {
   }
   
   private void downloadUri(String uri, Path path) {
-    log.info(String.format("Downloading %s to %s", uri, getFullPath(path)));
+    log.info("Downloading {} to {}", uri, getFullPath(path));
 
     final List<String> command = Lists.newArrayList();
     command.add("wget");
@@ -159,7 +215,7 @@ public class ArtifactManager {
   }
 
   public void untar(Path source, Path destination) {
-    log.info(String.format("Untarring %s to %s", getFullPath(source), getFullPath(destination)));
+    log.info("Untarring {} to {}", getFullPath(source), getFullPath(destination));
     
     final List<String> command = Lists.newArrayList();
     command.add("tar");

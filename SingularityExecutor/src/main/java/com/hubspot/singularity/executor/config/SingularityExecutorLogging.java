@@ -24,13 +24,11 @@ public class SingularityExecutorLogging {
     configureRootLogger();
   }
   
-  private Logger prepareRootLoggerWithStaticExecutorLogger(LoggerContext context) {
+  private Logger prepareRootLogger(LoggerContext context) {
     Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
     
     rootLogger.detachAndStopAllAppenders();
     
-    rootLogger.addAppender(buildFileAppender(context, rootLogPath));
-  
     return rootLogger;
   }
   
@@ -39,13 +37,17 @@ public class SingularityExecutorLogging {
     
     LoggerContext context = new LoggerContext();
     
-    Logger rootLogger = prepareRootLoggerWithStaticExecutorLogger(context);
- 
-    rootLogger.addAppender(buildFileAppender(context, taskLogFile));
+    prepareRootLogger(context);
+    
+    Logger taskLogger = context.getLogger(taskId);
+    taskLogger.detachAndStopAllAppenders();
+    
+    taskLogger.addAppender(buildFileAppender(context, rootLogPath));
+    taskLogger.addAppender(buildFileAppender(context, taskLogFile));
 
     context.start();
     
-    return rootLogger;
+    return taskLogger;
   }
   
   public void stopTaskLogger(String taskId, Logger logger) {
@@ -63,7 +65,9 @@ public class SingularityExecutorLogging {
   private void configureRootLogger() {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-    prepareRootLoggerWithStaticExecutorLogger(context);
+    Logger rootLogger = prepareRootLogger(context);
+    
+    rootLogger.addAppender(buildFileAppender(context, rootLogPath));
   }
   
   private FileAppender<ILoggingEvent> buildFileAppender(LoggerContext context, String file) {
