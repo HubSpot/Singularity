@@ -1,5 +1,26 @@
 package com.hubspot.singularity.smtp;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.mail.Address;
+import javax.mail.Message.RecipientType;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.lang.time.DurationFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -11,8 +32,16 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
-import com.hubspot.singularity.*;
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityCloseable;
+import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityModule;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
@@ -21,22 +50,9 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.ning.http.client.AsyncHttpClient;
+
 import de.neuland.jade4j.Jade4J;
 import de.neuland.jade4j.template.JadeTemplate;
-import org.apache.commons.lang.time.DurationFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.mail.Address;
-import javax.mail.Message.RecipientType;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class SingularityMailer implements SingularityCloseable {
 

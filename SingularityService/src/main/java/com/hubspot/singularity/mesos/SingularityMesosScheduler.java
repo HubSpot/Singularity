@@ -25,7 +25,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -130,7 +129,7 @@ public class SingularityMesosScheduler implements Scheduler {
       throw t;
     }
 
-    LOG.info("Finished handling offers ({}), accepted {}, declined {}, outstanding tasks {}", Utils.duration(start), acceptedOffers.size(),
+    LOG.info("Finished handling offers ({}), accepted {}, declined {}, outstanding tasks {}", JavaUtils.duration(start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size());
   }
 

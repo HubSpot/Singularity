@@ -1,23 +1,30 @@
 package com.hubspot.singularity.hooks;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.*;
+import com.hubspot.singularity.LoadBalancerState;
+import com.hubspot.singularity.SingularityLoadBalancerRequest;
+import com.hubspot.singularity.SingularityLoadBalancerResponse;
+import com.hubspot.singularity.SingularityLoadBalancerService;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class LoadBalancerClient {
 
@@ -95,7 +102,7 @@ public class LoadBalancerClient {
       LOG.error("LB {} request {} to {} threw error", request.getMethod(), loadBalancerRequestId, request.getUrl(), t);
       returnState = onFailure;
     } finally {
-      LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, returnState, Utils.duration(start));
+      LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, returnState, JavaUtils.duration(start));
     }
     
     return returnState;

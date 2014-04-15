@@ -31,7 +31,7 @@
       <artifactId>SingularityBase</artifactId>
       <version>0.3.0</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -159,7 +159,7 @@
       <artifactId>snappy</artifactId>
       <version>0.4-SNAPSHOT</version>
     </dependency>
-  
+
   </dependencies>
 
   <build>

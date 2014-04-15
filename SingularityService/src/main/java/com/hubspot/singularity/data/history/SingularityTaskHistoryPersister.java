@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityTaskHistoryPersister {
@@ -50,7 +50,7 @@ public class SingularityTaskHistoryPersister {
       numTotal++;
     }
     
-    LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), Utils.duration(start));
+    LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), JavaUtils.duration(start));
   }
   
   private boolean transferToHistoryDB(SingularityTaskId inactiveTaskId) {
@@ -71,7 +71,7 @@ public class SingularityTaskHistoryPersister {
     
     taskManager.deleteTaskHistory(inactiveTaskId);
     
-    LOG.debug("Moved task history for {} from ZK to History in {}", inactiveTaskId, Utils.duration(start));
+    LOG.debug("Moved task history for {} from ZK to History in {}", inactiveTaskId, JavaUtils.duration(start));
   
     return true;
   }

@@ -1,15 +1,20 @@
 package com.hubspot.mesos;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.net.InetAddresses;
-import org.apache.mesos.Protos.*;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+
+import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
 
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.net.InetAddresses;
 
 public class MesosUtils {
 

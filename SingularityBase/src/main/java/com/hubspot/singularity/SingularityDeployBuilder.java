@@ -1,10 +1,10 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
-import com.hubspot.mesos.Resources;
-
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Optional;
+import com.hubspot.mesos.Resources;
 
 public class SingularityDeployBuilder {
 
@@ -16,7 +16,8 @@ public class SingularityDeployBuilder {
   private Optional<Long> timestamp;
   private Optional<Map<String, String>> metadata;
 
-  private Optional<String> executor;
+  private Optional<String> customExecutorCmd;
+  private Optional<String> customExecutorId;
   private Optional<Resources> resources;
  
   private Optional<String> command;
@@ -34,7 +35,7 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> loadBalancerGroups;
   
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, executor, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, loadBalancerBaseUri, loadBalancerGroups);
+    return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, loadBalancerBaseUri, loadBalancerGroups);
   }
 
   public String getRequestId() {
@@ -81,13 +82,22 @@ public class SingularityDeployBuilder {
     this.metadata = metadata;
     return this;
   }
-
-  public Optional<String> getExecutor() {
-    return executor;
+    
+  public Optional<String> getCustomExecutorCmd() {
+    return customExecutorCmd;
   }
 
-  public SingularityDeployBuilder setExecutor(Optional<String> executor) {
-    this.executor = executor;
+  public SingularityDeployBuilder setCustomExecutorCmd(Optional<String> customExecutorCmd) {
+    this.customExecutorCmd = customExecutorCmd;
+    return this;
+  }
+
+  public Optional<String> getCustomExecutorId() {
+    return customExecutorId;
+  }
+
+  public SingularityDeployBuilder setCustomExecutorId(Optional<String> customExecutorId) {
+    this.customExecutorId = customExecutorId;
     return this;
   }
 
@@ -192,24 +202,10 @@ public class SingularityDeployBuilder {
 
   @Override
   public String toString() {
-    return "SingularityDeployBuilder [" +
-        "requestId='" + requestId + '\'' +
-        ", id='" + id + '\'' +
-        ", version=" + version +
-        ", timestamp=" + timestamp +
-        ", metadata=" + metadata +
-        ", executor=" + executor +
-        ", resources=" + resources +
-        ", command=" + command +
-        ", env=" + env +
-        ", uris=" + uris +
-        ", executorData=" + executorData +
-        ", healthcheckUri=" + healthcheckUri +
-        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-        ", loadBalancerBaseUri=" + loadBalancerBaseUri +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ']';
+    return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId="
+        + customExecutorId + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds="
+        + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", loadBalancerBaseUri=" + loadBalancerBaseUri + ", loadBalancerGroups="
+        + loadBalancerGroups + "]";
   }
+  
 }

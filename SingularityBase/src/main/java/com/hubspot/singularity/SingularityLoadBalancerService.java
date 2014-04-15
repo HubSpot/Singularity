@@ -1,13 +1,13 @@
 package com.hubspot.singularity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 public class SingularityLoadBalancerService extends SingularityJsonObject {
   private final String serviceId;

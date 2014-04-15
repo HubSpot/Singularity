@@ -1,5 +1,9 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,10 +12,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.Resources;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityDeploy extends SingularityJsonObject {
@@ -24,7 +24,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<Long> timestamp;
   private final Optional<Map<String, String>> metadata;
 
-  private final Optional<String> executor;
+  private final Optional<String> customExecutorCmd;
+  private final Optional<String> customExecutorId;
   private final Optional<Resources> resources;
  
   private final Optional<String> command;
@@ -54,8 +55,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("executor") Optional<String> executor, @JsonProperty("resources") Optional<Resources> resources,
-      @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
+  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,  @JsonProperty("customExecutorId") Optional<String> customExecutorId,
+      @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
       @JsonProperty("loadBalancerBaseUri") Optional<String> loadBalancerBaseUri, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups) {
@@ -63,8 +64,10 @@ public class SingularityDeploy extends SingularityJsonObject {
     
     this.command = command;
     this.resources = resources;
-    this.executor = executor;
-
+    
+    this.customExecutorCmd = customExecutorCmd;
+    this.customExecutorId = customExecutorId;
+    
     this.metadata = metadata;
     this.version = version;
     this.id = id;
@@ -88,7 +91,8 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setCommand(command)
         .setRequestId(requestId)
         .setResources(resources)
-        .setExecutor(executor)
+        .setCustomExecutorCmd(customExecutorCmd)
+        .setCustomExecutorId(customExecutorId)
 
         .setHealthcheckUri(healthcheckUri)
         .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
@@ -127,8 +131,12 @@ public class SingularityDeploy extends SingularityJsonObject {
     return metadata;
   }
 
-  public Optional<String> getExecutor() {
-    return executor;
+  public Optional<String> getCustomExecutorCmd() {
+    return customExecutorCmd;
+  }
+
+  public Optional<String> getCustomExecutorId() {
+    return customExecutorId;
   }
 
   public Optional<Resources> getResources() {
@@ -173,24 +181,9 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityDeploy [" +
-        "requestId='" + requestId + '\'' +
-        ", id='" + id + '\'' +
-        ", version=" + version +
-        ", timestamp=" + timestamp +
-        ", metadata=" + metadata +
-        ", executor=" + executor +
-        ", resources=" + resources +
-        ", command=" + command +
-        ", env=" + env +
-        ", uris=" + uris +
-        ", executorData=" + executorData +
-        ", healthcheckUri=" + healthcheckUri +
-        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-        ", loadBalancerBaseUri=" + loadBalancerBaseUri +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ']';
+    return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId=" + customExecutorId
+        + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds
+        + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", loadBalancerBaseUri=" + loadBalancerBaseUri + ", loadBalancerGroups=" + loadBalancerGroups + "]";
   }
+
 }

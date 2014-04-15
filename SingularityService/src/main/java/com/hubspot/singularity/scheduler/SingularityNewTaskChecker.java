@@ -1,25 +1,34 @@
 package com.hubspot.singularity.scheduler;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.hubspot.singularity.*;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.hooks.LoadBalancerClient;
-import org.apache.commons.lang.time.DurationFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang.time.DurationFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerState;
+import com.hubspot.singularity.SingularityCloseable;
+import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
 
 public class SingularityNewTaskChecker implements SingularityCloseable {
   
@@ -127,7 +136,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     
     final CheckTaskState state = getTaskState(task);
     
-    LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), Utils.duration(start));
+    LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), JavaUtils.duration(start));
     
     boolean reEnqueue = false;
     
@@ -236,7 +245,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     final boolean isOverdue = taskDuration > killAfterUnhealthyMillis;
   
     if (isOverdue) {
-      LOG.debug("Task {} is overdue (duration: {}), allowed limit {}", task.getTaskId(), Utils.durationFromMillis(taskDuration), Utils.durationFromMillis(killAfterUnhealthyMillis));
+      LOG.debug("Task {} is overdue (duration: {}), allowed limit {}", task.getTaskId(), JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(killAfterUnhealthyMillis));
     }
     
     return isOverdue;

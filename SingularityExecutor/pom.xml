@@ -10,7 +10,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>SingularityClient</artifactId>
+  <artifactId>SingularityExecutor</artifactId>
 
   <repositories>
     <repository>
@@ -33,39 +33,35 @@
       <artifactId>guice</artifactId>
       <version>${guice.version}</version>
     </dependency>
-    
+
     <dependency>
-        <groupId>com.fasterxml.jackson.datatype</groupId>
-        <artifactId>jackson-datatype-guava</artifactId>
-        <version>${jackson.version}</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${sl4fj.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-recipes</artifactId>
-      <version>${curator.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.1.1</version>
     </dependency>
 
     <dependency>
-      <groupId>com.ning</groupId>
-      <artifactId>async-http-client</artifactId>
-      <version>${ning.async.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>com.github.spullara.mustache.java</groupId>
+      <artifactId>compiler</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-guava</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
 
   </dependencies>

@@ -16,6 +16,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
@@ -25,7 +26,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
@@ -88,7 +88,7 @@ public class SingularityStartup {
       throw Throwables.propagate(e);
     }
     
-    LOG.info("Finished startup after {}", Utils.duration(start));
+    LOG.info("Finished startup after {}", JavaUtils.duration(start));
   }
   
   private void enqueueHealthAndNewTaskchecks() {
@@ -121,7 +121,7 @@ public class SingularityStartup {
       }
     }
     
-    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), Utils.duration(start));
+    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), JavaUtils.duration(start));
   }
   
   private boolean hasMatchingPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {

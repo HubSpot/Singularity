@@ -84,9 +84,9 @@ public class SingularityValidator {
       check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
     }
     
-    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getExecutor().isPresent() && !deploy.getCommand().isPresent()), 
+    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 
         "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
-    check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getExecutor().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 
+    check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getCustomExecutorCmd().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
     
     check(!deployManager.getDeploy(request.getId(), deploy.getId()).isPresent() && !historyManager.getDeployHistory(request.getId(), deploy.getId()).isPresent(), "Can not deploy a deploy that has already been deployed");

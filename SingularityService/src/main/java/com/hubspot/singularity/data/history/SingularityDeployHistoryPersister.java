@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.Utils;
 import com.hubspot.singularity.data.DeployManager;
 
 public class SingularityDeployHistoryPersister {
@@ -52,7 +52,7 @@ public class SingularityDeployHistoryPersister {
       numTotal++;
     }
     
-    LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, Utils.duration(start));
+    LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));
   }
   
   private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, SingularityDeployKey deployKey) {
@@ -91,7 +91,7 @@ public class SingularityDeployHistoryPersister {
     
     deployManager.deleteDeployHistory(deployKey);
     
-    LOG.debug("Moved deploy history for {} from ZK to History in {}", deployKey, Utils.duration(start));
+    LOG.debug("Moved deploy history for {} from ZK to History in {}", deployKey, JavaUtils.duration(start));
   
     return true;
   }

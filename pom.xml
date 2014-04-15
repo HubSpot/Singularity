@@ -21,6 +21,7 @@
     <jackson.version>2.3.1</jackson.version>
     <curator.version>2.4.1</curator.version>
     <ning.async.version>1.7.24</ning.async.version>
+    <guice.version>3.0</guice.version>
   </properties>
 
   <groupId>com.hubspot</groupId>
@@ -61,6 +62,7 @@
     <module>SingularityBase</module>
     <module>SingularityClient</module>
     <module>SingularityService</module>
+    <module>SingularityExecutor</module>
   </modules>
 
   <build>

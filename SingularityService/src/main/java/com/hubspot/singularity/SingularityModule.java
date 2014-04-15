@@ -194,7 +194,7 @@ public class SingularityModule extends AbstractModule {
     
     Preconditions.checkState(client.getZookeeperClient().blockUntilConnectedOrTimedOut());
     
-    LOG.info("Connected to ZK after {}", Utils.duration(start));
+    LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
     
     return client;
   }
