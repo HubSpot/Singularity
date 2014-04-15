@@ -15,11 +15,12 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.LoadBalancerState;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerRequest;
 import com.hubspot.singularity.SingularityLoadBalancerResponse;
 import com.hubspot.singularity.SingularityLoadBalancerService;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
@@ -108,24 +109,20 @@ public class LoadBalancerClient {
     return returnState;
   }
   
-  public Optional<LoadBalancerState> enqueue(String loadBalancerRequestId, SingularityTaskRequest taskRequest, List<SingularityTask> add, List<SingularityTask> remove) {
-    final Optional<SingularityLoadBalancerService> maybeService = SingularityLoadBalancerService.fromTaskRequest(taskRequest);
-
-    if (!maybeService.isPresent()) {
-      return Optional.absent();  // TODO: right thing to return?
-    }
-
+  public Optional<LoadBalancerState> enqueue(String loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
+    final SingularityLoadBalancerService lbService = SingularityLoadBalancerService.fromRequestAndDeploy(request, deploy);
+    
     final List<String> addUpstreams = transformTasksToUpstreams(add);
     final List<String> removeUpstreams = transformTasksToUpstreams(remove);
 
-    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId, maybeService.get(), addUpstreams, removeUpstreams);
+    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId, lbService, addUpstreams, removeUpstreams);
     
-    final Request request = httpClient.preparePost(loadBalancerUri)
+    final Request httpRequest = httpClient.preparePost(loadBalancerUri)
       .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
       .setBody(loadBalancerRequest.getAsBytes(objectMapper))
       .build();
     
-    return request(loadBalancerRequestId, request, Optional.of(LoadBalancerState.FAILED));
+    return request(loadBalancerRequestId, httpRequest, Optional.of(LoadBalancerState.FAILED));
   }
   
   private boolean isSuccess(Response response) {

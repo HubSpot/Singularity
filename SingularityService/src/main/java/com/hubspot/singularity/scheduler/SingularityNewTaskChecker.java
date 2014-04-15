@@ -200,7 +200,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     Optional<LoadBalancerState> lbState = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     
     if (!lbState.isPresent()) {
-      lbState = lbClient.enqueue(task.getTaskId().getId(), task.getTaskRequest(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
+      lbState = lbClient.enqueue(task.getTaskId().getId(), task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
     } else {
       Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbState.get());
       

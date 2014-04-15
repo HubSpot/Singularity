@@ -10,12 +10,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularityLoadBalancerService extends SingularityJsonObject {
+
   private final String serviceId;
   private final Collection<String> owners;
   private final String loadBalancerBaseUri;
   private final List<String> loadBalancerGroups;
   private final Optional<Map<String, Object>> options;
 
+  public static SingularityLoadBalancerService fromRequestAndDeploy(SingularityRequest request, SingularityDeploy deploy) {
+    final List<String> owners = request.getOwners().or(Collections.<String>emptyList());
+    final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
+
+    return new SingularityLoadBalancerService(request.getId(), owners, deploy.getLoadBalancerBaseUri().get(), loadBalancerGroups, Optional.<Map<String, Object>>absent());
+  }
+  
+  public static SingularityLoadBalancerService fromTaskRequest(SingularityTaskRequest taskRequest) {
+    return fromRequestAndDeploy(taskRequest.getRequest(), taskRequest.getDeploy());
+  }
+  
   @JsonCreator
   public SingularityLoadBalancerService(@JsonProperty("serviceId") String serviceId,
                                         @JsonProperty("owners") Collection<String> owners,
@@ -60,14 +72,4 @@ public class SingularityLoadBalancerService extends SingularityJsonObject {
         ']';
   }
 
-  public static Optional<SingularityLoadBalancerService> fromTaskRequest(SingularityTaskRequest taskRequest) {
-    final List<String> owners = taskRequest.getRequest().getOwners().or(Collections.<String>emptyList());
-    final List<String> loadBalancerGroups = taskRequest.getDeploy().getLoadBalancerGroups().or(Collections.<String>emptyList());
-
-    if (!taskRequest.getRequest().isLoadBalanced() || !taskRequest.getDeploy().getLoadBalancerBaseUri().isPresent()) {
-      return Optional.absent();
-    }
-
-    return Optional.of(new SingularityLoadBalancerService(taskRequest.getRequest().getId(), owners, taskRequest.getDeploy().getLoadBalancerBaseUri().get(), loadBalancerGroups, Optional.<Map<String, Object>>absent()));
-  }
 }

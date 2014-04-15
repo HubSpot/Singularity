@@ -30,7 +30,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
@@ -233,7 +232,7 @@ public class SingularityDeployChecker {
     return tasks;
   }
   
-  private DeployState enqueueSwitchLoadBalancer(SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
+  private DeployState enqueueSwitchLoadBalancer(SingularityRequest request, SingularityDeploy deploy, SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
     if (!lbClient.hasValidUri()) {
       LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
       return DeployState.FAILED;
@@ -241,9 +240,7 @@ public class SingularityDeployChecker {
     
     final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(Iterables.concat(deployTasks, allOtherTasks));
 
-    final SingularityTaskRequest taskRequest = tasks.get(deployTasks.iterator().next()).getTaskRequest();  // TODO: kinda grody, maybe switch to List<>
-    
-    Optional<LoadBalancerState> enqueueResult = lbClient.enqueue(pendingDeploy.getDeployMarker().getLoadBalancerRequestId(), taskRequest, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
+    Optional<LoadBalancerState> enqueueResult = lbClient.enqueue(pendingDeploy.getDeployMarker().getLoadBalancerRequestId(), request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
     
     Optional<DeployState> deployState = interpretLoadBalancerState(enqueueResult);
     
@@ -355,7 +352,7 @@ public class SingularityDeployChecker {
       return DeployState.WAITING;
     case HEALTHY:
       if (request.isLoadBalanced()) {
-        return enqueueSwitchLoadBalancer(pendingDeploy, deployActiveTasks, otherActiveTasks);
+        return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
       } else {
         return DeployState.SUCCEEDED;
       }

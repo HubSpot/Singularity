@@ -263,7 +263,7 @@ public class SingularityCleaner {
         return CheckLBState.MISSING_TASK;
       }
       
-      lbRemoveState = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
+      lbRemoveState = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
       
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
     } else if (lbRemoveState.get() == LoadBalancerState.WAITING) {
