@@ -60,7 +60,7 @@ public abstract class SafeProcessManager {
   public Process startProcess(ProcessBuilder builder) {
     String cmd = builder.command().get(0);
     
-    log.debug("Attempting to start {}", cmd);
+    log.debug("Starting process {}", cmd);
     
     processLock.lock();
     
@@ -124,8 +124,8 @@ public abstract class SafeProcessManager {
     }
   }
   
-  private String getCurrentProcessToString() {
-    return String.format("%s - %s", currentProcessPid, currentProcessCmd);
+  public String getCurrentProcessToString() {
+    return String.format("%s - (pid: %s)", currentProcessCmd.or("<none>"), currentProcessPid.or(0));
   }
   
   public void signalProcessIfActive() {

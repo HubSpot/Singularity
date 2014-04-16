@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.mesos.Protos.TaskState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.EmbeddedArtifact;
@@ -14,28 +16,33 @@ import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
+import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
-  private final String taskId;
+  private final SingularityExecutorTask task;
+
   private final ArtifactManager artifactManager;
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
+  
+  private final ExecutorUtils executorUtils;
   
   private final Path taskDirectory;
   private final Path executorOut;
 
   private final ExecutorData executorData;
   
-  public SingularityExecutorTaskProcessBuilder(String taskId, ArtifactManager artifactManager, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData) {
+  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, ArtifactManager artifactManager, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData) {
     this.executorData = executorData;
-    this.taskId = taskId;
+    this.task = task;
+    this.executorUtils = executorUtils;
     this.artifactManager = artifactManager;
     this.templateManager = templateManager;
     this.configuration = configuration;
     
-    this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
-    this.executorOut = configuration.getExecutorBashLogPath(taskId);
+    this.taskDirectory = configuration.getTaskDirectoryPath(task.getTaskId());
+    this.executorOut = configuration.getExecutorBashLogPath(task.getTaskId());
   }
   
   public ArtifactManager getArtifactManager() {
@@ -44,6 +51,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   @Override
   public ProcessBuilder call() throws Exception {
+    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, "Staging files...", task.getLog());
+    
     downloadFiles(executorData);
     extractFiles(executorData);
     
@@ -74,7 +83,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   
   private ProcessBuilder buildProcessBuilder(ExecutorData executorData) {
     templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData));
-    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(executorData.getCmd(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), taskId)); 
+    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(executorData.getCmd(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId())); 
     
     List<String> command = Lists.newArrayList();
     command.add("bash");
@@ -88,6 +97,11 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     processBuilder.redirectOutput(executorOut.toFile());
     
     return processBuilder;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityExecutorTaskProcessBuilder [task=" + task.getTaskId() + "]";
   }
 
 }

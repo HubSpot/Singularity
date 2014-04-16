@@ -194,7 +194,7 @@ public class SingularityExecutorMonitor {
   }
   
   private SingularityExecutorTaskProcessCallable buildProcessCallable(final SingularityExecutorTask task, ProcessBuilder processBuilder) {
-    return new SingularityExecutorTaskProcessCallable(task.getLog(), processBuilder);
+    return new SingularityExecutorTaskProcessCallable(task, processBuilder, executorUtils);
   }
   
   private SingularityExecutorTaskProcessCallable submitProcessMonitor(final SingularityExecutorTask task, ProcessBuilder processBuilder) {

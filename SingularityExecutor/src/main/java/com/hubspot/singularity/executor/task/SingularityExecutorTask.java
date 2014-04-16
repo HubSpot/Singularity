@@ -13,6 +13,7 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutorTask {
   
@@ -25,7 +26,7 @@ public class SingularityExecutorTask {
   private final AtomicBoolean killed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   
-  public SingularityExecutorTask(ExecutorDriver driver, SingularityExecutorConfiguration configuration, String taskId, ExecutorData executorData, ArtifactManager artifactManager, 
+  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, String taskId, ExecutorData executorData, ArtifactManager artifactManager, 
       Protos.TaskInfo taskInfo, TemplateManager templateManager, Logger log) {
     this.driver = driver;
     this.taskInfo = taskInfo;
@@ -36,7 +37,7 @@ public class SingularityExecutorTask {
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
 
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(taskId, artifactManager, templateManager, configuration, executorData);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, executorData);
   }
   
   public boolean isSuccessExitCode(int exitCode) {
