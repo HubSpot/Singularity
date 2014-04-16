@@ -2,6 +2,12 @@ Model = require './model'
 
 class Request extends Model
 
+    parse: (data) ->
+        if data.request?
+            data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
+            data.daemon = data.request.daemon
+        data
+
     url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }"
 
     deletePaused: =>
