@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -118,7 +119,7 @@ public class ArtifactManager {
     
     log.info("Extracting {} to {}", embeddedArtifact.getName(), extractTo);
     
-    try (SeekableByteChannel byteChannel = Files.newByteChannel(directory.resolve(embeddedArtifact.getFilename()), StandardOpenOption.CREATE_NEW)) {
+    try (SeekableByteChannel byteChannel = Files.newByteChannel(directory.resolve(embeddedArtifact.getFilename()), EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))) {
       byteChannel.write(ByteBuffer.wrap(embeddedArtifact.getContent()));
     } catch (IOException e) {
       throw new RuntimeException(String.format("Couldn't extract %s", embeddedArtifact.getName()), e);
