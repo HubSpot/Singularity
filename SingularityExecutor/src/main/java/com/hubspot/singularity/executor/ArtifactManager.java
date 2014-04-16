@@ -19,7 +19,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.hubspot.deploy.ArtifactInfo;
+import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
 public class ArtifactManager {
@@ -74,21 +74,21 @@ public class ArtifactManager {
     }
   }
   
-  private boolean filesSizeMatches(ArtifactInfo artifactInfo, Path path) {
-    return artifactInfo.getFilesize() < 1 || artifactInfo.getFilesize() == getSize(path);
+  private boolean filesSizeMatches(ExternalArtifact artifact, Path path) {
+    return artifact.getFilesize() < 1 || artifact.getFilesize() == getSize(path);
   }
   
-  private boolean md5Matches(ArtifactInfo artifactInfo, Path path) {
-    return !artifactInfo.getMd5sum().isPresent() || artifactInfo.getMd5sum().get().equals(calculateMd5sum(path));
+  private boolean md5Matches(ExternalArtifact artifact, Path path) {
+    return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equals(calculateMd5sum(path));
   }
   
-  private void checkFilesize(ArtifactInfo artifactInfo, Path path) {
-    if (!filesSizeMatches(artifactInfo, path)) {
-      throw new RuntimeException(String.format("Filesize %s (%s) does not match expected (%s)", getSize(path), path, artifactInfo.getFilesize()));
+  private void checkFilesize(ExternalArtifact artifact, Path path) {
+    if (!filesSizeMatches(artifact, path)) {
+      throw new RuntimeException(String.format("Filesize %s (%s) does not match expected (%s)", getSize(path), path, artifact.getFilesize()));
     }
 
-    if (!md5Matches(artifactInfo, path)) {
-      throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifactInfo.getMd5sum().get()));
+    if (!md5Matches(artifact, path)) {
+      throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifact.getMd5sum().get()));
     }
   }
   
@@ -100,16 +100,16 @@ public class ArtifactManager {
     }
   }
   
-  public void downloadAndCheck(ArtifactInfo artifactInfo, Path downloadTo) {
-    downloadUri(artifactInfo.getUrl(), downloadTo);
+  public void downloadAndCheck(ExternalArtifact artifact, Path downloadTo) {
+    downloadUri(artifact.getUrl(), downloadTo);
     
-    checkFilesize(artifactInfo, downloadTo);
+    checkFilesize(artifact, downloadTo);
   }
   
-  private Path downloadAndCache(ArtifactInfo artifactInfo, String filename) {
+  private Path downloadAndCache(ExternalArtifact artifact, String filename) {
     Path tempFilePath = createTempPath(filename);
     
-    downloadAndCheck(artifactInfo, tempFilePath);
+    downloadAndCheck(artifact, tempFilePath);
     
     Path cachedPath = getCachedPath(filename);
     
@@ -126,31 +126,31 @@ public class ArtifactManager {
     return cacheDirectory.resolve(filename);
   }
   
-  private boolean checkCached(ArtifactInfo artifactInfo, Path cachedPath) {
+  private boolean checkCached(ExternalArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
       log.debug("Cached {} did not exist", taskId, cachedPath);
       return false;
     }
     
-    if (!filesSizeMatches(artifactInfo, cachedPath)) {
-      log.debug("Cached {} ({}) did not match file size {}", cachedPath, getSize(cachedPath), artifactInfo.getFilesize());
+    if (!filesSizeMatches(artifact, cachedPath)) {
+      log.debug("Cached {} ({}) did not match file size {}", cachedPath, getSize(cachedPath), artifact.getFilesize());
       return false;
     }
     
-    if (!md5Matches(artifactInfo, cachedPath)) {
-      log.debug("Cached {} ({}) did not match md5 {}", cachedPath, calculateMd5sum(cachedPath), artifactInfo.getMd5sum().get());
+    if (!md5Matches(artifact, cachedPath)) {
+      log.debug("Cached {} ({}) did not match md5 {}", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
       return false;
     }
     
     return true;
   }
   
-  public Path fetch(ArtifactInfo artifactInfo) {
-    String filename = getFilenameFromUri(artifactInfo.getUrl());
+  public Path fetch(ExternalArtifact artifact) {
+    String filename = getFilenameFromUri(artifact.getUrl());
     Path cachedPath = getCachedPath(filename);
     
-    if (!checkCached(artifactInfo, cachedPath)) {
-      downloadAndCache(artifactInfo, filename);
+    if (!checkCached(artifact, cachedPath)) {
+      downloadAndCache(artifact, filename);
     } else {
       log.info("Using cached file {}", getFullPath(cachedPath));
     }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 
 public class SingularityDeployBuilder {
@@ -23,7 +24,7 @@ public class SingularityDeployBuilder {
   private Optional<String> command;
   private Optional<Map<String, String>> env;
   private Optional<List<String>> uris;
-  private Optional<Object> executorData;
+  private Optional<ExecutorData> executorData;
  
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
@@ -146,11 +147,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<Object> getExecutorData() {
+  public Optional<ExecutorData> getExecutorData() {
     return executorData;
   }
 
-  public SingularityDeployBuilder setExecutorData(Optional<Object> executorData) {
+  public SingularityDeployBuilder setExecutorData(Optional<ExecutorData> executorData) {
     this.executorData = executorData;
     return this;
   }

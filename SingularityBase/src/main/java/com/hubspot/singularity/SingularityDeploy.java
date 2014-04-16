@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -31,7 +32,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<String> command;
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
-  private final Optional<Object> executorData;
+  private final Optional<ExecutorData> executorData;
   
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -57,7 +58,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   @JsonCreator
   public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,  @JsonProperty("customExecutorId") Optional<String> customExecutorId,
       @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
-      @JsonProperty("executorData") Optional<Object> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
+      @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
       @JsonProperty("loadBalancerBaseUri") Optional<String> loadBalancerBaseUri, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups) {
     this.requestId = requestId;
@@ -104,7 +105,7 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setTimestamp(timestamp)
         .setEnv(env.isPresent() ? Optional.<Map<String, String>> of(Maps.newHashMap(env.get())) : env)
         .setUris(uris.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(uris.get())) : uris)
-        .setExecutorData(executorData);  // TODO: find the best way to clone this, maybe force it to be a Map<String, String> ?
+        .setExecutorData(executorData);
   }  
   
   public Optional<Long> getDeployHealthTimeoutSeconds() {
@@ -155,7 +156,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     return uris;
   }
 
-  public Optional<Object> getExecutorData() {
+  public Optional<ExecutorData> getExecutorData() {
     return executorData;
   }
   
