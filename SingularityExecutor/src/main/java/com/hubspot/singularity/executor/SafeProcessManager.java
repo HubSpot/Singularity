@@ -23,12 +23,12 @@ public abstract class SafeProcessManager {
   
   private final AtomicBoolean killed;
   
-  public SafeProcessManager(Logger log, Optional<String> currentProcessCmd, Optional<Process> currentProcess, Optional<Integer> currentProcessPid) {
+  public SafeProcessManager(Logger log) {
     this.log = log;
     
-    this.currentProcessCmd = currentProcessCmd;
-    this.currentProcess = currentProcess;
-    this.currentProcessPid = currentProcessPid;
+    this.currentProcessCmd = Optional.absent();
+    this.currentProcess = Optional.absent();
+    this.currentProcessPid = Optional.absent();
     
     this.processLock = new ReentrantLock();
   
