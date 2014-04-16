@@ -1,22 +1,22 @@
 package com.hubspot.singularity.executor.task;
 
-import java.nio.file.Path;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import org.apache.mesos.Protos.TaskState;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import org.apache.mesos.Protos.TaskState;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
@@ -56,7 +56,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     downloadFiles(executorData);
     extractFiles(executorData);
     
-    ProcessBuilder processBuilder = buildProcessBuilder(executorData);
+    ProcessBuilder processBuilder = buildProcessBuilder(executorData, MesosUtils.getAllPorts(task.getTaskInfo()));
   
     return processBuilder;
   }
@@ -81,8 +81,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     }
   }
   
-  private ProcessBuilder buildProcessBuilder(ExecutorData executorData) {
-    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData));
+  private ProcessBuilder buildProcessBuilder(ExecutorData executorData, List<Long> ports) {
+    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData, ports));
     templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(executorData.getCmd(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId())); 
     
     List<String> command = Lists.newArrayList();
