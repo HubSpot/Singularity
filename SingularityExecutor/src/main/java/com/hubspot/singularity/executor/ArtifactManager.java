@@ -80,7 +80,7 @@ public class ArtifactManager {
   }
   
   private boolean filesSizeMatches(ExternalArtifact artifact, Path path) {
-    return artifact.getFilesize() < 1 || artifact.getFilesize() == getSize(path);
+    return !artifact.getFilesize().isPresent() || artifact.getFilesize().get() == getSize(path);
   }
   
   private boolean md5Matches(Artifact artifact, Path path) {
