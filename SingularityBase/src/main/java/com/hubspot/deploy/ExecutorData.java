@@ -18,7 +18,7 @@ public class ExecutorData {
   private final Collection<EmbeddedArtifact> embeddedArtifacts;
   private final Collection<ExternalArtifact> externalArtifacts;
   private final Map<String, String> env;
-  private final Collection<Integer> exitCodes;
+  private final Collection<Integer> successfulExitCodes;
   private final Optional<String> runningSentinel;
   private final Optional<String> user;
 
@@ -29,13 +29,13 @@ public class ExecutorData {
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") Collection<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") Collection<ExternalArtifact> externalArtifacts, 
-      @JsonProperty("env") Map<String, String> env, @JsonProperty("exitCodes") Collection<Integer> exitCodes, @JsonProperty("user") String user, @JsonProperty("runningSentinel") String runningSentinel) {
+      @JsonProperty("env") Map<String, String> env, @JsonProperty("successfulExitCodes") Collection<Integer> successfulExitCodes, @JsonProperty("user") String user, @JsonProperty("runningSentinel") String runningSentinel) {
     this.cmd = cmd;
     this.embeddedArtifacts = Objects.firstNonNull(embeddedArtifacts, Collections.<EmbeddedArtifact> emptyList());
     this.externalArtifacts = Objects.firstNonNull(externalArtifacts, Collections.<ExternalArtifact> emptyList());
     this.env = Objects.firstNonNull(env, Collections.<String, String> emptyMap());
     this.user = Optional.fromNullable(user);
-    this.exitCodes = Objects.firstNonNull(exitCodes, Collections.singletonList(0));
+    this.successfulExitCodes = Objects.firstNonNull(successfulExitCodes, Collections.singletonList(0));
 
     this.runningSentinel = Strings.isNullOrEmpty(runningSentinel) ? Optional.<String> absent() : Optional.of(runningSentinel);
   }
@@ -56,8 +56,8 @@ public class ExecutorData {
     return externalArtifacts;
   }
 
-  public Collection<Integer> getExitCodes() {
-    return exitCodes;
+  public Collection<Integer> getSuccessfulExitCodes() {
+    return successfulExitCodes;
   }
 
   public Optional<String> getRunningSentinel() {
@@ -76,7 +76,7 @@ public class ExecutorData {
         .add("externalArtifacts", externalArtifacts)
         .add("env", env)
         .add("user", user)
-        .add("exitCodes", exitCodes)
+        .add("successfulExitCodes", successfulExitCodes)
         .add("runningSentinel", runningSentinel)
         .toString();
   }
