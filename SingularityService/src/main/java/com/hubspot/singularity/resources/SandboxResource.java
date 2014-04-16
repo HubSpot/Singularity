@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
@@ -56,7 +57,7 @@ public class SandboxResource extends AbstractHistoryResource {
   }
   
   private String getPath(String taskId, String path) {
-    if (path == null) {
+    if (Strings.isNullOrEmpty(path)) {
       return taskId;
     }
     return path;
