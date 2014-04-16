@@ -1,50 +1,29 @@
 package com.hubspot.singularity.executor;
 
-import java.util.Map;
-import java.util.concurrent.Executors;
-
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
+import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
+import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
 import com.hubspot.singularity.executor.config.SingularityTaskBuilder;
-import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 
 public class SingularityExecutor implements Executor {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
-  private final Map<String, SingularityExecutorTaskHolder> tasks;
-  private final ListeningExecutorService taskRunner;
-  
   private final SingularityTaskBuilder taskBuilder;
-  private final ExecutorUtils executorUtils;
-
-  private final SingularityExecutorLogging logging;
-  private final SingularityExecutorKiller killer;
+  private final SingularityExecutorMonitor monitor;
   
   @Inject
-  public SingularityExecutor(ExecutorUtils executorUtils, SingularityTaskBuilder taskBuilder, SingularityExecutorLogging logging, SingularityExecutorKiller killer) {
+  public SingularityExecutor(SingularityExecutorMonitor monitor, SingularityTaskBuilder taskBuilder) {
     this.taskBuilder = taskBuilder;
-    this.executorUtils = executorUtils;
-    this.logging = logging;
-    this.killer = killer;
-    
-    tasks = Maps.newConcurrentMap();
-    
-    taskRunner = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessRunner-%d").build()));
+    this.monitor = monitor;
   }
   
   /**
@@ -88,68 +67,24 @@ public class SingularityExecutor implements Executor {
     
     LOG.info("Asked to launch task {}", taskId);
 
-    if (taskRunner.isShutdown()) {
-      LOG.warn("Can't launch task {}, executor service is shut down!", taskInfo);
-
-      executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Executor service was shut down", LOG);
-      
-      return;
-    }
-    
-    if (tasks.containsKey(taskId)) {
-      LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
-    
-      return;
-    }
-     
     try {
       final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
-      final SingularityExecutorTask executorTask = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
-    
-      final ListenableFuture<Integer> future = taskRunner.submit(executorTask);
-   
-      Futures.addCallback(future, new FutureCallback<Integer>() {
-        
-        // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
-        public void onSuccess(Integer exitCode) {
-          if (executorTask.wasKilled()) {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, "Process was killed, but exited normally with code: " + exitCode, taskLog);
-          } else if (exitCode == 0) {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FINISHED, "Process exited normally", taskLog);
-          } else {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode, taskLog);
-          }
-          
-          onFinish(executorTask);
-        }
-        
-        public void onFailure(Throwable t) {
-          if (executorTask.wasKilled()) {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, String.format("Task killed, caught expected %s", t.getClass().getSimpleName()), taskLog);
-          } else {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, String.format("%s running task: %s", t.getClass().getSimpleName(), t.getMessage()), taskLog);
-          }
-
-          taskLog.error("Task {} failed with", executorTask, t);
-          
-          onFinish(executorTask);
-        }
-      });
+      final SingularityExecutorTask task = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
       
-      tasks.put(taskId, new SingularityExecutorTaskHolder(executorTask, future));
-        
-    } catch (Throwable t) {
-      LOG.error("Couldn't launch task {} because of", taskId, t);
-    
-      executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "While launching task: " + t.getMessage(), LOG);
-    }
-  }
+      SubmitState submitState = monitor.submit(task);
   
-  private void onFinish(SingularityExecutorTask task) {
-    tasks.remove(task.getTaskId());
-    
-    if (!task.wasKilled()) { // killer will take care of this.
-      logging.stopTaskLogger(task.getTaskId(), task.getLog());
+      switch (submitState) {
+      case REJECTED:
+        LOG.warn("Can't launch task {}, it was rejected (probably due to shutdown)", taskInfo);
+        break;
+      case TASK_ALREADY_EXISTED:
+        LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
+        break;
+      case SUBMITTED:
+        break;
+      }
+    } catch (Throwable t) {
+      LOG.error("Unexpected exception starting task {}", taskId, t);
     }
   }
   
@@ -166,14 +101,19 @@ public class SingularityExecutor implements Executor {
     
     LOG.info("Asked to kill task {}", taskId);
 
-    SingularityExecutorTaskHolder taskHolder = tasks.get(taskId);
+    KillState killState = monitor.requestKill(taskId);
     
-    if (taskHolder == null) {
-      LOG.warn("Asked to kill unknown task {}, ignoring...", taskId);
-      return;
+    switch (killState) {
+    case ALREADY_REQUESTED:
+    case DIDNT_EXIST:
+    case INCONSISTENT_STATE: 
+      LOG.warn("Couldn't kill task {} due to killState {}", taskId, killState);
+      break;
+    case INTERRUPTING_PRE_PROCESS:
+    case KILLING_PROCESS:
+      LOG.info("Requested kill of task {} with killState {}", taskId, killState);
+      break;
     }
-    
-    killer.kill(taskHolder);
   }
   
   @Override
@@ -192,13 +132,7 @@ public class SingularityExecutor implements Executor {
   public void shutdown(ExecutorDriver executorDriver) {
     LOG.info("Asked to shutdown executor...");
 
-    taskRunner.shutdown();  // dont accept any more tasks
-    
-    for (SingularityExecutorTaskHolder task : tasks.values()) {
-      killer.kill(task);
-    }
-    
-    killer.shutdown();
+    monitor.shutdown();
     
     LOG.info("Stopping driver...");
     executorDriver.stop();

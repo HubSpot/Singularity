@@ -7,36 +7,32 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 
-public class SingularityExecutorKiller {
+public class SingularityExecutorProcessKiller {
 
   private final long hardKillAfterMillis;
   
   private final ScheduledExecutorService scheduledExecutorService;
-  private final SingularityExecutorLogging logging;
 
   @Inject
-  public SingularityExecutorKiller(@Named(SingularityExecutorModule.HARD_KILL_AFTER_MILLIS) String hardKillAfterMillis,  @Named(SingularityExecutorModule.NUM_CORE_KILL_THREADS) String killThreads, SingularityExecutorLogging logging) {
+  public SingularityExecutorProcessKiller(@Named(SingularityExecutorModule.HARD_KILL_AFTER_MILLIS) String hardKillAfterMillis, @Named(SingularityExecutorModule.NUM_CORE_KILL_THREADS) String killThreads) {
     this.hardKillAfterMillis = Long.parseLong(hardKillAfterMillis);
-    this.logging = logging;
     
     this.scheduledExecutorService = Executors.newScheduledThreadPool(Integer.parseInt(killThreads), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorKillThread-%d").build());
   }
   
-  public void kill(final SingularityExecutorTaskHolder taskHolder) {
+  public void submitKillRequest(final SingularityExecutorTaskProcessCallable processCallable) {
     // make it so that the task can not make progress
-    taskHolder.getTask().markKilled();
-    taskHolder.getFuture().cancel(true);
+    processCallable.markKilled();
+    processCallable.signalProcessIfActive();
     
     scheduledExecutorService.schedule(new Runnable() {
       
       @Override
-      public void run() {
-        taskHolder.getTask().destroyProcessIfActive();
-        
-        logging.stopTaskLogger(taskHolder.getTask().getTaskId(), taskHolder.getTask().getLog());
+      public void run() {        
+        processCallable.destroyProcessIfActive();
       }
     }, hardKillAfterMillis, TimeUnit.MILLISECONDS);
   }

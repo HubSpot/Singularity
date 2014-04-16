@@ -19,20 +19,26 @@ public abstract class SafeProcessManager {
   
   private volatile Optional<String> currentProcessCmd;
   private volatile Optional<Process> currentProcess;
+  private volatile Optional<Integer> currentProcessPid;
   
-  private AtomicBoolean killed;
+  private final AtomicBoolean killed;
   
   public SafeProcessManager(Logger log) {
+    this(log, Optional.<String> absent(), Optional.<Process> absent(), Optional.<Integer> absent());
+  }
+  
+  public SafeProcessManager(Logger log, Optional<String> currentProcessCmd, Optional<Process> currentProcess, Optional<Integer> currentProcessPid) {
     this.log = log;
     
-    this.currentProcessCmd = Optional.absent();
-    this.currentProcess = Optional.absent();
+    this.currentProcessCmd = currentProcessCmd;
+    this.currentProcess = currentProcess;
+    this.currentProcessPid = currentProcessPid;
     
     this.processLock = new ReentrantLock();
   
     this.killed = new AtomicBoolean(false);
   }
-  
+    
   public boolean wasKilled() {
     return killed.get();
   }
@@ -70,8 +76,11 @@ public abstract class SafeProcessManager {
     try {
       process = builder.start();
       
+      currentProcessPid = Optional.of(getUnixPID(process));
       currentProcess = Optional.of(process);
       currentProcessCmd = Optional.of(cmd);
+      
+      log.debug("Started process {}", getCurrentProcessToString());
       
     } catch (IOException e) {
       throw Throwables.propagate(e);
@@ -87,6 +96,7 @@ public abstract class SafeProcessManager {
     
     try {
       currentProcess = Optional.absent();
+      currentProcessPid = Optional.absent();
       currentProcessCmd = Optional.absent();
     } finally {
       processLock.unlock();
@@ -108,8 +118,7 @@ public abstract class SafeProcessManager {
     }
   }
   
-  private int gracefulKillUnixProcess(Process process) {
-    final int pid = getUnixPID(process);
+  private int gracefulKillUnixProcess(int pid) {
     final String killCmd = String.format("kill -15 %s", pid); 
     
     try {
@@ -119,14 +128,18 @@ public abstract class SafeProcessManager {
     }
   }
   
+  private String getCurrentProcessToString() {
+    return String.format("%s - %s", currentProcessPid, currentProcessCmd);
+  }
+  
   public void signalProcessIfActive() {
     this.processLock.lock();
     
     try {
-      if (currentProcess.isPresent()) {
-        log.info("Signaling a process {} to exit", currentProcessCmd);
+      if (currentProcessPid.isPresent()) {
+        log.info("Signaling a process {} to exit", getCurrentProcessToString());
         
-        gracefulKillUnixProcess(currentProcess.get());
+        gracefulKillUnixProcess(currentProcessPid.get());
       }
     } finally {
       this.processLock.unlock();
@@ -138,11 +151,12 @@ public abstract class SafeProcessManager {
     
     try {
       if (currentProcess.isPresent()) {
-        log.info("Destroying a process {}", currentProcessCmd);
+        log.info("Destroying a process {}", getCurrentProcessToString());
         
         currentProcess.get().destroy();
 
         currentProcess = Optional.absent();
+        currentProcessPid = Optional.absent();
         currentProcessCmd = Optional.absent();
       }
     } finally {

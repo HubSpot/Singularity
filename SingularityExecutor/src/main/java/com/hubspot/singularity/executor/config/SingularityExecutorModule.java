@@ -20,7 +20,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.singularity.executor.SingularityExecutorKiller;
+import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 
 public class SingularityExecutorModule extends AbstractModule {
 
@@ -49,7 +49,7 @@ public class SingularityExecutorModule extends AbstractModule {
     
     bind(SingularityExecutorLogging.class).in(Scopes.SINGLETON);
     bind(SingularityTaskBuilder.class).in(Scopes.SINGLETON);
-    bind(SingularityExecutorKiller.class).in(Scopes.SINGLETON);
+    bind(SingularityExecutorProcessKiller.class).in(Scopes.SINGLETON);
   }
   
   private void bindDefaults(Properties properties) {

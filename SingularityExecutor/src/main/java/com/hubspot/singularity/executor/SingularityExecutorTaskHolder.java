@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 
 public class SingularityExecutorTaskHolder {
 
