@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # This script was automatically generated.
-# Task ID: {{ taskId }}
+# Task ID: {{{ taskId }}}
 #
 
 # load system-wide profile.d
@@ -40,4 +40,4 @@ if [[ "$USE_ULIMIT" == "1" ]]; then
 fi
 
 # execute command
-exec sudo -u {{ user }} {{ cmd }} >> ../{{ logfile }} 2>&1
+exec sudo -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1
