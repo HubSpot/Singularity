@@ -4,6 +4,8 @@ class HistoricalTasks extends Mixen(RequestTasks, Teeble.ServerCollection)
 
     model: Backbone.Model
 
+    comparator: undefined
+
     url: ->
         sortDirection = @sortDirection.toUpperCase()
         if @sortColumn in ['updatedAt', 'createdAt']
