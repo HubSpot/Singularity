@@ -43,3 +43,7 @@ Messenger.options =
         type: 'error'
         hideAfter: 5
         showCloseButton: true
+
+# ZeroClipboard options
+ZeroClipboard.config
+    debug: false

@@ -155,7 +155,6 @@ class Utils
         zeroClipboardClient = new ZeroClipboard $copyButton[0],
             moviePath: "#{ constants.appRoot }/static/swf/ZeroClipboard.swf"
             forceHandCursor: true
-            debug: true
 
         copiedTimeout = undefined
 
