@@ -86,7 +86,7 @@ public class SingularityValidator {
     }
     
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 
-        "If not using custom executor, specify a command. If using custom executor, specify executorData OR command.");
+        "If not using custom executor, specify a command. If using custom executor, specify executorData and customExecutorCmd and no command.");
     check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getCustomExecutorCmd().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 
         "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
     
