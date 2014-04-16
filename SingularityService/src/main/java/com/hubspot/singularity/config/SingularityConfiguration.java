@@ -86,7 +86,7 @@ public class SingularityConfiguration extends Configuration {
   private long zookeeperAsyncTimeout = 5000;
   
   @NotNull
-  private long deployHealthyBySeconds = 30;
+  private long deployHealthyBySeconds = 120;
   
   @NotNull
   private int maxRequestIdSize = 100;

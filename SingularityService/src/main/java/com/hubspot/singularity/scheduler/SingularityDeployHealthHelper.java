@@ -55,6 +55,7 @@ public class SingularityDeployHealthHelper {
         LOG.warn("Found an active task ({}) in done state: {}}", taskId, updates);
         return DeployHealth.UNHEALTHY;
       case RUNNING:
+        // TODO has it been running long enough?
       }
     }
     
