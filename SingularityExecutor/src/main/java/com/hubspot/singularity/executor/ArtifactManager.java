@@ -11,12 +11,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -27,50 +24,22 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
-public class ArtifactManager {
+public class ArtifactManager extends SafeProcessManager {
 
   private final Path cacheDirectory;
   private final Path executorOut;
   private final Logger log;
   private final String taskId;
   
-  private final Lock processLock;
-  private volatile Optional<String> currentProcessCmd;
-  private volatile Optional<Process> currentProcess;
-    
   public ArtifactManager(SingularityExecutorConfiguration configuration, String taskId, Logger log) {
+    super(log);
+    
     this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
     this.executorOut = configuration.getExecutorBashLogPath(taskId);
     this.log = log;
     this.taskId = taskId;
-    
-    this.currentProcessCmd = Optional.absent();
-    this.currentProcess = Optional.absent();
-    
-    this.processLock = new ReentrantLock();
   }
 
-  public void destroyProcessIfActive() {
-    this.processLock.lock();
-    
-    try {
-      if (currentProcess.isPresent()) {
-        log.info("Destroying a process {}", currentProcessCmd);
-        
-        currentProcess.get().destroy();
-        
-        clearCurrentProcessUnsafe();
-      }
-    } finally {
-      this.processLock.unlock();
-    }
-  }
-  
-  private void clearCurrentProcessUnsafe() {
-    currentProcess = Optional.absent();
-    currentProcessCmd = Optional.absent();
-  }
-  
   private long getSize(Path path) {
     try {
       return Files.size(path);
@@ -179,22 +148,7 @@ public class ArtifactManager {
   
     return cachedPath;
   }
-  
-  private void setCurrentProcess(Optional<String> newProcessCmd, Optional<Process> newProcess) {
-    try {
-      processLock.lockInterruptibly();
-    } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
-    } 
     
-    try {
-      currentProcessCmd = newProcessCmd;
-      currentProcess = newProcess;
-    } finally {
-      processLock.unlock();
-    }
-  }
-  
   private void runCommand(final List<String> command) {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
@@ -203,16 +157,14 @@ public class ArtifactManager {
       processBuilder.redirectError(outputFile);
       processBuilder.redirectOutput(outputFile);
       
-      final Process process = processBuilder.start();
-      
-      setCurrentProcess(Optional.of(command.get(0)), Optional.of(process));
+      final Process process = startProcess(processBuilder);
       
       final int exitCode = process.waitFor();
         
       Preconditions.checkState(exitCode == 0, "Got exit code %d while running command %s", exitCode, command);
 
-      setCurrentProcess(Optional.<String> absent(), Optional.<Process> absent());
-
+      processFinished();
+ 
     } catch (Throwable t) {
       throw new RuntimeException(String.format("While running %s", command), t);
     }
@@ -257,6 +209,11 @@ public class ArtifactManager {
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "ArtifactManager [cacheDirectory=" + cacheDirectory + ", executorOut=" + executorOut + ", log=" + log + ", taskId=" + taskId + "]";
   }
 
 }

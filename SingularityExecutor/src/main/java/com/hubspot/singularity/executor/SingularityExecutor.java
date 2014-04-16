@@ -120,19 +120,19 @@ public class SingularityExecutor implements Executor {
             executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_FAILED, "Exit code: " + exitCode, taskLog);
           }
           
-          onFinish(executorTask, taskLog);
+          onFinish(executorTask);
         }
         
         public void onFailure(Throwable t) {
           if (executorTask.wasKilled()) {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, "Task killed, caught expected exception: " + t.getMessage(), taskLog);
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_KILLED, String.format("Task killed, caught expected %s", t.getClass().getSimpleName()), taskLog);
           } else {
-            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, "Exception running task: " + t.getMessage(), taskLog);
+            executorUtils.sendStatusUpdate(executorDriver, taskInfo, Protos.TaskState.TASK_LOST, String.format("%s running task: %s", t.getClass().getSimpleName(), t.getMessage()), taskLog);
           }
 
           taskLog.error("Task {} failed with", executorTask, t);
           
-          onFinish(executorTask, taskLog);
+          onFinish(executorTask);
         }
       });
       
@@ -145,10 +145,12 @@ public class SingularityExecutor implements Executor {
     }
   }
   
-  private void onFinish(SingularityExecutorTask task, ch.qos.logback.classic.Logger taskLog) {
+  private void onFinish(SingularityExecutorTask task) {
     tasks.remove(task.getTaskId());
     
-    logging.stopTaskLogger(task.getTaskId(), taskLog);
+    if (!task.wasKilled()) { // killer will take care of this.
+      logging.stopTaskLogger(task.getTaskId(), task.getLog());
+    }
   }
   
   /**

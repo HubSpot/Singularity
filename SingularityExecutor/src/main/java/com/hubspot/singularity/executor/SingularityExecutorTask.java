@@ -3,12 +3,12 @@ package com.hubspot.singularity.executor;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
-import org.slf4j.Logger;
+
+import ch.qos.logback.classic.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -21,9 +21,8 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import com.hubspot.singularity.executor.utils.ProcessUtils;
 
-public class SingularityExecutorTask implements Callable<Integer> {
+public class SingularityExecutorTask extends SafeProcessManager implements Callable<Integer> {
 
   private final ExecutorDriver driver;
   private final ExecutorUtils executorUtils;
@@ -34,17 +33,15 @@ public class SingularityExecutorTask implements Callable<Integer> {
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
   
-  private volatile Process process;
-  
   private final Path taskDirectory;
   private final Path executorOut;
 
   private final Logger log;
   
-  private AtomicBoolean killed;
-
   public SingularityExecutorTask(ExecutorDriver driver, SingularityExecutorConfiguration configuration, ExecutorUtils executorUtils, String taskId, TaskInfo taskInfo, ObjectMapper jsonObjectMapper, 
       ArtifactManager artifactManager, TemplateManager templateManager, Logger log) {
+    super(log);
+    
     this.driver = driver;
     this.executorUtils = executorUtils;
     this.taskId = taskId;
@@ -57,8 +54,10 @@ public class SingularityExecutorTask implements Callable<Integer> {
     
     this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
     this.executorOut = configuration.getExecutorBashLogPath(taskId);
-    
-    this.killed = new AtomicBoolean(false);
+  }
+  
+  public Logger getLog() {
+    return log;
   }
 
   @Override
@@ -72,7 +71,7 @@ public class SingularityExecutorTask implements Callable<Integer> {
     
     ProcessBuilder processBuilder = buildProcessBuilder(executorData);
     
-    process = processBuilder.start();
+    Process process = startProcess(processBuilder);
     
     executorUtils.sendStatusUpdate(driver, taskInfo, Protos.TaskState.TASK_RUNNING, "Starting process", log);
     
@@ -126,38 +125,26 @@ public class SingularityExecutorTask implements Callable<Integer> {
     
     return processBuilder;
   }
-    
-  public void killSoft() {
-    log.info("Asked to kill task gently");
-    
-    Preconditions.checkState(!killed.get(), "Task %s is already killed", taskId);
-    
-    killed.set(true);
-    
-    if (process == null) {
-      log.info("Checking artifact process for task");
-      artifactManager.destroyProcessIfActive();
-    } else {
-      log.info("Gracefully killing main process for task");
-      ProcessUtils.gracefulKillUnixProcess(process);
-    }
+  
+  @Override
+  public void markKilled() {
+    artifactManager.markKilled();
+
+    super.markKilled();
   }
   
-  public boolean wasKilled() {
-    return killed.get();
+  @Override
+  public void signalProcessIfActive() {
+    artifactManager.destroyProcessIfActive();
+    
+    super.signalProcessIfActive();
   }
   
-  public void killHard() {
-    log.info("Asked to kill task hard");
+  @Override
+  public void destroyProcessIfActive() {
+    artifactManager.destroyProcessIfActive();
     
-    if (process == null) {
-      log.info("Task did not have a process to kill hard");
-      return;
-    }
-    
-    log.info("Destroying process for task");
-    
-    process.destroy();
+    super.destroyProcessIfActive();
   }
 
   public ExecutorDriver getDriver() {
@@ -174,7 +161,8 @@ public class SingularityExecutorTask implements Callable<Integer> {
 
   @Override
   public String toString() {
-    return "SingularityExecutorTask [driver=" + driver + ", taskId=" + taskId + ", taskInfo=" + taskInfo + ", process=" + process + "]";
+    return "SingularityExecutorTask [driver=" + driver + ", executorUtils=" + executorUtils + ", taskId=" + taskId + ", taskInfo=" + taskInfo + ", jsonObjectMapper=" + jsonObjectMapper + ", artifactManager=" + artifactManager
+        + ", templateManager=" + templateManager + ", configuration=" + configuration + ", taskDirectory=" + taskDirectory + ", executorOut=" + executorOut + ", log=" + log + "]";
   }
 
 }
