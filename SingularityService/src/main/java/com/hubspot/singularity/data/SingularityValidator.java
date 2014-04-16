@@ -1,12 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.text.ParseException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.quartz.CronExpression;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -16,6 +9,11 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
+import org.quartz.CronExpression;
+
+import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
 
 public class SingularityValidator {
 
@@ -87,9 +85,7 @@ public class SingularityValidator {
     
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 
         "If not using custom executor, specify a command. If using custom executor, specify executorData and customExecutorCmd and no command.");
-    check(!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0 || (!deploy.getCustomExecutorCmd().isPresent() || (deploy.getExecutorData().isPresent() && deploy.getExecutorData().get() instanceof Map)), 
-        "Requiring ports requires a custom executor with a json executor data payload OR not using a custom executor");
-    
+
     check(!deployManager.getDeploy(request.getId(), deploy.getId()).isPresent() && !historyManager.getDeployHistory(request.getId(), deploy.getId()).isPresent(), "Can not deploy a deploy that has already been deployed");
   }
   
