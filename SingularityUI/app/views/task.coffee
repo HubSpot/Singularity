@@ -76,6 +76,7 @@ class TaskView extends View
         @setupEvents()
 
         utils.setupSortableTables()
+        @$el.find('pre').each -> utils.setupCopyPre $ @
 
         @
 
