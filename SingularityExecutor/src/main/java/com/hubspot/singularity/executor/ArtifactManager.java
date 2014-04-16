@@ -2,7 +2,6 @@ package com.hubspot.singularity.executor;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -168,7 +167,7 @@ public class ArtifactManager {
   }
   
   public Path fetch(ExternalArtifact artifact) {
-    String filename = getFilenameFromUri(artifact.getUrl());
+    String filename = artifact.getFilename();
     Path cachedPath = getCachedPath(filename);
     
     if (!checkCached(artifact, cachedPath)) {
@@ -257,16 +256,6 @@ public class ArtifactManager {
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
-  }
-
-  public static String getFilenameFromUri(String uriString) {
-    final URI uri = URI.create(uriString);
-    final String path = uri.getPath();
-    int lastIndexOf = path.lastIndexOf("/");
-    if (lastIndexOf < 0) {
-      return path;
-    }
-    return path.substring(lastIndexOf + 1);
   }
 
 }

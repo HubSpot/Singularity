@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
-public class ExternalArtifact extends Artifact{
+public class ExternalArtifact extends Artifact {
   
   private final String url;
   private final long filesize;  
