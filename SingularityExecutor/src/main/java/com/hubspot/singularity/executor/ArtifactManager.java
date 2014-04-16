@@ -94,7 +94,7 @@ public class ArtifactManager {
   
   private Path createTempPath(String filename) {
     try {
-      return Files.createTempFile(filename, null);
+      return Files.createTempFile(cacheDirectory, filename, null);
     } catch (IOException e) {
       throw new RuntimeException(String.format("Couldn't create temporary file for %s", filename), e);
     }
