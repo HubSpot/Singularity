@@ -23,10 +23,6 @@ public abstract class SafeProcessManager {
   
   private final AtomicBoolean killed;
   
-  public SafeProcessManager(Logger log) {
-    this(log, Optional.<String> absent(), Optional.<Process> absent(), Optional.<Integer> absent());
-  }
-  
   public SafeProcessManager(Logger log, Optional<String> currentProcessCmd, Optional<Process> currentProcess, Optional<Integer> currentProcessPid) {
     this.log = log;
     
