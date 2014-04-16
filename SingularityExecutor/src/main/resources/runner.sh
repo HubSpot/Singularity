@@ -40,4 +40,4 @@ if [[ "$USE_ULIMIT" == "1" ]]; then
 fi
 
 # execute command
-exec su - {{ user }} -c {{ cmd }} >> ../{{ logfile }} 2>&1
+exec sudo -u {{ user }} {{ cmd }} >> ../{{ logfile }} 2>&1
