@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 public class ExternalArtifact extends Artifact{
   
   private final String url;
-  private final long filesize;
+  private final long filesize;  
 
   @JsonCreator
   public ExternalArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum, @JsonProperty("url") String url, @JsonProperty("filesize") long filesize) {

@@ -8,7 +8,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
@@ -26,12 +25,10 @@ import com.hubspot.singularity.executor.SingularityExecutorKiller;
 public class SingularityExecutorModule extends AbstractModule {
 
   public static final String ARTIFACT_CACHE_DIRECTORY = "hubspot.mesos.executor.artifact.cache.directory";
-  public static final String DEPLOY_ENV = "deploy.env";
 
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
 
-  public static final String YAML_MAPPER = "object.mapper.yaml";
   public static final String JSON_MAPPER = "object.mapper.json";
   
   public static final String ROOT_LOG_PATH = "root.log.path";
@@ -73,14 +70,6 @@ public class SingularityExecutorModule extends AbstractModule {
       throw Throwables.propagate(t);
     }
     Names.bindProperties(binder(), properties);
-  }
-  
-  @Provides
-  @Singleton
-  @Named(YAML_MAPPER)
-  public ObjectMapper getYamlObjectMapper() {
-    final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    return mapper;
   }
   
   @Provides

@@ -17,7 +17,6 @@ import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityTaskBuilder {
 
-  private final ObjectMapper yamlObjectMapper;
   private final ObjectMapper jsonObjectMapper;
 
   private final TemplateManager templateManager;
@@ -28,9 +27,8 @@ public class SingularityTaskBuilder {
   private final SingularityExecutorLogging executorLogging;
   
   @Inject
-  public SingularityTaskBuilder(@Named(SingularityExecutorModule.YAML_MAPPER) ObjectMapper yamlObjectMapper, @Named(SingularityExecutorModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, TemplateManager templateManager, 
+  public SingularityTaskBuilder(@Named(SingularityExecutorModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, TemplateManager templateManager, 
       ExecutorUtils executorUtils, SingularityExecutorLogging executorLogging, SingularityExecutorConfiguration configuration) {
-    this.yamlObjectMapper = yamlObjectMapper;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
     this.executorUtils = executorUtils;
@@ -47,7 +45,7 @@ public class SingularityTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     ArtifactManager artifactManager = buildArtifactManager(taskId, log);
     
-    return new SingularityExecutorTask(driver, configuration, executorUtils, taskId, taskInfo, jsonObjectMapper, yamlObjectMapper, artifactManager, templateManager, log);
+    return new SingularityExecutorTask(driver, configuration, executorUtils, taskId, taskInfo, jsonObjectMapper, artifactManager, templateManager, log);
   }
   
   private ArtifactManager buildArtifactManager(String taskId, Logger log) {

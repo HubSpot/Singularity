@@ -3,10 +3,13 @@ package com.hubspot.singularity.executor;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,6 +22,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import com.hubspot.deploy.Artifact;
+import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
@@ -78,7 +83,7 @@ public class ArtifactManager {
     return artifact.getFilesize() < 1 || artifact.getFilesize() == getSize(path);
   }
   
-  private boolean md5Matches(ExternalArtifact artifact, Path path) {
+  private boolean md5Matches(Artifact artifact, Path path) {
     return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equals(calculateMd5sum(path));
   }
   
@@ -86,7 +91,9 @@ public class ArtifactManager {
     if (!filesSizeMatches(artifact, path)) {
       throw new RuntimeException(String.format("Filesize %s (%s) does not match expected (%s)", getSize(path), path, artifact.getFilesize()));
     }
-
+  }
+  
+  private void checkMd5(Artifact artifact, Path path) {
     if (!md5Matches(artifact, path)) {
       throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifact.getMd5sum().get()));
     }
@@ -100,10 +107,25 @@ public class ArtifactManager {
     }
   }
   
-  public void downloadAndCheck(ExternalArtifact artifact, Path downloadTo) {
+  private void downloadAndCheck(ExternalArtifact artifact, Path downloadTo) {
     downloadUri(artifact.getUrl(), downloadTo);
     
     checkFilesize(artifact, downloadTo);
+    checkMd5(artifact, downloadTo);
+  }
+  
+  public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
+    final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
+    
+    log.info("Extracting {} to {}", embeddedArtifact.getName(), extractTo);
+    
+    try (SeekableByteChannel byteChannel = Files.newByteChannel(directory.resolve(embeddedArtifact.getFilename()), StandardOpenOption.CREATE_NEW)) {
+      byteChannel.write(ByteBuffer.wrap(embeddedArtifact.getContent()));
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Couldn't extract %s", embeddedArtifact.getName()), e);
+    }
+    
+    checkMd5(embeddedArtifact, extractTo);
   }
   
   private Path downloadAndCache(ExternalArtifact artifact, String filename) {

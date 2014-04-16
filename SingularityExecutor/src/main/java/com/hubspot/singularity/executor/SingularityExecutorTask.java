@@ -1,7 +1,5 @@
 package com.hubspot.singularity.executor;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -16,8 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.hubspot.deploy.DeployConfig;
+import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
@@ -31,7 +30,6 @@ public class SingularityExecutorTask implements Callable<Integer> {
   private final String taskId;
   private final Protos.TaskInfo taskInfo;
   private final ObjectMapper jsonObjectMapper;
-  private final ObjectMapper yamlObjectMapper;
   private final ArtifactManager artifactManager;
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
@@ -45,14 +43,13 @@ public class SingularityExecutorTask implements Callable<Integer> {
   
   private AtomicBoolean killed;
 
-  public SingularityExecutorTask(ExecutorDriver driver, SingularityExecutorConfiguration configuration, ExecutorUtils executorUtils, String taskId, TaskInfo taskInfo, ObjectMapper jsonObjectMapper, ObjectMapper yamlObjectMapper, 
+  public SingularityExecutorTask(ExecutorDriver driver, SingularityExecutorConfiguration configuration, ExecutorUtils executorUtils, String taskId, TaskInfo taskInfo, ObjectMapper jsonObjectMapper, 
       ArtifactManager artifactManager, TemplateManager templateManager, Logger log) {
     this.driver = driver;
     this.executorUtils = executorUtils;
     this.taskId = taskId;
     this.taskInfo = taskInfo;
     this.jsonObjectMapper = jsonObjectMapper;
-    this.yamlObjectMapper = yamlObjectMapper;
     this.artifactManager = artifactManager;
     this.templateManager = templateManager;
     this.log = log;
@@ -70,9 +67,10 @@ public class SingularityExecutorTask implements Callable<Integer> {
     
     final ExecutorData executorData = getExecutorData(jsonObjectMapper, taskInfo);
     
-    DeployConfig deployConfig = downloadFiles(executorData);
+    downloadFiles(executorData);
+    extractFiles(executorData);
     
-    ProcessBuilder processBuilder = buildProcessBuilder(executorData, deployConfig);
+    ProcessBuilder processBuilder = buildProcessBuilder(executorData);
     
     process = processBuilder.start();
     
@@ -95,34 +93,24 @@ public class SingularityExecutorTask implements Callable<Integer> {
     return taskDirectory.resolve(filename);
   }
   
-  private DeployConfig readDeployConfig(Path deployConfigPath) {
-    try {
-      return yamlObjectMapper.readValue(Files.newInputStream(deployConfigPath), DeployConfig.class);
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
+  private void extractFiles(ExecutorData executorData) {
+    for (EmbeddedArtifact artifact : executorData.getEmbeddedArtifacts()) {
+      artifactManager.extract(artifact, taskDirectory);
     }
   }
   
-  private DeployConfig downloadFiles(ExecutorData executorData) {
-    final Path deployConfigPath = getPath("config.yaml");
-    
-    artifactManager.downloadAndCheck(executorData.getDeployConfig().get(), deployConfigPath);
-    
-    final DeployConfig deployConfig = readDeployConfig(deployConfigPath);
-
-    if (executorData.getArtifact().isPresent()) {
-      Path fetched = artifactManager.fetch(executorData.getArtifact().get());
+  private void downloadFiles(ExecutorData executorData) {
+    for (ExternalArtifact artifact : executorData.getExternalArtifacts()) {
+      Path fetched = artifactManager.fetch(artifact);
       
       Preconditions.checkState(fetched.getFileName().toString().endsWith(".tar.gz"), "%s did not appear to be a tar archive (did not end with .tar.gz)", fetched.getFileName());
       
       artifactManager.untar(fetched, taskDirectory);
     }
-    
-    return deployConfig;
   }
   
-  private ProcessBuilder buildProcessBuilder(ExecutorData executorData, DeployConfig deployConfig) {
-    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData, deployConfig.getEnv().get(configuration.getDeployEnv())));
+  private ProcessBuilder buildProcessBuilder(ExecutorData executorData) {
+    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData));
     templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(executorData.getCmd(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), taskId)); 
     
     List<String> command = Lists.newArrayList();
