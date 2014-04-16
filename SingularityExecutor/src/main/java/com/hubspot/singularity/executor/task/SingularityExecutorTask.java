@@ -41,11 +41,11 @@ public class SingularityExecutorTask {
   }
   
   public boolean isSuccessExitCode(int exitCode) {
-    if (executorData.getExitCodes().isEmpty()) {
+    if (executorData.getSuccessfulExitCodes().isEmpty()) {
       return exitCode == 0;
     }
     
-    return executorData.getExitCodes().contains(exitCode);
+    return executorData.getSuccessfulExitCodes().contains(exitCode);
   }
   
   public ReentrantLock getLock() {
