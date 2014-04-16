@@ -323,13 +323,11 @@ public class SingularityDeployChecker {
       if (isCancelRequestPresent) {
         LOG.info("Canceling a deploy {} due to cancel request {}", pendingDeploy, cancelRequest.get());
         return DeployState.CANCELED;
-      } else {
-        return DeployState.OVERDUE;
       }
     }
     
     if (pendingDeploy.getLoadBalancerState().isPresent()) {
-      // we need to check this twice because we need to check overdue + cancels above, at this stage we're waiting.
+      // if we were overdue above, we should have entered into the should cancel load balancer 
       return DeployState.WAITING;
     }
     
@@ -337,21 +335,18 @@ public class SingularityDeployChecker {
       return DeployState.FAILED;
     }
     
-    if (deployActiveTasks.size() < request.getInstancesSafe()) {
-      return DeployState.WAITING;
-    }
-    
-    if (!deploy.isPresent()) {
-      return DeployState.WAITING;
+    if (deployActiveTasks.size() < request.getInstancesSafe() || !deploy.isPresent()) {
+      return checkOverdue(isDeployOverdue);
     }
     
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks);
     
     switch (deployHealth) {
     case WAITING:
-      return DeployState.WAITING;
+      return checkOverdue(isDeployOverdue);
     case HEALTHY:
       if (request.isLoadBalanced()) {
+        // don't check overdue here because we want to give it a chance to enqueue the load balancer request. the next check will determine its fate.
         return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
       } else {
         return DeployState.SUCCEEDED;
@@ -361,5 +356,14 @@ public class SingularityDeployChecker {
     
     return DeployState.FAILED;
   }
+
+  private DeployState checkOverdue(boolean isOverdue) {
+    if (isOverdue) {
+      return DeployState.OVERDUE;
+    } else {
+      return DeployState.WAITING;
+    }
+  }
+  
 
 }
