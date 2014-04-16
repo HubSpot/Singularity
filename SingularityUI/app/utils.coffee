@@ -155,10 +155,15 @@ class Utils
             forceHandCursor: true
             debug: true
 
+        copiedTimeout = undefined
+
         zeroClipboardClient.on 'load', ->
             zeroClipboardClient.on 'complete', ->
-                $pre.removeClass 'copied'
+                clearTimeout copiedTimeout
                 $pre[0].clientHeight
                 $pre.addClass 'copied'
+                copiedTimeout = setTimeout ->
+                    $pre.removeClass 'copied'
+                , 600
 
 module.exports = Utils
