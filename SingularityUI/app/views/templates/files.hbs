@@ -1,6 +1,6 @@
 <header class="jumbotron subhead" id="overview">
-    <h1>{{#hardBreak taskHistory.task.name}}{{/hardBreak}}</h1>
-    <p class="lead">{{#hardBreak taskHistory.task.id}}{{/hardBreak}}</p>
+    <h3><a href="{{#appRoot}}{{/appRoot}}request/{{ taskHistory.task.taskId.requestId }}" data-route="request/{{ taskHistory.task.taskId.requestId }}">{{#hardBreak taskHistory.task.taskId.requestId}}{{/hardBreak}}</a></h3>
+    <h1><a href="{{#appRoot}}{{/appRoot}}task/{{ taskHistory.task.id }}" data-route="task/{{ taskHistory.task.id }}">{{#hardBreak taskHistory.task.id}}{{/hardBreak}}</a></h1>
 </header>
 
 <section>
