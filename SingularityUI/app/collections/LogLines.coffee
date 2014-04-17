@@ -43,8 +43,9 @@ class LogLines extends Backbone.Collection
         # split on newlines
         lines = result.data.split @delimiter
 
-        # omit the last element, since it'll either be a blank or incomplete line
-        lines = _.initial(lines)
+        # omit the last element only if it's blank
+        if lines[lines.length - 1] is ''
+            lines = _.initial(lines)
 
         # omit the first (incomplete) element unless we're at the beginning of the file
         if offset > 0 and lines.length > 0
