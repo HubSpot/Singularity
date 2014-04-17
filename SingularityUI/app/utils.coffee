@@ -141,4 +141,30 @@ class Utils
                 return false
         return true
 
+    @setupCopyPre: ($pre) ->
+        if $pre.hasClass 'with-copy-button'
+            return
+
+        $pre.addClass 'with-copy-button'
+
+        $copyButton = $ """<button data-copy-button></button>"""
+        $copyButton.attr('data-clipboard-text', $pre.html())
+
+        $pre.prepend $copyButton
+
+        zeroClipboardClient = new ZeroClipboard $copyButton[0],
+            moviePath: "#{ constants.appRoot }/static/swf/ZeroClipboard.swf"
+            forceHandCursor: true
+
+        copiedTimeout = undefined
+
+        zeroClipboardClient.on 'load', ->
+            zeroClipboardClient.on 'complete', ->
+                clearTimeout copiedTimeout
+                $pre[0].clientHeight
+                $pre.addClass 'copied'
+                copiedTimeout = setTimeout ->
+                    $pre.removeClass 'copied'
+                , 600
+
 module.exports = Utils
