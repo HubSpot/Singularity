@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
@@ -24,17 +24,19 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   public List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
-    Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> map = taskManager.getTaskHistoryUpdates(taskIds);
+    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
     
     List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
     
     for (SingularityTaskId taskId : taskIds) {
-      Collection<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
+      List<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
       
       histories.add(SingularityTaskIdHistory.fromTaskIdAndUpdates(taskId, historyUpdates));
     }
     
-    return Ordering.natural().sortedCopy(histories);
+    Collections.sort(histories);
+    
+    return histories;
   }
   
   @Override

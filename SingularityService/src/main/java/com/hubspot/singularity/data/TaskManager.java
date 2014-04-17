@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -11,11 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -243,14 +242,16 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
-    return getAsyncChildren(getUpdatesPath(taskId), taskHistoryUpdateTranscoder);
+    List<SingularityTaskHistoryUpdate> updates = getAsyncChildren(getUpdatesPath(taskId), taskHistoryUpdateTranscoder);
+    Collections.sort(updates);
+    return updates;
   }
   
-  public Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
-    Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> map = ArrayListMultimap.create();
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
+    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = Maps.newHashMapWithExpectedSize(taskIds.size());
     
     for (SingularityTaskId taskId : taskIds) {
-      map.putAll(taskId, getTaskHistoryUpdates(taskId));
+      map.put(taskId, getTaskHistoryUpdates(taskId));
     }
     
     return map;

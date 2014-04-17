@@ -14,7 +14,6 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 
@@ -40,7 +39,7 @@ public class JadeHelper {
   public List<Map<String, String>> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<Map<String, String>> output = Lists.newArrayListWithCapacity(taskHistory.size());
     
-    for (SingularityTaskHistoryUpdate taskUpdate : Ordering.natural().sortedCopy(taskHistory)) {
+    for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
           ImmutableMap.<String, String> builder()
           .put("date", DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN))

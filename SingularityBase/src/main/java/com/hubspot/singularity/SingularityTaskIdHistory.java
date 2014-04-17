@@ -1,12 +1,11 @@
 package com.hubspot.singularity;
 
-import java.util.Collection;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 
 public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
 
@@ -14,12 +13,12 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   private final long updatedAt;
   private final Optional<ExtendedTaskState> lastTaskState;
   
-  public static SingularityTaskIdHistory fromTaskIdAndUpdates(SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> updates) {
+  public static SingularityTaskIdHistory fromTaskIdAndUpdates(SingularityTaskId taskId, List<SingularityTaskHistoryUpdate> updates) {
     ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
     
     if (updates != null && !updates.isEmpty()) {
-      SingularityTaskHistoryUpdate lastUpdate = Ordering.natural().max(updates);
+      SingularityTaskHistoryUpdate lastUpdate = updates.get(0);
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }

@@ -1,13 +1,13 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -40,7 +40,7 @@ public class SingularityDeployHealthHelper {
   }
   
   private DeployHealth getNoHealthcheckDeployHealth(final Collection<SingularityTaskId> matchingActiveTasks) {
-    final Multimap<SingularityTaskId, SingularityTaskHistoryUpdate> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
+    final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
     
     for (SingularityTaskId taskId : matchingActiveTasks) {
       Collection<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);

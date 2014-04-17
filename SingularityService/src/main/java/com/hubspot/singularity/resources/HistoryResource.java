@@ -126,6 +126,24 @@ public class HistoryResource extends AbstractHistoryResource {
   }
   
   @GET
+  @Path("/request/{requestId}/deploy/{deployId}")
+  public SingularityDeployHistory getDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
+    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
+    
+    if (deployHistory.isPresent()) {
+      return deployHistory.get();
+    }
+    
+    deployHistory = historyManager.getDeployHistory(requestId, deployId);
+    
+    if (!deployHistory.isPresent()) {
+      throw WebExceptions.notFound("Deploy history for request %s and deploy %s not found", requestId, deployId);
+    }
+    
+    return deployHistory.get();
+  }
+  
+  @GET
   @Path("/request/{requestId}/tasks")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);

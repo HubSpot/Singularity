@@ -58,7 +58,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   public int compareTo(SingularityTaskHistoryUpdate o) {
     return ComparisonChain.start()
         .compare(timestamp, o.getTimestamp())
-        .compare(getTaskId().getId(), o.getTaskId().getId())
+        .compare(o.getTaskId().getId(), getTaskId().getId())
         .result();
   }
 

@@ -23,7 +23,6 @@ import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -181,24 +180,6 @@ public class RequestResource {
     deployManager.cancelDeploy(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user));
     
     return fillEntireRequest(request);
-  }
-  
-  @GET
-  @Path("/request/{requestId}/deploy/{deployId}")
-  public SingularityDeployHistory getDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
-    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
-    
-    if (deployHistory.isPresent()) {
-      return deployHistory.get();
-    }
-    
-    deployHistory = historyManager.getDeployHistory(requestId, deployId);
-    
-    if (!deployHistory.isPresent()) {
-      throw WebExceptions.notFound("Deploy history for request %s and deploy %s not found", requestId, deployId);
-    }
-    
-    return deployHistory.get();
   }
   
   private String getAndCheckDeployId(String requestId) {
