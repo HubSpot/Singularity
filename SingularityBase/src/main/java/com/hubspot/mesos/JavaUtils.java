@@ -7,6 +7,9 @@ import java.net.NetworkInterface;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Enumeration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -113,6 +116,23 @@ public class JavaUtils {
 
   public static String durationFromMillis(final long millis) {
     return DurationFormatUtils.formatDuration(millis, DURATION_FORMAT);
+  }
+  
+  public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {
+    Thread t = new Thread("ExecutorServiceTerminationWaiter-" + threadNameSuffix) {
+      public void run() {
+        try {
+          service.awaitTermination(millis, TimeUnit.MILLISECONDS);
+        } catch (Throwable t) {
+        } finally {
+          latch.countDown();
+        }
+      }
+    };
+    
+    t.start();
+    
+    return t;
   }
 
 }

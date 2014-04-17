@@ -40,10 +40,15 @@ public class SingularityExecutorModule extends AbstractModule {
   
   public static final String DEFAULT_USER = "default.user";
   
+  public static final String SHUTDOWN_TIMEOUT_MILLIS = "executor.shutdown.timeout.millis";
+  
   public static final String HARD_KILL_AFTER_MILLIS = "executor.hard.kill.after.millis";
   public static final String NUM_CORE_KILL_THREADS = "executor.num.core.kill.threads";
   
   public static final String MAX_TASK_MESSAGE_LENGTH = "executor.status.update.max.task.message.length";
+  
+  public static final String IS_SINGLE_EXECUTOR_PER_TASK = "executor.is.single.per.task";
+  public static final String SINGLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS = "executor.single.shutdown.after.millis";
   
   @Override
   protected void configure() {
@@ -62,6 +67,9 @@ public class SingularityExecutorModule extends AbstractModule {
     properties.put(HARD_KILL_AFTER_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(3)));
     properties.put(NUM_CORE_KILL_THREADS, "1");
     properties.put(MAX_TASK_MESSAGE_LENGTH, "80");
+    properties.put(SHUTDOWN_TIMEOUT_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(5)));
+    properties.put(IS_SINGLE_EXECUTOR_PER_TASK, Boolean.toString(true));
+    properties.put(SINGLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS, "5000");
   }
   
   private void bindPropertiesFile(String file) {

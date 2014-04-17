@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -37,8 +38,8 @@ public class SingularityExecutorProcessKiller {
     }, hardKillAfterMillis, TimeUnit.MILLISECONDS);
   }
   
-  public void shutdown() {
-    scheduledExecutorService.shutdown();
+  public ExecutorService getExecutorService() {
+    return scheduledExecutorService;
   }
   
 }

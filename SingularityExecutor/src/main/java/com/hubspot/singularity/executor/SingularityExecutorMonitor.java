@@ -2,10 +2,13 @@ package com.hubspot.singularity.executor;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
@@ -16,6 +19,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
@@ -23,6 +27,8 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCalla
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutorMonitor {
+
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutorMonitor.class);
 
   private final ListeningExecutorService processBuilderPool;
   private final ListeningExecutorService runningProcessPool;
@@ -64,10 +70,28 @@ public class SingularityExecutorMonitor {
       task.getLog().info("Executor shutting down - requested task kill with state: {}", requestKill(task.getTaskId()));
     }
     
-    processKiller.shutdown();
+    processKiller.getExecutorService().shutdown();
+    
+    CountDownLatch latch = new CountDownLatch(3);
+    
+    JavaUtils.awaitTerminationWithLatch(latch, "processBuilder", processBuilderPool, configuration.getShutdownTimeoutWaitMillis());
+    JavaUtils.awaitTerminationWithLatch(latch, "runningProcess", runningProcessPool, configuration.getShutdownTimeoutWaitMillis());
+    JavaUtils.awaitTerminationWithLatch(latch, "processKiller", processKiller.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
+    
+    LOG.info("Awaiting shutdown of all executor services");
+    
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      LOG.warn("While awaiting shutdown of executor services", e);
+    }
   }
   
   public SubmitState submit(final SingularityExecutorTask task) {
+    if (configuration.isSingleExecutorPerTask() && !tasks.isEmpty()) {
+      return SubmitState.REJECTED;
+    }
+    
     task.getLock().lock();
     
     try {
@@ -161,6 +185,20 @@ public class SingularityExecutorMonitor {
     cleanupTaskResources(task);
     
     logging.stopTaskLogger(task.getTaskId(), task.getLog());
+    
+    checkSingleExecutorShutdown(task);
+  }
+  
+  private void checkSingleExecutorShutdown(SingularityExecutorTask task) {
+    if (configuration.isSingleExecutorPerTask()) {
+      shutdown();
+      try {
+        Thread.sleep(configuration.getSingleExecutorShutdownWaitMillis());
+      } catch (Throwable t) {
+        LOG.warn("While sleeping waiting to stop driver", t);
+      }
+      task.getDriver().stop();
+    }
   }
   
   private void cleanupTaskResources(SingularityExecutorTask task) {
