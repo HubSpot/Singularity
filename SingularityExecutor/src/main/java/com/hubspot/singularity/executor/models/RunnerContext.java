@@ -24,7 +24,7 @@ public class RunnerContext {
     return cmd;
   }
   
-  public String gettaskAppDirectory() {
+  public String getTaskAppDirectory() {
     return taskAppDirectory;
   }
   
