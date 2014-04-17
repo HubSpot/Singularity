@@ -45,6 +45,7 @@ public class SingularityClient {
   private static final String REQUESTS_GET_ACTIVE_FORMAT = REQUESTS_FORMAT + "/active";
   private static final String REQUESTS_GET_PAUSED_FORMAT = REQUESTS_FORMAT + "/paused";
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
+  private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_DELETE_PAUSED_FORMAT = REQUESTS_FORMAT + "/request/%s/paused";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
@@ -186,11 +187,11 @@ public class SingularityClient {
 
   }
   
-  public void createOrUpdateSingularityRequest(SingularityRequest request) {
-    checkNotNull(request.getId(), "Posted Singularity Request should have an id");
-    final String singularityApiRequestsUri = String.format(REQUEST_GET_FORMAT, getHost(), contextPath);
+  public void createOrUpdateSingularityRequest(SingularityRequest request, Optional<String> user) {
+    checkNotNull(request.getId(), "A posted Singularity Request should have an id");
+    final String singularityApiRequestsUri = finishUri(String.format(REQUEST_CREATE_OR_UPDATE_FORMAT, getHost(), contextPath), user);
     
-    LOG.info(String.format("Posting new or updated request with id: %s", request.getId()));
+    LOG.info(String.format("Posting new or updating request with id: %s", request.getId()));
     
     final long start = System.currentTimeMillis();
     
