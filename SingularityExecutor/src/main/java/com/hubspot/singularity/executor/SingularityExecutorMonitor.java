@@ -54,8 +54,13 @@ public class SingularityExecutorMonitor {
   public void shutdown() {
     processBuilderPool.shutdown();
     
-    // TODO figure out shutdown WRT to the second pool and the killer.
-    // TODO we could notify killer when something stops.
+    runningProcessPool.shutdown();
+    
+    for (SingularityExecutorTask task : tasks.values()) {
+      task.getLog().info("Executor shutting down - requested task kill with state: {}", requestKill(task.getTaskId()));
+    }
+    
+    processKiller.shutdown();
   }
   
   public SubmitState submit(final SingularityExecutorTask task) {
@@ -104,7 +109,15 @@ public class SingularityExecutorMonitor {
           wasKilled = task.wasKilled();
           
           if (!wasKilled) {
-            processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
+            try {
+              processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
+            } catch (Throwable t) {
+              task.getLog().error("While submitting process task", t);
+              
+              sendStatusUpdate(task, Protos.TaskState.TASK_LOST, String.format("Task lost while transitioning due to: %s", t.getClass().getSimpleName()));
+              
+              onFinish(task);
+            }
           }
         } finally {
           task.getLock().unlock();
