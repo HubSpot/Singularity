@@ -40,10 +40,6 @@ class FilesView extends View
         breadcrumbs = []
 
         breadcrumbs.push
-            path: utils.getShortTaskID(@taskHistory.get('task').id)
-            pathRoute: "task/#{ @taskHistory.get('task').id }"
-
-        breadcrumbs.push
             path: 'files'
             pathRoute: "task/#{ @taskHistory.get('task').id }/files"
 
