@@ -17,8 +17,6 @@ public class SingularityExecutorRunner {
   public static void main(String... args) {
     final long start = System.currentTimeMillis();
     
-    // TODO register shutdown hook?
-
     try {
       final Protos.Status driverStatus = new SingularityExecutorRunner().run();
 

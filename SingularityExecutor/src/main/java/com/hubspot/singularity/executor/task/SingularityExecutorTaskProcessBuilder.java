@@ -81,9 +81,23 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     }
   }
   
+  private String getCommand(ExecutorData executorData) {
+    final StringBuilder bldr = new StringBuilder(executorData.getCmd());
+    for (String extraCmdLineArg : executorData.getExtraCmdLineArgs()) {
+      bldr.append(" ");
+      bldr.append(extraCmdLineArg);
+    }
+    return bldr.toString();
+  }
+  
   private ProcessBuilder buildProcessBuilder(ExecutorData executorData, List<Long> ports) {
+    final String cmd = getCommand(executorData);
+    
     templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData, ports));
-    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(executorData.getCmd(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId())); 
+    
+    task.getLog().info("Writing a runner script to execute {}", cmd);
+    
+    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(cmd, configuration.getTaskAppDirectory(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId())); 
     
     List<String> command = Lists.newArrayList();
     command.add("bash");

@@ -15,7 +15,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
@@ -56,32 +55,25 @@ public class SandboxResource extends AbstractHistoryResource {
     return taskHistory;
   }
   
-  private String getPath(String taskId, String path) {
-    if (Strings.isNullOrEmpty(path)) {
-      return taskId;
-    }
-    return path;
-  }
-  
   @GET
   @Path("/{taskId}/browse")
-  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") String path) {
+  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path) {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), getPath(taskId, path)).toString();
+    final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     return sandboxManager.browse(slaveHostname, fullPath);
   }
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String path,
+  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path,
                                    @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), getPath(taskId, path)).toString();
+    final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
 
@@ -98,7 +90,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), getPath(taskId, path)).toString();
+    final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     try {
       final URI downloadUri = new URI("http", null, slaveHostname, 5051, "/files/download.json", String.format("path=%s", fullPath), null);

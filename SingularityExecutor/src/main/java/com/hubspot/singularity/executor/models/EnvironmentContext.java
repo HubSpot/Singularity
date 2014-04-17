@@ -20,7 +20,7 @@ public class EnvironmentContext {
     portsEnv = Maps.newHashMap();
 
     if (ports != null && !ports.isEmpty()) {
-      for (int i=0; i<ports.size(); i++) {
+      for (int i = 0; i < ports.size(); i++) {
         portsEnv.put("", ports.get(0));
         portsEnv.put(Integer.toString(i), ports.get(i));
       }

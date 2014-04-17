@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -15,6 +16,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
@@ -25,6 +27,7 @@ public class SingularityExecutorMonitor {
   private final ListeningExecutorService processBuilderPool;
   private final ListeningExecutorService runningProcessPool;
   
+  private final SingularityExecutorConfiguration configuration;
   private final SingularityExecutorLogging logging;
   private final ExecutorUtils executorUtils;
   private final SingularityExecutorProcessKiller processKiller;
@@ -34,8 +37,9 @@ public class SingularityExecutorMonitor {
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
   
   @Inject
-  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils,  SingularityExecutorProcessKiller processKiller) {
+  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils,  SingularityExecutorProcessKiller processKiller, SingularityExecutorConfiguration configuration) {
     this.logging = logging;
+    this.configuration = configuration;
     this.executorUtils = executorUtils;
     this.processKiller = processKiller;
 
@@ -154,7 +158,22 @@ public class SingularityExecutorMonitor {
     processRunningTasks.remove(task.getTaskId());
     processBuildingTasks.remove(task.getTaskId());
 
+    cleanupTaskResources(task);
+    
     logging.stopTaskLogger(task.getTaskId(), task.getLog());
+  }
+  
+  private void cleanupTaskResources(SingularityExecutorTask task) {
+    Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(task.getTaskId());
+    final String pathToDelete = taskAppDirectoryPath.toAbsolutePath().toString();
+    
+    task.getLog().info("Deleting: {}", pathToDelete);
+    
+    try {
+      Runtime.getRuntime().exec(String.format("rm -rf %s", pathToDelete)).waitFor();
+    } catch (Throwable t) {
+      task.getLog().error("While deleting directory {}", pathToDelete, t);
+    }
   }
   
   public enum KillState {

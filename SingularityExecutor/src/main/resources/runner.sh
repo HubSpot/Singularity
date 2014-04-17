@@ -22,7 +22,7 @@ else
   echo "No deploy-specific environment variables"
 fi
 
-cd app/
+cd {{{ taskAppDirectory }}}/
 
 # load artifact's profile.d
 if [[ -d .profile.d ]]; then

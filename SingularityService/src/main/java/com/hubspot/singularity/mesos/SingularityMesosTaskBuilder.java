@@ -1,8 +1,7 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.mesos.Protos;
@@ -21,8 +20,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
+import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityTask;
@@ -81,7 +82,6 @@ public class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
   
-  @SuppressWarnings("unchecked")
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
@@ -90,43 +90,24 @@ public class SingularityMesosTaskBuilder {
     );
     
     if (task.getDeploy().getExecutorData().isPresent()) {
-      Object executorData = task.getDeploy().getExecutorData().get();
+      ExecutorData executorData = task.getDeploy().getExecutorData().get();
       
-      if (executorData instanceof String) {
+      if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
+        LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId());
+        
+        List<String> cmdLineArgs = Lists.newArrayList(executorData.getExtraCmdLineArgs());
+        cmdLineArgs.add(task.getPendingTask().getMaybeCmdLineArgs().get());
+        
+        executorData = new ExecutorData(executorData.getCmd(), executorData.getEmbeddedArtifacts(), executorData.getExternalArtifacts(), executorData.getEnv(), 
+            executorData.getSuccessfulExitCodes(), executorData.getUser().orNull(), executorData.getRunningSentinel().orNull(), cmdLineArgs);
+      }
+      
+      try {
+        bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
+      } catch (JsonProcessingException e) {
+        LOG.warn("Unable to process executor data {} for task {} as json (trying as string)", executorData, taskId.getId(), e);
+        
         bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
-        
-        if (ports.isPresent()) {
-          LOG.warn(String.format("Unable to add ports (%s) to executorData %s for task %s because executorData is a string", Arrays.toString(ports.get()), executorData, taskId.getId()));
-        }
-        if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
-          LOG.warn(String.format("Unable to add cmd line args (%s) to executorData %s for task %s because executorData is a string", task.getPendingTask().getMaybeCmdLineArgs().get(), executorData, taskId.getId()));
-        }
-      } else {
-        if (ports.isPresent() || task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
-          try {
-            Map<String, Object> executorDataMap = (Map<String, Object>) executorData;
-          
-            if (ports.isPresent()) {
-              executorDataMap.put("ports", ports.get());
-              LOG.trace(String.format("Adding ports %s to task %s executorData", ports.get(), taskId.getId()));
-            }
-            
-            if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
-              executorDataMap.put("extraCmdLineArgs", task.getPendingTask().getMaybeCmdLineArgs().get());
-              LOG.trace(String.format("Adding cmd line args %s to task %s executorData", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId()));
-            }
-          } catch (ClassCastException cce) {
-            LOG.warn(String.format("Unable to add ports (%s) or cmd line args (%s) to executor data %s for task %s because executor data wasn't a map", ports, task.getPendingTask().getMaybeCmdLineArgs(), executorData, taskId.getId()), cce);
-          }
-        }
-        
-        try {
-          bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
-        } catch (JsonProcessingException e) {
-          LOG.warn(String.format("Unable to process executor data %s for task %s as json (trying as string)", executorData, taskId.getId()), e);
-          
-          bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
-        }
       }
     } else {
       bldr.setData(ByteString.copyFromUtf8(getCommand(taskId, task)));
@@ -138,7 +119,7 @@ public class SingularityMesosTaskBuilder {
     
     if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
       cmd = String.format("%s %s", cmd, task.getPendingTask().getMaybeCmdLineArgs().get());
-      LOG.info(String.format("Adding command line args (%s) to task %s - new cmd: %s", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId(), cmd));
+      LOG.info("Adding command line args ({}) to task {} - new cmd: {}", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId(), cmd);
     }
     
     return cmd;

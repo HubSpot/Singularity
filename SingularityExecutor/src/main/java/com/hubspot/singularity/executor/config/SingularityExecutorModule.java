@@ -32,6 +32,8 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String JSON_MAPPER = "object.mapper.json";
   
   public static final String ROOT_LOG_PATH = "root.log.path";
+  public static final String TASK_APP_DIRECTORY = "task.executor.app.directory";
+
   public static final String TASK_EXECUTOR_JAVA_LOG_PATH = "task.executor.java.log.path";
   public static final String TASK_EXECUTOR_BASH_LOG_PATH = "task.executor.bash.log.path";
   public static final String TASK_SERVICE_LOG_PATH = "task.service.log.path";
@@ -53,6 +55,7 @@ public class SingularityExecutorModule extends AbstractModule {
   }
   
   private void bindDefaults(Properties properties) {
+    properties.put(TASK_APP_DIRECTORY, "app");
     properties.put(TASK_EXECUTOR_BASH_LOG_PATH, "executor.bash.log");
     properties.put(TASK_EXECUTOR_JAVA_LOG_PATH, "executor.java.log");
     properties.put(TASK_SERVICE_LOG_PATH, "service.log");

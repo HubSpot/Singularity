@@ -6,12 +6,14 @@ public class RunnerContext {
   private final String user;
   private final String logfile;
   private final String taskId;
+  private final String taskAppDirectory;
   
-  public RunnerContext(String cmd, String user, String logfile, String taskId) {
+  public RunnerContext(String cmd, String taskAppDirectory, String user, String logfile, String taskId) {
     this.cmd = cmd;
     this.user = user;
     this.logfile = logfile;
     this.taskId = taskId;
+    this.taskAppDirectory = taskAppDirectory;
   }
   
   public String getTaskId() {
@@ -20,6 +22,10 @@ public class RunnerContext {
 
   public String getCmd() {
     return cmd;
+  }
+  
+  public String gettaskAppDirectory() {
+    return taskAppDirectory;
   }
   
   public String getUser() {
@@ -32,7 +38,7 @@ public class RunnerContext {
 
   @Override
   public String toString() {
-    return "RunnerContext [cmd=" + cmd + ", user=" + user + ", logfile=" + logfile + ", taskId=" + taskId + "]";
+    return "RunnerContext [cmd=" + cmd + ", user=" + user + ", logfile=" + logfile + ", taskId=" + taskId + ", taskAppDirectory=" + taskAppDirectory + "]";
   }
   
 }
