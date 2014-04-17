@@ -147,7 +147,7 @@ public class RequestResource {
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<LoadBalancerState> absent());
     
     if (deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED) {
-      throw WebExceptions.conflict("Deploy already existed for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
+      throw WebExceptions.conflict("Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
     }
     
     ConditionalPersistResult persistResult = deployManager.persistDeploy(request, deployMarker, pendingDeploy);
