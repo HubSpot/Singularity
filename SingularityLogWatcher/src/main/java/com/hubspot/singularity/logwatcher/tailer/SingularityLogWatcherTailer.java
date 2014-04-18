@@ -1,5 +1,6 @@
 package com.hubspot.singularity.logwatcher.tailer;
 
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -74,7 +75,7 @@ public class SingularityLogWatcherTailer {
     
     checkRead();
     
-    WatchKey watchKey = logfile.toAbsolutePath().getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchKey watchKey = logfile.toAbsolutePath().getParent().register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
     
     while (true) {
       processWatchKey(watchKey, byteChannel);
@@ -100,11 +101,11 @@ public class SingularityLogWatcherTailer {
     for (WatchEvent<?> event : events) {
       WatchEvent.Kind<?> kind = event.kind();
 
-      if (kind == StandardWatchEventKinds.OVERFLOW) {
-        LOG.trace("Ignoring an overflow event");
+      if (kind != StandardWatchEventKinds.ENTRY_MODIFY) {
+        LOG.trace("Ignoring an {} event to {}", event.context());
         continue;
       }
-
+      
       WatchEvent<Path> ev = cast(event);
       Path filename = ev.context();
       
@@ -123,7 +124,7 @@ public class SingularityLogWatcherTailer {
   
   private void checkRead() throws IOException {
     if (!shouldRead()) {
-      LOG.trace("Ignoring update to {}, not enough bytes available (minimum: {}", logfile, minimumReadSizeBytes);
+      LOG.trace("Ignoring update to {}, not enough bytes available (minimum {})", logfile, minimumReadSizeBytes);
       return;
     }
     
