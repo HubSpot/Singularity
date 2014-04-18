@@ -23,6 +23,7 @@ class RequestsActive extends Requests
             request.instances = request.request.instances
             request.schedule = request.request.schedule
             request.name = request.name ? request.id
+            request.daemon = request.request.daemon
             request.daemon = if _.isNull(request.daemon) then true else request.daemon
             request.deployUser = (request.requestDeployState?.activeDeploy?.user ? '').split('@')[0]
             request.deployId = request.requestDeployState?.activeDeploy?.deployId
