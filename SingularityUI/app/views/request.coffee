@@ -177,8 +177,23 @@ class RequestView extends View
         @$el.find('.historical-tasks-paginated').html requestHistoricalTasksTable.render().$el
 
     setupEvents: ->
-        @$el.find('[data-action="viewDeployJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'deploy', $(e.target).data('deploy-id')
+        @$el.find('[data-action="viewDeployJSON"]').unbind('click').on 'click', (e) =>
+            requestId = @options.requestId
+            deployId = $(e.target).data('deploy-id')
+            requestDeployId = "#{ @options.requestId }-#{ deployId }"
+
+            viewJSON = -> utils.viewJSON 'deploy', requestDeployId
+
+            if app.allDeploys[requestDeployId]
+                viewJSON()
+            else
+                requestActiveDeploy = new RequestActiveDeploy [], { requestId, deployId }
+                vex.showLoading()
+                requestActiveDeploy.fetch()
+                    .error(=> vex.hideLoading())
+                    .done =>
+                        vex.hideLoading()
+                        viewJSON()
 
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'task', $(e.target).data('task-id')
