@@ -12,6 +12,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class SingularityLogWatcherTailer {
     
     checkRead();
     
-    WatchKey watchKey = logfile.getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchKey watchKey = logfile.toAbsolutePath().getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
     
     while (true) {
       processWatchKey(watchKey, byteChannel);
@@ -88,7 +89,10 @@ public class SingularityLogWatcherTailer {
   }
   
   private void processWatchKey(WatchKey watchKey, SeekableByteChannel byteChannel) throws IOException {
-    for (WatchEvent<?> event: watchKey.pollEvents()) {
+    final long now = System.currentTimeMillis();
+    final List<WatchEvent<?>> events = watchKey.pollEvents();
+    
+    for (WatchEvent<?> event : events) {
       WatchEvent.Kind<?> kind = event.kind();
 
       if (kind == StandardWatchEventKinds.OVERFLOW) {
@@ -106,6 +110,8 @@ public class SingularityLogWatcherTailer {
       
       checkForRotate();
     }
+    
+    LOG.trace("Handled {} events in {}ms", events.size(), System.currentTimeMillis() - now);
   }
   
   private void checkRead() throws IOException {
