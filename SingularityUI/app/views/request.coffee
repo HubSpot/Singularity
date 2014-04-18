@@ -42,23 +42,29 @@ class RequestView extends View
     fetch: ->
         promises = []
 
-        promises.push @requestModel.fetch().done =>
-            @requestModel.fetched = true
-            @render()
-
-            if @requestModel.get('activeDeploy')?
-                if @requestActiveDeploy.mock
-                    @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
-                @requestActiveDeploy.fetch().done =>
-                    @requestActiveDeploy.fetched = true
-                    @render()
-            else
-                @requestActiveDeploy.fetched = true
-                @requestActiveDeploy.noData = true
-
         promises.push @requestHistory.fetch().done =>
             @requestHistory.fetched = true
             @render()
+
+            if @requestHistory.attributes.requestUpdates.length and not (@requestHistory.attributes.requestUpdates[0].state in ['PAUSED', 'DELETED'])
+                @requestModel.fetch().done =>
+                    @requestModel.fetched = true
+                    @render()
+
+                    if @requestModel.get('activeDeploy')?
+                        if @requestActiveDeploy.mock
+                            @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
+                        @requestActiveDeploy.fetch().done =>
+                            @requestActiveDeploy.fetched = true
+                            @render()
+                    else
+                        @requestActiveDeploy.fetched = true
+                        @requestActiveDeploy.noData = true
+                        @render()
+            else
+                @requestModel.fetched = true
+                @requestActiveDeploy.fetched = true
+                @requestActiveDeploy.noData = true
 
         promises.push @requestDeployHistory.fetch().done =>
             @requestDeployHistory.fetched = true
