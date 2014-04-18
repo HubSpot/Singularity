@@ -63,6 +63,7 @@
     <module>SingularityClient</module>
     <module>SingularityService</module>
     <module>SingularityExecutor</module>
+    <module>SingularityLogWatcher</module>
   </modules>
 
   <build>
