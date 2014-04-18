@@ -79,6 +79,11 @@ public class SingularityLogWatcherTailer {
     while (true) {
       processWatchKey(watchKey, byteChannel);
       
+      if (!watchKey.reset()) {
+        LOG.warn("WatchKey for {} no longer valid", logfile);
+        break;
+      }
+      
       watchKey = watchService.take(); // handle IE exception
     }
   }
