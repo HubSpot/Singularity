@@ -141,7 +141,7 @@
                   implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.hubspot.singularity.logwatcher.SingularityLogWatcher</mainClass>
+                  <mainClass>com.hubspot.singularity.logwatcher.SingularityLogWatcherRunner</mainClass>
                 </transformer>
               </transformers>
             </configuration>
