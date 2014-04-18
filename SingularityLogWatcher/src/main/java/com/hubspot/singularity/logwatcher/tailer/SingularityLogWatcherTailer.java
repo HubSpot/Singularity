@@ -96,13 +96,15 @@ public class SingularityLogWatcherTailer {
       WatchEvent.Kind<?> kind = event.kind();
 
       if (kind == StandardWatchEventKinds.OVERFLOW) {
-          continue;
+        LOG.trace("Ignoring an overflow event");
+        continue;
       }
 
       WatchEvent<Path> ev = cast(event);
       Path filename = ev.context();
       
       if (!filename.equals(logfile.getFileName())) {
+        LOG.trace("Ignoring a modification to {} (only care about {})", filename, logfile.getFileName());
         continue;
       }
       
