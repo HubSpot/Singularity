@@ -24,7 +24,7 @@ import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 
 public class SingularityExecutorModule extends AbstractModule {
 
-  public static final String ARTIFACT_CACHE_DIRECTORY = "hubspot.mesos.executor.artifact.cache.directory";
+  public static final String ARTIFACT_CACHE_DIRECTORY = "executor.artifact.cache.directory";
 
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
