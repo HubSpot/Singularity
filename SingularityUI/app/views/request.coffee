@@ -6,7 +6,6 @@ Request = require '../models/Request'
 RequestHistory = require '../models/RequestHistory'
 
 RequestTasks = require '../collections/RequestTasks'
-HistoricalTasks = require '../collections/HistoricalTasks'
 
 class RequestView extends View
 
