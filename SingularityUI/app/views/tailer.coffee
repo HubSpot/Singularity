@@ -160,6 +160,8 @@ class TailerView extends Backbone.View
     render: ->
         @$el.addClass 'loading'
 
+        @lines.sort()
+
         @taskHistory.fetch().done =>
             @$el.removeClass 'loading'
 
