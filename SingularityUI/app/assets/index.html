@@ -29,6 +29,7 @@
                     <ul class="nav">
                         <li><a data-href="">Dashboard</a></li>
                         <li><a data-href="status">Status</a></li>
+                        <li><a data-invoke-global-search>Search</a></li>
                         <li><a data-href="requests">Requests</a></li>
                         <li><a data-href="tasks">Tasks</a></li>
                         <li class="dropdown">
@@ -45,7 +46,9 @@
         </div>
     </div>
     <div class="global-search">
-        <input type="search" required />
+        <div class="global-search-input-wrapper">
+            <input type="search" placeholder="Search all requests..." required />
+        </div>
     </div>
     <div id="page" class="container"></div>
     <div style="-webkit-transform: translateZ(0)"></div>
