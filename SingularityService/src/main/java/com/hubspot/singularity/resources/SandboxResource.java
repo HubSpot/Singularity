@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 
@@ -63,7 +64,11 @@ public class SandboxResource extends AbstractHistoryResource {
     final String slaveHostname = history.getTask().getOffer().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
-    return sandboxManager.browse(slaveHostname, fullPath);
+    try {
+      return sandboxManager.browse(slaveHostname, fullPath);
+    } catch (SlaveNotFoundException snfe) {
+      throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
+    }
   }
 
   @GET
@@ -75,13 +80,17 @@ public class SandboxResource extends AbstractHistoryResource {
     final String slaveHostname = history.getTask().getOffer().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
-    final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
+    try {
+      final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
 
-    if (!maybeChunk.isPresent()) {
-      throw WebExceptions.notFound("File %s does not exist for task ID %s", fullPath, taskId);
+      if (!maybeChunk.isPresent()) {
+        throw WebExceptions.notFound("File %s does not exist for task ID %s", fullPath, taskId);
+      }
+
+      return maybeChunk.get();
+    } catch (SlaveNotFoundException snfe) {
+      throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
-
-    return maybeChunk.get();
   }
 
   @GET
