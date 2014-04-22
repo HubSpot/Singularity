@@ -9,11 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityDeployHealthHelper {
@@ -21,10 +24,12 @@ public class SingularityDeployHealthHelper {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployChecker.class);
   
   private final TaskManager taskManager;
+  private final SingularityConfiguration configuration;
   
   @Inject
-  public SingularityDeployHealthHelper(TaskManager taskManager) {
+  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration) {
     this.taskManager = taskManager;
+    this.configuration = configuration;
   }
   
   public enum DeployHealth {
@@ -33,13 +38,13 @@ public class SingularityDeployHealthHelper {
   
   public DeployHealth getDeployHealth(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks) {
     if (!deploy.isPresent() || !deploy.get().getHealthcheckUri().isPresent()) {
-      return getNoHealthcheckDeployHealth(activeTasks);
+      return getNoHealthcheckDeployHealth(deploy, activeTasks);
     } else {
       return getHealthCheckDeployState(activeTasks); 
     }
   }
   
-  private DeployHealth getNoHealthcheckDeployHealth(final Collection<SingularityTaskId> matchingActiveTasks) {
+  private DeployHealth getNoHealthcheckDeployHealth(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
     
     for (SingularityTaskId taskId : matchingActiveTasks) {
@@ -52,10 +57,20 @@ public class SingularityDeployHealthHelper {
       case WAITING:
         return DeployHealth.WAITING;
       case DONE:
-        LOG.warn("Found an active task ({}) in done state: {}}", taskId, updates);
+        LOG.warn("Unexpectedly found an active task ({}) in done state: {}}", taskId, updates);
         return DeployHealth.UNHEALTHY;
       case RUNNING:
-        // TODO has it been running long enough?
+        long runningThreshold = configuration.getConsiderTaskHealthyAfterRunningForSeconds();
+        if (deploy.isPresent()) {
+          runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().or(runningThreshold);
+        }
+        SingularityTaskHistoryUpdate runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
+        long taskDuration = System.currentTimeMillis() - runningUpdate.getTimestamp();
+        
+        if (taskDuration < runningThreshold) {
+          LOG.debug("Task {} has been running for {}, has not yet reached running threshold of {}", taskId, JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(runningThreshold));
+          return DeployHealth.WAITING;
+        }
       }
     }
     

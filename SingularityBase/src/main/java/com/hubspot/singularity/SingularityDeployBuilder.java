@@ -31,12 +31,15 @@ public class SingularityDeployBuilder {
   private Optional<Long> healthcheckTimeoutSeconds;
   
   private Optional<Long> deployHealthTimeoutSeconds;
+  
+  private Optional<Long> considerHealthyAfterRunningForSeconds;
 
   private Optional<String> loadBalancerBaseUri;
   private Optional<List<String>> loadBalancerGroups;
   
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, loadBalancerBaseUri, loadBalancerGroups);
+    return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, 
+        healthcheckTimeoutSeconds, loadBalancerBaseUri, loadBalancerGroups, considerHealthyAfterRunningForSeconds);
   }
 
   public String getRequestId() {
@@ -50,6 +53,15 @@ public class SingularityDeployBuilder {
 
   public String getId() {
     return id;
+  }
+  
+  public Optional<Long> getConsiderHealthyAfterRunningForSeconds() {
+    return considerHealthyAfterRunningForSeconds;
+  }
+
+  public SingularityDeployBuilder setConsiderHealthyAfterRunningForSeconds(Optional<Long> considerHealthyAfterRunningForSeconds) {
+    this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
+    return this;
   }
 
   public SingularityDeployBuilder setId(String id) {
@@ -205,8 +217,8 @@ public class SingularityDeployBuilder {
   public String toString() {
     return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId="
         + customExecutorId + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds="
-        + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", loadBalancerBaseUri=" + loadBalancerBaseUri + ", loadBalancerGroups="
-        + loadBalancerGroups + "]";
+        + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds="
+        + considerHealthyAfterRunningForSeconds + ", loadBalancerBaseUri=" + loadBalancerBaseUri + ", loadBalancerGroups=" + loadBalancerGroups + "]";
   }
-  
+
 }

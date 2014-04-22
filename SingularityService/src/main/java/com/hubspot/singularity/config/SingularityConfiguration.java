@@ -103,6 +103,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private boolean compressLargeDataObjects = true;
   
+  @NotNull
+  private long considerTaskHealthyAfterRunningForSeconds = 5;
+  
+  public long getConsiderTaskHealthyAfterRunningForSeconds() {
+    return considerTaskHealthyAfterRunningForSeconds;
+  }
+
+  public void setConsiderTaskHealthyAfterRunningForSeconds(long considerTaskHealthyAfterRunningForSeconds) {
+    this.considerTaskHealthyAfterRunningForSeconds = considerTaskHealthyAfterRunningForSeconds;
+  }
+
   public boolean isCompressLargeDataObjects() {
     return compressLargeDataObjects;
   }

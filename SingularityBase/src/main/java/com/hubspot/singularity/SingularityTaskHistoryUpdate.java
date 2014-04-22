@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Iterables;
 
 public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implements Comparable<SingularityTaskHistoryUpdate> {
 
@@ -24,6 +26,15 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   public enum SimplifiedTaskState {
     UNKNOWN, WAITING, RUNNING, DONE
+  }
+
+  public static SingularityTaskHistoryUpdate getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
+    return Iterables.find(updates, new Predicate<SingularityTaskHistoryUpdate>() {
+      @Override
+      public boolean apply(SingularityTaskHistoryUpdate input) {
+        return input.getTaskState() == taskState;
+      }
+    });
   }
   
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {

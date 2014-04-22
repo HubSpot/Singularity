@@ -26,6 +26,7 @@ public class SandboxManager {
     this.objectMapper = objectMapper;
   }
 
+  @SuppressWarnings("serial")
   public static class SlaveNotFoundException extends RuntimeException {
     public SlaveNotFoundException(Exception e) {
       super(e);

@@ -156,7 +156,7 @@ public class RequestResource {
     }
     
     if (!request.isDeployable()) {
-      deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED, deployMarker.getTimestamp()));
+      deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED, Optional.<String> absent(), deployMarker.getTimestamp()));
       
       deployManager.deletePendingDeploy(pendingDeployObj);
     }

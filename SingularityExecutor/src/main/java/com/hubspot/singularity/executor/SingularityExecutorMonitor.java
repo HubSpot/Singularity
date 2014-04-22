@@ -105,7 +105,7 @@ public class SingularityExecutorMonitor {
     JavaUtils.awaitTerminationWithLatch(latch, "runningProcess", runningProcessPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processKiller", processKiller.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
     
-    LOG.info("Awaiting shutdown of all executor services for a max of {}ms", configuration.getShutdownTimeoutWaitMillis());
+    LOG.info("Awaiting shutdown of all executor services for a max of {}", JavaUtils.durationFromMillis(configuration.getShutdownTimeoutWaitMillis()));
     
     try {
       latch.await();
@@ -113,7 +113,7 @@ public class SingularityExecutorMonitor {
       LOG.warn("While awaiting shutdown of executor services", e);
     }
     
-    LOG.info("Waiting {}ms before exiting driver...", configuration.getStopDriverAfterMillis());
+    LOG.info("Waiting {} before exiting driver...", JavaUtils.durationFromMillis(configuration.getStopDriverAfterMillis()));
     
     try {
       Thread.sleep(configuration.getStopDriverAfterMillis());
@@ -161,7 +161,7 @@ public class SingularityExecutorMonitor {
   
   @SuppressWarnings("rawtypes")
   private Future startExitChecker(final Optional<ExecutorDriver> driver) {
-    LOG.info("Starting an exit checker that will run in {}ms", configuration.getIdleExecutorShutdownWaitMillis());
+    LOG.info("Starting an exit checker that will run in {}", JavaUtils.durationFromMillis(configuration.getIdleExecutorShutdownWaitMillis()));
     
     return exitChecker.schedule(new Runnable() {
       

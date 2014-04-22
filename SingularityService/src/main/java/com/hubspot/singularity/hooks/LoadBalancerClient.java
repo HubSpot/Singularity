@@ -98,7 +98,7 @@ public class LoadBalancerClient {
       }
       
     } catch (TimeoutException te) {
-      LOG.trace("LB {} request {} timed out after waiting {}ms", request.getMethod(), loadBalancerRequestId, loadBalancerTimeoutMillis);
+      LOG.trace("LB {} request {} timed out after waiting {}", request.getMethod(), loadBalancerRequestId, JavaUtils.durationFromMillis(loadBalancerTimeoutMillis));
     } catch (Throwable t) {
       LOG.error("LB {} request {} to {} threw error", request.getMethod(), loadBalancerRequestId, request.getUrl(), t);
       returnState = onFailure;
