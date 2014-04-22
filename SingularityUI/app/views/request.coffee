@@ -120,8 +120,13 @@ class RequestView extends View
             delete requestLikeObject.JSONString
             delete requestLikeObject.localRequestHistoryId
 
-            if @requestHistory.attributes.requestUpdates[0].state is 'PAUSED'
+            state = @requestHistory.attributes.requestUpdates[0].state
+
+            if state is 'PAUSED'
                 context.request.paused = true
+
+            if state is 'DELETED'
+                context.request.deleted = true
 
             requestLikeObject.JSONString = utils.stringJSON requestLikeObject
             app.allRequests[requestLikeObject.id] = requestLikeObject
