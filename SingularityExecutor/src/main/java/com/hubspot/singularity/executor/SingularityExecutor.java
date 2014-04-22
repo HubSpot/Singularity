@@ -6,6 +6,7 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
@@ -132,10 +133,7 @@ public class SingularityExecutor implements Executor {
   public void shutdown(ExecutorDriver executorDriver) {
     LOG.info("Asked to shutdown executor...");
 
-    monitor.shutdown();
-    
-    LOG.info("Stopping driver...");
-    executorDriver.stop();
+    monitor.shutdown(Optional.of(executorDriver));
   }
 
   /**

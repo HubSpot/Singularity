@@ -15,15 +15,14 @@ public class SingularityExecutorConfiguration {
   private final String cacheDirectory;
   private final String taskAppDirectory;
   private final long shutdownTimeoutWaitMillis;
-  private final boolean isSingleExecutorPerTask;
-  private final long singleExecutorShutdownWaitMillis;
+  private final long idleExecutorShutdownWaitMillis;
+  private final long stopDriverAfterMillis;
   
   @Inject
   public SingularityExecutorConfiguration(@Named(SingularityExecutorModule.ARTIFACT_CACHE_DIRECTORY) String cacheDirectory, @Named(SingularityExecutorModule.TASK_APP_DIRECTORY) String taskAppDirectory,
       @Named(SingularityExecutorModule.TASK_EXECUTOR_BASH_LOG_PATH) String executorBashLog, @Named(SingularityExecutorModule.TASK_EXECUTOR_JAVA_LOG_PATH) String executorJavaLog, 
-      @Named(SingularityExecutorModule.TASK_SERVICE_LOG_PATH) String serviceLog, @Named(SingularityExecutorModule.DEFAULT_USER) String defaultRunAsUser, 
-      @Named(SingularityExecutorModule.SHUTDOWN_TIMEOUT_MILLIS) String shutdownTimeoutWaitMillis, @Named(SingularityExecutorModule.IS_SINGLE_EXECUTOR_PER_TASK) String isSingleExecutorPerTask, 
-      @Named(SingularityExecutorModule.SINGLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS) String singleExecutorShutdownWaitMillis) {
+      @Named(SingularityExecutorModule.TASK_SERVICE_LOG_PATH) String serviceLog, @Named(SingularityExecutorModule.DEFAULT_USER) String defaultRunAsUser, @Named(SingularityExecutorModule.SHUTDOWN_STOP_DRIVER_AFTER_MILLIS) String stopDriverAfterMillis,
+      @Named(SingularityExecutorModule.SHUTDOWN_TIMEOUT_MILLIS) String shutdownTimeoutWaitMillis, @Named(SingularityExecutorModule.IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS) String idleExecutorShutdownWaitMillis) {
     this.executorBashLog = executorBashLog;
     this.taskAppDirectory = taskAppDirectory;
     this.executorJavaLog = executorJavaLog;
@@ -31,16 +30,16 @@ public class SingularityExecutorConfiguration {
     this.serviceLog = serviceLog;
     this.defaultRunAsUser = defaultRunAsUser;
     this.shutdownTimeoutWaitMillis = Long.parseLong(shutdownTimeoutWaitMillis);
-    this.isSingleExecutorPerTask = Boolean.parseBoolean(isSingleExecutorPerTask);
-    this.singleExecutorShutdownWaitMillis = Long.parseLong(singleExecutorShutdownWaitMillis);
-  }
-  
-  public long getSingleExecutorShutdownWaitMillis() {
-    return singleExecutorShutdownWaitMillis;
+    this.idleExecutorShutdownWaitMillis = Long.parseLong(idleExecutorShutdownWaitMillis);
+    this.stopDriverAfterMillis = Long.parseLong(stopDriverAfterMillis);
   }
 
-  public boolean isSingleExecutorPerTask() {
-    return isSingleExecutorPerTask;
+  public long getStopDriverAfterMillis() {
+    return stopDriverAfterMillis;
+  }
+
+  public long getIdleExecutorShutdownWaitMillis() {
+    return idleExecutorShutdownWaitMillis;
   }
 
   public long getShutdownTimeoutWaitMillis() {
@@ -90,8 +89,8 @@ public class SingularityExecutorConfiguration {
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser + ", cacheDirectory=" + cacheDirectory
-        + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", isSingleExecutorPerTask=" + isSingleExecutorPerTask + ", singleExecutorShutdownWaitMillis="
-        + singleExecutorShutdownWaitMillis + "]";
+        + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
+        + "]";
   }
  
 }

@@ -210,8 +210,8 @@ public class SingularityRackManager {
     }
     
     if (isRackDead(rackId)) {
-      slaveManager.removeDead(rackId);
-    } 
+      rackManager.removeDead(rackId);
+    }
     
     rackManager.save(new SingularityRack(rackId, SingularityMachineState.ACTIVE));
     

@@ -4,7 +4,13 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
@@ -32,6 +38,13 @@ public class SingularityExecutorMonitor {
 
   private final ListeningExecutorService processBuilderPool;
   private final ListeningExecutorService runningProcessPool;
+  private final ScheduledExecutorService exitChecker;
+  
+  private final Lock exitLock;
+  
+  @SuppressWarnings("rawtypes")
+  private volatile Optional<Future> exitCheckerFuture;
+  private volatile RunState runState;
   
   private final SingularityExecutorConfiguration configuration;
   private final SingularityExecutorLogging logging;
@@ -43,25 +56,37 @@ public class SingularityExecutorMonitor {
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
   
   @Inject
-  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils,  SingularityExecutorProcessKiller processKiller, SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorConfiguration configuration) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
     this.processKiller = processKiller;
-
+    this.exitChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorExitChecker-%d").build());
+    
     this.tasks = Maps.newConcurrentMap();
     this.processBuildingTasks = Maps.newConcurrentMap();
     this.processRunningTasks = Maps.newConcurrentMap();
     
     this.processBuilderPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessBuilder-%d").build()));
     this.runningProcessPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessRunner-%d").build()));
+  
+    this.runState = RunState.RUNNING;
+    this.exitLock = new ReentrantLock();  
+    
+    this.exitCheckerFuture = Optional.of(startExitChecker(Optional.<ExecutorDriver> absent()));
+  }
+  
+  public enum RunState {
+    RUNNING, SHUTDOWN;
   }
   
   public enum SubmitState {
     SUBMITTED, REJECTED, TASK_ALREADY_EXISTED;
   }
     
-  public void shutdown() {
+  public void shutdown(Optional<ExecutorDriver> driver) {
+    LOG.info("Shutdown requested with driver {}", driver);
+    
     processBuilderPool.shutdown();
     
     runningProcessPool.shutdown();
@@ -71,6 +96,8 @@ public class SingularityExecutorMonitor {
     }
     
     processKiller.getExecutorService().shutdown();
+    
+    exitChecker.shutdownNow();
     
     CountDownLatch latch = new CountDownLatch(3);
     
@@ -85,22 +112,87 @@ public class SingularityExecutorMonitor {
     } catch (InterruptedException e) {
       LOG.warn("While awaiting shutdown of executor services", e);
     }
-  }
-  
-  public SubmitState submit(final SingularityExecutorTask task) {
-    if (configuration.isSingleExecutorPerTask() && !tasks.isEmpty()) {
-      return SubmitState.REJECTED;
+    
+    LOG.info("Waiting {}ms before exiting driver...", configuration.getShutdownTimeoutWaitMillis());
+    
+    try {
+      Thread.sleep(configuration.getShutdownTimeoutWaitMillis());
+    } catch (Throwable t) {
+      LOG.warn("While sleeping waiting to stop driver", t);
     }
     
+    if (driver.isPresent()) {
+      driver.get().stop();
+    } else {
+      LOG.warn("No driver present on shutdown, using System.exit(1)");
+      System.exit(1);
+    }
+  }
+  
+  @SuppressWarnings("rawtypes")
+  private Future startExitChecker(final Optional<ExecutorDriver> driver) {
+    LOG.info("Starting an exit checker that will run in {}ms", configuration.getIdleExecutorShutdownWaitMillis());
+    
+    return exitChecker.schedule(new Runnable() {
+      
+      @Override
+      public void run() {
+        LOG.info("Exit checker running...");
+        
+        try {
+          exitLock.lockInterruptibly();
+        } catch (InterruptedException e) {
+          LOG.warn("Interrupted acquiring exit lock", e);
+          return;
+        }
+        
+        boolean shuttingDown = false;
+        
+        try {
+          if (tasks.isEmpty()) {
+            runState = RunState.SHUTDOWN;
+            shuttingDown = true;
+          }
+        } finally {
+          exitLock.lock();
+        }
+        
+        if (shuttingDown) {
+          shutdown(driver);
+        } else if (runState == RunState.SHUTDOWN) {
+          LOG.info("Already shutting down...");
+        } else {
+          LOG.info("Tasks wasn't empty, exit checker doing nothing...");
+        }
+      }
+    }, configuration.getIdleExecutorShutdownWaitMillis(), TimeUnit.MILLISECONDS);
+  }
+  
+  private void clearExitCheckerUnsafe() {
+    if (exitCheckerFuture.isPresent()) {
+      exitCheckerFuture.get().cancel(true);
+      exitCheckerFuture = Optional.absent();
+    }
+  }    
+  
+  public SubmitState submit(final SingularityExecutorTask task) {
+    exitLock.lock();
     task.getLock().lock();
     
     try {
+      if (runState == RunState.SHUTDOWN) {
+        return SubmitState.REJECTED;
+      }
+      
       if (tasks.containsKey(task.getTaskId())) {
         return SubmitState.TASK_ALREADY_EXISTED;
       }
       tasks.put(task.getTaskId(), task);
+
+      clearExitCheckerUnsafe();
     } finally {
       task.getLock().unlock();
+      exitLock.unlock();
     }
     
     try {
@@ -186,18 +278,20 @@ public class SingularityExecutorMonitor {
     
     logging.stopTaskLogger(task.getTaskId(), task.getLog());
     
-    checkSingleExecutorShutdown(task);
+    checkIdleExecutorShutdown(task.getDriver());
   }
   
-  private void checkSingleExecutorShutdown(SingularityExecutorTask task) {
-    if (configuration.isSingleExecutorPerTask()) {
-      shutdown();
-      try {
-        Thread.sleep(configuration.getSingleExecutorShutdownWaitMillis());
-      } catch (Throwable t) {
-        LOG.warn("While sleeping waiting to stop driver", t);
+  private void checkIdleExecutorShutdown(ExecutorDriver driver) {
+    exitLock.lock();
+    
+    try {
+      clearExitCheckerUnsafe();
+
+      if (tasks.isEmpty()) {
+        exitCheckerFuture = Optional.of(startExitChecker(Optional.of(driver)));
       }
-      task.getDriver().stop();
+    } finally {
+      exitLock.unlock();
     }
   }
   
