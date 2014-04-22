@@ -25,6 +25,17 @@
   </repositories>
 
   <dependencies>
+    <dependency>
+      <groupId>net.kencochrane.raven</groupId>
+      <artifactId>raven-logback</artifactId>
+      <version>${sentry.version}</version>
+    </dependency>    
+
+    <dependency>
+      <groupId>net.kencochrane.raven</groupId>
+      <artifactId>raven-getsentry</artifactId>
+      <version>${sentry.version}</version>
+    </dependency>    
 
     <dependency>
       <groupId>com.hubspot</groupId>

@@ -30,6 +30,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("singularityUIHostnameAndPath")
   private String singularityUIHostnameAndPath;
   
+  @JsonProperty("sentry")
+  private SentryConfiguration sentryConfiguration;
+  
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -192,6 +195,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
     this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
+  }
+  
+  public Optional<SentryConfiguration> getSentryConfiguration(){
+    return Optional.fromNullable(sentryConfiguration);
+  }
+  
+  public void setSentryConfiguration(SentryConfiguration sentryConfiguration){
+    this.sentryConfiguration = sentryConfiguration;
   }
 
 }
