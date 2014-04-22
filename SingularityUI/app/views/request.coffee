@@ -8,7 +8,6 @@ RequestActiveDeploy = require '../models/RequestActiveDeploy'
 RequestDeployHistory = require '../models/RequestDeployHistory'
 
 RequestTasks = require '../collections/RequestTasks'
-HistoricalTasks = require '../collections/HistoricalTasks'
 
 class RequestView extends View
 

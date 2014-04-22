@@ -33,6 +33,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("loadBalancerUri")
   private String loadBalancerUri;
   
+  @JsonProperty("sentry")
+  private SentryConfiguration sentryConfiguration;
+  
   @Valid
   @NotNull
   private DataSourceFactory database;
@@ -312,6 +315,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
     this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
+  }
+  
+  public Optional<SentryConfiguration> getSentryConfiguration(){
+    return Optional.fromNullable(sentryConfiguration);
+  }
+  
+  public void setSentryConfiguration(SentryConfiguration sentryConfiguration){
+    this.sentryConfiguration = sentryConfiguration;
   }
 
   public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
