@@ -172,7 +172,7 @@ class Application
                 hideGlobalSearch()
 
         $('[data-invoke-global-search]').click -> toggleGlobalSearch()
-        $('[data-close-global-search]').click -> toggleGlobalSearch()
+        $('[data-close-global-search]').click (event) -> toggleGlobalSearch() if event.target.hasAttribute('data-close-global-search')
 
         $globalSearch.find('input').keydown (e) ->
             if e.keyCode is 27 # ESC
