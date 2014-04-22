@@ -88,7 +88,7 @@ public class SingularityExecutorMonitor {
     LOG.info("Shutdown requested with driver {}", driver);
     
     processBuilderPool.shutdown();
-    
+
     runningProcessPool.shutdown();
     
     for (SingularityExecutorTask task : tasks.values()) {
@@ -96,8 +96,8 @@ public class SingularityExecutorMonitor {
     }
     
     processKiller.getExecutorService().shutdown();
-    
-    exitChecker.shutdownNow();
+
+    exitChecker.shutdown();
     
     CountDownLatch latch = new CountDownLatch(3);
     
@@ -105,7 +105,7 @@ public class SingularityExecutorMonitor {
     JavaUtils.awaitTerminationWithLatch(latch, "runningProcess", runningProcessPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processKiller", processKiller.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
     
-    LOG.info("Awaiting shutdown of all executor services");
+    LOG.info("Awaiting shutdown of all executor services for a max of {}ms", configuration.getShutdownTimeoutWaitMillis());
     
     try {
       latch.await();
@@ -113,19 +113,49 @@ public class SingularityExecutorMonitor {
       LOG.warn("While awaiting shutdown of executor services", e);
     }
     
-    LOG.info("Waiting {}ms before exiting driver...", configuration.getShutdownTimeoutWaitMillis());
+    LOG.info("Waiting {}ms before exiting driver...", configuration.getStopDriverAfterMillis());
     
     try {
-      Thread.sleep(configuration.getShutdownTimeoutWaitMillis());
+      Thread.sleep(configuration.getStopDriverAfterMillis());
     } catch (Throwable t) {
       LOG.warn("While sleeping waiting to stop driver", t);
     }
     
     if (driver.isPresent()) {
+      LOG.info("Stopping driver {}", driver.get());
       driver.get().stop();
+      
     } else {
       LOG.warn("No driver present on shutdown, using System.exit(1)");
       System.exit(1);
+    }
+  }
+  
+  private void checkForExit(final Optional<ExecutorDriver> driver) {
+    try {
+      exitLock.lockInterruptibly();
+    } catch (InterruptedException e) {
+      LOG.warn("Interrupted acquiring exit lock", e);
+      return;
+    }
+    
+    boolean shuttingDown = false;
+    
+    try {
+      if (tasks.isEmpty()) {
+        runState = RunState.SHUTDOWN;
+        shuttingDown = true;
+      }
+    } finally {
+      exitLock.unlock();
+    }
+    
+    if (shuttingDown) {
+      shutdown(driver);
+    } else if (runState == RunState.SHUTDOWN) {
+      LOG.info("Already shutting down...");
+    } else {
+      LOG.info("Tasks wasn't empty, exit checker doing nothing...");
     }
   }
   
@@ -140,29 +170,10 @@ public class SingularityExecutorMonitor {
         LOG.info("Exit checker running...");
         
         try {
-          exitLock.lockInterruptibly();
-        } catch (InterruptedException e) {
-          LOG.warn("Interrupted acquiring exit lock", e);
-          return;
-        }
-        
-        boolean shuttingDown = false;
-        
-        try {
-          if (tasks.isEmpty()) {
-            runState = RunState.SHUTDOWN;
-            shuttingDown = true;
-          }
-        } finally {
-          exitLock.lock();
-        }
-        
-        if (shuttingDown) {
-          shutdown(driver);
-        } else if (runState == RunState.SHUTDOWN) {
-          LOG.info("Already shutting down...");
-        } else {
-          LOG.info("Tasks wasn't empty, exit checker doing nothing...");
+          checkForExit(driver);
+        } catch (Throwable t) {
+          LOG.error("Caught while shutting down", t);
+          System.exit(2);
         }
       }
     }, configuration.getIdleExecutorShutdownWaitMillis(), TimeUnit.MILLISECONDS);
@@ -170,6 +181,7 @@ public class SingularityExecutorMonitor {
   
   private void clearExitCheckerUnsafe() {
     if (exitCheckerFuture.isPresent()) {
+      LOG.info("Canceling an exit checker");
       exitCheckerFuture.get().cancel(true);
       exitCheckerFuture = Optional.absent();
     }
