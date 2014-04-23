@@ -17,6 +17,8 @@ import com.google.common.base.Throwables;
 
 public class JavaUtils {
 
+  public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
+  
   private static final String CHARSET_UTF = "UTF-8";
 
   public static byte[] toBytes(String string) {

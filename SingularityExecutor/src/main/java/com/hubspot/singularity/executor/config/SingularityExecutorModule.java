@@ -20,6 +20,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 
 public class SingularityExecutorModule extends AbstractModule {
@@ -29,6 +30,8 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
 
+  public static final String LOGGING_PATTERN = "executor.logging.pattern";
+  
   public static final String JSON_MAPPER = "object.mapper.json";
   
   public static final String ROOT_LOG_PATH = "root.log.path";
@@ -61,6 +64,7 @@ public class SingularityExecutorModule extends AbstractModule {
   
   private void bindDefaults(Properties properties) {
     properties.put(TASK_APP_DIRECTORY, "app");
+    properties.put(LOGGING_PATTERN, JavaUtils.LOGBACK_LOGGING_PATTERN);
     properties.put(TASK_EXECUTOR_BASH_LOG_PATH, "executor.bash.log");
     properties.put(TASK_EXECUTOR_JAVA_LOG_PATH, "executor.java.log");
     properties.put(TASK_SERVICE_LOG_PATH, "service.log");

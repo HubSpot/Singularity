@@ -16,10 +16,12 @@ public class SingularityExecutorLogging {
   private final static org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityExecutorLogging.class);
   
   private final String rootLogPath;
+  private final String loggingPattern;
   
   @Inject
-  public SingularityExecutorLogging(@Named(SingularityExecutorModule.ROOT_LOG_PATH) String rootLogPath) {
+  public SingularityExecutorLogging(@Named(SingularityExecutorModule.ROOT_LOG_PATH) String rootLogPath, @Named(SingularityExecutorModule.LOGGING_PATTERN) String loggingPattern) {
     this.rootLogPath = rootLogPath;
+    this.loggingPattern = loggingPattern;
     
     configureRootLogger();
   }
@@ -78,9 +80,9 @@ public class SingularityExecutorLogging {
         
     PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     encoder.setContext(context);
-    encoder.setPattern("%-4relative [%thread] %-5level %logger{35} - %msg%n");
+    encoder.setPattern(loggingPattern);
     encoder.start();
-    
+        
     fileAppender.setEncoder(encoder);
     fileAppender.start();
     
