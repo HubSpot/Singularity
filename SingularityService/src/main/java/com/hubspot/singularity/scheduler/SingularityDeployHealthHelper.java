@@ -80,25 +80,19 @@ public class SingularityDeployHealthHelper {
   private DeployHealth getHealthCheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks) {
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getHealthcheckResults(matchingActiveTasks);
 
-    boolean allHealthy = true;
-    
     for (SingularityTaskId taskId : matchingActiveTasks) {
       SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);
       
       if (healthcheckResult == null) {
-        LOG.warn("No health check present for {}", taskId);
-        allHealthy = false;
+        LOG.debug("No health check present for {}", taskId);
+        return DeployHealth.WAITING;
       } else if (healthcheckResult.isFailed()) {
-        LOG.info("Found a failed health check: {}", healthcheckResult);
-        return DeployHealth.UNHEALTHY;
+        LOG.debug("Found a failed health check: {}", healthcheckResult);
+        return DeployHealth.WAITING;
       }
     }
     
-    if (allHealthy) {
-      return DeployHealth.HEALTHY;
-    } else {
-      return DeployHealth.WAITING;
-    }
+    return DeployHealth.HEALTHY;
   }
 
 }

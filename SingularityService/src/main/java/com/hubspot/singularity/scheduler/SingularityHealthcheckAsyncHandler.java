@@ -16,12 +16,14 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final static Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
   private final long startTime;
+  private final SingularityHealthchecker healthchecker;
   private final SingularityTask task;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
   
-  public SingularityHealthcheckAsyncHandler(TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
+  public SingularityHealthcheckAsyncHandler(SingularityHealthchecker healthchecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
     this.taskManager = taskManager;
+    this.healthchecker = healthchecker;
     this.abort = abort;
     this.task = task;
     
@@ -43,7 +45,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
 
   @Override
   public void onThrowable(Throwable t) {
-    LOG.trace(String.format("Exception while making health check for task %s", task.getTaskId()), t);
+    LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
   
     saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())));
   }
@@ -52,12 +54,16 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody, 
         errorMessage, task.getTaskId());
   
-    LOG.trace(String.format("Saving healthcheck result %s", result));
+    LOG.trace("Saving healthcheck result {}", result);
  
     try {
       taskManager.saveHealthcheckResult(result);
+      
+      if (result.isFailed()) {
+        healthchecker.reEnqueueHealthcheck(task);
+      }
     } catch (Throwable t) {
-      LOG.error(String.format("Aborting, caught throwable while saving health check result %s", result), t);
+      LOG.error("Aborting, caught throwable while saving health check result {}", result, t);
       
       abort.abort();
     }
