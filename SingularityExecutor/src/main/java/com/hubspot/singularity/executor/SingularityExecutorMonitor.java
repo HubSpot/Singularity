@@ -113,18 +113,17 @@ public class SingularityExecutorMonitor {
       LOG.warn("While awaiting shutdown of executor services", e);
     }
     
-    LOG.info("Waiting {} before exiting driver...", JavaUtils.durationFromMillis(configuration.getStopDriverAfterMillis()));
+    LOG.info("Waiting {} before exiting...", JavaUtils.durationFromMillis(configuration.getStopDriverAfterMillis()));
     
     try {
       Thread.sleep(configuration.getStopDriverAfterMillis());
     } catch (Throwable t) {
-      LOG.warn("While sleeping waiting to stop driver", t);
+      LOG.warn("While waiting to exit", t);
     }
     
     if (driver.isPresent()) {
       LOG.info("Stopping driver {}", driver.get());
-      driver.get().stop();
-      
+      driver.get().stop();      
     } else {
       LOG.warn("No driver present on shutdown, using System.exit(1)");
       System.exit(1);
