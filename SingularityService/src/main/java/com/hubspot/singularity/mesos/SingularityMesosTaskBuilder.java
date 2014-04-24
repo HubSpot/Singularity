@@ -83,7 +83,17 @@ public class SingularityMesosTaskBuilder {
   
   private void prepareEnvironment(final SingularityTaskRequest task, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
-      
+    
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("INSTANCE_NO")
+        .setValue(Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()))
+        .build());
+    
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("TASK_REQUEST_ID")
+        .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
+        .build());
+        
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
       envBldr.addVariables(Variable.newBuilder()
           .setName(envEntry.getKey())
@@ -92,20 +102,18 @@ public class SingularityMesosTaskBuilder {
     }
       
     if (ports.isPresent()) {
-      int portNum = 0;
-      for (long port : ports.get()) {
+      for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
           envBldr.addVariables(Variable.newBuilder()
               .setName("PORT")
-              .setValue(Long.toString(port))
+              .setValue(Long.toString(ports.get()[portNum]))
               .build());
         }
 
         envBldr.addVariables(Variable.newBuilder()
-            .setName(String.format("PORT%s", portNum++))
-            .setValue(Long.toString(port))
+            .setName(String.format("PORT%s", portNum))
+            .setValue(Long.toString(ports.get()[portNum]))
             .build());
-        
       }
     }
     
