@@ -1,7 +1,5 @@
 package com.hubspot.singularity.executor.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -10,7 +8,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
@@ -18,8 +15,6 @@ public class SingularityExecutorModule extends AbstractModule {
 
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
-
-  public static final String JSON_MAPPER = "object.mapper.json";
   
   @Override
   protected void configure() {
@@ -48,16 +43,6 @@ public class SingularityExecutorModule extends AbstractModule {
   @Singleton
   public MustacheFactory providesMustacheFactory() {
     return new DefaultMustacheFactory();
-  }
-  
-  @Provides
-  @Singleton
-  @Named(JSON_MAPPER)
-  public ObjectMapper getJsonObjectMapper() {
-    final ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new GuavaModule());
-    mapper.registerModule(new ProtobufModule());
-    return mapper;
   }
   
 }

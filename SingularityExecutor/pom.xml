@@ -38,12 +38,6 @@
       <version>0.8.13</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-guava</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-
   </dependencies>
 
   <build>

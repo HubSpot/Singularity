@@ -18,6 +18,7 @@ import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
 public class SingularityTaskBuilder {
 
@@ -30,7 +31,7 @@ public class SingularityTaskBuilder {
   private final ExecutorUtils executorUtils;
   
   @Inject
-  public SingularityTaskBuilder(@Named(SingularityExecutorModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
+  public SingularityTaskBuilder(@Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
       SingularityExecutorConfiguration configuration) {
     this.executorUtils = executorUtils;
     this.jsonObjectMapper = jsonObjectMapper;

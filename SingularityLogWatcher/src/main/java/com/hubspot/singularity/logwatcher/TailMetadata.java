@@ -2,13 +2,17 @@ package com.hubspot.singularity.logwatcher;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class TailMetadata {
 
   private String filename;
   private String tag;
   private Map<String, String> extraFields;
   
-  public TailMetadata(String filename, String tag, Map<String, String> extraFields) {
+  @JsonCreator
+  public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields) {
     this.filename = filename;
     this.tag = tag;
     this.extraFields = extraFields;
