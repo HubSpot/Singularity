@@ -94,10 +94,18 @@ public class SingularityMesosTaskBuilder {
     if (ports.isPresent()) {
       int portNum = 0;
       for (long port : ports.get()) {
+        if (portNum == 0) {
+          envBldr.addVariables(Variable.newBuilder()
+              .setName("PORT")
+              .setValue(Long.toString(port))
+              .build());
+        }
+
         envBldr.addVariables(Variable.newBuilder()
             .setName(String.format("PORT%s", portNum++))
             .setValue(Long.toString(port))
             .build());
+        
       }
     }
     
