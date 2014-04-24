@@ -1,7 +1,6 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.mesos.Protos;
@@ -20,10 +19,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.ExecutorDataBuilder;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityTask;
@@ -82,24 +81,49 @@ public class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
   
+  private void prepareEnvironment(final SingularityTaskRequest task, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
+    Environment.Builder envBldr = Environment.newBuilder();
+      
+    for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
+      envBldr.addVariables(Variable.newBuilder()
+          .setName(envEntry.getKey())
+          .setValue(envEntry.getValue())
+          .build());
+    }
+      
+    if (ports.isPresent()) {
+      int portNum = 0;
+      for (long port : ports.get()) {
+        envBldr.addVariables(Variable.newBuilder()
+            .setName(String.format("PORT%s", portNum++))
+            .setValue(Long.toString(port))
+            .build());
+      }
+    }
+    
+    commandBuilder.setEnvironment(envBldr.build());
+  }
+  
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
+    CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
+    
+    prepareEnvironment(task, commandBuilder, ports);
+    
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
-          .setCommand(CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get()))
+          .setCommand(commandBuilder.build())
           .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(String.format("singularity-%s", taskId.toString().replace(':', '_')))))
     );
-    
+        
     if (task.getDeploy().getExecutorData().isPresent()) {
       ExecutorData executorData = task.getDeploy().getExecutorData().get();
       
       if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
         LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId());
         
-        List<String> cmdLineArgs = Lists.newArrayList(executorData.getExtraCmdLineArgs());
-        cmdLineArgs.add(task.getPendingTask().getMaybeCmdLineArgs().get());
-        
-        executorData = new ExecutorData(executorData.getCmd(), executorData.getEmbeddedArtifacts(), executorData.getExternalArtifacts(), executorData.getEnv(), 
-            executorData.getSuccessfulExitCodes(), executorData.getUser().orNull(), executorData.getRunningSentinel().orNull(), cmdLineArgs);
+        ExecutorDataBuilder executorDataBldr = executorData.toBuilder();
+        executorDataBldr.getExtraCmdLineArgs().add(task.getPendingTask().getMaybeCmdLineArgs().get());
+        executorData = executorDataBldr.build();
       }
       
       try {
@@ -133,29 +157,10 @@ public class SingularityMesosTaskBuilder {
     for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
-  
-    bldr.setCommand(commandBldr);
     
-    if (task.getDeploy().getEnv().isPresent() || ports.isPresent()) {
-      Environment.Builder envBldr = Environment.newBuilder();
-      
-      for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-        envBldr.addVariables(Variable.newBuilder()
-            .setName(envEntry.getKey())
-            .setValue(envEntry.getValue())
-            .build());
-      }
-      
-      if (ports.isPresent()) {
-        int portNum = 0;
-        for (long port : ports.get()) {
-          envBldr.addVariables(Variable.newBuilder()
-              .setName(String.format("PORT%s", portNum++))
-              .setValue(Long.toString(port))
-              .build());
-        }
-      }
-    }
+    prepareEnvironment(task, commandBldr, ports);
+    
+    bldr.setCommand(commandBldr);
   }
 
 }

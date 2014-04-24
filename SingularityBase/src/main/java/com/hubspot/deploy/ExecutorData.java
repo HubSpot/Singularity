@@ -2,14 +2,13 @@ package com.hubspot.deploy;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExecutorData {
@@ -17,7 +16,6 @@ public class ExecutorData {
   private final String cmd;
   private final List<EmbeddedArtifact> embeddedArtifacts;
   private final List<ExternalArtifact> externalArtifacts;
-  private final Map<String, String> env;
   private final List<Integer> successfulExitCodes;
   private final Optional<String> runningSentinel;
   private final Optional<String> user;
@@ -25,30 +23,35 @@ public class ExecutorData {
   
   @JsonCreator
   public static ExecutorData fromString(String value) {
-    return new ExecutorData(value, Collections.<EmbeddedArtifact> emptyList(), Collections.<ExternalArtifact> emptyList(), Collections.<String, String> emptyMap(), null, null, null, Collections.<String> emptyList());
+    return new ExecutorData(value, Collections.<EmbeddedArtifact> emptyList(), Collections.<ExternalArtifact> emptyList(), null, null, null, Collections.<String> emptyList());
   }
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts, 
-      @JsonProperty("env") Map<String, String> env, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") String user, @JsonProperty("runningSentinel") String runningSentinel, 
+      @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user, @JsonProperty("runningSentinel") Optional<String> runningSentinel, 
       @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs) {
     this.cmd = cmd;
-    this.embeddedArtifacts = Objects.firstNonNull(embeddedArtifacts, Collections.<EmbeddedArtifact> emptyList());
-    this.externalArtifacts = Objects.firstNonNull(externalArtifacts, Collections.<ExternalArtifact> emptyList());
-    this.env = Objects.firstNonNull(env, Collections.<String, String> emptyMap());
-    this.user = Optional.fromNullable(user);
-    this.successfulExitCodes = Objects.firstNonNull(successfulExitCodes, Collections.singletonList(0));
-    this.extraCmdLineArgs = Objects.firstNonNull(extraCmdLineArgs, Collections.<String> emptyList());
-    
-    this.runningSentinel = Strings.isNullOrEmpty(runningSentinel) ? Optional.<String> absent() : Optional.of(runningSentinel);
+    this.embeddedArtifacts = nonNullImmutable(embeddedArtifacts);
+    this.externalArtifacts = nonNullImmutable(externalArtifacts);
+    this.user = user;
+    this.successfulExitCodes = nonNullImmutable(successfulExitCodes);
+    this.extraCmdLineArgs = nonNullImmutable(extraCmdLineArgs);
+    this.runningSentinel = runningSentinel;
+  }
+  
+  public ExecutorDataBuilder toBuilder() {
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs);
+  }
+  
+  private <T> List<T> nonNullImmutable(List<T> list) {
+    if (list == null) {
+      return Collections.emptyList();
+    }
+    return ImmutableList.copyOf(list);
   }
 
   public String getCmd() {
     return cmd;
-  }
-
-  public Map<String, String> getEnv() {
-    return env;
   }
 
   public List<EmbeddedArtifact> getEmbeddedArtifacts() {
@@ -81,7 +84,6 @@ public class ExecutorData {
         .add("cmd", cmd)
         .add("embeddedArtifacts", embeddedArtifacts)
         .add("externalArtifacts", externalArtifacts)
-        .add("env", env)
         .add("user", user)
         .add("successfulExitCodes", successfulExitCodes)
         .add("runningSentinel", runningSentinel)

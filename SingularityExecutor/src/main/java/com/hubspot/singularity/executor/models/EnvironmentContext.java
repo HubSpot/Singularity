@@ -1,45 +1,25 @@
 package com.hubspot.singularity.executor.models;
 
-import com.google.common.collect.Maps;
-import com.hubspot.deploy.ExecutorData;
-
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import org.apache.mesos.Protos.Environment.Variable;
+import org.apache.mesos.Protos.TaskInfo;
 
 public class EnvironmentContext {
   
-  private final ExecutorData executorData;
-  private final List<Long> ports;
-  private final Map<String, Long> portsEnv;
+  private final TaskInfo taskInfo;
   
-  public EnvironmentContext(ExecutorData executorData, List<Long> ports) {
-    this.executorData = executorData;
-    this.ports = ports;
-
-    portsEnv = Maps.newHashMap();
-
-    if (ports != null && !ports.isEmpty()) {
-      for (int i = 0; i < ports.size(); i++) {
-        portsEnv.put("", ports.get(0));
-        portsEnv.put(Integer.toString(i), ports.get(i));
-      }
-    }
+  public EnvironmentContext(TaskInfo taskInfo) {
+    this.taskInfo = taskInfo;
   }
 
-  public Set<Map.Entry<String, String>> getExecutorDataEnv() {
-    return executorData.getEnv().entrySet();
-  }
-
-  public Set<Map.Entry<String, Long>> getPortsEnv() {
-    return portsEnv.entrySet();
+  public List<Variable> getEnv() {
+    return taskInfo.getExecutor().getCommand().getEnvironment().getVariablesList();
   }
 
   @Override
   public String toString() {
-    return "EnvironmentContext [" +
-        "executorData=" + executorData +
-        ", ports=" + ports +
-        ']';
+    return "EnvironmentContext [taskInfo=" + taskInfo + "]";
   }
+  
 }

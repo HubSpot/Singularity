@@ -1,22 +1,23 @@
 package com.hubspot.singularity.executor.task;
 
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.TaskState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExternalArtifact;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import org.apache.mesos.Protos.TaskState;
-
-import java.nio.file.Path;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
@@ -56,7 +57,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     downloadFiles(executorData);
     extractFiles(executorData);
     
-    ProcessBuilder processBuilder = buildProcessBuilder(executorData, MesosUtils.getAllPorts(task.getTaskInfo()));
+    ProcessBuilder processBuilder = buildProcessBuilder(task.getTaskInfo(), executorData);
   
     return processBuilder;
   }
@@ -90,10 +91,10 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return bldr.toString();
   }
   
-  private ProcessBuilder buildProcessBuilder(ExecutorData executorData, List<Long> ports) {
+  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData) {
     final String cmd = getCommand(executorData);
     
-    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(executorData, ports));
+    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(taskInfo));
     
     task.getLog().info("Writing a runner script to execute {}", cmd);
     
