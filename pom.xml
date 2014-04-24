@@ -61,6 +61,7 @@
 
   <modules>
     <module>SingularityBase</module>
+    <module>SingularityRunnerBase</module>
     <module>SingularityClient</module>
     <module>SingularityService</module>
     <module>SingularityExecutor</module>

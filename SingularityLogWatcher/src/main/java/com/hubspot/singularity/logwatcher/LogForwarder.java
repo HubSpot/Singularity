@@ -2,6 +2,6 @@ package com.hubspot.singularity.logwatcher;
 
 public interface LogForwarder {
 
-  public void forwardMessage(String tag, String line);
+  public void forwardMessage(TailMetadata tailMetadata, String line);
   
 }

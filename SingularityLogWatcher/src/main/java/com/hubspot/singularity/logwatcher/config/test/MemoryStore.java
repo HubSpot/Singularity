@@ -1,6 +1,6 @@
 package com.hubspot.singularity.logwatcher.config.test;
 
-import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -9,26 +9,49 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.logwatcher.SimpleStore;
+import com.hubspot.singularity.logwatcher.TailMetadata;
+import com.hubspot.singularity.logwatcher.TailMetadataListener;
 
 public class MemoryStore implements SimpleStore {
 
   private final static Logger LOG = LoggerFactory.getLogger(MemoryStore.class);
 
-  private final Map<Path, Long> map;
+  private final Map<TailMetadata, Long> map;
+  private final List<TailMetadata> list;
   
-  public MemoryStore() {
-    map = Maps.newHashMap();
+  public MemoryStore(List<TailMetadata> list) {
+    this.map = Maps.newHashMap();
+    this.list = list;
   }
   
   @Override
-  public void savePosition(Path logfile, long position) {
-    Long previous = map.put(logfile, position);
-    LOG.info("Stored position {} for {}, old position {}", position, logfile, previous);
+  public void markConsumed(TailMetadata tail) throws StoreException {
+    LOG.info("Consumed:" + tail);
   }
 
   @Override
-  public Optional<Long> getPosition(Path logfile) {
-    return Optional.fromNullable(map.get(logfile));
+  public void savePosition(TailMetadata tail, long position) {
+    Long previous = map.put(tail, position);
+    LOG.info("Stored position {} for {}, old position {}", position, tail, previous);
+  }
+
+  @Override
+  public Optional<Long> getPosition(TailMetadata tail) {
+    return Optional.fromNullable(map.get(tail));
+  }
+
+  @Override
+  public List<TailMetadata> getTails() {
+    return list;
+  }
+
+  @Override
+  public void registerListener(TailMetadataListener listener) {
+  }
+
+
+  @Override
+  public void removeListener(TailMetadataListener listener) {
   }
 
 }

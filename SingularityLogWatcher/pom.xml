@@ -20,42 +20,16 @@
     </repository>
   </repositories>
 
+  <properties>
+    <runner.class>com.hubspot.singularity.logwatcher.SingularityLogWatcherRunner</runner.class>
+  </properties>
+
   <dependencies>
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityBase</artifactId>
+      <artifactId>SingularityRunnerBase</artifactId>
       <version>0.3.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>${guice.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${sl4fj.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-guava</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
 
     <dependency>
@@ -63,7 +37,7 @@
       <artifactId>fluent-logger</artifactId>
       <version>0.2.11</version>
     </dependency>
-    
+
   </dependencies>
 
   <build>
@@ -141,7 +115,7 @@
                   implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.hubspot.singularity.logwatcher.SingularityLogWatcherRunner</mainClass>
+                  <mainClass>${runner.class}</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -169,5 +143,6 @@
       </plugin>
     </plugins>
   </build>
+
 
 </project>
