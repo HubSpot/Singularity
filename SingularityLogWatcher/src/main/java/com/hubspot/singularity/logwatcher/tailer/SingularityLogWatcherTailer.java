@@ -80,9 +80,11 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   public void watch() throws IOException, InterruptedException {
     LOG.info("Watching file {} at position {} with a {} byte buffer and minimum read size {}", logfile, byteChannel.position(), byteBuffer.capacity(), configuration.getMinimimReadSizeBytes());
 
-    checkRead(false);
-
-    super.watch();
+    checkRead(tailMetadata.isFinished());
+    
+    if (!tailMetadata.isFinished()) {
+      super.watch();
+    }
   }
 
   @Override

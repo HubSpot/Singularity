@@ -14,6 +14,7 @@ import com.google.inject.AbstractModule;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.TailMetadata;
+import com.hubspot.singularity.logwatcher.impl.FileBasedSimpleStore;
 
 public class SingularityLogWatcherTestModule extends AbstractModule {
 
@@ -31,13 +32,13 @@ public class SingularityLogWatcherTestModule extends AbstractModule {
     
     rootLogger.setLevel(Level.ALL);
     
-    List<TailMetadata> list = Lists.newArrayList();
-    for (int i = 0; i < args.length; i += 2) {
-      TailMetadata tail = new TailMetadata(args[i], args[i + 1], Collections.<String, String> emptyMap());
-      list.add(tail);
-    }
+//    List<TailMetadata> list = Lists.newArrayList();
+//    for (int i = 0; i < args.length; i += 2) {
+//      TailMetadata tail = new TailMetadata(args[i], args[i + 1], Collections.<String, String> emptyMap(), false);
+//      list.add(tail);
+//    }
     
-    bind(SimpleStore.class).toInstance(new MemoryStore(list));
+    bind(SimpleStore.class).to(FileBasedSimpleStore.class);
     bind(LogForwarder.class).toInstance(new LogLogForwarder());
   }
   

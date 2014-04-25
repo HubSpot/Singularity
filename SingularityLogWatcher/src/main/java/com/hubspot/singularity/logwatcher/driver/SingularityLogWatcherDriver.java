@@ -4,11 +4,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -32,6 +33,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
   private final Map<TailMetadata, SingularityLogWatcherTailer> tailers;
   
   private volatile boolean shutdown;
+  private final Lock shutdownLock;
   
   @Inject
   public SingularityLogWatcherDriver(SimpleStore store, SingularityLogWatcherConfiguration configuration, LogForwarder logForwarder) {
@@ -41,9 +43,10 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     this.tailers = Maps.newConcurrentMap();
     this.tailService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherTailThread-%d").build());
     this.shutdown = false;
+    this.shutdownLock = new ReentrantLock();
   }
   
-  private synchronized void tail(final TailMetadata tail) {
+  private void tail(final TailMetadata tail) {
     final SingularityLogWatcherTailer tailer = buildTailer(tail);
 
     tailService.submit(new Runnable() {
@@ -54,6 +57,8 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
           tailer.watch();
           
           if (!shutdown) {
+            LOG.info("Consuming tail: {}", tail);
+          
             tailer.consumeStream();
             store.markConsumed(tail);
           }
@@ -73,24 +78,39 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     tailers.put(tail, tailer);
   }
   
-  public synchronized void start() {
+  public void start() {
     final long start = System.currentTimeMillis();
     
-    for (TailMetadata tail : store.getTails()) {
-      tail(tail);
-    }
+    shutdownLock.lock();
     
-    LOG.info("Started {} tails in {}", tailers.size(), JavaUtils.duration(start));
+    try {
+      if (shutdown) {
+        LOG.info("Not starting, was already shutdown");
+        return;
+      }
+      
+      for (TailMetadata tail : store.getTails()) {
+        tail(tail);
+      }
+    } finally {
+      shutdownLock.unlock();
+    }
+        
+    LOG.info("Started {} tail(s) in {}", tailers.size(), JavaUtils.duration(start));
+  
+    store.start();
   }
 
-  public synchronized void markShutdown() {
+  public void markShutdown() {
+    shutdownLock.lock();
     this.shutdown = true;
+    shutdownLock.unlock();
   }
   
   public void shutdown() {
     final long start = System.currentTimeMillis();
     
-    LOG.info("Shutting down with {} tailers", tailers.size());
+    LOG.info("Shutting down with {} tailer(s)", tailers.size());
     
     markShutdown();
     
@@ -102,11 +122,17 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     
     try {
       tailService.awaitTermination(1L, TimeUnit.DAYS);
-    } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
+    } catch (Throwable t) {
+      LOG.error("While awaiting tail service", t);
     }
     
-    LOG.info("Shutdown {} tailers after {}", tailers.size(), JavaUtils.duration(start));
+    try {
+      store.close();
+    } catch (Throwable t) {
+      LOG.error("While closing store", t);
+    }
+    
+    LOG.info("Shutdown after {}", JavaUtils.duration(start));
   }
   
   private SingularityLogWatcherTailer buildTailer(TailMetadata tail) {
@@ -114,30 +140,31 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
   }
   
   @Override
-  public synchronized void addedTailMetadata(TailMetadata newTailMetadata) {
-    if (shutdown) {
-      LOG.info("Not tailing {}, shutting down...", newTailMetadata);
-      return;
-    }
+  public void tailChanged(TailMetadata tailMetadata) {
+    shutdownLock.lock();
     
-    tail(newTailMetadata);
-  }
-
-  @Override
-  public synchronized void stopTail(final TailMetadata tailMetadataToStop) {
-    if (shutdown) {
-      LOG.info("Not stopping {}, shutting down...", tailMetadataToStop);
-      return;
-    }
-
-    final SingularityLogWatcherTailer tailer = tailers.get(tailMetadataToStop);
+    try {
     
-    if (tailer == null) {
-      LOG.warn("Didn't have a tailer to stop for tailmetadata {}", tailMetadataToStop);
-      return;
+      if (shutdown) {
+        LOG.info("Not handling notification {}, shutting down...", tailMetadata);
+        return;
+      }
+      
+      final SingularityLogWatcherTailer tailer = tailers.get(tailMetadata);
+      
+      if (tailer != null) {
+        if (tailMetadata.isFinished()) {
+          tailer.stop();
+        } else {
+          LOG.info("Ignoring notification about {} since we already had a tailer for it", tailMetadata);
+        }
+      } else {
+        tail(tailMetadata);
+      }
+      
+    } finally {
+      shutdownLock.unlock();
     }
-    
-    tailer.stop();
   }
 
 }

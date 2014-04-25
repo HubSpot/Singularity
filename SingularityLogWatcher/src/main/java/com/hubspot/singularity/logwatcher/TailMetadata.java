@@ -7,15 +7,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TailMetadata {
 
-  private String filename;
-  private String tag;
-  private Map<String, String> extraFields;
+  private final String filename;
+  private final String tag;
+  private final Map<String, String> extraFields;
+  private final boolean finished;
   
   @JsonCreator
-  public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields) {
+  public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields, @JsonProperty("finished") boolean finished) {
     this.filename = filename;
     this.tag = tag;
     this.extraFields = extraFields;
+    this.finished = finished;
   }
   
   @Override
@@ -42,34 +44,26 @@ public class TailMetadata {
       return false;
     return true;
   }
-  
+
   public String getFilename() {
     return filename;
   }
-  
-  public void setFilename(String filename) {
-    this.filename = filename;
-  }
-  
+
   public String getTag() {
     return tag;
   }
-  
-  public void setTag(String tag) {
-    this.tag = tag;
-  }
-  
+
   public Map<String, String> getExtraFields() {
     return extraFields;
   }
-  
-  public void setExtraFields(Map<String, String> extraFields) {
-    this.extraFields = extraFields;
+
+  public boolean isFinished() {
+    return finished;
   }
-  
+
   @Override
   public String toString() {
-    return "TailMetadata [filename=" + filename + ", tag=" + tag + ", extraFields=" + extraFields + "]";
+    return "TailMetadata [filename=" + filename + ", tag=" + tag + ", extraFields=" + extraFields + ", isFinished=" + finished + "]";
   }
   
 }

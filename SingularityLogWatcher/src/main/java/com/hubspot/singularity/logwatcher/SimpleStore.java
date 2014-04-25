@@ -1,10 +1,11 @@
 package com.hubspot.singularity.logwatcher;
 
+import java.io.Closeable;
 import java.util.List;
 
 import com.google.common.base.Optional;
 
-public interface SimpleStore {
+public interface SimpleStore extends Closeable {
 
   @SuppressWarnings("serial")
   public static class StoreException extends RuntimeException {
@@ -26,6 +27,8 @@ public interface SimpleStore {
     }
     
   }
+  
+  public void start(); 
   
   public void markConsumed(TailMetadata tail) throws StoreException;
   

@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 
 public abstract class WatchServiceHelper implements Closeable {
@@ -60,7 +61,7 @@ public abstract class WatchServiceHelper implements Closeable {
   }
   
   public void watch() throws IOException, InterruptedException {
-    LOG.info("Watching directory {} for events {}", watchDirectory, watchEvents);
+    LOG.info("Watching directory {} for event(s) {}", watchDirectory, watchEvents);
     
     WatchKey watchKey = watchDirectory.register(watchService, watchEvents.toArray(new WatchEvent.Kind[watchEvents.size()]));
     
@@ -87,7 +88,7 @@ public abstract class WatchServiceHelper implements Closeable {
   }
   
   private void processWatchKey(WatchKey watchKey) throws IOException {
-    final long now = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
     final List<WatchEvent<?>> events = watchKey.pollEvents();
     
     for (WatchEvent<?> event : events) {
@@ -104,7 +105,7 @@ public abstract class WatchServiceHelper implements Closeable {
       processEvent(kind, filename);
     }
     
-    LOG.trace("Handled {} events in {}ms", events.size(), System.currentTimeMillis() - now);
+    LOG.trace("Handled {} event(s) in {}", events.size(), JavaUtils.duration(start));
   }
 
 }

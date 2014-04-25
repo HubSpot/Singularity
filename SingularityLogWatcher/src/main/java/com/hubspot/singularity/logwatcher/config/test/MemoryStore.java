@@ -1,5 +1,6 @@
 package com.hubspot.singularity.logwatcher.config.test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,12 @@ public class MemoryStore implements SimpleStore {
     this.list = list;
   }
   
+  @Override
+  public void close() throws IOException {}
+
+  @Override
+  public void start() {}
+
   @Override
   public void markConsumed(TailMetadata tail) throws StoreException {
     LOG.info("Consumed:" + tail);
