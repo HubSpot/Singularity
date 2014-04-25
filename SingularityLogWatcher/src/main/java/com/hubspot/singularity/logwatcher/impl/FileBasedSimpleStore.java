@@ -106,16 +106,18 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
   
   private Path getTailMetadataPath(TailMetadata tail) {
-    return Paths.get(tail.getFilename() + configuration.getMetadataSuffix());
+    return configuration.getMetadataDirectory().resolve(Paths.get(tail.getPath().getFileName() + configuration.getMetadataSuffix()));
   }
   
   private Path getStorePath(TailMetadata tail) {
-    return Paths.get(tail.getFilename() + configuration.getStoreSuffix());
+    return configuration.getStoreDirectory().resolve(Paths.get(tail.getPath().getFileName() + configuration.getStoreSuffix()));
   }
   
   @Override
   public Optional<Long> getPosition(TailMetadata tail) throws StoreException {
     Path storePath = getStorePath(tail);
+    
+    LOG.info(storePath.toString());
     
     if (!Files.exists(storePath)) {
       return Optional.absent();

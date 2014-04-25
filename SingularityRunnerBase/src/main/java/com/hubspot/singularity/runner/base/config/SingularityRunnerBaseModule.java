@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.config;
 
+import java.util.Properties;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
@@ -22,8 +24,9 @@ public class SingularityRunnerBaseModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    configuration.bindPropertiesFile(rootPath, binder());
+    Properties properties = configuration.bindPropertiesFile(rootPath, binder());
     
+    bind(Properties.class).toInstance(properties);
     bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
   }
   

@@ -37,13 +37,11 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   private final ByteBuffer byteBuffer;
   private final LogForwarder logForwarder;
   private final SimpleStore store;
-  private final SingularityLogWatcherConfiguration configuration;
 
   public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, SimpleStore simpleStore, LogForwarder logForwarder) {
     super(configuration, Paths.get(tailMetadata.getFilename()).toAbsolutePath().getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
     this.tailMetadata = tailMetadata;
     this.logfile = Paths.get(tailMetadata.getFilename());
-    this.configuration = configuration;
     this.store = simpleStore;
     this.logForwarder = logForwarder;
     this.byteBuffer = ByteBuffer.allocate(configuration.getByteBufferCapacity());
@@ -78,7 +76,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
 
   public void watch() throws IOException, InterruptedException {
-    LOG.info("Watching file {} at position {} with a {} byte buffer and minimum read size {}", logfile, byteChannel.position(), byteBuffer.capacity(), configuration.getMinimimReadSizeBytes());
+    LOG.info("Watching file {} at position {} with a {} byte buffer", logfile, byteChannel.position(), byteBuffer.capacity());
 
     checkRead(tailMetadata.isFinished());
     
@@ -98,11 +96,6 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
 
   private void checkRead(boolean force) throws IOException {
-    if (!force && !shouldRead()) {
-      LOG.trace("Ignoring update to {}, not enough bytes available (minimum {})", logfile, configuration.getMinimimReadSizeBytes());
-      return;
-    }
-
     int bytesRead = 0;
     int bytesLeft = 0;
 
@@ -120,12 +113,6 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), Charset.forName("UTF-8"));
       logForwarder.forwardMessage(tailMetadata, string);
     }
-  }
-
-  private boolean shouldRead() throws IOException {
-    final long newBytesAvailable = byteChannel.size() - byteChannel.position();
-
-    return newBytesAvailable >= configuration.getMinimimReadSizeBytes();
   }
 
   private int read() throws IOException {

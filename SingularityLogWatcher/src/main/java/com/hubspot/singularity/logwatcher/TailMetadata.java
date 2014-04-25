@@ -1,8 +1,11 @@
 package com.hubspot.singularity.logwatcher;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TailMetadata {
@@ -11,6 +14,7 @@ public class TailMetadata {
   private final String tag;
   private final Map<String, String> extraFields;
   private final boolean finished;
+  private final Path path;
   
   @JsonCreator
   public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields, @JsonProperty("finished") boolean finished) {
@@ -18,6 +22,7 @@ public class TailMetadata {
     this.tag = tag;
     this.extraFields = extraFields;
     this.finished = finished;
+    this.path = Paths.get(filename);
   }
   
   @Override
@@ -45,6 +50,11 @@ public class TailMetadata {
     return true;
   }
 
+  @JsonIgnore
+  public Path getPath() {
+    return path;
+  }
+  
   public String getFilename() {
     return filename;
   }

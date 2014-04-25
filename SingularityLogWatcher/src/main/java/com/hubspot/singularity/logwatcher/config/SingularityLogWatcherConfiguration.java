@@ -11,7 +11,6 @@ import com.google.inject.name.Named;
 public class SingularityLogWatcherConfiguration {
 
   private final int byteBufferCapacity;
-  private final long minimimReadSizeBytes;
   private final long pollMillis;
   private final List<FluentdHost> fluentdHosts;
   private final Path metadataDirectory;
@@ -20,12 +19,11 @@ public class SingularityLogWatcherConfiguration {
   private final String storeSuffix;
   
   @Inject
-  public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, @Named(SingularityLogWatcherConfigurationLoader.MINIMUM_READ_SIZE_BYTES) String minimimReadSizeBytes,
+  public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity,
       @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
       @Named(SingularityLogWatcherConfigurationLoader.METADATA_DIRECTORY) String metadataDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, 
       @Named(SingularityLogWatcherConfigurationLoader.METADATA_SUFFIX) String metadataSuffix, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
-    this.minimimReadSizeBytes = Long.parseLong(minimimReadSizeBytes);
     this.pollMillis = Long.parseLong(pollMillis);
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
     this.storeSuffix = storeSuffix;
@@ -93,17 +91,13 @@ public class SingularityLogWatcherConfiguration {
     return byteBufferCapacity;
   }
 
-  public long getMinimimReadSizeBytes() {
-    return minimimReadSizeBytes;
-  }
-  
   public List<FluentdHost> getFluentdHosts() {
     return fluentdHosts;
   }
 
   @Override
   public String toString() {
-    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", minimimReadSizeBytes=" + minimimReadSizeBytes + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", metadataDirectory="
+    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", metadataDirectory="
         + metadataDirectory + ", storeDirectory=" + storeDirectory + ", metadataSuffix=" + metadataSuffix + ", storeSuffix=" + storeSuffix + "]";
   }
   

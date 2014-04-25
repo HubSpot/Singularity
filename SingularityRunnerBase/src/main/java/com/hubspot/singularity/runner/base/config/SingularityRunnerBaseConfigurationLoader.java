@@ -16,7 +16,7 @@ public class SingularityRunnerBaseConfigurationLoader {
   public static final String LOGGING_PATTERN = "logging.pattern";
   public static final String ROOT_LOG_PATH = "root.log.path";
   
-  protected void bindPropertiesFile(String configurationFilePath, Binder binder) {
+  protected Properties bindPropertiesFile(String configurationFilePath, Binder binder) {
     Properties properties = new Properties();
     bindDefaults(properties);
     try (BufferedReader br = Files.newBufferedReader(Paths.get(configurationFilePath), Charset.defaultCharset())) {
@@ -25,6 +25,7 @@ public class SingularityRunnerBaseConfigurationLoader {
       throw Throwables.propagate(t);
     }
     Names.bindProperties(binder, properties);
+    return properties;
   }
   
   protected void bindDefaults(Properties properties) {
