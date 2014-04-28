@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hubspot.singularity.logwatcher.LogForwarder;
-import com.hubspot.singularity.logwatcher.TailMetadata;
+import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class LogLogForwarder implements LogForwarder {
 
@@ -12,7 +12,7 @@ public class LogLogForwarder implements LogForwarder {
 
   @Override
   public void forwardMessage(TailMetadata tailMetadata, String line) {
-    LOG.info("--> {}, line: {}", tailMetadata, line);
+//    LOG.info("--> {}, line: {}", tailMetadata, line);
   }
 
 }

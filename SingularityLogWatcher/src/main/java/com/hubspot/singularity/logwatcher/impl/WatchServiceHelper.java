@@ -51,7 +51,6 @@ public abstract class WatchServiceHelper implements Closeable {
     }
   }
   
-  
   private WatchService createWatchService() {
     try {
       return FileSystems.getDefault().newWatchService();

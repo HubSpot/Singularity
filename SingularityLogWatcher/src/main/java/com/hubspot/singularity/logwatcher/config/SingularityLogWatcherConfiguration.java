@@ -13,22 +13,17 @@ public class SingularityLogWatcherConfiguration {
   private final int byteBufferCapacity;
   private final long pollMillis;
   private final List<FluentdHost> fluentdHosts;
-  private final Path metadataDirectory;
   private final Path storeDirectory;
-  private final String metadataSuffix;
   private final String storeSuffix;
   
   @Inject
   public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity,
       @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
-      @Named(SingularityLogWatcherConfigurationLoader.METADATA_DIRECTORY) String metadataDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, 
-      @Named(SingularityLogWatcherConfigurationLoader.METADATA_SUFFIX) String metadataSuffix, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix) {
+      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
     this.storeSuffix = storeSuffix;
-    this.metadataSuffix = metadataSuffix;
-    this.metadataDirectory = Paths.get(metadataDirectory);
     this.storeDirectory = Paths.get(storeDirectory);
   }
   
@@ -57,16 +52,8 @@ public class SingularityLogWatcherConfiguration {
     
   }
   
-  public Path getMetadataDirectory() {
-    return metadataDirectory;
-  }
-
   public Path getStoreDirectory() {
     return storeDirectory;
-  }
-
-  public String getMetadataSuffix() {
-    return metadataSuffix;
   }
 
   public String getStoreSuffix() {
@@ -97,8 +84,7 @@ public class SingularityLogWatcherConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", metadataDirectory="
-        + metadataDirectory + ", storeDirectory=" + storeDirectory + ", metadataSuffix=" + metadataSuffix + ", storeSuffix=" + storeSuffix + "]";
+    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix + "]";
   }
   
 }

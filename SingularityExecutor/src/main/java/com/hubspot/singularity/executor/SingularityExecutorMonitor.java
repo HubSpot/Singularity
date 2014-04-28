@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor;
 
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -307,16 +306,8 @@ public class SingularityExecutorMonitor {
   }
   
   private void cleanupTaskResources(SingularityExecutorTask task) {
-    Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(task.getTaskId());
-    final String pathToDelete = taskAppDirectoryPath.toAbsolutePath().toString();
-    
-    task.getLog().info("Deleting: {}", pathToDelete);
-    
-    try {
-      Runtime.getRuntime().exec(String.format("rm -rf %s", pathToDelete)).waitFor();
-    } catch (Throwable t) {
-      task.getLog().error("While deleting directory {}", pathToDelete, t);
-    }
+    task.cleanupTaskAppDirectory();
+    task.writeTailMetadata(true);
   }
   
   public enum KillState {

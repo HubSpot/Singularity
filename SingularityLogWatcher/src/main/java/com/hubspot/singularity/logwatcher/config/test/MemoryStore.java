@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.logwatcher.SimpleStore;
-import com.hubspot.singularity.logwatcher.TailMetadata;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
+import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class MemoryStore implements SimpleStore {
 

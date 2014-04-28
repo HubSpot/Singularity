@@ -9,7 +9,7 @@ import org.fluentd.logger.FluentLogger;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.logwatcher.LogForwarder;
-import com.hubspot.singularity.logwatcher.TailMetadata;
+import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class FluentdLogForwarder implements LogForwarder {
 

@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.util.List;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public interface SimpleStore extends Closeable {
 

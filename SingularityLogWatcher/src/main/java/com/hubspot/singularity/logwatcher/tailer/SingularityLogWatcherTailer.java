@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,11 +18,12 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
-import com.hubspot.singularity.logwatcher.TailMetadata;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.impl.WatchServiceHelper;
+import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class SingularityLogWatcherTailer extends WatchServiceHelper implements Closeable {
 
@@ -110,7 +110,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     }
 
     if (force && bytesLeft > 0) {
-      String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), Charset.forName("UTF-8"));
+      String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
       logForwarder.forwardMessage(tailMetadata, string);
     }
   }
@@ -129,7 +129,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
 
   private int processByteBufferAndReturnRemainingBytes() {
-    String string = new String(byteBuffer.array(), 0, byteBuffer.position(), Charset.forName("UTF-8"));
+    String string = new String(byteBuffer.array(), 0, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
 
     LOG.trace("{} had a string with size {}", logfile, string.length());
 

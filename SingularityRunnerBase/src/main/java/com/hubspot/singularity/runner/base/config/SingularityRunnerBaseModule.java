@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
@@ -28,6 +29,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     
     bind(Properties.class).toInstance(properties);
     bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
+    bind(SingularityRunnerBaseConfiguration.class).in(Scopes.SINGLETON);
   }
   
   @Provides

@@ -1,12 +1,12 @@
-package com.hubspot.singularity.logwatcher;
+package com.hubspot.singularity.runner.base.config;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.hash.Hashing;
+import com.hubspot.mesos.JavaUtils;
 
 public class TailMetadata {
 
@@ -14,7 +14,7 @@ public class TailMetadata {
   private final String tag;
   private final Map<String, String> extraFields;
   private final boolean finished;
-  private final Path path;
+  private final String filenameKey;
   
   @JsonCreator
   public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields, @JsonProperty("finished") boolean finished) {
@@ -22,7 +22,11 @@ public class TailMetadata {
     this.tag = tag;
     this.extraFields = extraFields;
     this.finished = finished;
-    this.path = Paths.get(filename);
+    this.filenameKey = generateFilenameKey(filename);
+  }
+  
+  private String generateFilenameKey(String filename) {
+    return Hashing.sha256().hashString(filename, JavaUtils.CHARSET_UTF8).toString();
   }
   
   @Override
@@ -51,8 +55,8 @@ public class TailMetadata {
   }
 
   @JsonIgnore
-  public Path getPath() {
-    return path;
+  public String getFilenameKey() {
+    return filenameKey;
   }
   
   public String getFilename() {
@@ -73,7 +77,7 @@ public class TailMetadata {
 
   @Override
   public String toString() {
-    return "TailMetadata [filename=" + filename + ", tag=" + tag + ", extraFields=" + extraFields + ", isFinished=" + finished + "]";
+    return "TailMetadata [filename=" + filename + ", tag=" + tag + ", extraFields=" + extraFields + ", finished=" + finished + ", filenameKey=" + filenameKey + "]";
   }
-  
+
 }

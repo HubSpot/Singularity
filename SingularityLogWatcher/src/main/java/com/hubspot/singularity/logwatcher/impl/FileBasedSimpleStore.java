@@ -23,24 +23,27 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.SimpleStore;
-import com.hubspot.singularity.logwatcher.TailMetadata;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
+import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleStore {
 
   private final static Logger LOG = LoggerFactory.getLogger(FileBasedSimpleStore.class);
 
-  private final SingularityLogWatcherConfiguration configuration;
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
+  private final SingularityLogWatcherConfiguration logWatcherConfiguration;
   private final ObjectMapper objectMapper;
   
   private final List<TailMetadataListener> listeners;
   
   @Inject
-  public FileBasedSimpleStore(SingularityLogWatcherConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
-    super(configuration, configuration.getMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
-    this.configuration = configuration;
+  public FileBasedSimpleStore(SingularityRunnerBaseConfiguration baseConfiguration, SingularityLogWatcherConfiguration logWatcherConfiguration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
+    super(logWatcherConfiguration, baseConfiguration.getMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
+    this.logWatcherConfiguration = logWatcherConfiguration;
+    this.baseConfiguration = baseConfiguration;
     this.objectMapper = objectMapper;
     
     this.listeners = Lists.newArrayList();
@@ -56,8 +59,8 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
 
   private boolean isMetadataFile(Path filename) {
-    if (!filename.toString().endsWith(configuration.getMetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getMetadataSuffix());
+    if (!filename.toString().endsWith(baseConfiguration.getMetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getMetadataSuffix());
       return false;
     }
     
@@ -70,7 +73,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
       return;
     }
     
-    Optional<TailMetadata> tail = read(filename.toAbsolutePath());
+    Optional<TailMetadata> tail = read(baseConfiguration.getMetadataDirectory().resolve(filename).toAbsolutePath());
       
     if (tail.isPresent()) {
       synchronized (listeners) {
@@ -81,16 +84,26 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     }
   }
 
-  @Override
-  public void markConsumed(TailMetadata tail) throws StoreException {
-    Path storePath = getStorePath(tail);
-    Path tailMetadataPath = getTailMetadataPath(tail);
+  private void delete(Path path) throws IOException {
+    boolean deleted = false;
     
     try {
-      Files.deleteIfExists(storePath);
-      Files.deleteIfExists(tailMetadataPath);
+      deleted = Files.deleteIfExists(path);
+    } finally {
+      LOG.trace("Deleted {} : {}", path, deleted);
+    }
+  }
+  
+  @Override
+  public void markConsumed(TailMetadata tail) throws StoreException {
+    Path tailMetadataPath = baseConfiguration.getTailMetadataPath(tail);
+    Path storePath = getStorePath(tail);
+    
+    try {
+      delete(tailMetadataPath);
+      delete(storePath);
     } catch (IOException ioe) {
-      throw new StoreException("Couldn't delete files", ioe);
+      throw new StoreException(String.format("Couldn't delete files %s and %s", tailMetadataPath, storePath), ioe);
     }
   }
 
@@ -105,19 +118,13 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     }
   }
   
-  private Path getTailMetadataPath(TailMetadata tail) {
-    return configuration.getMetadataDirectory().resolve(Paths.get(tail.getPath().getFileName() + configuration.getMetadataSuffix()));
-  }
-  
   private Path getStorePath(TailMetadata tail) {
-    return configuration.getStoreDirectory().resolve(Paths.get(tail.getPath().getFileName() + configuration.getStoreSuffix()));
+    return logWatcherConfiguration.getStoreDirectory().resolve(Paths.get(tail.getFilenameKey() + logWatcherConfiguration.getStoreSuffix()));
   }
   
   @Override
   public Optional<Long> getPosition(TailMetadata tail) throws StoreException {
     Path storePath = getStorePath(tail);
-    
-    LOG.info(storePath.toString());
     
     if (!Files.exists(storePath)) {
       return Optional.absent();
@@ -147,7 +154,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   public List<TailMetadata> getTails() {
     try {
       final List<TailMetadata> tails = Lists.newArrayList();
-      final DirectoryStream<Path> dirStream = Files.newDirectoryStream(configuration.getMetadataDirectory());
+      final DirectoryStream<Path> dirStream = Files.newDirectoryStream(baseConfiguration.getMetadataDirectory());
       final Iterator<Path> iterator = dirStream.iterator(); // are you fucking kidding me java7?
       
       while (iterator.hasNext()) {

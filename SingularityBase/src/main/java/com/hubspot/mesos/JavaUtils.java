@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -19,11 +20,12 @@ public class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
   
-  private static final String CHARSET_UTF = "UTF-8";
-
+  public static final String CHARSET_UTF8_STRING = "UTF-8";
+  public static final Charset CHARSET_UTF8 = Charset.forName(CHARSET_UTF8_STRING);
+  
   public static byte[] toBytes(String string) {
     try {
-      return string.getBytes(CHARSET_UTF);
+      return string.getBytes(CHARSET_UTF8_STRING);
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }
@@ -31,7 +33,7 @@ public class JavaUtils {
 
   public static String toString(byte[] bytes) {
     try {
-      return new String(bytes, CHARSET_UTF);
+      return new String(bytes, CHARSET_UTF8_STRING);
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }
@@ -39,7 +41,7 @@ public class JavaUtils {
 
   public static String urlEncode(String string) {
     try {
-      return URLEncoder.encode(string, CHARSET_UTF);
+      return URLEncoder.encode(string, CHARSET_UTF8_STRING);
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }
@@ -47,7 +49,7 @@ public class JavaUtils {
 
   public static String urlDecode(String string) {
     try {
-      return URLDecoder.decode(string, CHARSET_UTF);
+      return URLDecoder.decode(string, CHARSET_UTF8_STRING);
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }

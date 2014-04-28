@@ -1,10 +1,10 @@
 package com.hubspot.deploy;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 
 public class ExecutorDataBuilder {
   
@@ -15,13 +15,11 @@ public class ExecutorDataBuilder {
   private Optional<String> runningSentinel;
   private Optional<String> user;
   private List<String> extraCmdLineArgs;
-  
-  public ExecutorDataBuilder(String cmd) {
-    this(cmd, Lists.<EmbeddedArtifact> newArrayList(), Lists.<ExternalArtifact> newArrayList(), Lists.<Integer> newArrayList(), Optional.<String> absent(), Optional.<String> absent(), Lists.<String> newArrayList());
-  }
+  private Optional<String> loggingTag;
+  private Map<String, String> loggingExtraFields;
   
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
-      Optional<String> user, List<String> extraCmdLineArgs) {
+      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -29,10 +27,30 @@ public class ExecutorDataBuilder {
     this.runningSentinel = runningSentinel;
     this.user = user;
     this.extraCmdLineArgs = extraCmdLineArgs;
+    this.loggingTag = loggingTag;
+    this.loggingExtraFields = loggingExtraFields;
   }
   
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields);
+  }
+  
+  public Optional<String> getLoggingTag() {
+    return loggingTag;
+  }
+
+  public ExecutorDataBuilder setLoggingTag(Optional<String> loggingTag) {
+    this.loggingTag = loggingTag;
+    return this;
+  }
+
+  public Map<String, String> getLoggingExtraFields() {
+    return loggingExtraFields;
+  }
+
+  public ExecutorDataBuilder setLoggingExtraFields(Map<String, String> loggingExtraFields) {
+    this.loggingExtraFields = loggingExtraFields;
+    return this;
   }
 
   public String getCmd() {
@@ -108,6 +126,8 @@ public class ExecutorDataBuilder {
         .add("successfulExitCodes", successfulExitCodes)
         .add("runningSentinel", runningSentinel)
         .add("extraCmdLineArgs", extraCmdLineArgs)
+        .add("loggingTag", loggingTag)
+        .add("loggingExtraFields", loggingExtraFields)
         .toString();
   }
 }

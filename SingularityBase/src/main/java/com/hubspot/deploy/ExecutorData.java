@@ -2,6 +2,7 @@ package com.hubspot.deploy;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExecutorData {
@@ -20,16 +22,13 @@ public class ExecutorData {
   private final Optional<String> runningSentinel;
   private final Optional<String> user;
   private final List<String> extraCmdLineArgs;
+  private final Optional<String> loggingTag;
+  private final Map<String, String> loggingExtraFields;
   
-  @JsonCreator
-  public static ExecutorData fromString(String value) {
-    return new ExecutorData(value, Collections.<EmbeddedArtifact> emptyList(), Collections.<ExternalArtifact> emptyList(), null, null, null, Collections.<String> emptyList());
-  }
-
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts, 
       @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user, @JsonProperty("runningSentinel") Optional<String> runningSentinel, 
-      @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs) {
+      @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag, @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields) {
     this.cmd = cmd;
     this.embeddedArtifacts = nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = nonNullImmutable(externalArtifacts);
@@ -37,10 +36,19 @@ public class ExecutorData {
     this.successfulExitCodes = nonNullImmutable(successfulExitCodes);
     this.extraCmdLineArgs = nonNullImmutable(extraCmdLineArgs);
     this.runningSentinel = runningSentinel;
+    this.loggingTag = loggingTag;
+    this.loggingExtraFields = nonNullImmutable(loggingExtraFields);
   }
   
   public ExecutorDataBuilder toBuilder() {
-    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs);
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields);
+  }
+  
+  private <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
+    if (map == null) {
+      return Collections.emptyMap();
+    }
+    return ImmutableMap.copyOf(map);
   }
   
   private <T> List<T> nonNullImmutable(List<T> list) {
@@ -52,6 +60,14 @@ public class ExecutorData {
 
   public String getCmd() {
     return cmd;
+  }
+
+  public Optional<String> getLoggingTag() {
+    return loggingTag;
+  }
+
+  public Map<String, String> getLoggingExtraFields() {
+    return loggingExtraFields;
   }
 
   public List<EmbeddedArtifact> getEmbeddedArtifacts() {
@@ -88,6 +104,8 @@ public class ExecutorData {
         .add("successfulExitCodes", successfulExitCodes)
         .add("runningSentinel", runningSentinel)
         .add("extraCmdLineArgs", extraCmdLineArgs)
+        .add("loggingTag", loggingTag)
+        .add("loggingExtraFields", loggingExtraFields)
         .toString();
   }
 }

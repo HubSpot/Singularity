@@ -15,6 +15,9 @@ public class SingularityRunnerBaseConfigurationLoader {
 
   public static final String LOGGING_PATTERN = "logging.pattern";
   public static final String ROOT_LOG_PATH = "root.log.path";
+
+  public static final String METADATA_DIRECTORY = "logwatcher.metadata.directory";
+  public static final String METADATA_SUFFIX = "logwatcher.metadata.suffix";
   
   protected Properties bindPropertiesFile(String configurationFilePath, Binder binder) {
     Properties properties = new Properties();
@@ -30,6 +33,7 @@ public class SingularityRunnerBaseConfigurationLoader {
   
   protected void bindDefaults(Properties properties) {
     properties.put(LOGGING_PATTERN, JavaUtils.LOGBACK_LOGGING_PATTERN);
+    properties.put(METADATA_SUFFIX, ".tail");
   }
 
 }

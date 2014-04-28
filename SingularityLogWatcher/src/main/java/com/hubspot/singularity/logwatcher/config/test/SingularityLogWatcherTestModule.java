@@ -1,19 +1,14 @@
 package com.hubspot.singularity.logwatcher.config.test;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
-import com.hubspot.singularity.logwatcher.TailMetadata;
 import com.hubspot.singularity.logwatcher.impl.FileBasedSimpleStore;
 
 public class SingularityLogWatcherTestModule extends AbstractModule {
