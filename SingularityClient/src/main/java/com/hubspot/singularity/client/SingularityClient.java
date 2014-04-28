@@ -117,7 +117,7 @@ public class SingularityClient {
     try {
       return httpClient.prepareDelete(requestUri).execute().get();
     } catch (Exception e) {
-      throw new SingularityClientException("Failed to send delete request to Singularity due to exception", e);
+      throw new SingularityClientException("DELETE request to Singularity failed due to exception", e);
     }
   }
 
@@ -125,7 +125,7 @@ public class SingularityClient {
     try {
       return httpClient.prepareGet(requestUri).execute().get();
     } catch (Exception e) {
-      throw new SingularityClientException("Failed to delete Singularity request due to exception", e);
+      throw new SingularityClientException("GET request to Singularity failed due to exception", e);
     }
   }
 
@@ -133,7 +133,7 @@ public class SingularityClient {
     try {
       return httpClient.preparePost(requestUri).execute().get();
     } catch (Exception e) {
-      throw new SingularityClientException("Failed to POST due to exception", e);
+      throw new SingularityClientException("POST request to Singularity failed due to exception", e);
     }
   }
 
@@ -144,7 +144,7 @@ public class SingularityClient {
           .setBody(objectMapper.writeValueAsBytes(data))
           .execute().get();
     } catch (Exception e) {
-      throw new SingularityClientException("Failed to POST due to exception", e);
+      throw new SingularityClientException("POST request to Singularity failed due to exception", e);
     }
   }
   
