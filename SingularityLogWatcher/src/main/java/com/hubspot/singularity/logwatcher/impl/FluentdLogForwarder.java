@@ -9,15 +9,18 @@ import org.fluentd.logger.FluentLogger;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.logwatcher.LogForwarder;
+import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class FluentdLogForwarder implements LogForwarder {
 
   private final List<FluentLogger> fluentLoggers;
-
+  private final SingularityLogWatcherConfiguration configuration;
+  
   @Inject
-  public FluentdLogForwarder(List<FluentLogger> fluentLoggers) {
+  public FluentdLogForwarder(List<FluentLogger> fluentLoggers, SingularityLogWatcherConfiguration configuration) {
     this.fluentLoggers = fluentLoggers;
+    this.configuration = configuration;
   }
 
   @Override
@@ -25,7 +28,7 @@ public class FluentdLogForwarder implements LogForwarder {
     Collections.shuffle(fluentLoggers);
     
     for (FluentLogger logger : fluentLoggers) {
-      if (logger.log(tailMetadata.getTag(), getData(tailMetadata, line), getTimestamp(tailMetadata, line))) {
+      if (logger.log(getTag(tailMetadata.getTag()), getData(tailMetadata, line), getTimestamp(tailMetadata, line))) {
         return;
       }
     }
@@ -36,6 +39,10 @@ public class FluentdLogForwarder implements LogForwarder {
   // TODO
   private long getTimestamp(TailMetadata tailMetadata, String line) {
     return System.currentTimeMillis();
+  }
+  
+  private String getTag(String tailTag) {
+    return String.format("%s.%s", configuration.getFluentdTagPrefix(), tailTag);
   }
   
   private Map<String, Object> getData(TailMetadata tailMetadata, String line) {

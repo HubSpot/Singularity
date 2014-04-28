@@ -68,20 +68,23 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
   
   @Override
-  protected void processEvent(Kind<?> kind, Path filename) throws IOException {
+  protected boolean processEvent(Kind<?> kind, Path filename) throws IOException {
     if (!isMetadataFile(filename)) {
-      return;
+      return false;
     }
     
     Optional<TailMetadata> tail = read(baseConfiguration.getMetadataDirectory().resolve(filename).toAbsolutePath());
       
-    if (tail.isPresent()) {
-      synchronized (listeners) {
-        for (TailMetadataListener listener : listeners) {
-          listener.tailChanged(tail.get());
-        }
+    if (!tail.isPresent()) {
+      return false;
+    }
+    
+    synchronized (listeners) {
+      for (TailMetadataListener listener : listeners) {
+        listener.tailChanged(tail.get());
       }
     }
+    return true;
   }
 
   private void delete(Path path) throws IOException {

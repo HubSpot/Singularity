@@ -1,4 +1,4 @@
-package com.hubspot.singularity.logwatcher.config.test;
+package com.hubspot.singularity.logwatcher.impl;
 
 import org.slf4j.LoggerFactory;
 
@@ -7,11 +7,11 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
-import com.hubspot.singularity.logwatcher.impl.FileBasedSimpleStore;
 
-public class SingularityLogWatcherTestModule extends AbstractModule {
+public class SingularityLogWatcherImplModule extends AbstractModule {
 
   @Override
   protected void configure() {
@@ -21,9 +21,8 @@ public class SingularityLogWatcherTestModule extends AbstractModule {
     
     rootLogger.setLevel(Level.ALL);
     
-    bind(SimpleStore.class).to(FileBasedSimpleStore.class);
-    bind(LogForwarder.class).toInstance(new LogLogForwarder());
+    bind(SimpleStore.class).to(FileBasedSimpleStore.class).in(Scopes.SINGLETON);
+    bind(LogForwarder.class).to(FluentdLogForwarder.class).in(Scopes.SINGLETON);
   }
-  
-  
+
 }

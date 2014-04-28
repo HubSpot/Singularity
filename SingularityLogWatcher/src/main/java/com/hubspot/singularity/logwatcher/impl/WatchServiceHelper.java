@@ -79,7 +79,7 @@ public abstract class WatchServiceHelper implements Closeable {
     }
   }
 
-  protected abstract void processEvent(WatchEvent.Kind<?> kind, Path filename) throws IOException;
+  protected abstract boolean processEvent(WatchEvent.Kind<?> kind, Path filename) throws IOException;
   
   @SuppressWarnings("unchecked")
   private WatchEvent<Path> cast(WatchEvent<?> event) {
@@ -89,6 +89,8 @@ public abstract class WatchServiceHelper implements Closeable {
   private void processWatchKey(WatchKey watchKey) throws IOException {
     final long start = System.currentTimeMillis();
     final List<WatchEvent<?>> events = watchKey.pollEvents();
+    
+    int processed = 0;
     
     for (WatchEvent<?> event : events) {
       WatchEvent.Kind<?> kind = event.kind();
@@ -101,10 +103,12 @@ public abstract class WatchServiceHelper implements Closeable {
       WatchEvent<Path> ev = cast(event);
       Path filename = ev.context();
       
-      processEvent(kind, filename);
+      if (processEvent(kind, filename)) {
+        processed++;
+      }
     }
     
-    LOG.trace("Handled {} event(s) in {}", events.size(), JavaUtils.duration(start));
+    LOG.trace("Handled {} out of {} event(s) for {} in {}", processed, events.size(), watchDirectory, JavaUtils.duration(start));
   }
 
 }

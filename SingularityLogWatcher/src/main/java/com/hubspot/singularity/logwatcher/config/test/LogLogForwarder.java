@@ -12,7 +12,7 @@ public class LogLogForwarder implements LogForwarder {
 
   @Override
   public void forwardMessage(TailMetadata tailMetadata, String line) {
-//    LOG.info("--> {}, line: {}", tailMetadata, line);
+    LOG.info("--> {}, line: {}", tailMetadata, line);
   }
 
 }

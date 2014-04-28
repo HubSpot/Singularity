@@ -86,13 +86,15 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
 
   @Override
-  protected void processEvent(Kind<?> kind, Path filename) throws IOException {
+  protected boolean processEvent(Kind<?> kind, Path filename) throws IOException {
     if (!filename.equals(logfile.getFileName())) {
       LOG.trace("Ignoring a modification to {} (only care about {})", filename, logfile.getFileName());
-      return;
+      return true;
     }
 
     checkRead(false);
+  
+    return true;
   }
 
   private void checkRead(boolean force) throws IOException {

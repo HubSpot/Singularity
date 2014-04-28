@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherModule;
-import com.hubspot.singularity.logwatcher.config.test.SingularityLogWatcherTestModule;
 import com.hubspot.singularity.logwatcher.driver.SingularityLogWatcherDriver;
+import com.hubspot.singularity.logwatcher.impl.SingularityLogWatcherImplModule;
 
 public class SingularityLogWatcherRunner {
 
@@ -20,7 +20,7 @@ public class SingularityLogWatcherRunner {
   private SingularityLogWatcherRunner() {}
   
   public void run(String[] args) {
-    final Injector injector = Guice.createInjector(new SingularityLogWatcherModule(), new SingularityLogWatcherTestModule(args));
+    final Injector injector = Guice.createInjector(new SingularityLogWatcherModule(), new SingularityLogWatcherImplModule());
     
     final SingularityLogWatcherDriver driver = injector.getInstance(SingularityLogWatcherDriver.class);
     

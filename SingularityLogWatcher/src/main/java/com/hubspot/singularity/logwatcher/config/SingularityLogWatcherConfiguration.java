@@ -15,15 +15,17 @@ public class SingularityLogWatcherConfiguration {
   private final List<FluentdHost> fluentdHosts;
   private final Path storeDirectory;
   private final String storeSuffix;
+  private final String fluentdTagPrefix;
   
   @Inject
-  public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity,
+  public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
       @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
       @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
     this.storeSuffix = storeSuffix;
+    this.fluentdTagPrefix = fluentdTagPrefix;
     this.storeDirectory = Paths.get(storeDirectory);
   }
   
@@ -82,9 +84,14 @@ public class SingularityLogWatcherConfiguration {
     return fluentdHosts;
   }
 
+  public String getFluentdTagPrefix() {
+    return fluentdTagPrefix;
+  }
+
   @Override
   public String toString() {
-    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix + "]";
+    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
+        + ", fluentdTagPrefix=" + fluentdTagPrefix + "]";
   }
-  
+
 }

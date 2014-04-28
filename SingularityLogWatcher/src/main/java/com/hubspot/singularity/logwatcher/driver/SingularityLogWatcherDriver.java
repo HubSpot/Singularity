@@ -34,7 +34,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
   private final Map<TailMetadata, SingularityLogWatcherTailer> tailers;
   
   private volatile boolean shutdown;
-  private final Lock shutdownLock;
+  private final Lock tailersLock;
   
   @Inject
   public SingularityLogWatcherDriver(SimpleStore store, SingularityLogWatcherConfiguration configuration, LogForwarder logForwarder) {
@@ -44,7 +44,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     this.tailers = Maps.newConcurrentMap();
     this.tailService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherTailThread-%d").build());
     this.shutdown = false;
-    this.shutdownLock = new ReentrantLock();
+    this.tailersLock = new ReentrantLock();
   
     this.store.registerListener(this);
   }
@@ -94,7 +94,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     int success = 0;
     int total = 0;
     
-    shutdownLock.lock();
+    tailersLock.lock();
     
     try {
       if (shutdown) {
@@ -109,7 +109,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
         total++;
       }
     } finally {
-      shutdownLock.unlock();
+      tailersLock.unlock();
     }
         
     LOG.info("Started {} tail(s) out of {} in {}", success, total, JavaUtils.duration(start));
@@ -118,9 +118,9 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
   }
 
   public void markShutdown() {
-    shutdownLock.lock();
+    tailersLock.lock();
     this.shutdown = true;
-    shutdownLock.unlock();
+    tailersLock.unlock();
   }
   
   public void shutdown() {
@@ -163,7 +163,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
   
   @Override
   public void tailChanged(TailMetadata tailMetadata) {
-    shutdownLock.lock();
+    tailersLock.lock();
     
     try {
     
@@ -185,7 +185,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
       }
       
     } finally {
-      shutdownLock.unlock();
+      tailersLock.unlock();
     }
   }
 
