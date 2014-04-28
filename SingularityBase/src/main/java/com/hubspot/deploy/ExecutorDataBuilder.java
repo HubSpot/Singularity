@@ -31,6 +31,10 @@ public class ExecutorDataBuilder {
     this.loggingExtraFields = loggingExtraFields;
   }
   
+  public ExecutorDataBuilder() {
+    
+  }
+  
   public ExecutorData build() {
     return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields);
   }
