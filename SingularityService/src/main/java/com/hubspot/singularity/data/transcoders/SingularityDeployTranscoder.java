@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class SingularityDeployTranscoder extends CompressingTranscoder implements Transcoder<SingularityDeploy> {
+public class SingularityDeployTranscoder extends CompressingTranscoder<SingularityDeploy> {
 
   private final ObjectMapper objectMapper;
   
@@ -14,15 +14,16 @@ public class SingularityDeployTranscoder extends CompressingTranscoder implement
     super(configuration);
     this.objectMapper = objectMapper;
   }
-
-  @Override
-  public SingularityDeploy transcode(byte[] data) {
-    return SingularityDeploy.fromBytes(getMaybeUncompressedBytes(data), objectMapper);
-  }
   
   @Override
-  public byte[] toBytes(SingularityDeploy object) {
-    return getMaybeCompressedBytes(object.getAsBytes(objectMapper));
+  protected SingularityDeploy actualTranscode(byte[] data) {
+    return SingularityDeploy.fromBytes(data, objectMapper);
+  }
+
+
+  @Override
+  protected byte[] actualToBytes(SingularityDeploy object) {
+    return object.getAsBytes(objectMapper);
   }
   
 }

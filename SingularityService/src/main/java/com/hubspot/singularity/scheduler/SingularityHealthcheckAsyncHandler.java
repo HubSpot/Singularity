@@ -7,6 +7,7 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.Response;
@@ -20,12 +21,14 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final SingularityTask task;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
+  private final int maxHealthcheckResponseBodyBytes;
   
-  public SingularityHealthcheckAsyncHandler(SingularityHealthchecker healthchecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
+  public SingularityHealthcheckAsyncHandler(SingularityConfiguration configuration, SingularityHealthchecker healthchecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.abort = abort;
     this.task = task;
+    this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
     
     startTime = System.currentTimeMillis();
   }
@@ -35,7 +38,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     Optional<String> responseBody = Optional.absent();
     
     if (response.hasResponseBody()) {
-      responseBody = Optional.of(response.getResponseBody());
+      responseBody = Optional.of(response.getResponseBodyExcerpt(maxHealthcheckResponseBodyBytes));
     }
     
     saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent());

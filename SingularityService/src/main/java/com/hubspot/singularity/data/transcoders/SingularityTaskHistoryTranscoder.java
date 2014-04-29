@@ -2,11 +2,10 @@ package com.hubspot.singularity.data.transcoders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class SingularityTaskHistoryTranscoder extends CompressingTranscoder implements Transcoder<SingularityTaskHistory> {
+public class SingularityTaskHistoryTranscoder extends CompressingTranscoder<SingularityTaskHistory> {
 
   private final ObjectMapper objectMapper;
   
@@ -17,13 +16,13 @@ public class SingularityTaskHistoryTranscoder extends CompressingTranscoder impl
   }
 
   @Override
-  public SingularityTaskHistory transcode(byte[] data) {
-    return SingularityTaskHistory.fromBytes(getMaybeUncompressedBytes(data), objectMapper);
+  protected SingularityTaskHistory actualTranscode(byte[] data) {
+    return SingularityTaskHistory.fromBytes(data, objectMapper);
   }
-  
+
   @Override
-  public byte[] toBytes(SingularityTaskHistory object) throws SingularityJsonException {
-    return getMaybeCompressedBytes(object.getAsBytes(objectMapper));
+  protected byte[] actualToBytes(SingularityTaskHistory object) {
+    return object.getAsBytes(objectMapper);
   }
   
 }

@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityTask extends SingularityJsonObject {
+public class SingularityTask extends SingularityTaskIdHolder {
 
   private final SingularityTaskRequest taskRequest;
   private final SingularityTaskId taskId;
@@ -26,14 +26,11 @@ public class SingularityTask extends SingularityJsonObject {
   
   @JsonCreator
   public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("mesosTask") TaskInfo task) {
+    super(taskId);
     this.taskRequest = taskRequest;
     this.offer = offer;
     this.mesosTask = task;
     this.taskId = taskId;
-  }
-
-  public SingularityTaskId getTaskId() {
-    return taskId;
   }
 
   public SingularityTaskRequest getTaskRequest() {

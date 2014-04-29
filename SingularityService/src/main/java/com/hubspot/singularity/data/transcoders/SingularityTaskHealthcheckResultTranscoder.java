@@ -3,24 +3,26 @@ package com.hubspot.singularity.data.transcoders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class SingularityTaskHealthcheckResultTranscoder extends SingularityTaskIdHolderTranscoder<SingularityTaskHealthcheckResult> {
+public class SingularityTaskHealthcheckResultTranscoder extends SingularityCompressingTaskIdHolderTranscoder<SingularityTaskHealthcheckResult> {
 
   private final ObjectMapper objectMapper;
   
   @Inject
-  public SingularityTaskHealthcheckResultTranscoder(ObjectMapper objectMapper) {
+  public SingularityTaskHealthcheckResultTranscoder(SingularityConfiguration configuration, ObjectMapper objectMapper) {
+    super(configuration);
     this.objectMapper = objectMapper;
   }
 
   @Override
-  public byte[] toBytes(SingularityTaskHealthcheckResult object) {
-    return object.getAsBytes(objectMapper);
+  protected SingularityTaskHealthcheckResult actualTranscode(byte[] data) {
+    return SingularityTaskHealthcheckResult.fromBytes(data, objectMapper);
   }
 
   @Override
-  public SingularityTaskHealthcheckResult transcode(byte[] data) {
-    return SingularityTaskHealthcheckResult.fromBytes(data, objectMapper);
+  protected byte[] actualToBytes(SingularityTaskHealthcheckResult object) {
+    return object.getAsBytes(objectMapper);
   }
-  
+
 }

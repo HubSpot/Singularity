@@ -176,7 +176,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
   
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(this, taskManager, abort, task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(configuration, this, taskManager, abort, task);
     final Optional<String> uri = getHealthcheckUri(task);
     
     if (!uri.isPresent()) {

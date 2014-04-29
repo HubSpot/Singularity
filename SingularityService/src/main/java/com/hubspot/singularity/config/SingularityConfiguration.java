@@ -106,6 +106,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long considerTaskHealthyAfterRunningForSeconds = 5;
   
+  @NotNull
+  private int maxHealthcheckResponseBodyBytes = 8192;
+  
+  public int getMaxHealthcheckResponseBodyBytes() {
+    return maxHealthcheckResponseBodyBytes;
+  }
+
+  public void setMaxHealthcheckResponseBodyBytes(int maxHealthcheckResponseBodyBytes) {
+    this.maxHealthcheckResponseBodyBytes = maxHealthcheckResponseBodyBytes;
+  }
+
   public long getConsiderTaskHealthyAfterRunningForSeconds() {
     return considerTaskHealthyAfterRunningForSeconds;
   }
