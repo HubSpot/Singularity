@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -31,13 +30,14 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.LoadBalancerStateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityPendingTaskIdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHealthcheckResultTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskIdTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityLoadBalancerUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
@@ -55,8 +55,10 @@ public class TaskManager extends CuratorAsyncManager {
   private final static String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
   private final static String DIRECTORY_KEY = "DIRECTORY";
   private final static String TASK_KEY = "TASK";
+  
   private final static String LOAD_BALANCER_PRE_KEY = "LOAD_BALANCER_";
   
+  private final static String HEALTHCHECKS_PATH = "/healthchecks";
   private final static String UPDATES_PATH = "/updates";
   
   private final SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder;
@@ -65,12 +67,14 @@ public class TaskManager extends CuratorAsyncManager {
   private final SingularityTaskIdTranscoder taskIdTranscoder;
   private final SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder;
   private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
+  private final SingularityLoadBalancerUpdateTranscoder taskLoadBalancerUpdateTranscoder;
   private final ObjectMapper objectMapper;
   private final Function<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTaskFunction;
   
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder, SingularityTaskIdTranscoder taskIdTranscoder, 
-      SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder, SingularityTaskIdTranscoder taskIdTranscoder,
+      SingularityLoadBalancerUpdateTranscoder taskLoadBalancerHistoryUpdateTranscoder, SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder, 
+      SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
   
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -79,6 +83,7 @@ public class TaskManager extends CuratorAsyncManager {
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.taskIdTranscoder = taskIdTranscoder;
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
+    this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
     
     this.objectMapper = objectMapper;
     this.pendingTaskIdToPendingTaskFunction = new Function<SingularityPendingTaskId, SingularityPendingTask>() {
@@ -96,8 +101,16 @@ public class TaskManager extends CuratorAsyncManager {
     };
   }
   
-  private String getHealthcheckPath(SingularityTaskId taskId) {
+  private String getLastHealthcheckPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), LAST_HEALTHCHECK_KEY);
+  }
+  
+  private String getHealthcheckParentPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), HEALTHCHECKS_PATH);
+  }
+  
+  private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
+    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), Long.toString(healthcheck.getTimestamp()));
   }
   
   private String getTaskPath(SingularityTaskId taskId) {
@@ -152,13 +165,8 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(SCHEDULED_PATH_ROOT);
   }
   
-  public void saveLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType, Optional<LoadBalancerState> loadBalancerState) {
-    Optional<byte[]> data = Optional.absent();
-    if (loadBalancerState.isPresent()) {
-      data = Optional.of(LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER.toBytes(loadBalancerState.get()));
-    }
-    
-    save(getLoadBalancerStatePath(taskId, requestType), data);
+  public void saveLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType, SingularityLoadBalancerUpdate lbUpdate) {
+    save(getLoadBalancerStatePath(taskId, requestType), Optional.of(lbUpdate.getAsBytes(objectMapper)));
   }
 
   public void updateTaskDirectory(SingularityTaskId taskId, String directory) {
@@ -170,7 +178,10 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
-    save(getHealthcheckPath(healthcheckResult.getTaskId()), Optional.of(healthcheckResult.getAsBytes(objectMapper)));
+    final Optional<byte[]> bytes = Optional.of(healthcheckResult.getAsBytes(objectMapper));
+  
+    save(getHealthcheckPath(healthcheckResult), bytes);
+    save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
   }
   
   public void persistScheduleTasks(List<SingularityPendingTask> tasks) {
@@ -257,14 +268,20 @@ public class TaskManager extends CuratorAsyncManager {
     return map;
   }
   
-  public Optional<SingularityTaskHealthcheckResult> getHealthcheckResult(SingularityTaskId taskId) {
-    return getData(getHealthcheckPath(taskId), healthcheckResultTranscoder);
+  public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {
+    List<SingularityTaskHealthcheckResult> healthcheckResults = getAsyncChildren(getHealthcheckParentPath(taskId), healthcheckResultTranscoder);
+    Collections.sort(healthcheckResults);
+    return healthcheckResults;
   }
   
-  public Map<SingularityTaskId, SingularityTaskHealthcheckResult> getHealthcheckResults(Collection<SingularityTaskId> taskIds) {
+  public Optional<SingularityTaskHealthcheckResult> getLastHealthcheck(SingularityTaskId taskId) {
+    return getData(getLastHealthcheckPath(taskId), healthcheckResultTranscoder);
+  }
+  
+  public Map<SingularityTaskId, SingularityTaskHealthcheckResult> getLastHealthcheck(Collection<SingularityTaskId> taskIds) {
     List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
     for (SingularityTaskId taskId : taskIds) {
-      paths.add(getHealthcheckPath(taskId));
+      paths.add(getLastHealthcheckPath(taskId));
     }
     
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("healthchecks_by_ids", paths, healthcheckResultTranscoder);
@@ -332,15 +349,26 @@ public class TaskManager extends CuratorAsyncManager {
     
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
     Optional<String> directory = getDirectory(taskId);
-    Optional<SingularityTaskHealthcheckResult> lastHealthcheckResult = getHealthcheckResult(taskId);
-    Optional<LoadBalancerState> addLoadBalancerState = getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
-    Optional<LoadBalancerState> removeLoadBalancerState = getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
+    List<SingularityTaskHealthcheckResult> healthchecks = getHealthcheckResults(taskId);
     
-    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, lastHealthcheckResult, task.get(), addLoadBalancerState, removeLoadBalancerState));
+    List<SingularityLoadBalancerUpdate> loadBalancerUpdates = Lists.newArrayListWithCapacity(2);
+    
+    checkLoadBalancerHistory(loadBalancerUpdates, taskId, LoadBalancerRequestType.ADD);
+    checkLoadBalancerHistory(loadBalancerUpdates, taskId, LoadBalancerRequestType.REMOVE);
+    
+    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, healthchecks, task.get(), loadBalancerUpdates));
   }
   
-  public Optional<LoadBalancerState> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
-    return getData(getLoadBalancerStatePath(taskId, requestType), LoadBalancerStateTranscoder.LOAD_BALANCER_STATE_TRANSCODER);
+  private void checkLoadBalancerHistory(List<SingularityLoadBalancerUpdate> loadBalancerUpdates, SingularityTaskId taskId, LoadBalancerRequestType lbRequestType) {
+    Optional<SingularityLoadBalancerUpdate> lbHistory = getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+  
+    if (lbHistory.isPresent()) {
+      loadBalancerUpdates.add(lbHistory.get());
+    }
+  }
+  
+  public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
+    return getData(getLoadBalancerStatePath(taskId, requestType), taskLoadBalancerUpdateTranscoder);
   }
   
   public Optional<SingularityTask> getActiveTask(String taskId) {

@@ -20,6 +20,7 @@ import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
@@ -181,7 +182,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     }
     
     if (hasHealthcheck(task)) {
-      Optional<SingularityTaskHealthcheckResult> healthCheck = taskManager.getHealthcheckResult(task.getTaskId());
+      Optional<SingularityTaskHealthcheckResult> healthCheck = taskManager.getLastHealthcheck(task.getTaskId());
       
       if (!healthCheck.isPresent()) {
         return CheckTaskState.CHECK_IF_OVERDUE;
@@ -197,28 +198,27 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
       return CheckTaskState.HEALTHY;
     } 
     
-    Optional<LoadBalancerState> lbState = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
+    Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
+    SingularityLoadBalancerUpdate newLbUpdate = null;
     
-    if (!lbState.isPresent()) {
-      lbState = lbClient.enqueue(task.getTaskId().getId(), task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
+    if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
+      newLbUpdate = lbClient.enqueue(task.getTaskId().getId(), task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
     } else {
-      Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbState.get());
+      Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbUpdate.get().getLoadBalancerState());
       
       if (maybeCheckTaskState.isPresent()) {
         return maybeCheckTaskState.get();
       }
       
-      lbState = lbClient.getState(task.getTaskId().getId());
+      newLbUpdate = lbClient.getState(task.getTaskId().getId());
     }
     
-    if (lbState.isPresent()) {
-      taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD, lbState);
+    taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD, newLbUpdate);
       
-      Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbState.get());
+    Optional<CheckTaskState> maybeCheckTaskState = checkLbState(newLbUpdate.getLoadBalancerState());
       
-      if (maybeCheckTaskState.isPresent()) {
-        return maybeCheckTaskState.get();
-      }
+    if (maybeCheckTaskState.isPresent()) {
+      return maybeCheckTaskState.get();
     }
     
     return CheckTaskState.LB_IN_PROGRESS_CHECK_AGAIN;
@@ -232,6 +232,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     case FAILED:
       return Optional.of(CheckTaskState.UNHEALTHY_KILL_TASK);
     case CANCELING:
+    case UNKNOWN:
     case WAITING:
       break;
     }

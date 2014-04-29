@@ -19,12 +19,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -143,7 +143,7 @@ public class RequestResource {
     validator.checkDeploy(request, pendingDeploy);
 
     SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, pendingDeploy.getId(), System.currentTimeMillis(), user);
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<LoadBalancerState> absent());
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING);
     
     if (deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED) {
       throw WebExceptions.conflict("Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
@@ -156,7 +156,7 @@ public class RequestResource {
     }
     
     if (!request.isDeployable()) {
-      deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED, Optional.<String> absent(), deployMarker.getTimestamp()));
+      deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED));
       
       deployManager.deletePendingDeploy(pendingDeployObj);
     }

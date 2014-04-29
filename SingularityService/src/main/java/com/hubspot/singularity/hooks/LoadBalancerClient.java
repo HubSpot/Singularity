@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityLoadBalancerResponse;
 import com.hubspot.singularity.SingularityLoadBalancerService;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
@@ -60,13 +61,13 @@ public class LoadBalancerClient {
     return String.format(OPERATION_URI, loadBalancerUri, loadBalanceRequestId);
   }
 
-  public Optional<LoadBalancerState> getState(String loadBalancerRequestId) {
+  public SingularityLoadBalancerUpdate getState(String loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
     
     final Request request = httpClient.prepareGet(uri)
       .build();
     
-    return request(loadBalancerRequestId, request, Optional.<LoadBalancerState> absent());
+    return request(loadBalancerRequestId, request, LoadBalancerState.UNKNOWN);
   }
   
   private SingularityLoadBalancerResponse readResponse(Response response)  {
@@ -76,12 +77,15 @@ public class LoadBalancerClient {
       throw Throwables.propagate(e);
     }
   }
-  
-  private Optional<LoadBalancerState> request(String loadBalancerRequestId, Request request, Optional<LoadBalancerState> onFailure) {
-    Optional<LoadBalancerState> returnState = Optional.absent();
-    
+
+  private SingularityLoadBalancerUpdate request(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
     final long start = System.currentTimeMillis();
+    final LoadBalancerState result = actualRequest(loadBalancerRequestId, request, onFailure);
+    LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, result, JavaUtils.duration(start));
+    return new SingularityLoadBalancerUpdate(result, loadBalancerRequestId, start);
+  }
     
+  private LoadBalancerState actualRequest(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
     try {
       LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
       
@@ -91,25 +95,21 @@ public class LoadBalancerClient {
       
       LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
       
-      if (isSuccess(response)) {
-        returnState = Optional.of(readResponse(response).getLoadBalancerState());
-      } else {
-        returnState = onFailure;
+      if (!isSuccess(response)) {
+        return onFailure;
       }
       
+      return readResponse(response).getLoadBalancerState();
     } catch (TimeoutException te) {
       LOG.trace("LB {} request {} timed out after waiting {}", request.getMethod(), loadBalancerRequestId, JavaUtils.durationFromMillis(loadBalancerTimeoutMillis));
+      return LoadBalancerState.UNKNOWN;
     } catch (Throwable t) {
       LOG.error("LB {} request {} to {} threw error", request.getMethod(), loadBalancerRequestId, request.getUrl(), t);
-      returnState = onFailure;
-    } finally {
-      LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, returnState, JavaUtils.duration(start));
+      return onFailure;
     }
-    
-    return returnState;
   }
   
-  public Optional<LoadBalancerState> enqueue(String loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
+  public SingularityLoadBalancerUpdate enqueue(String loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
     final SingularityLoadBalancerService lbService = SingularityLoadBalancerService.fromRequestAndDeploy(request, deploy);
     
     final List<String> addUpstreams = transformTasksToUpstreams(add);
@@ -122,7 +122,7 @@ public class LoadBalancerClient {
       .setBody(loadBalancerRequest.getAsBytes(objectMapper))
       .build();
     
-    return request(loadBalancerRequestId, httpRequest, Optional.of(LoadBalancerState.FAILED));
+    return request(loadBalancerRequestId, httpRequest, LoadBalancerState.FAILED);
   }
   
   private boolean isSuccess(Response response) {
@@ -143,13 +143,13 @@ public class LoadBalancerClient {
     return upstreams;
   }
   
-  public Optional<LoadBalancerState> cancel(String loadBalancerRequestId) {
+  public SingularityLoadBalancerUpdate cancel(String loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
     
     final Request request = httpClient.prepareDelete(uri)
         .build();
     
-    return request(uri, request, Optional.<LoadBalancerState> absent());
+    return request(uri, request, LoadBalancerState.UNKNOWN);
   }
   
 }

@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -245,17 +246,18 @@ public class SingularityCleaner {
   }
   
   private CheckLBState checkLbState(SingularityTaskId taskId) {
-    Optional<LoadBalancerState> lbAddState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+    Optional<SingularityLoadBalancerUpdate> lbAddUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
     
-    if (!lbAddState.isPresent() || lbAddState.get() != LoadBalancerState.SUCCESS) {
+    if (!lbAddUpdate.isPresent() || lbAddUpdate.get().getLoadBalancerState() != LoadBalancerState.SUCCESS) {
       return CheckLBState.NOT_LOAD_BALANCED;
     }
     
-    Optional<LoadBalancerState> lbRemoveState = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
-     
+    Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
+    SingularityLoadBalancerUpdate lbRemoveUpdate = null;
+    
     final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(taskId, LoadBalancerRequestType.REMOVE);
       
-    if (!lbRemoveState.isPresent()) {
+    if (!maybeLbRemoveUpdate.isPresent() || maybeLbRemoveUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
       final Optional<SingularityTask> task = taskManager.getTask(taskId);
       
       if (!task.isPresent()) {
@@ -263,26 +265,27 @@ public class SingularityCleaner {
         return CheckLBState.MISSING_TASK;
       }
       
-      lbRemoveState = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
+      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
       
-      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
-    } else if (lbRemoveState.get() == LoadBalancerState.WAITING) {
-      lbRemoveState = lbClient.getState(loadBalancerRequestId);
+      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
+    } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == LoadBalancerState.WAITING) {
+      lbRemoveUpdate = lbClient.getState(loadBalancerRequestId);
 
-      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveState);
+      taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
+    } else {
+      lbRemoveUpdate = maybeLbRemoveUpdate.get();
     }
     
-    if (lbRemoveState.isPresent()) {
-      switch (lbRemoveState.get()) {
-      case FAILED:
-      case CANCELED:
-      case CANCELING:
-        LOG.error("LB request {} is in an invalid, unexpected state {}", loadBalancerRequestId, lbRemoveState.get());
-      case SUCCESS:
-        return CheckLBState.DONE;
-      case WAITING:
-        LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
-      }
+    switch (lbRemoveUpdate.getLoadBalancerState()) {
+    case FAILED:
+    case CANCELED:
+    case CANCELING:
+      LOG.error("LB request {} is in an invalid, unexpected state {}", loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+    case SUCCESS:
+      return CheckLBState.DONE;
+    case UNKNOWN:
+    case WAITING:
+      LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
     }
     
     return CheckLBState.WAITING;

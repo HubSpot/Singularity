@@ -78,7 +78,7 @@ public class SingularityDeployHealthHelper {
   }
   
   private DeployHealth getHealthCheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks) {
-    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getHealthcheckResults(matchingActiveTasks);
+    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
       SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);

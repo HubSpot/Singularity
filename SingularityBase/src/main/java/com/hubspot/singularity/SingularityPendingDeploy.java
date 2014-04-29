@@ -10,7 +10,8 @@ import com.google.common.base.Optional;
 public class SingularityPendingDeploy extends SingularityJsonObject {
 
   private final SingularityDeployMarker deployMarker;
-  private final Optional<LoadBalancerState> loadBalancerState;
+  private final Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate;
+  private final DeployState currentDeployState;
   
   public static SingularityPendingDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
@@ -21,22 +22,28 @@ public class SingularityPendingDeploy extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityPendingDeploy(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("loadBalancerState") Optional<LoadBalancerState> loadBalancerState) {
+  public SingularityPendingDeploy(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("lastLoadBalancerUpdate") Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate,
+      @JsonProperty("currentDeployState") DeployState currentDeployState) {
     this.deployMarker = deployMarker;
-    this.loadBalancerState = loadBalancerState;
+    this.lastLoadBalancerUpdate = lastLoadBalancerUpdate;
+    this.currentDeployState = currentDeployState;
   }
 
   public SingularityDeployMarker getDeployMarker() {
     return deployMarker;
   }
 
-  public Optional<LoadBalancerState> getLoadBalancerState() {
-    return loadBalancerState;
+  public Optional<SingularityLoadBalancerUpdate> getLastLoadBalancerUpdate() {
+    return lastLoadBalancerUpdate;
+  }
+
+  public DeployState getCurrentDeployState() {
+    return currentDeployState;
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingDeploy [deployMarker=" + deployMarker + ", loadBalancerState=" + loadBalancerState + "]";
+    return "SingularityPendingDeploy [deployMarker=" + deployMarker + ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate + ", currentDeployState=" + currentDeployState + "]";
   }
  
 }
