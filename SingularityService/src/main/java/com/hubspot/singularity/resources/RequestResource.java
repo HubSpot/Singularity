@@ -131,7 +131,9 @@ public class RequestResource {
       pendingDeploy = fillDeploy(requestDeployState.get().getPendingDeploy());
     }
     
-    return new SingularityRequestParent(request, requestDeployState, activeDeploy, pendingDeploy);
+    Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(request.getId());
+    
+    return new SingularityRequestParent(request, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState);
   }
   
   @POST
@@ -280,7 +282,7 @@ public class RequestResource {
     
     for (SingularityRequest request : requests) {
       Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(request.getId()));
-      parents.add(new SingularityRequestParent(request, deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent()));
+      parents.add(new SingularityRequestParent(request, deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(), Optional.<SingularityPendingDeploy> absent()));
     }
     
     return parents;  
