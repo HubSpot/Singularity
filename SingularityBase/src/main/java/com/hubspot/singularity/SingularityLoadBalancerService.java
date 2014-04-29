@@ -21,7 +21,7 @@ public class SingularityLoadBalancerService extends SingularityJsonObject {
     final List<String> owners = request.getOwners().or(Collections.<String>emptyList());
     final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
 
-    return new SingularityLoadBalancerService(request.getId(), owners, deploy.getLoadBalancerBaseUri().get(), loadBalancerGroups, Optional.<Map<String, Object>>absent());
+    return new SingularityLoadBalancerService(request.getId(), owners, deploy.getServiceBasePath().get(), loadBalancerGroups, Optional.<Map<String, Object>>absent());
   }
   
   public static SingularityLoadBalancerService fromTaskRequest(SingularityTaskRequest taskRequest) {

@@ -34,12 +34,12 @@ public class SingularityDeployBuilder {
   
   private Optional<Long> considerHealthyAfterRunningForSeconds;
 
-  private Optional<String> loadBalancerBaseUri;
+  private Optional<String> serviceBasePath;
   private Optional<List<String>> loadBalancerGroups;
   
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, 
-        healthcheckTimeoutSeconds, loadBalancerBaseUri, loadBalancerGroups, considerHealthyAfterRunningForSeconds);
+        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds);
   }
 
   public String getRequestId() {
@@ -195,12 +195,12 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<String> getLoadBalancerBaseUri() {
-    return loadBalancerBaseUri;
+  public Optional<String> getServiceBasePath() {
+    return serviceBasePath;
   }
 
-  public SingularityDeployBuilder setLoadBalancerBaseUri(Optional<String> loadBalancerBaseUri) {
-    this.loadBalancerBaseUri = loadBalancerBaseUri;
+  public SingularityDeployBuilder setServiceBasePath(Optional<String> serviceBasePath) {
+    this.serviceBasePath = serviceBasePath;
     return this;
   }
 
@@ -218,7 +218,7 @@ public class SingularityDeployBuilder {
     return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId="
         + customExecutorId + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds="
         + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds="
-        + considerHealthyAfterRunningForSeconds + ", loadBalancerBaseUri=" + loadBalancerBaseUri + ", loadBalancerGroups=" + loadBalancerGroups + "]";
+        + considerHealthyAfterRunningForSeconds + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + "]";
   }
 
 }

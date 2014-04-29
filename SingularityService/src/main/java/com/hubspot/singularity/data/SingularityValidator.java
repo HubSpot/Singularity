@@ -80,7 +80,7 @@ public class SingularityValidator {
     
     if (request.isLoadBalanced()) {
       check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
-      check(deploy.getLoadBalancerBaseUri().isPresent(), "Load balanced requests must have a load balancer base uri");
+      check(deploy.getServiceBasePath().isPresent(), "Load balanced requests must provide the web service base path");
     }
     
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 

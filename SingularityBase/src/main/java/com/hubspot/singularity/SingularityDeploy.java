@@ -42,7 +42,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   
   private final Optional<Long> considerHealthyAfterRunningForSeconds;
 
-  private final Optional<String> loadBalancerBaseUri;
+  private final Optional<String> serviceBasePath;
   private final Optional<List<String>> loadBalancerGroups;
   
   public static SingularityDeployBuilder newBuilder() {
@@ -62,7 +62,7 @@ public class SingularityDeploy extends SingularityJsonObject {
       @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
-      @JsonProperty("loadBalancerBaseUri") Optional<String> loadBalancerBaseUri, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds) {
+      @JsonProperty("serviceBasePath") Optional<String> serviceBasePath, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds) {
     this.requestId = requestId;
     
     this.command = command;
@@ -87,7 +87,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     
     this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
 
-    this.loadBalancerBaseUri = loadBalancerBaseUri;
+    this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
   }
   
@@ -176,8 +176,8 @@ public class SingularityDeploy extends SingularityJsonObject {
     return healthcheckTimeoutSeconds;
   }
 
-  public Optional<String> getLoadBalancerBaseUri() {
-    return loadBalancerBaseUri;
+  public Optional<String> getServiceBasePath() {
+    return serviceBasePath;
   }
   
   public Optional<Long> getConsiderHealthyAfterRunningForSeconds() {
@@ -193,7 +193,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId=" + customExecutorId
         + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds
         + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds
-        + ", loadBalancerBaseUri=" + loadBalancerBaseUri + ", loadBalancerGroups=" + loadBalancerGroups + "]";
+        + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + "]";
   }
 
 }
