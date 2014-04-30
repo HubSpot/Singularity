@@ -80,12 +80,34 @@ public class LoadBalancerClient {
 
   private SingularityLoadBalancerUpdate request(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
     final long start = System.currentTimeMillis();
-    final LoadBalancerState result = actualRequest(loadBalancerRequestId, request, onFailure);
+    final LoadBalancerUpdateHolder result = actualRequest(loadBalancerRequestId, request, onFailure);
     LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, result, JavaUtils.duration(start));
-    return new SingularityLoadBalancerUpdate(result, loadBalancerRequestId, start);
+    return new SingularityLoadBalancerUpdate(result.state, loadBalancerRequestId, result.message, start);
   }
+
+  private static class LoadBalancerUpdateHolder {
     
-  private LoadBalancerState actualRequest(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
+    private Optional<String> message;
+    private final LoadBalancerState state;
+    
+    public LoadBalancerUpdateHolder(LoadBalancerState state) {
+      this.message = Optional.absent();
+      this.state = state;
+    }
+
+    public LoadBalancerUpdateHolder setMessage(Optional<String> message) {
+      this.message = message;
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return "LoadBalancerUpdateHolder [message=" + message + ", state=" + state + "]";
+    }
+       
+  }
+  
+  private LoadBalancerUpdateHolder actualRequest(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
     try {
       LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
       
@@ -96,16 +118,18 @@ public class LoadBalancerClient {
       LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
       
       if (!isSuccess(response)) {
-        return onFailure;
+        return new LoadBalancerUpdateHolder(onFailure);
       }
       
-      return readResponse(response).getLoadBalancerState();
+      SingularityLoadBalancerResponse lbResponse = readResponse(response);
+      
+      return new LoadBalancerUpdateHolder(lbResponse.getLoadBalancerState()).setMessage(lbResponse.getMessage());
     } catch (TimeoutException te) {
       LOG.trace("LB {} request {} timed out after waiting {}", request.getMethod(), loadBalancerRequestId, JavaUtils.durationFromMillis(loadBalancerTimeoutMillis));
-      return LoadBalancerState.UNKNOWN;
+      return new LoadBalancerUpdateHolder(LoadBalancerState.UNKNOWN);
     } catch (Throwable t) {
       LOG.error("LB {} request {} to {} threw error", request.getMethod(), loadBalancerRequestId, request.getUrl(), t);
-      return onFailure;
+      return new LoadBalancerUpdateHolder(onFailure);
     }
   }
   

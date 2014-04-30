@@ -48,4 +48,5 @@ public class SingularityLoadBalancerResponse extends SingularityJsonObject {
         ", message=" + message +
         ']';
   }
+  
 }
