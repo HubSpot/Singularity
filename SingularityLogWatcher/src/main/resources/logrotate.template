@@ -1,0 +1,12 @@
+{{{ logfile }}} 
+
+{
+  olddir {{{ olddir }}}
+  compress
+  copytruncate
+  nomail
+  nosharedscripts
+  rotate 10000
+  dateext
+  notifempty
+}

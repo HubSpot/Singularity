@@ -1,21 +1,18 @@
 package com.hubspot.singularity.executor;
 
-import java.io.BufferedWriter;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.github.mustachejava.Mustache;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
+import com.hubspot.singularity.runner.base.config.TemplateManagerBase;
 
 @Singleton
-public class TemplateManager {
+public class TemplateManager extends TemplateManagerBase {
   
   private final Mustache runnerTemplate;
   private final Mustache environmentTemplate;
@@ -27,14 +24,6 @@ public class TemplateManager {
     this.environmentTemplate = environmentTemplate;
   }
   
-  private void writeTemplate(Path path, Mustache template, Object context) {
-    try (final BufferedWriter writer = Files.newBufferedWriter(path, Charset.defaultCharset())) {
-      template.execute(writer, context);
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
   public void writeRunnerScript(Path destination, RunnerContext context) {
     writeTemplate(destination, runnerTemplate, context);
   }

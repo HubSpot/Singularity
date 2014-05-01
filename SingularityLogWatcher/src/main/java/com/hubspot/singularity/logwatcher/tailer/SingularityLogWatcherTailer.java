@@ -11,18 +11,22 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.impl.WatchServiceHelper;
+import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateContext;
+import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
 import com.hubspot.singularity.runner.base.config.TailMetadata;
 
 public class SingularityLogWatcherTailer extends WatchServiceHelper implements Closeable {
@@ -37,10 +41,12 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   private final ByteBuffer byteBuffer;
   private final LogForwarder logForwarder;
   private final SimpleStore store;
+  private final LogrotateTemplateManager logrotateTemplateManager;;
   
-  public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, SimpleStore simpleStore, LogForwarder logForwarder) {
+  public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, LogrotateTemplateManager logrotateTemplateManager, SimpleStore simpleStore, LogForwarder logForwarder) {
     super(configuration, Paths.get(tailMetadata.getFilename()).toAbsolutePath().getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
     this.tailMetadata = tailMetadata;
+    this.logrotateTemplateManager = logrotateTemplateManager;
     this.logfile = Paths.get(tailMetadata.getFilename());
     this.store = simpleStore;
     this.logForwarder = logForwarder;
@@ -129,8 +135,31 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     }
   }
   
-  private void logrotate() {
+  private void logrotate() throws IOException {
+    Path tempFilePath = Files.createTempFile(null, ".logrotate");
     
+    logrotateTemplateManager.writeRunnerScript(tempFilePath.toAbsolutePath(), 
+        new LogrotateTemplateContext(getConfiguration().getS3QueueDirectory().toAbsolutePath().toString(), logfile.toAbsolutePath().toString()));
+    List<String> command = ImmutableList.of("logrotate", "-f", "-v", tempFilePath.toAbsolutePath().toString());
+    
+    ProcessBuilder processBuilder = new ProcessBuilder(command);
+    processBuilder.inheritIO();
+    
+    LOG.debug("Logrotating {} by calling {}", logfile, command);
+    
+    try {
+      int exitCode = processBuilder.start().waitFor();
+      
+      if (exitCode != 0) {
+        // TODO hadnle failed log rotate
+        
+      }
+    } catch (InterruptedException ie) {
+      throw Throwables.propagate(ie);
+    }
+    // TODO handle this.
+    byteChannel.position(0);
+    updatePosition(0);
   }
   
   private int read() throws IOException {

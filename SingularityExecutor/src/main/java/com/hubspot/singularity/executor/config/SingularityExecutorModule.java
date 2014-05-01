@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor.config;
 
-import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.google.inject.AbstractModule;
@@ -37,12 +36,6 @@ public class SingularityExecutorModule extends AbstractModule {
   @Named(ENVIRONMENT_TEMPLATE)
   public Mustache providesEnvironmentTemplate(MustacheFactory factory) {
     return factory.compile(ENVIRONMENT_TEMPLATE);
-  }
-  
-  @Provides
-  @Singleton
-  public MustacheFactory providesMustacheFactory() {
-    return new DefaultMustacheFactory();
   }
   
 }

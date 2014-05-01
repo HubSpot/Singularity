@@ -4,6 +4,8 @@ import java.util.Properties;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.MustacheFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -40,6 +42,12 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());
     return mapper;
+  }
+
+  @Provides
+  @Singleton
+  public MustacheFactory providesMustacheFactory() {
+    return new DefaultMustacheFactory();
   }
 
 }
