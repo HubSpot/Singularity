@@ -178,8 +178,8 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
-    final Optional<byte[]> bytes = Optional.of(healthcheckResult.getAsBytes(objectMapper));
-  
+    final Optional<byte[]> bytes = Optional.of(healthcheckResultTranscoder.toBytes(healthcheckResult));
+    
     save(getHealthcheckPath(healthcheckResult), bytes);
     save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
   }
