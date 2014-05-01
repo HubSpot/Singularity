@@ -16,17 +16,22 @@ public class SingularityLogWatcherConfiguration {
   private final Path storeDirectory;
   private final String storeSuffix;
   private final String fluentdTagPrefix;
+  private final long logrotateAfterBytes;
+  private final Path s3QueueDirectory;
   
   @Inject
   public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
       @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
-      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix) {
+      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes, @Named(SingularityLogWatcherConfigurationLoader.S3_QUEUE_DIRECTORY) String s3QueueDirectory) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
     this.storeSuffix = storeSuffix;
     this.fluentdTagPrefix = fluentdTagPrefix;
     this.storeDirectory = Paths.get(storeDirectory);
+    this.logrotateAfterBytes = Long.parseLong(logrotateAfterBytes);
+    this.s3QueueDirectory = Paths.get(s3QueueDirectory);
   }
   
   public static class FluentdHost {
@@ -54,6 +59,14 @@ public class SingularityLogWatcherConfiguration {
     
   }
   
+  public Path getS3QueueDirectory() {
+    return s3QueueDirectory;
+  }
+
+  public long getLogrotateAfterBytes() {
+    return logrotateAfterBytes;
+  }
+
   public Path getStoreDirectory() {
     return storeDirectory;
   }
@@ -91,7 +104,7 @@ public class SingularityLogWatcherConfiguration {
   @Override
   public String toString() {
     return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
-        + ", fluentdTagPrefix=" + fluentdTagPrefix + "]";
+        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", s3QueueDirectory=" + s3QueueDirectory + "]";
   }
 
 }

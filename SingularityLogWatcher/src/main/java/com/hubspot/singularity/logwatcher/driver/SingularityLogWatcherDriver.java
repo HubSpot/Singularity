@@ -45,7 +45,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     this.tailService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherTailThread-%d").build());
     this.shutdown = false;
     this.tailersLock = new ReentrantLock();
-  
+    
     this.store.registerListener(this);
   }
   

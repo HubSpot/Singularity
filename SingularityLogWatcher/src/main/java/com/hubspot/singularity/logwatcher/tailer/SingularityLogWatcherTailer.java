@@ -37,7 +37,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   private final ByteBuffer byteBuffer;
   private final LogForwarder logForwarder;
   private final SimpleStore store;
-
+  
   public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, SimpleStore simpleStore, LogForwarder logForwarder) {
     super(configuration, Paths.get(tailMetadata.getFilename()).toAbsolutePath().getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
     this.tailMetadata = tailMetadata;
@@ -97,7 +97,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     return true;
   }
 
-  private void checkRead(boolean force) throws IOException {
+  private void checkRead(boolean readAllBytes) throws IOException {
     int bytesRead = 0;
     int bytesLeft = 0;
 
@@ -110,13 +110,29 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
         updatePosition(bytesLeft);
       }
     }
-
-    if (force && bytesLeft > 0) {
+    
+    if (readAllBytes && bytesLeft > 0) {
       String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
       logForwarder.forwardMessage(tailMetadata, string);
     }
+    
+    if (!readAllBytes) {
+      checkLogrotate();
+    } else {
+      logrotate();
+    }
   }
 
+  private void checkLogrotate() throws IOException {
+    if (byteChannel.position() > getConfiguration().getLogrotateAfterBytes()) {
+      logrotate();
+    }
+  }
+  
+  private void logrotate() {
+    
+  }
+  
   private int read() throws IOException {
     byteBuffer.clear();
     return byteChannel.read(byteBuffer);

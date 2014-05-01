@@ -39,6 +39,10 @@ public abstract class WatchServiceHelper implements Closeable {
     this.stopped = false;
   }
   
+  public SingularityLogWatcherConfiguration getConfiguration() {
+    return configuration;
+  }
+
   public void stop() {
     this.stopped = true;
   }
