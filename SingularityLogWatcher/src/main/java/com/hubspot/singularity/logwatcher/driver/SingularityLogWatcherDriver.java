@@ -3,6 +3,7 @@ package com.hubspot.singularity.logwatcher.driver;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,7 +18,6 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
-import com.hubspot.singularity.logwatcher.SimpleStore.StoreException;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
@@ -32,6 +32,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
   private final LogForwarder logForwarder;
   private final SingularityLogWatcherConfiguration configuration;
   private final ExecutorService tailService;
+  private final ScheduledExecutorService retryService;
   private final LogrotateTemplateManager logrotateTemplateManager;
   private final Map<TailMetadata, SingularityLogWatcherTailer> tailers;
   
@@ -46,6 +47,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     this.logrotateTemplateManager = logrotateTemplateManager;
     this.tailers = Maps.newConcurrentMap();
     this.tailService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherTailThread-%d").build());
+    this.retryService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherRetryThread-%d").build());
     this.shutdown = false;
     this.tailersLock = new ReentrantLock();
     
@@ -74,11 +76,14 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
             tailer.consumeStream();
             store.markConsumed(tail);
           }
-        } catch (StoreException storeException) {
-          LOG.error("While tailing: {}", tail, storeException);
-          shutdown();
         } catch (Throwable t) {
-          LOG.error("While tailing {}, will not retry until JVM is restarted or a new notification is posted", tail, t);
+          if (shutdown) {
+            LOG.error("Exception tailing {} while shutting down", tail, t);
+          } else {
+            LOG.error("Exception tailing {}, will retry in {}", tail, JavaUtils.durationFromMillis(TimeUnit.SECONDS.toMillis(configuration.getRetryDelaySeconds())), t);
+            
+            tailLater(tail);
+          }
         } finally {
           tailer.close();
 
@@ -89,6 +94,21 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     
     tailers.put(tail, tailer);
     return true;
+  }
+  
+  private void tailLater(final TailMetadata tail) {
+    retryService.schedule(new Runnable() {
+      
+      @Override
+      public void run() {
+        LOG.debug("Retrying {}", tail);
+        try {
+          tailChanged(tail);
+        } catch (Throwable unexpected) {
+          LOG.error("Unexpected exception for {} while attempting retry", tail, unexpected);
+        }
+      }
+    }, configuration.getRetryDelaySeconds(), TimeUnit.SECONDS);
   }
   
   public void start() {
@@ -108,6 +128,8 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
       for (TailMetadata tail : store.getTails()) {
         if (tail(tail)) {
           success++;
+        } else {
+          tailLater(tail);
         }
         total++;
       }
@@ -132,6 +154,8 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     LOG.info("Shutting down with {} tailer(s)", tailers.size());
     
     markShutdown();
+    
+    retryService.shutdownNow();
     
     for (SingularityLogWatcherTailer tailer : tailers.values()) {
       tailer.stop();

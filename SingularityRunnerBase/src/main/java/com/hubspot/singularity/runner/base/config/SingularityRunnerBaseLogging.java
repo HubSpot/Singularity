@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
@@ -21,12 +22,13 @@ public class SingularityRunnerBaseLogging {
   private final Properties properties;
   
   @Inject
-  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_PATH) String rootLogPath, @Named(SingularityRunnerBaseConfigurationLoader.LOGGING_PATTERN) String loggingPattern, Properties properties) {
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_PATH) String rootLogPath, @Named(SingularityRunnerBaseConfigurationLoader.LOGGING_PATTERN) String loggingPattern, 
+      @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_LEVEL) String rootLogLevel, Properties properties) {
     this.rootLogPath = rootLogPath;
     this.loggingPattern = loggingPattern;
     this.properties = properties;
     
-    Logger rootLogger = configureRootLogger();
+    Logger rootLogger = configureRootLogger(rootLogLevel);
     printProperties(rootLogger);
   }
   
@@ -50,10 +52,12 @@ public class SingularityRunnerBaseLogging {
     return rootLogger;
   }
   
-  public Logger configureRootLogger() {
+  public Logger configureRootLogger(String rootLogLevel) {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
 
     Logger rootLogger = prepareRootLogger(context);
+    
+    rootLogger.setLevel(Level.toLevel(rootLogLevel));
     
     rootLogger.addAppender(buildFileAppender(context, rootLogPath));
     

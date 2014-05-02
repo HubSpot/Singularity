@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
@@ -73,7 +74,14 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       SeekableByteChannel channel = Files.newByteChannel(logfile, StandardOpenOption.READ);
       Optional<Long> previousPosition = store.getPosition(tailMetadata);
       if (previousPosition.isPresent()) {
-        channel.position(previousPosition.get());
+        long storePosition = previousPosition.get();
+        
+        if (storePosition < channel.size()) {
+          LOG.warn("Found {} with size {} and position {}, resetting to 0", logfile, channel.size(), storePosition);
+          savePosition(0);
+        } else {
+          channel.position(previousPosition.get());
+        }
       }
       return channel;
     } catch (IOException e) {
@@ -139,7 +147,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     Path tempFilePath = Files.createTempFile(null, ".logrotate");
     
     logrotateTemplateManager.writeRunnerScript(tempFilePath.toAbsolutePath(), 
-        new LogrotateTemplateContext(getConfiguration().getS3QueueDirectory().toAbsolutePath().toString(), logfile.toAbsolutePath().toString()));
+        new LogrotateTemplateContext(getConfiguration(), logfile.toAbsolutePath().toString()));
     List<String> command = ImmutableList.of("logrotate", "-f", "-v", tempFilePath.toAbsolutePath().toString());
     
     ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -150,27 +158,33 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     try {
       int exitCode = processBuilder.start().waitFor();
       
-      if (exitCode != 0) {
-        // TODO hadnle failed log rotate
-        
-      }
+      Preconditions.checkState(exitCode == 0, "Logrotate of %s failed with exit code %s", logfile, exitCode);
+      
     } catch (InterruptedException ie) {
       throw Throwables.propagate(ie);
     }
-    // TODO handle this.
+    
+    resetPosition();
+  }
+  
+  private void resetPosition() throws IOException {
     byteChannel.position(0);
-    updatePosition(0);
+    savePosition(0);
   }
   
   private int read() throws IOException {
     byteBuffer.clear();
     return byteChannel.read(byteBuffer);
   }
+  
+  private void savePosition(long newPosition) {
+    store.savePosition(tailMetadata, newPosition);
+  }
 
   private void updatePosition(int bytesLeft) throws IOException {
     long newPosition = byteChannel.position() - bytesLeft;
 
-    store.savePosition(tailMetadata, newPosition);
+    savePosition(newPosition);
 
     byteChannel.position(newPosition);
   }
