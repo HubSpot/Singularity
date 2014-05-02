@@ -18,7 +18,6 @@ import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
 public class SingularityTaskBuilder {
@@ -26,25 +25,23 @@ public class SingularityTaskBuilder {
   private final ObjectMapper jsonObjectMapper;
 
   private final TemplateManager templateManager;
-  private final SingularityRunnerBaseConfiguration baseConfiguration;
-  private final SingularityExecutorConfiguration executorConfiguration;
+  private final SingularityExecutorConfiguration configuration;
   
   private final SingularityExecutorLogging executorLogging;
   private final ExecutorUtils executorUtils;
   
   @Inject
   public SingularityTaskBuilder(@Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
-      SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration) {
+      SingularityExecutorConfiguration configuration) {
     this.executorUtils = executorUtils;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
     this.executorLogging = executorLogging;
-    this.baseConfiguration = baseConfiguration;
-    this.executorConfiguration = executorConfiguration;
+    this.configuration = configuration;
   }
   
   public Logger buildTaskLogger(String taskId) {
-    Path javaExecutorLogPath = executorConfiguration.getExecutorJavaLogPath(taskId);
+    Path javaExecutorLogPath = configuration.getExecutorJavaLogPath(taskId);
     
     return executorLogging.buildTaskLogger(taskId, javaExecutorLogPath.toAbsolutePath().toString());
   }
@@ -52,11 +49,11 @@ public class SingularityTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     ArtifactManager artifactManager = buildArtifactManager(taskId, log);
     
-    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskId, readExecutorData(jsonObjectMapper, taskInfo), artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
+    return new SingularityExecutorTask(driver, executorUtils, configuration, taskId, readExecutorData(jsonObjectMapper, taskInfo), artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
   }
   
   private ArtifactManager buildArtifactManager(String taskId, Logger log) {
-    return new ArtifactManager(executorConfiguration, taskId, log);
+    return new ArtifactManager(configuration, taskId, log);
   }
   
   private ExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {

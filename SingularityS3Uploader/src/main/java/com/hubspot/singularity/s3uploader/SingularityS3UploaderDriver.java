@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
@@ -28,16 +27,14 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderDriver.class);
 
-  private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityS3UploaderConfiguration configuration;
   private final ScheduledExecutorService executorService;
   private final ObjectMapper objectMapper;
   
   @Inject
-  public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
-    super(configuration.getPollForShutDownMillis(), baseConfiguration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE));
+  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
+    super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE));
   
-    this.baseConfiguration = baseConfiguration;
     this.configuration = configuration;
     this.objectMapper = objectMapper;
     
@@ -80,7 +77,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper {
   }
   
   private Optional<S3UploadMetadata> readS3UploadMetadata(Path filename) throws IOException {
-    byte[] s3MetadataBytes = Files.readAllBytes(baseConfiguration.getS3MetadataDirectory().resolve(filename));
+    byte[] s3MetadataBytes = Files.readAllBytes(configuration.getS3MetadataDirectory().resolve(filename));
     
     LOG.trace("Read {} bytes from {}", s3MetadataBytes.length, filename);
     
@@ -93,8 +90,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper {
   }
   
   private boolean isS3MetadataFile(Path filename) {
-    if (!filename.toString().endsWith(baseConfiguration.getLogMetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getLogMetadataSuffix());
+    if (!filename.toString().endsWith(configuration.getS3MetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getS3MetadataSuffix());
       return false;
     }
     

@@ -1,12 +1,12 @@
 package com.hubspot.singularity.logwatcher.config;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
 public class SingularityLogWatcherConfiguration {
 
@@ -24,25 +24,48 @@ public class SingularityLogWatcherConfiguration {
   private final String logrotateCount; 
   private final String logrotateDateformat;
   
+  private final Path logMetadataDirectory;
+  private final String logMetadataSuffix;
+  
   @Inject
-  public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
-      @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
-      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes, @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COUNT) String logrotateCount, @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory) {
+  public SingularityLogWatcherConfiguration(
+      @Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, 
+      @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
+      @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, 
+      @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
+      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, 
+      @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes,
+      @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COUNT) String logrotateCount, 
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
+      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
+      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
+      ) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
     this.storeSuffix = storeSuffix;
     this.fluentdTagPrefix = fluentdTagPrefix;
-    this.storeDirectory = Paths.get(storeDirectory);
+    this.storeDirectory = SingularityRunnerBaseConfigurationLoader.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
     this.logrotateAfterBytes = Long.parseLong(logrotateAfterBytes);
     this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
     this.logrotateToDirectory = logrotateToDirectory;
     this.logrotateCount = logrotateCount;
     this.logrotateMaxageDays = logrotateMaxageDays;
     this.logrotateDateformat = logrotateDateformat;
+    this.logMetadataSuffix = logMetadataSuffix;
+    this.logMetadataDirectory = SingularityRunnerBaseConfigurationLoader.getValidDirectory(logMetadataDirectory, SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY);
+  }
+  
+  public Path getLogMetadataDirectory() {
+    return logMetadataDirectory;
+  }
+
+  public String getLogMetadataSuffix() {
+    return logMetadataSuffix;
   }
   
   public static class FluentdHost {

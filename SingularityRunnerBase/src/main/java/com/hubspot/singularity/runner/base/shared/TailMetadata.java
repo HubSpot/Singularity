@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -15,6 +17,10 @@ public class TailMetadata {
   private final Map<String, String> extraFields;
   private final boolean finished;
   private final String filenameKey;
+  
+  public static Path getTailMetadataPath(Path logMetadataDirectory, String logMetadataSuffix, TailMetadata tail) {
+    return logMetadataDirectory.resolve(Paths.get(tail.getFilenameKey() + logMetadataSuffix));
+  }
   
   @JsonCreator
   public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields, @JsonProperty("finished") boolean finished) {

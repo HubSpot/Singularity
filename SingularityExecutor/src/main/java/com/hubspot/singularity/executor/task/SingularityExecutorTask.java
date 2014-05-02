@@ -18,7 +18,6 @@ import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityExecutorTask {
@@ -32,36 +31,34 @@ public class SingularityExecutorTask {
   private final AtomicBoolean killed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final ObjectMapper objectMapper;
-  private final SingularityRunnerBaseConfiguration baseConfiguration;
-  private final SingularityExecutorConfiguration executorConfiguration;
+  private final SingularityExecutorConfiguration configuration;
   
   private final Path taskDirectory;
   private final Path executorBashOut;
   private final Path serviceLogOut;
   
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, String taskId, 
+  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, String taskId, 
       ExecutorData executorData, ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.executorData = executorData;
     this.taskId = taskId;
     this.log = log;
-    this.executorConfiguration = executorConfiguration;
-    this.baseConfiguration = baseConfiguration;
+    this.configuration = configuration;
     this.objectMapper = objectMapper; 
     
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
 
-    this.serviceLogOut = executorConfiguration.getTaskDirectoryPath(taskId).resolve(executorConfiguration.getServiceLog()).toAbsolutePath();
-    this.taskDirectory = executorConfiguration.getTaskDirectoryPath(taskId);
-    this.executorBashOut = executorConfiguration.getExecutorBashLogPath(taskId);
+    this.serviceLogOut = configuration.getTaskDirectoryPath(taskId).resolve(configuration.getServiceLog()).toAbsolutePath();
+    this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
+    this.executorBashOut = configuration.getExecutorBashLogPath(taskId);
     
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, executorConfiguration, executorData);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, executorData);
   }
   
   public void cleanupTaskAppDirectory() {
-    final Path taskAppDirectoryPath = executorConfiguration.getTaskAppDirectoryPath(getTaskId());
+    final Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(getTaskId());
     final String pathToDelete = taskAppDirectoryPath.toAbsolutePath().toString();
     
     log.info("Deleting: {}", pathToDelete);
@@ -96,7 +93,7 @@ public class SingularityExecutorTask {
     }
     
     final TailMetadata tailMetadata = new TailMetadata(serviceLogOut.toString(), executorData.getLoggingTag().get(), executorData.getLoggingExtraFields(), finished);
-    final Path path = baseConfiguration.getTailMetadataPath(tailMetadata);
+    final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
     
     log.info("Writing logging metadata {} to {}", tailMetadata, path);
     

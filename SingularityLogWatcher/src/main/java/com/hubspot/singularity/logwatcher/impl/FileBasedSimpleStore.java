@@ -23,7 +23,6 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
@@ -32,17 +31,15 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
 
   private final static Logger LOG = LoggerFactory.getLogger(FileBasedSimpleStore.class);
 
-  private final SingularityRunnerBaseConfiguration baseConfiguration;
-  private final SingularityLogWatcherConfiguration logWatcherConfiguration;
+  private final SingularityLogWatcherConfiguration configuration;
   private final ObjectMapper objectMapper;
   
   private final List<TailMetadataListener> listeners;
   
   @Inject
-  public FileBasedSimpleStore(SingularityRunnerBaseConfiguration baseConfiguration, SingularityLogWatcherConfiguration logWatcherConfiguration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
-    super(logWatcherConfiguration.getPollMillis(), baseConfiguration.getLogMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
-    this.logWatcherConfiguration = logWatcherConfiguration;
-    this.baseConfiguration = baseConfiguration;
+  public FileBasedSimpleStore(SingularityLogWatcherConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
+    super(configuration.getPollMillis(), configuration.getLogMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
+    this.configuration = configuration;
     this.objectMapper = objectMapper;
     
     this.listeners = Lists.newArrayList();
@@ -58,8 +55,8 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
 
   private boolean isMetadataFile(Path filename) {
-    if (!filename.toString().endsWith(baseConfiguration.getLogMetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getLogMetadataSuffix());
+    if (!filename.toString().endsWith(configuration.getLogMetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getLogMetadataSuffix());
       return false;
     }
     
@@ -72,7 +69,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
       return false;
     }
     
-    Optional<TailMetadata> tail = read(baseConfiguration.getLogMetadataDirectory().resolve(filename).toAbsolutePath());
+    Optional<TailMetadata> tail = read(configuration.getLogMetadataDirectory().resolve(filename).toAbsolutePath());
       
     if (!tail.isPresent()) {
       return false;
@@ -98,7 +95,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   
   @Override
   public void markConsumed(TailMetadata tail) throws StoreException {
-    Path tailMetadataPath = baseConfiguration.getTailMetadataPath(tail);
+    Path tailMetadataPath = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tail);
     Path storePath = getStorePath(tail);
     
     try {
@@ -121,7 +118,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
   
   private Path getStorePath(TailMetadata tail) {
-    return logWatcherConfiguration.getStoreDirectory().resolve(Paths.get(tail.getFilenameKey() + logWatcherConfiguration.getStoreSuffix()));
+    return configuration.getStoreDirectory().resolve(Paths.get(tail.getFilenameKey() + configuration.getStoreSuffix()));
   }
   
   @Override
@@ -157,7 +154,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     try {
       final List<TailMetadata> tails = Lists.newArrayList();
       
-      for (Path file : JavaUtils.iterable(baseConfiguration.getLogMetadataDirectory())) {
+      for (Path file : JavaUtils.iterable(configuration.getLogMetadataDirectory())) {
         if (!isMetadataFile(file)) {
           continue;
         }
