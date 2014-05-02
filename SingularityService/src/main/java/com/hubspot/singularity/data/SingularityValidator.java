@@ -66,6 +66,10 @@ public class SingularityValidator {
       check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
     }
     
+    if (request.isLoadBalanced()) {
+      check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
+    }
+    
     if (!request.isLongRunning()) {
       check(request.getInstances().or(1) == 1, "Non-daemons can not be ran on more than one instance");
     }
@@ -79,7 +83,6 @@ public class SingularityValidator {
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
     
     if (request.isLoadBalanced()) {
-      check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
       check(deploy.getServiceBasePath().isPresent(), "Load balanced requests must provide the web service base path");
     }
     
