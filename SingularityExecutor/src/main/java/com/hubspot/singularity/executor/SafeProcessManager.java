@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.hubspot.mesos.JavaUtils;
 
 public abstract class SafeProcessManager {
   
@@ -20,6 +21,7 @@ public abstract class SafeProcessManager {
   private volatile Optional<String> currentProcessCmd;
   private volatile Optional<Process> currentProcess;
   private volatile Optional<Integer> currentProcessPid;
+  private volatile Optional<Long> currentProcessStart;
   
   private final AtomicBoolean killed;
   
@@ -70,6 +72,8 @@ public abstract class SafeProcessManager {
     Process process = null;
     
     try {
+      currentProcessStart = Optional.of(System.currentTimeMillis());
+      
       process = builder.start();
       
       currentProcessPid = Optional.of(getUnixPID(process));
@@ -87,13 +91,22 @@ public abstract class SafeProcessManager {
     return process;
   }
   
+  private void resetCurrentVariables() {
+    currentProcess = Optional.absent();
+    currentProcessPid = Optional.absent();
+    currentProcessCmd = Optional.absent();
+    currentProcessStart = Optional.absent();
+  }
+  
   public void processFinished() {
     lockInterruptibly();
     
+    if (currentProcessCmd.isPresent() && currentProcessStart.isPresent()) {
+      log.debug("Process {} finished after {}", currentProcessCmd.get(), JavaUtils.duration(currentProcessStart.get()));
+    }
+    
     try {
-      currentProcess = Optional.absent();
-      currentProcessPid = Optional.absent();
-      currentProcessCmd = Optional.absent();
+      resetCurrentVariables();
     } finally {
       processLock.unlock();
     }
@@ -151,9 +164,7 @@ public abstract class SafeProcessManager {
         
         currentProcess.get().destroy();
 
-        currentProcess = Optional.absent();
-        currentProcessPid = Optional.absent();
-        currentProcessCmd = Optional.absent();
+        resetCurrentVariables();
       }
     } finally {
       this.processLock.unlock();

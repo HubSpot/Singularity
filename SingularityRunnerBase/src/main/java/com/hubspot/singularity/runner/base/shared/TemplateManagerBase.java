@@ -1,4 +1,4 @@
-package com.hubspot.singularity.runner.base.config;
+package com.hubspot.singularity.runner.base.shared;
 
 import java.io.BufferedWriter;
 import java.nio.file.Files;

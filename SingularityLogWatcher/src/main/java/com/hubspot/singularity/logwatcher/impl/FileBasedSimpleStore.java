@@ -1,7 +1,6 @@
 package com.hubspot.singularity.logwatcher.impl;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,7 +8,6 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,7 +25,8 @@ import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
 public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleStore {
 
@@ -41,7 +40,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   
   @Inject
   public FileBasedSimpleStore(SingularityRunnerBaseConfiguration baseConfiguration, SingularityLogWatcherConfiguration logWatcherConfiguration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
-    super(logWatcherConfiguration, baseConfiguration.getMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
+    super(logWatcherConfiguration.getPollMillis(), baseConfiguration.getLogMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
     this.logWatcherConfiguration = logWatcherConfiguration;
     this.baseConfiguration = baseConfiguration;
     this.objectMapper = objectMapper;
@@ -59,8 +58,8 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
 
   private boolean isMetadataFile(Path filename) {
-    if (!filename.toString().endsWith(baseConfiguration.getMetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getMetadataSuffix());
+    if (!filename.toString().endsWith(baseConfiguration.getLogMetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getLogMetadataSuffix());
       return false;
     }
     
@@ -73,7 +72,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
       return false;
     }
     
-    Optional<TailMetadata> tail = read(baseConfiguration.getMetadataDirectory().resolve(filename).toAbsolutePath());
+    Optional<TailMetadata> tail = read(baseConfiguration.getLogMetadataDirectory().resolve(filename).toAbsolutePath());
       
     if (!tail.isPresent()) {
       return false;
@@ -157,12 +156,8 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   public List<TailMetadata> getTails() {
     try {
       final List<TailMetadata> tails = Lists.newArrayList();
-      final DirectoryStream<Path> dirStream = Files.newDirectoryStream(baseConfiguration.getMetadataDirectory());
-      final Iterator<Path> iterator = dirStream.iterator(); // are you fucking kidding me java7?
       
-      while (iterator.hasNext()) {
-        Path file = iterator.next();
-       
+      for (Path file : JavaUtils.iterable(baseConfiguration.getLogMetadataDirectory())) {
         if (!isMetadataFile(file)) {
           continue;
         }

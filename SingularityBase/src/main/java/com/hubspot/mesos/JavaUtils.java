@@ -1,5 +1,6 @@
 package com.hubspot.mesos;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -7,7 +8,11 @@ import java.net.NetworkInterface;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -137,6 +142,21 @@ public class JavaUtils {
     t.start();
     
     return t;
+  }
+  
+  public static Iterable<Path> iterable(final Path directory) {
+    return new Iterable<Path>() {
+      
+      @Override
+      public Iterator<Path> iterator() {
+        try {
+          DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory);
+          return dirStream.iterator();
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
+        }
+      }
+    };
   }
 
 }

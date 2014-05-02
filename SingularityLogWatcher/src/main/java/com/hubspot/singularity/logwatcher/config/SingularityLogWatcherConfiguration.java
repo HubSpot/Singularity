@@ -17,7 +17,6 @@ public class SingularityLogWatcherConfiguration {
   private final String storeSuffix;
   private final String fluentdTagPrefix;
   private final long logrotateAfterBytes;
-  private final Path s3QueueDirectory;
   private final long retryDelaySeconds;
   
   private final String logrotateToDirectory;
@@ -29,10 +28,9 @@ public class SingularityLogWatcherConfiguration {
   public SingularityLogWatcherConfiguration(@Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
       @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
       @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes, @Named(SingularityLogWatcherConfigurationLoader.S3_QUEUE_DIRECTORY) String s3QueueDirectory,
-      @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds, @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes, @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COUNT) String logrotateCount, @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat) {
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
@@ -40,7 +38,6 @@ public class SingularityLogWatcherConfiguration {
     this.fluentdTagPrefix = fluentdTagPrefix;
     this.storeDirectory = Paths.get(storeDirectory);
     this.logrotateAfterBytes = Long.parseLong(logrotateAfterBytes);
-    this.s3QueueDirectory = Paths.get(s3QueueDirectory);
     this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
     this.logrotateToDirectory = logrotateToDirectory;
     this.logrotateCount = logrotateCount;
@@ -75,10 +72,6 @@ public class SingularityLogWatcherConfiguration {
   
   public String getLogrotateToDirectory() {
     return logrotateToDirectory;
-  }
-
-  public Path getS3QueueDirectory() {
-    return s3QueueDirectory;
   }
 
   public long getLogrotateAfterBytes() {
@@ -138,8 +131,8 @@ public class SingularityLogWatcherConfiguration {
   @Override
   public String toString() {
     return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
-        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", s3QueueDirectory=" + s3QueueDirectory + ", retryDelaySeconds=" + retryDelaySeconds + ", logrotateToDirectory=" + logrotateToDirectory
-        + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + "]";
-  } 
-
+        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", retryDelaySeconds=" + retryDelaySeconds + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays="
+        + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + "]";
+  }
+  
 }

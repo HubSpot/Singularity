@@ -19,7 +19,7 @@ import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfiguration;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityExecutorTask {
   

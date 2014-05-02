@@ -66,6 +66,7 @@
     <module>SingularityService</module>
     <module>SingularityExecutor</module>
     <module>SingularityLogWatcher</module>
+    <module>SingularityS3Uploader</module>
   </modules>
 
   <build>

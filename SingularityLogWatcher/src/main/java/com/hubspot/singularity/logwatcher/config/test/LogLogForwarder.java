@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hubspot.singularity.logwatcher.LogForwarder;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class LogLogForwarder implements LogForwarder {
 

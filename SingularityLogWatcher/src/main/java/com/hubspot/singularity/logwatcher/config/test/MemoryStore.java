@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class MemoryStore implements SimpleStore {
 

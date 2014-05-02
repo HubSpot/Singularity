@@ -9,7 +9,7 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
-import com.hubspot.singularity.runner.base.config.TemplateManagerBase;
+import com.hubspot.singularity.runner.base.shared.TemplateManagerBase;
 
 @Singleton
 public class TemplateManager extends TemplateManagerBase {

@@ -22,7 +22,7 @@ import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
 import com.hubspot.singularity.logwatcher.tailer.SingularityLogWatcherTailer;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityLogWatcherDriver implements TailMetadataListener {
 
@@ -46,8 +46,8 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     this.configuration = configuration;
     this.logrotateTemplateManager = logrotateTemplateManager;
     this.tailers = Maps.newConcurrentMap();
-    this.tailService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherTailThread-%d").build());
-    this.retryService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherRetryThread-%d").build());
+    this.tailService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherTailer-%d").build());
+    this.retryService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherRetry-%d").build());
     this.shutdown = false;
     this.tailersLock = new ReentrantLock();
     

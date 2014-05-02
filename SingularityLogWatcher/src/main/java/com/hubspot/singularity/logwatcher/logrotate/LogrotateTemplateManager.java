@@ -6,7 +6,7 @@ import com.github.mustachejava.Mustache;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherModule;
-import com.hubspot.singularity.runner.base.config.TemplateManagerBase;
+import com.hubspot.singularity.runner.base.shared.TemplateManagerBase;
 
 public class LogrotateTemplateManager extends TemplateManagerBase {
   

@@ -12,7 +12,6 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityRunnerB
 
   public static final String STORE_DIRECTORY = "logwatcher.store.directory";
   public static final String STORE_SUFFIX = "logwatcher.store.suffix";
-  public static final String S3_QUEUE_DIRECTORY = "logwatcher.s3.queue.directory";
   
   public static final String RETRY_DELAY_SECONDS = "logwatcher.retry.delay.seconds";
   

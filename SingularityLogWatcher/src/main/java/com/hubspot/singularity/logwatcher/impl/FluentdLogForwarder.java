@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class FluentdLogForwarder implements LogForwarder {
 

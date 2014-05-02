@@ -1,4 +1,4 @@
-package com.hubspot.singularity.logwatcher.impl;
+package com.hubspot.singularity.runner.base.shared;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 
 public abstract class WatchServiceHelper implements Closeable {
 
@@ -24,13 +23,13 @@ public abstract class WatchServiceHelper implements Closeable {
   
   private final WatchService watchService;
   private final Path watchDirectory;
-  private final SingularityLogWatcherConfiguration configuration;
+  private final long pollWaitCheckShutdownMillis;
   private final List<WatchEvent.Kind<Path>> watchEvents;
   
   private volatile boolean stopped;
   
-  public WatchServiceHelper(SingularityLogWatcherConfiguration configuration, Path watchDirectory, List<WatchEvent.Kind<Path>> watchEvents) {
-    this.configuration = configuration;
+  public WatchServiceHelper(long pollWaitCheckShutdownMillis, Path watchDirectory, List<WatchEvent.Kind<Path>> watchEvents) {
+    this.pollWaitCheckShutdownMillis = pollWaitCheckShutdownMillis;
     
     this.watchDirectory = watchDirectory;
     this.watchEvents = watchEvents;
@@ -39,10 +38,6 @@ public abstract class WatchServiceHelper implements Closeable {
     this.stopped = false;
   }
   
-  public SingularityLogWatcherConfiguration getConfiguration() {
-    return configuration;
-  }
-
   public void stop() {
     this.stopped = true;
   }
@@ -79,7 +74,7 @@ public abstract class WatchServiceHelper implements Closeable {
         }
       }
       
-      watchKey = watchService.poll(configuration.getPollMillis(), TimeUnit.MILLISECONDS);
+      watchKey = watchService.poll(pollWaitCheckShutdownMillis, TimeUnit.MILLISECONDS);
     }
   }
 

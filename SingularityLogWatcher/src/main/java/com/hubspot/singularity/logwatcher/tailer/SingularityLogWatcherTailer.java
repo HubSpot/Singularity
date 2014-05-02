@@ -25,10 +25,10 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
-import com.hubspot.singularity.logwatcher.impl.WatchServiceHelper;
 import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateContext;
 import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
-import com.hubspot.singularity.runner.base.config.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.TailMetadata;
+import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
 public class SingularityLogWatcherTailer extends WatchServiceHelper implements Closeable {
 
@@ -43,10 +43,12 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   private final LogForwarder logForwarder;
   private final SimpleStore store;
   private final LogrotateTemplateManager logrotateTemplateManager;;
+  private final SingularityLogWatcherConfiguration configuration;
   
   public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, LogrotateTemplateManager logrotateTemplateManager, SimpleStore simpleStore, LogForwarder logForwarder) {
-    super(configuration, Paths.get(tailMetadata.getFilename()).toAbsolutePath().getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
+    super(configuration.getPollMillis(), Paths.get(tailMetadata.getFilename()).toAbsolutePath().getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
     this.tailMetadata = tailMetadata;
+    this.configuration = configuration;
     this.logrotateTemplateManager = logrotateTemplateManager;
     this.logfile = Paths.get(tailMetadata.getFilename());
     this.store = simpleStore;
@@ -138,7 +140,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
 
   private void checkLogrotate() throws IOException {
-    if (byteChannel.position() > getConfiguration().getLogrotateAfterBytes()) {
+    if (byteChannel.position() > configuration.getLogrotateAfterBytes()) {
       logrotate();
     }
   }
@@ -147,7 +149,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     Path tempFilePath = Files.createTempFile(null, ".logrotate");
     
     logrotateTemplateManager.writeRunnerScript(tempFilePath.toAbsolutePath(), 
-        new LogrotateTemplateContext(getConfiguration(), logfile.toAbsolutePath().toString()));
+        new LogrotateTemplateContext(configuration, logfile.toAbsolutePath().toString()));
     List<String> command = ImmutableList.of("logrotate", "-f", "-v", tempFilePath.toAbsolutePath().toString());
     
     ProcessBuilder processBuilder = new ProcessBuilder(command);
