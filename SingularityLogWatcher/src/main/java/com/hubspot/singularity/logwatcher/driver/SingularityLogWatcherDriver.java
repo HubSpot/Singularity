@@ -22,9 +22,10 @@ import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
 import com.hubspot.singularity.logwatcher.tailer.SingularityLogWatcherTailer;
+import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
-public class SingularityLogWatcherDriver implements TailMetadataListener {
+public class SingularityLogWatcherDriver implements TailMetadataListener, SingularityDriver {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherDriver.class);
 
@@ -111,7 +112,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener {
     }, configuration.getRetryDelaySeconds(), TimeUnit.SECONDS);
   }
   
-  public void start() {
+  public void startAndWait() {
     final long start = System.currentTimeMillis();
     
     int success = 0;

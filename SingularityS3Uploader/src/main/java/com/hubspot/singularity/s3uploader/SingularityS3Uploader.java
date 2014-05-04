@@ -8,6 +8,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Set;
 
 import org.jets3t.service.S3Service;
 import org.jets3t.service.model.S3Bucket;
@@ -28,17 +29,33 @@ public class SingularityS3Uploader {
   private final Path fileDirectory;
   private final S3Service s3Service;
   private final S3Bucket s3Bucket;
+  private final Path metadataPath;
   
-  public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem) {
+  public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, Path metadataPath) {
     this.s3Service = s3Service;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = Paths.get(uploadMetadata.getDirectory());
     this.pathMatcher = fileSystem.getPathMatcher(uploadMetadata.getFileGlob());
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
+    this.metadataPath = metadataPath;
   }
   
-  public void upload() throws IOException {
+  public Path getMetadataPath() {
+    return metadataPath;
+  }
+    
+  public S3UploadMetadata getUploadMetadata() {
+    return uploadMetadata;
+  }
+  
+  @Override
+  public String toString() {
+    return "SingularityS3Uploader [uploadMetadata=" + uploadMetadata + ", metadataPath=" + metadataPath + "]";
+  }
+
+  public int upload(Set<Path> synchronizedToUpload) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
+    int found = 0;
     
     for (Path file : JavaUtils.iterable(fileDirectory)) {
       if (!pathMatcher.matches(file)) {
@@ -46,10 +63,18 @@ public class SingularityS3Uploader {
         continue;
       }
       
-      toUpload.add(file);
+      found++;
+      
+      if (synchronizedToUpload.add(file)) {
+        toUpload.add(file);
+      } else {
+        LOG.debug("Another uploader already added {}", file);
+      }
     }
     
     uploadBatch(toUpload);
+    
+    return found;
   }
   
   private void uploadBatch(List<Path> toUpload) {

@@ -13,6 +13,9 @@ public class SingularityS3UploaderConfiguration {
   private final String s3SecretKey;
   private final int executorCoreThreads;
 
+  private final long checkUploadsEverySeconds;
+  private final long stopCheckingAfterSecondsWithoutNewFile;
+  
   private final Path s3MetadataDirectory;
   private final String s3MetadataSuffix;
   
@@ -22,7 +25,9 @@ public class SingularityS3UploaderConfiguration {
       @Named(SingularityS3UploaderConfigurationLoader.S3_SECRET_KEY) String s3SecretKey,
       @Named(SingularityS3UploaderConfigurationLoader.EXECUTOR_CORE_THREADS) String executorCoreThreads,
       @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
-      @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix
+      @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
+      @Named(SingularityS3UploaderConfigurationLoader.CHECK_FOR_UPLOADS_EVERY_SECONDS) String checkUploadsEverySeconds,
+      @Named(SingularityS3UploaderConfigurationLoader.STOP_CHECKING_AFTER_SECONDS_WITHOUT_NEW_FILE) String stopCheckingAfterSecondsWithoutNewFile
       ) {
     this.pollForShutDownMillis = Long.parseLong(pollForShutDownMillis);
     this.s3AccessKey = s3AccessKey;
@@ -30,6 +35,8 @@ public class SingularityS3UploaderConfiguration {
     this.executorCoreThreads = Integer.parseInt(executorCoreThreads);
     this.s3MetadataDirectory = SingularityRunnerBaseConfigurationLoader.getValidDirectory(s3MetadataDirectory, SingularityS3UploaderConfigurationLoader.S3_METADATA_DIRECTORY);
     this.s3MetadataSuffix = s3MetadataSuffix;
+    this.checkUploadsEverySeconds = Long.parseLong(checkUploadsEverySeconds);
+    this.stopCheckingAfterSecondsWithoutNewFile = Long.parseLong(stopCheckingAfterSecondsWithoutNewFile);
   }
 
   public Path getS3MetadataDirectory() {
@@ -56,10 +63,19 @@ public class SingularityS3UploaderConfiguration {
     return s3SecretKey;
   }
 
+  public long getCheckUploadsEverySeconds() {
+    return checkUploadsEverySeconds;
+  }
+
+  public long getStopCheckingAfterSecondsWithoutNewFile() {
+    return stopCheckingAfterSecondsWithoutNewFile;
+  }
+
   @Override
   public String toString() {
-    return "SingularityS3UploaderConfiguration [pollForShutDownMillis=" + pollForShutDownMillis + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", executorCoreThreads=" + executorCoreThreads + ", s3MetadataDirectory="
-        + s3MetadataDirectory + ", s3MetadataSuffix=" + s3MetadataSuffix + "]";
+    return "SingularityS3UploaderConfiguration [pollForShutDownMillis=" + pollForShutDownMillis + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", executorCoreThreads=" + executorCoreThreads
+        + ", checkUploadsEverySeconds=" + checkUploadsEverySeconds + ", stopCheckingAfterSecondsWithoutNewFile=" + stopCheckingAfterSecondsWithoutNewFile + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3MetadataSuffix="
+        + s3MetadataSuffix + "]";
   }
   
 }

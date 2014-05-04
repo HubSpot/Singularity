@@ -20,28 +20,28 @@ import com.hubspot.mesos.JavaUtils;
 public abstract class WatchServiceHelper implements Closeable {
 
   private final static Logger LOG = LoggerFactory.getLogger(WatchServiceHelper.class);
-  
+
   private final WatchService watchService;
   private final Path watchDirectory;
   private final long pollWaitCheckShutdownMillis;
   private final List<WatchEvent.Kind<Path>> watchEvents;
-  
+
   private volatile boolean stopped;
-  
+
   public WatchServiceHelper(long pollWaitCheckShutdownMillis, Path watchDirectory, List<WatchEvent.Kind<Path>> watchEvents) {
     this.pollWaitCheckShutdownMillis = pollWaitCheckShutdownMillis;
-    
+
     this.watchDirectory = watchDirectory;
     this.watchEvents = watchEvents;
     this.watchService = createWatchService();
 
     this.stopped = false;
   }
-  
+
   public void stop() {
     this.stopped = true;
   }
-  
+
   public void close() {
     try {
       Closeables.close(watchService, true);
@@ -49,7 +49,7 @@ public abstract class WatchServiceHelper implements Closeable {
       // impossible!
     }
   }
-  
+
   private WatchService createWatchService() {
     try {
       return FileSystems.getDefault().newWatchService();
@@ -57,40 +57,40 @@ public abstract class WatchServiceHelper implements Closeable {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public void watch() throws IOException, InterruptedException {
     LOG.info("Watching directory {} for event(s) {}", watchDirectory, watchEvents);
-    
+
     WatchKey watchKey = watchDirectory.register(watchService, watchEvents.toArray(new WatchEvent.Kind[watchEvents.size()]));
-    
+
     while (!stopped) {
       if (watchKey != null) {
-        
+
         processWatchKey(watchKey);
-        
+
         if (!watchKey.reset()) {
           LOG.warn("WatchKey for {} no longer valid", watchDirectory);
           break;
         }
       }
-      
+
       watchKey = watchService.poll(pollWaitCheckShutdownMillis, TimeUnit.MILLISECONDS);
     }
   }
 
   protected abstract boolean processEvent(WatchEvent.Kind<?> kind, Path filename) throws IOException;
-  
+
   @SuppressWarnings("unchecked")
   private WatchEvent<Path> cast(WatchEvent<?> event) {
     return (WatchEvent<Path>) event;
   }
-  
+
   private void processWatchKey(WatchKey watchKey) throws IOException {
     final long start = System.currentTimeMillis();
     final List<WatchEvent<?>> events = watchKey.pollEvents();
-    
+
     int processed = 0;
-    
+
     for (WatchEvent<?> event : events) {
       WatchEvent.Kind<?> kind = event.kind();
 
@@ -98,15 +98,15 @@ public abstract class WatchServiceHelper implements Closeable {
         LOG.trace("Ignoring an {} event to {}", event.context());
         continue;
       }
-      
+
       WatchEvent<Path> ev = cast(event);
       Path filename = ev.context();
-      
+
       if (processEvent(kind, filename)) {
         processed++;
       }
     }
-    
+
     LOG.trace("Handled {} out of {} event(s) for {} in {}", processed, events.size(), watchDirectory, JavaUtils.duration(start));
   }
 
