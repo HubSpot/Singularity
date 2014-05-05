@@ -28,6 +28,7 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 public class SingularityMesosTaskBuilder {
 
@@ -35,11 +36,13 @@ public class SingularityMesosTaskBuilder {
   
   private final ObjectMapper objectMapper;
   private final SingularityRackManager rackManager;
+  private final ExecutorIdGenerator idGenerator;
   
   @Inject
-  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularityRackManager rackManager) {
+  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularityRackManager rackManager, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
     this.rackManager = rackManager;
+    this.idGenerator = idGenerator;
   }
   
   public SingularityTask buildTask(Protos.Offer offer, SingularityTaskRequest taskRequest, Resources resources) {
@@ -128,7 +131,7 @@ public class SingularityMesosTaskBuilder {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
           .setCommand(commandBuilder.build())
-          .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(String.format("singularity-%s", taskId.toString().replace(':', '_')))))
+          .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
     );
         
     if (task.getDeploy().getExecutorData().isPresent()) {
