@@ -116,7 +116,11 @@ public class SingularityExecutorConfiguration {
   }
   
   public Path getTaskDirectoryPath(String taskId) {
-    return Paths.get(taskId);
+    return Paths.get(getSafeTaskIdForDirectory(taskId));
+  }
+  
+  private String getSafeTaskIdForDirectory(String taskId) {
+    return taskId.replace(":", "_");
   }
   
   public Path getTaskAppDirectoryPath(String taskId) {
