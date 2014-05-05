@@ -134,7 +134,7 @@ public class SingularityDeployChecker {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
         deployResult = new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState(), deployResult.getLbUpdate(), deployResult.getTimestamp()));
       }
-    } else if (deployResult.getDeployState() == DeployState.WAITING) {
+    } else if (!deployResult.getDeployState().isDeployFinished()) {
       return;
     }
     
@@ -282,7 +282,7 @@ public class SingularityDeployChecker {
   }
   
   private boolean shouldCancelLoadBalancer(final SingularityPendingDeploy pendingDeploy) {
-    return pendingDeploy.getLastLoadBalancerUpdate().isPresent() && (pendingDeploy.getCurrentDeployState() == DeployState.WAITING || pendingDeploy.getCurrentDeployState() == DeployState.CANCELING);
+    return pendingDeploy.getLastLoadBalancerUpdate().isPresent() && !pendingDeploy.getCurrentDeployState().isDeployFinished();
   }
   
   private SingularityDeployResult fromLbState(DeployState state, SingularityLoadBalancerUpdate lbUpdate) {
