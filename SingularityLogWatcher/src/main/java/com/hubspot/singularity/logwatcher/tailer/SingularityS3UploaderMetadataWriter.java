@@ -25,13 +25,21 @@ public class SingularityS3UploaderMetadataWriter {
     this.objectMapper = objectMapper;
   }
 
+  private String getGlob(TailMetadata tailMetadata) {
+    return String.format("%s*.gz*", Paths.get(tailMetadata.getFilename()).getFileName());
+  }
+  
+  private String getS3KeyPattern(TailMetadata tailMetadata) {
+    return String.format("%s/%s", tailMetadata.getTag(), configuration.getS3KeyPattern());
+  }
+  
   public void writeS3MetadataFile(TailMetadata tailMetadata, Path logrotatedFile) throws IOException {
     String logrotateToDirectory = configuration.getLogrotateToDirectory();
     Path directoryPath = logrotatedFile.getParent().resolve(logrotateToDirectory);
     
-    String glob = String.format("%s*.gz.*", Paths.get(tailMetadata.getFilename()).getFileName());
+    String glob = getGlob(tailMetadata);
     
-    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(directoryPath.toAbsolutePath().toString(), glob, configuration.getS3Bucket(), configuration.getS3KeyPattern());
+    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(directoryPath.toAbsolutePath().toString(), glob, configuration.getS3Bucket(), getS3KeyPattern(tailMetadata));
     
     String s3UploadMetadatafilename = String.format("%s%s", tailMetadata.getFilenameKey(), configuration.getS3MetadataSuffix());
     

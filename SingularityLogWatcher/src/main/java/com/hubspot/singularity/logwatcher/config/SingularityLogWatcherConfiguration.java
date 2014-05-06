@@ -19,6 +19,7 @@ public class SingularityLogWatcherConfiguration {
   private final long logrotateAfterBytes;
   private final long retryDelaySeconds;
   
+  private final String logrotateCommand;
   private final String logrotateToDirectory;
   private final String logrotateMaxageDays;
   private final String logrotateCount; 
@@ -43,6 +44,7 @@ public class SingularityLogWatcherConfiguration {
       @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes,
       @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
+      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COMMAND) String logrotateCommand, 
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COUNT) String logrotateCount, 
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
@@ -62,6 +64,7 @@ public class SingularityLogWatcherConfiguration {
     this.storeDirectory = JavaUtils.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
     this.logrotateAfterBytes = Long.parseLong(logrotateAfterBytes);
     this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
+    this.logrotateCommand = logrotateCommand;
     this.logrotateToDirectory = logrotateToDirectory;
     this.logrotateCount = logrotateCount;
     this.logrotateMaxageDays = logrotateMaxageDays;
@@ -74,6 +77,10 @@ public class SingularityLogWatcherConfiguration {
     this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityLogWatcherConfigurationLoader.S3_METADATA_DIRECTORY);
   }
     
+  public String getLogrotateCommand() {
+    return logrotateCommand;
+  }
+  
   public String getS3MetadataSuffix() {
     return s3MetadataSuffix;
   }
@@ -184,9 +191,9 @@ public class SingularityLogWatcherConfiguration {
   @Override
   public String toString() {
     return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
-        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", retryDelaySeconds=" + retryDelaySeconds + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays="
-        + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", s3MetadataSuffix="
-        + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", retryDelaySeconds=" + retryDelaySeconds + ", logrotateCommand=" + logrotateCommand + ", logrotateToDirectory=" + logrotateToDirectory
+        + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix="
+        + logMetadataSuffix + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
 
 }

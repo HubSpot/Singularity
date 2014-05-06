@@ -155,7 +155,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     
     logrotateTemplateManager.writeRunnerScript(tempFilePath.toAbsolutePath(), 
         new LogrotateTemplateContext(configuration, logfile.toAbsolutePath().toString()));
-    List<String> command = ImmutableList.of("logrotate", "-f", "-v", tempFilePath.toAbsolutePath().toString());
+    List<String> command = ImmutableList.of(configuration.getLogrotateCommand(), "-f", "-v", tempFilePath.toAbsolutePath().toString());
     
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     processBuilder.inheritIO();

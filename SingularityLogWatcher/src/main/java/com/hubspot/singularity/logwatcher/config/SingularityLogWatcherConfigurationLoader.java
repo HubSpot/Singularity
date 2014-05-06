@@ -17,6 +17,7 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityRunnerB
   
   public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
   
+  public static final String LOGROTATE_COMMAND = "logwatcher.logrotate.command";
   public static final String LOGROTATE_AFTER_BYTES = "logwatcher.logrotate.after.bytes";
   public static final String LOGROTATE_DIRECTORY = "logwatcher.logrotate.to.directory";
   public static final String LOGROTATE_MAXAGE_DAYS = "logwatcher.logrotate.maxage.days";
@@ -30,6 +31,7 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityRunnerB
   protected void bindDefaults(Properties properties) {
     super.bindDefaults(properties);
 
+    properties.put(LOGROTATE_COMMAND, "logrotate");
     properties.put(LOGROTATE_AFTER_BYTES, "104857600"); // 100MB
     properties.put(LOGROTATE_DIRECTORY, "logs");
     properties.put(LOGROTATE_MAXAGE_DAYS, "7");
