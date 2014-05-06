@@ -86,7 +86,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   
   private void readInitialFiles() throws IOException {
     final long start = System.currentTimeMillis();
-    LOG.info("Scanning for metadata files (*.{}) in {}", configuration.getS3MetadataSuffix(), configuration.getS3MetadataDirectory());
+    LOG.info("Scanning for metadata files (*{}) in {}", configuration.getS3MetadataSuffix(), configuration.getS3MetadataDirectory());
     
     int foundFiles = 0;
     
@@ -270,7 +270,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     try {
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-        SingularityS3Uploader found = Iterables.find(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
+        Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
           @Override
           public boolean apply(SingularityS3Uploader input) {
             return input.getMetadataPath().equals(filename.toAbsolutePath());
@@ -279,8 +279,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         LOG.info("Found {} to match deleted path {}", found, filename);
 
-        if (found != null) {
-          metadataToUploader.remove(found.getUploadMetadata());
+        if (found.isPresent()) {
+          metadataToUploader.remove(found.get().getUploadMetadata());
         }
       } else if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
         return handleNewS3Metadata(filename);
