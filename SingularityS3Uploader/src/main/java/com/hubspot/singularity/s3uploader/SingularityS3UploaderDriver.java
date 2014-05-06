@@ -242,7 +242,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
     
     try {
-      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata.get(), fileSystem, filename.toAbsolutePath());
+      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata.get(), fileSystem, filename);
       
       LOG.info("Created new uploader {}", uploader);
       
@@ -269,11 +269,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     try {
+      final Path fullPath = configuration.getS3MetadataDirectory().resolve(filename);
+      
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
         Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
           @Override
           public boolean apply(SingularityS3Uploader input) {
-            return input.getMetadataPath().equals(filename.toAbsolutePath());
+            return input.getMetadataPath().equals(fullPath);
           }
         });
 
@@ -283,7 +285,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           metadataToUploader.remove(found.get().getUploadMetadata());
         }
       } else if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
-        return handleNewS3Metadata(filename);
+        return handleNewS3Metadata(fullPath);
       }
 
       return false;

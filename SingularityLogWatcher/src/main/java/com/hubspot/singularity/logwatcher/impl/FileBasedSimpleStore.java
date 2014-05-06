@@ -69,7 +69,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
       return false;
     }
     
-    Optional<TailMetadata> tail = read(configuration.getLogMetadataDirectory().resolve(filename).toAbsolutePath());
+    Optional<TailMetadata> tail = read(configuration.getLogMetadataDirectory().resolve(filename));
       
     if (!tail.isPresent()) {
       return false;

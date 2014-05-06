@@ -170,18 +170,14 @@ public class ArtifactManager extends SafeProcessManager {
     }
   }
   
-  private String getFullPath(Path path) {
-    return path.toAbsolutePath().toString();
-  }
-  
   private void downloadUri(String uri, Path path) {
-    log.info("Downloading {} to {}", uri, getFullPath(path));
+    log.info("Downloading {} to {}", uri, path);
 
     final List<String> command = Lists.newArrayList();
     command.add("wget");
     command.add(uri);
     command.add("-O");
-    command.add(getFullPath(path));
+    command.add(path.toString());
     command.add("-nv");
     command.add("--no-check-certificate");
 
@@ -189,14 +185,14 @@ public class ArtifactManager extends SafeProcessManager {
   }
 
   public void untar(Path source, Path destination) {
-    log.info("Untarring {} to {}", getFullPath(source), getFullPath(destination));
+    log.info("Untarring {} to {}", source, destination);
     
     final List<String> command = Lists.newArrayList();
     command.add("tar");
     command.add("-oxzf");
-    command.add(getFullPath(source));
+    command.add(source.toString());
     command.add("-C");
-    command.add(getFullPath(destination));
+    command.add(destination.toString());
   
     runCommand(command);
   }

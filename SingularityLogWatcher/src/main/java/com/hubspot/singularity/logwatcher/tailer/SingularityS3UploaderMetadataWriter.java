@@ -39,7 +39,7 @@ public class SingularityS3UploaderMetadataWriter {
     
     String glob = getGlob(tailMetadata);
     
-    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(directoryPath.toAbsolutePath().toString(), glob, configuration.getS3Bucket(), getS3KeyPattern(tailMetadata));
+    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(directoryPath.toString(), glob, configuration.getS3Bucket(), getS3KeyPattern(tailMetadata));
     
     String s3UploadMetadatafilename = String.format("%s%s", tailMetadata.getFilenameKey(), configuration.getS3MetadataSuffix());
     

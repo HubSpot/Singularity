@@ -43,7 +43,7 @@ public class SingularityTaskBuilder {
   public Logger buildTaskLogger(String taskId) {
     Path javaExecutorLogPath = configuration.getExecutorJavaLogPath(taskId);
     
-    return executorLogging.buildTaskLogger(taskId, javaExecutorLogPath.toAbsolutePath().toString());
+    return executorLogging.buildTaskLogger(taskId, javaExecutorLogPath.toString());
   }
   
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {

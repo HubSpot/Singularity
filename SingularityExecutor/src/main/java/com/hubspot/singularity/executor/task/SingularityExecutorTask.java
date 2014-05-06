@@ -50,7 +50,7 @@ public class SingularityExecutorTask {
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
 
-    this.serviceLogOut = configuration.getTaskDirectoryPath(taskId).resolve(configuration.getServiceLog()).toAbsolutePath();
+    this.serviceLogOut = configuration.getTaskDirectoryPath(taskId).resolve(configuration.getServiceLog());
     this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
     this.executorBashOut = configuration.getExecutorBashLogPath(taskId);
     
@@ -59,7 +59,7 @@ public class SingularityExecutorTask {
   
   public void cleanupTaskAppDirectory() {
     final Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(getTaskId());
-    final String pathToDelete = taskAppDirectoryPath.toAbsolutePath().toString();
+    final String pathToDelete = taskAppDirectoryPath.toString();
     
     log.info("Deleting: {}", pathToDelete);
     

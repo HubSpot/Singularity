@@ -48,7 +48,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   
   public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, LogrotateTemplateManager logrotateTemplateManager, SimpleStore simpleStore, LogForwarder logForwarder,
       SingularityS3UploaderMetadataWriter s3MetadataWriter) {
-    super(configuration.getPollMillis(), Paths.get(tailMetadata.getFilename()).toAbsolutePath().getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
+    super(configuration.getPollMillis(), Paths.get(tailMetadata.getFilename()).getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
     this.tailMetadata = tailMetadata;
     this.configuration = configuration;
     this.s3MetadataWriter = s3MetadataWriter;
@@ -149,13 +149,13 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
   
   private void logrotate() throws IOException {
-    s3MetadataWriter.writeS3MetadataFile(tailMetadata, logfile.toAbsolutePath());
+    s3MetadataWriter.writeS3MetadataFile(tailMetadata, logfile);
     
     Path tempFilePath = Files.createTempFile(null, ".logrotate");
     
-    logrotateTemplateManager.writeRunnerScript(tempFilePath.toAbsolutePath(), 
-        new LogrotateTemplateContext(configuration, logfile.toAbsolutePath().toString()));
-    List<String> command = ImmutableList.of(configuration.getLogrotateCommand(), "-f", "-v", tempFilePath.toAbsolutePath().toString());
+    logrotateTemplateManager.writeRunnerScript(tempFilePath, 
+        new LogrotateTemplateContext(configuration, logfile.toString()));
+    List<String> command = ImmutableList.of(configuration.getLogrotateCommand(), "-f", "-v", tempFilePath.toString());
     
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     processBuilder.inheritIO();
