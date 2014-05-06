@@ -63,7 +63,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   
   @Inject
   public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
-    super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE));
+    super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.fileSystem = FileSystems.getDefault();
     try {
@@ -237,7 +237,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     Optional<S3UploadMetadata> metadata = readS3UploadMetadata(filename);
 
     if (metadataToUploader.containsKey(metadata)) {
-      LOG.info("Ignoring metadata {} from {} because there was already one present", metadata.get(), filename);
+      LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata.get(), filename);
       return false;
     }
     
@@ -279,7 +279,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           }
         });
 
-        LOG.info("Found {} to match deleted path {}", found, filename);
+        LOG.trace("Found {} to match deleted path {}", found, filename);
 
         if (found.isPresent()) {
           metadataToUploader.remove(found.get().getUploadMetadata());
@@ -299,6 +299,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     LOG.trace("Read {} bytes from {}", s3MetadataBytes.length, filename);
 
+    if (s3MetadataBytes.length == 0) {
+      return Optional.absent();
+    }
+    
     try {
       S3UploadMetadata metadata = objectMapper.readValue(s3MetadataBytes, S3UploadMetadata.class);
       return Optional.of(metadata);

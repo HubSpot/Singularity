@@ -143,6 +143,10 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     
     LOG.trace("Read {} bytes from {}", bytes.length, file);
     
+    if (bytes.length == 0) {
+      return Optional.absent();
+    }
+    
     try {
       TailMetadata tail = objectMapper.readValue(bytes, TailMetadata.class);
       return Optional.of(tail);

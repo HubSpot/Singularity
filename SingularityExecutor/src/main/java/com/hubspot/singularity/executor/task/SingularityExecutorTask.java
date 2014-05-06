@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor.task;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -95,10 +96,12 @@ public class SingularityExecutorTask {
     final TailMetadata tailMetadata = new TailMetadata(serviceLogOut.toString(), executorData.getLoggingTag().get(), executorData.getLoggingExtraFields(), finished);
     final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
     
-    log.info("Writing logging metadata {} to {}", tailMetadata, path);
-    
     try {
-      objectMapper.writeValue(path.toFile(), tailMetadata);
+      final byte[] bytes = objectMapper.writeValueAsBytes(tailMetadata);
+      
+      log.info("Writing {} bytes of logging metadata {} to {}", bytes.length, tailMetadata, path);
+        
+      Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (Throwable t) {
       log.error("Failed writing logging metadata", t);
     }
