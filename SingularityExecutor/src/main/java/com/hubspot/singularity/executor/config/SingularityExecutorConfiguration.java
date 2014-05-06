@@ -5,7 +5,7 @@ import java.nio.file.Paths;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityExecutorConfiguration {
 
@@ -55,7 +55,7 @@ public class SingularityExecutorConfiguration {
     this.hardKillAfterMillis = Long.parseLong(hardKillAfterMillis);
     this.killThreads = Integer.parseInt(killThreads);
     this.maxTaskMessageLength = Integer.parseInt(maxTaskMessageLength); 
-    this.logMetadataDirectory = SingularityRunnerBaseConfigurationLoader.getValidDirectory(logMetadataDirectory, SingularityExecutorConfigurationLoader.LOG_METADATA_DIRECTORY);
+    this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityExecutorConfigurationLoader.LOG_METADATA_DIRECTORY);
     this.logMetadataSuffix = logMetadataSuffix;
   }
   
