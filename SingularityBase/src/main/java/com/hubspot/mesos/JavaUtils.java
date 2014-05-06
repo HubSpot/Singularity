@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 public class JavaUtils {
@@ -159,4 +161,14 @@ public class JavaUtils {
     };
   }
 
+  public static Path getValidDirectory(String directoryPath, String name) {
+    Preconditions.checkState(!directoryPath.isEmpty(), "Path for %s can't be empty", name);
+    
+    Path path = Paths.get(directoryPath);
+    
+    Preconditions.checkState(Files.isDirectory(path), "Path %s for %s wasn't a directory", path, name);
+    
+    return path;
+  }
+  
 }

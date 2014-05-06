@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityLogWatcherConfiguration {
 
@@ -49,7 +49,7 @@ public class SingularityLogWatcherConfiguration {
     this.fluentdHosts = parseFluentdHosts(fluentdHosts);
     this.storeSuffix = storeSuffix;
     this.fluentdTagPrefix = fluentdTagPrefix;
-    this.storeDirectory = SingularityRunnerBaseConfigurationLoader.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
+    this.storeDirectory = JavaUtils.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
     this.logrotateAfterBytes = Long.parseLong(logrotateAfterBytes);
     this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
     this.logrotateToDirectory = logrotateToDirectory;
@@ -57,7 +57,7 @@ public class SingularityLogWatcherConfiguration {
     this.logrotateMaxageDays = logrotateMaxageDays;
     this.logrotateDateformat = logrotateDateformat;
     this.logMetadataSuffix = logMetadataSuffix;
-    this.logMetadataDirectory = SingularityRunnerBaseConfigurationLoader.getValidDirectory(logMetadataDirectory, SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY);
+    this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY);
   }
   
   public Path getLogMetadataDirectory() {

@@ -38,8 +38,20 @@ public abstract class WatchServiceHelper implements Closeable {
     this.stopped = false;
   }
 
-  public void stop() {
-    this.stopped = true;
+  public boolean stop() {
+    if (stopped) {
+      return false;
+    }
+    stopped = true;
+    return true;
+  }
+
+  public boolean isStopped() {
+    return stopped;
+  }
+
+  public void setStopped(boolean stopped) {
+    this.stopped = stopped;
   }
 
   public void close() {

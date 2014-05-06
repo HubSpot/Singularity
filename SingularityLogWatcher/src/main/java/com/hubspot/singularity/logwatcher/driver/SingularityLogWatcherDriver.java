@@ -143,10 +143,14 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     store.start();
   }
 
-  public void markShutdown() {
+  public boolean markShutdown() {
     tailersLock.lock();
-    this.shutdown = true;
+    if (shutdown) {
+      return false;
+    }
+    shutdown = true;
     tailersLock.unlock();
+    return true;
   }
   
   public void shutdown() {
@@ -154,7 +158,10 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     
     LOG.info("Shutting down with {} tailer(s)", tailers.size());
     
-    markShutdown();
+    if (!markShutdown()) {
+      LOG.info("Already shutdown, canceling redundant call");
+      return;
+    }
     
     retryService.shutdownNow();
     

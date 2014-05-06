@@ -2,7 +2,19 @@ package com.hubspot.singularity.runner.base.shared;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 
+/**
+ * s3KeyFormat is the format for the S3 file.
+ * 
+ * It can contain the following:
+ * %filename - adds the original file's filename
+ * %Y - adds year
+ * %m - adds month
+ * %d - adds day of the month 
+ * %index - adds the index of the file uploaded at this moment (to preserve uniqueness)
+ *
+ */
 public class S3UploadMetadata {
   
   private final String directory;
@@ -12,6 +24,11 @@ public class S3UploadMetadata {
   
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat) {
+    Preconditions.checkNotNull(directory);
+    Preconditions.checkNotNull(fileGlob);
+    Preconditions.checkNotNull(s3Bucket);
+    Preconditions.checkNotNull(s3KeyFormat);
+    
     this.directory = directory;
     this.fileGlob = fileGlob;
     this.s3Bucket = s3Bucket;
