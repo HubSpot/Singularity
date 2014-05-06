@@ -143,7 +143,7 @@ public class ArtifactManager extends SafeProcessManager {
     if (!checkCached(artifact, cachedPath)) {
       downloadAndCache(artifact, filename);
     } else {
-      log.info("Using cached file {}", getFullPath(cachedPath));
+      log.info("Using cached file {}", cachedPath);
     }
   
     return cachedPath;
