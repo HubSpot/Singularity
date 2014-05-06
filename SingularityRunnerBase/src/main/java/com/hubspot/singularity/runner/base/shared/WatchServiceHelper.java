@@ -119,7 +119,7 @@ public abstract class WatchServiceHelper implements Closeable {
       }
     }
 
-    LOG.trace("Handled {} out of {} event(s) for {} in {}", processed, events.size(), watchDirectory, JavaUtils.duration(start));
+    LOG.debug("Handled {} out of {} event(s) for {} in {}", processed, events.size(), watchDirectory, JavaUtils.duration(start));
   }
 
 }

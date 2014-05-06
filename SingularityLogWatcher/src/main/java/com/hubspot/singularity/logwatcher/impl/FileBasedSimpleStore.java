@@ -69,6 +69,8 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
       return false;
     }
     
+    LOG.trace("Handling {} event on {}", kind, filename);
+    
     Optional<TailMetadata> tail = read(configuration.getLogMetadataDirectory().resolve(filename));
       
     if (!tail.isPresent()) {
@@ -139,11 +141,13 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   private Optional<TailMetadata> read(Path file) throws IOException {
     byte[] bytes = Files.readAllBytes(file);
     
+    LOG.trace("Read {} bytes from {}", bytes.length, file);
+    
     try {
       TailMetadata tail = objectMapper.readValue(bytes, TailMetadata.class);
       return Optional.of(tail);
     } catch (IOException e) {
-      LOG.warn("File {} is not a valid TailMetadata", file, e);
+      LOG.warn("File {} is not a valid TailMetadata ({})", file, JavaUtils.toString(bytes), e);
     }
     
     return Optional.absent();

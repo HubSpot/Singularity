@@ -204,7 +204,6 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     tailersLock.lock();
     
     try {
-    
       if (shutdown) {
         LOG.info("Not handling notification {}, shutting down...", tailMetadata);
         return;
@@ -221,7 +220,6 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       } else {
         tail(tailMetadata);
       }
-      
     } finally {
       tailersLock.unlock();
     }
