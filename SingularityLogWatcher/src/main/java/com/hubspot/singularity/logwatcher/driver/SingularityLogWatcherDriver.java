@@ -22,6 +22,7 @@ import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
 import com.hubspot.singularity.logwatcher.tailer.SingularityLogWatcherTailer;
+import com.hubspot.singularity.logwatcher.tailer.SingularityS3UploaderMetadataWriter;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
@@ -36,12 +37,13 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
   private final ScheduledExecutorService retryService;
   private final LogrotateTemplateManager logrotateTemplateManager;
   private final Map<TailMetadata, SingularityLogWatcherTailer> tailers;
+  private final SingularityS3UploaderMetadataWriter s3MetadataWriter;
   
   private volatile boolean shutdown;
   private final Lock tailersLock;
   
   @Inject
-  public SingularityLogWatcherDriver(SimpleStore store,  LogrotateTemplateManager logrotateTemplateManager, SingularityLogWatcherConfiguration configuration, LogForwarder logForwarder) {
+  public SingularityLogWatcherDriver(SimpleStore store,  LogrotateTemplateManager logrotateTemplateManager, SingularityLogWatcherConfiguration configuration, LogForwarder logForwarder, SingularityS3UploaderMetadataWriter s3MetadataWriter) {
     this.store = store;
     this.logForwarder = logForwarder;
     this.configuration = configuration;
@@ -51,6 +53,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     this.retryService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherRetry-%d").build());
     this.shutdown = false;
     this.tailersLock = new ReentrantLock();
+    this.s3MetadataWriter = s3MetadataWriter;
     
     this.store.registerListener(this);
   }
@@ -188,7 +191,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
   
   private Optional<SingularityLogWatcherTailer> buildTailer(TailMetadata tail) {
     try {
-      SingularityLogWatcherTailer tailer = new SingularityLogWatcherTailer(tail, configuration, logrotateTemplateManager, store, logForwarder);
+      SingularityLogWatcherTailer tailer = new SingularityLogWatcherTailer(tail, configuration, logrotateTemplateManager, store, logForwarder, s3MetadataWriter);
       return Optional.of(tailer);
     } catch (Throwable t) {
       LOG.warn("Couldn't create a tailer for {}", tail, t);

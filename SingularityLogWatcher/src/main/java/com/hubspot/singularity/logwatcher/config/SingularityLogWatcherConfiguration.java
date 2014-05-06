@@ -27,6 +27,12 @@ public class SingularityLogWatcherConfiguration {
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
   
+  private final String s3MetadataSuffix;
+  private final Path s3MetadataDirectory;
+  
+  private final String s3KeyPattern;
+  private final String s3Bucket;
+  
   @Inject
   public SingularityLogWatcherConfiguration(
       @Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, 
@@ -42,7 +48,11 @@ public class SingularityLogWatcherConfiguration {
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
       @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
       @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
-      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
+      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix,
+      @Named(SingularityLogWatcherConfigurationLoader.S3_UPLOADER_BUCKET) String s3Bucket,
+      @Named(SingularityLogWatcherConfigurationLoader.S3_UPLOADER_PATTERN) String s3KeyPattern,
+      @Named(SingularityLogWatcherConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
+      @Named(SingularityLogWatcherConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix
       ) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
@@ -58,8 +68,28 @@ public class SingularityLogWatcherConfiguration {
     this.logrotateDateformat = logrotateDateformat;
     this.logMetadataSuffix = logMetadataSuffix;
     this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY);
+    this.s3Bucket = s3Bucket;
+    this.s3KeyPattern = s3KeyPattern;
+    this.s3MetadataSuffix = s3MetadataSuffix;
+    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityLogWatcherConfigurationLoader.S3_METADATA_DIRECTORY);
   }
-  
+    
+  public String getS3MetadataSuffix() {
+    return s3MetadataSuffix;
+  }
+
+  public Path getS3MetadataDirectory() {
+    return s3MetadataDirectory;
+  }
+
+  public String getS3KeyPattern() {
+    return s3KeyPattern;
+  }
+
+  public String getS3Bucket() {
+    return s3Bucket;
+  }
+
   public Path getLogMetadataDirectory() {
     return logMetadataDirectory;
   }
@@ -155,7 +185,8 @@ public class SingularityLogWatcherConfiguration {
   public String toString() {
     return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
         + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", retryDelaySeconds=" + retryDelaySeconds + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays="
-        + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + "]";
+        + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", s3MetadataSuffix="
+        + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
-  
+
 }

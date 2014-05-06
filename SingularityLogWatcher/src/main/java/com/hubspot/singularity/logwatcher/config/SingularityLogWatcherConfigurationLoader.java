@@ -23,6 +23,9 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityRunnerB
   public static final String LOGROTATE_COUNT = "logwatcher.logrotate.count";
   public static final String LOGROTATE_DATEFORMAT = "logwatcher.logrotate.dateformat";
   
+  public static final String S3_UPLOADER_PATTERN = "logwatcher.s3.uploader.pattern";
+  public static final String S3_UPLOADER_BUCKET = "logwatcher.s3.uploader.bucket";
+  
   @Override
   protected void bindDefaults(Properties properties) {
     super.bindDefaults(properties);

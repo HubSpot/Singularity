@@ -5,6 +5,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +26,7 @@ public class SingularityS3Uploader {
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
-  private final Path fileDirectory;
+  private final String fileDirectory;
   private final S3Service s3Service;
   private final S3Bucket s3Bucket;
   private final Path metadataPath;
@@ -34,7 +35,7 @@ public class SingularityS3Uploader {
   public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, Path metadataPath) {
     this.s3Service = s3Service;
     this.uploadMetadata = uploadMetadata;
-    this.fileDirectory = JavaUtils.getValidDirectory(uploadMetadata.getDirectory(), "S3Uploader");
+    this.fileDirectory = uploadMetadata.getDirectory();
     this.pathMatcher = fileSystem.getPathMatcher("glob:" + uploadMetadata.getFileGlob());
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
@@ -58,7 +59,7 @@ public class SingularityS3Uploader {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
     
-    for (Path file : JavaUtils.iterable(fileDirectory)) {
+    for (Path file : JavaUtils.iterable(Paths.get(fileDirectory))) {
       if (!pathMatcher.matches(file.getFileName())) {
         LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
         continue;
