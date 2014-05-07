@@ -132,7 +132,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         int uploads = 0;
         final int uploaders = metadataToUploader.size();
-        metrics.resetCounters();
+        metrics.startUploads();
         
         try {
           uploads = checkUploads();
@@ -140,6 +140,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           LOG.error("Uncaught exception while checking {} upload(s)", uploaders, t);
         } finally {
           runLock.unlock();
+          metrics.finishUploads();
           LOG.info("Uploaded {} from {} uploader(s) in {}", uploads, uploaders, JavaUtils.duration(start));
         }
       }

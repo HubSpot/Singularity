@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3uploader;
 
+import java.util.concurrent.TimeUnit;
+
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.JmxReporter;
@@ -19,6 +21,8 @@ public class SingularityS3UploaderMetrics {
   private final Meter filesystemEventsMeter;
   
   private long timeOfLastSuccessUpload;
+  private int lastUploadDuration;
+  private long startUploadsAt;
   
   @Inject
   public SingularityS3UploaderMetrics(MetricRegistry registry) {
@@ -29,11 +33,20 @@ public class SingularityS3UploaderMetrics {
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
     
-    registry.register(name("uploads", "sincelast"), new Gauge<Integer>() {
+    registry.register(name("uploads", "millissincelast"), new Gauge<Integer>() {
 
       @Override
       public Integer getValue() {
         return Integer.valueOf((int) (System.currentTimeMillis() - timeOfLastSuccessUpload));
+      }
+      
+    });
+    
+    registry.register(name("uploads", "lastdurationmillis"), new Gauge<Integer>() {
+
+      @Override
+      public Integer getValue() {
+        return lastUploadDuration;
       }
       
     });
@@ -61,9 +74,15 @@ public class SingularityS3UploaderMetrics {
     reporter.start();
   }  
   
-  public void resetCounters() {
+  public void startUploads() {
     uploadCounter.dec(uploadCounter.getCount());
     errorCounter.dec(errorCounter.getCount());
+    startUploadsAt = System.nanoTime();
+  }
+  
+  public void finishUploads() {
+    long nanosElapsed = System.nanoTime() - startUploadsAt;
+    lastUploadDuration = (int) TimeUnit.NANOSECONDS.toMillis(nanosElapsed);
   }
   
   public Counter getUploadCounter() {
