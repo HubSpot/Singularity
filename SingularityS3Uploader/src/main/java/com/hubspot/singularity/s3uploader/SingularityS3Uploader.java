@@ -74,6 +74,10 @@ public class SingularityS3Uploader {
       }
     }
     
+    if (toUpload.isEmpty()) {
+      return found;
+    }
+    
     uploadBatch(toUpload);
     
     return found;
@@ -88,7 +92,7 @@ public class SingularityS3Uploader {
     for (int i = 0; i < toUpload.size(); i++) {
       final Path file = toUpload.get(i);
       try {
-        uploadSingle(i, start, file);
+        uploadSingle(i, file);
         success++;
         Files.delete(file);
       } catch (Exception e) {
@@ -124,9 +128,10 @@ public class SingularityS3Uploader {
     return s3KeyFormat;
   }
   
-  private void uploadSingle(int sequence, long timestamp, Path file) throws Exception {
+  private void uploadSingle(int sequence, Path file) throws Exception {
     final long start = System.currentTimeMillis();
-    final String key = getKey(sequence, timestamp, file);
+    
+    final String key = getKey(sequence, Files.getLastModifiedTime(file).toMillis(), file);
     
     LOG.info("{} Uploading {} to {}-{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
     
