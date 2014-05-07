@@ -97,9 +97,11 @@ public class SingularityS3Uploader {
       final Path file = toUpload.get(i);
       try {
         uploadSingle(i, file);
+        metrics.upload();
         success++;
         Files.delete(file);
       } catch (Exception e) {
+        metrics.error();
         LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
       } finally {
         context.stop();

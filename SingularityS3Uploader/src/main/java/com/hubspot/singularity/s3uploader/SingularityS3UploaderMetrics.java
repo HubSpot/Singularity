@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3uploader;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -12,15 +13,31 @@ public class SingularityS3UploaderMetrics {
   private final MetricRegistry registry;
   private final Counter uploaderCounter;
   private final Counter expiringUploaderCounter;
+  private final Counter uploadCounter;
+  private final Counter errorCounter;
   private final Timer uploadTimer;
   private final Meter filesystemEventsMeter;
+  
+  private long timeOfLastSuccessUpload;
   
   @Inject
   public SingularityS3UploaderMetrics(MetricRegistry registry) {
     this.registry = registry;
     this.uploaderCounter = registry.counter(name("uploaders", "total"));
     this.expiringUploaderCounter = registry.counter(name("uploaders", "expiring"));
-    this.uploadTimer = registry.timer(name("uploads"));
+    this.uploadCounter = registry.counter(name("uploads", "success"));
+    this.errorCounter = registry.counter(name("uploads", "errors"));
+    this.uploadTimer = registry.timer(name("uploads", "timer"));
+    
+    registry.register(name("uploads", "sincelast"), new Gauge<Integer>() {
+
+      @Override
+      public Integer getValue() {
+        return Integer.valueOf((int) (System.currentTimeMillis() - timeOfLastSuccessUpload));
+      }
+      
+    });
+    
     this.filesystemEventsMeter = registry.meter(name("filesystem", "events"));
     
     startJmxReporter();
@@ -30,11 +47,33 @@ public class SingularityS3UploaderMetrics {
     return MetricRegistry.name(SingularityS3UploaderMetrics.class, names);
   }
 
+  public void upload() {
+    uploadCounter.inc();
+    timeOfLastSuccessUpload = System.currentTimeMillis();
+  }
+  
+  public void error() {
+    errorCounter.inc();
+  }
+  
   private void startJmxReporter() {
     JmxReporter reporter = JmxReporter.forRegistry(registry).build();
     reporter.start();
+  }  
+  
+  public void resetCounters() {
+    uploadCounter.dec(uploadCounter.getCount());
+    errorCounter.dec(errorCounter.getCount());
   }
-    
+  
+  public Counter getUploadCounter() {
+    return uploadCounter;
+  }
+
+  public Counter getErrorCounter() {
+    return errorCounter;
+  }
+
   public Counter getExpiringUploaderCounter() {
     return expiringUploaderCounter;
   }

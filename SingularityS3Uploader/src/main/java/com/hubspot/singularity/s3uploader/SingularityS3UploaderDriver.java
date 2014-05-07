@@ -132,7 +132,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         int uploads = 0;
         final int uploaders = metadataToUploader.size();
-
+        metrics.resetCounters();
+        
         try {
           uploads = checkUploads();
         } catch (Throwable t) {
