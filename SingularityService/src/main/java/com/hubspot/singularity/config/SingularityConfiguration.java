@@ -109,6 +109,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private int maxHealthcheckResponseBodyBytes = 8192;
   
+  @NotNull
+  private boolean sandboxDefaultsToTaskId = true;
+  
+  public boolean isSandboxDefaultsToTaskId() {
+    return sandboxDefaultsToTaskId;
+  }
+
+  public void setSandboxDefaultsToTaskId(boolean sandboxDefaultsToTaskId) {
+    this.sandboxDefaultsToTaskId = sandboxDefaultsToTaskId;
+  }
+
   public int getMaxHealthcheckResponseBodyBytes() {
     return maxHealthcheckResponseBodyBytes;
   }

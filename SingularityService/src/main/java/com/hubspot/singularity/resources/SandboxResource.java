@@ -22,6 +22,7 @@ import com.hubspot.mesos.json.MesosFileObject;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
@@ -34,11 +35,13 @@ public class SandboxResource extends AbstractHistoryResource {
   
   private final SandboxManager sandboxManager;
   private final SingularityLogSupport logSupport;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, SingularityLogSupport logSupport) {
+  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
     super(historyManager, taskManager);
     
+    this.configuration = configuration;
     this.sandboxManager = sandboxManager;
     this.logSupport = logSupport;
   }
@@ -56,9 +59,20 @@ public class SandboxResource extends AbstractHistoryResource {
     return taskHistory;
   }
   
+  private String getDefaultPath(String taskId, String qPath) {
+    if (qPath != null) {
+      return qPath;
+    }
+    if (configuration.isSandboxDefaultsToTaskId()) {
+      return taskId;
+    }
+    return "";
+  }
+  
   @GET
   @Path("/{taskId}/browse")
-  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path) {
+  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") String qPath) {
+    final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
@@ -73,8 +87,9 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path,
+  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String qPath,
                                    @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
+    final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
