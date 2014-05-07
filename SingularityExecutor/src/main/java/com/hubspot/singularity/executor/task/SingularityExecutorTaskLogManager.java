@@ -38,6 +38,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   }
   
   private void writeLogrotateFile() {
+    task.getLog().info("Writing logrotate configuration file to {}", getLogrotateConfPath());
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, task.getServiceLogOut().toString()));
   }
  
