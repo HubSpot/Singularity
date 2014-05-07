@@ -141,7 +141,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         } finally {
           runLock.unlock();
           metrics.finishUploads();
-          LOG.info("Uploaded {} from {} uploader(s) in {}", uploads, uploaders, JavaUtils.duration(start));
+          LOG.info("Found {} items from {} uploader(s) in {}", uploads, uploaders, JavaUtils.duration(start));
         }
       }
     }, configuration.getCheckUploadsEverySeconds(), configuration.getCheckUploadsEverySeconds(), TimeUnit.SECONDS);
@@ -212,16 +212,22 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       final SingularityS3Uploader uploader = uploaderToFuture.getKey();
       try {
         final int foundFiles = uploaderToFuture.getValue().get();
+        
         if (foundFiles == 0) {
           final long durationSinceLastFile = now - uploaderLastHadFilesAt.get(uploader);
+          final boolean isFinished = isFinished(uploader);
           
-          if (durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile() || isFinished(uploader)) {
+          if (durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile() || isFinished) {
             LOG.info("Expiring uploader {}", uploader);
             expiredUploaders.add(uploader);
+          } else {
+            LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, durationSinceLastFile, configuration.getStopCheckingAfterMillisWithoutNewFile(), isFinished);
           }
         } else {
+          LOG.trace("Updating uploader {} last expire time");
           uploaderLastHadFilesAt.put(uploader, now);
         }
+        
         totesUploads += foundFiles;
       } catch (Throwable t) {
         LOG.error("Waiting on future", t);
@@ -248,7 +254,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private boolean isFinished(SingularityS3Uploader uploader) {
     Boolean isUploaderFinished = isFinished.get(uploader);
     
-    return isUploaderFinished != null && isUploaderFinished.booleanValue();
+    return (isUploaderFinished != null && isUploaderFinished.booleanValue()) || uploader.getUploadMetadata().isFinished();
   }
 
   private boolean handleNewS3Metadata(Path filename) throws IOException {
