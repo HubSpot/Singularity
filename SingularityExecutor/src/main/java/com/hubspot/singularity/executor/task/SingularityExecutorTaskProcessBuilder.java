@@ -52,8 +52,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     extractFiles(executorData);
     
     ProcessBuilder processBuilder = buildProcessBuilder(task.getTaskInfo(), executorData);
-  
-    task.writeTailMetadata(false);
+    
+    task.getTaskLogManager().setup();
     
     return processBuilder;
   }
@@ -109,7 +109,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     
     return processBuilder;
   }
-
+  
   @Override
   public String toString() {
     return "SingularityExecutorTaskProcessBuilder [task=" + task.getTaskId() + "]";

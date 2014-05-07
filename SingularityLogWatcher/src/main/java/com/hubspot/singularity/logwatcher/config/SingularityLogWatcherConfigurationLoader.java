@@ -17,27 +17,10 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityRunnerB
   
   public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
   
-  public static final String LOGROTATE_COMMAND = "logwatcher.logrotate.command";
-  public static final String LOGROTATE_AFTER_BYTES = "logwatcher.logrotate.after.bytes";
-  public static final String LOGROTATE_DIRECTORY = "logwatcher.logrotate.to.directory";
-  public static final String LOGROTATE_MAXAGE_DAYS = "logwatcher.logrotate.maxage.days";
-  public static final String LOGROTATE_COUNT = "logwatcher.logrotate.count";
-  public static final String LOGROTATE_DATEFORMAT = "logwatcher.logrotate.dateformat";
-  
-  public static final String S3_UPLOADER_PATTERN = "logwatcher.s3.uploader.pattern";
-  public static final String S3_UPLOADER_BUCKET = "logwatcher.s3.uploader.bucket";
-  
   @Override
   protected void bindDefaults(Properties properties) {
     super.bindDefaults(properties);
 
-    properties.put(LOGROTATE_COMMAND, "logrotate");
-    properties.put(LOGROTATE_AFTER_BYTES, "104857600"); // 100MB
-    properties.put(LOGROTATE_DIRECTORY, "logs");
-    properties.put(LOGROTATE_MAXAGE_DAYS, "7");
-    properties.put(LOGROTATE_COUNT, "20");
-    properties.put(LOGROTATE_DATEFORMAT, "-%s");
-    
     properties.put(BYTE_BUFFER_CAPACITY, "8192");
     properties.put(POLL_MILLIS, "1000");
     properties.put(FLUENTD_HOSTS, "localhost:24224");

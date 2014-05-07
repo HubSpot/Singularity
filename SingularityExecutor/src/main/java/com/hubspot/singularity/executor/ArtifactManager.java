@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -14,9 +13,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.hubspot.deploy.Artifact;
@@ -24,18 +22,16 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
-public class ArtifactManager extends SafeProcessManager {
+public class ArtifactManager extends SimpleProcessManager {
 
   private final Path cacheDirectory;
-  private final Path executorOut;
   private final Logger log;
   private final String taskId;
   
   public ArtifactManager(SingularityExecutorConfiguration configuration, String taskId, Logger log) {
-    super(log);
+    super(log, configuration.getExecutorBashLogPath(taskId));
     
     this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
-    this.executorOut = configuration.getExecutorBashLogPath(taskId);
     this.log = log;
     this.taskId = taskId;
   }
@@ -148,38 +144,17 @@ public class ArtifactManager extends SafeProcessManager {
   
     return cachedPath;
   }
-    
-  private void runCommand(final List<String> command) {
-    final ProcessBuilder processBuilder = new ProcessBuilder(command);
-
-    try {
-      final File outputFile = executorOut.toFile();
-      processBuilder.redirectError(outputFile);
-      processBuilder.redirectOutput(outputFile);
-      
-      final Process process = startProcess(processBuilder);
-      
-      final int exitCode = process.waitFor();
-        
-      Preconditions.checkState(exitCode == 0, "Got exit code %d while running command %s", exitCode, command);
-
-      processFinished();
- 
-    } catch (Throwable t) {
-      throw new RuntimeException(String.format("While running %s", command), t);
-    }
-  }
   
   private void downloadUri(String uri, Path path) {
     log.info("Downloading {} to {}", uri, path);
 
-    final List<String> command = Lists.newArrayList();
-    command.add("wget");
-    command.add(uri);
-    command.add("-O");
-    command.add(path.toString());
-    command.add("-nv");
-    command.add("--no-check-certificate");
+    final List<String> command = ImmutableList.of(
+      "wget",
+      uri,
+      "-O",
+      path.toString(),
+      "-nv",
+      "--no-check-certificate");
 
     runCommand(command);
   }
@@ -187,12 +162,12 @@ public class ArtifactManager extends SafeProcessManager {
   public void untar(Path source, Path destination) {
     log.info("Untarring {} to {}", source, destination);
     
-    final List<String> command = Lists.newArrayList();
-    command.add("tar");
-    command.add("-oxzf");
-    command.add(source.toString());
-    command.add("-C");
-    command.add(destination.toString());
+    final List<String> command = ImmutableList.of(
+      "tar",
+      "-oxzf",
+      source.toString(),
+      "-C",
+      destination.toString());
   
     runCommand(command);
   }
@@ -209,7 +184,7 @@ public class ArtifactManager extends SafeProcessManager {
 
   @Override
   public String toString() {
-    return "ArtifactManager [cacheDirectory=" + cacheDirectory + ", executorOut=" + executorOut + ", log=" + log + ", taskId=" + taskId + "]";
+    return "ArtifactManager [cacheDirectory=" + cacheDirectory + ", log=" + log + ", taskId=" + taskId + "]";
   }
 
 }

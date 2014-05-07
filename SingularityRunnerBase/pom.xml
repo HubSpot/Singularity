@@ -56,12 +56,6 @@
       <version>${jackson.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.github.spullara.mustache.java</groupId>
-      <artifactId>compiler</artifactId>
-      <version>0.8.13</version>
-    </dependency>
-
   </dependencies>
 
   

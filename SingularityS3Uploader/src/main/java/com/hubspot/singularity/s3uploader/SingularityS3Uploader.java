@@ -105,10 +105,20 @@ public class SingularityS3Uploader {
     
     String s3KeyFormat = uploadMetadata.getS3KeyFormat();
     
-    s3KeyFormat = s3KeyFormat.replace("%filename", file.getFileName().toString());
+    String filename = file.getFileName().toString();
+    
+    s3KeyFormat = s3KeyFormat.replace("%filename", filename);
+    
+    int lastPeriod = filename.lastIndexOf(".");
+    
+    if (lastPeriod > -1) {
+      s3KeyFormat = s3KeyFormat.replace("%fileext", filename.substring(lastPeriod));
+    }
+    
     s3KeyFormat = s3KeyFormat.replace("%Y", Integer.toString(calendar.get(Calendar.YEAR)));
     s3KeyFormat = s3KeyFormat.replace("%m", Integer.toString(calendar.get(Calendar.MONTH)));
     s3KeyFormat = s3KeyFormat.replace("%d", Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)));
+    s3KeyFormat = s3KeyFormat.replace("%s", Long.toString(timestamp));
     s3KeyFormat = s3KeyFormat.replace("%index", Integer.toString(sequence));
     
     return s3KeyFormat;

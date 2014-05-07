@@ -16,23 +16,10 @@ public class SingularityLogWatcherConfiguration {
   private final Path storeDirectory;
   private final String storeSuffix;
   private final String fluentdTagPrefix;
-  private final long logrotateAfterBytes;
   private final long retryDelaySeconds;
-  
-  private final String logrotateCommand;
-  private final String logrotateToDirectory;
-  private final String logrotateMaxageDays;
-  private final String logrotateCount; 
-  private final String logrotateDateformat;
   
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
-  
-  private final String s3MetadataSuffix;
-  private final Path s3MetadataDirectory;
-  
-  private final String s3KeyPattern;
-  private final String s3Bucket;
   
   @Inject
   public SingularityLogWatcherConfiguration(
@@ -42,19 +29,9 @@ public class SingularityLogWatcherConfiguration {
       @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
       @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, 
       @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_AFTER_BYTES) String logrotateAfterBytes,
       @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COMMAND) String logrotateCommand, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_COUNT) String logrotateCount, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
-      @Named(SingularityLogWatcherConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
       @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
-      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix,
-      @Named(SingularityLogWatcherConfigurationLoader.S3_UPLOADER_BUCKET) String s3Bucket,
-      @Named(SingularityLogWatcherConfigurationLoader.S3_UPLOADER_PATTERN) String s3KeyPattern,
-      @Named(SingularityLogWatcherConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
-      @Named(SingularityLogWatcherConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix
+      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
       ) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
@@ -62,39 +39,9 @@ public class SingularityLogWatcherConfiguration {
     this.storeSuffix = storeSuffix;
     this.fluentdTagPrefix = fluentdTagPrefix;
     this.storeDirectory = JavaUtils.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
-    this.logrotateAfterBytes = Long.parseLong(logrotateAfterBytes);
     this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
-    this.logrotateCommand = logrotateCommand;
-    this.logrotateToDirectory = logrotateToDirectory;
-    this.logrotateCount = logrotateCount;
-    this.logrotateMaxageDays = logrotateMaxageDays;
-    this.logrotateDateformat = logrotateDateformat;
     this.logMetadataSuffix = logMetadataSuffix;
     this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY);
-    this.s3Bucket = s3Bucket;
-    this.s3KeyPattern = s3KeyPattern;
-    this.s3MetadataSuffix = s3MetadataSuffix;
-    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityLogWatcherConfigurationLoader.S3_METADATA_DIRECTORY);
-  }
-    
-  public String getLogrotateCommand() {
-    return logrotateCommand;
-  }
-  
-  public String getS3MetadataSuffix() {
-    return s3MetadataSuffix;
-  }
-
-  public Path getS3MetadataDirectory() {
-    return s3MetadataDirectory;
-  }
-
-  public String getS3KeyPattern() {
-    return s3KeyPattern;
-  }
-
-  public String getS3Bucket() {
-    return s3Bucket;
   }
 
   public Path getLogMetadataDirectory() {
@@ -128,14 +75,6 @@ public class SingularityLogWatcherConfiguration {
       return "FluentdHost [host=" + host + ", port=" + port + "]";
     }
     
-  }
-  
-  public String getLogrotateToDirectory() {
-    return logrotateToDirectory;
-  }
-
-  public long getLogrotateAfterBytes() {
-    return logrotateAfterBytes;
   }
 
   public Path getStoreDirectory() {
@@ -176,24 +115,10 @@ public class SingularityLogWatcherConfiguration {
     return fluentdTagPrefix;
   }
 
-  public String getLogrotateMaxageDays() {
-    return logrotateMaxageDays;
-  }
-
-  public String getLogrotateCount() {
-    return logrotateCount;
-  }
-
-  public String getLogrotateDateformat() {
-    return logrotateDateformat;
-  }
-
   @Override
   public String toString() {
     return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
-        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", logrotateAfterBytes=" + logrotateAfterBytes + ", retryDelaySeconds=" + retryDelaySeconds + ", logrotateCommand=" + logrotateCommand + ", logrotateToDirectory=" + logrotateToDirectory
-        + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix="
-        + logMetadataSuffix + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", retryDelaySeconds=" + retryDelaySeconds + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + "]";
   }
 
 }

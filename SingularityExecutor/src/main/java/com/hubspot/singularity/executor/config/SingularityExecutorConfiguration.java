@@ -24,8 +24,21 @@ public class SingularityExecutorConfiguration {
 
   private final int maxTaskMessageLength;
   
+  private final String logrotateCommand;
+  private final Path logrotateConfDirectory;
+  private final String logrotateToDirectory;
+  private final String logrotateMaxageDays;
+  private final String logrotateCount; 
+  private final String logrotateDateformat;
+
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
+  
+  private final String s3MetadataSuffix;
+  private final Path s3MetadataDirectory;
+  
+  private final String s3KeyPattern;
+  private final String s3Bucket;
   
   @Inject
   public SingularityExecutorConfiguration(@Named(SingularityExecutorConfigurationLoader.ARTIFACT_CACHE_DIRECTORY) String cacheDirectory, 
@@ -41,7 +54,17 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.NUM_CORE_KILL_THREADS) String killThreads, 
       @Named(SingularityExecutorConfigurationLoader.MAX_TASK_MESSAGE_LENGTH) String maxTaskMessageLength,
       @Named(SingularityExecutorConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
-      @Named(SingularityExecutorConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
+      @Named(SingularityExecutorConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix,
+      @Named(SingularityExecutorConfigurationLoader.S3_UPLOADER_BUCKET) String s3Bucket,
+      @Named(SingularityExecutorConfigurationLoader.S3_UPLOADER_PATTERN) String s3KeyPattern,
+      @Named(SingularityExecutorConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
+      @Named(SingularityExecutorConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_COMMAND) String logrotateCommand, 
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_COUNT) String logrotateCount, 
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory
       ) {
     this.executorBashLog = executorBashLog;
     this.taskAppDirectory = taskAppDirectory;
@@ -57,6 +80,16 @@ public class SingularityExecutorConfiguration {
     this.maxTaskMessageLength = Integer.parseInt(maxTaskMessageLength); 
     this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityExecutorConfigurationLoader.LOG_METADATA_DIRECTORY);
     this.logMetadataSuffix = logMetadataSuffix;
+    this.logrotateCommand = logrotateCommand;
+    this.logrotateConfDirectory = JavaUtils.getValidDirectory(logrotateConfDirectory, SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY);
+    this.logrotateToDirectory = logrotateToDirectory;
+    this.logrotateCount = logrotateCount;
+    this.logrotateMaxageDays = logrotateMaxageDays;
+    this.logrotateDateformat = logrotateDateformat;
+    this.s3Bucket = s3Bucket;
+    this.s3KeyPattern = s3KeyPattern;
+    this.s3MetadataSuffix = s3MetadataSuffix;
+    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityExecutorConfigurationLoader.S3_METADATA_DIRECTORY);
   }
   
   public Path getLogMetadataDirectory() {
@@ -135,12 +168,53 @@ public class SingularityExecutorConfiguration {
     return getTaskDirectoryPath(taskId).resolve(getExecutorJavaLog());
   }
 
+  public String getLogrotateCommand() {
+    return logrotateCommand;
+  }
+
+  public String getLogrotateToDirectory() {
+    return logrotateToDirectory;
+  }
+
+  public String getLogrotateMaxageDays() {
+    return logrotateMaxageDays;
+  }
+
+  public String getLogrotateCount() {
+    return logrotateCount;
+  }
+
+  public String getLogrotateDateformat() {
+    return logrotateDateformat;
+  }
+
+  public String getS3MetadataSuffix() {
+    return s3MetadataSuffix;
+  }
+
+  public Path getS3MetadataDirectory() {
+    return s3MetadataDirectory;
+  }
+
+  public String getS3KeyPattern() {
+    return s3KeyPattern;
+  }
+
+  public String getS3Bucket() {
+    return s3Bucket;
+  }
+
+  public Path getLogrotateConfDirectory() {
+    return logrotateConfDirectory;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser + ", cacheDirectory=" + cacheDirectory
         + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
-        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix
-        + "]";
+        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateConfDirectory=" + logrotateConfDirectory
+        + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory="
+        + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
 
 }

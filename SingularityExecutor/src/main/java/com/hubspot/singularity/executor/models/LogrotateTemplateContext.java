@@ -1,13 +1,13 @@
-package com.hubspot.singularity.logwatcher.logrotate;
+package com.hubspot.singularity.executor.models;
 
-import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
 public class LogrotateTemplateContext {
 
   private final String logfile;
-  private final SingularityLogWatcherConfiguration configuration;
+  private final SingularityExecutorConfiguration configuration;
   
-  public LogrotateTemplateContext(SingularityLogWatcherConfiguration configuration, String logfile) {
+  public LogrotateTemplateContext(SingularityExecutorConfiguration configuration, String logfile) {
     this.configuration = configuration;
     this.logfile = logfile;
   }
@@ -30,6 +30,11 @@ public class LogrotateTemplateContext {
   
   public String getLogfile() {
     return logfile;
+  }
+
+  @Override
+  public String toString() {
+    return "LogrotateTemplateContext [logfile=" + logfile + ", configuration=" + configuration + "]";
   }
   
 }

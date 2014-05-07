@@ -59,6 +59,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final ExecutorService executorService;
   private final FileSystem fileSystem;
   private final S3Service s3Service;
+  private final Map<SingularityS3Uploader, Boolean> isFinished;
   private ScheduledFuture<?> future;
   
   @Inject
@@ -77,6 +78,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     this.metadataToUploader = Maps.newHashMap();
     this.uploaderLastHadFilesAt = Maps.newHashMap();
+    this.isFinished = Maps.newHashMap();
     
     this.runLock = new ReentrantLock();
 
@@ -207,7 +209,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         if (foundFiles == 0) {
           final long durationSinceLastFile = now - uploaderLastHadFilesAt.get(uploader);
           
-          if (durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile()) {
+          if (durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile() || isFinished(uploader)) {
             LOG.info("Expiring uploader {}", uploader);
             expiredUploaders.add(uploader);
           }
@@ -232,25 +234,45 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     return totesUploads;
   }
+  
+  private boolean isFinished(SingularityS3Uploader uploader) {
+    Boolean isUploaderFinished = isFinished.get(uploader);
+    
+    return isUploaderFinished != null && isUploaderFinished.booleanValue();
+  }
 
   private boolean handleNewS3Metadata(Path filename) throws IOException {
-    Optional<S3UploadMetadata> metadata = readS3UploadMetadata(filename);
+    Optional<S3UploadMetadata> maybeMetadata = readS3UploadMetadata(filename);
 
-    if (metadataToUploader.containsKey(metadata)) {
-      LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata.get(), filename);
-      return false;
+    if (!maybeMetadata.isPresent()) {
+      return false;    
+    }
+    
+    final S3UploadMetadata metadata = maybeMetadata.get();
+    
+    SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
+    
+    if (existingUploader != null) {
+      if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
+        LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
+        return false;
+      } else {
+        LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
+        isFinished.put(existingUploader, metadata.isFinished());
+        return true;
+      }
     }
     
     try {
-      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata.get(), fileSystem, filename);
+      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata, fileSystem, filename);
       
       LOG.info("Created new uploader {}", uploader);
       
-      metadataToUploader.put(metadata.get(), uploader);
+      metadataToUploader.put(metadata, uploader);
       uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
       return true;
     } catch (Throwable t) {
-      LOG.info("Ignoring metadata {} because uploader couldn't be created", metadata.get(), t);
+      LOG.info("Ignoring metadata {} because uploader couldn't be created", metadata, t);
       return false;
     }
   }
@@ -282,7 +304,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         LOG.trace("Found {} to match deleted path {}", found, filename);
 
         if (found.isPresent()) {
-          metadataToUploader.remove(found.get().getUploadMetadata());
+          isFinished.put(found.get(), Boolean.TRUE);
         }
       } else if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
         return handleNewS3Metadata(fullPath);

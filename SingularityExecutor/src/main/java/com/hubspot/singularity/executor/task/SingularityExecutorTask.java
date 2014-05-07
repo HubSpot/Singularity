@@ -1,9 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,7 +16,6 @@ import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityExecutorTask {
   
@@ -31,13 +27,14 @@ public class SingularityExecutorTask {
   private final ReentrantLock lock;
   private final AtomicBoolean killed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
-  private final ObjectMapper objectMapper;
+  private final SingularityExecutorTaskLogManager taskLogManager;
+  
   private final SingularityExecutorConfiguration configuration;
   
   private final Path taskDirectory;
   private final Path executorBashOut;
   private final Path serviceLogOut;
-  
+    
   public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, String taskId, 
       ExecutorData executorData, ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log) {
     this.driver = driver;
@@ -46,7 +43,6 @@ public class SingularityExecutorTask {
     this.taskId = taskId;
     this.log = log;
     this.configuration = configuration;
-    this.objectMapper = objectMapper; 
     
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
@@ -55,10 +51,11 @@ public class SingularityExecutorTask {
     this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
     this.executorBashOut = configuration.getExecutorBashLogPath(taskId);
     
+    this.taskLogManager = new SingularityExecutorTaskLogManager(this, objectMapper, templateManager, configuration);
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, executorData);
   }
   
-  public void cleanupTaskAppDirectory() {
+  private void cleanupTaskAppDirectory() {
     final Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(getTaskId());
     final String pathToDelete = taskAppDirectoryPath.toString();
     
@@ -71,40 +68,13 @@ public class SingularityExecutorTask {
     }
   }
   
-  private void ensureServiceOutExists() {
-    try {
-      Files.createFile(serviceLogOut);
-    } catch (FileAlreadyExistsException faee) {
-      log.warn("Executor out {} already existed", serviceLogOut);
-    } catch (Throwable t) {
-      log.error("Failed creating executor out {}", serviceLogOut, t);
-    }
+  public void cleanup() {
+    taskLogManager.teardown();
+    cleanupTaskAppDirectory();
   }
   
-  public void writeTailMetadata(boolean finished) {
-    if (!executorData.getLoggingTag().isPresent()) {
-      if (!finished) {
-        log.warn("Not writing logging metadata because logging tag is absent");
-      }
-      return;
-    }
-    
-    if (!finished) {
-      ensureServiceOutExists();
-    }
-    
-    final TailMetadata tailMetadata = new TailMetadata(serviceLogOut.toString(), executorData.getLoggingTag().get(), executorData.getLoggingExtraFields(), finished);
-    final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
-    
-    try {
-      final byte[] bytes = objectMapper.writeValueAsBytes(tailMetadata);
-      
-      log.info("Writing {} bytes of logging metadata {} to {}", bytes.length, tailMetadata, path);
-        
-      Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    } catch (Throwable t) {
-      log.error("Failed writing logging metadata", t);
-    }
+  public SingularityExecutorTaskLogManager getTaskLogManager() {
+    return taskLogManager;
   }
 
   public Path getTaskDirectory() {
@@ -113,6 +83,10 @@ public class SingularityExecutorTask {
 
   public Path getExecutorBashOut() {
     return executorBashOut;
+  }
+
+  public Path getServiceLogOut() {
+    return serviceLogOut;
   }
 
   public boolean isSuccessExitCode(int exitCode) {
@@ -153,6 +127,10 @@ public class SingularityExecutorTask {
 
   public String getTaskId() {
     return taskId;
+  }
+
+  public ExecutorData getExecutorData() {
+    return executorData;
   }
 
   @Override

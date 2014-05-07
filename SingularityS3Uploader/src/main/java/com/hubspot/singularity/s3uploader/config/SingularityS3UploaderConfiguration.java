@@ -28,7 +28,7 @@ public class SingularityS3UploaderConfiguration {
       @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
       @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
       @Named(SingularityS3UploaderConfigurationLoader.CHECK_FOR_UPLOADS_EVERY_SECONDS) String checkUploadsEverySeconds,
-      @Named(SingularityS3UploaderConfigurationLoader.STOP_CHECKING_AFTER_SECONDS_WITHOUT_NEW_FILE) String stopCheckingAfterSecondsWithoutNewFile
+      @Named(SingularityS3UploaderConfigurationLoader.STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE) String stopCheckingAfterHoursWithoutNewFile
       ) {
     this.pollForShutDownMillis = Long.parseLong(pollForShutDownMillis);
     this.s3AccessKey = s3AccessKey;
@@ -37,7 +37,7 @@ public class SingularityS3UploaderConfiguration {
     this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityS3UploaderConfigurationLoader.S3_METADATA_DIRECTORY);
     this.s3MetadataSuffix = s3MetadataSuffix;
     this.checkUploadsEverySeconds = Long.parseLong(checkUploadsEverySeconds);
-    this.stopCheckingAfterMillisWithoutNewFile = TimeUnit.SECONDS.toMillis(Long.parseLong(stopCheckingAfterSecondsWithoutNewFile));
+    this.stopCheckingAfterMillisWithoutNewFile = TimeUnit.HOURS.toMillis(Long.parseLong(stopCheckingAfterHoursWithoutNewFile));
   }
 
   public Path getS3MetadataDirectory() {

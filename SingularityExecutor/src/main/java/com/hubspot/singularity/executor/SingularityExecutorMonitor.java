@@ -284,7 +284,7 @@ public class SingularityExecutorMonitor {
     processRunningTasks.remove(task.getTaskId());
     processBuildingTasks.remove(task.getTaskId());
 
-    cleanupTaskResources(task);
+    task.cleanup();
     
     logging.stopTaskLogger(task.getTaskId(), task.getLog());
     
@@ -304,12 +304,7 @@ public class SingularityExecutorMonitor {
       exitLock.unlock();
     }
   }
-  
-  private void cleanupTaskResources(SingularityExecutorTask task) {
-    task.cleanupTaskAppDirectory();
-    task.writeTailMetadata(true);
-  }
-  
+    
   public enum KillState {
     DIDNT_EXIST, ALREADY_REQUESTED, INTERRUPTING_PRE_PROCESS, KILLING_PROCESS, INCONSISTENT_STATE;
   }

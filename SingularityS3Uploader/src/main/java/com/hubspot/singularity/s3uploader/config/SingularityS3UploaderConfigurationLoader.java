@@ -11,7 +11,7 @@ public class SingularityS3UploaderConfigurationLoader extends SingularityRunnerB
   public static final String S3_SECRET_KEY = "s3uploader.s3.secret.key";
   
   public static final String CHECK_FOR_UPLOADS_EVERY_SECONDS = "s3uploader.check.uploads.every.seconds";
-  public static final String STOP_CHECKING_AFTER_SECONDS_WITHOUT_NEW_FILE = "s3uploader.stop.checking.after.seconds.without.new.file";
+  public static final String STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE = "s3uploader.stop.checking.after.hours.without.new.file";
   
   public static final String EXECUTOR_CORE_THREADS = "s3uploader.core.threads";
   
@@ -22,8 +22,8 @@ public class SingularityS3UploaderConfigurationLoader extends SingularityRunnerB
     properties.put(POLL_MILLIS, "1000");
     properties.put(EXECUTOR_CORE_THREADS, "3");
     
-    properties.put(CHECK_FOR_UPLOADS_EVERY_SECONDS, "60");
-    properties.put(STOP_CHECKING_AFTER_SECONDS_WITHOUT_NEW_FILE, "600");
+    properties.put(CHECK_FOR_UPLOADS_EVERY_SECONDS, "600");
+    properties.put(STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE, "168");
   }
   
 }

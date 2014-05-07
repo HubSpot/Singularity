@@ -11,22 +11,17 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
-import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateContext;
-import com.hubspot.singularity.logwatcher.logrotate.LogrotateTemplateManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
@@ -42,17 +37,11 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   private final ByteBuffer byteBuffer;
   private final LogForwarder logForwarder;
   private final SimpleStore store;
-  private final LogrotateTemplateManager logrotateTemplateManager;
-  private final SingularityLogWatcherConfiguration configuration;
-  private final SingularityS3UploaderMetadataWriter s3MetadataWriter;
   
-  public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, LogrotateTemplateManager logrotateTemplateManager, SimpleStore simpleStore, LogForwarder logForwarder,
-      SingularityS3UploaderMetadataWriter s3MetadataWriter) {
+  public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, SimpleStore simpleStore, LogForwarder logForwarder) {
     super(configuration.getPollMillis(), Paths.get(tailMetadata.getFilename()).getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
+    
     this.tailMetadata = tailMetadata;
-    this.configuration = configuration;
-    this.s3MetadataWriter = s3MetadataWriter;
-    this.logrotateTemplateManager = logrotateTemplateManager;
     this.logfile = Paths.get(tailMetadata.getFilename());
     this.store = simpleStore;
     this.logForwarder = logForwarder;
@@ -116,7 +105,10 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     return true;
   }
 
+  // TODO TEST hadnling resize
   private void checkRead(boolean readAllBytes) throws IOException {
+    checkPosition();
+    
     int bytesRead = 0;
     int bytesLeft = 0;
 
@@ -134,46 +126,14 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
       logForwarder.forwardMessage(tailMetadata, string);
     }
-    
-    if (!readAllBytes) {
-      checkLogrotate();
-    } else {
-      logrotate();
+  }
+  
+  private void checkPosition() throws IOException {
+    if (byteChannel.position() > byteChannel.size()) {
+      resetPosition();
     }
   }
 
-  private void checkLogrotate() throws IOException {
-    if (byteChannel.position() > configuration.getLogrotateAfterBytes()) {
-      logrotate();
-    }
-  }
-  
-  private void logrotate() throws IOException {
-    s3MetadataWriter.writeS3MetadataFile(tailMetadata, logfile);
-    
-    Path tempFilePath = Files.createTempFile(null, ".logrotate");
-    
-    logrotateTemplateManager.writeRunnerScript(tempFilePath, 
-        new LogrotateTemplateContext(configuration, logfile.toString()));
-    List<String> command = ImmutableList.of(configuration.getLogrotateCommand(), "-f", "-v", tempFilePath.toString());
-    
-    ProcessBuilder processBuilder = new ProcessBuilder(command);
-    processBuilder.inheritIO();
-    
-    LOG.debug("Logrotating {} by calling {}", logfile, command);
-    
-    try {
-      int exitCode = processBuilder.start().waitFor();
-      
-      Preconditions.checkState(exitCode == 0, "Logrotate of %s failed with exit code %s", logfile, exitCode);
-      
-    } catch (InterruptedException ie) {
-      throw Throwables.propagate(ie);
-    }
-    
-    resetPosition();
-  }
-  
   private void resetPosition() throws IOException {
     byteChannel.position(0);
     savePosition(0);
