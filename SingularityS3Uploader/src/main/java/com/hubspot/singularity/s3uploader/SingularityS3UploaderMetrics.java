@@ -33,10 +33,16 @@ public class SingularityS3UploaderMetrics {
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
     
+    this.timeOfLastSuccessUpload = -1;
+    
     registry.register(name("uploads", "millissincelast"), new Gauge<Integer>() {
 
       @Override
       public Integer getValue() {
+        if (timeOfLastSuccessUpload == -1) {
+          return -1;
+        }
+        
         return Integer.valueOf((int) (System.currentTimeMillis() - timeOfLastSuccessUpload));
       }
       
