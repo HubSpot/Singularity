@@ -306,7 +306,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         if (found.isPresent()) {
           isFinished.put(found.get(), Boolean.TRUE);
         }
-      } else if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
+      } else {
         return handleNewS3Metadata(fullPath);
       }
 
