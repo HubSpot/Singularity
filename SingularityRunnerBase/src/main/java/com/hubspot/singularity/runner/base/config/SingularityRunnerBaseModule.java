@@ -2,6 +2,7 @@ package com.hubspot.singularity.runner.base.config;
 
 import java.util.Properties;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
@@ -39,5 +40,11 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     mapper.registerModule(new ProtobufModule());
     return mapper;
   }
-
+  
+  @Provides
+  @Singleton
+  public MetricRegistry getMetricRegistry() {
+    return new MetricRegistry();
+  }
+  
 }

@@ -37,7 +37,7 @@
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
     </dependency>
-        
+
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
@@ -55,14 +55,26 @@
       <artifactId>logback-classic</artifactId>
       <version>1.1.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>3.0.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
   </dependencies>
 
-  
+
 </project>

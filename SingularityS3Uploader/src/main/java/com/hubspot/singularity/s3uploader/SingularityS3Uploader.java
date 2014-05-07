@@ -16,6 +16,7 @@ import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
@@ -30,10 +31,12 @@ public class SingularityS3Uploader {
   private final S3Service s3Service;
   private final S3Bucket s3Bucket;
   private final Path metadataPath;
+  private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
   
-  public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, Path metadataPath) {
+  public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
     this.s3Service = s3Service;
+    this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
     this.pathMatcher = fileSystem.getPathMatcher("glob:" + uploadMetadata.getFileGlob());
@@ -90,6 +93,7 @@ public class SingularityS3Uploader {
     int success = 0;
     
     for (int i = 0; i < toUpload.size(); i++) {
+      final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
       try {
         uploadSingle(i, file);
@@ -97,6 +101,8 @@ public class SingularityS3Uploader {
         Files.delete(file);
       } catch (Exception e) {
         LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
+      } finally {
+        context.stop();
       }
     }
     

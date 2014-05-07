@@ -62,10 +62,14 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final Map<SingularityS3Uploader, Boolean> isFinished;
   private ScheduledFuture<?> future;
   
+  private final SingularityS3UploaderMetrics metrics;
+
   @Inject
-  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
+  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper, SingularityS3UploaderMetrics metrics) {
     super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
+    this.metrics = metrics;
+    
     this.fileSystem = FileSystems.getDefault();
     try {
       this.s3Service = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()));
@@ -223,8 +227,12 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
     
     for (SingularityS3Uploader expiredUploader : expiredUploaders) {
+      metrics.getUploaderCounter().dec();
+      metrics.getExpiringUploaderCounter().dec();
+      
       metadataToUploader.remove(expiredUploader.getUploadMetadata());
       uploaderLastHadFilesAt.remove(expiredUploader);
+      isFinished.remove(expiredUploader);
       try {
         Files.delete(expiredUploader.getMetadataPath());
       } catch (IOException e) {
@@ -258,13 +266,26 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         return false;
       } else {
         LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
+        
+        if (metadata.isFinished()) {
+          metrics.getExpiringUploaderCounter().inc();
+        } else {
+          metrics.getExpiringUploaderCounter().dec();
+        }
+        
         isFinished.put(existingUploader, metadata.isFinished());
         return true;
       }
     }
     
     try {
-      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata, fileSystem, filename);
+      metrics.getUploaderCounter().inc();
+      
+      if (metadata.isFinished()) {
+        metrics.getExpiringUploaderCounter().inc();
+      }
+      
+      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata, fileSystem, metrics, filename);
       
       LOG.info("Created new uploader {}", uploader);
       
@@ -279,6 +300,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   
   @Override
   protected boolean processEvent(Kind<?> kind, final Path filename) throws IOException {
+    metrics.getFilesystemEventsMeter().mark();
+    
     if (!isS3MetadataFile(filename)) {
       return false;
     }
@@ -304,6 +327,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         LOG.trace("Found {} to match deleted path {}", found, filename);
 
         if (found.isPresent()) {
+          metrics.getExpiringUploaderCounter().inc();
           isFinished.put(found.get(), Boolean.TRUE);
         }
       } else {
