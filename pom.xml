@@ -23,6 +23,7 @@
     <curator.version>2.4.1</curator.version>
     <ning.async.version>1.7.24</ning.async.version>
     <guice.version>3.0</guice.version>
+    <guava.version>15.0</guava.version>
   </properties>
 
   <groupId>com.hubspot</groupId>

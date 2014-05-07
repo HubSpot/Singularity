@@ -145,11 +145,11 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     try {
       final byte[] bytes = objectMapper.writeValueAsBytes(o);
       
-      task.getLog().info("Writing {} bytes of {} to {}", bytes.length, o, path);
+      task.getLog().info("Writing {} bytes of {} to {}", bytes.length, o.toString(), path);
         
       Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (Throwable t) {
-      task.getLog().error("Failed writing {}", o, t);
+      task.getLog().error("Failed writing {}", o.toString(), t);
     }
   }
   

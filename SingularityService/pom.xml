@@ -39,6 +39,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+ 
+    <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guice</artifactId>
       <version>0.7.0</version>
@@ -138,6 +144,10 @@
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.guav</groupId>
+          <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
