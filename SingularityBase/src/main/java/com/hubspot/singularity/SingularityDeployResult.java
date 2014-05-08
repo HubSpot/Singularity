@@ -27,7 +27,7 @@ public class SingularityDeployResult extends SingularityJsonObject {
   }
   
   public SingularityDeployResult(DeployState deployState, SingularityLoadBalancerUpdate lbUpdate) {
-    this(deployState, Optional.<String> absent(), Optional.of(lbUpdate), System.currentTimeMillis());
+    this(deployState, Optional.of(String.format("Load balancer had state %s (%s)", lbUpdate.getLoadBalancerState(), lbUpdate.getMessage().or(""))), Optional.of(lbUpdate), System.currentTimeMillis());
   }
   
   public SingularityDeployResult(DeployState deployState, String message) {
