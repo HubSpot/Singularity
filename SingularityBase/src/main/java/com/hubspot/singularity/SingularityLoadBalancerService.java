@@ -1,19 +1,19 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-
 public class SingularityLoadBalancerService extends SingularityJsonObject {
 
   private final String serviceId;
   private final Collection<String> owners;
-  private final String loadBalancerBaseUri;
+  private final String serviceBasePath;
   private final List<String> loadBalancerGroups;
   private final Optional<Map<String, Object>> options;
 
@@ -31,12 +31,12 @@ public class SingularityLoadBalancerService extends SingularityJsonObject {
   @JsonCreator
   public SingularityLoadBalancerService(@JsonProperty("serviceId") String serviceId,
                                         @JsonProperty("owners") Collection<String> owners,
-                                        @JsonProperty("loadBalancerBaseUri") String loadBalancerBaseUri,
+                                        @JsonProperty("serviceBasePath") String serviceBasePath,
                                         @JsonProperty("loadBalancerGroups") List<String> loadBalancerGroups,
                                         @JsonProperty("options") Optional<Map<String, Object>> options) {
     this.serviceId = serviceId;
     this.owners = owners;
-    this.loadBalancerBaseUri = loadBalancerBaseUri;
+    this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
     this.options = options;
   }
@@ -49,8 +49,8 @@ public class SingularityLoadBalancerService extends SingularityJsonObject {
     return owners;
   }
 
-  public String getLoadBalancerBaseUri() {
-    return loadBalancerBaseUri;
+  public String getServiceBasePath() {
+    return serviceBasePath;
   }
 
   public List<String> getLoadBalancerGroups() {
@@ -66,10 +66,9 @@ public class SingularityLoadBalancerService extends SingularityJsonObject {
     return "SingularityLoadBalancerService [" +
         "serviceId='" + serviceId + '\'' +
         ", owners=" + owners +
-        ", loadBalancerBaseUri='" + loadBalancerBaseUri + '\'' +
+        ", serviceBasePath='" + serviceBasePath + '\'' +
         ", loadBalancerGroups=" + loadBalancerGroups +
         ", options=" + options +
         ']';
   }
-
 }
