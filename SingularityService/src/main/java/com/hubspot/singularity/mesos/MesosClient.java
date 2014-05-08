@@ -47,7 +47,7 @@ public class MesosClient {
     try {
       response = asyncHttpClient.prepareGet(uri).execute().get();
     } catch (Exception e) {
-      throw new MesosClientException("While fetching: " + uri, e);
+      throw new MesosClientException("Exception fetching: " + uri, e);
     }
     
     if (response.getStatusCode() < 200 || response.getStatusCode() > 299) {

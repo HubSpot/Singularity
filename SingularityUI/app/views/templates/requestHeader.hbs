@@ -6,20 +6,26 @@
             <a data-request-id="{{ request.id }}" data-action="viewObjectJSON">JSON</a>
         {{/if}}
         {{#if request.scheduledOrOnDemand}}
-            <a data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">Run now</a>
+            {{#unless request.deleted}}
+                <a data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">Run now</a>
+            {{/unless}}
         {{/if}}
         {{#if request.fullObject}}
-            {{#if request.paused}}
-                <a data-request-id="{{ request.id }}" data-action="pause" data-action-unpause="true">Unpause</a>
-            {{else}}
-                <a data-request-id="{{ request.id }}" data-action="pause">Pause</a>
-            {{/if}}
+            {{#unless request.deleted}}
+                {{#if request.paused}}
+                    <a data-request-id="{{ request.id }}" data-action="pause" data-action-unpause="true">Unpause</a>
+                {{else}}
+                    <a data-request-id="{{ request.id }}" data-action="pause">Pause</a>
+                {{/if}}
+            {{/unless}}
         {{/if}}
-        <a data-request-id="{{ request.id }}" data-action="remove">Remove</a>
+        {{#unless request.deleted}}
+            <a data-request-id="{{ request.id }}" data-action="remove">Remove</a>
+        {{/unless}}
     </div>
 </h1>
 {{#eachWithFn requestHistory.requestUpdates}}
     {{#if _first}}
-        <p class="lead">{{ stateHuman }} by {{ userHuman }} {{ createdAtHuman }}</p>
+        <p class="lead">{{ stateHuman }} {{#if userHuman}}by {{ userHuman }}{{/if}} {{ createdAtHuman }}</p>
     {{/if}}
 {{/eachWithFn}}

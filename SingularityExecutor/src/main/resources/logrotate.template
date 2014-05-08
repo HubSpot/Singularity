@@ -1,0 +1,14 @@
+{{{ logfile }}} 
+
+{
+  dateext
+  dateformat {{{ rotateDateformat }}}
+  olddir {{{ rotateDirectory }}}
+  compress
+  copytruncate
+  nomail
+  nosharedscripts
+  rotate {{{ rotateCount }}}
+  maxage {{{ maxageDays }}}
+  notifempty
+}

@@ -10,6 +10,8 @@ class TasksScheduled extends Tasks
     parse: (tasks) ->
         _.each tasks, (task, i) =>
             task.JSONString = utils.stringJSON task
+            if not task.pendingTaskId?
+                task.pendingTaskId = task.pendingTask.pendingTaskId
             task.id = @parsePendingId task.pendingTaskId
             task.requestId = task.pendingTaskId.requestId
             task.name = task.id

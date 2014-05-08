@@ -14,7 +14,12 @@ public class SingularityTaskCleanupTranscoder implements Transcoder<SingularityT
   }
 
   @Override
-  public SingularityTaskCleanup transcode(byte[] data) throws Exception {
+  public byte[] toBytes(SingularityTaskCleanup object)  {
+    return object.getAsBytes(objectMapper);
+  }
+
+  @Override
+  public SingularityTaskCleanup transcode(byte[] data) {
     return SingularityTaskCleanup.fromBytes(data, objectMapper);
   }
   

@@ -1,13 +1,12 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Date;
 import java.util.List;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
@@ -17,36 +16,26 @@ public interface HistoryManager {
     ASC, DESC;
   }
   
-  public enum TaskHistoryOrderBy {
-    requestId, taskId, lastTaskStatus, createdAt, updatedAt,
-  }
-  
   public enum RequestHistoryOrderBy {
     requestId, createdAt
   }
   
   void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user);
   
-  void saveTaskHistory(SingularityTask task, String driverStatus);
+  void saveTaskHistory(SingularityTaskHistory taskHistory);
   
-  void saveTaskUpdate(String taskId, String statusUpdate, Optional<String> message, Date timestamp);
+  void saveDeployHistory(SingularityDeployHistory deployHistory);
   
-  void updateTaskHistory(String taskId, String statusUpdate, Date timestamp);
+  Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId);
   
-  void updateTaskDirectory(String taskId, String directory);
-  
-  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
-  
-  List<SingularityTaskIdHistory> getActiveTaskHistoryForRequest(String requestId);
-  
-  List<SingularityTaskIdHistory> getTaskHistoryForRequestLike(String requestIdLike, Optional<TaskHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
-  
-  Optional<SingularityTaskHistory> getTaskHistory(String taskId, boolean fetchUpdates);
+  List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
+
+  List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
+
+  Optional<SingularityTaskHistory> getTaskHistory(String taskId);
  
   List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   
-  List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
-  
-  Optional<SingularityTaskIdHistory> getLastTaskForRequest(String requestId);
+  List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
    
 }

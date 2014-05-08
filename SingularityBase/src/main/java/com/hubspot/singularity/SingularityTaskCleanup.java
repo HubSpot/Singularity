@@ -1,7 +1,8 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -9,38 +10,45 @@ import com.google.common.base.Optional;
 public class SingularityTaskCleanup extends SingularityJsonObject {
 
   public enum TaskCleanupType {
-    USER_REQUESTED, DECOMISSIONING, SCALING_DOWN, BOUNCING
+    USER_REQUESTED(true), DECOMISSIONING(false), SCALING_DOWN(true), BOUNCING(false), DEPLOY_FAILED(true), NEW_DEPLOY_SUCCEEDED(true), DEPLOY_CANCELED(true), UNHEALTHY_NEW_TASK(true), OVERDUE_NEW_TASK(true);
+  
+    private final boolean killInstantly;
+    
+    private TaskCleanupType(boolean killInstantly) {
+      this.killInstantly = killInstantly;
+    }
+    
+    public boolean shouldKillInstantly() {
+      return killInstantly;
+    }
   }
   
   private final Optional<String> user;
   private final TaskCleanupType cleanupType;
   private final long timestamp;
-  private final String taskId;
-  private final String requestId;
+  private final SingularityTaskId taskId;
+  
+  public static SingularityTaskCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityTaskCleanup.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
+  }
   
   @JsonCreator
-  public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") String cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") String taskId, @JsonProperty("requestId") String requestId) {
-    this(user, TaskCleanupType.valueOf(cleanupType), timestamp, taskId, requestId);
-  }
-   
-  public SingularityTaskCleanup(Optional<String> user, TaskCleanupType cleanupType, long timestamp, String taskId, String requestId) {
+  public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") TaskCleanupType cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskId") SingularityTaskId taskId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.taskId = taskId;
-    this.requestId = requestId;
   }
-
-  public String getRequestId() {
-    return requestId;
-  }
-
+  
   public Optional<String> getUser() {
     return user;
   }
 
-  @JsonIgnore
-  public TaskCleanupType getCleanupTypeEnum() {
+  public TaskCleanupType getCleanupType() {
     return cleanupType;
   }
 
@@ -48,21 +56,13 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
     return timestamp;
   }
 
-  public String getTaskId() {
+  public SingularityTaskId getTaskId() {
     return taskId;
   }
-  
-  public String getCleanupType() {
-    return cleanupType.name();
-  }
-  
-  public static SingularityTaskCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) throws Exception {
-    return objectMapper.readValue(bytes, SingularityTaskCleanup.class);
-  }
-
+    
   @Override
   public String toString() {
-    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + ", requestId=" + requestId + "]";
-  }  
+    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + "]";
+  }
   
 }

@@ -7,11 +7,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Singularity</title>
-    <link rel="shortcut icon" href="/singularity/static/images/favicon.ico" />
+    <link rel="shortcut icon" href="/singularitytest/static/images/favicon.ico" />
     <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="/singularity/static/css/app.css">
-    <script src="/singularity/static/js/vendor.js"></script>
-    <script src="/singularity/static/js/app.js"></script>
+    <link rel="stylesheet" href="/singularitytest/static/css/app.css">
+    <script src="/singularitytest/static/js/vendor.js"></script>
+    <script src="/singularitytest/static/js/app.js"></script>
     <script>require('initialize');</script>
 </head>
 <body>
@@ -27,9 +27,9 @@
                 <a class="brand" href="">Singularity</a>
                 <div class="nav-collapse collapse">
                     <ul class="nav">
+                        <li><a data-invoke-global-search><span class="icon icon-search hidden-phone"></span> <span class="hidden-phone icon-search-adjacent-text">Search</span><span class="visible-phone">Search</span></a></li>
                         <li><a data-href="">Dashboard</a></li>
                         <li><a data-href="status">Status</a></li>
-                        <li><a data-href="search">Search</a></li>
                         <li><a data-href="requests">Requests</a></li>
                         <li><a data-href="tasks">Tasks</a></li>
                         <li class="dropdown">
@@ -45,8 +45,12 @@
             </div>
         </div>
     </div>
-    <div class="global-search">
-        <input type="search" required />
+    <div class="global-search" data-close-global-search>
+        <a data-close-global-search class="global-search-close">&times;</a>
+        <div class="global-search-input-wrapper">
+            <p class="global-search-tip ui-tip">Tip: You can press <code>t</code> to open this search and <code>esc</code> to close it.</p>
+            <input type="search" placeholder="Search all requests..." required />
+        </div>
     </div>
     <div id="page" class="container"></div>
     <div style="-webkit-transform: translateZ(0)"></div>

@@ -1,25 +1,25 @@
 package com.hubspot.mesos;
 
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.Value;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.net.InetAddresses;
+import org.apache.mesos.Protos.*;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
 
-import com.google.common.base.Throwables;
-import com.google.common.net.InetAddresses;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 public class MesosUtils {
 
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
+
+  private MesosUtils() { }
 
   private static int getScalar(Resource r) {
     return (int) r.getScalar().getValue();
@@ -42,6 +42,16 @@ public class MesosUtils {
       }
     }
     
+    return null;
+  }
+
+  private static Ranges getRanges(TaskInfo taskInfo, String name) {
+    for (Resource r: taskInfo.getResourcesList()) {
+      if (r.hasName() && r.getName().equals(name) && r.hasRanges()) {
+        return r.getRanges();
+      }
+    }
+
     return null;
   }
   
@@ -80,6 +90,22 @@ public class MesosUtils {
       }
     }
     
+    return ports;
+  }
+
+  public static List<Long> getAllPorts(TaskInfo taskInfo) {
+    final List<Long> ports = Lists.newArrayList();
+
+    final Ranges ranges = getRanges(taskInfo, PORTS);
+
+    if (ranges != null) {
+      for (Range range : ranges.getRangeList()) {
+        for (long port = range.getBegin(); port < range.getEnd(); port++) {
+          ports.add(port);
+        }
+      }
+    }
+
     return ports;
   }
   
@@ -173,5 +199,15 @@ public class MesosUtils {
     }
   }
   
-  
+  public static Optional<Long> getFirstPort(Offer offer) {
+    for (Resource resource : offer.getResourcesList()) {
+      if (resource.getName().equals(MesosUtils.PORTS)) {
+        if (resource.getRanges().getRangeCount() > 0) {
+          return Optional.of(resource.getRanges().getRange(0).getBegin());
+        }
+      }
+    }
+
+    return Optional.absent();
+  }
 }

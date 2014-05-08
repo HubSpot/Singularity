@@ -7,16 +7,8 @@ class RequestsActive extends Requests
 
     url: ->
         properties = [
-            # root
-            'id'
-            'name'
-            'schedule'
-            'daemon'
-            'timestamp'
-            'instances'
-
-            # executorData # TODO - consider using metadata for this instead?
-            'executorData.env'
+            'request'
+            'requestDeployState'
         ]
 
         propertiesString = "?property=#{ properties.join('&property=') }"
@@ -26,10 +18,16 @@ class RequestsActive extends Requests
     parse: (requests) ->
         _.each requests, (request, i) =>
             request.JSONString = utils.stringJSON request
-            request.id = request.id
+            request.id = request.request.id
+            request.request.instances = if _.isNull(request.request.instances) then 1 else request.request.instances
+            request.instances = request.request.instances
+            request.schedule = request.request.schedule
             request.name = request.name ? request.id
+            request.daemon = request.request.daemon
             request.daemon = if _.isNull(request.daemon) then true else request.daemon
-            request.deployUser = (request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]
+            request.deployUser = (request.requestDeployState?.activeDeploy?.user ? '').split('@')[0]
+            request.deployId = request.requestDeployState?.activeDeploy?.deployId
+            request.timestamp = request.requestDeployState?.activeDeploy?.timestamp
             request.timestampHuman = utils.humanTimeAgo request.timestamp
             request.scheduled = utils.isScheduledRequest request
             request.onDemand = utils.isOnDemandRequest request

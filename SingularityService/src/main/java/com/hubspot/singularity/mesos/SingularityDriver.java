@@ -55,7 +55,7 @@ public class SingularityDriver {
   public Protos.Status start() {
     Protos.Status status = driver.start();
   
-    LOG.info("Started with status:" + status);
+    LOG.info("Started with status: {}", status);
 
     return status;
   }
@@ -63,7 +63,7 @@ public class SingularityDriver {
   public Protos.Status kill(String taskId) {
     Protos.Status status = driver.killTask(TaskID.newBuilder().setValue(taskId).build());
   
-    LOG.info(String.format("Killed task %s with driver status: %s", taskId, status));
+    LOG.info("Killed task {} with driver status: {}", taskId, status);
     
     return status;
   }
@@ -73,7 +73,7 @@ public class SingularityDriver {
     
     Protos.Status status = driver.abort();
     
-    LOG.info("Aborted with status: " + status);
+    LOG.info("Aborted with status: {}", status);
         
     return status;
   }

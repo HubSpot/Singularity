@@ -21,15 +21,14 @@ class TaskHistory extends Model
         taskHistory.task.isStopped = false
 
         _.each taskHistory.taskUpdates, (taskUpdate, i) =>
-            taskUpdate.statusUpdateHuman = if constants.taskStates[taskUpdate.statusUpdate] then constants.taskStates[taskUpdate.statusUpdate].label else ''
+            taskUpdate.taskStateHuman = if constants.taskStates[taskUpdate.taskState] then constants.taskStates[taskUpdate.taskState].label else ''
             taskUpdate.statusMessage = taskUpdate.statusMessage ? ''
             taskUpdate.timestampHuman = utils.humanTimeAgo taskUpdate.timestamp
 
-            if taskUpdate.statusUpdate in ['TASK_KILLED', 'TASK_FAILED', 'TASK_FINISHED']
+            if taskUpdate.taskState in constants.inactiveTaskStates
                 taskHistory.task.isStopped = true
 
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
-        taskHistory.taskUpdates.reverse()
 
         # Construct mesos logs link
         taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"

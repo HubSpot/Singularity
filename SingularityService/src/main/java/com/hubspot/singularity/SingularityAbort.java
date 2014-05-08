@@ -2,6 +2,8 @@ package com.hubspot.singularity;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,8 @@ public class SingularityAbort {
   private final SingularityCloser closer;
   private final SingularityMailer mailer;
   
+  private volatile boolean aborting;
+  
   @Inject
   public SingularityAbort(@Named(SingularityModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer) {
     this.curator = curator;
@@ -30,9 +34,36 @@ public class SingularityAbort {
     this.driverManager = driverManager;
     this.closer = closer;
     this.mailer = mailer;
+  
+    this.aborting = false;
+    
+    this.curator.getConnectionStateListenable().addListener(new ConnectionStateListener() {
+      
+      @Override
+      public void stateChanged(CuratorFramework client, ConnectionState newState) {
+        if (newState == ConnectionState.LOST) {
+          LOG.error("Aborting due to new connection state recieved from ZooKeeper: {}", newState);
+          abort();
+        }
+      }
+    });
   }
 
+  private synchronized boolean checkAlreadyAborting() {
+    if (!aborting) {
+      aborting = true;
+      return false;
+    } else {
+      LOG.info("Abort asked to abort, but it was already aborting");
+      return true;
+    }
+  }
+  
   public void abort() {
+    if (checkAlreadyAborting()) {
+      return;
+    }
+    
     mailer.sendAbortMail();
     
     stop();
@@ -42,7 +73,7 @@ public class SingularityAbort {
     exit();
   }
   
-  public void exit() {
+  private void exit() {
     System.exit(1);
   }
 
@@ -68,7 +99,7 @@ public class SingularityAbort {
     }
   }
   
-  public void closeCurator() {
+  private void closeCurator() {
     try {
       Closeables.close(curator, false);
     } catch (Throwable t) {
@@ -76,7 +107,7 @@ public class SingularityAbort {
     }
   }
 
-  public void closeLeader() {
+  private void closeLeader() {
     try {
       Closeables.close(leaderLatch, false);
     } catch (Throwable t) {
@@ -96,7 +127,7 @@ public class SingularityAbort {
     try {
       Thread.sleep(5000);
     } catch (Exception e) {
-
+      LOG.info("While sleeping for log flush", e);
     }
   }
 

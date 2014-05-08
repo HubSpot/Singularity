@@ -1,13 +1,15 @@
 package com.hubspot.singularity;
 
-import com.codahale.metrics.servlets.MetricsServlet;
 import io.dropwizard.Bundle;
 import io.dropwizard.lifecycle.ServerLifecycleListener;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.eclipse.jetty.server.Server;
 
 import javax.servlet.ServletContext;
+
+import org.eclipse.jetty.server.Server;
+
+import com.codahale.metrics.servlets.MetricsServlet;
 
 /**
  * Expose Dropwizard's metrics registry to {@link com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter}
