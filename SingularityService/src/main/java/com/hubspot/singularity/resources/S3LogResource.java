@@ -17,6 +17,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.jets3t.service.S3Service;
 import org.jets3t.service.model.S3Object;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -28,6 +30,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -38,11 +41,14 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.scheduler.SingularityCleaner;
 
 @Path("/logs")
 @Produces({ MediaType.APPLICATION_JSON })
 public class S3LogResource extends AbstractHistoryResource {
 
+  private final static Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
+  
   private final Optional<S3Service> s3;
   private final Optional<S3Configuration> configuration;
   
@@ -66,7 +72,11 @@ public class S3LogResource extends AbstractHistoryResource {
       tag = history.getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
     }
     
-    return SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), taskId, tag, start, end);
+    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), taskId, tag, start, end);
+  
+    LOG.trace("Task {} got S3 prefixes {} for start {}, end {}, tag {}", taskId, prefixes, start, end, tag);
+  
+    return prefixes;
   }
   
   private Collection<SingularityS3Log> getS3Logs(SingularityTaskId taskIdObject) throws InterruptedException, ExecutionException, TimeoutException {
@@ -86,7 +96,11 @@ public class S3LogResource extends AbstractHistoryResource {
       }));
     }
     
+    final long start = System.currentTimeMillis();
     List<S3Object[]> results = Futures.allAsList(futures).get(configuration.get().getWaitForS3ListSeconds(), TimeUnit.SECONDS);
+    
+    LOG.trace("Got results {} from S3 after {}", results, JavaUtils.duration(start));
+    
     List<ListenableFuture<SingularityS3Log>> logFutures = Lists.newArrayListWithCapacity(results.size() * 2);
     
     final Date expireAt = new Date(System.currentTimeMillis() + configuration.get().getExpireS3LinksAfterMillis());

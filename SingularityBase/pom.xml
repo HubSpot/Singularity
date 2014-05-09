@@ -10,12 +10,12 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.3.4</version>
+    <version>0.3.5</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>SingularityBase</artifactId>
-
+  
   <repositories>
     <repository>
       <id>sonatype-nexus-snapshots</id>
