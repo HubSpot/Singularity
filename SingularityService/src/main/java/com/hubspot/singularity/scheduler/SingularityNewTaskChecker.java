@@ -108,7 +108,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   }
   
   private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace(String.format("Enqueing a new task check for task %s with delay %s", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds))));
+    LOG.trace(String.format("Enqueuing a new task check for task %s with delay %s", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds))));
   
     ScheduledFuture<?> future = executorService.schedule(new Runnable() {
       

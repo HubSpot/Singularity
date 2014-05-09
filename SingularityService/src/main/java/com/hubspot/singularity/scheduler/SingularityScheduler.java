@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
@@ -274,7 +275,7 @@ public class SingularityScheduler {
     return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().getValue()) || stateCache.isRackDecomissioning(taskId.getRackId());
   }
   
-  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, Optional<SingularityDeployStatistics> deployStatistics, long failTime, SingularitySchedulerStateCache stateCache) {
+  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, Optional<SingularityDeployStatistics> deployStatistics, long failTime, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
     
     if (!maybeRequest.isPresent()) {
@@ -294,14 +295,20 @@ public class SingularityScheduler {
     PendingType pendingType = PendingType.TASK_DONE;
     
     if (state.isFailed()) {
-      if (!wasDecomissioning(taskId, maybeActiveTask, stateCache)) {
+      boolean wasDecomissioning = wasDecomissioning(taskId, maybeActiveTask, stateCache);
+      
+      if (!wasDecomissioning && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED) {
         mailer.sendTaskFailedMail(taskId, request, state);
       } else {
-        LOG.debug("Not sending a task failure email because task {} was on a decomissioning slave/rack", taskId);
+        if (wasDecomissioning) {
+          LOG.debug("Not sending a task failure email because task {} was on a decomissioning slave/rack", taskId);
+        } else {
+          LOG.debug("Not sending a task failure email because task {} already recieved an failure update", taskId);
+        }
       }
       
       // TODO how to handle this if there are running tasks that are working?
-      if (shouldPause(request, deployStatistics)) {
+      if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldPause(request, deployStatistics)) {
         mailer.sendRequestPausedMail(taskId, request);
         requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, failTime, request.getId()));
         return Optional.absent();
@@ -320,7 +327,7 @@ public class SingularityScheduler {
     return Optional.absent();
   }
   
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, SingularitySchedulerStateCache stateCache) {
+  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
     final long failTime = System.currentTimeMillis();
     
@@ -330,7 +337,11 @@ public class SingularityScheduler {
 
     taskManager.createLBCleanupTask(taskId);
     
-    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, state, deployStatistics, failTime, stateCache);
+    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, state, deployStatistics, failTime, taskHistoryUpdateCreateResult, stateCache);
+    
+    if (taskHistoryUpdateCreateResult == SingularityCreateResult.EXISTED) {
+      return;
+    }
     
     SingularityDeployStatisticsBuilder bldr = null;
     

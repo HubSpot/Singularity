@@ -20,6 +20,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -180,7 +181,7 @@ public class SingularityMesosScheduler implements Scheduler {
     final String taskId = status.getTaskId().getValue();
     LOG.debug("Got a status update for task: {}, status - {}", taskId, status);
     
-    Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
+    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
     
     if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
       healthchecker.enqueueHealthcheck(maybeActiveTask.get());
@@ -191,15 +192,17 @@ public class SingularityMesosScheduler implements Scheduler {
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
     
-    taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskIdObj, now, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent()));
+    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, now, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
 
+    final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
+    
     logSupport.checkDirectory(taskIdObj);
     
     if (taskState.isDone()) {
       healthchecker.cancelHealthcheck(taskId);
       newTaskChecker.cancelNewTaskCheck(taskId);
       
-      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, taskState, stateCacheProvider.get());
+      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     } else if (maybeActiveTask.isPresent()) {
       Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
       

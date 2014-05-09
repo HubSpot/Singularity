@@ -20,6 +20,7 @@ import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -150,11 +151,11 @@ public class SingularityStartup {
     for (String strTaskId : strTaskIds) {
       SingularityTaskId taskId = SingularityTaskId.fromString(strTaskId);
       
-      taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), ExtendedTaskState.TASK_LOST_WHILE_DOWN, Optional.<String> absent()));
+      SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), ExtendedTaskState.TASK_LOST_WHILE_DOWN, Optional.<String> absent()));
       
       logSupport.checkDirectory(taskId);
       
-      scheduler.handleCompletedTask(taskManager.getActiveTask(strTaskId), taskId, ExtendedTaskState.TASK_LOST_WHILE_DOWN, stateCacheProvider.get());
+      scheduler.handleCompletedTask(taskManager.getActiveTask(strTaskId), taskId, ExtendedTaskState.TASK_LOST_WHILE_DOWN, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     }
     
     LOG.info("Finished reconciling active tasks: {} active tasks, {} were deleted", activeTaskIds.size(), strTaskIds.size());
