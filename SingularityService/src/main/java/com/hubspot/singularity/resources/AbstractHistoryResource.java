@@ -2,9 +2,11 @@ package com.hubspot.singularity.resources;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 
@@ -12,10 +14,12 @@ public abstract class AbstractHistoryResource {
   
   private final HistoryManager historyManager;
   private final TaskManager taskManager;
+  private final DeployManager deployManager;
   
-  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager) {
+  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager) {
     this.historyManager = historyManager;
     this.taskManager = taskManager;
+    this.deployManager = deployManager;
   }
   
   protected SingularityTaskId getTaskIdObject(String taskId) {
@@ -38,6 +42,22 @@ public abstract class AbstractHistoryResource {
     }
   
     return history.get();
+  }
+  
+  protected SingularityDeployHistory getDeployHistory(String requestId, String deployId) {
+    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
+    
+    if (deployHistory.isPresent()) {
+      return deployHistory.get();
+    }
+    
+    deployHistory = historyManager.getDeployHistory(requestId, deployId);
+    
+    if (!deployHistory.isPresent()) {
+      throw WebExceptions.notFound("Deploy history for request %s and deploy %s not found", requestId, deployId);
+    }
+    
+    return deployHistory.get();
   }
   
 }

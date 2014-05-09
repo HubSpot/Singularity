@@ -38,7 +38,7 @@ public class HistoryResource extends AbstractHistoryResource {
   
   @Inject
   public HistoryResource(HistoryManager historyManager, DeployManager deployManager, TaskManager taskManager) {
-    super(historyManager, taskManager);
+    super(historyManager, taskManager, deployManager);
     
     this.deployManager = deployManager;
     this.historyManager = historyManager;
@@ -128,19 +128,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   public SingularityDeployHistory getDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
-    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
-    
-    if (deployHistory.isPresent()) {
-      return deployHistory.get();
-    }
-    
-    deployHistory = historyManager.getDeployHistory(requestId, deployId);
-    
-    if (!deployHistory.isPresent()) {
-      throw WebExceptions.notFound("Deploy history for request %s and deploy %s not found", requestId, deployId);
-    }
-    
-    return deployHistory.get();
+    return getDeployHistory(requestId, deployId);
   }
   
   @GET

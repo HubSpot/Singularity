@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
@@ -38,8 +39,8 @@ public class SandboxResource extends AbstractHistoryResource {
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
-    super(historyManager, taskManager);
+  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
+    super(historyManager, taskManager, deployManager);
     
     this.configuration = configuration;
     this.sandboxManager = sandboxManager;

@@ -3,17 +3,38 @@ package com.hubspot.singularity;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 public class SingularityS3FormatHelper {
 
-  public static String getS3KeyFormat(String s3KeyFormat, SingularityTaskId taskId, Optional<String> loggingTag) {
+  private static final List<String> DISALLOWED_FOR_TASK = ImmutableList.of("%index", "%s", "%filename", "%fileext");
+  private static final List<String> DISALLOWED_FOR_DEPLOY = ImmutableList.copyOf(Iterables.concat(DISALLOWED_FOR_TASK, ImmutableList.of("%host")));
+  private static final List<String> DISALLOWED_FOR_REQUEST = ImmutableList.copyOf(Iterables.concat(DISALLOWED_FOR_DEPLOY, ImmutableList.of("%tag", "%deployId")));
+  
+  public static String getS3KeyFormat(String s3KeyFormat, String requestId) {
+    s3KeyFormat = s3KeyFormat.replace("%requestId", requestId);
+    
+    return s3KeyFormat;
+  }
+  
+  public static String getS3KeyFormat(String s3KeyFormat, String requestId, String deployId, Optional<String> loggingTag) {
+    s3KeyFormat = getS3KeyFormat(s3KeyFormat, requestId);
+    
     s3KeyFormat = s3KeyFormat.replace("%tag", loggingTag.or(""));
-    s3KeyFormat = s3KeyFormat.replace("%requestId", taskId.getRequestId());
-    s3KeyFormat = s3KeyFormat.replace("%deployId", taskId.getDeployId());
+    s3KeyFormat = s3KeyFormat.replace("%deployId", deployId);
+    
+    return s3KeyFormat;
+  }
+  
+  public static String getS3KeyFormat(String s3KeyFormat, SingularityTaskId taskId, Optional<String> loggingTag) {
+    s3KeyFormat = getS3KeyFormat(s3KeyFormat, taskId.getRequestId(), taskId.getDeployId(), loggingTag);
+    
     s3KeyFormat = s3KeyFormat.replace("%host", taskId.getHost());
     s3KeyFormat = s3KeyFormat.replace("%taskId", taskId.toString());
     
@@ -41,19 +62,15 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
   
-  private static int lowestIndex(String string, String find, int previousLowest) {
-    int index = string.indexOf(find);
-    if (index != -1 && index < previousLowest) {
-      return index;
+  public static String trimKeyFormat(String s3KeyFormat, List<String> disallowedKeys) {
+    int lowestIndex = s3KeyFormat.length();
+    
+    for (String disallowedKey : disallowedKeys) {
+      int index = s3KeyFormat.indexOf(disallowedKey);
+      if (index != -1 && index < lowestIndex) {
+        lowestIndex = index;
+      }
     }
-    return previousLowest;
-  }
-  
-  public static String trimKeyFormat(String s3KeyFormat) {
-    int lowestIndex = lowestIndex(s3KeyFormat, "%index", s3KeyFormat.length());
-    lowestIndex = lowestIndex(s3KeyFormat, "%s", lowestIndex);
-    lowestIndex = lowestIndex(s3KeyFormat, "%filename", lowestIndex);
-    lowestIndex = lowestIndex(s3KeyFormat, "%fileext", lowestIndex);
     
     if (lowestIndex == -1) {
       return s3KeyFormat;
@@ -74,9 +91,24 @@ public class SingularityS3FormatHelper {
     return String.format("%02d", value);
   }
   
-  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, SingularityTaskId taskId, Optional<String> tag, long start, long end) {
-    String keyFormat = getS3KeyFormat(s3KeyFormat, taskId, tag);
-    String trimKeyFormat = trimKeyFormat(keyFormat);
+  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, String deployId, Optional<String> tag, long start, long end) {
+    String keyFormat = getS3KeyFormat(s3KeyFormat, requestId, deployId, tag);
+    
+    keyFormat = keyFormat.replace("%taskId", requestId + "-" + deployId);
+    
+    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_DEPLOY, start, end);
+  }
+  
+  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, long start, long end) {
+    String keyFormat = getS3KeyFormat(s3KeyFormat, requestId);
+    
+    keyFormat = keyFormat.replace("%taskId", requestId);
+    
+    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_REQUEST, start, end);
+  }
+  
+  private static Collection<String>  getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end) {
+    String trimKeyFormat = trimKeyFormat(s3KeyFormat, disallowedKeys);
 
     int indexOfY = trimKeyFormat.indexOf("%Y");
     int indexOfM = trimKeyFormat.indexOf("%m");
@@ -130,6 +162,12 @@ public class SingularityS3FormatHelper {
     return keyPrefixes;
   }
   
+  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, SingularityTaskId taskId, Optional<String> tag, long start, long end) {
+    String keyFormat = getS3KeyFormat(s3KeyFormat, taskId, tag);
+    
+    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_TASK, start, end);
+  }
+  
   public static void main(String[] args) {
     SingularityTaskId taskId = new SingularityTaskId("rid", "did", System.currentTimeMillis(), 1, "host", "rackid");
     Optional<String> tag = Optional.<String> absent();
@@ -142,13 +180,11 @@ public class SingularityS3FormatHelper {
     System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
     System.out.println(getS3KeyPrefixes("%Y/%m/%d", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
     
+    System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", "requestId", "deployId", tag, c.getTimeInMillis(), System.currentTimeMillis()));
+    
+    
     System.out.println(System.currentTimeMillis() - now);
     
   }
-  
-  
-  
-  
-  
   
 }
