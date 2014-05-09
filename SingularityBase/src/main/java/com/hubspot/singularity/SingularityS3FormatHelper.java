@@ -94,15 +94,25 @@ public class SingularityS3FormatHelper {
   public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, String deployId, Optional<String> tag, long start, long end) {
     String keyFormat = getS3KeyFormat(s3KeyFormat, requestId, deployId, tag);
     
-    keyFormat = keyFormat.replace("%taskId", requestId + "-" + deployId);
+    keyFormat = trimTaskId(keyFormat, requestId + "-" + deployId);
     
     return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_DEPLOY, start, end);
+  }
+  
+  private static String trimTaskId(String s3KeyFormat, String replaceWith) {
+    int index = s3KeyFormat.indexOf("%taskId");
+    
+    if (index > -1) {
+      s3KeyFormat = s3KeyFormat.substring(0, index) + replaceWith;
+    }
+    
+    return s3KeyFormat;
   }
   
   public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, long start, long end) {
     String keyFormat = getS3KeyFormat(s3KeyFormat, requestId);
     
-    keyFormat = keyFormat.replace("%taskId", requestId);
+    keyFormat = trimTaskId(s3KeyFormat, requestId);
     
     return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_REQUEST, start, end);
   }
