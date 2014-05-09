@@ -57,7 +57,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
     properties.put(LOGROTATE_DIRECTORY, "logs");
     properties.put(LOGROTATE_MAXAGE_DAYS, "7");
     properties.put(LOGROTATE_COUNT, "20");
-    properties.put(LOGROTATE_DATEFORMAT, "-%s");
+    properties.put(LOGROTATE_DATEFORMAT, "-%Y%m%d%s");
     properties.put(LOGROTATE_CONFIG_DIRECTORY, "/etc/logrotate.d");
   }
   

@@ -5,6 +5,7 @@
   dateformat {{{ rotateDateformat }}}
   olddir {{{ rotateDirectory }}}
   compress
+  daily
   copytruncate
   nomail
   nosharedscripts
