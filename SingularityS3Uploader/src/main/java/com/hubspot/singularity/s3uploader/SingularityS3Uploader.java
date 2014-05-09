@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 
 public class SingularityS3Uploader {
@@ -111,35 +111,10 @@ public class SingularityS3Uploader {
     LOG.info("{} Uploaded {} out of {} item(s) in {}", logIdentifier, success, toUpload.size(), JavaUtils.duration(start));
   }
   
-  private String getKey(int sequence, long timestamp, Path file) {
-    final Calendar calendar = Calendar.getInstance();
-    calendar.setTimeInMillis(timestamp);
-    
-    String s3KeyFormat = uploadMetadata.getS3KeyFormat();
-    
-    String filename = file.getFileName().toString();
-    
-    s3KeyFormat = s3KeyFormat.replace("%filename", filename);
-    
-    int lastPeriod = filename.lastIndexOf(".");
-    
-    if (lastPeriod > -1) {
-      s3KeyFormat = s3KeyFormat.replace("%fileext", filename.substring(lastPeriod));
-    }
-    
-    s3KeyFormat = s3KeyFormat.replace("%Y", Integer.toString(calendar.get(Calendar.YEAR)));
-    s3KeyFormat = s3KeyFormat.replace("%m", Integer.toString(calendar.get(Calendar.MONTH)));
-    s3KeyFormat = s3KeyFormat.replace("%d", Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)));
-    s3KeyFormat = s3KeyFormat.replace("%s", Long.toString(timestamp));
-    s3KeyFormat = s3KeyFormat.replace("%index", Integer.toString(sequence));
-    
-    return s3KeyFormat;
-  }
-  
   private void uploadSingle(int sequence, Path file) throws Exception {
     final long start = System.currentTimeMillis();
     
-    final String key = getKey(sequence, Files.getLastModifiedTime(file).toMillis(), file);
+    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString());
     
     LOG.info("{} Uploading {} to {}-{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
     

@@ -35,7 +35,7 @@ import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityModule;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
@@ -82,7 +82,7 @@ public class SingularityMailer implements SingularityCloseable {
 
   @Inject
   public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, HistoryManager historyManager, AsyncHttpClient asyncHttpClient, 
-      ObjectMapper objectMapper, @Named(SingularityModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityModule.REQUEST_PAUSED_TEMPLATE) JadeTemplate requestPausedTemplate, @Named(SingularityModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate) {
+      ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_PAUSED_TEMPLATE) JadeTemplate requestPausedTemplate, @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
     this.jadeHelper = jadeHelper;

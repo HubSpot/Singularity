@@ -28,7 +28,7 @@ public class SingularityAbort {
   private volatile boolean aborting;
   
   @Inject
-  public SingularityAbort(@Named(SingularityModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer) {
+  public SingularityAbort(@Named(SingularityServiceModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer) {
     this.curator = curator;
     this.leaderLatch = leaderLatch;
     this.driverManager = driverManager;

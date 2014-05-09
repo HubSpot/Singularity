@@ -13,7 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityModule;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.config.MesosConfiguration;
 
 public class SingularityDriver {
@@ -25,7 +25,7 @@ public class SingularityDriver {
   private final MesosSchedulerDriver driver;
 
   @Inject
-  public SingularityDriver(@Named(SingularityModule.MASTER_PROPERTY) String master, SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
+  public SingularityDriver(@Named(SingularityServiceModule.MASTER_PROPERTY) String master, SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
     this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())

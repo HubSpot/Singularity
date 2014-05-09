@@ -20,7 +20,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
   @Override
   public void initialize(Bootstrap<SingularityConfiguration> bootstrap) {
     GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.<SingularityConfiguration>newBuilder()
-        .addModule(new SingularityModule())
+        .addModule(new SingularityServiceModule())
         .enableAutoConfig(getClass().getPackage().getName())
         .setConfigClass(SingularityConfiguration.class)
         .build(Stage.DEVELOPMENT);

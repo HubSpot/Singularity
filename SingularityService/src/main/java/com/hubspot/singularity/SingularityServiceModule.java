@@ -14,6 +14,9 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.jets3t.service.S3Service;
+import org.jets3t.service.impl.rest.httpclient.RestS3Service;
+import org.jets3t.service.security.AWSCredentials;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -32,6 +36,7 @@ import com.google.inject.name.Named;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
@@ -49,9 +54,9 @@ import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 
-public class SingularityModule extends AbstractModule {
+public class SingularityServiceModule extends AbstractModule {
   
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityModule.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityServiceModule.class);
   
   private static final String LEADER_PATH = "/leader";
   
@@ -132,6 +137,21 @@ public class SingularityModule extends AbstractModule {
   }
 
   @Provides
+  @Singleton
+  public Optional<S3Service> s3Service(Optional<S3Configuration> config) {
+    if (!config.isPresent()) {
+      return Optional.absent();
+    }
+    
+    try {
+      S3Service s3 = new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey()));
+      return Optional.of(s3);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  @Provides
   @Named(ZK_NAMESPACE_PROPERTY)
   public String providesZkNamespace(ZooKeeperConfiguration config) {
     return config.getZkNamespace();
@@ -156,9 +176,9 @@ public class SingularityModule extends AbstractModule {
   @Provides
   @Singleton
   public LeaderLatch provideLeaderLatch(CuratorFramework curator,
-                                        @Named(SingularityModule.ZK_NAMESPACE_PROPERTY) String zkNamespace,
-                                        @Named(SingularityModule.HOSTNAME_PROPERTY) String hostname,
-                                        @Named(SingularityModule.HTTP_PORT_PROPERTY) int httpPort) {
+                                        @Named(SingularityServiceModule.ZK_NAMESPACE_PROPERTY) String zkNamespace,
+                                        @Named(SingularityServiceModule.HOSTNAME_PROPERTY) String hostname,
+                                        @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
     return new LeaderLatch(curator, LEADER_PATH, String.format("%s:%d", hostname, httpPort));
   }
   
@@ -172,6 +192,12 @@ public class SingularityModule extends AbstractModule {
   @Singleton
   public Optional<SMTPConfiguration> smtpConfiguration(SingularityConfiguration config) {
     return config.getSmtpConfiguration();
+  }
+  
+  @Provides
+  @Singleton
+  public Optional<S3Configuration> s3Configuration(SingularityConfiguration config) {
+    return config.getS3Configuration();
   }
   
   @Singleton

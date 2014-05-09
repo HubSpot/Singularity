@@ -24,6 +24,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("smtp")
   private SMTPConfiguration smtpConfiguration;
 
+  @JsonProperty("s3")
+  private S3Configuration s3Configuration;
+  
   @JsonProperty("hostname")
   private String hostname;
   
@@ -111,7 +114,7 @@ public class SingularityConfiguration extends Configuration {
   
   @NotNull
   private boolean sandboxDefaultsToTaskId = true;
-  
+
   public boolean isSandboxDefaultsToTaskId() {
     return sandboxDefaultsToTaskId;
   }
@@ -289,6 +292,10 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(singularityUIHostnameAndPath);
   }
 
+  public Optional<S3Configuration> getS3Configuration() {
+    return Optional.fromNullable(s3Configuration);
+  }
+  
   public Optional<SMTPConfiguration> getSmtpConfiguration() {
     return Optional.fromNullable(smtpConfiguration);
   }
@@ -356,6 +363,10 @@ public class SingularityConfiguration extends Configuration {
   
   public void setSentryConfiguration(SentryConfiguration sentryConfiguration){
     this.sentryConfiguration = sentryConfiguration;
+  }
+
+  public void setS3Configuration(S3Configuration s3Configuration) {
+    this.s3Configuration = s3Configuration;
   }
 
   public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {

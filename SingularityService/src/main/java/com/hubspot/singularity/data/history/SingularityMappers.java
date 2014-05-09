@@ -15,7 +15,7 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityModule;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
@@ -44,7 +44,7 @@ public class SingularityMappers {
 
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return new SingularityRequestHistory(r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), RequestState.valueOf(r.getString("requestState")), SingularityRequest.fromBytes(r.getBytes("request"),
-          SingularityModule.OBJECT_MAPPER));
+          SingularityServiceModule.OBJECT_MAPPER));
     }
 
   }

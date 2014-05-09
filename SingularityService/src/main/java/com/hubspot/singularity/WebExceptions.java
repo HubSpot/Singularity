@@ -7,7 +7,11 @@ import javax.ws.rs.core.Response.Status;
 public class WebExceptions {
   
   public static WebApplicationException badRequest(String message, Object... args) {
-      throw webException(Status.BAD_REQUEST.getStatusCode(), message, args);
+    throw webException(Status.BAD_REQUEST.getStatusCode(), message, args);
+  }
+  
+  public static WebApplicationException timeout(String message, Object... args) {
+    throw webException(408, message, args);
   }
 
   public static WebApplicationException conflict(String message, Object... args) {

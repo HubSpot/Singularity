@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.SimpleProcessManager;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -113,13 +114,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     
     final SingularityTaskId singularityTaskId = getSingularityTaskId();
     
-    s3KeyPattern = s3KeyPattern.replace("%tag", task.getExecutorData().getLoggingTag().or(""));
-    s3KeyPattern = s3KeyPattern.replace("%requestId", singularityTaskId.getRequestId());
-    s3KeyPattern = s3KeyPattern.replace("%deployId", singularityTaskId.getDeployId());
-    s3KeyPattern = s3KeyPattern.replace("%host", singularityTaskId.getHost());
-    s3KeyPattern = s3KeyPattern.replace("%taskId", task.getTaskId());
-    
-    return s3KeyPattern;
+    return SingularityS3FormatHelper.getS3KeyFormat(s3KeyPattern, singularityTaskId, task.getExecutorData().getLoggingTag());
   }
   
   private SingularityTaskId getSingularityTaskId() {
