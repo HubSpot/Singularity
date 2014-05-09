@@ -98,24 +98,30 @@ public class S3LogResource extends AbstractHistoryResource {
     final long start = System.currentTimeMillis();
     List<S3Object[]> results = Futures.allAsList(futures).get(configuration.get().getWaitForS3ListSeconds(), TimeUnit.SECONDS);
     
-    LOG.trace("Got results {} from S3 after {}", results, JavaUtils.duration(start));
-    
-    List<ListenableFuture<SingularityS3Log>> logFutures = Lists.newArrayListWithCapacity(results.size() * 2);
-    
-    final Date expireAt = new Date(System.currentTimeMillis() + configuration.get().getExpireS3LinksAfterMillis());
+    List<S3Object> objects = Lists.newArrayListWithExpectedSize(results.size() * 2);
     
     for (S3Object[] s3Objects : results) {
       for (final S3Object s3Object : s3Objects) {
-        logFutures.add(es.submit(new Callable<SingularityS3Log>() {
-
-          @Override
-          public SingularityS3Log call() throws Exception {
-            String getUrl = s3.get().createSignedGetUrl(configuration.get().getS3Bucket(), s3Object.getKey(), expireAt);
-            
-            return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
-          }
-        }));
+        objects.add(s3Object);
       }
+    }
+
+    LOG.trace("Got {} objects from S3 after {}", objects.size(), JavaUtils.duration(start));
+    
+    List<ListenableFuture<SingularityS3Log>> logFutures = Lists.newArrayListWithCapacity(objects.size());
+    final Date expireAt = new Date(System.currentTimeMillis() + configuration.get().getExpireS3LinksAfterMillis());
+
+    for (final S3Object s3Object : objects) {
+      logFutures.add(es.submit(new Callable<SingularityS3Log>() {
+
+        @Override
+        public SingularityS3Log call() throws Exception {
+          String getUrl = s3.get().createSignedGetUrl(configuration.get().getS3Bucket(), s3Object.getKey(), expireAt);
+
+          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
+        }
+        
+      }));
     }
     
     return Futures.allAsList(logFutures).get(configuration.get().getWaitForS3LinksSeconds(), TimeUnit.SECONDS);

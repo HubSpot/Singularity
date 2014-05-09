@@ -41,25 +41,25 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
   
-  private static int highestIndex(String string, String find, int previousHighest) {
+  private static int lowestIndex(String string, String find, int previousLowest) {
     int index = string.indexOf(find);
-    if (index > previousHighest) {
+    if (index == -1 && index < previousLowest) {
       return index;
     }
-    return previousHighest;
+    return previousLowest;
   }
   
   public static String trimKeyFormat(String s3KeyFormat) {
-    int highestIndex = highestIndex(s3KeyFormat, "%index", -1);
-    highestIndex = highestIndex(s3KeyFormat, "%s", highestIndex);
-    highestIndex = highestIndex(s3KeyFormat, "%filename", highestIndex);
-    highestIndex = highestIndex(s3KeyFormat, "%fileext", highestIndex);
+    int lowestIndex = lowestIndex(s3KeyFormat, "%index", s3KeyFormat.length());
+    lowestIndex = lowestIndex(s3KeyFormat, "%s", lowestIndex);
+    lowestIndex = lowestIndex(s3KeyFormat, "%filename", lowestIndex);
+    lowestIndex = lowestIndex(s3KeyFormat, "%fileext", lowestIndex);
     
-    if (highestIndex == -1) {
+    if (lowestIndex == -1) {
       return s3KeyFormat;
     }
     
-    return s3KeyFormat.substring(0, highestIndex);
+    return s3KeyFormat.substring(0, lowestIndex);
   }
   
   private static int getMonth(Calendar calender) {
