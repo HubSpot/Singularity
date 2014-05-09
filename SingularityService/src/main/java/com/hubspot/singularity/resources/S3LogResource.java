@@ -41,7 +41,6 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.scheduler.SingularityCleaner;
 
 @Path("/logs")
 @Produces({ MediaType.APPLICATION_JSON })
