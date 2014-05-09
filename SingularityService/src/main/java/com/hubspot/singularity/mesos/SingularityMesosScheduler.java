@@ -190,8 +190,13 @@ public class SingularityMesosScheduler implements Scheduler {
     final Date now = new Date();
     
     historyManager.updateTaskHistory(taskId, status.getState().name(), now);
-    historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), now);
 
+    boolean isDupe = historyManager.hasTaskUpdate(taskId, status.getState().name());
+    
+    if (!isDupe) {
+      historyManager.saveTaskUpdate(taskId, status.getState().name(), status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent(), now);
+    }
+    
     logSupport.checkDirectory(SingularityTaskId.fromString(taskId));
     
     if (MesosUtils.isTaskDone(status.getState())) {
@@ -199,7 +204,7 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.deleteActiveTask(taskId);
       }
       
-      scheduler.handleCompletedTask(maybeActiveTask, taskId, status.getState(), stateCacheProvider.get());
+      scheduler.handleCompletedTask(maybeActiveTask, taskId, isDupe, status.getState(), stateCacheProvider.get());
     }
   }
 

@@ -40,6 +40,10 @@ public interface HistoryJDBI {
   @SqlQuery("SELECT status, message, createdAt FROM taskUpdates WHERE taskId = :taskId")
   List<SingularityTaskHistoryUpdate> getTaskUpdates(@Bind("taskId") String taskId);
   
+  @Mapper(SingularityTaskUpdateMapper.class)
+  @SqlQuery("SELECT status, message, createdAt FROM taskUpdates WHERE taskId = :taskId AND status = :status")
+  List<SingularityTaskHistoryUpdate> getTaskUpdate(@Bind("taskId") String taskId, @Bind("status") String status);
+  
   @Mapper(SingularityTaskHistoryHelperMapper.class)
   @SqlQuery("SELECT createdAt, task, directory FROM taskHistory WHERE taskId = :taskId")
   SingularityTaskHistoryHelper getTaskHistoryForTask(@Bind("taskId") String taskId);

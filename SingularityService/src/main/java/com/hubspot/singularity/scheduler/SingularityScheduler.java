@@ -268,7 +268,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().getValue()) || stateCache.isRackDecomissioning(taskId.getRackId());
   }
   
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, String stringTaskId, TaskState state, SingularityScheduleStateCache stateCache) {
+  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, String stringTaskId, boolean isDupe, TaskState state, SingularityScheduleStateCache stateCache) {
     SingularityTaskId taskId = SingularityTaskId.fromString(stringTaskId);
  
     Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(taskId.getRequestId());
@@ -283,7 +283,7 @@ public class SingularityScheduler extends SingularitySchedulerBase {
     PendingType pendingType = PendingType.TASK_DONE;
     
     if (MesosUtils.isTaskFailed(state)) {
-      if (!wasDecomissioning(taskId, maybeActiveTask, stateCache)) {
+      if (!wasDecomissioning(taskId, maybeActiveTask, stateCache) && !isDupe) {
         mailer.sendTaskFailedMail(taskId, request, state);
       } else {
         LOG.debug(String.format("Not sending a task failure email because task %s was on a decomissioning slave/rack", taskId));

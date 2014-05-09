@@ -125,6 +125,11 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<SingularityTaskIdHistory> getActiveTaskHistoryForRequest(String requestId) {
     return history.getActiveTaskHistoryForRequest(requestId);
   }
+  
+  @Override
+  public boolean hasTaskUpdate(String taskId, String status) {
+    return !history.getTaskUpdate(taskId, status).isEmpty();
+  }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId, boolean fetchUpdates) {

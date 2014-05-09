@@ -43,6 +43,8 @@ public interface HistoryManager {
   
   Optional<SingularityTaskHistory> getTaskHistory(String taskId, boolean fetchUpdates);
  
+  boolean hasTaskUpdate(String taskId, String status);
+  
   List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
   
   List<SingularityRequestHistory> getRequestHistoryLike(String requestIdLike, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
