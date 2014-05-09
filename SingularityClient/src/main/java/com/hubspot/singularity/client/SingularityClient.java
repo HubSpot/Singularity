@@ -19,6 +19,7 @@ import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityTask;
@@ -40,6 +41,7 @@ public class SingularityClient {
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
+  private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
   
   private static final String REQUESTS_FORMAT = "http://%s/%s/requests";
   private static final String REQUESTS_GET_ACTIVE_FORMAT = REQUESTS_FORMAT + "/active";
@@ -177,11 +179,9 @@ public class SingularityClient {
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
-    }
-    else if (getResponse.getStatusCode() == 404) {
+    } else if (getResponse.getStatusCode() == 404) {
       return Optional.<SingularityRequestParent>absent();
-    }
-    else {
+    } else {
       throw fail("Get 'Singularity Request' failed", getResponse);
     }
 
@@ -543,6 +543,31 @@ public class SingularityClient {
       return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKID_HISTORY_COLLECTION);
     } catch (Exception e) {
       throw Throwables.propagate(e);
+    }
+  }
+  
+  public Optional<SingularityDeployHistory> getHistoryForRequestDeploy(String requestId, String deployId) {
+    final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getHost(), contextPath, requestId, deployId);
+
+    LOG.info(String.format("Getting history for SingularityRequest/Deploy '%s / %s' - (%s)", requestId, deployId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+    
+    if (isSuccess(getResponse)) {
+      LOG.info(String.format("Got deploy history from Singularity in %sms", System.currentTimeMillis() - start));
+
+      try {
+        return Optional.of(objectMapper.readValue(getResponse.getResponseBodyAsStream(), SingularityDeployHistory.class));
+      } catch (Exception e) {
+        throw Throwables.propagate(e);
+      }
+    } else if (getResponse.getStatusCode() == 404) {
+      return Optional.<SingularityDeployHistory>absent();
+    }
+    else {
+      throw fail("Get 'History for Request Deploy' failed", getResponse);
     }
   }
 
