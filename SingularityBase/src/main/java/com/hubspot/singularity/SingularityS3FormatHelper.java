@@ -43,7 +43,7 @@ public class SingularityS3FormatHelper {
   
   private static int lowestIndex(String string, String find, int previousLowest) {
     int index = string.indexOf(find);
-    if (index == -1 && index < previousLowest) {
+    if (index != -1 && index < previousLowest) {
       return index;
     }
     return previousLowest;
@@ -135,11 +135,11 @@ public class SingularityS3FormatHelper {
     Optional<String> tag = Optional.<String> absent();
     Calendar c = Calendar.getInstance();
     
-    c.add(Calendar.MONTH, -1);
+    c.add(Calendar.DAY_OF_YEAR, -1);
     
     final long now = System.currentTimeMillis();
     
-    System.out.println(getS3KeyPrefixes("himynameis/%Y/%filename/%m", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
+    System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
     System.out.println(getS3KeyPrefixes("%Y/%m/%d", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
     
     System.out.println(System.currentTimeMillis() - now);
