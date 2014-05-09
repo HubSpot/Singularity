@@ -110,11 +110,11 @@ public class SingularityS3FormatHelper {
   }
   
   public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, long start, long end) {
-    String keyFormat = getS3KeyFormat(s3KeyFormat, requestId);
+    s3KeyFormat = getS3KeyFormat(s3KeyFormat, requestId);
     
-    keyFormat = trimTaskId(s3KeyFormat, requestId);
+    s3KeyFormat = trimTaskId(s3KeyFormat, requestId);
     
-    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_REQUEST, start, end);
+    return getS3KeyPrefixes(s3KeyFormat, DISALLOWED_FOR_REQUEST, start, end);
   }
   
   private static Collection<String>  getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end) {
@@ -191,6 +191,10 @@ public class SingularityS3FormatHelper {
     System.out.println(getS3KeyPrefixes("%Y/%m/%d", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
     
     System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", "requestId", "deployId", tag, c.getTimeInMillis(), System.currentTimeMillis()));
+    
+
+    System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", "rid", c.getTimeInMillis(), System.currentTimeMillis()));
+    
     
     
     System.out.println(System.currentTimeMillis() - now);
