@@ -66,7 +66,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         Integer.toString(configuration.getTailLogLinesToSave()), 
         task.getServiceLogOut().toString(), 
         ">", 
-        task.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toString());
+        configuration.getServiceFinishedTailLog());
     
     try {
       super.runCommand(cmd);
