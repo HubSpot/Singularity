@@ -34,6 +34,9 @@ public class SingularityExecutorConfiguration {
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
   
+  private final int tailLogLinesToSave;
+  private final String serviceFinishedTailLog;
+  
   private final String s3MetadataSuffix;
   private final Path s3MetadataDirectory;
   
@@ -64,7 +67,9 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays, 
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory,
+      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
+      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String serviceFinishedTailLog
       ) {
     this.executorBashLog = executorBashLog;
     this.taskAppDirectory = taskAppDirectory;
@@ -90,8 +95,14 @@ public class SingularityExecutorConfiguration {
     this.s3KeyPattern = s3KeyPattern;
     this.s3MetadataSuffix = s3MetadataSuffix;
     this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityExecutorConfigurationLoader.S3_METADATA_DIRECTORY);
+    this.tailLogLinesToSave = Integer.parseInt(tailLogLinesToSave);
+    this.serviceFinishedTailLog = serviceFinishedTailLog;
   }
   
+  public int getTailLogLinesToSave() {
+    return tailLogLinesToSave;
+  }
+
   public Path getLogMetadataDirectory() {
     return logMetadataDirectory;
   }
@@ -136,6 +147,10 @@ public class SingularityExecutorConfiguration {
     return serviceLog;
   }
 
+  public String getServiceFinishedTailLog() {
+    return serviceFinishedTailLog;
+  }
+  
   public String getDefaultRunAsUser() {
     return defaultRunAsUser;
   }
@@ -214,7 +229,8 @@ public class SingularityExecutorConfiguration {
         + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
         + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateConfDirectory=" + logrotateConfDirectory
         + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory="
-        + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern="
+        + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
 
 }

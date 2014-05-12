@@ -46,9 +46,32 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   public void teardown() {
     writeTailMetadata(true);
     
+    copyLogTail();
+    
     if (manualLogrotate()) {
       removeLogrotateFile();
       writeS3MetadataFile(true);
+    }// TODO deal with this cleanup
+    
+  }
+  
+  private void copyLogTail() {
+    if (configuration.getTailLogLinesToSave() <= 0) {
+      return;
+    }
+   
+    final List<String> cmd = ImmutableList.of(
+        "tail", 
+        "-n", 
+        Integer.toString(configuration.getTailLogLinesToSave()), 
+        task.getServiceLogOut().toString(), 
+        ">", 
+        task.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toString());
+    
+    try {
+      super.runCommand(cmd);
+    } catch (Throwable t) {
+      task.getLog().error("Failed saving tail of log {} to {}", task.getServiceLogOut().toString(), configuration.getServiceFinishedTailLog(), t);
     }
   }
   

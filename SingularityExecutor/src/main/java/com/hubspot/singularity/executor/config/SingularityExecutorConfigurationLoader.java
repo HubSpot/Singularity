@@ -35,6 +35,9 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
   public static final String LOGROTATE_COUNT = "executor.logrotate.count";
   public static final String LOGROTATE_DATEFORMAT = "executor.logrotate.dateformat";
   
+  public static final String TAIL_LOG_LINES_TO_SAVE = "executor.service.log.tail.lines.to.save";
+  public static final String TAIL_LOG_FILENAME = "executor.service.log.tail.file.name";
+  
   public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
   public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
   
@@ -53,6 +56,9 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
     properties.put(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS, Long.toString(TimeUnit.SECONDS.toMillis(30)));
     properties.put(SHUTDOWN_STOP_DRIVER_AFTER_MILLIS, Long.toString(TimeUnit.SECONDS.toMillis(5)));
   
+    properties.put(TAIL_LOG_LINES_TO_SAVE, "500");
+    properties.put(TAIL_LOG_FILENAME, "tail_of_finished_service.log");
+    
     properties.put(LOGROTATE_COMMAND, "logrotate");
     properties.put(LOGROTATE_DIRECTORY, "logs");
     properties.put(LOGROTATE_MAXAGE_DAYS, "7");
