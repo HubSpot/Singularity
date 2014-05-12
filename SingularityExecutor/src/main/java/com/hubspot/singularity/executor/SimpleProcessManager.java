@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor;
 
+import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -13,21 +14,28 @@ public class SimpleProcessManager extends SafeProcessManager {
   }
 
   protected void runCommand(final List<String> command) {
+    runCommand(command, Redirect.INHERIT);
+  }
+  
+  protected void runCommand(final List<String> command, final Redirect redirectOutput) {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
+    int exitCode = 0;
+    
     try {
-      processBuilder.inheritIO();
+      processBuilder.redirectError(Redirect.INHERIT);
+      processBuilder.redirectOutput(redirectOutput);
       
       final Process process = startProcess(processBuilder);
       
-      final int exitCode = process.waitFor();
-        
-      Preconditions.checkState(exitCode == 0, "Got exit code %s while running command %s", exitCode, command);
+      exitCode = process.waitFor();
     } catch (Throwable t) {
       throw new RuntimeException(String.format("While running %s", command), t);
     } finally {
       processFinished();
     }
+    
+    Preconditions.checkState(exitCode == 0, "Got exit code %s while running command %s", exitCode, command);
   }
   
 }

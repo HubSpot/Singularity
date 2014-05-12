@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,12 +65,10 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         "tail", 
         "-n", 
         Integer.toString(configuration.getTailLogLinesToSave()), 
-        task.getServiceLogOut().toString(), 
-        ">", 
-        configuration.getServiceFinishedTailLog());
+        task.getServiceLogOut().toString());
     
     try {
-      super.runCommand(cmd);
+      super.runCommand(cmd, Redirect.to(task.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toFile()));
     } catch (Throwable t) {
       task.getLog().error("Failed saving tail of log {} to {}", new Object[] { task.getServiceLogOut().toString(), configuration.getServiceFinishedTailLog(), t});
     }
