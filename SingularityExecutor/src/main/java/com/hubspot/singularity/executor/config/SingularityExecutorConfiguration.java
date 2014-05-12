@@ -69,7 +69,7 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
-      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String serviceFinishedTailLog
+      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog
       ) {
     this.executorBashLog = executorBashLog;
     this.taskAppDirectory = taskAppDirectory;

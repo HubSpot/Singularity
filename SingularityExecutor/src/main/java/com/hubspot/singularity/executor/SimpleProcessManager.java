@@ -29,12 +29,11 @@ public class SimpleProcessManager extends SafeProcessManager {
       
       final int exitCode = process.waitFor();
         
-      Preconditions.checkState(exitCode == 0, "Got exit code %d while running command %s", exitCode, command);
-
-      processFinished();
- 
+      Preconditions.checkState(exitCode == 0, "Got exit code %s while running command %s", exitCode, command);
     } catch (Throwable t) {
       throw new RuntimeException(String.format("While running %s", command), t);
+    } finally {
+      processFinished();
     }
   }
   
