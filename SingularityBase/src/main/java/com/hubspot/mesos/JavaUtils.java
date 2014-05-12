@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 
 public class JavaUtils {
 
@@ -147,18 +149,12 @@ public class JavaUtils {
   }
   
   public static Iterable<Path> iterable(final Path directory) {
-    return new Iterable<Path>() {
-      
-      @Override
-      public Iterator<Path> iterator() {
-        try {
-          DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory);
-          return dirStream.iterator();
-        } catch (IOException e) {
-          throw Throwables.propagate(e);
-        }
-      }
-    };
+    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory);) {
+      Iterator<Path> iterator = dirStream.iterator();
+      return Lists.newArrayList(iterator);
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   public static Path getValidDirectory(String directoryPath, String name) {

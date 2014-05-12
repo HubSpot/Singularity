@@ -275,9 +275,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       } else {
         LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
         
-        if (metadata.isFinished()) {
+        if (metadata.isFinished() && !isFinished(existingUploader)) {
           metrics.getExpiringUploaderCounter().inc();
-        } else {
+        } else if (metadata.isFinished() && isFinished(existingUploader)) {
           metrics.getExpiringUploaderCounter().dec();
         }
         
@@ -334,9 +334,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         LOG.trace("Found {} to match deleted path {}", found, filename);
 
-        if (found.isPresent()) {
-          metrics.getExpiringUploaderCounter().inc();
-          isFinished.put(found.get(), Boolean.TRUE);
+        if (found.isPresent() && !found.get().getUploadMetadata().isFinished()) {
+          Boolean existingValue = isFinished.put(found.get(), Boolean.TRUE);
+          if (existingValue == null || !existingValue.booleanValue()) {
+            metrics.getExpiringUploaderCounter().inc();
+          }
         }
       } else {
         return handleNewS3Metadata(fullPath);
