@@ -25,7 +25,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   private final SingularityExecutorConfiguration configuration;
   
   public SingularityExecutorTaskLogManager(SingularityExecutorTask task, ObjectMapper objectMapper, TemplateManager templateManager, SingularityExecutorConfiguration configuration) {
-    super(task.getLog(), task.getExecutorBashOut());
+    super(task.getLog());
     this.task = task;
     this.objectMapper = objectMapper;
     this.templateManager = templateManager;

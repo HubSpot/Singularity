@@ -29,7 +29,7 @@ public class ArtifactManager extends SimpleProcessManager {
   private final String taskId;
   
   public ArtifactManager(SingularityExecutorConfiguration configuration, String taskId, Logger log) {
-    super(log, configuration.getExecutorBashLogPath(taskId));
+    super(log);
     
     this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
     this.log = log;

@@ -1,7 +1,5 @@
 package com.hubspot.singularity.executor;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -10,20 +8,15 @@ import com.google.common.base.Preconditions;
 
 public class SimpleProcessManager extends SafeProcessManager {
   
-  private final Path processOut;
-  
-  public SimpleProcessManager(Logger log, Path processOut) {
+  public SimpleProcessManager(Logger log) {
     super(log);
-    this.processOut = processOut;
   }
 
   protected void runCommand(final List<String> command) {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
     try {
-      final File outputFile = processOut.toFile();
-      processBuilder.redirectError(outputFile);
-      processBuilder.redirectOutput(outputFile);
+      processBuilder.inheritIO();
       
       final Process process = startProcess(processBuilder);
       
