@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 
 import java.io.IOException;
 
-@JsonIgnoreProperties( ignoreUnknown = false )
+@JsonIgnoreProperties( ignoreUnknown = true )
 public class SingularityLoadBalancerResponse extends SingularityJsonObject {
 
   private final String loadBalancerRequestId;
