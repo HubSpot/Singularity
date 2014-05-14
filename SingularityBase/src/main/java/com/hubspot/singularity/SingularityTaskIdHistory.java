@@ -37,7 +37,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   @Override
   public int compareTo(SingularityTaskIdHistory o) {
     return ComparisonChain.start()
-        .compare(updatedAt, o.getUpdatedAt())
+        .compare(o.getUpdatedAt(), updatedAt)
         .compare(taskId.getId(), o.getTaskId().getId())
         .result();
   }
