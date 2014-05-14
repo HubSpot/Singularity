@@ -89,6 +89,9 @@ class RequestHistoricalTasksTableView extends View
 
         @
 
+    refresh: ->
+        @historicalTasks.goTo @historicalTasks.currentPage
+
     postHistoricalTasksViewRender: ->
         @fixPagination()
         @setupEvents()

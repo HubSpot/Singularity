@@ -84,6 +84,9 @@ class RequestDeployHistoryTableView extends View
 
         @
 
+    refresh: ->
+        @deployHistory.goTo @deployHistory.currentPage
+
     postDeployHistoryViewRender: ->
         @fixPagination()
 

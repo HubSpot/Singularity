@@ -25,6 +25,8 @@ class RequestView extends View
     events:
         'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
 
+    firstRender: true
+
     initialize: ->
         @requestModel = new Request id: @options.requestId
         @requestModel.fetched = false
@@ -78,9 +80,37 @@ class RequestView extends View
         @fetch().done =>
             @render()
 
+        @requestHistoricalTasksTable?.refresh()
+        @requestDeployHistoryTable?.refresh()
+
         @
 
     render: ->
+
+        context = @gatherContext()
+
+        if @firstRender
+            @$el.html @template context, @gatherPartials()
+            @saveSelectors()
+            @firstRender = false
+        else
+            @$requestHeader.html @requestHeaderTemplate context
+            @$requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
+            @$requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
+            @$requestHistory.html @requestHistoryTemplate context
+            @$requestActiveDeploy.html @requestActiveDeployTemplate context
+            @$requestInfo.html @requestInfoTemplate context
+
+        @renderHistoricalTasksPaginatedIfNeeded()
+        @renderDeployHistoryPaginatedIfNeeded()
+
+        @setupEvents()
+
+        @$el.find('pre').each -> utils.setupCopyPre $ @
+
+        @
+
+    gatherContext: ->
         context =
             request:
                 id: @options.requestId
@@ -128,14 +158,10 @@ class RequestView extends View
             context.request.onDemand = utils.isOnDemandRequest requestLikeObject
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
-        $requestHeader = @$el.find('[data-request-header]')
-        $requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
-        $requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
-        $requestHistory = @$el.find('[data-request-history]')
-        $requestActiveDeploy = @$el.find('[data-request-active-deploy]')
-        $requestInfo = @$el.find('[data-request-info]')
-        $requestDeployHistory = @$el.find('[data-request-deploy-history]')
+        context
 
+
+    gatherPartials: ->
         partials =
             partials:
                 requestHeader: @requestHeaderTemplate
@@ -145,37 +171,33 @@ class RequestView extends View
                 requestActiveDeploy: @requestActiveDeployTemplate
                 requestInfo: @requestInfoTemplate
 
-        if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
-            @$el.html @template context, partials
-            @renderHistoricalTasksPaginated()
-            @renderDeployHistoryPaginated()
-        else
-            $requestHeader.html @requestHeaderTemplate context
-            $requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
-            $requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
-            $requestHistory.html @requestHistoryTemplate context
-            $requestActiveDeploy.html @requestActiveDeployTemplate context
-            $requestInfo.html @requestInfoTemplate context
+    saveSelectors: ->
+        @$requestHeader = @$el.find('[data-request-header]')
+        @$requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
+        @$requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
+        @$requestHistory = @$el.find('[data-request-history]')
+        @$requestActiveDeploy = @$el.find('[data-request-active-deploy]')
+        @$requestInfo = @$el.find('[data-request-info]')
+        @$requestDeployHistory = @$el.find('[data-request-deploy-history]')
 
-        @setupEvents()
 
-        @$el.find('pre').each -> utils.setupCopyPre $ @
+    renderHistoricalTasksPaginatedIfNeeded: ->
+        return if @requestHistoricalTasksTable?
 
-        @
-
-    renderHistoricalTasksPaginated: ->
-        requestHistoricalTasksTable = new RequestHistoricalTasksTableView
+        @requestHistoricalTasksTable = new RequestHistoricalTasksTableView
             requestId: @options.requestId
             count: 10
 
-        @$el.find('.historical-tasks-paginated').html requestHistoricalTasksTable.render().$el
+        @$el.find('.historical-tasks-paginated').html @requestHistoricalTasksTable.render().$el
 
-    renderDeployHistoryPaginated: ->
-        requestDeployHistoryTable = new RequestDeployHistoryTableView
+    renderDeployHistoryPaginatedIfNeeded: ->
+        return if @requestDeployHistoryTable?
+
+        @requestDeployHistoryTable = new RequestDeployHistoryTableView
             requestId: @options.requestId
             count: 10
 
-        @$el.find('.deploy-history-paginated').html requestDeployHistoryTable.render().$el
+        @$el.find('.deploy-history-paginated').html @requestDeployHistoryTable.render().$el
 
 
     setupEvents: ->
