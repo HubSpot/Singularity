@@ -50,7 +50,7 @@ globalRefresh = ->
     , 20 * 1000
 
 refresh = ->
-    if not $('body > .vex').length and not windowBlurred
+    if not $('body > .vex').length and not windowBlurred and env.disablePageRefresh isnt true
         app.views.current?.refresh?()
 
 class Router extends Backbone.Router
