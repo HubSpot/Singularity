@@ -1,11 +1,11 @@
 View = require './view'
 
 RequestHistoricalTasksTableView = require './requestHistoricalTasksTable'
+RequestDeployHistoryTableView = require './requestDeployHistoryTable'
 
 Request = require '../models/Request'
 RequestHistory = require '../models/RequestHistory'
 RequestActiveDeploy = require '../models/RequestActiveDeploy'
-RequestDeployHistory = require '../models/RequestDeployHistory'
 
 RequestTasks = require '../collections/RequestTasks'
 
@@ -16,12 +16,14 @@ class RequestView extends View
     requestHeaderTemplate: require './templates/requestHeader'
     requestTasksActiveTableTemplate: require './templates/requestTasksActiveTable'
     requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
-    requestDeployHistoryTemplate: require './templates/requestDeployHistory'
     requestHistoryTemplate: require './templates/requestHistory'
     requestActiveDeployTemplate: require './templates/requestActiveDeploy'
     requestInfoTemplate: require './templates/requestInfo'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
+
+    events:
+        'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
 
     initialize: ->
         @requestModel = new Request id: @options.requestId
@@ -29,9 +31,6 @@ class RequestView extends View
 
         @requestHistory = new RequestHistory {}, requestId: @options.requestId
         @requestHistory.fetched = false
-
-        @requestDeployHistory = new RequestDeployHistory {}, requestId: @options.requestId
-        @requestDeployHistory.fetched = false
 
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
         @requestTasksActive.fetched = false
@@ -64,10 +63,6 @@ class RequestView extends View
                 @requestModel.fetched = true
                 @requestActiveDeploy.fetched = true
                 @requestActiveDeploy.noData = true
-
-        promises.push @requestDeployHistory.fetch().done =>
-            @requestDeployHistory.fetched = true
-            @render()
 
         promises.push @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
@@ -103,9 +98,6 @@ class RequestView extends View
 
             fetchDoneHistory: @requestHistory.fetched
             requestHistory: @requestHistory.attributes
-
-            fetchDoneDeployHistory: @requestDeployHistory.fetched
-            requestDeployHistory: @requestDeployHistory.attributes
 
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
@@ -152,11 +144,11 @@ class RequestView extends View
                 requestHistory: @requestHistoryTemplate
                 requestActiveDeploy: @requestActiveDeployTemplate
                 requestInfo: @requestInfoTemplate
-                requestDeployHistory: @requestDeployHistoryTemplate
 
         if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
             @$el.html @template context, partials
             @renderHistoricalTasksPaginated()
+            @renderDeployHistoryPaginated()
         else
             $requestHeader.html @requestHeaderTemplate context
             $requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
@@ -164,11 +156,9 @@ class RequestView extends View
             $requestHistory.html @requestHistoryTemplate context
             $requestActiveDeploy.html @requestActiveDeployTemplate context
             $requestInfo.html @requestInfoTemplate context
-            $requestDeployHistory.html @requestDeployHistoryTemplate context
 
         @setupEvents()
 
-        utils.setupSortableTables()
         @$el.find('pre').each -> utils.setupCopyPre $ @
 
         @
@@ -180,24 +170,15 @@ class RequestView extends View
 
         @$el.find('.historical-tasks-paginated').html requestHistoricalTasksTable.render().$el
 
+    renderDeployHistoryPaginated: ->
+        requestDeployHistoryTable = new RequestDeployHistoryTableView
+            requestId: @options.requestId
+            count: 10
+
+        @$el.find('.deploy-history-paginated').html requestDeployHistoryTable.render().$el
+
+
     setupEvents: ->
-        @$el.find('[data-action="viewDeployJSON"]').unbind('click').on 'click', (e) =>
-            requestId = @options.requestId
-            deployId = $(e.target).data('deploy-id')
-            requestDeployId = "#{ @options.requestId }-#{ deployId }"
-
-            viewJSON = -> utils.viewJSON 'deploy', requestDeployId
-
-            if app.allDeploys[requestDeployId]
-                viewJSON()
-            else
-                requestActiveDeploy = new RequestActiveDeploy [], { requestId, deployId }
-                vex.showLoading()
-                requestActiveDeploy.fetch()
-                    .error(=> vex.hideLoading())
-                    .done =>
-                        vex.hideLoading()
-                        viewJSON()
 
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'task', $(e.target).data('task-id')
@@ -276,5 +257,25 @@ class RequestView extends View
                     app.collections.tasksScheduled.remove(taskModel)
                     $row.remove()
                     utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
+
+    # Leaving this code inside the parent view (instead of RequestDeployHistoryTableView) for now
+    viewDeployJSON: (e) ->
+        requestId = @options.requestId
+        deployId = $(e.target).data('deploy-id')
+        requestDeployId = "#{ @options.requestId }-#{ deployId }"
+
+        viewJSON = -> utils.viewJSON 'deploy', requestDeployId
+
+        if app.allDeploys[requestDeployId]
+            viewJSON()
+        else
+            requestActiveDeploy = new RequestActiveDeploy [], { requestId, deployId }
+            vex.showLoading()
+            requestActiveDeploy.fetch()
+                .error(=> vex.hideLoading())
+                .done =>
+                    vex.hideLoading()
+                    viewJSON()
+
 
 module.exports = RequestView

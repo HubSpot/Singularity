@@ -4,7 +4,7 @@ localRequestHistoryIdNumber = 1
 
 class RequestHistory extends Model
 
-    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/requests"
+    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/requests?orderDirection=DESC"
 
     initialize: (models, { @requestId }) =>
 
@@ -24,9 +24,6 @@ class RequestHistory extends Model
             requestUpdate.userHuman = requestUpdate.user
             requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
             requestUpdate.stateHuman = constants.requestStates[requestUpdate.state]
-
-        _.sortBy requestHistory.requestUpdates, (r) -> r.createdAt
-        requestHistory.requestUpdates.reverse()
 
         requestHistory
 

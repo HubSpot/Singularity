@@ -10,8 +10,6 @@ class RequestHistoricalTasksTableView extends View
         @historicalTasks = new HistoricalTasks [],
             requestId: @options.requestId
             active: false
-            sortColumn: 'updatedAt'
-            sortDirection: 'asc'
 
         $.extend @historicalTasks,
             totalPages: 100
@@ -56,19 +54,19 @@ class RequestHistoricalTasksTableView extends View
                     subviews: $.extend {}, @subviews,
                         pagination: HistoryPaginationView
                     partials: [
-                        header: '<th class="sorting" data-sort="taskId">Name</th>'
+                        header: '<th>Name</th>'
                         cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
-                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Status</th>'
+                        header: '<th class="visible-desktop">Status</th>'
                         cell: '<td class="visible-desktop">{{ lastTaskStateHuman }}</td>'
                     ,
-                        header: '<th class="sorting visible-desktop" data-sort="lastTaskStatus">Deploy ID</th>'
+                        header: '<th class="visible-desktop">Deploy ID</th>'
                         cell: '<td class="visible-desktop">{{ deployId }}</td>'
                     ,
-                        header: '<th class="sorting visible-desktop" data-sort="startedAt">Started</th>'
+                        header: '<th class="visible-desktop">Started</th>'
                         cell: '<td class="visible-desktop">{{ startedAtHuman }}</td>'
                     ,
-                        header: '<th class="sorting hidden-phone" data-sort="updatedAt">Updated</th>'
+                        header: '<th class="hidden-phone">Updated</th>'
                         cell: '<td class="hidden-phone">{{ updatedAtHuman }}</td>'
                     ,
                         header: '<th class="hidden-phone">&nbsp;</th>'
