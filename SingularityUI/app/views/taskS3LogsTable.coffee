@@ -4,7 +4,7 @@ class TaskS3LogsTableView extends View
 
     initialize: ->
         super
-        console.log "@collection", @collection
+        @options.count ?= 10
 
     render: ->
         @$el.html '<div class="page-loader centered cushy"></div>'
@@ -48,19 +48,19 @@ class TaskS3LogsTableView extends View
                     subviews: $.extend {}, @subviews,
                         pagination: TaskS3LogsPaginationView
                     partials: [
-                        header: '<th>Log file</th>'
-                        cell: '<td><a href="{{ url }}" target="_blank">{{ key }}</a></td>'
+                        header: '<th class="half-table">Log file</th>'
+                        cell: '<td><a class="long-link" href="{{ url }}" target="_blank">{{ key }}</a></td>'
                     ,
                         header: '<th>Size</th>'
                         cell: '<td>{{ sizeHuman }}</td>'
                     ,
                         header: '<th>Last modified</th>'
                         cell: '<td data-value="{{ lastModified }}">{{ lastModifiedHuman }}</td>'
-                    # ,
-                    #     header: '<th></th>'
-                    #     cell: """<td class="actions-column">
-                    #                <a data-deploy-id="{{ deployId }}" data-action="viewDeployJSON">JSON</a>
-                    #              </td>"""
+                    ,
+                        header: '<th></th>'
+                        cell: """<td class="actions-column">
+                                   <a href="{{ url }}" target="_blank">Download</a>
+                                 </td>"""
                     ]
 
                 @tableView.setElement @el
