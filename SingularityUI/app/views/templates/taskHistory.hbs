@@ -1,0 +1,45 @@
+<section data-task-history>
+    <div class="page-header">
+        <h1>History</h1>
+    </div>
+    {{#if taskHistory.taskUpdates}}
+        <div class="row-fluid">
+            <div class="span12">
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Message</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn taskHistory.taskUpdates}}
+                            <tr>
+                                <td><span title="{{ statusUpdate }}">{{ taskStateHuman }}</span></td>
+                                <td>
+                                    {{#if statusMessage}}
+                                        {{ statusMessage }}
+                                    {{else}}
+                                        &mdash;
+                                    {{/if}}
+                                </td>
+                                <td data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {{else}}
+        {{#if taskHistory.hasNoTaskUpdates}}
+            <div class="empty-table-message"><p>This task has no history yet.</p></div>
+            <div class="page-loader-with-message">
+                <div class="page-loader centered"></div>
+                <p>Refreshing history...</p>
+            </div>
+        {{else}}
+            <div class="page-loader centered"></div>
+        {{/if}}
+    {{/if}}
+</section>

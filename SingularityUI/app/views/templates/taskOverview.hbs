@@ -1,0 +1,25 @@
+<header class="jumbotron subhead" id="overview">
+    <h3><a href="{{#appRoot}}{{/appRoot}}request/{{ request.id }}" data-route="request/{{ request.id }}">{{#hardBreak request.id}}{{/hardBreak}}</a></h3>
+    <h1 data-string-length-tens="{{ taskIdStringLengthTens }}">
+        {{#hardBreak taskHistory.task.id}}{{/hardBreak}}
+        <div class="header-actions">
+            <a data-task-id="{{ taskHistory.task.id }}" data-action="viewObjectJSON">JSON</a>
+            {{#if taskHistory.task.isStopped}}{{else}}
+                <a data-task-id="{{ taskHistory.task.id }}" data-action="remove">Kill task</a>
+            {{/if}}
+        </div>
+    </h1>
+    {{#if taskHistory.taskUpdates}}
+        {{#eachWithFn taskHistory.taskUpdates}}
+            {{#if _first}}
+                <p class="lead">
+                    {{ taskStateHuman }} as of
+                    {{ timestampHuman }}
+                    {{#if statusMessage}}
+                        ({{ statusMessage }})
+                    {{/if}}
+                </p>
+            {{/if}}
+        {{/eachWithFn}}
+    {{/if}}
+</header>

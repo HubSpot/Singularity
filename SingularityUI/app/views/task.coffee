@@ -8,14 +8,20 @@ TaskFiles = require '../collections/TaskFiles'
 
 TaskS3LogsTableView = require '../views/taskS3LogsTable'
 
-class TaskView extends View
 
-    template: require './templates/task'
+class TaskView extends View
 
     killTaskTemplate: require './templates/vex/killTask'
 
+    overviewTemplate: require './templates/taskOverview'
+    historyTemplate:  require './templates/taskHistory'
+    logsTemplate:     require './templates/taskLogs'
+    filesTemplate:    require './templates/taskFiles'
+    infoTemplate:     require './templates/taskInfo'
+
     initialize: ->
         @sandboxTries = 0
+        @firstRender = true
         @taskFiles = {}
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
 
@@ -55,10 +61,7 @@ class TaskView extends View
                 )
             @sandboxTries += 1
 
-        @taskS3Logs.fetch().fail =>
-            console.log 's3 logs failed'
-        .done =>
-            console.log 's3 logs succeeded'
+        @taskS3Logs.fetch()
 
         deferred
 
@@ -73,9 +76,6 @@ class TaskView extends View
 
     render: ->
         return @ unless @taskHistory.attributes?.task?.id
-
-        console.log "rendering"
-        console.trace()
 
         if @taskHistory.attributes.taskUpdates?.length is 0
             @taskHistory.attributes.hasNoTaskUpdates = true
@@ -95,10 +95,24 @@ class TaskView extends View
             partials:
                 filesTable: require './templates/filesTable'
 
-        @$el.html @template context, partials
+        if @firstRender
+            @firstRender = false
+
+            @$el.append @overviewTemplate context, partials
+            @$el.append @historyTemplate context, partials
+            @$el.append @logsTemplate context, partials
+            @$el.append @filesTemplate context, partials
+            @$el.append @infoTemplate context, partials
+
+            @saveSelectors()
+            @setupSubviews()
+        else
+            @dom.overview.replaceWith @overviewTemplate context, partials
+            @dom.historySection.replaceWith @historyTemplate context, partials
+            @dom.filesSection.replaceWith @filesTemplate context, partials
+            @dom.infoSection.replaceWith @infoTemplate context, partials
 
         @setupEvents()
-        @setupSubviews()
 
         @$el.find('pre').each -> utils.setupCopyPre $ @
 
@@ -122,10 +136,18 @@ class TaskView extends View
                     taskModel.destroy()
                     setTimeout (=> @refresh()), 500
 
-    setupSubviews: ->
-        if not @taskS3LogsTableView?
-            @taskS3LogsTableView = new TaskS3LogsTableView { collection: @taskS3Logs }
+    saveSelectors: ->
+        @dom ?= {}
 
-        @$('[data-s3-logs-wrapper]').append @taskS3LogsTableView.render().$el
+        @dom.overview = @$('#overview')
+        @dom.historySection = @$('[data-task-history]')
+        @dom.logsSection = @$('[data-task-logs]')
+        @dom.logsWrapper = @$('[data-s3-logs-wrapper]')
+        @dom.filesSection = @$('[data-task-files]')
+        @dom.infoSection = @$('[data-task-info]')
+
+    setupSubviews: ->
+        @taskS3LogsTableView = new TaskS3LogsTableView { collection: @taskS3Logs }
+        @dom.logsWrapper.append @taskS3LogsTableView.render().$el
 
 module.exports = TaskView
