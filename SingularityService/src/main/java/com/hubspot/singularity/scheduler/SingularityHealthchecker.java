@@ -19,7 +19,6 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -37,7 +36,6 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
-  private final DeployManager deployManager;
   
   private final Map<String, ScheduledFuture<?>> taskIdToHealthcheck;
   
@@ -45,9 +43,8 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final SingularityCloser closer;
   
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, DeployManager deployManager, SingularityConfiguration configuration, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer) {
     this.http = http;
-    this.deployManager = deployManager;
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.abort = abort;
@@ -64,21 +61,12 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   public void reEnqueueHealthcheck(SingularityTask task) {
-    if (!isDeployPending(task)) {
+    if (!taskManager.isActiveTask(task.getTaskId().getId())) {
+      LOG.trace("Task {} is not active, not reEnqueueing healthcheck", task.getTaskId());
       return;
     }
-
-    privateEnqueueHealthcheck(task);
-  }
-  
-  private boolean isDeployPending(SingularityTask task) {
-    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(task.getTaskId().getRequestId());
-   
-    if (!requestDeployState.isPresent() || !requestDeployState.get().getPendingDeploy().isPresent()) {
-      return false;
-    }
     
-    return requestDeployState.get().getPendingDeploy().get().getDeployId().equals(task.getTaskId().getDeployId());
+    privateEnqueueHealthcheck(task);
   }
   
   private void privateEnqueueHealthcheck(SingularityTask task) {
