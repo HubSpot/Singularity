@@ -1,19 +1,24 @@
-Model = require './model'
+Collection = require './collection'
 
 localRequestHistoryIdNumber = 1
 
-class RequestHistory extends Model
+class RequestHistory extends Mixen(Teeble.ServerCollection)
 
-    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/requests?orderDirection=DESC"
+    url: ->
+        params =
+            count: @perPage
+            page: @currentPage
+            orderDirection: 'DESC'
+
+        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/requests?#{ $.param params }"
 
     initialize: (models, { @requestId }) =>
+        super
 
     parse: (requestHistoryObjects) ->
-        requestHistory = {}
-        requestHistory.requestId = @requestId
-        requestHistory.requestUpdates = requestHistoryObjects
+        requestHistoryObjects
 
-        _.each requestHistory.requestUpdates, (requestUpdate, i) =>
+        _.each requestHistoryObjects, (requestUpdate, i) =>
             if requestUpdate.request?
                 requestUpdate.request.JSONString = utils.stringJSON requestUpdate.request
                 requestUpdate.request.daemon = if _.isNull(requestUpdate.request.daemon) then true else requestUpdate.request.daemon
@@ -25,6 +30,6 @@ class RequestHistory extends Model
             requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
             requestUpdate.stateHuman = constants.requestStates[requestUpdate.state]
 
-        requestHistory
+        requestHistoryObjects
 
 module.exports = RequestHistory

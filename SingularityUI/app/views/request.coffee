@@ -2,9 +2,9 @@ View = require './view'
 
 RequestHistoricalTasksTableView = require './requestHistoricalTasksTable'
 RequestDeployHistoryTableView = require './requestDeployHistoryTable'
+RequestHistoryTableView = require './requestHistoryTable'
 
 Request = require '../models/Request'
-RequestHistory = require '../models/RequestHistory'
 RequestActiveDeploy = require '../models/RequestActiveDeploy'
 
 RequestTasks = require '../collections/RequestTasks'
@@ -16,7 +16,6 @@ class RequestView extends View
     requestHeaderTemplate: require './templates/requestHeader'
     requestTasksActiveTableTemplate: require './templates/requestTasksActiveTable'
     requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
-    requestHistoryTemplate: require './templates/requestHistory'
     requestActiveDeployTemplate: require './templates/requestActiveDeploy'
     requestInfoTemplate: require './templates/requestInfo'
 
@@ -31,54 +30,47 @@ class RequestView extends View
         @requestModel = new Request id: @options.requestId
         @requestModel.fetched = false
 
-        @requestHistory = new RequestHistory {}, requestId: @options.requestId
-        @requestHistory.fetched = false
-
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
         @requestTasksActive.fetched = false
 
         @requestActiveDeploy = { attributes: {}, mock: true }
 
     fetch: ->
-        promises = []
+        # @requestHistory.fetch().done =>
+        #     @requestHistory.fetched = true
+        #     @render()
 
-        promises.push @requestHistory.fetch().done =>
-            @requestHistory.fetched = true
-            @render()
+        #     if @requestHistory.attributes.requestUpdates.length and not (@requestHistory.attributes.requestUpdates[0].state in ['PAUSED', 'DELETED'])
+        #         @requestModel.fetch().done =>
+        #             @requestModel.fetched = true
+        #             @render()
 
-            if @requestHistory.attributes.requestUpdates.length and not (@requestHistory.attributes.requestUpdates[0].state in ['PAUSED', 'DELETED'])
-                @requestModel.fetch().done =>
-                    @requestModel.fetched = true
-                    @render()
+        #             if @requestModel.get('activeDeploy')?
+        #                 if @requestActiveDeploy.mock
+        #                     @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
+        #                 @requestActiveDeploy.fetch().done =>
+        #                     @requestActiveDeploy.fetched = true
+        #                     @render()
+        #             else
+        #                 @requestActiveDeploy.fetched = true
+        #                 @requestActiveDeploy.noData = true
+        #                 @render()
+        #     else
+        #         @requestModel.fetched = true
+        #         @requestActiveDeploy.fetched = true
+        #         @requestActiveDeploy.noData = true
 
-                    if @requestModel.get('activeDeploy')?
-                        if @requestActiveDeploy.mock
-                            @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
-                        @requestActiveDeploy.fetch().done =>
-                            @requestActiveDeploy.fetched = true
-                            @render()
-                    else
-                        @requestActiveDeploy.fetched = true
-                        @requestActiveDeploy.noData = true
-                        @render()
-            else
-                @requestModel.fetched = true
-                @requestActiveDeploy.fetched = true
-                @requestActiveDeploy.noData = true
-
-        promises.push @requestTasksActive.fetch().done =>
+        @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
             @render()
 
-        promises.push app.collections.tasksScheduled.fetch().done =>
+        app.collections.tasksScheduled.fetch().done =>
             app.collections.tasksScheduled.fetched = true
             @render()
 
-        $.when(promises...)
-
     refresh: ->
-        @fetch().done =>
-            @render()
+        # Will automatically kick over several renders (yuck)
+        @fetch()
 
         @requestHistoricalTasksTable?.refresh()
         @requestDeployHistoryTable?.refresh()
@@ -86,7 +78,6 @@ class RequestView extends View
         @
 
     render: ->
-
         context = @gatherContext()
 
         if @firstRender
@@ -97,12 +88,12 @@ class RequestView extends View
             @$requestHeader.html @requestHeaderTemplate context
             @$requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
             @$requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
-            @$requestHistory.html @requestHistoryTemplate context
             @$requestActiveDeploy.html @requestActiveDeployTemplate context
             @$requestInfo.html @requestInfoTemplate context
 
         @renderHistoricalTasksPaginatedIfNeeded()
         @renderDeployHistoryPaginatedIfNeeded()
+        @renderHistoryPaginatedIfNeeded()
 
         @setupEvents()
 
@@ -126,9 +117,6 @@ class RequestView extends View
 
             requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
 
-            fetchDoneHistory: @requestHistory.fetched
-            requestHistory: @requestHistory.attributes
-
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
 
@@ -137,26 +125,31 @@ class RequestView extends View
 
         _.extend context.request, @requestModel.attributes
 
-        if @requestHistory.attributes.requestUpdates?.length
-            requestLikeObject = $.extend {}, @requestHistory.attributes.requestUpdates[0].request
-            delete requestLikeObject.JSONString
-            delete requestLikeObject.localRequestHistoryId
 
-            state = @requestHistory.attributes.requestUpdates[0].state
 
-            if state is 'PAUSED'
-                context.request.paused = true
 
-            if state is 'DELETED'
-                context.request.deleted = true
+        # TODO, update this since it now comes from sub view?
 
-            requestLikeObject.JSONString = utils.stringJSON requestLikeObject
-            app.allRequests[requestLikeObject.id] = requestLikeObject
-            context.request.fullObject = true
+        # if @requestHistory.attributes.requestUpdates?.length
+        #     requestLikeObject = $.extend {}, @requestHistory.attributes.requestUpdates[0].request
+        #     delete requestLikeObject.JSONString
+        #     delete requestLikeObject.localRequestHistoryId
 
-            context.request.scheduled = utils.isScheduledRequest requestLikeObject
-            context.request.onDemand = utils.isOnDemandRequest requestLikeObject
-            context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
+        #     state = @requestHistory.attributes.requestUpdates[0].state
+
+        #     if state is 'PAUSED'
+        #         context.request.paused = true
+
+        #     if state is 'DELETED'
+        #         context.request.deleted = true
+
+        #     requestLikeObject.JSONString = utils.stringJSON requestLikeObject
+        #     app.allRequests[requestLikeObject.id] = requestLikeObject
+        #     context.request.fullObject = true
+
+        #     context.request.scheduled = utils.isScheduledRequest requestLikeObject
+        #     context.request.onDemand = utils.isOnDemandRequest requestLikeObject
+        #     context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
         context
 
@@ -167,7 +160,6 @@ class RequestView extends View
                 requestHeader: @requestHeaderTemplate
                 requestTasksActiveTable: @requestTasksActiveTableTemplate
                 requestTasksScheduledTable: @requestTasksScheduledTableTemplate
-                requestHistory: @requestHistoryTemplate
                 requestActiveDeploy: @requestActiveDeployTemplate
                 requestInfo: @requestInfoTemplate
 
@@ -175,7 +167,6 @@ class RequestView extends View
         @$requestHeader = @$el.find('[data-request-header]')
         @$requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
         @$requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
-        @$requestHistory = @$el.find('[data-request-history]')
         @$requestActiveDeploy = @$el.find('[data-request-active-deploy]')
         @$requestInfo = @$el.find('[data-request-info]')
         @$requestDeployHistory = @$el.find('[data-request-deploy-history]')
@@ -198,6 +189,15 @@ class RequestView extends View
             count: 10
 
         @$el.find('.deploy-history-paginated').html @requestDeployHistoryTable.render().$el
+
+    renderHistoryPaginatedIfNeeded: ->
+        return if @requestHistoryTable?
+
+        @requestHistoryTable = new RequestHistoryTableView
+            requestId: @options.requestId
+            count: 10
+
+        @$el.find('.history-paginated').html @requestHistoryTable.render().$el
 
 
     setupEvents: ->
