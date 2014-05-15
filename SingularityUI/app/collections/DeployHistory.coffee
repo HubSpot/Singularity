@@ -1,4 +1,3 @@
-Collection = require './collection'
 
 # Can't just extend Teeble.ServerCollection directly due to Mixen bugs :(
 class DeployHistory extends Mixen(Teeble.ServerCollection)

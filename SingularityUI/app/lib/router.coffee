@@ -3,6 +3,8 @@ SearchView = require 'views/search'
 RequestsView = require 'views/requests'
 RequestView = require 'views/request'
 RequestHistoricalTasksView = require 'views/requestHistoricalTasks'
+RequestDeployHistoryView = require 'views/requestDeployHistory'
+RequestHistoryView = require 'views/requestHistory'
 TasksView = require 'views/tasks'
 TaskView = require 'views/task'
 FilesView = require 'views/files'
@@ -64,6 +66,8 @@ class Router extends Backbone.Router
         'requests(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
         'request/:requestId/historical-tasks': 'requestHistoricalTasks'
+        'request/:requestId/deploy-history': 'requestDeployHistory'
+        'request/:requestId/request-history': 'requestHistory'
         'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
         'tasks(/)': 'tasksFiltered'
@@ -134,6 +138,26 @@ class Router extends Backbone.Router
         else
             app.views.current = app.views.requestHistoricalTasksViews[requestId]
             app.show app.views.requestHistoricalTasksViews[requestId].refresh()
+
+    requestDeployHistory: (requestId) ->
+        app.views.requestDeployHistoryViews = {} if not app.views.requestDeployHistoryViews
+        if not app.views.requestDeployHistoryViews[requestId]
+            app.views.requestDeployHistoryViews[requestId] = new RequestDeployHistoryView requestId: requestId
+            app.views.current = app.views.requestDeployHistoryViews[requestId]
+            app.show app.views.requestDeployHistoryViews[requestId].render().refresh()
+        else
+            app.views.current = app.views.requestDeployHistoryViews[requestId]
+            app.show app.views.requestDeployHistoryViews[requestId].refresh()
+
+    requestHistory: (requestId) ->
+        app.views.requestHistoryViews = {} if not app.views.requestHistoryViews
+        if not app.views.requestHistoryViews[requestId]
+            app.views.requestHistoryViews[requestId] = new RequestHistoryView requestId: requestId
+            app.views.current = app.views.requestHistoryViews[requestId]
+            app.show app.views.requestHistoryViews[requestId].render().refresh()
+        else
+            app.views.current = app.views.requestHistoryViews[requestId]
+            app.show app.views.requestHistoryViews[requestId].refresh()
 
     tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
         if not app.views.tasks?

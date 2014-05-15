@@ -21,9 +21,6 @@ class RequestView extends View
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
-    events:
-        'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
-
     firstRender: true
 
     initialize: ->
@@ -34,6 +31,11 @@ class RequestView extends View
         @requestTasksActive.fetched = false
 
         @requestActiveDeploy = { attributes: {}, mock: true }
+
+    events: ->
+        _.extend super,
+            'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
+
 
     fetch: ->
         # Note some other fetching is deferred until the request history subview/table is fetched
@@ -52,6 +54,7 @@ class RequestView extends View
 
         @requestHistoricalTasksTable?.refresh()
         @requestDeployHistoryTable?.refresh()
+        @requestHistoryTable?.refresh()
 
         @
 
@@ -126,8 +129,6 @@ class RequestView extends View
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
             context.firstRequestHistoryItem = firstHistoryItem.attributes
-
-        console.log "context", context
 
         context
 

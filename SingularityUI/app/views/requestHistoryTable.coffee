@@ -1,6 +1,6 @@
 View = require './view'
 
-RequestHistory = require '../collections/RequestHistory'
+RequestHistory = require '../collections/History'
 
 class RequestHistoryTableView extends View
 

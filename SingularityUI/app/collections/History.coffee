@@ -1,7 +1,7 @@
-Collection = require './collection'
 
 localRequestHistoryIdNumber = 1
 
+# Can't just extend Teeble.ServerCollection directly due to Mixen bugs :(
 class RequestHistory extends Mixen(Teeble.ServerCollection)
 
     url: ->

@@ -2,7 +2,7 @@ require 'lib/view_helper'
 
 class View extends Backbone.View
 
-    events:
+    events: ->
         'click a[data-route]': 'routeLink'
 
     routeLink: (e) =>
