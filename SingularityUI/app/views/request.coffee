@@ -181,7 +181,12 @@ class RequestView extends View
         # More fetching after we know the latest request state (from the first item of the history)
         @listenTo @requestHistoryTable.history, 'sync', =>
             if @requestHistoryTable.hasHistoryItems() and not @requestHistoryTable.isPausedOrDeleted()
-                @requestModel.fetch().done =>
+                @requestModel.fetch({ suppressErrors: true }).fail =>
+                    @requestModel.fetched = true
+                    @requestActiveDeploy.fetched = true
+                    @requestActiveDeploy.noData = true
+                    @render()
+                .done =>
                     @requestModel.fetched = true
                     @render()
 
