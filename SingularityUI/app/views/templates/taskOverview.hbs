@@ -11,7 +11,7 @@
     </h1>
     {{#if taskHistory.taskUpdates}}
         {{#eachWithFn taskHistory.taskUpdates}}
-            {{#if _first}}
+            {{#if _last}}
                 <p class="lead">
                     {{ taskStateHuman }} as of
                     {{ timestampHuman }}
