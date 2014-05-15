@@ -49,12 +49,19 @@ class RequestView extends View
             @render()
 
     refresh: ->
-        # Will automatically kick over several renders (yuck)
+        @refreshCount ?= 0
+        @refreshCount += 1
+
+        # Will automatically kick off several renders (yuck)
         @fetch()
 
-        @requestHistoricalTasksTable?.refresh()
-        @requestDeployHistoryTable?.refresh()
-        @requestHistoryTable?.refresh()
+        # Since the parent view is calling refresh immediately, don't refresh
+        # all subviews on the first fetch (ghetto way to prevent unnecessary HTTP
+        # calls from too tightly coupled views)
+        if @refreshCount > 1
+            @requestHistoricalTasksTable?.refresh()
+            @requestDeployHistoryTable?.refresh()
+            @requestHistoryTable?.refresh()
 
         @
 
