@@ -10,8 +10,8 @@ class RequestHistoryTableView extends View
         @history = new RequestHistory [],
             requestId: @options.requestId
 
-        @listenToOnce @history, 'sync', =>
-            @firstHistoryItem = @history.first()
+        @listenTo @history, 'sync', (collection, models, options) =>
+            @firstHistoryItem = @history.first() if /offset=0/.test options.data
 
         $.extend @history,
             totalPages: 100

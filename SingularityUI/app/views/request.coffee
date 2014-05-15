@@ -262,9 +262,10 @@ class RequestView extends View
             requestModel = new Request id: $(e.target).data('request-id')
 
             unpause = $(e.target).data('action-unpause') is true
+            verb = if unpause then 'unpause' else 'pause'
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to pause this request?</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to #{verb} this request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     if unpause
