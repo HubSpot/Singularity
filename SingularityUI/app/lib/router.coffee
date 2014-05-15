@@ -37,7 +37,7 @@ $(window).on 'blur', ->
 
 $(window).on 'focus', ->
     windowBlurred = false
-    refresh()
+    refresh() unless env.disablePageRefresh is true
 
 nav = ->
     if not app.views.navigationView?
@@ -48,11 +48,11 @@ window.globalRefreshTimeout = undefined
 globalRefresh = ->
     clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
     window.globalRefreshTimeout = setInterval ->
-        refresh()
+        refresh() unless env.disablePageRefresh is true
     , 20 * 1000
 
 refresh = ->
-    if not $('body > .vex').length and not windowBlurred and env.disablePageRefresh isnt true
+    if not $('body > .vex').length and not windowBlurred
         app.views.current?.refresh?()
 
 class Router extends Backbone.Router
