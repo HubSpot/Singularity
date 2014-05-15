@@ -72,7 +72,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   }
   
   private int getDelaySeconds(SingularityTask task) {
-    int delaySeconds = 1; // TODO base buffer
+    int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
     
     if (hasHealthcheck(task)) {
       delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
@@ -85,7 +85,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   
   // should only be called on tasks that are new and not part of a pending deploy.
   public void enqueueNewTaskCheck(SingularityTask task) {
-    if (taskIdToCheck.containsKey(task.getTaskId())) {
+    if (taskIdToCheck.containsKey(task.getTaskId().getId())) {
       LOG.trace(String.format("Already had a newTaskCheck for task for task %s", task.getTaskId()));
       return;
     }

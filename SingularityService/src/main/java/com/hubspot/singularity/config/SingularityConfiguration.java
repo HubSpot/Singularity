@@ -68,6 +68,9 @@ public class SingularityConfiguration extends Configuration {
   private long healthcheckIntervalSeconds = 5;
   
   @NotNull
+  private int newTaskCheckerBaseDelaySeconds = 30;
+
+  @NotNull
   private long killScheduledTasksWithAreDecomissionedAfterSeconds = 300;
   
   @NotNull
@@ -310,6 +313,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckDeploysEverySeconds(long checkDeploysEverySeconds) {
     this.checkDeploysEverySeconds = checkDeploysEverySeconds;
+  }
+    
+  public int getNewTaskCheckerBaseDelaySeconds() {
+    return newTaskCheckerBaseDelaySeconds;
+  }
+
+  public void setNewTaskCheckerBaseDelaySeconds(int newTaskCheckerBaseDelaySeconds) {
+    this.newTaskCheckerBaseDelaySeconds = newTaskCheckerBaseDelaySeconds;
   }
 
   public void setCleanupEverySeconds(long cleanupEverySeconds) {
