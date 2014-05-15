@@ -3,7 +3,10 @@ View = require './view'
 Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
 
+TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
+
+TaskS3LogsTableView = require '../views/taskS3LogsTable'
 
 class TaskView extends View
 
@@ -15,6 +18,15 @@ class TaskView extends View
         @sandboxTries = 0
         @taskFiles = {}
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
+
+        @taskS3Logs = new TaskS3Logs [], taskId: @options.taskId
+
+        $.extend @taskS3Logs,
+            totalPages: 100
+            totalRecords: 10000
+            currentPage: 1
+            firstPage: 1
+            perPage: 10
 
     fetch: ->
         deferred = $.Deferred()
@@ -43,16 +55,27 @@ class TaskView extends View
                 )
             @sandboxTries += 1
 
+        @taskS3Logs.fetch().fail =>
+            console.log 's3 logs failed'
+        .done =>
+            console.log 's3 logs succeeded'
+
         deferred
 
     refresh: ->
         @fetch().done =>
             @render()
 
+        # Refresh the current logs table page
+        @taskS3Logs.goTo @taskS3Logs.currentPage
+
         @
 
     render: ->
         return @ unless @taskHistory.attributes?.task?.id
+
+        console.log "rendering"
+        console.trace()
 
         if @taskHistory.attributes.taskUpdates?.length is 0
             @taskHistory.attributes.hasNoTaskUpdates = true
@@ -64,6 +87,7 @@ class TaskView extends View
             taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
             taskFilesFetchDone: @taskFilesFetchDone
             taskFilesSandboxUnavailable: @taskFilesSandboxUnavailable
+            taskS3LogsCollectionJSON: JSON.stringify(@taskS3Logs.toJSON(), null, 4)
 
         context.taskIdStringLengthTens = Math.floor(context.taskHistory.task.id.length / 10) * 10
 
@@ -74,8 +98,8 @@ class TaskView extends View
         @$el.html @template context, partials
 
         @setupEvents()
+        @setupSubviews()
 
-        utils.setupSortableTables()
         @$el.find('pre').each -> utils.setupCopyPre $ @
 
         @
@@ -97,5 +121,11 @@ class TaskView extends View
                     return unless confirmed
                     taskModel.destroy()
                     setTimeout (=> @refresh()), 500
+
+    setupSubviews: ->
+        if not @taskS3LogsTableView?
+            @taskS3LogsTableView = new TaskS3LogsTableView { collection: @taskS3Logs }
+
+        @$('[data-s3-logs-wrapper]').append @taskS3LogsTableView.render().$el
 
 module.exports = TaskView
