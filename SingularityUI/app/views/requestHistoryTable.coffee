@@ -10,6 +10,9 @@ class RequestHistoryTableView extends View
         @history = new RequestHistory [],
             requestId: @options.requestId
 
+        @listenToOnce @history, 'sync', =>
+            @firstHistoryItem = @history.first()
+
         $.extend @history,
             totalPages: 100
             totalRecords: 10000
@@ -103,5 +106,15 @@ class RequestHistoryTableView extends View
                 else
                     @$el.find('.pagination-next').addClass('disabled')
             @tableEverNotEmpty = true
+
+    # I know, I know... model mucking on the view? Gross.
+    hasHistoryItems: ->
+        @firstHistoryItem?
+
+    firstItem: ->
+        @firstHistoryItem
+
+    isPausedOrDeleted: ->
+        @firstHistoryItem?.state in ['PAUSED', 'DELETED']
 
 module.exports = RequestHistoryTableView

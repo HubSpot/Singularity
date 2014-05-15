@@ -36,29 +36,7 @@ class RequestView extends View
         @requestActiveDeploy = { attributes: {}, mock: true }
 
     fetch: ->
-        # @requestHistory.fetch().done =>
-        #     @requestHistory.fetched = true
-        #     @render()
-
-        #     if @requestHistory.attributes.requestUpdates.length and not (@requestHistory.attributes.requestUpdates[0].state in ['PAUSED', 'DELETED'])
-        #         @requestModel.fetch().done =>
-        #             @requestModel.fetched = true
-        #             @render()
-
-        #             if @requestModel.get('activeDeploy')?
-        #                 if @requestActiveDeploy.mock
-        #                     @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
-        #                 @requestActiveDeploy.fetch().done =>
-        #                     @requestActiveDeploy.fetched = true
-        #                     @render()
-        #             else
-        #                 @requestActiveDeploy.fetched = true
-        #                 @requestActiveDeploy.noData = true
-        #                 @render()
-        #     else
-        #         @requestModel.fetched = true
-        #         @requestActiveDeploy.fetched = true
-        #         @requestActiveDeploy.noData = true
+        # Note some other fetching is deferred until the request history subview/table is fetched
 
         @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
@@ -126,30 +104,30 @@ class RequestView extends View
         _.extend context.request, @requestModel.attributes
 
 
+        # Reaching into a subview to pick out a model (just to get things done) :/
+        if @requestHistoryTable?.hasHistoryItems()
+            firstHistoryItem = @requestHistoryTable.firstItem()
+            requestLikeObject = $.extend {}, firstHistoryItem.get 'request'
+            delete requestLikeObject.JSONString
+            delete requestLikeObject.localRequestHistoryId
 
+            if firstHistoryItem.get('state') is 'PAUSED'
+                context.request.paused = true
 
-        # TODO, update this since it now comes from sub view?
+            if firstHistoryItem.get('state') is 'DELETED'
+                context.request.deleted = true
 
-        # if @requestHistory.attributes.requestUpdates?.length
-        #     requestLikeObject = $.extend {}, @requestHistory.attributes.requestUpdates[0].request
-        #     delete requestLikeObject.JSONString
-        #     delete requestLikeObject.localRequestHistoryId
+            requestLikeObject.JSONString = utils.stringJSON requestLikeObject
+            app.allRequests[requestLikeObject.id] = requestLikeObject
+            context.request.fullObject = true
 
-        #     state = @requestHistory.attributes.requestUpdates[0].state
+            context.request.scheduled = utils.isScheduledRequest requestLikeObject
+            context.request.onDemand = utils.isOnDemandRequest requestLikeObject
+            context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
-        #     if state is 'PAUSED'
-        #         context.request.paused = true
+            context.firstRequestHistoryItem = firstHistoryItem.attributes
 
-        #     if state is 'DELETED'
-        #         context.request.deleted = true
-
-        #     requestLikeObject.JSONString = utils.stringJSON requestLikeObject
-        #     app.allRequests[requestLikeObject.id] = requestLikeObject
-        #     context.request.fullObject = true
-
-        #     context.request.scheduled = utils.isScheduledRequest requestLikeObject
-        #     context.request.onDemand = utils.isOnDemandRequest requestLikeObject
-        #     context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
+        console.log "context", context
 
         context
 
@@ -198,6 +176,28 @@ class RequestView extends View
             count: 10
 
         @$el.find('.history-paginated').html @requestHistoryTable.render().$el
+
+        # More fetching after we know the latest request state (from the first item of the history)
+        @listenTo @requestHistoryTable.history, 'sync', =>
+            if @requestHistoryTable.hasHistoryItems() and not @requestHistoryTable.isPausedOrDeleted()
+                @requestModel.fetch().done =>
+                    @requestModel.fetched = true
+                    @render()
+
+                    if @requestModel.get('activeDeploy')?
+                        if @requestActiveDeploy.mock
+                            @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
+                        @requestActiveDeploy.fetch().done =>
+                            @requestActiveDeploy.fetched = true
+                            @render()
+                    else
+                        @requestActiveDeploy.fetched = true
+                        @requestActiveDeploy.noData = true
+                        @render()
+            else
+                @requestModel.fetched = true
+                @requestActiveDeploy.fetched = true
+                @requestActiveDeploy.noData = true
 
 
     setupEvents: ->

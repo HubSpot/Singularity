@@ -24,8 +24,6 @@
         {{/unless}}
     </div>
 </h1>
-{{#eachWithFn requestHistory.requestUpdates}}
-    {{#if _first}}
-        <p class="lead">{{ stateHuman }} {{#if userHuman}}by {{ userHuman }}{{/if}} {{ createdAtHuman }}</p>
-    {{/if}}
-{{/eachWithFn}}
+{{#if firstRequestHistoryItem}}
+    <p class="lead">{{ firstRequestHistoryItem.stateHuman }} {{#if firstRequestHistoryItem.userHuman}}by {{ firstRequestHistoryItem.userHuman }}{{/if}} {{ firstRequestHistoryItem.createdAtHuman }}</p>
+{{/if}}
