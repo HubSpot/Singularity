@@ -105,7 +105,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     
     master = masterInfo;
     
-    startup.startup(masterInfo);
+    startup.startup(masterInfo, driver);
 
     cleanupPoller.start(this);
     stalePoller.start(this);

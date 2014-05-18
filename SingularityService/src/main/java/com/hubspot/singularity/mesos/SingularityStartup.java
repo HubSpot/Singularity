@@ -3,12 +3,15 @@ package com.hubspot.singularity.mesos;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.Protos.TaskID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFrameworkObject;
@@ -23,7 +26,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityStartup {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
+  private final static org.jboss.logging.Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
   
   private final MesosClient mesosClient;
   private final TaskManager taskManager;
@@ -38,7 +41,7 @@ public class SingularityStartup {
     this.requestManager = requestManager;
   }
   
-  public void startup(MasterInfo masterInfo) {
+  public void startup(MasterInfo masterInfo, SchedulerDriver driver) {
     final String uri = mesosClient.getMasterUri(masterInfo);
     
     final long start = System.currentTimeMillis();
@@ -54,7 +57,7 @@ public class SingularityStartup {
       // 1- we need to look for active tasks that are no longer active (assume that there is no such thing as a missing active task.)
       // 2- we need to reschedule the world.
       
-      checkForMissingActiveTasks(state);
+      checkForMissingActiveTasks(state, driver);
       rescheduleTheWorld();
       
     } catch (Exception e) {
@@ -64,16 +67,21 @@ public class SingularityStartup {
     LOG.info(String.format("Finished startup after %sms", System.currentTimeMillis() - start));
   }
   
-  private void checkForMissingActiveTasks(MesosMasterStateObject state) {
+  private void checkForMissingActiveTasks(MesosMasterStateObject state, SchedulerDriver driver) {
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final Set<String> strTaskIds = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
+    final List<String> unknownActiveTaskIds = Lists.newArrayList();
+    
     for (SingularityTaskId taskId : activeTaskIds) {
       strTaskIds.add(taskId.toString());
     }
     
     for (MesosFrameworkObject framework : state.getFrameworks()) {
       for (MesosTaskObject taskObject : framework.getTasks()) {
-        strTaskIds.remove(taskObject.getId());
+        if (!strTaskIds.remove(taskObject.getId())) {
+          // wasn't in our active task ids!
+          unknownActiveTaskIds.add(taskObject.getId());
+        }
       }
     }
     
@@ -83,6 +91,11 @@ public class SingularityStartup {
       taskManager.deleteActiveTask(strTaskId);
     }
     
+    for (String unknownTaskId : unknownActiveTaskIds) {
+      LOG.info("Killing: " + unknownTaskId);
+      driver.killTask(TaskID.newBuilder().setValue(unknownTaskId).build());
+    }
+  
     LOG.info(String.format("Finished reconciling active tasks: %s active tasks, %s were deleted", activeTaskIds.size(), strTaskIds.size()));
   }
   
