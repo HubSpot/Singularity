@@ -26,7 +26,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityStartup {
 
-  private final static org.jboss.logging.Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
   
   private final MesosClient mesosClient;
   private final TaskManager taskManager;
