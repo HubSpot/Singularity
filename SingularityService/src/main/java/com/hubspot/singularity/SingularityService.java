@@ -46,8 +46,13 @@ public class SingularityService extends Application<SingularityConfiguration> {
     environment.servlets().addServlet("brunch", new SingularityBrunchServlet("/static/", "/", "index.html")).addMapping("/*");
   }
 
-  public static void main(String[] args) throws Exception {
-    new SingularityService().run(args);
+  public static void main(String[] args) {
+    try {
+      new SingularityService().run(args);
+    } catch (Throwable t) {
+      t.printStackTrace();
+      System.exit(1);
+    }
   }
 
 }

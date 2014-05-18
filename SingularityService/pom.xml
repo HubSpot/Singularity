@@ -47,7 +47,7 @@
     <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guice</artifactId>
-      <version>0.7.0</version>
+      <version>0.7.0.2</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
