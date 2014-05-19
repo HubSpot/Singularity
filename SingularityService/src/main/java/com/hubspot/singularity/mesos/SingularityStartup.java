@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -32,13 +33,15 @@ public class SingularityStartup {
   private final TaskManager taskManager;
   private final SingularityRackManager rackManager;
   private final RequestManager requestManager;
+  private final MesosConfiguration mesosConfiguration;
   
   @Inject
-  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityRackManager rackManager, TaskManager taskManager, RequestManager requestManager) {
+  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityRackManager rackManager, TaskManager taskManager, RequestManager requestManager, MesosConfiguration configuration) {
     this.mesosClient = mesosClient;
     this.rackManager = rackManager;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
+    this.mesosConfiguration = configuration;
   }
   
   public void startup(MasterInfo masterInfo, SchedulerDriver driver) {
@@ -77,6 +80,11 @@ public class SingularityStartup {
     }
     
     for (MesosFrameworkObject framework : state.getFrameworks()) {
+      if (!framework.getName().equals(mesosConfiguration.getFrameworkName())) {
+        LOG.info("Skipping framework:" + framework.getName());
+        continue;
+      }
+      
       for (MesosTaskObject taskObject : framework.getTasks()) {
         if (!strTaskIds.remove(taskObject.getId())) {
           // wasn't in our active task ids!
