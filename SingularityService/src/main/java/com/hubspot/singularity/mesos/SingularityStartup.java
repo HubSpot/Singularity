@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
@@ -49,10 +50,12 @@ public class SingularityStartup {
   private final SingularityLogSupport logSupport;
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
+  private final MesosConfiguration mesosConfiguration;
   
   @Inject
-  public SingularityStartup(MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder, 
+  public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder, 
       SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport) {
+    this.mesosConfiguration = mesosConfiguration;
     this.mesosClient = mesosClient;
     this.scheduler = scheduler;
     this.stateCacheProvider = stateCacheProvider;
@@ -135,30 +138,38 @@ public class SingularityStartup {
   }
   
   private void checkForMissingActiveTasks(MesosMasterStateObject state) {    
+    final long start = System.currentTimeMillis();
+    
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-    final Set<String> strTaskIds = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
+    
+    final Set<String> inactiveTaskIds = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
     for (SingularityTaskId taskId : activeTaskIds) {
-      strTaskIds.add(taskId.toString());
+      inactiveTaskIds.add(taskId.toString());
     }
     
     for (MesosFrameworkObject framework : state.getFrameworks()) {
+      if (!framework.getId().equals(mesosConfiguration.getFrameworkId())) {
+        LOG.info("Skipping framework {}", framework.getId());
+        continue;
+      }
+      
       for (MesosTaskObject taskObject : framework.getTasks()) {
-        strTaskIds.remove(taskObject.getId());
+        inactiveTaskIds.remove(taskObject.getId()); // remove a
       }
     }
     
-    // these are no longer running.
-    for (String strTaskId : strTaskIds) {
-      SingularityTaskId taskId = SingularityTaskId.fromString(strTaskId);
+    // these are no longer running
+    for (String inactiveTaskId : inactiveTaskIds) {
+      SingularityTaskId taskId = SingularityTaskId.fromString(inactiveTaskId);
       
       SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), ExtendedTaskState.TASK_LOST_WHILE_DOWN, Optional.<String> absent()));
       
       logSupport.checkDirectory(taskId);
       
-      scheduler.handleCompletedTask(taskManager.getActiveTask(strTaskId), taskId, ExtendedTaskState.TASK_LOST_WHILE_DOWN, taskHistoryUpdateCreateResult, stateCacheProvider.get());
+      scheduler.handleCompletedTask(taskManager.getActiveTask(inactiveTaskId), taskId, ExtendedTaskState.TASK_LOST_WHILE_DOWN, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     }
     
-    LOG.info("Finished reconciling active tasks: {} active tasks, {} were deleted", activeTaskIds.size(), strTaskIds.size());
+    LOG.info("Finished reconciling active tasks: {} active tasks, {} were deleted in {}", activeTaskIds.size(), inactiveTaskIds.size(), JavaUtils.duration(start));
   }
   
 }
