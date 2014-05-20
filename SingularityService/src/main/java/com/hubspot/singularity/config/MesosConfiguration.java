@@ -22,7 +22,17 @@ public class MesosConfiguration {
   private String rackIdAttributeKey = "rackid";
   @NotNull
   private String defaultRackId = "DEFAULT";
+  @NotNull
+  private Boolean allowMissingAllExistingTasksOnStartup = false;
     
+  public Boolean getAllowMissingAllExistingTasksOnStartup() {
+    return allowMissingAllExistingTasksOnStartup;
+  }
+
+  public void setAllowMissingAllExistingTasksOnStartup(Boolean allowMissingAllExistingTasksOnStartup) {
+    this.allowMissingAllExistingTasksOnStartup = allowMissingAllExistingTasksOnStartup;
+  }
+
   public String getRackIdAttributeKey() {
     return rackIdAttributeKey;
   }

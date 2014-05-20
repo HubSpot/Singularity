@@ -104,12 +104,12 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     abort.abort();
   }
 
-  private void startup(SchedulerDriver driver, MasterInfo masterInfo) {
+  private void startup(SchedulerDriver driver, MasterInfo masterInfo, boolean registered) {
     Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
     
     master = masterInfo;
     
-    startup.startup(masterInfo);
+    startup.startup(masterInfo, registered);
 
     historyPersister.start();
     cleanupPoller.start(this);
@@ -134,7 +134,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo);
+      startup(driver, masterInfo, true);
 
       scheduler.registered(driver, frameworkId, masterInfo);
     } catch (Throwable t) {
@@ -149,7 +149,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo);
+      startup(driver, masterInfo, false);
 
       scheduler.reregistered(driver, masterInfo);
     } catch (Throwable t) {

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,7 @@ import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
@@ -54,7 +56,7 @@ public class SingularityStartup {
   
   @Inject
   public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder, 
-      SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport) {
+      SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
     this.mesosConfiguration = mesosConfiguration;
     this.mesosClient = mesosClient;
     this.scheduler = scheduler;
@@ -68,7 +70,7 @@ public class SingularityStartup {
     this.logSupport = logSupport;
   }
   
-  public void startup(MasterInfo masterInfo) {
+  public void startup(MasterInfo masterInfo, boolean registered) {
     final long start = System.currentTimeMillis();
     
     final String uri = mesosClient.getMasterUri(masterInfo);
@@ -84,7 +86,7 @@ public class SingularityStartup {
       // 1- we need to look for active tasks that are no longer active (assume that there is no such thing as a missing active task.)
       // 2- we need to reschedule the world.
       
-      checkForMissingActiveTasks(state);
+      checkForMissingActiveTasks(state, registered);
       enqueueHealthAndNewTaskchecks();
       
     } catch (Exception e) {
@@ -137,7 +139,7 @@ public class SingularityStartup {
     return false;
   }
   
-  private void checkForMissingActiveTasks(MesosMasterStateObject state) {    
+  private void checkForMissingActiveTasks(MesosMasterStateObject state, boolean frameworkIsNew) {    
     final long start = System.currentTimeMillis();
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
@@ -147,18 +149,32 @@ public class SingularityStartup {
       inactiveTaskIds.add(taskId.toString());
     }
     
+    List<MesosTaskObject> frameworkRunningTasks = Collections.emptyList();
+    
     for (MesosFrameworkObject framework : state.getFrameworks()) {
       if (!framework.getId().equals(mesosConfiguration.getFrameworkId())) {
         LOG.info("Skipping framework {}", framework.getId());
         continue;
       }
+    
+      frameworkRunningTasks = framework.getTasks();
+    }
+    
+    for (MesosTaskObject taskObject : frameworkRunningTasks) {
+      inactiveTaskIds.remove(taskObject.getId());
+    }
+    
+    // we've lost all tasks
+    if (frameworkRunningTasks.isEmpty() && !activeTaskIds.isEmpty()) {
+      final String msg = String.format("Framework %s (new: %s) had no active tasks, expected ~ %s", mesosConfiguration.getFrameworkId(), frameworkIsNew, activeTaskIds.size());
       
-      for (MesosTaskObject taskObject : framework.getTasks()) {
-        inactiveTaskIds.remove(taskObject.getId()); // remove a
+      if (mesosConfiguration.getAllowMissingAllExistingTasksOnStartup().booleanValue()) {
+        LOG.info("Ignoring task mismatch because allowMissingAllExistingTasksOnStartup is true");
+      } else {
+        throw new IllegalStateException(String.format("%s - %s", msg, "set allowMissingAllExistingTasksOnStartup in mesos configuration to true or remove active tasks manually / check framework / zookeeper ids"));
       }
     }
     
-    // these are no longer running
     for (String inactiveTaskId : inactiveTaskIds) {
       SingularityTaskId taskId = SingularityTaskId.fromString(inactiveTaskId);
       
