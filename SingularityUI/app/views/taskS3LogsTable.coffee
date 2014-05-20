@@ -49,7 +49,7 @@ class TaskS3LogsTableView extends View
                         pagination: TaskS3LogsPaginationView
                     partials: [
                         header: '<th class="half-table">Log file</th>'
-                        cell: '<td><a class="long-link" href="{{ url }}" target="_blank">{{ key }}</a></td>'
+                        cell: '<td><a class="long-link" href="{{ url }}" target="_blank" title="{{ key }}">{{ shortKey }}</a></td>'
                     ,
                         header: '<th>Size</th>'
                         cell: '<td>{{ sizeHuman }}</td>'
