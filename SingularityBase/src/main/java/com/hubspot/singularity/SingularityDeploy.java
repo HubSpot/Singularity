@@ -1,9 +1,5 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,6 +9,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityDeploy extends SingularityJsonObject {
@@ -44,6 +44,7 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   private final Optional<String> serviceBasePath;
   private final Optional<List<String>> loadBalancerGroups;
+  private final Optional<Map<String, Object>> loadBalancerOptions;
   
   public static SingularityDeployBuilder newBuilder() {
     return new SingularityDeployBuilder();
@@ -62,7 +63,8 @@ public class SingularityDeploy extends SingularityJsonObject {
       @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
-      @JsonProperty("serviceBasePath") Optional<String> serviceBasePath, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds) {
+      @JsonProperty("serviceBasePath") Optional<String> serviceBasePath, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
+      @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions) {
     this.requestId = requestId;
     
     this.command = command;
@@ -89,6 +91,7 @@ public class SingularityDeploy extends SingularityJsonObject {
 
     this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
+    this.loadBalancerOptions = loadBalancerOptions;
   }
   
   public SingularityDeployBuilder toBuilder() {
@@ -188,12 +191,33 @@ public class SingularityDeploy extends SingularityJsonObject {
     return loadBalancerGroups;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId=" + customExecutorId
-        + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds
-        + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds
-        + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + "]";
+  public Optional<Map<String, Object>> getLoadBalancerOptions() {
+    return loadBalancerOptions;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityDeploy [" +
+        "requestId='" + requestId + '\'' +
+        ", id='" + id + '\'' +
+        ", version=" + version +
+        ", timestamp=" + timestamp +
+        ", metadata=" + metadata +
+        ", customExecutorCmd=" + customExecutorCmd +
+        ", customExecutorId=" + customExecutorId +
+        ", resources=" + resources +
+        ", command=" + command +
+        ", env=" + env +
+        ", uris=" + uris +
+        ", executorData=" + executorData +
+        ", healthcheckUri=" + healthcheckUri +
+        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+        ", serviceBasePath=" + serviceBasePath +
+        ", loadBalancerGroups=" + loadBalancerGroups +
+        ", loadBalancerOptions=" + loadBalancerOptions +
+        ']';
+  }
 }

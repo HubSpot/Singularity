@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
+
+import java.util.List;
+import java.util.Map;
 
 public class SingularityDeployBuilder {
 
@@ -36,10 +36,11 @@ public class SingularityDeployBuilder {
 
   private Optional<String> serviceBasePath;
   private Optional<List<String>> loadBalancerGroups;
+  private Optional<Map<String, Object>> loadBalancerOptions;
   
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, 
-        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds);
+        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions);
   }
 
   public String getRequestId() {
@@ -213,12 +214,38 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId="
-        + customExecutorId + ", resources=" + resources + ", command=" + command + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds="
-        + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds="
-        + considerHealthyAfterRunningForSeconds + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + "]";
+  public Optional<Map<String, Object>> getLoadBalancerOptions() {
+    return loadBalancerOptions;
   }
 
+  public SingularityDeployBuilder setLoadBalancerOptions(Optional<Map<String, Object>> loadBalancerOptions) {
+    this.loadBalancerOptions = loadBalancerOptions;
+    return this;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityDeployBuilder [" +
+        "requestId='" + requestId + '\'' +
+        ", id='" + id + '\'' +
+        ", version=" + version +
+        ", timestamp=" + timestamp +
+        ", metadata=" + metadata +
+        ", customExecutorCmd=" + customExecutorCmd +
+        ", customExecutorId=" + customExecutorId +
+        ", resources=" + resources +
+        ", command=" + command +
+        ", env=" + env +
+        ", uris=" + uris +
+        ", executorData=" + executorData +
+        ", healthcheckUri=" + healthcheckUri +
+        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+        ", serviceBasePath=" + serviceBasePath +
+        ", loadBalancerGroups=" + loadBalancerGroups +
+        ", loadBalancerOptions=" + loadBalancerOptions +
+        ']';
+  }
 }
