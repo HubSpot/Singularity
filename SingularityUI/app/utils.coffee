@@ -123,9 +123,11 @@ class Utils
     @spacifyObjectID: (id) ->
         id.replace(/([a-z]|(?:(?:^|[a-z])[AI])|^)([A-Z])/g, (match, first, second) -> "#{ first } #{ second }").replace(/[_:-]/g, ' ')
 
-    @matchWordsInWords: (query, string) ->
+    @matchLowercaseOrWordsInWords: (query, string) ->
         queryWords = utils.spacifyObjectID(query).toLowerCase().split(' ')
         stringWords = utils.spacifyObjectID(string).toLowerCase().split(' ')
+
+        return true if string?.toLowerCase().indexOf(query?.toLowerCase()) >= 0
 
         for word in queryWords
             found = false
