@@ -158,7 +158,7 @@ class TasksView extends View
                     host = $row.data('task-host')
                     rowText = "#{ rowText } #{ host }" if host?
 
-                    if utils.matchWordsInWords(searchText, rowText)
+                    if utils.matchLowercaseOrWordsInWords(searchText, rowText)
                         $row.removeClass('filtered')
                     else
                         $row.addClass('filtered')

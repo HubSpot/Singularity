@@ -285,7 +285,7 @@ class RequestsView extends View
                     user = $row.data('request-deploy-user')
                     rowText = "#{ rowText } #{ user }" if user?
 
-                    if utils.matchWordsInWords(@lastSearchFilter, rowText)
+                    if utils.matchLowercaseOrWordsInWords(@lastSearchFilter, rowText)
                         $row.removeClass('filtered')
                     else
                         $row.addClass('filtered')

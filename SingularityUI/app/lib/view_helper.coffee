@@ -30,7 +30,7 @@ Handlebars.registerHelper 'ifFilteredRequest', (request, searchFilter, options) 
     user = request.deployUser
     rowText = "#{ rowText } #{ user }" if user?
 
-    if utils.matchWordsInWords searchFilter, rowText
+    if utils.matchLowercaseOrWordsInWords searchFilter, rowText
         options.inverse @
     else
         options.fn @
