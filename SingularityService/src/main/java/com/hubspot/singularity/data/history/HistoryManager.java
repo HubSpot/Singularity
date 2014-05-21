@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestState;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
@@ -20,7 +20,7 @@ public interface HistoryManager {
     requestId, createdAt
   }
   
-  void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user);
+  void saveRequestHistoryUpdate(SingularityRequest request, RequestHistoryType state, Optional<String> user);
   
   void saveTaskHistory(SingularityTaskHistory taskHistory);
   

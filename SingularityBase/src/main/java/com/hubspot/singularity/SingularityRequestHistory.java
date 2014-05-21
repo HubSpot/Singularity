@@ -8,15 +8,15 @@ public class SingularityRequestHistory {
 
   private final long createdAt;
   private final Optional<String> user;
-  private final RequestState state;
+  private final RequestHistoryType state;
   private final SingularityRequest request;
 
-  public enum RequestState {
+  public enum RequestHistoryType {
     CREATED, UPDATED, DELETED, PAUSED, UNPAUSED;
   }
 
   @JsonCreator
-  public SingularityRequestHistory(@JsonProperty("createdAt") long createdAt, @JsonProperty("user") Optional<String> user, @JsonProperty("state") RequestState state, @JsonProperty("request") SingularityRequest request) {
+  public SingularityRequestHistory(@JsonProperty("createdAt") long createdAt, @JsonProperty("user") Optional<String> user, @JsonProperty("state") RequestHistoryType state, @JsonProperty("request") SingularityRequest request) {
     this.createdAt = createdAt;
     this.user = user;
     this.state = state;
@@ -31,7 +31,7 @@ public class SingularityRequestHistory {
     return user;
   }
 
-  public RequestState getState() {
+  public RequestHistoryType getState() {
     return state;
   }
 

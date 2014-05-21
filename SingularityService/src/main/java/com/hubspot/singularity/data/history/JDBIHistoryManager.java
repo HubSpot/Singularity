@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestState;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.transcoders.SingularityDeployHistoryTranscoder;
@@ -38,7 +38,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public void saveRequestHistoryUpdate(SingularityRequest request, RequestState state, Optional<String> user) {
+  public void saveRequestHistoryUpdate(SingularityRequest request, RequestHistoryType state, Optional<String> user) {
     history.insertRequestHistory(request.getId(), request.getAsBytes(objectMapper), new Date(), state.name(), user.orNull());
   }
   
