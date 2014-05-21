@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-
 public class SingularityRequestParent extends SingularityJsonObject {
 
   private final SingularityRequest request;
