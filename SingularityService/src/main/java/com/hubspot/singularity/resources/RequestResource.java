@@ -163,7 +163,9 @@ public class RequestResource {
       deployManager.deletePendingDeploy(pendingDeployObj);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
+    if (!request.isOneOff()) {
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
+    }
     
     return fillEntireRequest(request);
   }
