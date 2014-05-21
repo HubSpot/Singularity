@@ -24,9 +24,9 @@ public class SingularityRequestParent extends SingularityJsonObject {
     this.pendingDeployState = pendingDeployState;
   }
   
-  public RequestState getState() {
-    return state;
-  }
+//  public RequestState getState() {
+//    return state;
+//  }
 
   public SingularityRequest getRequest() {
     return request;
