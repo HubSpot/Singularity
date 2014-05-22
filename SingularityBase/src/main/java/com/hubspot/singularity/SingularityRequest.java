@@ -26,8 +26,8 @@ public class SingularityRequest extends SingularityJsonObject {
   
   private final Optional<Boolean> loadBalanced;
   
-  public static SingularityRequestBuilder newBuilder() {
-    return new SingularityRequestBuilder();
+  public static SingularityRequestBuilder newBuilder(String id) {
+    return new SingularityRequestBuilder(id);
   }
 
   public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
@@ -54,9 +54,8 @@ public class SingularityRequest extends SingularityJsonObject {
   }
   
   public SingularityRequestBuilder toBuilder() {
-    return new SingularityRequestBuilder()
+    return new SingularityRequestBuilder(id)
         .setDaemon(daemon)
-        .setId(id)
         .setLoadBalanced(loadBalanced)
         .setInstances(instances)
         .setMaxFailuresBeforePausing(maxFailuresBeforePausing)
