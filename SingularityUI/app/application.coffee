@@ -41,7 +41,7 @@ class Application
         @router = new Router
 
         Backbone.history.start
-            pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
+            pushState: true
             root: window.singularity.config.appRoot
 
         Object.freeze? @
@@ -62,7 +62,7 @@ class Application
             return if unloading
             return if blurred and jqxhr.statusText is 'timeout'
 
-            url = settings.url.replace(env.SINGULARITY_BASE, '')
+            url = settings.url.replace(window.singularity.config.appRoot, '')
 
             if jqxhr.status is 502
                 Messenger().post "<p>A request failed because Singularity is deploying. Things should resolve in a few seconds so just hang tight...</p>"

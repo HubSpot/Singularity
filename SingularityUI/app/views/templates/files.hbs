@@ -1,6 +1,6 @@
 <header class="jumbotron subhead" id="overview">
-    <h3><a href="{{#appRoot}}{{/appRoot}}request/{{ taskHistory.task.taskId.requestId }}" data-route="request/{{ taskHistory.task.taskId.requestId }}">{{#hardBreak taskHistory.task.taskId.requestId}}{{/hardBreak}}</a></h3>
-    <h1><a href="{{#appRoot}}{{/appRoot}}task/{{ taskHistory.task.id }}" data-route="task/{{ taskHistory.task.id }}">{{#hardBreak taskHistory.task.id}}{{/hardBreak}}</a></h1>
+    <h3><a href="{{#appRoot}}{{/appRoot}}/request/{{ taskHistory.task.taskId.requestId }}">{{#hardBreak taskHistory.task.taskId.requestId}}{{/hardBreak}}</a></h3>
+    <h1><a href="{{#appRoot}}{{/appRoot}}/task/{{ taskHistory.task.id }}">{{#hardBreak taskHistory.task.id}}{{/hardBreak}}</a></h1>
 </header>
 
 <section>
@@ -9,7 +9,7 @@
             {{#if _last}}
                 <li class="active">{{ path }}</li>
             {{else}}
-                <li><a href="{{#appRoot}}{{/appRoot}}{{ pathRoute }}" data-route="{{ pathRoute }}">{{ path }}</a></li>
+                <li><a href="{{#appRoot}}{{/appRoot}}/{{ pathRoute }}">{{ path }}</a></li>
             {{/if}}
         {{/eachWithFn}}
     </ol>

@@ -55,7 +55,7 @@ class RequestHistoricalTasksTableView extends View
                         pagination: HistoryPaginationView
                     partials: [
                         header: '<th>Name</th>'
-                        cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
+                        cell: '<td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>'
                     ,
                         header: '<th class="visible-desktop">Status</th>'
                         cell: '<td class="visible-desktop">{{ lastTaskStateHuman }}</td>'
@@ -73,7 +73,7 @@ class RequestHistoricalTasksTableView extends View
                         cell: '''
                             <td class="actions-column hidden-phone">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                                <a href="{{#appRoot}}{{/appRoot}}task/{{ id }}/files/" data-route="/task/{{ id }}/files/">Files</a>
+                                <a href="{{#appRoot}}{{/appRoot}}/task/{{ id }}/files/">Files</a>
                             </td>
                         '''
                     ]
