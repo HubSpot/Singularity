@@ -16,6 +16,7 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
+  public static final String API_BASE_PATH = "/v1";
 
   @Override
   public void initialize(Bootstrap<SingularityConfiguration> bootstrap) {

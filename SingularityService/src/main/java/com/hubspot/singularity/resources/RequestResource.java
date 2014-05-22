@@ -1,40 +1,14 @@
 package com.hubspot.singularity.resources;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployResult;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestState;
-import com.hubspot.singularity.SingularityRequestParent;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
 import com.hubspot.singularity.data.RequestManager;
@@ -43,7 +17,12 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.NotFoundException;
 
-@Path("/v1/requests")
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+import java.util.Map;
+
+@Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource {
 

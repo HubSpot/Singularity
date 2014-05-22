@@ -1,20 +1,15 @@
 package com.hubspot.singularity.resources;
 
-import java.util.List;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRack;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.data.RackManager;
 
-@Path("/v1/racks")
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+
+@Path(SingularityService.API_BASE_PATH + "/racks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
   

@@ -1,24 +1,12 @@
 package com.hubspot.singularity.resources;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
@@ -30,7 +18,15 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 
-@Path("/v1/sandbox")
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+
+@Path(SingularityService.API_BASE_PATH + "/sandbox")
 @Produces({ MediaType.APPLICATION_JSON })
 public class SandboxResource extends AbstractHistoryResource {
   
