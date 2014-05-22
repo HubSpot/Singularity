@@ -1,25 +1,8 @@
 package com.hubspot.singularity.resources;
 
-import java.util.Arrays;
-import java.util.List;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -28,7 +11,13 @@ import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
-@Path("/history")
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response.Status;
+import java.util.Arrays;
+import java.util.List;
+
+@Path(SingularityService.API_BASE_PATH + "/history")
 @Produces({ MediaType.APPLICATION_JSON })
 public class HistoryResource extends AbstractHistoryResource {
   

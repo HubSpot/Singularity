@@ -5,7 +5,7 @@ class TasksScheduled extends Tasks
 
     model: TaskScheduled
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/scheduled"
+    url: "#{ config.apiBase }/tasks/scheduled"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

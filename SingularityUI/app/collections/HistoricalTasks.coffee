@@ -11,6 +11,6 @@ class HistoricalTasks extends Mixen(RequestTasks, Teeble.ServerCollection)
             count: @perPage
             page: @currentPage
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks?#{ $.param params }"
+        "#{ config.apiBase }/history/request/#{ @requestId }/tasks?#{ $.param params }"
 
 module.exports = HistoricalTasks

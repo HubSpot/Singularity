@@ -1,11 +1,4 @@
 constants =
-
-    appRoot: '/singularitytest/'
-    apiBase: 'singularitytest/v1'
-
-    mesosLogsPort: '5051'
-    mesosLogsPortHttps: '5151'
-
     taskStates:
         TASK_RUNNING:
             isActive: true

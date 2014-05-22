@@ -52,4 +52,4 @@ exports.config =
             joinTo: 'static/js/app.js'
 
     server:
-        base: '/singularitytest'
+        base: '/singularity'

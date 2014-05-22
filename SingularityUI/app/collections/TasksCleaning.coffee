@@ -2,7 +2,7 @@ Tasks = require './Tasks'
 
 class TasksCleaning extends Tasks
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/cleaning"
+    url: "#{ config.apiBase }/tasks/cleaning"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

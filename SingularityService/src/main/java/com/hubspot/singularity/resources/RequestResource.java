@@ -1,41 +1,11 @@
 package com.hubspot.singularity.resources;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployResult;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityRequestParent;
-import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
 import com.hubspot.singularity.data.RequestManager;
@@ -44,7 +14,12 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.NotFoundException;
 
-@Path("/requests")
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+import java.util.Map;
+
+@Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource {
 
@@ -79,7 +54,7 @@ public class RequestResource {
       requestManager.deletePausedRequest(request.getId());
     }
     
-    historyManager.saveRequestHistoryUpdate(newRequest, result == PersistResult.CREATED ? RequestHistoryType.CREATED : RequestHistoryType.UPDATED, user);
+    historyManager.saveRequestHistoryUpdate(newRequest, result == PersistResult.CREATED ? SingularityRequestHistory.RequestHistoryType.CREATED : SingularityRequestHistory.RequestHistoryType.UPDATED, user);
     
     checkReschedule(newRequest, maybeOldRequest);
     
@@ -95,7 +70,7 @@ public class RequestResource {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
       
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), PendingType.UPDATED_REQUEST));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), SingularityPendingRequest.PendingType.UPDATED_REQUEST));
       }
     }
   }
@@ -165,7 +140,7 @@ public class RequestResource {
     }
     
     if (!request.isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, SingularityPendingRequest.PendingType.NEW_DEPLOY));
     }
     
     return fillEntireRequest(request, RequestState.ACTIVE);
@@ -206,7 +181,7 @@ public class RequestResource {
       throw WebExceptions.badRequest("Can not bounce a scheduled request (%s)", request);
     }
     
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), SingularityPendingRequest.PendingType.BOUNCE));
   }
   
   @POST
@@ -215,12 +190,12 @@ public class RequestResource {
     SingularityRequest request = fetchRequest(requestId);
     Optional<String> maybeCmdLineArgs = Optional.absent();
     
-    PendingType pendingType = null;
+    SingularityPendingRequest.PendingType pendingType = null;
     
     if (request.isScheduled()) {
-      pendingType = PendingType.IMMEDIATE;
+      pendingType = SingularityPendingRequest.PendingType.IMMEDIATE;
     } else if (request.isOneOff()) {
-      pendingType = PendingType.ONEOFF;
+      pendingType = SingularityPendingRequest.PendingType.ONEOFF;
       
       if (!Strings.isNullOrEmpty(commandLineArgs)) {
         maybeCmdLineArgs = Optional.of(commandLineArgs);
@@ -237,10 +212,10 @@ public class RequestResource {
   public void pause(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
     
-    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, SingularityRequestCleanup.RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
     
     if (result == SingularityCreateResult.CREATED) {
-      historyManager.saveRequestHistoryUpdate(request, RequestHistoryType.PAUSED, user);
+      historyManager.saveRequestHistoryUpdate(request, SingularityRequestHistory.RequestHistoryType.PAUSED, user);
     } else {
       throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s", requestId, result);
     }
@@ -258,10 +233,10 @@ public class RequestResource {
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
     
     if (maybeDeployId.isPresent()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, SingularityPendingRequest.PendingType.UNPAUSED));
     }
   
-    historyManager.saveRequestHistoryUpdate(request.get(), RequestHistoryType.UNPAUSED, user);
+    historyManager.saveRequestHistoryUpdate(request.get(), SingularityRequestHistory.RequestHistoryType.UNPAUSED, user);
   
     return request.get();
   }
@@ -362,7 +337,7 @@ public class RequestResource {
       throw handleNoMatchingRequest(requestId);
     }
     
-    historyManager.saveRequestHistoryUpdate(request.get(), RequestHistoryType.DELETED, user);
+    historyManager.saveRequestHistoryUpdate(request.get(), SingularityRequestHistory.RequestHistoryType.DELETED, user);
     
     return request.get();
   }
@@ -376,7 +351,7 @@ public class RequestResource {
       throw handleNoMatchingRequest(requestId);
     }
     
-    historyManager.saveRequestHistoryUpdate(request.get(), RequestHistoryType.DELETED, user);
+    historyManager.saveRequestHistoryUpdate(request.get(), SingularityRequestHistory.RequestHistoryType.DELETED, user);
     
     return request.get();
   }

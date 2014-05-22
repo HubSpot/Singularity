@@ -41,8 +41,8 @@ class Application
         @router = new Router
 
         Backbone.history.start
-            pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-            root: constants.appRoot
+            pushState: true
+            root: config.appRoot
 
         Object.freeze? @
 
@@ -62,7 +62,7 @@ class Application
             return if unloading
             return if blurred and jqxhr.statusText is 'timeout'
 
-            url = settings.url.replace(env.SINGULARITY_BASE, '')
+            url = settings.url.replace(config.appRoot, '')
 
             if jqxhr.status is 502
                 Messenger().post "<p>A request failed because Singularity is deploying. Things should resolve in a few seconds so just hang tight...</p>"
@@ -181,7 +181,7 @@ class Application
 
         $globalSearch.find('input').typeahead
             source: (query, process) ->
-                $.get "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/requests/search", { requestIdLike: query }, (data) ->
+                $.get "#{ config.apiBase }/history/requests/search", { requestIdLike: query }, (data) ->
                     process data
                 return undefined
             matcher: -> true

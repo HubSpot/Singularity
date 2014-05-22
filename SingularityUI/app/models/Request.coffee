@@ -8,26 +8,26 @@ class Request extends Model
             data.daemon = data.request.daemon
         data
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }"
+    url: => "#{ config.apiBase }/requests/request/#{ @get('id') }"
 
     deletePaused: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/paused"
+            url: "#{ config.apiBase }/requests/request/#{ @get('id') }/paused"
             type: 'DELETE'
 
     unpause: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/unpause"
+            url: "#{ config.apiBase }/requests/request/#{ @get('id') }/unpause"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/pause"
+            url: "#{ config.apiBase }/requests/request/#{ @get('id') }/pause"
             type: 'POST'
 
     run: (confirmedOrPromptData) ->
         options =
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/run"
+            url: "#{ config.apiBase }/requests/request/#{ @get('id') }/run"
             type: 'POST'
             contentType: 'application/json'
 

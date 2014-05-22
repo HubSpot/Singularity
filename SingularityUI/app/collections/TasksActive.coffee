@@ -27,7 +27,7 @@ class TasksActive extends Tasks
 
         propertiesString = "?property=#{ properties.join('&property=') }"
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/active#{ propertiesString }"
+        "#{ config.apiBase }/tasks/active#{ propertiesString }"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>
