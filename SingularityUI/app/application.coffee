@@ -40,9 +40,13 @@ class Application
 
         @router = new Router
 
+        # so sneaky
+        el = document.createElement('a')
+        el.href = config.appRoot
+
         Backbone.history.start
             pushState: true
-            root: config.appRoot
+            root: el.pathname
 
         Object.freeze? @
 
