@@ -1,5 +1,6 @@
 package com.hubspot.singularity.views;
 
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.views.View;
@@ -14,7 +15,7 @@ public class ConfigView extends View {
     super("config.mustache");
 
     appRoot = configuration.getSingularityUIHostnameAndPath().or(((SimpleServerFactory)configuration.getServerFactory()).getApplicationContextPath());
-    apiBase = String.format("%s/v1", appRoot);
+    apiBase = String.format("%s%s", appRoot, SingularityService.API_BASE_PATH);
     mesosLogsPort = configuration.getMesosConfiguration().getSlaveHttpPort();
     mesosLogsPortHttps = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
   }
