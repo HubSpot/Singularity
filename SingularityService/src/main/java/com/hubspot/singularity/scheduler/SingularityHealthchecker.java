@@ -171,7 +171,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       return;
     }
     
-    final Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds().or(configuration.getDefaultHealthcheckTimeoutSeconds());
+    final Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
     
     try {
       PerRequestConfig prc = new PerRequestConfig();

@@ -5,13 +5,11 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityRequest extends SingularityJsonObject {
 
   private final String id;

@@ -56,7 +56,7 @@ public class SingularityConfiguration extends Configuration {
   private long saveStateEverySeconds = 60;
   
   @NotNull
-  private long defaultHealthcheckTimeoutSeconds = 5;
+  private long healthcheckTimeoutSeconds = 5;
   
   @NotNull
   private long checkNewTasksEverySeconds = 5;
@@ -242,12 +242,12 @@ public class SingularityConfiguration extends Configuration {
     return checkDeploysEverySeconds;
   }
 
-  public long getDefaultHealthcheckTimeoutSeconds() {
-    return defaultHealthcheckTimeoutSeconds;
+  public long getHealthcheckTimeoutSeconds() {
+    return healthcheckTimeoutSeconds;
   }
 
-  public void setDefaultHealthcheckTimeoutSeconds(long defaultHealthcheckTimeoutSeconds) {
-    this.defaultHealthcheckTimeoutSeconds = defaultHealthcheckTimeoutSeconds;
+  public void setHealthcheckTimeoutSeconds(long healthcheckTimeoutSeconds) {
+    this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
 
   public long getCleanupEverySeconds() {

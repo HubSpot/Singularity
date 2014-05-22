@@ -3,12 +3,10 @@ package com.hubspot.singularity;
 import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityRequestDeployState extends SingularityJsonObject {
 
   private final String requestId;
