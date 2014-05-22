@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 
 public class SingularityRequestBuilder {
 
-  private String id;
+  private final String id;
   
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
@@ -20,6 +20,18 @@ public class SingularityRequestBuilder {
   
   private Optional<Boolean> loadBalanced;
   
+  public SingularityRequestBuilder(String id) {
+    this.id = id;
+    this.owners = Optional.absent();
+    this.numRetriesOnFailure = Optional.absent();
+    this.maxFailuresBeforePausing = Optional.absent();
+    this.schedule = Optional.absent();
+    this.daemon = Optional.absent();
+    this.instances = Optional.absent();
+    this.rackSensitive = Optional.absent();
+    this.loadBalanced = Optional.absent();
+  }
+
   public SingularityRequest build() {
     return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, schedule, daemon, instances, rackSensitive, loadBalanced);
   }
@@ -35,11 +47,6 @@ public class SingularityRequestBuilder {
 
   public String getId() {
     return id;
-  }
-
-  public SingularityRequestBuilder setId(String id) {
-    this.id = id;
-    return this;
   }
 
   public Optional<List<String>> getOwners() {

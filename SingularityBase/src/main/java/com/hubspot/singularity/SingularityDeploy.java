@@ -1,7 +1,10 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -10,11 +13,6 @@ import com.google.common.collect.Maps;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityDeploy extends SingularityJsonObject {
 
   private final String requestId;
@@ -46,8 +44,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<List<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
   
-  public static SingularityDeployBuilder newBuilder() {
-    return new SingularityDeployBuilder();
+  public static SingularityDeployBuilder newBuilder(String requestId, String id) {
+    return new SingularityDeployBuilder(requestId, id);
   }
   
   public static SingularityDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
@@ -95,9 +93,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   }
   
   public SingularityDeployBuilder toBuilder() {
-    return new SingularityDeployBuilder()
+    return new SingularityDeployBuilder(requestId, id)
         .setCommand(command)
-        .setRequestId(requestId)
         .setResources(resources)
         .setCustomExecutorCmd(customExecutorCmd)
         .setCustomExecutorId(customExecutorId)
@@ -108,7 +105,6 @@ public class SingularityDeploy extends SingularityJsonObject {
         
         .setMetadata(metadata.isPresent() ? Optional.<Map<String, String>> of(Maps.newHashMap(metadata.get())) : metadata)
         .setVersion(version)
-        .setId(id)
         .setTimestamp(timestamp)
         .setEnv(env.isPresent() ? Optional.<Map<String, String>> of(Maps.newHashMap(env.get())) : env)
         .setUris(uris.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(uris.get())) : uris)

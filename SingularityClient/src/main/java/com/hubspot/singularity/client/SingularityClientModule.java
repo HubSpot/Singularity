@@ -1,6 +1,7 @@
 package com.hubspot.singularity.client;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
@@ -32,6 +33,7 @@ public class SingularityClientModule extends AbstractModule {
   public ObjectMapper getObjectMapper() {
     return new ObjectMapper()
         .setSerializationInclusion(Include.NON_NULL)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .registerModule(new GuavaModule())
         .registerModule(new ProtobufModule());
   }

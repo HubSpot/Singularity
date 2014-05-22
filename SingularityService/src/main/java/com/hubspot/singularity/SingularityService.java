@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.Stage;
 import com.hubspot.dropwizard.guice.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
@@ -39,6 +41,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
     });
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
+    bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   @Override

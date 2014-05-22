@@ -1,17 +1,16 @@
 package com.hubspot.singularity;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 
-import java.util.List;
-import java.util.Map;
-
 public class SingularityDeployBuilder {
 
-  private String requestId;
-  
-  private String id;
+  private final String requestId;
+  private final String id;
 
   private Optional<String> version;
   private Optional<Long> timestamp;
@@ -37,6 +36,29 @@ public class SingularityDeployBuilder {
   private Optional<String> serviceBasePath;
   private Optional<List<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
+
+  public SingularityDeployBuilder(String requestId, String id) {
+    this.requestId = requestId;
+    this.id = id;
+    this.version = Optional.absent();
+    this.timestamp = Optional.absent();
+    this.metadata = Optional.absent();
+    this.customExecutorCmd = Optional.absent();
+    this.customExecutorId = Optional.absent();
+    this.resources = Optional.absent();
+    this.command = Optional.absent();
+    this.env = Optional.absent();
+    this.uris = Optional.absent();
+    this.executorData = Optional.absent();
+    this.healthcheckUri = Optional.absent();
+    this.healthcheckIntervalSeconds = Optional.absent();
+    this.healthcheckTimeoutSeconds = Optional.absent();
+    this.deployHealthTimeoutSeconds = Optional.absent();
+    this.considerHealthyAfterRunningForSeconds = Optional.absent();
+    this.serviceBasePath = Optional.absent();
+    this.loadBalancerGroups = Optional.absent();
+    this.loadBalancerOptions = Optional.absent();
+  }
   
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, 
@@ -45,11 +67,6 @@ public class SingularityDeployBuilder {
 
   public String getRequestId() {
     return requestId;
-  }
-
-  public SingularityDeployBuilder setRequestId(String requestId) {
-    this.requestId = requestId;
-    return this;
   }
 
   public String getId() {
@@ -62,11 +79,6 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setConsiderHealthyAfterRunningForSeconds(Optional<Long> considerHealthyAfterRunningForSeconds) {
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
-    return this;
-  }
-
-  public SingularityDeployBuilder setId(String id) {
-    this.id = id;
     return this;
   }
 

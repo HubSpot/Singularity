@@ -5,13 +5,11 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityRequest extends SingularityJsonObject {
 
   private final String id;
@@ -28,8 +26,8 @@ public class SingularityRequest extends SingularityJsonObject {
   
   private final Optional<Boolean> loadBalanced;
   
-  public static SingularityRequestBuilder newBuilder() {
-    return new SingularityRequestBuilder();
+  public static SingularityRequestBuilder newBuilder(String id) {
+    return new SingularityRequestBuilder(id);
   }
 
   public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
@@ -56,9 +54,8 @@ public class SingularityRequest extends SingularityJsonObject {
   }
   
   public SingularityRequestBuilder toBuilder() {
-    return new SingularityRequestBuilder()
+    return new SingularityRequestBuilder(id)
         .setDaemon(daemon)
-        .setId(id)
         .setLoadBalanced(loadBalanced)
         .setInstances(instances)
         .setMaxFailuresBeforePausing(maxFailuresBeforePausing)

@@ -196,9 +196,15 @@ public class SingularityDeployChecker {
   private void removePendingDeploy(SingularityPendingDeploy pendingDeploy) {
     deployManager.deletePendingDeploy(pendingDeploy);
   }
-  
+
   private final long getAllowedMillis(SingularityDeploy deploy) {
-    return TimeUnit.SECONDS.toMillis(deploy.getHealthcheckIntervalSeconds().or(0L) + deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds()));
+    long seconds = deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
+    
+    if (deploy.getHealthcheckUri().isPresent()) {
+      seconds += deploy.getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()) + deploy.getHealthcheckTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
+    }
+    
+    return TimeUnit.SECONDS.toMillis(seconds);
   }
   
   private boolean isDeployOverdue(SingularityPendingDeploy pendingDeploy, Optional<SingularityDeploy> deploy) {
