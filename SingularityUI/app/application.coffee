@@ -42,7 +42,7 @@ class Application
 
         Backbone.history.start
             pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-            root: constants.appRoot
+            root: window.singularity.config.appRoot
 
         Object.freeze? @
 
@@ -181,7 +181,7 @@ class Application
 
         $globalSearch.find('input').typeahead
             source: (query, process) ->
-                $.get "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/requests/search", { requestIdLike: query }, (data) ->
+                $.get "#{ window.singularity.config.apiBase }/history/requests/search", { requestIdLike: query }, (data) ->
                     process data
                 return undefined
             matcher: -> true

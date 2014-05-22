@@ -1,19 +1,19 @@
 package com.hubspot.singularity;
 
+import com.google.inject.Stage;
+import com.hubspot.dropwizard.guice.GuiceBundle;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.sentry.SentryAppenderBundle;
+import com.hubspot.singularity.smtp.SMTPAppenderBundle;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-
-import com.google.inject.Stage;
-import com.hubspot.dropwizard.guice.GuiceBundle;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.smtp.SMTPAppenderBundle;
-import com.hubspot.singularity.sentry.SentryAppenderBundle;
+import io.dropwizard.views.ViewBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
 
@@ -26,6 +26,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         .build(Stage.DEVELOPMENT);
     bootstrap.addBundle(guiceBundle);
 
+    bootstrap.addBundle(new ViewBundle());
     bootstrap.addBundle(new SentryAppenderBundle());
     bootstrap.addBundle(new SMTPAppenderBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
@@ -42,8 +43,6 @@ public class SingularityService extends Application<SingularityConfiguration> {
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
     environment.jersey().register(PropertyFilteringMessageBodyWriter.class);
-    environment.jersey().setUrlPattern("/v1/*");
-    environment.servlets().addServlet("brunch", new SingularityBrunchServlet("/static/", "/", "index.html")).addMapping("/*");
   }
 
   public static void main(String[] args) {

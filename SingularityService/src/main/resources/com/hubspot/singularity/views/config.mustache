@@ -1,0 +1,10 @@
+window.singularity = {
+    config: {
+        appRoot: "{{{appRoot}}}",
+        apiBase: "{{{apiBase}}}",
+        mesosLogPort: {{{mesosLogsPort}}},
+        {{#mesosLogsPortHttps}}
+        mesosLogsPortHttps: {{{mesosLogsPortHttps}}}
+        {{/mesosLogsPortHttps}}
+    }
+};

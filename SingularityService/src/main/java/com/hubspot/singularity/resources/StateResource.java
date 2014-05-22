@@ -20,7 +20,7 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
 
-@Path("/state")
+@Path("/v1/state")
 @Produces({ MediaType.APPLICATION_JSON })
 public class StateResource {
 

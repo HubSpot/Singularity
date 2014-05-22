@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.data.RackManager;
 
-@Path("/racks")
+@Path("/v1/racks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
   

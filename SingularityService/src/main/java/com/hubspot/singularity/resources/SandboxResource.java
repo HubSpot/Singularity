@@ -30,7 +30,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 
-@Path("/sandbox")
+@Path("/v1/sandbox")
 @Produces({ MediaType.APPLICATION_JSON })
 public class SandboxResource extends AbstractHistoryResource {
   

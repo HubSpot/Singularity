@@ -10,7 +10,7 @@ class RequestHistory extends Mixen(Teeble.ServerCollection)
             page: @currentPage
             orderDirection: 'DESC'
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/requests?#{ $.param params }"
+        "#{ window.singularity.config.apiBase }/history/request/#{ @requestId }/requests?#{ $.param params }"
 
     initialize: (models, { @requestId }) =>
         super

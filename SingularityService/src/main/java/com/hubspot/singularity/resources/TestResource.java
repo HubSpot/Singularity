@@ -13,7 +13,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityLeaderController;
 
-@Path("/test")
+@Path("/v1/test")
 public class TestResource {
 
   private final SingularityAbort abort;

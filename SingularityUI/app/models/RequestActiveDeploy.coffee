@@ -2,7 +2,7 @@ Model = require './model'
 
 class RequestActiveDeploy extends Model
 
-    url: -> "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/deploy/#{ @deployId }"
+    url: -> "#{ window.singularity.config.apiBase }/history/request/#{ @requestId }/deploy/#{ @deployId }"
 
     initialize: (models, { @requestId, @deployId }) =>
 

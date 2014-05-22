@@ -26,7 +26,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.sun.jersey.api.NotFoundException;
 
-@Path("/tasks")
+@Path("/v1/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class TaskResource {
   

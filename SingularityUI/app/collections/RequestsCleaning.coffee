@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsCleaning extends Requests
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/queued/cleanup"
+    url: "#{ window.singularity.config.apiBase }/requests/queued/cleanup"
 
     parse: (requests) ->
         _.each requests, (request, i) ->

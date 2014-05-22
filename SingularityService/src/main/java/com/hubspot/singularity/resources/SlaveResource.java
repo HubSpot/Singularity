@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.data.SlaveManager;
 
-@Path("/slaves")
+@Path("/v1/slaves")
 @Produces({ MediaType.APPLICATION_JSON })
 public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   

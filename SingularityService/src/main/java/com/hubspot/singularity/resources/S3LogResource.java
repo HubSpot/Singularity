@@ -48,7 +48,7 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 
-@Path("/logs")
+@Path("/v1/logs")
 @Produces({ MediaType.APPLICATION_JSON })
 public class S3LogResource extends AbstractHistoryResource {
 

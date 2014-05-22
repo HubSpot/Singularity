@@ -43,7 +43,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.NotFoundException;
 
-@Path("/requests")
+@Path("/v1/requests")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource {
 

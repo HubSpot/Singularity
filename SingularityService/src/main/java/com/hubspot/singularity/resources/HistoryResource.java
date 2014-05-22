@@ -28,7 +28,7 @@ import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
-@Path("/history")
+@Path("/v1/history")
 @Produces({ MediaType.APPLICATION_JSON })
 public class HistoryResource extends AbstractHistoryResource {
   
