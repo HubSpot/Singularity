@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsSearch extends Requests
 
-    url: => "#{ window.singularity.config.apiBase }/history/requests/search?count=6&#{ $.param @params }&requestIdLike=#{ @query }"
+    url: => "#{ config.apiBase }/history/requests/search?count=6&#{ $.param @params }&requestIdLike=#{ @query }"
 
     initialize: (models, { @query, @params }) =>
 

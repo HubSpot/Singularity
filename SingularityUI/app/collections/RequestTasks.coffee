@@ -2,7 +2,7 @@ Collection = require './collection'
 
 class RequestTasks extends Collection
 
-    url: => "#{ window.singularity.config.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
+    url: => "#{ config.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
 
     comparator: -> - @get('createdAt')
 

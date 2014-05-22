@@ -2,7 +2,7 @@ Tasks = require './Tasks'
 
 class TasksSearch extends Tasks
 
-    url: => "#{ window.singularity.config.apiBase }/history/tasks/search?count=6&#{ $.param @params }&requestIdLike=#{ @query }"
+    url: => "#{ config.apiBase }/history/tasks/search?count=6&#{ $.param @params }&requestIdLike=#{ @query }"
 
     initialize: (models, { @query, @params }) =>
 

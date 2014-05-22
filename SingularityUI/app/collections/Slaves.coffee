@@ -5,7 +5,7 @@ class Slaves extends Collection
 
     model: Slave
 
-    url: => "#{ window.singularity.config.apiBase }/slaves/#{ @slaveType }"
+    url: => "#{ config.apiBase }/slaves/#{ @slaveType }"
 
     initialize: (models, { @slaveType }) =>
 

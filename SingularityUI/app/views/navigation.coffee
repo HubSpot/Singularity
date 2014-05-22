@@ -24,11 +24,11 @@ class NavigationView extends View
         $anchors = $nav.find('ul.nav a[data-href]')
         $anchors.each ->
             route = $(@).data('href')
-            $(@).attr('href', "#{ window.singularity.config.appRoot }/#{ route }")
+            $(@).attr('href', "#{ config.appRoot }/#{ route }")
 
         $nav.find('li').removeClass('active')
 
-        currentTopLevel = "#{ window.singularity.config.appRoot }/#{ Backbone.history.fragment.split('/')[0] }"
+        currentTopLevel = "#{ config.appRoot }/#{ Backbone.history.fragment.split('/')[0] }"
 
         $anchors.each ->
             if $(@).attr('href') in [currentTopLevel, currentTopLevel + 's']

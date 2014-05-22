@@ -5,7 +5,7 @@ class Racks extends Collection
 
     model: Rack
 
-    url: => "#{ window.singularity.config.apiBase }/racks/#{ @rackType }"
+    url: => "#{ config.apiBase }/racks/#{ @rackType }"
 
     initialize: (models, { @rackType }) =>
 

@@ -155,7 +155,7 @@ class Utils
         $pre.prepend $copyButton
 
         zeroClipboardClient = new ZeroClipboard $copyButton[0],
-            moviePath: "#{ window.singularity.config.appRoot }/static/swf/ZeroClipboard.swf"
+            moviePath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
             forceHandCursor: true
 
         copiedTimeout = undefined

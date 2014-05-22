@@ -27,7 +27,7 @@ class TasksActive extends Tasks
 
         propertiesString = "?property=#{ properties.join('&property=') }"
 
-        "#{ window.singularity.config.apiBase }/tasks/active#{ propertiesString }"
+        "#{ config.apiBase }/tasks/active#{ propertiesString }"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

@@ -2,7 +2,7 @@ Model = require './model'
 
 class State extends Model
 
-    url: -> "#{ window.singularity.config.apiBase }/state"
+    url: -> "#{ config.apiBase }/state"
 
     parse: (state) =>
         mesosMaster = undefined

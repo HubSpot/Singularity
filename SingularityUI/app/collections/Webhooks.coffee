@@ -5,7 +5,7 @@ class Webhooks extends Collection
 
     model: Webhook
 
-    url: "#{ window.singularity.config.apiBase }/webhooks"
+    url: "#{ config.apiBase }/webhooks"
 
     parse: (webhooks) =>
         _.map webhooks, (webhook) ->

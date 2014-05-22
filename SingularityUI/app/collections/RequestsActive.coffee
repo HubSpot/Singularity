@@ -13,7 +13,7 @@ class RequestsActive extends Requests
 
         propertiesString = "?property=#{ properties.join('&property=') }"
 
-        "#{ window.singularity.config.apiBase }/requests/active#{ propertiesString }"
+        "#{ config.apiBase }/requests/active#{ propertiesString }"
 
     parse: (requests) ->
         _.each requests, (request, i) =>
