@@ -163,11 +163,7 @@ public class RequestManager extends CuratorAsyncManager {
       return PersistResult.UPDATED;
     }
   }
-  
-  public List<String> getRequestIds() {
-    return getChildren(ACTIVE_PATH_ROOT);
-  }
-  
+    
   public List<SingularityPendingRequest> getPendingRequests() {
     return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
   }

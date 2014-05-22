@@ -8,7 +8,7 @@ import com.google.common.util.concurrent.*;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.*;
-import com.hubspot.singularity.SingularityRequestHistory.RequestState;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
@@ -88,7 +88,7 @@ public class S3LogResource extends AbstractHistoryResource {
     
     long end = System.currentTimeMillis();
     
-    if (history != null && history.getState() == RequestState.DELETED || history.getState() == RequestState.PAUSED) {
+    if (history != null && history.getState() == RequestHistoryType.DELETED || history.getState() == RequestHistoryType.PAUSED) {
       end = history.getCreatedAt() + TimeUnit.DAYS.toMillis(1);
     }
     
