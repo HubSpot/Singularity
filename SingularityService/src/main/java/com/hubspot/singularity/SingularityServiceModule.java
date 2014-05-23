@@ -68,7 +68,7 @@ public class SingularityServiceModule extends AbstractModule {
   public static final String UNDERLYING_CURATOR = "curator.base.instance";
   
   public static final String TASK_FAILED_TEMPLATE = "task.failed.template";
-  public static final String REQUEST_PAUSED_TEMPLATE = "request.paused.template";
+  public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String TASK_NOT_RUNNING_WARNING_TEMPLATE = "task.not.running.warning.template";
   
   @Override
@@ -266,9 +266,9 @@ public class SingularityServiceModule extends AbstractModule {
   
   @Provides
   @Singleton
-  @Named(REQUEST_PAUSED_TEMPLATE)
+  @Named(REQUEST_IN_COOLDOWN_TEMPLATE)
   public JadeTemplate getRequestPausedTemplate() throws IOException {
-    return getJadeTemplate("request_paused.jade");
+    return getJadeTemplate("request_in_cooldown.jade");
   }
   
   @Provides

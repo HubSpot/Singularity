@@ -5,7 +5,7 @@ import org.apache.mesos.Protos.TaskState;
 public enum ExtendedTaskState {
 
   TASK_STAGING("staging", false, false), TASK_STARTING("starting", false, false), TASK_RUNNING("running", false, false), TASK_CLEANING("cleaning", false, false),
-  TASK_FINISHED("finished", true, false), TASK_FAILED("failed", true, true), TASK_KILLED("killed", true, false), TASK_LOST("lost", true, true), TASK_LOST_WHILE_DOWN("lost while down", true, true);
+  TASK_FINISHED("finished", true, false), TASK_FAILED("failed", true, true), TASK_KILLED("killed", true, false), TASK_LOST("lost", true, false), TASK_LOST_WHILE_DOWN("lost while down", true, false);
   
   private final String displayName;
   private final boolean isDone;
@@ -27,6 +27,10 @@ public enum ExtendedTaskState {
   
   public boolean isFailed() {
     return isFailed;
+  }
+  
+  public boolean isSuccess() {
+    return this == TASK_FINISHED;
   }
   
   public static ExtendedTaskState fromTaskState(TaskState taskState) {

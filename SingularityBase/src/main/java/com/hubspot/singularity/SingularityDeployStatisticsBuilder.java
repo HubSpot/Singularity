@@ -20,6 +20,9 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
     this.deployId = deployId;
+    
+    this.lastFinishAt = Optional.absent();
+    this.lastTaskState = Optional.absent();
   }
   
   public SingularityDeployStatistics build() {

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -13,8 +12,6 @@ import org.apache.commons.lang.time.DateFormatUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 
 import de.neuland.jade4j.template.TemplateLoader;
@@ -49,18 +46,6 @@ public class JadeHelper {
     }
 
     return output;
-  }
-
-  public Map<String, String> getJadeRequestHistory(SingularityRequestHistory requestHistory) {
-    Date createdFormatted = new Date(requestHistory.getCreatedAt());
-
-    Map<String, String> formatted = Maps.newHashMap();
-    formatted.put("state", requestHistory.getState().name());
-    formatted.put("date", createdFormatted.toString());
-    formatted.put("user", requestHistory.getUser().orNull());
-    formatted.put("request_id", requestHistory.getRequest().getId());
-
-    return formatted;
   }
 
 }

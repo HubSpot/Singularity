@@ -14,17 +14,19 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerState;
+import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDriverManager;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -65,14 +67,21 @@ public class SingularityCleaner {
     }
          
     // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
-    final Optional<SingularityRequest> request = requestManager.fetchRequest(taskCleanup.getTaskId().getRequestId());
+    final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskCleanup.getTaskId().getRequestId());
     
-    if (!request.isPresent()) {
+    if (!requestWithState.isPresent()) {
       LOG.debug("Killing a task {} immediately because the request was missing", taskCleanup);
       return true;
     }
     
-    if (request.get().isScheduled()) {
+    if (requestWithState.get().getState() == RequestState.PAUSED) {
+      LOG.debug("Killing a task {} immediately because the request was paused", taskCleanup);
+      return true;
+    }
+    
+    final SingularityRequest request = requestWithState.get().getRequest();
+    
+    if (request.isScheduled()) {
       final long taskDuration = System.currentTimeMillis() - taskCleanup.getTaskId().getStartedAt();
       final boolean tooOld = taskDuration > killScheduledTasksAfterDecomissionedMillis;
       
@@ -81,7 +90,7 @@ public class SingularityCleaner {
       return tooOld;
     }
     
-    final String requestId = request.get().getId();
+    final String requestId = request.getId();
     
     final Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
     
@@ -99,8 +108,8 @@ public class SingularityCleaner {
     
     final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
     
-    if (matchingTasks.size() < request.get().getInstancesSafe()) {
-      LOG.debug("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.get().getInstancesSafe());
+    if (matchingTasks.size() < request.getInstancesSafe()) {
+      LOG.debug("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
       return false;
     }
     
@@ -140,19 +149,17 @@ public class SingularityCleaner {
     
     for (SingularityRequestCleanup requestCleanup : cleanupRequests) {
       final String requestId = requestCleanup.getRequestId();
-      final Optional<SingularityRequest> request = requestManager.fetchRequest(requestId);
+      final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
       
       boolean killTasks = true;
       
       if (requestCleanup.getCleanupType() == RequestCleanupType.PAUSING) {
-        if (request.isPresent()) {
-          requestManager.pause(request.get());
-        } else {
+        if (SingularityRequestWithState.isActive(requestWithState)) {
           killTasks = false;
-          LOG.info("Not pausing {}, because it didn't exist in active requests", requestId);
+          LOG.info("Not pausing {}, because it was {}", requestId, requestWithState.get().getState());
         }
       } else if (requestCleanup.getCleanupType() == RequestCleanupType.DELETING) {
-        if (request.isPresent()) {        
+        if (requestWithState.isPresent()) {        
           killTasks = false;
           LOG.info("Not cleaning {}, because it existed", requestId);
         }

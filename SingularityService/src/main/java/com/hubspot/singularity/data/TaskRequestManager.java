@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskRequest;
 
 public class TaskRequestManager {
@@ -35,24 +35,29 @@ public class TaskRequestManager {
       requestIdToPendingTaskId.put(task.getPendingTaskId().getRequestId(), task);
     }
     
-    final List<SingularityRequest> matchingRequests = requestManager.getRequests(requestIdToPendingTaskId.keySet());
+    final List<SingularityRequestWithState> matchingRequests = requestManager.getRequests(requestIdToPendingTaskId.keySet());
     
     final Map<SingularityPendingTask, SingularityDeployKey> deployKeys = SingularityDeployKey.fromPendingTasks(requestIdToPendingTaskId.values());
     final Map<SingularityDeployKey, SingularityDeploy> matchingDeploys = deployManager.getDeploysForKeys(deployKeys.values());
     
     final List<SingularityTaskRequest> taskRequests = Lists.newArrayListWithCapacity(matchingRequests.size());
     
-    for (SingularityRequest request : matchingRequests) {
-      SingularityPendingTask task = requestIdToPendingTaskId.get(request.getId());
+    for (SingularityRequestWithState request : matchingRequests) {
+      SingularityPendingTask task = requestIdToPendingTaskId.get(request.getRequest().getId());
     
       SingularityDeploy foundDeploy = matchingDeploys.get(deployKeys.get(task));
       
       if (foundDeploy == null) {
-        LOG.warn(String.format("Couldn't find a matching deploy for pending task %s", task));
+        LOG.warn("Couldn't find a matching deploy for pending task {}", task);
         continue;
       }
       
-      taskRequests.add(new SingularityTaskRequest(request, foundDeploy, task));
+      if (!request.getState().isRunnable()) {
+        LOG.warn("Request was in state {} for pending task {}", request.getState(), task);
+        continue;
+      }
+      
+      taskRequests.add(new SingularityTaskRequest(request.getRequest(), foundDeploy, task));
     }
     
     return taskRequests;

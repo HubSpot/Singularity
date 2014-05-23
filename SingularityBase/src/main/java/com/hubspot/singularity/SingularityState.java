@@ -8,8 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SingularityState {
   
   private final int activeTasks;
-  private final int requests;
   private final int pausedRequests;
+  private final int activeRequests;
+  private final int cooldownRequests;
   private final int scheduledTasks;
   private final int lateTasks;
   private final int futureTasks;
@@ -34,14 +35,16 @@ public class SingularityState {
   private final List<SingularityHostState> hostStates;
 
   @JsonCreator
-  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("requests") int requests, @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests,
+  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests, 
+      @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests,
       @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves, 
       @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks, 
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag) {
     this.activeTasks = activeTasks;
-    this.requests = requests;
+    this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
+    this.cooldownRequests = cooldownRequests;
     this.scheduledTasks = scheduledTasks;
     this.pendingRequests = pendingRequests;
     this.cleaningRequests = cleaningRequests;
@@ -108,8 +111,12 @@ public class SingularityState {
     return activeTasks;
   }
 
-  public int getRequests() {
-    return requests;
+  public int getActiveRequests() {
+    return activeRequests;
+  }
+
+  public int getCooldownRequests() {
+    return cooldownRequests;
   }
 
   public int getScheduledTasks() {
@@ -138,10 +145,10 @@ public class SingularityState {
 
   @Override
   public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", requests=" + requests + ", pausedRequests=" + pausedRequests + ", scheduledTasks=" + scheduledTasks + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks
-        + ", cleaningTasks=" + cleaningTasks + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves
-        + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks=" + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys
-        + ", hostStates=" + hostStates + "]";
+    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks + ", lateTasks="
+        + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", activeSlaves=" + activeSlaves
+        + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks=" + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", oldestDeploy=" + oldestDeploy
+        + ", numDeploys=" + numDeploys + ", hostStates=" + hostStates + "]";
   }
   
 }

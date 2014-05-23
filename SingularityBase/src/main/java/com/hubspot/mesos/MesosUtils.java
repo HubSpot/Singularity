@@ -187,10 +187,6 @@ public class MesosUtils {
     return true;
   }
   
-  public static boolean isTaskFailed(TaskState state) {
-    return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED;
-  }
-  
   public static boolean isTaskDone(TaskState state) {
     return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }

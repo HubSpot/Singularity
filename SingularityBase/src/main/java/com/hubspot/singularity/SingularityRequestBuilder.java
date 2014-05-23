@@ -10,7 +10,6 @@ public class SingularityRequestBuilder {
   
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
-  private Optional<Integer> maxFailuresBeforePausing;
 
   private Optional<String> schedule;
   private Optional<Boolean> daemon;
@@ -24,7 +23,6 @@ public class SingularityRequestBuilder {
     this.id = id;
     this.owners = Optional.absent();
     this.numRetriesOnFailure = Optional.absent();
-    this.maxFailuresBeforePausing = Optional.absent();
     this.schedule = Optional.absent();
     this.daemon = Optional.absent();
     this.instances = Optional.absent();
@@ -33,7 +31,7 @@ public class SingularityRequestBuilder {
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, maxFailuresBeforePausing, schedule, daemon, instances, rackSensitive, loadBalanced);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced);
   }
   
   public Optional<Boolean> getLoadBalanced() {
@@ -64,15 +62,6 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setNumRetriesOnFailure(Optional<Integer> numRetriesOnFailure) {
     this.numRetriesOnFailure = numRetriesOnFailure;
-    return this;
-  }
-
-  public Optional<Integer> getMaxFailuresBeforePausing() {
-    return maxFailuresBeforePausing;
-  }
-
-  public SingularityRequestBuilder setMaxFailuresBeforePausing(Optional<Integer> maxFailuresBeforePausing) {
-    this.maxFailuresBeforePausing = maxFailuresBeforePausing;
     return this;
   }
 
@@ -114,7 +103,7 @@ public class SingularityRequestBuilder {
 
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", maxFailuresBeforePausing=" + maxFailuresBeforePausing + ", schedule=" + schedule + ", daemon=" + daemon
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", daemon=" + daemon
         + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", loadBalanced=" + loadBalanced + "]";
   }
   

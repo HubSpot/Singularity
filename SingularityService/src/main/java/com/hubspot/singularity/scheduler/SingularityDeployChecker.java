@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
@@ -91,10 +92,10 @@ public class SingularityDeployChecker {
     final SingularityDeployKey deployKey = pendingDeployToKey.get(pendingDeploy);
     final Optional<SingularityDeploy> deploy = Optional.fromNullable(deployKeyToDeploy.get(deployKey));
     
-    Optional<SingularityRequest> maybeRequest = requestManager.fetchRequest(pendingDeploy.getDeployMarker().getRequestId());
+    Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
 
-    if (!maybeRequest.isPresent()) {
-      LOG.warn("Deploy {} was missing a request, removing deploy", pendingDeploy);
+    if (!SingularityRequestWithState.isActive(maybeRequestWithState)) {
+      LOG.warn("Deploy {} request was {}, removing deploy", SingularityRequestWithState.getRequestState(maybeRequestWithState), pendingDeploy);
       
       if (shouldCancelLoadBalancer(pendingDeploy)) {
         cancelLoadBalancer(pendingDeploy);
@@ -108,7 +109,7 @@ public class SingularityDeployChecker {
 
     final Optional<SingularityDeployMarker> cancelRequest = findCancel(cancelDeploys, pendingDeployMarker);
     
-    final SingularityRequest request = maybeRequest.get();
+    final SingularityRequest request = maybeRequestWithState.get().getRequest();
     
     final List<SingularityTaskId> requestTasks = taskManager.getTaskIdsForRequest(request.getId());
     final List<SingularityTaskId> activeTasks = taskManager.filterActiveTaskIds(requestTasks);    

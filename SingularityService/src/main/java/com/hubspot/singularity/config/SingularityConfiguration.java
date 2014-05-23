@@ -118,6 +118,39 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private boolean sandboxDefaultsToTaskId = true;
 
+  @NotNull
+  private int cooldownAfterFailures = 5;
+  
+  @NotNull
+  private long cooldownExpiresAfterMinutes = 30;
+  
+  @NotNull
+  private long cooldownMinScheduleSeconds = 120;
+  
+  public int getCooldownAfterFailures() {
+    return cooldownAfterFailures;
+  }
+
+  public void setCooldownAfterFailures(int cooldownAfterFailures) {
+    this.cooldownAfterFailures = cooldownAfterFailures;
+  }
+
+  public long getCooldownExpiresAfterMinutes() {
+    return cooldownExpiresAfterMinutes;
+  }
+
+  public void setCooldownExpiresAfterMinutes(long cooldownExpiresAfterMinutes) {
+    this.cooldownExpiresAfterMinutes = cooldownExpiresAfterMinutes;
+  }
+
+  public long getCooldownMinScheduleSeconds() {
+    return cooldownMinScheduleSeconds;
+  }
+
+  public void setCooldownMinScheduleSeconds(long cooldownMinScheduleSeconds) {
+    this.cooldownMinScheduleSeconds = cooldownMinScheduleSeconds;
+  }
+
   public boolean isSandboxDefaultsToTaskId() {
     return sandboxDefaultsToTaskId;
   }

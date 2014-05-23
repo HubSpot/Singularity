@@ -10,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -51,10 +52,29 @@ public class StateResource {
 
     final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getScheduledTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
     
-    final int requests = requestManager.getNumRequests();
+    final List<SingularityRequestWithState> requests = requestManager.getRequests();
+    
+    int numActiveRequests = 0;
+    int numPausedRequests = 0;
+    int cooldownRequests = 0;
+
+    for (SingularityRequestWithState requestWithState : requests) {
+      switch (requestWithState.getState()) {
+      case ACTIVE:
+        numActiveRequests++;
+        break;
+      case PAUSED:
+        numPausedRequests++;
+        break;
+      case SYSTEM_COOLDOWN:
+        cooldownRequests++;
+        break;
+      default:
+      }
+    }
+    
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
     final int cleaningRequests = requestManager.getSizeOfCleanupQueue();
-    final int pausedRequests = requestManager.getNumPausedRequests();
     
     final int activeRacks = rackManager.getNumActive();
     final int deadRacks = rackManager.getNumDead();
@@ -78,7 +98,7 @@ public class StateResource {
       numDeploys++;
     }
     
-    return new SingularityState(activeTasks, requests, pausedRequests, scheduledTasks, pendingRequests, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, 
+    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, 
         decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(), scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag());
   }
   
