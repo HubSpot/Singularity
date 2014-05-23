@@ -2,7 +2,7 @@ Model = require './model'
 
 class TaskHistory extends Model
 
-    url: -> "#{ config.apiBase }/history/task/#{ @taskId }"
+    url: -> "#{ config.apiRoot }/history/task/#{ @taskId }"
 
     initialize: (models, { @taskId }) =>
         @on 'sync', => @synced = true

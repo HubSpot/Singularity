@@ -7,7 +7,7 @@ class DeployHistory extends Mixen(Teeble.ServerCollection)
             count: @perPage
             page: @currentPage
 
-        "#{ config.apiBase }/history/request/#{ @requestId }/deploys?#{ $.param params }"
+        "#{ config.apiRoot }/history/request/#{ @requestId }/deploys?#{ $.param params }"
 
     model: Backbone.Model
     comparator: undefined

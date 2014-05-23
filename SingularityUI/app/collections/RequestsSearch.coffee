@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsSearch extends Requests
 
-    url: => "#{ config.apiBase }/history/requests/search?count=6&#{ $.param @params }&requestIdLike=#{ @query }"
+    url: => "#{ config.apiRoot }/history/requests/search?count=6&#{ $.param @params }&requestIdLike=#{ @query }"
 
     initialize: (models, { @query, @params }) =>
 

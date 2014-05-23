@@ -5,7 +5,7 @@ class Slaves extends Collection
 
     model: Slave
 
-    url: => "#{ config.apiBase }/slaves/#{ @slaveType }"
+    url: => "#{ config.apiRoot }/slaves/#{ @slaveType }"
 
     initialize: (models, { @slaveType }) =>
 

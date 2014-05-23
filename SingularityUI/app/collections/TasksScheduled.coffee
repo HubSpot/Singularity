@@ -5,7 +5,7 @@ class TasksScheduled extends Tasks
 
     model: TaskScheduled
 
-    url: "#{ config.apiBase }/tasks/scheduled"
+    url: "#{ config.apiRoot }/tasks/scheduled"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

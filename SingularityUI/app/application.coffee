@@ -185,7 +185,7 @@ class Application
 
         $globalSearch.find('input').typeahead
             source: (query, process) ->
-                $.get "#{ config.apiBase }/history/requests/search", { requestIdLike: query }, (data) ->
+                $.get "#{ config.apiRoot }/history/requests/search", { requestIdLike: query }, (data) ->
                     process data
                 return undefined
             matcher: -> true

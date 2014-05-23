@@ -7,12 +7,21 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Singularity</title>
-    <link rel="shortcut icon" href="{{{staticPath}}}/images/favicon.ico" />
+    <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="{{{staticPath}}}/css/app.css">
-    <script src="{{{basePath}}}/config.js"></script>
-    <script src="{{{staticPath}}}/js/vendor.js"></script>
-    <script src="{{{staticPath}}}/js/app.js"></script>
+    <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css">
+    <script>
+        window.config = {
+            appRoot: "{{{appRoot}}}",
+            apiRoot: "{{{apiRoot}}}",
+            mesosLogPort: {{{mesosLogsPort}}},
+            {{#mesosLogsPortHttps}}
+            mesosLogsPortHttps: {{{mesosLogsPortHttps}}}
+            {{/mesosLogsPortHttps}}
+        };
+    </script>
+    <script src="{{{staticRoot}}}/js/vendor.js"></script>
+    <script src="{{{staticRoot}}}/js/app.js"></script>
     <script>require('initialize');</script>
 </head>
 <body>

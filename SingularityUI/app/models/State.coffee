@@ -2,7 +2,7 @@ Model = require './model'
 
 class State extends Model
 
-    url: -> "#{ config.apiBase }/state"
+    url: -> "#{ config.apiRoot }/state"
 
     parse: (state) =>
         mesosMaster = undefined

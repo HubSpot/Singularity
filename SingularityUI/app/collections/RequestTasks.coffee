@@ -2,7 +2,7 @@ Collection = require './collection'
 
 class RequestTasks extends Collection
 
-    url: => "#{ config.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
+    url: => "#{ config.apiRoot }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
 
     comparator: -> - @get('createdAt')
 

@@ -10,7 +10,7 @@ class RequestHistory extends Mixen(Teeble.ServerCollection)
             page: @currentPage
             orderDirection: 'DESC'
 
-        "#{ config.apiBase }/history/request/#{ @requestId }/requests?#{ $.param params }"
+        "#{ config.apiRoot }/history/request/#{ @requestId }/requests?#{ $.param params }"
 
     initialize: (models, { @requestId }) =>
         super

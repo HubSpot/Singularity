@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsPending extends Requests
 
-    url: "#{ config.apiBase }/requests/queued/pending"
+    url: "#{ config.apiRoot }/requests/queued/pending"
 
     parse: (requests) ->
         _.each requests, (request, i) =>

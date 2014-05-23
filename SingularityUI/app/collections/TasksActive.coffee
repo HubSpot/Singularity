@@ -27,7 +27,7 @@ class TasksActive extends Tasks
 
         propertiesString = "?property=#{ properties.join('&property=') }"
 
-        "#{ config.apiBase }/tasks/active#{ propertiesString }"
+        "#{ config.apiRoot }/tasks/active#{ propertiesString }"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>

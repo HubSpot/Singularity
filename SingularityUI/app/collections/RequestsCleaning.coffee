@@ -2,7 +2,7 @@ Requests = require './Requests'
 
 class RequestsCleaning extends Requests
 
-    url: "#{ config.apiBase }/requests/queued/cleanup"
+    url: "#{ config.apiRoot }/requests/queued/cleanup"
 
     parse: (requests) ->
         _.each requests, (request, i) ->
