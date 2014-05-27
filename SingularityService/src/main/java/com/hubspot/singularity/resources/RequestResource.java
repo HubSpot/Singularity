@@ -27,6 +27,7 @@ import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -43,7 +44,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.NotFoundException;
 
-@Path("/requests")
+@Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource {
 
