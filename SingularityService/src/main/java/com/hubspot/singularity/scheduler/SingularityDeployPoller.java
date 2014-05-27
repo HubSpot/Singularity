@@ -49,7 +49,11 @@ public class SingularityDeployPoller {
           
           final int numDeploys = deployChecker.checkDeploys();
        
-          LOG.info("Checked {} deploys in {}", numDeploys, JavaUtils.duration(start));
+          if (numDeploys == 0) {
+            LOG.trace("No pending deploys");
+          } else {
+            LOG.info("Checked {} deploys in {}", numDeploys, JavaUtils.duration(start));
+          }
         } catch (Throwable t) {
           LOG.error("Caught an exception while checking deploys -- aborting", t);
           abort.abort();

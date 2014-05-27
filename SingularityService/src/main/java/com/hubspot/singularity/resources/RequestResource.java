@@ -66,7 +66,7 @@ public class RequestResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent submit(SingularityRequest request, @QueryParam("user") Optional<String> user) {
     if (request.getId() == null) {
-      throw WebExceptions.badRequest("Request must have an Id");
+      throw WebExceptions.badRequest("Request must have an id");
     }
     
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
@@ -133,13 +133,20 @@ public class RequestResource {
     return new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState);
   }
   
+  private void checkRequestStateNotPaused(SingularityRequestWithState requestWithState, String action) {
+    if (requestWithState.getState() == RequestState.PAUSED) {
+      throw WebExceptions.conflict("Request %s is paused. Unable to %s (it must be manually unpaused first)", requestWithState.getRequest().getId(), action);
+    }
+  }
+  
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   @Path("/request/{requestId}/deploy")
   public SingularityRequestParent deploy(@PathParam("requestId") String requestId, SingularityDeploy pendingDeploy, @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
-    // TODO waht to do here if the request is in an odd state?
+    
+    checkRequestStateNotPaused(requestWithState, "deploy");
     
     validator.checkDeploy(request, pendingDeploy);
 
@@ -162,7 +169,7 @@ public class RequestResource {
       deployManager.deletePendingDeploy(pendingDeployObj);
     }
     
-    if (!request.isOneOff()) {
+    if (shouldAddToPendingQueue(request)) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
     }
     
@@ -177,7 +184,7 @@ public class RequestResource {
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
     
     if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId)) {
-      throw WebExceptions.badRequest("Request id %s does not have a pending deploy with id %s", requestId, deployId);
+      throw WebExceptions.badRequest("Request %s does not have a pending deploy %s", requestId, deployId);
     }
     
     deployManager.cancelDeploy(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user));
@@ -189,22 +196,26 @@ public class RequestResource {
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
     
     if (!maybeDeployId.isPresent()) {
-      throw WebExceptions.badRequest("Can not schedule a request (%s) with no deploy", requestId);
+      throw WebExceptions.conflict("Can not schedule a request (%s) with no deploy", requestId);
     }
     
     return maybeDeployId.get();
+  }
+  
+  private boolean shouldAddToPendingQueue(SingularityRequest request) {
+    return !request.isOneOff();
   }
   
   @POST
   @Path("/request/{requestId}/bounce")
   public SingularityRequestParent bounce(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
-    
-    // TODO HANDLE PAUSE AND OTEHR ODD STATE.
-    
+        
     if (requestWithState.getRequest().isScheduled() || requestWithState.getRequest().isOneOff()) {
       throw WebExceptions.badRequest("Can not bounce a scheduled or one-off request (%s)", requestWithState);
     }
+    
+    checkRequestStateNotPaused(requestWithState, "bounce");
     
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), PendingType.BOUNCE));
   
@@ -216,7 +227,7 @@ public class RequestResource {
   public SingularityRequestParent scheduleImmediately(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user, String commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     
-    // TODO HANDLE REQUEST STATE
+    checkRequestStateNotPaused(requestWithState, "run now");
     
     Optional<String> maybeCmdLineArgs = Optional.absent();
     
@@ -244,9 +255,9 @@ public class RequestResource {
   public SingularityRequestParent pause(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     
-    if (requestWithState.getState() == RequestState.PAUSED) {
-      throw WebExceptions.conflict("Request %s is already paused %s", requestId, requestWithState.getState());
-    }
+    checkRequestStateNotPaused(requestWithState, "pause");
+    
+    requestManager.pause(requestWithState.getRequest());
     
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
     
@@ -256,7 +267,7 @@ public class RequestResource {
       throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s", requestId, result);
     }
     
-    return fillEntireRequest(requestWithState);
+    return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED));
   }
   
   @POST
@@ -272,7 +283,7 @@ public class RequestResource {
     
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
     
-    if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
+    if (maybeDeployId.isPresent() && shouldAddToPendingQueue(requestWithState.getRequest())) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
     }
   

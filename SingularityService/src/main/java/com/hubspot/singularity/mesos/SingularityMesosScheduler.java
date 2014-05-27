@@ -130,7 +130,7 @@ public class SingularityMesosScheduler implements Scheduler {
       throw t;
     }
 
-    LOG.info("Finished handling offers ({}), accepted {}, declined {}, outstanding tasks {}", JavaUtils.duration(start), acceptedOffers.size(),
+    LOG.info("Finished handling offers ({}), {} accepted, {} declined, {} outstanding tasks", JavaUtils.duration(start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size());
   }
 

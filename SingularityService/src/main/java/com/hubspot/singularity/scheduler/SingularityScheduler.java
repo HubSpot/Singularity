@@ -141,7 +141,11 @@ public class SingularityScheduler {
       rackManager.markAsDecomissioned(rack);
     }
 
-    LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
+    if (slaves.isEmpty() && racks.isEmpty() && requestIdsToReschedule.isEmpty() && matchingTaskIds.isEmpty()) {
+      LOG.trace("Decomission check found nothing");
+    } else {
+      LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
+    }
   }
   
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
@@ -149,11 +153,12 @@ public class SingularityScheduler {
     
     final List<SingularityPendingRequest> pendingRequests = requestManager.getPendingRequests();
     
-    LOG.info("Pending queue had {} requests", pendingRequests.size());
-    
     if (pendingRequests.isEmpty()) {
+      LOG.trace("Pending queue was empty");
       return;
     }
+
+    LOG.info("Pending queue had {} requests", pendingRequests.size());
     
     int totalNewScheduledTasks = 0;
     int obsoleteRequests = 0;
