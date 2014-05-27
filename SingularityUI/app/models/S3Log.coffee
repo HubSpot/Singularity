@@ -13,11 +13,7 @@ class S3Log extends Model
     logJSON
 
   _truncateToShortKey: (key) ->
-    indexOfLastSlashOrStringLength = key.lastIndexOf('/')
-    indexOfLastSlashOrStringLength = undefined if indexOfLastSlashOrStringLength is -1
-
-    key.slice 0, indexOfLastSlashOrStringLength
-
+    key.substring(key.lastIndexOf('/') + 1)  # gets string after last slash. returns entire string if no slashes.
 
 module.exports = S3Log
 

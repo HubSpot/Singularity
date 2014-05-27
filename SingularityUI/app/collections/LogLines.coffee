@@ -29,7 +29,7 @@ class LogLines extends Backbone.Collection
         params =
             path: @path
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/read?#{ $.param params }"
+        "#{ config.apiRoot }/sandbox/#{ @taskId }/read?#{ $.param params }"
 
     fetchEndOffset: =>
         Q($.getJSON @url()).then (result) ->

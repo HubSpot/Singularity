@@ -10,7 +10,8 @@ import com.hubspot.mesos.Resources;
 public class SingularityDeployBuilder {
 
   private final String requestId;
-  private final String id;
+
+  private String id;
 
   private Optional<String> version;
   private Optional<Long> timestamp;
@@ -73,6 +74,11 @@ public class SingularityDeployBuilder {
     return id;
   }
   
+  public SingularityDeployBuilder setId(String id) {
+    this.id = id;
+    return this;
+  }
+
   public Optional<Long> getConsiderHealthyAfterRunningForSeconds() {
     return considerHealthyAfterRunningForSeconds;
   }

@@ -1,19 +1,19 @@
 package com.hubspot.singularity.resources;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.TaskStatus;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityLeaderController;
+import com.hubspot.singularity.SingularityService;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.TaskStatus;
 
-@Path("/test")
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+
+@Path(SingularityService.API_BASE_PATH + "/test")
 public class TestResource {
 
   private final SingularityAbort abort;

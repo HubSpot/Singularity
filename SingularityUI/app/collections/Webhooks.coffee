@@ -5,7 +5,7 @@ class Webhooks extends Collection
 
     model: Webhook
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/webhooks"
+    url: "#{ config.apiRoot }/webhooks"
 
     parse: (webhooks) =>
         _.map webhooks, (webhook) ->

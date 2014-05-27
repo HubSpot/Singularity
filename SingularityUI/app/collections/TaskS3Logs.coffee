@@ -9,7 +9,7 @@ class TaskS3Logs extends Mixen(Teeble.ServerCollection)
             count: @perPage
             page: @currentPage
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/logs/task/#{ @taskId }?#{ $.param params }"
+        "#{ config.apiRoot }/logs/task/#{ @taskId }?#{ $.param params }"
 
     initialize: (models, { @taskId }) =>
         super

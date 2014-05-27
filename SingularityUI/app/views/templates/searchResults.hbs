@@ -16,7 +16,7 @@
                 <tbody>
                     {{#eachWithFn requestsResults}}
                         <tr>
-                            <td><a title="{{ id }}" href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                            <td><a title="{{ id }}" href="{{#appRoot}}{{/appRoot}}/request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
                             <td data-value="{{ createdAt }}"><span title="{{ createdAt }}">{{ createdAtHuman }}</span></td>
                             <td>{{ instances }}</td>
                             <td>{{ daemon }}</td>
@@ -48,7 +48,7 @@
                 <tbody>
                     {{#eachWithFn tasksResults}}
                         <tr>
-                            <td><a title="{{ id }}" href="{{#appRoot}}{{/appRoot}}task/{{ id }}" data-route="task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                            <td><a title="{{ id }}" href="{{#appRoot}}{{/appRoot}}/task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
                             <td data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
                             <td>{{ host }}</td>
                             <td>{{ rack }}</td>

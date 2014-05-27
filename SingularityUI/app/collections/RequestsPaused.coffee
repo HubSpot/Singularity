@@ -2,6 +2,6 @@ RequestsActive = require './RequestsActive'
 
 class RequestsPaused extends RequestsActive
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/paused"
+    url: "#{ config.apiRoot }/requests/paused"
 
 module.exports = RequestsPaused
