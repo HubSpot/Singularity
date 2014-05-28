@@ -13,7 +13,6 @@ numberAttributes = [
     'activeRacks'
     'deadRacks'
     'decomissioningRacks'
-    'numWebhooks'
     'cleaningTasks'
     'lateTasks'
     'futureTasks'

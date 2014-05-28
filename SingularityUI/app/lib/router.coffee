@@ -12,7 +12,6 @@ TailView = require 'views/tail'
 StatusView = require 'views/status'
 RacksView = require 'views/racks'
 SlavesView = require 'views/slaves'
-WebhooksView = require 'views/webhooks'
 PageNotFoundView = require 'views/pageNotFound'
 NavigationView = require 'views/navigation'
 
@@ -77,7 +76,6 @@ class Router extends Backbone.Router
         'task/:taskId/tail/*path': 'tail'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
-        'webhooks(/)': 'webhooks'
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
@@ -205,15 +203,6 @@ class Router extends Backbone.Router
         else
             app.views.current = app.views.slaves
             app.show app.views.slaves.refresh()
-
-    webhooks: ->
-        if not app.views.webhooks?
-            app.views.webhooks = new WebhooksView
-            app.views.current = app.views.webhooks
-            app.show app.views.webhooks.render().refresh()
-        else
-            app.views.current = app.views.webhooks
-            app.show app.views.webhooks.refresh()
 
     templateFromURLFragment: ->
         app.views.current = undefined
