@@ -127,6 +127,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long cooldownMinScheduleSeconds = 120;
   
+  @NotNull
+  private boolean allowRequestsWithoutOwners = true;
+  
+  public boolean isAllowRequestsWithoutOwners() {
+    return allowRequestsWithoutOwners;
+  }
+
+  public void setAllowRequestsWithoutOwners(boolean allowRequestsWithoutOwners) {
+    this.allowRequestsWithoutOwners = allowRequestsWithoutOwners;
+  }
+
   public int getCooldownAfterFailures() {
     return cooldownAfterFailures;
   }

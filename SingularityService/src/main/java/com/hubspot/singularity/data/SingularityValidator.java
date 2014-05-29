@@ -21,6 +21,7 @@ public class SingularityValidator {
   
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
+  private final boolean allowRequestsWithoutOwners;
   private final HistoryManager historyManager;
   private final DeployManager deployManager;
   
@@ -28,6 +29,7 @@ public class SingularityValidator {
   public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
+    this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.deployManager = deployManager;
     this.historyManager = historyManager;
   }
@@ -46,6 +48,11 @@ public class SingularityValidator {
   
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest) {
     check(request.getId() != null, "Id must not be null");
+    
+    if (!allowRequestsWithoutOwners) {
+      check(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
+    }
+    
     check(request.getId().length() < maxRequestIdSize, String.format("Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId()));
     check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
     
