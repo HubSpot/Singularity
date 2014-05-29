@@ -124,8 +124,7 @@ public class SingularityExecutorMonitor {
       LOG.info("Stopping driver {}", driver.get());
       driver.get().stop();      
     } else {
-      LOG.warn("No driver present on shutdown, using System.exit(1)");
-      System.exit(1);
+      logAndExit(1, "No driver present on shutdown, exiting");
     }
   }
   
@@ -170,8 +169,7 @@ public class SingularityExecutorMonitor {
         try {
           checkForExit(driver);
         } catch (Throwable t) {
-          LOG.error("Caught while shutting down", t);
-          System.exit(2);
+          logAndExit(2, "While shutting down", t);
         }
       }
     }, configuration.getIdleExecutorShutdownWaitMillis(), TimeUnit.MILLISECONDS);
@@ -210,11 +208,7 @@ public class SingularityExecutorMonitor {
       
       watchProcessBuilder(task, processBuildFuture);
     } catch (Throwable t) {
-      task.getLog().error("Couldn't start task", t);
-      
-      sendStatusUpdate(task, TaskState.TASK_LOST, "Task couldn't start due to: " + t.getMessage());
-      
-      onFinish(task);
+      finishTask(task, TaskState.TASK_LOST, "Task couldn't start due to: " + t.getMessage(), Optional.of("Couldn't start task"), t);
       
       return SubmitState.REJECTED;
     }
@@ -222,11 +216,34 @@ public class SingularityExecutorMonitor {
     return SubmitState.SUBMITTED;
   }
   
+  private void logAndExit(int statusCode, String format, Object... args) {
+    try {
+      LOG.error(format, args);
+    } finally {
+      System.exit(statusCode);
+    }
+  }
+  
+  private void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
+    try {
+      if (errorMsg.isPresent()) {
+        task.getLog().error(errorMsg.get(), errorObjects);
+      }
+    } finally {
+      try {
+        sendStatusUpdate(task, taskState, message);
+      
+        onFinish(task);
+      } catch (Throwable t) {
+        logAndExit(3, "Failed while finishing task {} (state {})", task.getTaskId(), taskState, t);
+      }
+    }
+  }
+  
   private void watchProcessBuilder(final SingularityExecutorTask task, final ListenableFuture<ProcessBuilder> processBuildFuture) {
     Futures.addCallback(processBuildFuture, new FutureCallback<ProcessBuilder>() {
       
-      // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
-      public void onSuccess(ProcessBuilder processBuilder) {
+      private void onSuccessThrows(ProcessBuilder processBuilder) {
         task.getLog().debug("Process builder finished succesfully... ");
         
         boolean wasKilled = false;
@@ -239,38 +256,40 @@ public class SingularityExecutorMonitor {
           wasKilled = task.wasKilled();
           
           if (!wasKilled) {
-            try {
-              processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
-            } catch (Throwable t) {
-              task.getLog().error("While submitting process task", t);
-              
-              sendStatusUpdate(task, Protos.TaskState.TASK_LOST, String.format("Task lost while transitioning due to: %s", t.getClass().getSimpleName()));
-              
-              onFinish(task);
-            }
+            processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
           }
         } finally {
           task.getLock().unlock();
         }
           
         if (wasKilled) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, "Task killed before service process started");
-          
-          onFinish(task);
+          finishTask(task, TaskState.TASK_KILLED, "Task killed before service process started", Optional.<String> absent());
+        }
+      }
+      
+      // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
+      public void onSuccess(ProcessBuilder processBuilder) {
+        try {
+          onSuccessThrows(processBuilder);
+        } catch (Throwable t) {
+          finishTask(task, TaskState.TASK_LOST, String.format("Task lost while transitioning due to: %s", t.getClass().getSimpleName()), Optional.of("While submitting process task"), t);
         }
       }
       
       public void onFailure(Throwable t) {
-        if (task.wasKilled()) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, String.format("Task killed, caught expected %s", t.getClass().getSimpleName()));
-        } else {
-          task.getLog().error("Task {} failed before starting process", task, t);
-          
-          sendStatusUpdate(task, Protos.TaskState.TASK_LOST, String.format("%s while initializing task: %s", t.getClass().getSimpleName(), t.getMessage()));
+        TaskState state = TaskState.TASK_LOST;
+        String message = String.format("%s while initializing task: %s", t.getClass().getSimpleName(), t.getMessage());
+        
+        try {
+          if (task.wasKilled()) {
+            state = TaskState.TASK_KILLED;
+            message = String.format("Task killed, caught expected %s", t.getClass().getSimpleName());
+          }
+        } finally {
+          finishTask(task, state, message, Optional.of("Task {} failed before starting process"), task, t);
         }
-
-        onFinish(task);
       }
+      
     });
     
   }

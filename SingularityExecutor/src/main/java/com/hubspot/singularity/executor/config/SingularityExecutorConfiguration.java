@@ -25,6 +25,7 @@ public class SingularityExecutorConfiguration {
   private final int maxTaskMessageLength;
   
   private final String logrotateCommand;
+  private final String logrotateStateFile;
   private final Path logrotateConfDirectory;
   private final String logrotateToDirectory;
   private final String logrotateMaxageDays;
@@ -69,6 +70,7 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat, 
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory,
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_STATE_FILE) String logrotateStateFile,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog
       ) {
@@ -89,6 +91,7 @@ public class SingularityExecutorConfiguration {
     this.logrotateCommand = logrotateCommand;
     this.logrotateConfDirectory = JavaUtils.getValidDirectory(logrotateConfDirectory, SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY);
     this.logrotateToDirectory = logrotateToDirectory;
+    this.logrotateStateFile = logrotateStateFile;
     this.logrotateCount = logrotateCount;
     this.logrotateMaxageDays = logrotateMaxageDays;
     this.logrotateDateformat = logrotateDateformat;
@@ -118,6 +121,10 @@ public class SingularityExecutorConfiguration {
 
   public int getKillThreads() {
     return killThreads;
+  }
+
+  public String getLogrotateStateFile() {
+    return logrotateStateFile;
   }
 
   public int getMaxTaskMessageLength() {
@@ -228,10 +235,10 @@ public class SingularityExecutorConfiguration {
   public String toString() {
     return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser + ", cacheDirectory=" + cacheDirectory
         + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
-        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateConfDirectory=" + logrotateConfDirectory
-        + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory="
-        + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern="
-        + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile
+        + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat="
+        + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog
+        + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
 
 }

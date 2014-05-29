@@ -87,7 +87,9 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   public boolean manualLogrotate() {
     final List<String> command = ImmutableList.of(
         configuration.getLogrotateCommand(), 
-        "-f", 
+        "-f",
+        "-s",
+        configuration.getLogrotateStateFile(),
         getLogrotateConfPath().toString());
     
     try {

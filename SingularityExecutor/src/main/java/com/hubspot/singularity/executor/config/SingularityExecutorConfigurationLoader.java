@@ -29,6 +29,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
 
   public static final String LOGROTATE_COMMAND = "executor.logrotate.command";
   public static final String LOGROTATE_CONFIG_DIRECTORY = "executor.logrotate.config.folder";
+  public static final String LOGROTATE_STATE_FILE = "executor.logrotate.state.file";
   public static final String LOGROTATE_AFTER_BYTES = "executor.logrotate.after.bytes";
   public static final String LOGROTATE_DIRECTORY = "executor.logrotate.to.directory";
   public static final String LOGROTATE_MAXAGE_DAYS = "executor.logrotate.maxage.days";
@@ -65,6 +66,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
     properties.put(LOGROTATE_COUNT, "20");
     properties.put(LOGROTATE_DATEFORMAT, "-%Y%m%d%s");
     properties.put(LOGROTATE_CONFIG_DIRECTORY, "/etc/logrotate.d");
+    properties.put(LOGROTATE_STATE_FILE, "logrotate.status");
   }
   
 }
