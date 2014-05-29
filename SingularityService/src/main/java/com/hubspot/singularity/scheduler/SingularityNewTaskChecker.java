@@ -86,7 +86,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   // should only be called on tasks that are new and not part of a pending deploy.
   public void enqueueNewTaskCheck(SingularityTask task) {
     if (taskIdToCheck.containsKey(task.getTaskId().getId())) {
-      LOG.trace(String.format("Already had a newTaskCheck for task for task %s", task.getTaskId()));
+      LOG.trace("Already had a newTaskCheck for task {}", task.getTaskId());
       return;
     }
     
@@ -104,11 +104,11 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     
     boolean canceled = future.cancel(false);
     
-    LOG.trace(String.format("Canceling new task check (%s) for task %s", canceled, taskId));
+    LOG.trace("Canceling new task check ({}) for task {}", canceled, taskId);
   }
   
   private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace(String.format("Enqueuing a new task check for task %s with delay %s", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds))));
+    LOG.trace("Enqueuing a new task check for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
   
     ScheduledFuture<?> future = executorService.schedule(new Runnable() {
       

@@ -90,7 +90,7 @@ public class SingularityValidator {
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
     
     if (request.isLoadBalanced()) {
-      check(deploy.getServiceBasePath().isPresent(), "Load balanced requests must provide the web service base path");
+      check(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
     }
     
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 
