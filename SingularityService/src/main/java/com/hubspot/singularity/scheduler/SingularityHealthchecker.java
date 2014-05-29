@@ -35,6 +35,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
+  private final SingularityNewTaskChecker newTaskChecker;
   
   private final Map<String, ScheduledFuture<?>> taskIdToHealthcheck;
   
@@ -42,9 +43,10 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final SingularityCloser closer;
   
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer) {
     this.http = http;
     this.configuration = configuration;
+    this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
     this.abort = abort;
     this.closer = closer;
@@ -88,7 +90,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   public void cancelHealthcheck(String taskId) {
-    ScheduledFuture<?> future = taskIdToHealthcheck.get(taskId);
+    ScheduledFuture<?> future = taskIdToHealthcheck.remove(taskId);
     
     if (future == null) {
       return;
@@ -163,7 +165,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
   
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(configuration, this, taskManager, abort, task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(configuration, this, newTaskChecker, taskManager, abort, task);
     final Optional<String> uri = getHealthcheckUri(task);
     
     if (!uri.isPresent()) {

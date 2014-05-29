@@ -68,10 +68,10 @@ public class SingularityConfiguration extends Configuration {
   private long healthcheckIntervalSeconds = 5;
   
   @NotNull
-  private int newTaskCheckerBaseDelaySeconds = 30;
+  private int newTaskCheckerBaseDelaySeconds = 1;
 
   @NotNull
-  private long killScheduledTasksWithAreDecomissionedAfterSeconds = 300;
+  private long killScheduledTasksWhichAreDecomissionedAfterSeconds = 300;
   
   @NotNull
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
@@ -206,12 +206,12 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
   }
   
-  public long getKillScheduledTasksWithAreDecomissionedAfterSeconds() {
-    return killScheduledTasksWithAreDecomissionedAfterSeconds;
+  public long getKillScheduledTasksWhichAreDecomissionedAfterSeconds() {
+    return killScheduledTasksWhichAreDecomissionedAfterSeconds;
   }
 
-  public void setKillScheduledTasksWithAreDecomissionedAfterSeconds(long killScheduledTasksWithAreDecomissionedAfterSeconds) {
-    this.killScheduledTasksWithAreDecomissionedAfterSeconds = killScheduledTasksWithAreDecomissionedAfterSeconds;
+  public void setKillScheduledTasksWhichAreDecomissionedAfterSeconds(long killScheduledTasksWhichAreDecomissionedAfterSeconds) {
+    this.killScheduledTasksWhichAreDecomissionedAfterSeconds = killScheduledTasksWhichAreDecomissionedAfterSeconds;
   }
 
   public long getDeployHealthyBySeconds() {

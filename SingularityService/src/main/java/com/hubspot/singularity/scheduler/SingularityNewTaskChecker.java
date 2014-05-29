@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +42,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   private final LoadBalancerClient lbClient;
   private final long killAfterUnhealthyMillis;
   
-  private final Map<String, ScheduledFuture<?>> taskIdToCheck;
+  private final Map<String, Future<?>> taskIdToCheck;
   
   private final ScheduledExecutorService executorService;
   
@@ -76,6 +77,8 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     
     if (hasHealthcheck(task)) {
       delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+    } else if (task.getTaskRequest().getRequest().isLoadBalanced()) {
+      return delaySeconds;
     }
     
     delaySeconds += task.getTaskRequest().getDeploy().getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
@@ -94,23 +97,51 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     
     enqueueCheckWithDelay(task, delaySeconds);
   }
-   
-  public void cancelNewTaskCheck(String taskId) {
-    ScheduledFuture<?> future = taskIdToCheck.get(taskId);
+  
+  public void runNewTaskCheckImmediately(SingularityTask task) {
+    final String taskId = task.getTaskId().getId();
+    
+    LOG.info("Requested immediate task check for {}", taskId);
+        
+    CancelState cancelState = cancelNewTaskCheck(taskId);
+    
+    if (cancelState == CancelState.NOT_CANCELED) {
+      LOG.debug("Task {} check was already done, not running again", taskId);
+      return;
+    } else if (cancelState == CancelState.NOT_PRESENT) {
+      LOG.trace("Task {} check was not present, not running immediately as it is assumed to be part of an active deploy", taskId);
+      return;
+    }
+        
+    Future<?> future = executorService.submit(getTaskCheck(task));
+    
+    taskIdToCheck.put(taskId, future);
+  }
+  
+  public static enum CancelState {
+    NOT_PRESENT, CANCELED, NOT_CANCELED;
+  }
+  
+  public CancelState cancelNewTaskCheck(String taskId) {
+    Future<?> future = taskIdToCheck.remove(taskId);
     
     if (future == null) {
-      return;
+      return CancelState.NOT_PRESENT;
     }
     
     boolean canceled = future.cancel(false);
     
-    LOG.trace(String.format("Canceling new task check (%s) for task %s", canceled, taskId));
+    LOG.trace("Canceling new task check ({}) for task {}", canceled, taskId);
+  
+    if (canceled) {
+      return CancelState.CANCELED;
+    } else {
+      return CancelState.NOT_CANCELED;
+    }
   }
   
-  private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace(String.format("Enqueuing a new task check for task %s with delay %s", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds))));
-  
-    ScheduledFuture<?> future = executorService.schedule(new Runnable() {
+  private Runnable getTaskCheck(final SingularityTask task) {
+    return new Runnable() {
       
       @Override
       public void run() {
@@ -122,8 +153,13 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
           LOG.error("Uncaught throwable in task check for task {}", task, t);
         }
       }
-      
-    }, delaySeconds, TimeUnit.SECONDS);
+    };
+  }
+  
+  private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds) {
+    LOG.trace(String.format("Enqueuing a new task check for task %s with delay %s", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds))));
+  
+    ScheduledFuture<?> future = executorService.schedule(getTaskCheck(task), delaySeconds, TimeUnit.SECONDS);
     
     taskIdToCheck.put(task.getTaskId().getId(), future);
   }
@@ -201,8 +237,10 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     SingularityLoadBalancerUpdate newLbUpdate = null;
     
+    final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(task.getTaskId(), LoadBalancerRequestType.ADD);
+    
     if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
-      newLbUpdate = lbClient.enqueue(task.getTaskId().getId(), task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
+      newLbUpdate = lbClient.enqueue(loadBalancerRequestId, task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
     } else {
       Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbUpdate.get().getLoadBalancerState());
       
@@ -210,7 +248,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
         return maybeCheckTaskState.get();
       }
       
-      newLbUpdate = lbClient.getState(task.getTaskId().getId());
+      newLbUpdate = lbClient.getState(loadBalancerRequestId);
     }
     
     taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD, newLbUpdate);

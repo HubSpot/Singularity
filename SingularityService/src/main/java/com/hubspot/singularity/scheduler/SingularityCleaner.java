@@ -55,7 +55,7 @@ public class SingularityCleaner {
     this.requestManager = requestManager;
     this.driverManager = driverManager;
     
-    this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillScheduledTasksWithAreDecomissionedAfterSeconds());
+    this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillScheduledTasksWhichAreDecomissionedAfterSeconds());
   }
   
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {

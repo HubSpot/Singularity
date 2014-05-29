@@ -118,11 +118,12 @@ public class SingularityStartup {
           newTaskChecker.enqueueNewTaskCheck(task);
           enqueuedNewTaskChecks++;
         }
-      } else if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
-        if (healthchecker.shouldHealthcheck(task)) {
-          healthchecker.enqueueHealthcheck(task);
-          enqueuedHealthchecks++;
-        }
+        if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
+          if (healthchecker.shouldHealthcheck(task)) {
+            healthchecker.enqueueHealthcheck(task);
+            enqueuedHealthchecks++;
+          }
+        } 
       }
     }
     
