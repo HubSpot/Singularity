@@ -164,6 +164,10 @@ public class RequestManager extends CuratorAsyncManager {
   public Iterable<SingularityRequestWithState> getActiveRequests() {
     return getRequests(RequestState.ACTIVE);
   }
+
+  public Iterable<SingularityRequestWithState> getCooldownRequests() {
+    return getRequests(RequestState.SYSTEM_COOLDOWN);
+  }
   
   public List<SingularityRequestWithState> getRequests() {
     return getAsyncChildren(NORMAL_PATH_ROOT, requestTranscoder);

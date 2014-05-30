@@ -327,6 +327,20 @@ public class RequestResource {
   
   @GET
   @PropertyFiltering
+  @Path("/cooldown")
+  public Iterable<SingularityRequestParent> getCooldownRequests() {
+    return getRequestsWithDeployState(requestManager.getCooldownRequests());
+  }
+  
+  @GET
+  @PropertyFiltering
+  @Path("/")
+  public Iterable<SingularityRequestParent> getRequests() {
+    return getRequestsWithDeployState(requestManager.getRequests());
+  }
+  
+  @GET
+  @PropertyFiltering
   @Path("/queued/pending")
   public List<SingularityPendingRequest> getPendingRequests() {
     return requestManager.getPendingRequests();

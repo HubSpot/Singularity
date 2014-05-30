@@ -110,6 +110,10 @@ public class SingularityState {
   public int getActiveTasks() {
     return activeTasks;
   }
+  
+  public int getAllRequests() {
+    return getActiveRequests() + getCooldownRequests() + getPausedRequests();
+  }
 
   public int getActiveRequests() {
     return activeRequests;
