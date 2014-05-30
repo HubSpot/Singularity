@@ -102,7 +102,7 @@ public class DeployManager extends CuratorAsyncManager {
     return getChildrenAsIdsForParents(BY_REQUEST_ROOT, paths, deployKeyTranscoder);
   }
   
-  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(List<String> requestIds) {
+  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(Collection<String> requestIds) {
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
     
     for (String requestId : requestIds) {

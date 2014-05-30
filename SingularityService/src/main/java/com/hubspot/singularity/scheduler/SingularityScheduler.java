@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +22,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -221,22 +223,56 @@ public class SingularityScheduler {
     final List<SingularityTaskRequest> dueTaskRequests = taskRequestManager.getTaskRequests(dueTasks);
     Collections.sort(dueTaskRequests);
     
-    checkForStaleScheduledTasks(dueTasks, dueTaskRequests);
-    
-    return dueTaskRequests;
+    return checkForStaleScheduledTasks(dueTasks, dueTaskRequests);
   }
   
-  private void checkForStaleScheduledTasks(List<SingularityPendingTask> pendingTasks, List<SingularityTaskRequest> taskRequests) {
+  private List<SingularityTaskRequest> checkForStaleScheduledTasks(List<SingularityPendingTask> pendingTasks, List<SingularityTaskRequest> taskRequests) {
     final Set<String> foundRequestIds = Sets.newHashSetWithExpectedSize(taskRequests.size());
+    
     for (SingularityTaskRequest taskRequest : taskRequests) {
       foundRequestIds.add(taskRequest.getRequest().getId());
     }
+    
     for (SingularityPendingTask pendingTask : pendingTasks) {
       if (!foundRequestIds.contains(pendingTask.getPendingTaskId().getRequestId())) {
         LOG.info("Removing stale pending task {} because there was no found request id", pendingTask.getPendingTaskId());
         taskManager.deleteScheduledTask(pendingTask.getPendingTaskId().getId());
       }
     }
+    
+    // TODO this check isn't necessary if we keep track better during deploys
+    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(foundRequestIds);
+    final List<SingularityTaskRequest> taskRequestsWithValidDeploys = Lists.newArrayListWithCapacity(taskRequests.size());
+    
+    for (SingularityTaskRequest taskRequest : taskRequests) {
+      SingularityRequestDeployState requestDeployState = deployStates.get(taskRequest.getRequest().getId());
+      
+      if (!matchesDeploy(requestDeployState, taskRequest)) {
+        LOG.info("Removing stale pending task {} because the deployId did not match active/pending deploys {}", taskRequest.getPendingTask().getPendingTaskId(), requestDeployState);
+        taskManager.deleteScheduledTask(taskRequest.getPendingTask().getPendingTaskId().getId());
+      } else {
+        taskRequestsWithValidDeploys.add(taskRequest);
+      }
+    }
+    
+    return taskRequestsWithValidDeploys;
+  }
+
+  private boolean matchesDeploy(SingularityRequestDeployState requestDeployState, SingularityTaskRequest taskRequest) {
+    if (requestDeployState == null) {
+      return false;
+    }
+    if (!matchesDeployMarker(requestDeployState.getActiveDeploy(), taskRequest.getDeploy().getId())) {
+      return false;
+    }
+    if (!matchesDeployMarker(requestDeployState.getPendingDeploy(), taskRequest.getDeploy().getId())) {
+      return false;
+    }
+    return true;
+  }
+  
+  private boolean matchesDeployMarker(Optional<SingularityDeployMarker> deployMarker, String deployId) {
+    return deployMarker.isPresent() && deployMarker.get().getDeployId().equals(deployId);
   }
   
   private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId) {
@@ -510,7 +546,7 @@ public class SingularityScheduler {
     if (state == RequestState.SYSTEM_COOLDOWN) {
       if (hasCooldownExpired(deployStatistics)) {
         requestManager.saveRequest(request);
-      } else {
+      } else if (pendingType != PendingType.NEW_DEPLOY) {
         final long prevNextRunAt = nextRunAt;
         nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));
         LOG.trace("Adjusted next run of {} to {} (from: {}) due to cooldown", request.getId(), nextRunAt, prevNextRunAt);
