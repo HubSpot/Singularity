@@ -14,12 +14,14 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerRequest;
 import com.hubspot.singularity.SingularityLoadBalancerResponse;
 import com.hubspot.singularity.SingularityLoadBalancerService;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -57,17 +59,17 @@ public class LoadBalancerClient {
     return hasValidUri;
   }
   
-  private String getLoadBalancerUri(String loadBalanceRequestId) {
-    return String.format(OPERATION_URI, loadBalancerUri, loadBalanceRequestId);
+  private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
+    return String.format(OPERATION_URI, loadBalancerUri, loadBalancerRequestId);
   }
 
-  public SingularityLoadBalancerUpdate getState(String loadBalancerRequestId) {
+  public SingularityLoadBalancerUpdate getState(LoadBalancerRequestId loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
     
     final Request request = httpClient.prepareGet(uri)
       .build();
     
-    return request(loadBalancerRequestId, request, LoadBalancerState.UNKNOWN);
+    return request(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, LoadBalancerState.UNKNOWN);
   }
   
   private SingularityLoadBalancerResponse readResponse(Response response)  {
@@ -78,11 +80,11 @@ public class LoadBalancerClient {
     }
   }
 
-  private SingularityLoadBalancerUpdate request(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
+  private SingularityLoadBalancerUpdate request(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method, Request request, LoadBalancerState onFailure) {
     final long start = System.currentTimeMillis();
     final LoadBalancerUpdateHolder result = actualRequest(loadBalancerRequestId, request, onFailure);
     LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, result, JavaUtils.duration(start));
-    return new SingularityLoadBalancerUpdate(result.state, loadBalancerRequestId, result.message, start);
+    return new SingularityLoadBalancerUpdate(result.state, loadBalancerRequestId, result.message, start, method, request.getUrl());
   }
 
   private static class LoadBalancerUpdateHolder {
@@ -102,7 +104,7 @@ public class LoadBalancerClient {
        
   }
   
-  private LoadBalancerUpdateHolder actualRequest(String loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
+  private LoadBalancerUpdateHolder actualRequest(LoadBalancerRequestId loadBalancerRequestId, Request request, LoadBalancerState onFailure) {
     try {
       LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
       
@@ -128,20 +130,20 @@ public class LoadBalancerClient {
     }
   }
   
-  public SingularityLoadBalancerUpdate enqueue(String loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
+  public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
     final SingularityLoadBalancerService lbService = SingularityLoadBalancerService.fromRequestAndDeploy(request, deploy);
     
     final List<String> addUpstreams = transformTasksToUpstreams(add);
     final List<String> removeUpstreams = transformTasksToUpstreams(remove);
 
-    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId, lbService, addUpstreams, removeUpstreams);
+    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
     
     final Request httpRequest = httpClient.preparePost(loadBalancerUri)
       .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
       .setBody(loadBalancerRequest.getAsBytes(objectMapper))
       .build();
     
-    return request(loadBalancerRequestId, httpRequest, LoadBalancerState.FAILED);
+    return request(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, httpRequest, LoadBalancerState.FAILED);
   }
   
   private boolean isSuccess(Response response) {
@@ -162,13 +164,13 @@ public class LoadBalancerClient {
     return upstreams;
   }
   
-  public SingularityLoadBalancerUpdate cancel(String loadBalancerRequestId) {
+  public SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
     
     final Request request = httpClient.prepareDelete(uri)
         .build();
     
-    return request(uri, request, LoadBalancerState.UNKNOWN);
+    return request(loadBalancerRequestId, LoadBalancerMethod.CANCEL, request, LoadBalancerState.UNKNOWN);
   }
   
 }

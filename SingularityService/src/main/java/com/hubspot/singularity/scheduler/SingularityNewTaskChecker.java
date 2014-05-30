@@ -18,6 +18,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
@@ -237,7 +238,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     SingularityLoadBalancerUpdate newLbUpdate = null;
     
-    final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(task.getTaskId(), LoadBalancerRequestType.ADD);
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD);
     
     if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
       newLbUpdate = lbClient.enqueue(loadBalancerRequestId, task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());

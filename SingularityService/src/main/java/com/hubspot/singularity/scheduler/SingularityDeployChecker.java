@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -251,7 +252,7 @@ public class SingularityDeployChecker {
     
     final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(Iterables.concat(deployTasks, allOtherTasks));
 
-    SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(pendingDeploy.getDeployMarker().getLoadBalancerRequestId(), request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
+    SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(getLoadBalancerRequestId(pendingDeploy.getDeployMarker()), request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
     
     DeployState deployState = interpretLoadBalancerState(enqueueResult, DeployState.WAITING);
 
@@ -283,7 +284,7 @@ public class SingularityDeployChecker {
   }
   
   private SingularityDeployResult cancelLoadBalancer(SingularityPendingDeploy pendingDeploy) {
-    final SingularityLoadBalancerUpdate lbUpdate = lbClient.cancel(pendingDeploy.getDeployMarker().getLoadBalancerRequestId());
+    final SingularityLoadBalancerUpdate lbUpdate = lbClient.cancel(getLoadBalancerRequestId(pendingDeploy.getDeployMarker()));
     
     final DeployState deployState = interpretLoadBalancerState(lbUpdate, DeployState.CANCELING);
     
@@ -304,6 +305,10 @@ public class SingularityDeployChecker {
     return pendingDeploy.getLastLoadBalancerUpdate().isPresent() && pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() != LoadBalancerState.UNKNOWN;
   }
   
+  private LoadBalancerRequestId getLoadBalancerRequestId(SingularityDeployMarker deployMarker) {
+    return new LoadBalancerRequestId(String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId()), LoadBalancerRequestType.DEPLOY);
+  }
+  
   private SingularityDeployResult getDeployResult(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy, final SingularityDeployKey deployKey, 
       final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks, final Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
     if (!request.isDeployable()) {
@@ -313,7 +318,7 @@ public class SingularityDeployChecker {
     }
     
     if (shouldCheckLbState(pendingDeploy)) {
-      final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(pendingDeploy.getDeployMarker().getLoadBalancerRequestId());
+      final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(getLoadBalancerRequestId(pendingDeploy.getDeployMarker()));
 
       DeployState deployState = interpretLoadBalancerState(lbUpdate, pendingDeploy.getCurrentDeployState());
       

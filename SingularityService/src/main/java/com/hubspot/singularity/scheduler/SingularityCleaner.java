@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
@@ -262,7 +263,7 @@ public class SingularityCleaner {
     Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
     SingularityLoadBalancerUpdate lbRemoveUpdate = null;
     
-    final String loadBalancerRequestId = LoadBalancerRequestType.getLoadBalancerRequestId(taskId, LoadBalancerRequestType.REMOVE);
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE);
       
     if (!maybeLbRemoveUpdate.isPresent() || maybeLbRemoveUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
       final Optional<SingularityTask> task = taskManager.getTask(taskId);
