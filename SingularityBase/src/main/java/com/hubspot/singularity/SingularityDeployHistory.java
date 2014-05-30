@@ -33,7 +33,7 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
   
   @Override
   public int compareTo(SingularityDeployHistory o) {
-    return getDeployMarker().compareTo(o.getDeployMarker());
+    return o.getDeployMarker().compareTo(getDeployMarker());
   }
 
   public Optional<SingularityDeployResult> getDeployResult() {

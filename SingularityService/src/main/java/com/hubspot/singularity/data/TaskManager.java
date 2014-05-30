@@ -360,7 +360,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
   
   private void checkLoadBalancerHistory(List<SingularityLoadBalancerUpdate> loadBalancerUpdates, SingularityTaskId taskId, LoadBalancerRequestType lbRequestType) {
-    Optional<SingularityLoadBalancerUpdate> lbHistory = getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+    Optional<SingularityLoadBalancerUpdate> lbHistory = getLoadBalancerState(taskId, lbRequestType);
   
     if (lbHistory.isPresent()) {
       loadBalancerUpdates.add(lbHistory.get());

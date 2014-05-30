@@ -1,10 +1,10 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.data.DeployManager;
@@ -33,7 +33,9 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
       }
     }
     
-    return Ordering.natural().sortedCopy(histories);
+    Collections.sort(histories);
+    
+    return histories;
   }
 
   @Override

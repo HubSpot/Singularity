@@ -18,13 +18,15 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
 
   private final long startTime;
   private final SingularityHealthchecker healthchecker;
+  private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTask task;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
   private final int maxHealthcheckResponseBodyBytes;
   
-  public SingularityHealthcheckAsyncHandler(SingularityConfiguration configuration, SingularityHealthchecker healthchecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
+  public SingularityHealthcheckAsyncHandler(SingularityConfiguration configuration, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
     this.taskManager = taskManager;
+    this.newTaskChecker = newTaskChecker;
     this.healthchecker = healthchecker;
     this.abort = abort;
     this.task = task;
@@ -64,6 +66,8 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       
       if (result.isFailed()) {
         healthchecker.reEnqueueHealthcheck(task);
+      } else {
+        newTaskChecker.runNewTaskCheckImmediately(task);
       }
     } catch (Throwable t) {
       LOG.error("Aborting, caught throwable while saving health check result {}", result, t);
