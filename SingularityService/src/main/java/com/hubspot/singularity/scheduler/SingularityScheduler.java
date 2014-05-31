@@ -360,7 +360,7 @@ public class SingularityScheduler {
         }
       }
       
-      if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, deployStatistics)) {
+      if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, requestState, deployStatistics)) {
         LOG.info("Request {} is entering cooldown due to failed task {}", request.getId(), taskId);
         requestState = RequestState.SYSTEM_COOLDOWN;
         requestManager.cooldown(request);
@@ -466,7 +466,11 @@ public class SingularityScheduler {
     return true;
   } 
   
-  private boolean shouldEnterCooldown(SingularityRequest request, SingularityDeployStatistics deployStatistics) {
+  private boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics) {
+    if (requestState != RequestState.ACTIVE) {
+      return false;
+    }
+    
     if (configuration.getCooldownAfterFailures() < 1) {
       return false;
     }
