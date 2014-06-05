@@ -69,6 +69,31 @@ class TailerView extends Backbone.View
     scrollToBottom: =>
         @$el.scrollTop @el.scrollHeight
 
+    goToTop: =>
+        @$container.html("")
+        @lines.reset()
+        
+        # So we get an appropriate difference in order to
+        #     get more content when we scroll down
+        @lines.offset = -@readLength
+        
+        @stopTailing()
+        
+        promise = @fetchNext()
+        promise.then =>
+            @$el.scrollTop 0
+            @stopTailing()
+
+    goToBottom: =>
+        @$container.html("")
+        @lines.reset()
+        
+        # Gives us an appropriate line.difference
+        #     for tailing after the fetch
+        @lines.offset = Infinity
+        
+        @seekToEnd()
+
     renderLine: (model) =>
         data = model.toJSON()
         data.data = $.trim data.data
@@ -144,8 +169,14 @@ class TailerView extends Backbone.View
             # if at top, fetch previous lines
             @fetchPrev()
         else if scrollBottom >= scrollMax
-            # if at bottom, start tailing if appropriate
-            @startTailing()
+            # If at the bottom, tail unless the last response
+            #     gave us > 80% of how much we asked for
+            # This way we can load content when scrolling down
+            #     if we went to the top earlier
+            if @lines.offsetDifference > @readLength * .8
+                @fetchNext()
+            else
+                @startTailing()
         else
             # if somewhere in the middle, stop tailing
             @stopTailing()
@@ -157,6 +188,11 @@ class TailerView extends Backbone.View
         else
             @$el.removeClass 'empty'
 
+    seekToEnd: ->
+        @lines.fetchEndOffset().then (offset) =>
+            @handleEmpty(offset)
+            @tail Math.max(0, offset - @readLength)
+
     render: ->
         @$el.addClass 'loading'
 
@@ -166,9 +202,7 @@ class TailerView extends Backbone.View
             @$el.removeClass 'loading'
 
             # seek to the end of the file
-            @lines.fetchEndOffset().then (offset) =>
-                @handleEmpty(offset)
-                @tail Math.max(0, offset - @readLength)
+            @seekToEnd()
 
         @
 

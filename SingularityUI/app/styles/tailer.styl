@@ -2,52 +2,75 @@
 
 .tail-wrapper
 
-    .tail-indicator
+    .tail-corner-container
         display inline-block
-        font-size 12px
-        line-height 12px
-        margin auto
         bottom 30px
         right 30px
-        opacity .8
-        transition opacity .4s
-        background $red
-        color #fff
-        padding .75em .7em .7em
-        font-weight 200
-        letter-spacing .2em
-        border-radius 5px
-        text-transform uppercase
+        
+        .tail-indicator, a
+            font-size 12px
+            line-height 12px
+            padding .75em .7em .7em
+            font-weight 200
+            letter-spacing .2em
+            border-radius 5px
+            text-transform uppercase
+            float right
+        
+        a
+            display inline-block
+            background #ddd // fallback
+            background rgba(200, 200, 200, .8)
+            color #666
+            margin-bottom .7em
+            
+            &:hover
+                text-decoration none
+        
+        .tail-indicator
+            display inline-block
+            color #fff
+            margin auto
+            opacity .8
+            transition opacity .4s
+            background $red
 
-        &:before
-            content "Not tailing"
+            &:before
+                content "Not tailing"
 
-        .page-loader
+            .page-loader
+                display none
+                border-top-color inherit
+                border-right-color inherit
+
+            &:hover
+                opacity 1
+
+    &.tailing
+        
+        .tail-indicator
+            background $green
+        
+        .tail-bottom-button
             display none
-            border-top-color inherit
-            border-right-color inherit
-
-        &:hover
-            opacity 1
-
-    &.tailing .tail-indicator
-        background $green
 
     &.fetchNext, &.fetchPrev
-
+        
         .tail-indicator
             background $orange
 
     &.tailing .tail-indicator:before
         content "Tailing"
 
-    &.fetchNext .tail-indicator
+    &.fetchNext
+        
+        .tail-indicator
+            
+            .page-loader
+                display block
 
-        .page-loader
-            display block
-
-        &:before
-            content ""
+            &:before
+                content ""
 
     &.fetchPrev .tail-indicator
 
@@ -101,7 +124,7 @@
 
     .tail-wrapper
 
-        .tail-indicator
+        .tail-corner-container
             position absolute
 
     html.tail-view
