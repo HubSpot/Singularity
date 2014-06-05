@@ -91,7 +91,7 @@ public class LoadBalancerClient {
     private final LoadBalancerState state;
     
     public LoadBalancerUpdateHolder(LoadBalancerState state, Optional<String> message) {
-      this.message = Optional.absent();
+      this.message = message;
       this.state = state;
     }
 
