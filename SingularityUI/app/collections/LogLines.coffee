@@ -38,6 +38,8 @@ class LogLines extends Backbone.Collection
             error
 
     parse: (result) =>
+        @offsetDifference = result.offset - @offset
+        
         @offset = offset = result.offset
 
         # split on newlines
