@@ -35,8 +35,18 @@
         <h1>Requests</h1>
     </div>
     <div class="row-fluid">
-        <div class="span2dot5">
+        <div class="span2">
             <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests">
+                <div class="well">
+                    <div class="big-number">
+                        <div class="number" data-state-attribute="requests">{{ state.allRequests }}</div>
+                        <div class="number-label">Total</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="span2">
+            <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active">
                 <div class="well">
                     <div class="big-number">
                         <div class="number" data-state-attribute="requests">{{ state.activeRequests }}</div>
@@ -45,8 +55,8 @@
                 </div>
             </a>
         </div>
-        <div class="span2dot5">
-            <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests">
+        <div class="span2">
+            <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/cooldown">
                 <div class="well">
                     <div class="big-number">
                         <div class="number" data-state-attribute="requests">{{ state.cooldownRequests }}</div>
@@ -55,7 +65,7 @@
                 </div>
             </a>
         </div>
-        <div class="span2dot5">
+        <div class="span2">
             <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/paused">
                 <div class="well">
                     <div class="big-number">
@@ -65,7 +75,7 @@
                 </div>
             </a>
         </div>
-        <div class="span2dot5">
+        <div class="span2">
             <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/pending">
                 <div class="well">
                     <div class="big-number">
@@ -75,7 +85,7 @@
                 </div>
             </a>
         </div>
-        <div class="span2dot5">
+        <div class="span2">
             <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/cleaning">
                 <div class="well">
                     <div class="big-number">
