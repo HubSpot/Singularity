@@ -70,7 +70,7 @@ class TailerView extends Backbone.View
         @$el.scrollTop @el.scrollHeight
 
     goToTop: =>
-        @$container.html("")
+        @$container.empty()
         @lines.reset()
         
         # So we get an appropriate difference in order to
@@ -85,11 +85,11 @@ class TailerView extends Backbone.View
             @stopTailing()
 
     goToBottom: =>
-        @$container.html("")
+        @$container.empty()
         @lines.reset()
         
         # Gives us an appropriate line.difference
-        #     for tailing after the fetch
+        #     so we can tail after the fetch
         @lines.offset = Infinity
         
         @seekToEnd()
@@ -159,6 +159,10 @@ class TailerView extends Backbone.View
 
     handleScroll: =>
         if not @$el.parents('html').length # Our view ain't in the page no mo
+            return
+        
+        # don't do anything if there's nothing to scroll through
+        if @$container.is(":empty")
             return
 
         scrollTop = @$el.scrollTop()
