@@ -7,7 +7,13 @@
         bottom 30px
         right 30px
         
-        .tail-indicator, a
+        .tail-button-container
+            display inline-block
+        
+        .tail-indicator-container
+            display: block
+        
+        .tail-indicator, .tail-button-container a
             font-size 12px
             line-height 12px
             padding .75em .7em .7em
@@ -17,26 +23,22 @@
             text-transform uppercase
             float right
         
-        a
+        .tail-button-container a
             display inline-block
+            margin .5em 0 0 .5em
             background #ddd // fallback
             background rgba(200, 200, 200, .8)
             color #666
-            margin-bottom .7em
             
             &:hover
                 text-decoration none
         
         .tail-indicator
-            display inline-block
             color #fff
             margin auto
             opacity .8
-            transition opacity .4s
             background $red
-
-            &:before
-                content "Not tailing"
+            display none
 
             .page-loader
                 display none
@@ -50,13 +52,15 @@
         
         .tail-indicator
             background $green
+            display inline-block
         
         .tail-bottom-button
-            display none
+            opacity .5
 
     &.fetchNext, &.fetchPrev
         
         .tail-indicator
+            display inline-block
             background $orange
 
     &.tailing .tail-indicator:before
