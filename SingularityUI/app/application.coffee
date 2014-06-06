@@ -3,8 +3,6 @@ Router = require 'lib/router'
 User = require 'models/User'
 State = require 'models/State'
 
-RequestsAll  =require "collections/RequestsAll"
-
 RequestsActive = require 'collections/RequestsActive'
 RequestsCooldown = require 'collections/RequestsCooldown'
 RequestsPaused = require 'collections/RequestsPaused'
