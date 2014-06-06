@@ -262,13 +262,8 @@ public class SingularityScheduler {
     if (requestDeployState == null) {
       return false;
     }
-    if (!matchesDeployMarker(requestDeployState.getActiveDeploy(), taskRequest.getDeploy().getId())) {
-      return false;
-    }
-    if (!matchesDeployMarker(requestDeployState.getPendingDeploy(), taskRequest.getDeploy().getId())) {
-      return false;
-    }
-    return true;
+    return matchesDeployMarker(requestDeployState.getActiveDeploy(), taskRequest.getDeploy().getId()) 
+        || matchesDeployMarker(requestDeployState.getPendingDeploy(), taskRequest.getDeploy().getId());
   }
   
   private boolean matchesDeployMarker(Optional<SingularityDeployMarker> deployMarker, String deployId) {
