@@ -69,6 +69,32 @@ class TailerView extends Backbone.View
     scrollToBottom: =>
         @$el.scrollTop @el.scrollHeight
 
+    goToTop: =>
+        @$container.empty()
+        @lines.reset()
+        
+        # So we get an appropriate difference in order to
+        #     get more content when we scroll down
+        @lines.offset = -@readLength
+        
+        @stopTailing()
+        
+        promise = @fetchNext()
+        promise.then =>
+            @$el.scrollTop 0
+            @stopTailing()
+            @parent.$el.addClass("at-top")
+
+    goToBottom: =>
+        @$container.empty()
+        @lines.reset()
+        
+        # Gives us an appropriate line.difference
+        #     so we can tail after the fetch
+        @lines.offset = Infinity
+        
+        @seekToEnd()
+
     renderLine: (model) =>
         data = model.toJSON()
         data.data = $.trim data.data
@@ -135,17 +161,32 @@ class TailerView extends Backbone.View
     handleScroll: =>
         if not @$el.parents('html').length # Our view ain't in the page no mo
             return
+        
+        # don't do anything if there's nothing to scroll through
+        if @$container.is(":empty")
+            return
 
         scrollTop = @$el.scrollTop()
         scrollBottom = scrollTop + @$el.height()
         scrollMax = @el.scrollHeight
 
+        @parent.$el.removeClass("at-top")
+
         if scrollTop is 0 and @lines.getMinOffset() > 0
             # if at top, fetch previous lines
             @fetchPrev()
+        else if scrollTop is 0
+            # If at the top and there's nothing left to fetch
+            @parent.$el.addClass("at-top")
         else if scrollBottom >= scrollMax
-            # if at bottom, start tailing if appropriate
-            @startTailing()
+            # If at the bottom, tail unless the last response
+            #     gave us > 80% of how much we asked for
+            # This way we can load content when scrolling down
+            #     if we went to the top earlier
+            if @lines.offsetDifference > @readLength * .8
+                @fetchNext()
+            else
+                @startTailing()
         else
             # if somewhere in the middle, stop tailing
             @stopTailing()
@@ -157,6 +198,11 @@ class TailerView extends Backbone.View
         else
             @$el.removeClass 'empty'
 
+    seekToEnd: ->
+        @lines.fetchEndOffset().then (offset) =>
+            @handleEmpty(offset)
+            @tail Math.max(0, offset - @readLength)
+
     render: ->
         @$el.addClass 'loading'
 
@@ -166,9 +212,7 @@ class TailerView extends Backbone.View
             @$el.removeClass 'loading'
 
             # seek to the end of the file
-            @lines.fetchEndOffset().then (offset) =>
-                @handleEmpty(offset)
-                @tail Math.max(0, offset - @readLength)
+            @seekToEnd()
 
         @
 
