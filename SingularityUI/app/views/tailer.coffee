@@ -83,6 +83,7 @@ class TailerView extends Backbone.View
         promise.then =>
             @$el.scrollTop 0
             @stopTailing()
+            @parent.$el.addClass("at-top")
 
     goToBottom: =>
         @$container.empty()
@@ -169,9 +170,14 @@ class TailerView extends Backbone.View
         scrollBottom = scrollTop + @$el.height()
         scrollMax = @el.scrollHeight
 
+        @parent.$el.removeClass("at-top")
+
         if scrollTop is 0 and @lines.getMinOffset() > 0
             # if at top, fetch previous lines
             @fetchPrev()
+        else if scrollTop is 0
+            # If at the top and there's nothing left to fetch
+            @parent.$el.addClass("at-top")
         else if scrollBottom >= scrollMax
             # If at the bottom, tail unless the last response
             #     gave us > 80% of how much we asked for
