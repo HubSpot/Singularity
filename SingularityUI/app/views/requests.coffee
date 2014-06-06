@@ -7,7 +7,10 @@ class RequestsView extends View
     templateRequestsActive: require './templates/requestsActive'
     templateRequestsActiveBody: require './templates/requestsActiveBody'
     templateRequestsActiveFilter: require './templates/requestsActiveFilter'
-
+    
+    templateRequestsCooldown: require './templates/requestsCooldown'
+    templateRequestsCooldownBody: require './templates/requestsCooldownBody'
+    
     templateRequestsPaused: require './templates/requestsPaused'
     templateRequestsPausedBody: require './templates/requestsPausedBody'
 
@@ -30,6 +33,8 @@ class RequestsView extends View
         @collection = switch @lastRequestsFilter
             when 'active'
                 app.collections.requestsActive
+            when 'cooldown'
+                app.collections.requestsCooldown
             when 'paused'
                 app.collections.requestsPaused
             when 'pending'
@@ -67,6 +72,11 @@ class RequestsView extends View
             template = @templateRequestsActive
             templateBody = @templateRequestsActiveBody
             templateFilter = @templateRequestsActiveFilter
+
+        if @lastRequestsFilter is 'cooldown'
+            @collection = app.collections.requestsCooldown
+            template = @templateRequestsCooldown
+            templateBody = @templateRequestsCooldownBody
 
         if @lastRequestsFilter is 'paused'
             @collection = app.collections.requestsPaused
