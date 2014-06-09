@@ -167,8 +167,6 @@ public abstract class SafeProcessManager {
     
     try {
       if (currentProcessPid.isPresent()) {
-        log.info("Signaling a process {} to exit", getCurrentProcessToString());
-        
         sendSignal(Signal.SIGTERM);
       }
     } finally {
@@ -181,8 +179,6 @@ public abstract class SafeProcessManager {
     
     try {
       if (currentProcess.isPresent()) {
-        log.info("Destroying a process {}", getCurrentProcessToString());
-        
         sendSignal(Signal.SIGKILL);
         
         resetCurrentVariables();
