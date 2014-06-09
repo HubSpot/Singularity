@@ -30,14 +30,17 @@ public class SingularityTaskBuilder {
   private final SingularityExecutorLogging executorLogging;
   private final ExecutorUtils executorUtils;
   
+  private final String executorPid;
+  
   @Inject
   public SingularityTaskBuilder(@Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
-      SingularityExecutorConfiguration configuration) {
+      SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid) {
     this.executorUtils = executorUtils;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
     this.executorLogging = executorLogging;
     this.configuration = configuration;
+    this.executorPid = executorPid;
   }
   
   public Logger buildTaskLogger(String taskId) {
@@ -49,7 +52,7 @@ public class SingularityTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     ArtifactManager artifactManager = buildArtifactManager(taskId, log);
     
-    return new SingularityExecutorTask(driver, executorUtils, configuration, taskId, readExecutorData(jsonObjectMapper, taskInfo), artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
+    return new SingularityExecutorTask(driver, executorUtils, configuration, taskId, executorPid, readExecutorData(jsonObjectMapper, taskInfo), artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
   }
   
   private ArtifactManager buildArtifactManager(String taskId, Logger log) {

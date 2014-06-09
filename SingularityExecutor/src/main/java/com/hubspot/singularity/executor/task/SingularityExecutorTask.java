@@ -35,7 +35,7 @@ public class SingularityExecutorTask {
   private final Path executorBashOut;
   private final Path serviceLogOut;
     
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, String taskId, 
+  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, String taskId, String executorPid,
       ExecutorData executorData, ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log) {
     this.driver = driver;
     this.taskInfo = taskInfo;
@@ -52,7 +52,7 @@ public class SingularityExecutorTask {
     this.executorBashOut = configuration.getExecutorBashLogPath(taskId);
     
     this.taskLogManager = new SingularityExecutorTaskLogManager(this, objectMapper, templateManager, configuration);
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, executorData);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, executorData, executorPid);
   }
   
   private void cleanupTaskAppDirectory() {

@@ -27,26 +27,29 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
   
+  private final String executorPid;
+  
   private final ExecutorUtils executorUtils;
   
   private final ExecutorData executorData;
   
-  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, ArtifactManager artifactManager, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData) {
+  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, ArtifactManager artifactManager, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData, String executorPid) {
     this.executorData = executorData;
     this.task = task;
     this.executorUtils = executorUtils;
     this.artifactManager = artifactManager;
     this.templateManager = templateManager;
     this.configuration = configuration;
+    this.executorPid = executorPid;
   }
   
   public ArtifactManager getArtifactManager() {
     return artifactManager;
   }
-
+ 
   @Override
   public ProcessBuilder call() throws Exception {
-    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, "Staging files...", task.getLog());
+    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
     
     downloadFiles(executorData);
     extractFiles(executorData);

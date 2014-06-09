@@ -6,9 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
 public class SingularityExecutorRunner {
   
@@ -18,25 +21,34 @@ public class SingularityExecutorRunner {
     final long start = System.currentTimeMillis();
     
     try {
-      final Protos.Status driverStatus = new SingularityExecutorRunner().run();
+      final Injector injector = Guice.createInjector(new SingularityExecutorModule());
+      final SingularityExecutorRunner executorRunner = injector.getInstance(SingularityExecutorRunner.class);
+      
+      final Protos.Status driverStatus = executorRunner.run();
 
-      LOG.info("MesosExecutorDriver finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
+      LOG.info("Finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
       
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
     } catch (Throwable t) {
-      LOG.error("MesosExecutorDriver finished after {} with error", JavaUtils.duration(start), t);
+      LOG.error("Finished after {} with error", JavaUtils.duration(start), t);
     }
   }
   
-  private SingularityExecutorRunner() {}
+  private final String name;
+  private final SingularityExecutor singularityExecutor;
+  
+  @Inject
+  public SingularityExecutorRunner(@Named(SingularityRunnerBaseModule.PROCESS_NAME) String name, SingularityExecutor singularityExecutor) {
+    this.name = name;
+    this.singularityExecutor = singularityExecutor;
+  }
   
   public Protos.Status run() {
-    final Injector injector = Guice.createInjector(new SingularityExecutorModule());
-
-    LOG.info("Starting MesosExecutorDriver...");
+    LOG.info("{} starting MesosExecutorDriver...", name);
     
-    final MesosExecutorDriver driver = new MesosExecutorDriver(injector.getInstance(SingularityExecutor.class));
+    final MesosExecutorDriver driver = new MesosExecutorDriver(singularityExecutor);
 
     return driver.run();
   }
+
 }
