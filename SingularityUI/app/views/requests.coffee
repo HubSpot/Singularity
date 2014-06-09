@@ -221,9 +221,13 @@ class RequestsView extends View
                 message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
-                    $row.remove()
+                    
+                    if @lastRequestsFilter is "paused"
+                        $row.remove()
+                        
                     requestModel.unpause().done =>
-                        @render()
+                        @refresh()
+                        
 
         @$el.find('[data-action="starToggle"]').unbind('click').on 'click', (e) =>
             $target = $(e.target)
