@@ -4,6 +4,9 @@ Request = require '../models/Request'
 
 class RequestsView extends View
 
+    templateRequestsAll: require './templates/requestsAll'
+    templateRequestsAllBody: require './templates/requestsAllBody'
+
     templateRequestsActive: require './templates/requestsActive'
     templateRequestsActiveBody: require './templates/requestsActiveBody'
     templateRequestsActiveFilter: require './templates/requestsActiveFilter'
@@ -31,6 +34,8 @@ class RequestsView extends View
 
     fetch: ->
         @collection = switch @lastRequestsFilter
+            when 'all'
+                app.collections.requestsAll
             when 'active'
                 app.collections.requestsActive
             when 'cooldown'
@@ -66,6 +71,11 @@ class RequestsView extends View
                 @lastRequestsSubFilter = @lastRequestsActiveSubFilter
         else
             @lastRequestsSubFilter = requestsSubFilter
+
+        if @lastRequestsFilter is 'all'
+            @collection = app.collections.requestsAll
+            template = @templateRequestsAll
+            templateBody = @templateRequestsAllBody
 
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
