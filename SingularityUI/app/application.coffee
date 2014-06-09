@@ -4,6 +4,7 @@ User = require 'models/User'
 State = require 'models/State'
 
 RequestsActive = require 'collections/RequestsActive'
+RequestsCooldown = require 'collections/RequestsCooldown'
 RequestsPaused = require 'collections/RequestsPaused'
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
@@ -94,7 +95,11 @@ class Application
             collection_key: 'requestsActive'
             collection: RequestsActive
             error_phrase: 'requests'
-        }, {
+        },  {
+            collection_key: 'requestsCooldown'
+            collection: RequestsCooldown
+            error_phrase: 'requests on cooldown'
+        },  {
             collection_key: 'requestsPaused'
             collection: RequestsPaused
             error_phrase: 'paused requests'
