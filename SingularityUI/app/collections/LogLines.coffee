@@ -38,14 +38,19 @@ class LogLines extends Backbone.Collection
             error
 
     parse: (result) =>
+        @offsetDifference = result.offset - @offset
+        
         @offset = offset = result.offset
 
         # split on newlines
         lines = result.data.split @delimiter
 
-        # omit the last element only if it's blank
-        if lines[lines.length - 1] is ''
-            lines = _.initial(lines)
+        # if the last line is incomplete, subtract it from the offset
+        if lines[lines.length - 1] isnt ''
+            offset -= lines[lines.length - 1].length
+            
+        # always omit last element (either it's blank or an incomplete line)
+        lines = _.initial(lines)
 
         # omit the first (incomplete) element unless we're at the beginning of the file
         if offset > 0 and lines.length > 0

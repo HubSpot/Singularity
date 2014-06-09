@@ -10,6 +10,10 @@ class TailView extends View
 
     className: 'tail-wrapper'
 
+    events:
+        'click .tail-top-button': 'tailerToTop'
+        'click .tail-bottom-button': 'tailerToBottom'
+
     initialize: ({@taskId, @path}) ->
         @subfolders = []
 
@@ -38,5 +42,11 @@ class TailView extends View
         @tailer.render()
 
         @
+
+    tailerToTop: =>
+        @tailer.goToTop()
+    
+    tailerToBottom: =>
+        @tailer.goToBottom()
 
 module.exports = TailView
