@@ -2,6 +2,9 @@ Model = require './model'
 
 class Request extends Model
 
+    initialize: =>
+        @set "displayState", @getState()
+
     parse: (data) ->
         if data.request?
             data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
@@ -37,5 +40,15 @@ class Request extends Model
             options.contentType = 'text/plain'
 
         $.ajax options
+    
+    getState: =>
+        if @get("cleanupType")?
+            return contants.requestStates.CLEANUP
+        else if @get("requestDeployState").pendingDeploy != null
+            return constants.requestStates.PENDING
+        else
+            apiState = @get("state")
+            return constants.requestStates[apiState]
+        
 
 module.exports = Request
