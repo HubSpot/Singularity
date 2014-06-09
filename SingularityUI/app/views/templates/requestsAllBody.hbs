@@ -1,0 +1,78 @@
+<section>
+    <div class="row-fluid">
+        <div class="span12">
+            {{#if requests.length}}
+                <table class="table" data-sortable>
+                    <thead>
+                        <tr>
+                            <th data-sortable="false"></th>
+                            <th>Name</th>
+                            <th>State</th>
+                            <th class="visible-large-desktop">Instances</th>
+                            <th class="visible-large-desktop">Deploy ID</th>
+                            <th class="visible-large-desktop">Deploy user</th>
+                            <th class="hidden-phone">Deploy time</th>
+
+                            {{#ifEqual requestsSubFilter "daemon"}}{{else}}
+                            {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
+                            {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
+                                <th class="visible-large-desktop">Schedule</th>
+                            {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+
+                            <th class="hidden-phone" data-sortable="false"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#eachWithFn requests}}
+                            <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}" {{#ifFilteredRequest this ../searchFilter}}class="filtered"{{/ifFilteredRequest}}>
+                                <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                                <td class="visible-large-desktop">{{ displayState }}</td>
+                                <td class="visible-large-desktop">{{ instances }}</td>
+                                <td class="visible-large-desktop">{{ deployId }}</td>
+                                <td class="visible-large-desktop">{{ deployUser }}</td>
+                                <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
+
+                                {{#ifEqual requestsSubFilter "daemon"}}{{else}}
+                                {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
+                                {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
+                                    <td class="visible-large-desktop">{{ schedule }}</td>
+                                {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+
+                                <td class="actions-column hidden-phone">
+                                    {{#ifEqual state "PAUSED"}}
+                                        <a data-request-id="{{ id }}" data-action="unpause">Unpause</a>
+                                    {{/ifEqual}}
+                                    {{#ifEqual state "ACTIVE"}}
+                                        {{#if onDemand}}
+                                            <a data-request-id="{{ id }}" data-request-type="on-demand" data-action="run-now">Run now</a>
+                                        {{/if}}
+                                        {{#if scheduled}}
+                                            <a data-request-id="{{ id }}" data-request-type="scheduled" data-action="run-now">Run now</a>
+                                        {{/if}}
+                                    {{/ifEqual}}
+                                    {{#ifEqual state "SYSTEM_COOLDOWN"}}
+                                        {{#if onDemand}}
+                                            <a data-request-id="{{ id }}" data-request-type="on-demand" data-action="run-now">Run now</a>
+                                        {{/if}}
+                                        {{#if scheduled}}
+                                            <a data-request-id="{{ id }}" data-request-type="scheduled" data-action="run-now">Run now</a>
+                                        {{/if}}
+                                    {{/ifEqual}}
+                                    <a data-request-id="{{ id }}" data-action="viewJSON">JSON</a>
+                                    <a data-request-id="{{ id }}" data-action="remove">Remove</a>
+                                </td>
+                            </tr>
+                        {{/eachWithFn}}
+                    </tbody>
+                </table>
+            {{else}}
+                {{#if collectionSynced}}
+                    <div class="empty-table-message"><p>No requests</p></div>
+                {{else}}
+                    <div class="page-loader centered cushy"></div>
+                {{/if}}
+            {{/if}}
+        </div>
+    </div>
+</section>
