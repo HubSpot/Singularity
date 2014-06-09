@@ -104,6 +104,14 @@ class Utils
         wasJustNow = Math.abs(time.diff(now)) < 120000
         """#{ if future then time.from() else time.fromNow() } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
 
+    @humanTimeShort: (date) ->
+        return '' unless date?
+        now = moment()
+        time = moment(date)
+        wasToday = time.date() is now.date() and Math.abs(time.diff(now)) < 86400000
+        wasJustNow = Math.abs(time.diff(now)) < 120000
+        """#{ time.fromNow() }"""
+
     @humanTimeAgo: (date) ->
         utils.humanTime date
 

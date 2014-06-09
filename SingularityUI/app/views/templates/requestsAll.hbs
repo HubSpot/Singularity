@@ -1,15 +1,15 @@
 <header class="jumbotron subhead" id="overview">
-    <h1>Active requests</h1>
+    <h1>All requests</h1>
 </header>
 
 <section>
     <div class="row-fluid">
         <div class="span12">
             <ul class="nav nav-pills">
-                <li>
+                <li class="active">
                     <a href="{{#appRoot}}{{/appRoot}}/requests">All</a>
                 </li>
-                <li class="active">
+                <li>
                     <a href="{{#appRoot}}{{/appRoot}}/requests/active">Active</a>
                 </li>
                 <li>
@@ -32,9 +32,6 @@
 <section>
     <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." value="{{ searchFilter }}" required />
-        <div data-requests-filter-container class="requests-filter-container">
-            {{> requestsFilter}}
-        </div>
     </div>
 </section>
 
