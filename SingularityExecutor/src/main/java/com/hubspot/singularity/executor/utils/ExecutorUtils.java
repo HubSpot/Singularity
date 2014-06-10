@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
 public class ExecutorUtils {
 
@@ -18,7 +20,7 @@ public class ExecutorUtils {
   private final ObjectMapper objectMapper;
   
   @Inject
-  public ExecutorUtils(SingularityExecutorConfiguration configuration, ObjectMapper objectMapper) {
+  public ExecutorUtils(SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper) {
     this.configuration = configuration;
     this.objectMapper = objectMapper;
   }
