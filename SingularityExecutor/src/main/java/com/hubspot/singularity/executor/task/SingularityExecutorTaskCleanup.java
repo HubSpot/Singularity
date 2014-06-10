@@ -30,7 +30,7 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
     boolean logTearDownSuccess = taskLogManager.teardown();
     boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
   
-    log.info("Cleaned up logs ({}) and task app directory ({})");
+    log.info("Cleaned up logs ({}) and task app directory ({})", logTearDownSuccess, cleanupTaskAppDirectorySuccess);
     
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
       Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
