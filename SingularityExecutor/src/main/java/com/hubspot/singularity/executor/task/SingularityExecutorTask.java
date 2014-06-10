@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor.task;
 
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,81 +19,45 @@ import com.hubspot.singularity.executor.utils.ExecutorUtils;
 public class SingularityExecutorTask {
   
   private final ExecutorDriver driver;
-  private final String taskId;
   private final Protos.TaskInfo taskInfo;
   private final Logger log;
-  private final ExecutorData executorData;
   private final ReentrantLock lock;
   private final AtomicBoolean killed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
+  private final SingularityExecutorTaskCleanup taskCleanup;
+  private final SingularityExecutorTaskDefinition taskDefinition;
   
-  private final SingularityExecutorConfiguration configuration;
-  
-  private final Path taskDirectory;
-  private final Path executorBashOut;
-  private final Path serviceLogOut;
-    
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, String taskId, String executorPid,
-      ExecutorData executorData, ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log) {
+  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
+      ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log) {
     this.driver = driver;
     this.taskInfo = taskInfo;
-    this.executorData = executorData;
-    this.taskId = taskId;
     this.log = log;
-    this.configuration = configuration;
     
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
 
-    this.serviceLogOut = configuration.getTaskDirectoryPath(taskId).resolve(configuration.getServiceLog());
-    this.taskDirectory = configuration.getTaskDirectoryPath(taskId);
-    this.executorBashOut = configuration.getExecutorBashLogPath(taskId);
+    this.taskDefinition = taskDefinition;
     
-    this.taskLogManager = new SingularityExecutorTaskLogManager(this, objectMapper, templateManager, configuration);
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, executorData, executorPid);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, configuration, log, executorUtils);
+    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, configuration, taskDefinition, log);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, taskDefinition.getExecutorData(), executorPid);
   }
-  
-  private void cleanupTaskAppDirectory() {
-    final Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(getTaskId());
-    final String pathToDelete = taskAppDirectoryPath.toString();
     
-    log.info("Deleting: {}", pathToDelete);
-    
-    try {
-      Runtime.getRuntime().exec(String.format("rm -rf %s", pathToDelete)).waitFor();
-    } catch (Throwable t) {
-      log.error("While deleting directory {}", pathToDelete, t);
-    }
-  }
-  
   public void cleanup() {
-    taskLogManager.teardown();
-    cleanupTaskAppDirectory();
+    taskCleanup.cleanup();
   }
   
   public SingularityExecutorTaskLogManager getTaskLogManager() {
     return taskLogManager;
   }
 
-  public Path getTaskDirectory() {
-    return taskDirectory;
-  }
-
-  public Path getExecutorBashOut() {
-    return executorBashOut;
-  }
-
-  public Path getServiceLogOut() {
-    return serviceLogOut;
-  }
-
   public boolean isSuccessExitCode(int exitCode) {
-    if (executorData.getSuccessfulExitCodes().isEmpty()) {
+    if (getExecutorData().getSuccessfulExitCodes().isEmpty()) {
       return exitCode == 0;
     }
     
-    return executorData.getSuccessfulExitCodes().contains(exitCode);
+    return getExecutorData().getSuccessfulExitCodes().contains(exitCode);
   }
   
   public ReentrantLock getLock() {
@@ -126,17 +89,21 @@ public class SingularityExecutorTask {
   }
 
   public String getTaskId() {
-    return taskId;
+    return taskDefinition.getTaskId();
   }
 
   public ExecutorData getExecutorData() {
-    return executorData;
+    return taskDefinition.getExecutorData();
+  }
+  
+  public SingularityExecutorTaskDefinition getTaskDefinition() {
+    return taskDefinition;
   }
 
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
-        .add("taskId", taskId)
+        .add("taskId", getTaskId())
         .add("killed", killed.get())
         .add("taskInfo", taskInfo)
         .toString();

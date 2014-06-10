@@ -17,6 +17,7 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
+import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
@@ -50,9 +51,13 @@ public class SingularityTaskBuilder {
   }
   
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
+    ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
+    
+    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, configuration);
+    
     ArtifactManager artifactManager = buildArtifactManager(taskId, log);
     
-    return new SingularityExecutorTask(driver, executorUtils, configuration, taskId, executorPid, readExecutorData(jsonObjectMapper, taskInfo), artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
+    return new SingularityExecutorTask(driver, executorUtils, configuration, taskDefinition, executorPid, artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
   }
   
   private ArtifactManager buildArtifactManager(String taskId, Logger log) {

@@ -1,19 +1,26 @@
 package com.hubspot.singularity.executor.utils;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
 public class ExecutorUtils {
 
   private final SingularityExecutorConfiguration configuration;
+  private final ObjectMapper objectMapper;
   
   @Inject
-  public ExecutorUtils(SingularityExecutorConfiguration configuration) {
+  public ExecutorUtils(SingularityExecutorConfiguration configuration, ObjectMapper objectMapper) {
     this.configuration = configuration;
+    this.objectMapper = objectMapper;
   }
   
   public void sendStatusUpdate(ExecutorDriver driver, Protos.TaskInfo taskInfo, Protos.TaskState taskState, String message, Logger taskLogger) {
@@ -32,5 +39,20 @@ public class ExecutorUtils {
       taskLogger.error("While sending status update", t);
     }
   }
-
+  
+  public boolean writeObject(Object o, Path path, Logger log) {
+    try {
+      final byte[] bytes = objectMapper.writeValueAsBytes(o);
+      
+      log.info("Writing {} bytes of {} to {}", new Object[] { Integer.toString(bytes.length), o.toString(), path.toString() });
+        
+      Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    
+      return true;
+    } catch (Throwable t) {
+      log.error("Failed writing {}", o.toString(), t);
+      return false;
+    }
+  }
+  
 }

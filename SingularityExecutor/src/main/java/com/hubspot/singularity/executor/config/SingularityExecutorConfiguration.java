@@ -19,6 +19,8 @@ public class SingularityExecutorConfiguration {
   private final long idleExecutorShutdownWaitMillis;
   private final long stopDriverAfterMillis;
   
+  private final String globalTaskDefinitionDirectory;
+  
   private final long hardKillAfterMillis;
   private final int killThreads;
 
@@ -47,6 +49,7 @@ public class SingularityExecutorConfiguration {
   @Inject
   public SingularityExecutorConfiguration(
       @Named(SingularityExecutorConfigurationLoader.ARTIFACT_CACHE_DIRECTORY) String cacheDirectory, 
+      @Named(SingularityExecutorConfigurationLoader.GLOBAL_TASK_DEFINITION_DIRECTORY) String globalTaskDefinitionDirectory, 
       @Named(SingularityExecutorConfigurationLoader.TASK_APP_DIRECTORY) String taskAppDirectory,
       @Named(SingularityExecutorConfigurationLoader.TASK_EXECUTOR_BASH_LOG_PATH) String executorBashLog, 
       @Named(SingularityExecutorConfigurationLoader.TASK_EXECUTOR_JAVA_LOG_PATH) String executorJavaLog, 
@@ -75,6 +78,7 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog
       ) {
     this.executorBashLog = executorBashLog;
+    this.globalTaskDefinitionDirectory = globalTaskDefinitionDirectory;
     this.taskAppDirectory = taskAppDirectory;
     this.executorJavaLog = executorJavaLog;
     this.cacheDirectory = cacheDirectory;
@@ -231,14 +235,18 @@ public class SingularityExecutorConfiguration {
     return logrotateConfDirectory;
   }
 
+  public String getGlobalTaskDefinitionDirectory() {
+    return globalTaskDefinitionDirectory;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser + ", cacheDirectory=" + cacheDirectory
         + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
-        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile
-        + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat="
-        + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog
-        + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + ", globalTaskDefinitionDirectory=" + globalTaskDefinitionDirectory + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand="
+        + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays
+        + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave
+        + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
-
+  
 }
