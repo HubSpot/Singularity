@@ -21,7 +21,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
-public class SingularityTaskBuilder {
+public class SingularityExecutorTaskBuilder {
 
   private final ObjectMapper jsonObjectMapper;
 
@@ -34,7 +34,7 @@ public class SingularityTaskBuilder {
   private final String executorPid;
   
   @Inject
-  public SingularityTaskBuilder(@Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
+  public SingularityExecutorTaskBuilder(@Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
       SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid) {
     this.executorUtils = executorUtils;
     this.jsonObjectMapper = jsonObjectMapper;
@@ -54,6 +54,8 @@ public class SingularityTaskBuilder {
     ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
     
     SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, configuration);
+    
+    executorUtils.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);
     
     ArtifactManager artifactManager = buildArtifactManager(taskId, log);
     

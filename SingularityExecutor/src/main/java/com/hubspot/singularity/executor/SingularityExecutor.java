@@ -11,18 +11,18 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
-import com.hubspot.singularity.executor.config.SingularityTaskBuilder;
+import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 
 public class SingularityExecutor implements Executor {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
-  private final SingularityTaskBuilder taskBuilder;
+  private final SingularityExecutorTaskBuilder taskBuilder;
   private final SingularityExecutorMonitor monitor;
   
   @Inject
-  public SingularityExecutor(SingularityExecutorMonitor monitor, SingularityTaskBuilder taskBuilder) {
+  public SingularityExecutor(SingularityExecutorMonitor monitor, SingularityExecutorTaskBuilder taskBuilder) {
     this.taskBuilder = taskBuilder;
     this.monitor = monitor;
   }

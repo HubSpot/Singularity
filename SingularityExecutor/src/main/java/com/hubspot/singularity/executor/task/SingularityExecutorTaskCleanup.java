@@ -1,5 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 
@@ -27,7 +29,19 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
     boolean logTearDownSuccess = taskLogManager.teardown();
     boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
   
-    return logTearDownSuccess && cleanupTaskAppDirectorySuccess;
+    if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
+      Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
+      
+      try {
+        Files.deleteIfExists(taskDefinitionPath);
+        return true;
+      } catch (IOException e) {
+        log.error("Failed deleting {}", taskDefinitionPath, e);
+        return false;
+      }
+    }
+    
+    return false;
   }
   
   private boolean cleanupTaskAppDirectory() {

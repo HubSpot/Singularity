@@ -238,6 +238,10 @@ public class SingularityExecutorConfiguration {
   public String getGlobalTaskDefinitionDirectory() {
     return globalTaskDefinitionDirectory;
   }
+  
+  public Path getTaskDefinitionPath(String taskId) {
+    return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(getSafeTaskIdForDirectory(taskId) + ".json");
+  }
 
   @Override
   public String toString() {
