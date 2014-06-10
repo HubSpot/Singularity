@@ -1,5 +1,6 @@
 package com.hubspot.singularity.hooks;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -7,19 +8,21 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
+import com.hubspot.baragon.models.BaragonResponse;
+import com.hubspot.baragon.models.BaragonService;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityLoadBalancerRequest;
-import com.hubspot.singularity.SingularityLoadBalancerResponse;
-import com.hubspot.singularity.SingularityLoadBalancerService;
+import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
@@ -72,9 +75,9 @@ public class LoadBalancerClient {
     return request(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, BaragonRequestState.UNKNOWN);
   }
   
-  private SingularityLoadBalancerResponse readResponse(Response response)  {
+  private BaragonResponse readResponse(Response response)  {
     try {
-      return SingularityLoadBalancerResponse.fromBytes(response.getResponseBodyAsBytes(), objectMapper);
+      return objectMapper.readValue(response.getResponseBodyAsBytes(), BaragonResponse.class);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
@@ -118,7 +121,7 @@ public class LoadBalancerClient {
         return new LoadBalancerUpdateHolder(onFailure, Optional.of(String.format("Response status code %s", response.getStatusCode())));
       }
       
-      SingularityLoadBalancerResponse lbResponse = readResponse(response);
+      BaragonResponse lbResponse = readResponse(response);
       
       return new LoadBalancerUpdateHolder(lbResponse.getLoadBalancerState(), lbResponse.getMessage());
     } catch (TimeoutException te) {
@@ -131,19 +134,25 @@ public class LoadBalancerClient {
   }
   
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
-    final SingularityLoadBalancerService lbService = SingularityLoadBalancerService.fromRequestAndDeploy(request, deploy);
+    final List<String> serviceOwners = request.getOwners().or(Collections.<String>emptyList());
+    final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
+    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
     
     final List<String> addUpstreams = transformTasksToUpstreams(add);
     final List<String> removeUpstreams = transformTasksToUpstreams(remove);
 
-    final SingularityLoadBalancerRequest loadBalancerRequest = new SingularityLoadBalancerRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
-    
-    final Request httpRequest = httpClient.preparePost(loadBalancerUri)
-      .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
-      .setBody(loadBalancerRequest.getAsBytes(objectMapper))
-      .build();
-    
-    return request(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, httpRequest, BaragonRequestState.FAILED);
+    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
+
+    try {
+      final Request httpRequest = httpClient.preparePost(loadBalancerUri)
+          .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+          .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest))
+          .build();
+
+      return request(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, httpRequest, BaragonRequestState.FAILED);
+    } catch (JsonProcessingException e) {
+      throw new SingularityJsonException(e);
+    }
   }
   
   private boolean isSuccess(Response response) {
