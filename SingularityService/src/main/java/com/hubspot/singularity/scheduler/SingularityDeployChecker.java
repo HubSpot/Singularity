@@ -15,11 +15,11 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -302,7 +302,7 @@ public class SingularityDeployChecker {
   }
   
   private boolean shouldCheckLbState(final SingularityPendingDeploy pendingDeploy) {
-    return pendingDeploy.getLastLoadBalancerUpdate().isPresent() && pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() != LoadBalancerState.UNKNOWN;
+    return pendingDeploy.getLastLoadBalancerUpdate().isPresent() && pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() != BaragonRequestState.UNKNOWN;
   }
   
   private LoadBalancerRequestId getLoadBalancerRequestId(SingularityDeployMarker deployMarker) {
