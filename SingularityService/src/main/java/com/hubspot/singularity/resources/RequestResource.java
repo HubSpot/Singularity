@@ -74,6 +74,10 @@ public class RequestResource {
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest);
     
+    if (!maybeOldRequest.isPresent() && requestManager.getCleanupRequest(request.getId()).isPresent()) {
+      throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
+    }
+    
     SingularityCreateResult result = requestManager.saveRequest(newRequest);
     
     historyManager.saveRequestHistoryUpdate(newRequest, result == SingularityCreateResult.CREATED ? RequestHistoryType.CREATED : RequestHistoryType.UPDATED, user);
@@ -167,7 +171,7 @@ public class RequestResource {
     if (!request.isDeployable()) {
       deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED));
       
-      deployManager.deletePendingDeploy(pendingDeployObj);
+      deployManager.deletePendingDeploy(requestId);
     }
     
     if (shouldAddToPendingQueue(request)) {

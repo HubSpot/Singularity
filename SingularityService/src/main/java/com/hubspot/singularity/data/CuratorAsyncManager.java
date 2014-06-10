@@ -62,7 +62,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       @Override
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         if (event.getData() == null || event.getData().length == 0) {
-          LOG.debug("Expected active node {} but it wasn't there", event.getPath());
+          LOG.trace("Expected active node {} but it wasn't there", event.getPath());
           
           missing.incrementAndGet();
           latch.countDown();
@@ -110,7 +110,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       @Override
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         if (event.getChildren() == null || event.getChildren().size() == 0) {
-          LOG.debug("Expected children for node {} - but found none", event.getPath());
+          LOG.trace("Expected children for node {} - but found none", event.getPath());
           
           missing.incrementAndGet();
           latch.countDown();

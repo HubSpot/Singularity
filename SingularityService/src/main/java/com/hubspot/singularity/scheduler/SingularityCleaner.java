@@ -16,6 +16,7 @@ import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -163,16 +164,20 @@ public class SingularityCleaner {
         if (requestWithState.isPresent()) {        
           killTasks = false;
           LOG.info("Not cleaning {}, because it existed", requestId);
+        } else {
+          cleanupDeployState(requestCleanup);
         }
       }
       
-      if (killTasks) {        
+      if (killTasks) {
         for (SingularityTaskId matchingTaskId : Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(requestId))) {
+          LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
           driverManager.kill(matchingTaskId.toString());
           numTasksKilled++;
         }
      
         for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matching(requestId))) {
+          LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
           taskManager.deleteScheduledTask(matchingTask.getPendingTaskId().getId());
           numScheduledTasksRemoved++;
         }
@@ -182,6 +187,12 @@ public class SingularityCleaner {
     }
     
     LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled, numScheduledTasksRemoved, JavaUtils.duration(start));
+  }
+  
+  private void cleanupDeployState(SingularityRequestCleanup requestCleanup) {
+    SingularityDeleteResult deletePendingDeployResult = deployManager.deletePendingDeploy(requestCleanup.getRequestId());
+    SingularityDeleteResult deleteRequestDeployStateResult = deployManager.deleteRequestDeployState(requestCleanup.getRequestId());
+    LOG.trace("Deleted pendingDeploy ({}) and requestDeployState ({}) due to {}", deletePendingDeployResult, deleteRequestDeployStateResult, requestCleanup);
   }
   
   public void drainCleanupQueue() {

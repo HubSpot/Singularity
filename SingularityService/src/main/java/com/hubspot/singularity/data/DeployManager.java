@@ -357,12 +357,16 @@ public class DeployManager extends CuratorAsyncManager {
     return create(getCancelDeployPath(deployMarker), Optional.of(deployMarker.getAsBytes(objectMapper)));
   }
 
+  public SingularityDeleteResult deleteRequestDeployState(String requestId) {
+    return delete(getRequestDeployStatePath(requestId));
+  }
+  
   public SingularityDeleteResult deleteDeployHistory(SingularityDeployKey deployKey) {
     return delete(getDeployParentPath(deployKey.getRequestId(), deployKey.getDeployId()));
   }
   
-  public SingularityDeleteResult deletePendingDeploy(SingularityPendingDeploy pendingDeploy) {
-    return delete(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()));
+  public SingularityDeleteResult deletePendingDeploy(String requestId) {
+    return delete(getPendingDeployPath(requestId));
   }
   
   public SingularityDeleteResult deleteCancelRequest(SingularityDeployMarker deployMarker) {
