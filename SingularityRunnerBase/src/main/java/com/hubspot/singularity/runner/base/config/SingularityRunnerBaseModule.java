@@ -4,7 +4,9 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -49,6 +51,8 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   @Named(JSON_MAPPER)
   public ObjectMapper getJsonObjectMapper() {
     final ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    mapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());
     return mapper;
