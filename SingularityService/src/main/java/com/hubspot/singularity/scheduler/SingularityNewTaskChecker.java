@@ -16,10 +16,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -240,7 +240,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD);
     
-    if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
+    if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
       newLbUpdate = lbClient.enqueue(loadBalancerRequestId, task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
     } else {
       Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbUpdate.get().getLoadBalancerState());
@@ -263,7 +263,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     return CheckTaskState.LB_IN_PROGRESS_CHECK_AGAIN;
   }
   
-  private Optional<CheckTaskState> checkLbState(LoadBalancerState lbState) {
+  private Optional<CheckTaskState> checkLbState(BaragonRequestState lbState) {
     switch (lbState) {
     case SUCCESS:
       return Optional.of(CheckTaskState.HEALTHY);

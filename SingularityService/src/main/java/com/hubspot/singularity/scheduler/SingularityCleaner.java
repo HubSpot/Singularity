@@ -11,10 +11,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.LoadBalancerState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDriverManager;
@@ -256,7 +256,7 @@ public class SingularityCleaner {
   private CheckLBState checkLbState(SingularityTaskId taskId) {
     Optional<SingularityLoadBalancerUpdate> lbAddUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
     
-    if (!lbAddUpdate.isPresent() || lbAddUpdate.get().getLoadBalancerState() != LoadBalancerState.SUCCESS) {
+    if (!lbAddUpdate.isPresent() || lbAddUpdate.get().getLoadBalancerState() != BaragonRequestState.SUCCESS) {
       return CheckLBState.NOT_LOAD_BALANCED;
     }
     
@@ -265,7 +265,7 @@ public class SingularityCleaner {
     
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE);
       
-    if (!maybeLbRemoveUpdate.isPresent() || maybeLbRemoveUpdate.get().getLoadBalancerState() == LoadBalancerState.UNKNOWN) {
+    if (!maybeLbRemoveUpdate.isPresent() || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
       final Optional<SingularityTask> task = taskManager.getTask(taskId);
       
       if (!task.isPresent()) {
@@ -276,7 +276,7 @@ public class SingularityCleaner {
       lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
       
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
-    } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == LoadBalancerState.WAITING) {
+    } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING) {
       lbRemoveUpdate = lbClient.getState(loadBalancerRequestId);
 
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);

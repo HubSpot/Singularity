@@ -6,11 +6,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 
 public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
 
-  private final LoadBalancerState loadBalancerState;
+  private final BaragonRequestState loadBalancerState;
   private final Optional<String> message;
   private final long timestamp;
   private final String uri;
@@ -30,7 +31,7 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
   }
   
   @JsonCreator
-  public SingularityLoadBalancerUpdate(@JsonProperty("state") LoadBalancerState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId, @JsonProperty("message") Optional<String> message, 
+  public SingularityLoadBalancerUpdate(@JsonProperty("state") BaragonRequestState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId, @JsonProperty("message") Optional<String> message,
       @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") String uri) {
     this.loadBalancerState = loadBalancerState;
     this.message = message;
@@ -40,7 +41,7 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
     this.loadBalancerRequestId = loadBalancerRequestId;
   }
 
-  public LoadBalancerState getLoadBalancerState() {
+  public BaragonRequestState getLoadBalancerState() {
     return loadBalancerState;
   }
 
