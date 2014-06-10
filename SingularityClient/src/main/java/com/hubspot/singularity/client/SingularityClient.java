@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -20,7 +19,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -31,8 +32,6 @@ import com.ning.http.client.Response;
 public class SingularityClient {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
-
-  private static final String WEBHOOK_FORMAT = "http://%s/%s/webhooks";
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
@@ -46,6 +45,10 @@ public class SingularityClient {
   private static final String REQUESTS_FORMAT = "http://%s/%s/requests";
   private static final String REQUESTS_GET_ACTIVE_FORMAT = REQUESTS_FORMAT + "/active";
   private static final String REQUESTS_GET_PAUSED_FORMAT = REQUESTS_FORMAT + "/paused";
+  private static final String REQUESTS_GET_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/cooldown";
+  private static final String REQUESTS_GET_PENDING_FORMAT = REQUESTS_FORMAT + "/queued/pending";
+  private static final String REQUESTS_GET_CLEANUP_FORMAT = REQUESTS_FORMAT + "/queued/cleanup";
+  
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
@@ -61,6 +64,8 @@ public class SingularityClient {
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
   private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
+  private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
+  private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   
@@ -382,25 +387,61 @@ public class SingularityClient {
     }
   }
   
-  //
-  // SINGULARITY REQUEST COLLECTIONS
-  //
-  
-  //
-  // ACTIVE REQUESTS
-  //
-  public Collection<SingularityRequest> getActiveSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getHost(), contextPath);
+  /**
+   * Get all singularity requests that their state is either ACTIVE, PAUSED or COOLDOWN
+   * 
+   * For the requests that are pending to become ACTIVE use:
+   *    {@link SingularityClient#getPendingSingularityRequests()}
+   * 
+   * For the requests that are cleaning up use:
+   *    {@link SingularityClient#getCleanupSingularityRequests()}
+   *     
+   * 
+   * Use {@link SingularityClient#getActiveSingularityRequests()}, {@link SingularityClient#getPausedSingularityRequests()}, 
+   * {@link SingularityClient#getCoolDownSingularityRequests()} respectively to get only the ACTIVE, PAUSED or COOLDOWN requests. 
+   * 
+   * @return
+   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequest} instances.
+   *    
+   */
+  public Collection<SingularityRequest> getSingularityRequests() {
+    final String requestUri = String.format(REQUESTS_FORMAT, getHost(), contextPath);
 
-    LOG.info(String.format("Getting active requests - (%s)", requestUri));
+    LOG.info(String.format("Getting all [ACTIVE, PAUSED, COOLDOWN] requests - (%s)", requestUri));
 
     final long start = System.currentTimeMillis();
 
     Response getResponse = getUri(requestUri);
 
-    checkResponse("get active requests", getResponse);
+    checkResponse("get all [ACTIVE, PAUSED, COOLDOWN] requests", getResponse);
 
-    LOG.info(String.format("Successfully got active requests from Singularity in %sms", System.currentTimeMillis() - start));
+    LOG.info(String.format("Successfully got all [ACTIVE, PAUSED, COOLDOWN] requests from Singularity in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), REQUESTS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
+  /**
+   * Get all requests that their state is ACTIVE
+   * 
+   * @return
+   *    All ACTIVE {@link SingularityRequest} instances
+   */
+  public Collection<SingularityRequest> getActiveSingularityRequests() {
+    final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Getting requests in ACTIVE state - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get requests in ACTIVE state", getResponse);
+
+    LOG.info(String.format("Successfully got ACTIVE requests from Singularity in %sms", System.currentTimeMillis() - start));
 
     try {
       return objectMapper.readValue(getResponse.getResponseBodyAsStream(), REQUESTS_COLLECTION);
@@ -417,21 +458,25 @@ public class SingularityClient {
     return getActiveSingularityRequests();
   }
 
-  //
-  // PAUSED REQUESTS
-  //
+  /**
+   * Get all requests that their state is PAUSED 
+   * ACTIVE requests are paused by users, which is equivalent to stop their tasks from running without undeploying them
+   * 
+   * @return
+   *    All PAUSED {@link SingularityRequest} instances 
+   */
   public Collection<SingularityRequest> getPausedSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getHost(), contextPath);
 
-    LOG.info(String.format("Getting paused requests - (%s)", requestUri));
+    LOG.info(String.format("Getting requests in PAUSED state - (%s)", requestUri));
 
     final long start = System.currentTimeMillis();
 
     Response getResponse = getUri(requestUri);
 
-    checkResponse("get paused requests", getResponse);
+    checkResponse("get requests in PAUSED state", getResponse);
 
-    LOG.info(String.format("Successfully got paused requests from Singularity in %sms", System.currentTimeMillis() - start));
+    LOG.info(String.format("Successfully got PAUSED requests from Singularity in %sms", System.currentTimeMillis() - start));
 
     try {
       return objectMapper.readValue(getResponse.getResponseBodyAsStream(), REQUESTS_COLLECTION);
@@ -446,6 +491,87 @@ public class SingularityClient {
   @Deprecated
   public Collection<SingularityRequest> getPausedRequests() {
     return getPausedSingularityRequests();
+  }
+  
+  /**
+   * Get all requests that has been set to a COOLDOWN state by singularity
+   *  
+   * @return
+   *    All {@link SingularityRequest} instances that their state is COOLDOWN
+   */
+  public Collection<SingularityRequest> getCoolDownSingularityRequests() {
+    final String requestUri = String.format(REQUESTS_GET_COOLDOWN_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Getting requests in COOLDOWN state - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get requests in COOLDOWN state", getResponse);
+
+    LOG.info(String.format("Successfully got COOLDOWN requests from Singularity in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), REQUESTS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
+  /**
+   * Get all requests that are pending to become ACTIVE
+   *  
+   * @return
+   *    A collection of {@link SingularityPendingRequest} instances that hold information about the singularity requests that are pending to become ACTIVE
+   */
+  public Collection<SingularityPendingRequest> getPendingSingularityRequests() {
+    final String requestUri = String.format(REQUESTS_GET_PENDING_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Getting requests that are pending to become ACTIVE - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get requests that are pending to become ACTIVE", getResponse);
+
+    LOG.info(String.format("Successfully got requests that are pending to become ACTIVE in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), PENDING_REQUESTS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
+  /**
+   * Get all requests that are cleaning up
+   * Requests that are cleaning up are those that have been marked for removal and their tasks are being stopped/removed 
+   * before they are being removed. So after their have been cleaned up, these request cease to exist in Singularity. 
+   *  
+   * @return
+   *    A collection of {@link SingularityRequestCleanup} instances that hold information about all singularity requests 
+   *    that are marked for deletion and are currently cleaning up.
+   */
+  public Collection<SingularityRequestCleanup> getCleanupSingularityRequests() {
+    final String requestUri = String.format(REQUESTS_GET_CLEANUP_FORMAT, getHost(), contextPath);
+
+    LOG.info(String.format("Getting requests requests that are cleaning up - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get requests that are cleaning up", getResponse);
+
+    LOG.info(String.format("Successfully got requests that are cleaning up in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), CLEANUP_REQUESTS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
   }
   
   //
@@ -571,21 +697,4 @@ public class SingularityClient {
     }
   }
 
-  //
-  // WEBHOOKS
-  //
-
-  public void addWebhook(String url) {
-    final String requestUri = String.format(WEBHOOK_FORMAT, getHost(), contextPath);
-
-    LOG.info(String.format("Adding webhook %s - (%s)", url, requestUri));
-
-    final long start = System.currentTimeMillis();
-
-    Response postResponse = postUri(requestUri, Arrays.asList(url));
-
-    checkResponse("add webhook", postResponse);
-
-    LOG.info(String.format("Successfully added webhook to Singularity in %sms", System.currentTimeMillis() - start));
-  }
 }
