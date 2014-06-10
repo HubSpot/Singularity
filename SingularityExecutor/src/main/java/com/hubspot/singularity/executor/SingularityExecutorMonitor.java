@@ -393,11 +393,11 @@ public class SingularityExecutorMonitor {
       // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
       public void onSuccess(Integer exitCode) {
         if (task.wasKilled()) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, "Task killed, but process exited with code: " + exitCode);
+          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, "Task killed. Process exited with code " + exitCode);
         } else if (task.isSuccessExitCode(exitCode)) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_FINISHED, "Process exited normally with code: " + exitCode);
+          sendStatusUpdate(task, Protos.TaskState.TASK_FINISHED, "Process exited normally with code " + exitCode);
         } else {
-          sendStatusUpdate(task, Protos.TaskState.TASK_FAILED, "Process failed with exit code: " + exitCode);
+          sendStatusUpdate(task, Protos.TaskState.TASK_FAILED, "Process failed with code " + exitCode);
         }
         
         onFinish(task);
@@ -409,7 +409,7 @@ public class SingularityExecutorMonitor {
         if (task.wasKilled()) {
           sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, String.format("Task killed, caught %s", t.getClass().getSimpleName()));
         } else {
-          sendStatusUpdate(task, Protos.TaskState.TASK_LOST, String.format("%s while running process: %s", t.getClass().getSimpleName(), t.getMessage()));
+          sendStatusUpdate(task, Protos.TaskState.TASK_LOST, String.format("%s while running process %s", t.getClass().getSimpleName(), t.getMessage()));
         }
         
         onFinish(task);
