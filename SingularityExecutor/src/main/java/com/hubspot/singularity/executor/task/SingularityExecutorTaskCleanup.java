@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.SimpleProcessManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
@@ -51,7 +53,13 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
     log.info("Deleting: {}", pathToDelete);
     
     try {
-      super.runCommand(Collections.singletonList(String.format("rm -rf %s", pathToDelete)));
+      final List<String> cmd = ImmutableList.of(
+          "rm",
+          "-rf",
+          pathToDelete
+      );
+      
+      super.runCommand(cmd);
       return true;
     } catch (Throwable t) {
       log.error("While deleting directory {}", pathToDelete, t);

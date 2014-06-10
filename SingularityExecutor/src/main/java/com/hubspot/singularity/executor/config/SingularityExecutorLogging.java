@@ -41,6 +41,8 @@ public class SingularityExecutorLogging {
     LOG.info("Stopping task logger for {}", taskId);
     
     try {
+      logger.info("Task finished, stopping logger");
+      
       logger.detachAndStopAllAppenders();
     
       logger.getLoggerContext().stop();
