@@ -1,6 +1,14 @@
 package com.hubspot.singularity;
 
 
+import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.migrations.MigrationsBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.dropwizard.views.ViewBundle;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.Stage;
 import com.hubspot.dropwizard.guice.GuiceBundle;
@@ -9,13 +17,6 @@ import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SentryAppenderBundle;
 import com.hubspot.singularity.smtp.SMTPAppenderBundle;
-import io.dropwizard.Application;
-import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.migrations.MigrationsBundle;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.dropwizard.views.ViewBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
 

@@ -1,9 +1,10 @@
 package com.hubspot.singularity.views;
 
-import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.views.View;
+
+import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class IndexView extends View {
   private final String appRoot;

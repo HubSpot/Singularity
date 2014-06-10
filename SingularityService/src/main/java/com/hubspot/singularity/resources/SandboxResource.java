@@ -1,5 +1,18 @@
 package com.hubspot.singularity.resources;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -17,14 +30,6 @@ import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
 
 @Path(SingularityService.API_BASE_PATH + "/sandbox")
 @Produces({ MediaType.APPLICATION_JSON })

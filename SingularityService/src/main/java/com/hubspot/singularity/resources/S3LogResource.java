@@ -1,35 +1,53 @@
 package com.hubspot.singularity.resources;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.*;
-import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.*;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
-import com.hubspot.singularity.config.S3Configuration;
-import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
-import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
-import org.jets3t.service.S3Service;
-import org.jets3t.service.model.S3Object;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.*;
+
+import org.jets3t.service.S3Service;
+import org.jets3t.service.model.S3Object;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityS3FormatHelper;
+import com.hubspot.singularity.SingularityS3Log;
+import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.S3Configuration;
+import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
+import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 
 @Path(SingularityService.API_BASE_PATH + "/logs")
 @Produces({ MediaType.APPLICATION_JSON })

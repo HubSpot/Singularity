@@ -1,5 +1,11 @@
 package com.hubspot.singularity.data;
 
+import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
+
+import org.quartz.CronExpression;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -9,11 +15,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
-import org.quartz.CronExpression;
-
-import java.text.ParseException;
-import java.util.Date;
-import java.util.List;
 
 public class SingularityValidator {
 

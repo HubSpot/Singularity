@@ -1,5 +1,21 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
+import java.util.Map.Entry;
+
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.CommandInfo;
+import org.apache.mesos.Protos.CommandInfo.URI;
+import org.apache.mesos.Protos.Environment;
+import org.apache.mesos.Protos.Environment.Variable;
+import org.apache.mesos.Protos.ExecutorID;
+import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -14,15 +30,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.*;
-import org.apache.mesos.Protos.CommandInfo.URI;
-import org.apache.mesos.Protos.Environment.Variable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.Map.Entry;
 
 public class SingularityMesosTaskBuilder {
 

@@ -1,8 +1,8 @@
 package com.hubspot.singularity.config;
 
-import com.google.common.base.Optional;
-
 import javax.validation.constraints.NotNull;
+
+import com.google.common.base.Optional;
 
 public class MesosConfiguration {
 
