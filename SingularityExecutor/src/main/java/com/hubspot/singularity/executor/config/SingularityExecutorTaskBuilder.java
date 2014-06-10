@@ -53,7 +53,7 @@ public class SingularityExecutorTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
     
-    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, configuration);
+    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData);
     
     executorUtils.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);
     

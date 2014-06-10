@@ -21,16 +21,16 @@ import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
 
-  private final SingularityExecutorTaskDefinition taskDefiniton;
+  private final SingularityExecutorTaskConfiguration taskConfiguration;
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
   private final Logger log;
   private final ExecutorUtils executorUtils;
   
-  public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefiniton, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, ExecutorUtils executorUtils) {
+  public SingularityExecutorTaskLogManager(SingularityExecutorTaskConfiguration taskConfiguration, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, ExecutorUtils executorUtils) {
     super(log);
     this.log = log;
-    this.taskDefiniton = taskDefiniton;
+    this.taskConfiguration = taskConfiguration;
     this.templateManager = templateManager;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
@@ -44,7 +44,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   
   private void writeLogrotateFile() {
     log.info("Writing logrotate configuration file to {}", getLogrotateConfPath());
-    templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefiniton.getServiceLogOut().toString()));
+    templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskConfiguration.getServiceLogOut().toString()));
   }
    
   public boolean teardown() {
@@ -71,12 +71,12 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         "tail", 
         "-n", 
         Integer.toString(configuration.getTailLogLinesToSave()), 
-        taskDefiniton.getServiceLogOut().toString());
+        taskConfiguration.getServiceLogOut().toString());
     
     try {
-      super.runCommand(cmd, Redirect.to(taskDefiniton.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toFile()));
+      super.runCommand(cmd, Redirect.to(taskConfiguration.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toFile()));
     } catch (Throwable t) {
-      log.error("Failed saving tail of log {} to {}", new Object[] { taskDefiniton.getServiceLogOut().toString(), configuration.getServiceFinishedTailLog(), t});
+      log.error("Failed saving tail of log {} to {}", new Object[] { taskConfiguration.getServiceLogOut().toString(), configuration.getServiceFinishedTailLog(), t});
     }
   }
   
@@ -111,16 +111,16 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   
   private void ensureServiceOutExists() {
     try {
-      Files.createFile(taskDefiniton.getServiceLogOut());
+      Files.createFile(taskConfiguration.getServiceLogOut());
     } catch (FileAlreadyExistsException faee) {
-      log.warn("Executor out {} already existed", taskDefiniton.getServiceLogOut());
+      log.warn("Executor out {} already existed", taskConfiguration.getServiceLogOut());
     } catch (Throwable t) {
-      log.error("Failed creating executor out {}", taskDefiniton.getServiceLogOut(), t);
+      log.error("Failed creating executor out {}", taskConfiguration.getServiceLogOut(), t);
     }
   }
   
   private boolean writeTailMetadata(boolean finished) {
-    if (!taskDefiniton.getExecutorData().getLoggingTag().isPresent()) {
+    if (!taskConfiguration.getExecutorData().getLoggingTag().isPresent()) {
       if (!finished) {
         log.warn("Not writing logging metadata because logging tag is absent");
       }
@@ -131,14 +131,14 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
       ensureServiceOutExists();
     }
     
-    final TailMetadata tailMetadata = new TailMetadata(taskDefiniton.getServiceLogOut().toString(), taskDefiniton.getExecutorData().getLoggingTag().get(), taskDefiniton.getExecutorData().getLoggingExtraFields(), finished);
+    final TailMetadata tailMetadata = new TailMetadata(taskConfiguration.getServiceLogOut().toString(), taskConfiguration.getExecutorData().getLoggingTag().get(), taskConfiguration.getExecutorData().getLoggingExtraFields(), finished);
     final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
     
     return writeObject(tailMetadata, path);
   }
   
   private String getS3Glob() {
-    return String.format("%s*.gz*", taskDefiniton.getServiceLogOut().getFileName());
+    return String.format("%s*.gz*", taskConfiguration.getServiceLogOut().getFileName());
   }
   
   private String getS3KeyPattern() {
@@ -146,23 +146,23 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     
     final SingularityTaskId singularityTaskId = getSingularityTaskId();
     
-    return SingularityS3FormatHelper.getS3KeyFormat(s3KeyPattern, singularityTaskId, taskDefiniton.getExecutorData().getLoggingTag());
+    return SingularityS3FormatHelper.getS3KeyFormat(s3KeyPattern, singularityTaskId, taskConfiguration.getExecutorData().getLoggingTag());
   }
   
   private SingularityTaskId getSingularityTaskId() {
-    return SingularityTaskId.fromString(taskDefiniton.getTaskId());
+    return SingularityTaskId.fromString(taskConfiguration.getTaskId());
   }
   
   public Path getLogrotateConfPath() {
-    return configuration.getLogrotateConfDirectory().resolve(taskDefiniton.getTaskId());
+    return configuration.getLogrotateConfDirectory().resolve(taskConfiguration.getTaskId());
   }
 
   private boolean writeS3MetadataFile(boolean finished) {
-    Path logrotateDirectory = taskDefiniton.getServiceLogOut().getParent().resolve(configuration.getLogrotateToDirectory());
+    Path logrotateDirectory = taskConfiguration.getServiceLogOut().getParent().resolve(configuration.getLogrotateToDirectory());
     
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished);
     
-    String s3UploadMetadatafilename = String.format("%s%s", taskDefiniton.getTaskId(), configuration.getS3MetadataSuffix());
+    String s3UploadMetadatafilename = String.format("%s%s", taskConfiguration.getTaskId(), configuration.getS3MetadataSuffix());
     
     Path s3UploadMetadataPath = configuration.getS3MetadataDirectory().resolve(s3UploadMetadatafilename);
     
