@@ -29,6 +29,7 @@ class RequestsActive extends Requests
             request.deployId = request.requestDeployState?.activeDeploy?.deployId
             request.timestamp = request.requestDeployState?.activeDeploy?.timestamp
             request.timestampHuman = utils.humanTimeAgo request.timestamp
+            request.timestampHumanShort = utils.humanTimeShort request.timestamp
             request.scheduled = utils.isScheduledRequest request
             request.onDemand = utils.isOnDemandRequest request
             requests[i] = request

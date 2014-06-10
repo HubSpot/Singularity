@@ -363,6 +363,10 @@ public class SingularityScheduler {
       }
     }
     
+    if (request.isOneOff()) {
+      return Optional.absent();
+    }
+    
     if (state.isSuccess()) {
       if (requestState == RequestState.SYSTEM_COOLDOWN) {
         // TODO send not cooldown anymore email
@@ -381,12 +385,8 @@ public class SingularityScheduler {
       }
     }
     
-    if (!request.isOneOff()) {
-      scheduleTasks(stateCache, request, requestState, deployStatistics, new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), pendingType));
-      return Optional.of(pendingType);
-    }
-    
-    return Optional.absent();
+    scheduleTasks(stateCache, request, requestState, deployStatistics, new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), pendingType));
+    return Optional.of(pendingType);
   }
   
   private SingularityDeployStatistics getDeployStatitics(String requestId, String deployId) {
@@ -462,7 +462,7 @@ public class SingularityScheduler {
   } 
   
   private boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics) {
-    if (requestState != RequestState.ACTIVE) {
+    if (requestState != RequestState.ACTIVE || request.isOneOff()) {
       return false;
     }
     

@@ -27,6 +27,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
   
   public static final String ARTIFACT_CACHE_DIRECTORY = "executor.artifact.cache.directory";
 
+  public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
+
   public static final String LOGROTATE_COMMAND = "executor.logrotate.command";
   public static final String LOGROTATE_CONFIG_DIRECTORY = "executor.logrotate.config.folder";
   public static final String LOGROTATE_STATE_FILE = "executor.logrotate.state.file";

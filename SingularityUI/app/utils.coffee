@@ -43,15 +43,38 @@ class Utils
         if type is 'requestHistory'
             lookupObject = app.allRequestHistories
 
+        copyButton =
+            text: "Copy"
+            type: "button"
+            className: "vex-dialog-button-secondary copy-button"
+                
         vex.dialog.alert
             buttons: [
-                $.extend({}, vex.dialog.buttons.YES, text: 'Done')
+                $.extend({}, vex.dialog.buttons.YES, text: 'Done'),
+                copyButton
             ]
             className: 'vex-theme-default vex-theme-default-json-view'
             message: "<pre>#{ utils.htmlEncode lookupObject[objectId].JSONString }</pre>"
             afterOpen: ($vexContent) ->
                 utils.scrollPreventDefaultAtBounds $vexContent.find('pre')
                 utils.scrollPreventAlways $vexContent.parent()
+                
+                # Dity hack to make ZeroClipboard play along
+                # The Flash element doesn't work if it falls outside the
+                # bounds of the body, even if it's inside the dialog
+                overlayHeight = $(".vex-overlay").height()
+                $("body").css "min-height", overlayHeight + "px"
+                
+                $button = $vexContent.find ".copy-button"
+                $button.attr "data-clipboard-text", $vexContent.find("pre").html()
+                
+                zeroClipboardClient = new ZeroClipboard $button[0],
+                    moviePath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
+                
+                zeroClipboardClient.on "load", ->
+                    zeroClipboardClient.on "complete", ->
+                        $button.val "Copied"
+                        setTimeout (-> $button.val "Copy"), 800
 
     @scrollPreventDefaultAtBounds: ($scroll) ->
         $scroll.bind 'mousewheel', (e, delta) ->
@@ -103,6 +126,14 @@ class Utils
         wasToday = time.date() is now.date() and Math.abs(time.diff(now)) < 86400000
         wasJustNow = Math.abs(time.diff(now)) < 120000
         """#{ if future then time.from() else time.fromNow() } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
+
+    @humanTimeShort: (date) ->
+        return '' unless date?
+        now = moment()
+        time = moment(date)
+        wasToday = time.date() is now.date() and Math.abs(time.diff(now)) < 86400000
+        wasJustNow = Math.abs(time.diff(now)) < 120000
+        """#{ time.fromNow() }"""
 
     @humanTimeAgo: (date) ->
         utils.humanTime date

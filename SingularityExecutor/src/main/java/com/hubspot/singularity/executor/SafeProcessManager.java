@@ -25,6 +25,21 @@ public abstract class SafeProcessManager {
   
   private final AtomicBoolean killed;
   
+  public enum Signal {
+    SIGTERM(15), SIGKILL(9);
+    
+    private final int code;
+
+    private Signal(int code) {
+      this.code = code;
+    }
+
+    public int getCode() {
+      return code;
+    }
+    
+  }
+  
   public SafeProcessManager(Logger log) {
     this.log = log;
     
@@ -127,11 +142,17 @@ public abstract class SafeProcessManager {
     }
   }
   
-  private int gracefulKillUnixProcess(int pid) {
-    final String killCmd = String.format("kill -15 %s", pid); 
+  private void sendSignal(Signal signal) {
+    final long start = System.currentTimeMillis();
+    
+    log.info("Signaling {} to process {}", signal, getCurrentProcessToString());
+    
+    final String killCmd = String.format("kill -%s %s", signal.getCode(), currentProcessPid.get()); 
     
     try {
-      return Runtime.getRuntime().exec(killCmd).waitFor();
+      int signalCode = Runtime.getRuntime().exec(killCmd).waitFor();
+
+      log.debug("Kill signal process got exit code {} after {}", signalCode, JavaUtils.duration(start));
     } catch (InterruptedException | IOException e) {
       throw Throwables.propagate(e);
     }
@@ -146,9 +167,7 @@ public abstract class SafeProcessManager {
     
     try {
       if (currentProcessPid.isPresent()) {
-        log.info("Signaling a process {} to exit", getCurrentProcessToString());
-        
-        gracefulKillUnixProcess(currentProcessPid.get());
+        sendSignal(Signal.SIGTERM);
       }
     } finally {
       this.processLock.unlock();
@@ -160,10 +179,8 @@ public abstract class SafeProcessManager {
     
     try {
       if (currentProcess.isPresent()) {
-        log.info("Destroying a process {}", getCurrentProcessToString());
+        sendSignal(Signal.SIGKILL);
         
-        currentProcess.get().destroy();
-
         resetCurrentVariables();
       }
     } finally {

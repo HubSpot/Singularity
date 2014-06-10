@@ -29,6 +29,14 @@ constants =
             label: 'Lost while down'
 
     requestStates:
+        ACTIVE: "Active"
+        SYSTEM_COOLDOWN: "Cooldown"
+        PAUSED: "Paused"
+        DELETED: "Deleted"
+        PENDING: "Pending"
+        CLEANUP: "Cleaning"
+
+    requestHistoryStates:
         CREATED: 'Created'
         UPDATED: 'Updated'
         DELETED: 'Deleted'

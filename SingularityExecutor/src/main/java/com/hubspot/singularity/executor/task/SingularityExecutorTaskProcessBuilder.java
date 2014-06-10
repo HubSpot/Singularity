@@ -27,26 +27,29 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
   
+  private final String executorPid;
+  
   private final ExecutorUtils executorUtils;
   
   private final ExecutorData executorData;
   
-  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, ArtifactManager artifactManager, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData) {
+  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, ArtifactManager artifactManager, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData, String executorPid) {
     this.executorData = executorData;
     this.task = task;
     this.executorUtils = executorUtils;
     this.artifactManager = artifactManager;
     this.templateManager = templateManager;
     this.configuration = configuration;
+    this.executorPid = executorPid;
   }
   
   public ArtifactManager getArtifactManager() {
     return artifactManager;
   }
-
+ 
   @Override
   public ProcessBuilder call() throws Exception {
-    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, "Staging files...", task.getLog());
+    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
     
     downloadFiles(executorData);
     extractFiles(executorData);
@@ -59,12 +62,12 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   }
   
   private Path getPath(String filename) {
-    return task.getTaskDirectory().resolve(filename);
+    return task.getTaskDefinition().getTaskDirectory().resolve(filename);
   }
   
   private void extractFiles(ExecutorData executorData) {
     for (EmbeddedArtifact artifact : executorData.getEmbeddedArtifacts()) {
-      artifactManager.extract(artifact, task.getTaskDirectory());
+      artifactManager.extract(artifact, task.getTaskDefinition().getTaskDirectory());
     }
   }
   
@@ -74,7 +77,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       
       Preconditions.checkState(fetched.getFileName().toString().endsWith(".tar.gz"), "%s did not appear to be a tar archive (did not end with .tar.gz)", fetched.getFileName());
       
-      artifactManager.untar(fetched, task.getTaskDirectory());
+      artifactManager.untar(fetched, task.getTaskDefinition().getTaskDirectory());
     }
   }
   
@@ -102,10 +105,10 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     
-    processBuilder.directory(task.getTaskDirectory().toFile());
+    processBuilder.directory(task.getTaskDefinition().getTaskDirectory().toFile());
     
-    processBuilder.redirectError(task.getExecutorBashOut().toFile());
-    processBuilder.redirectOutput(task.getExecutorBashOut().toFile());
+    processBuilder.redirectError(task.getTaskDefinition().getExecutorBashOut().toFile());
+    processBuilder.redirectOutput(task.getTaskDefinition().getExecutorBashOut().toFile());
     
     return processBuilder;
   }

@@ -24,7 +24,7 @@ public class SingularityExecutorModule extends AbstractModule {
     install(new SingularityRunnerBaseModule("/etc/singularity.executor.properties", new SingularityExecutorConfigurationLoader()));
     
     bind(SingularityExecutorLogging.class).in(Scopes.SINGLETON);
-    bind(SingularityTaskBuilder.class).in(Scopes.SINGLETON);
+    bind(SingularityExecutorTaskBuilder.class).in(Scopes.SINGLETON);
     bind(SingularityExecutorProcessKiller.class).in(Scopes.SINGLETON);
   }
   

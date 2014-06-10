@@ -28,7 +28,7 @@ class RequestHistory extends Mixen(Teeble.ServerCollection)
 
             requestUpdate.userHuman = requestUpdate.user
             requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
-            requestUpdate.stateHuman = constants.requestStates[requestUpdate.state]
+            requestUpdate.stateHuman = constants.requestHistoryStates[requestUpdate.state]
 
         requestHistoryObjects
 

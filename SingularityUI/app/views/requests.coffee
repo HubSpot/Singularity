@@ -4,10 +4,16 @@ Request = require '../models/Request'
 
 class RequestsView extends View
 
+    templateRequestsAll: require './templates/requestsAll'
+    templateRequestsAllBody: require './templates/requestsAllBody'
+
     templateRequestsActive: require './templates/requestsActive'
     templateRequestsActiveBody: require './templates/requestsActiveBody'
     templateRequestsActiveFilter: require './templates/requestsActiveFilter'
-
+    
+    templateRequestsCooldown: require './templates/requestsCooldown'
+    templateRequestsCooldownBody: require './templates/requestsCooldownBody'
+    
     templateRequestsPaused: require './templates/requestsPaused'
     templateRequestsPausedBody: require './templates/requestsPausedBody'
 
@@ -28,8 +34,12 @@ class RequestsView extends View
 
     fetch: ->
         @collection = switch @lastRequestsFilter
+            when 'all'
+                app.collections.requestsAll
             when 'active'
                 app.collections.requestsActive
+            when 'cooldown'
+                app.collections.requestsCooldown
             when 'paused'
                 app.collections.requestsPaused
             when 'pending'
@@ -62,11 +72,21 @@ class RequestsView extends View
         else
             @lastRequestsSubFilter = requestsSubFilter
 
+        if @lastRequestsFilter is 'all'
+            @collection = app.collections.requestsAll
+            template = @templateRequestsAll
+            templateBody = @templateRequestsAllBody
+
         if @lastRequestsFilter is 'active'
             @collection = app.collections.requestsActive
             template = @templateRequestsActive
             templateBody = @templateRequestsActiveBody
             templateFilter = @templateRequestsActiveFilter
+
+        if @lastRequestsFilter is 'cooldown'
+            @collection = app.collections.requestsCooldown
+            template = @templateRequestsCooldown
+            templateBody = @templateRequestsCooldownBody
 
         if @lastRequestsFilter is 'paused'
             @collection = app.collections.requestsPaused
@@ -125,6 +145,9 @@ class RequestsView extends View
 
         else
             context.requests = _.pluck(@collection.models, 'attributes')
+        
+        if @lastRequestsFilter is 'all'
+            context.requests.reverse()
 
         # Intersect starred requests before rendering
         for request in context.requests
@@ -201,9 +224,13 @@ class RequestsView extends View
                 message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
-                    $row.remove()
+                    
+                    if @lastRequestsFilter is "paused"
+                        $row.remove()
+                        
                     requestModel.unpause().done =>
-                        @render()
+                        @refresh()
+                        
 
         @$el.find('[data-action="starToggle"]').unbind('click').on 'click', (e) =>
             $target = $(e.target)

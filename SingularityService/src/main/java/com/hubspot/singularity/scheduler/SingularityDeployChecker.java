@@ -196,7 +196,7 @@ public class SingularityDeployChecker {
   }
   
   private void removePendingDeploy(SingularityPendingDeploy pendingDeploy) {
-    deployManager.deletePendingDeploy(pendingDeploy);
+    deployManager.deletePendingDeploy(pendingDeploy.getDeployMarker().getRequestId());
   }
 
   private final long getAllowedMillis(SingularityDeploy deploy) {

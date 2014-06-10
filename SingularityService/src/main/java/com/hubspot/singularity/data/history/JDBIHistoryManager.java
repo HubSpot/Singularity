@@ -6,7 +6,9 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
@@ -44,8 +46,13 @@ public class JDBIHistoryManager implements HistoryManager {
   
   @Override
   public void saveDeployHistory(SingularityDeployHistory deployHistory) {
-    history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(), deployHistory.getDeployMarker().getDeployId(), new Date(deployHistory.getDeployMarker().getTimestamp()), deployHistory.getDeployMarker().getUser().orNull(), 
-        new Date(deployHistory.getDeployResult().get().getTimestamp()), deployHistory.getDeployResult().get().getDeployState().name(), deployHistoryTranscoder.toBytes(deployHistory));
+    history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(), 
+        deployHistory.getDeployMarker().getDeployId(), 
+        new Date(deployHistory.getDeployMarker().getTimestamp()), 
+        deployHistory.getDeployMarker().getUser().orNull(),
+        deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
+        deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(), 
+        deployHistoryTranscoder.toBytes(deployHistory));
   }
 
   @Override

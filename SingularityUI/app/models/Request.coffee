@@ -1,11 +1,18 @@
 Model = require './model'
 
 class Request extends Model
-
+            
     parse: (data) ->
         if data.request?
             data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
             data.daemon = data.request.daemon
+            
+            if data.cleanupType?
+                data.displayState = contants.requestStates.CLEANUP
+            else if data.requestDeployState? and data.requestDeployState.pendingDeploy?
+                data.displayState = constants.requestStates.PENDING
+            else
+                data.displayState = constants.requestStates[data.state]
         data
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
@@ -37,5 +44,6 @@ class Request extends Model
             options.contentType = 'text/plain'
 
         $.ajax options
+        
 
 module.exports = Request

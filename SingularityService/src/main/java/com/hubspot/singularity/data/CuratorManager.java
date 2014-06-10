@@ -75,7 +75,7 @@ public abstract class CuratorManager {
       curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {
-      LOG.warn("Tried to delete an item at path {} that didn't exist", path);
+      LOG.trace("Tried to delete an item at path {} that didn't exist", path);
       return SingularityDeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);

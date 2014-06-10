@@ -4,10 +4,10 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityTaskId;
@@ -15,22 +15,25 @@ import com.hubspot.singularity.executor.SimpleProcessManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
+import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
 
-  private final SingularityExecutorTask task;
-  private final ObjectMapper objectMapper;
+  private final SingularityExecutorTaskDefinition taskDefiniton;
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
+  private final Logger log;
+  private final ExecutorUtils executorUtils;
   
-  public SingularityExecutorTaskLogManager(SingularityExecutorTask task, ObjectMapper objectMapper, TemplateManager templateManager, SingularityExecutorConfiguration configuration) {
-    super(task.getLog());
-    this.task = task;
-    this.objectMapper = objectMapper;
+  public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefiniton, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, ExecutorUtils executorUtils) {
+    super(log);
+    this.log = log;
+    this.taskDefiniton = taskDefiniton;
     this.templateManager = templateManager;
     this.configuration = configuration;
+    this.executorUtils = executorUtils;
   }
 
   public void setup() {
@@ -40,20 +43,23 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   }
   
   private void writeLogrotateFile() {
-    task.getLog().info("Writing logrotate configuration file to {}", getLogrotateConfPath());
-    templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, task.getServiceLogOut().toString()));
+    log.info("Writing logrotate configuration file to {}", getLogrotateConfPath());
+    templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefiniton.getServiceLogOut().toString()));
   }
- 
-  public void teardown() {
-    writeTailMetadata(true);
+   
+  public boolean teardown() {
+    boolean writeTailMetadataSuccess = writeTailMetadata(true);
     
     copyLogTail();
     
     if (manualLogrotate()) {
-      removeLogrotateFile();
-      writeS3MetadataFile(true);
-    }// TODO deal with this cleanup
-    
+      boolean removeLogRotateFileSuccess = removeLogrotateFile();
+      boolean writeS3MetadataFileSuccess = writeS3MetadataFile(true);
+      
+      return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataFileSuccess;
+    } else {
+      return false;
+    }
   }
   
   private void copyLogTail() {
@@ -65,23 +71,25 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         "tail", 
         "-n", 
         Integer.toString(configuration.getTailLogLinesToSave()), 
-        task.getServiceLogOut().toString());
+        taskDefiniton.getServiceLogOut().toString());
     
     try {
-      super.runCommand(cmd, Redirect.to(task.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toFile()));
+      super.runCommand(cmd, Redirect.to(taskDefiniton.getTaskDirectory().resolve(configuration.getServiceFinishedTailLog()).toFile()));
     } catch (Throwable t) {
-      task.getLog().error("Failed saving tail of log {} to {}", new Object[] { task.getServiceLogOut().toString(), configuration.getServiceFinishedTailLog(), t});
+      log.error("Failed saving tail of log {} to {}", new Object[] { taskDefiniton.getServiceLogOut().toString(), configuration.getServiceFinishedTailLog(), t});
     }
   }
   
-  private void removeLogrotateFile() {
+  private boolean removeLogrotateFile() {
     boolean deleted = false;
     try {
       deleted = Files.deleteIfExists(getLogrotateConfPath());
     } catch (Throwable t) {
-      task.getLog().trace("Couldn't delete {}", getLogrotateConfPath(), t);
+      log.trace("Couldn't delete {}", getLogrotateConfPath(), t);
+      return false;
     }
-    task.getLog().trace("Deleted {} : {}", getLogrotateConfPath(), deleted);
+    log.trace("Deleted {} : {}", getLogrotateConfPath(), deleted);
+    return true;
   }
   
   public boolean manualLogrotate() {
@@ -96,41 +104,41 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
       super.runCommand(command);
       return true;
     } catch (Throwable t) {
-      task.getLog().warn("Tried to manually logrotate using {}, but caught", getLogrotateConfPath(), t);
+      log.warn("Tried to manually logrotate using {}, but caught", getLogrotateConfPath(), t);
       return false;
     }
   }
   
   private void ensureServiceOutExists() {
     try {
-      Files.createFile(task.getServiceLogOut());
+      Files.createFile(taskDefiniton.getServiceLogOut());
     } catch (FileAlreadyExistsException faee) {
-      task.getLog().warn("Executor out {} already existed", task.getServiceLogOut());
+      log.warn("Executor out {} already existed", taskDefiniton.getServiceLogOut());
     } catch (Throwable t) {
-      task.getLog().error("Failed creating executor out {}", task.getServiceLogOut(), t);
+      log.error("Failed creating executor out {}", taskDefiniton.getServiceLogOut(), t);
     }
   }
   
-  private void writeTailMetadata(boolean finished) {
-    if (!task.getExecutorData().getLoggingTag().isPresent()) {
+  private boolean writeTailMetadata(boolean finished) {
+    if (!taskDefiniton.getExecutorData().getLoggingTag().isPresent()) {
       if (!finished) {
-        task.getLog().warn("Not writing logging metadata because logging tag is absent");
+        log.warn("Not writing logging metadata because logging tag is absent");
       }
-      return;
+      return true;
     }
     
     if (!finished) {
       ensureServiceOutExists();
     }
     
-    final TailMetadata tailMetadata = new TailMetadata(task.getServiceLogOut().toString(), task.getExecutorData().getLoggingTag().get(), task.getExecutorData().getLoggingExtraFields(), finished);
+    final TailMetadata tailMetadata = new TailMetadata(taskDefiniton.getServiceLogOut().toString(), taskDefiniton.getExecutorData().getLoggingTag().get(), taskDefiniton.getExecutorData().getLoggingExtraFields(), finished);
     final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
     
-    writeObject(tailMetadata, path);
+    return writeObject(tailMetadata, path);
   }
   
   private String getS3Glob() {
-    return String.format("%s*.gz*", task.getServiceLogOut().getFileName());
+    return String.format("%s*.gz*", taskDefiniton.getServiceLogOut().getFileName());
   }
   
   private String getS3KeyPattern() {
@@ -138,39 +146,31 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     
     final SingularityTaskId singularityTaskId = getSingularityTaskId();
     
-    return SingularityS3FormatHelper.getS3KeyFormat(s3KeyPattern, singularityTaskId, task.getExecutorData().getLoggingTag());
+    return SingularityS3FormatHelper.getS3KeyFormat(s3KeyPattern, singularityTaskId, taskDefiniton.getExecutorData().getLoggingTag());
   }
   
   private SingularityTaskId getSingularityTaskId() {
-    return SingularityTaskId.fromString(task.getTaskId());
+    return SingularityTaskId.fromString(taskDefiniton.getTaskId());
   }
   
   public Path getLogrotateConfPath() {
-    return configuration.getLogrotateConfDirectory().resolve(task.getTaskId());
+    return configuration.getLogrotateConfDirectory().resolve(taskDefiniton.getTaskId());
   }
 
-  private void writeS3MetadataFile(boolean finished) {
-    Path logrotateDirectory = task.getServiceLogOut().getParent().resolve(configuration.getLogrotateToDirectory());
+  private boolean writeS3MetadataFile(boolean finished) {
+    Path logrotateDirectory = taskDefiniton.getServiceLogOut().getParent().resolve(configuration.getLogrotateToDirectory());
     
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished);
     
-    String s3UploadMetadatafilename = String.format("%s%s", task.getTaskId(), configuration.getS3MetadataSuffix());
+    String s3UploadMetadatafilename = String.format("%s%s", taskDefiniton.getTaskId(), configuration.getS3MetadataSuffix());
     
     Path s3UploadMetadataPath = configuration.getS3MetadataDirectory().resolve(s3UploadMetadatafilename);
     
-    writeObject(s3UploadMetadata, s3UploadMetadataPath);
+    return writeObject(s3UploadMetadata, s3UploadMetadataPath);
   }
 
-  private void writeObject(Object o, Path path) {
-    try {
-      final byte[] bytes = objectMapper.writeValueAsBytes(o);
-      
-      task.getLog().info("Writing {} bytes of {} to {}", new Object[] { Integer.toString(bytes.length), o.toString(), path.toString() });
-        
-      Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    } catch (Throwable t) {
-      task.getLog().error("Failed writing {}", o.toString(), t);
-    }
+  private boolean writeObject(Object o, Path path) {
+    return executorUtils.writeObject(o, path, log);
   }
   
 }

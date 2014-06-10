@@ -3,7 +3,9 @@ Router = require 'lib/router'
 User = require 'models/User'
 State = require 'models/State'
 
+RequestsAll = require "collections/RequestsAll"
 RequestsActive = require 'collections/RequestsActive'
+RequestsCooldown = require 'collections/RequestsCooldown'
 RequestsPaused = require 'collections/RequestsPaused'
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
@@ -91,10 +93,18 @@ class Application
         @state = new State
 
         resources = [{
+            collection_key: 'requestsAll'
+            collection: RequestsAll
+            error_phrase: 'all requests'
+        },  {
             collection_key: 'requestsActive'
             collection: RequestsActive
-            error_phrase: 'requests'
-        }, {
+            error_phrase: 'active requests'
+        },  {
+            collection_key: 'requestsCooldown'
+            collection: RequestsCooldown
+            error_phrase: 'requests on cooldown'
+        },  {
             collection_key: 'requestsPaused'
             collection: RequestsPaused
             error_phrase: 'paused requests'

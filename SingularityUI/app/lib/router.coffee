@@ -99,7 +99,7 @@ class Router extends Backbone.Router
         app.views.current = app.views.status
         app.show app.views.status.refresh(fromRoute = true)
 
-    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'all', searchFilter = '') ->
+    requestsFiltered: (requestsFilter = 'all', requestsSubFilter = 'all', searchFilter = '') ->
         if requestsSubFilter is 'running'
             requestsSubFilter = 'daemon' # Front end URL migration :P
 

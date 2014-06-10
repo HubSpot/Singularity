@@ -71,8 +71,8 @@ public class LoadBalancerClient {
     
     final Request request = httpClient.prepareGet(uri)
       .build();
-    
-    return request(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, BaragonRequestState.UNKNOWN);
+
+    return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, BaragonRequestState.UNKNOWN);
   }
   
   private BaragonResponse readResponse(Response response)  {
@@ -83,9 +83,9 @@ public class LoadBalancerClient {
     }
   }
 
-  private SingularityLoadBalancerUpdate request(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method, Request request, BaragonRequestState onFailure) {
+  private SingularityLoadBalancerUpdate sendRequestWrapper(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method, Request request, BaragonRequestState onFailure) {
     final long start = System.currentTimeMillis();
-    final LoadBalancerUpdateHolder result = actualRequest(loadBalancerRequestId, request, onFailure);
+    final LoadBalancerUpdateHolder result = sendRequest(loadBalancerRequestId, request, onFailure);
     LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, result, JavaUtils.duration(start));
     return new SingularityLoadBalancerUpdate(result.state, loadBalancerRequestId, result.message, start, method, request.getUrl());
   }
@@ -106,8 +106,8 @@ public class LoadBalancerClient {
     }
        
   }
-  
-  private LoadBalancerUpdateHolder actualRequest(LoadBalancerRequestId loadBalancerRequestId, Request request, BaragonRequestState onFailure) {
+
+  private LoadBalancerUpdateHolder sendRequest(LoadBalancerRequestId loadBalancerRequestId, Request request, BaragonRequestState onFailure) {
     try {
       LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
       
@@ -129,7 +129,7 @@ public class LoadBalancerClient {
       return new LoadBalancerUpdateHolder(BaragonRequestState.UNKNOWN, Optional.of(String.format("Timed out after %s", JavaUtils.durationFromMillis(loadBalancerTimeoutMillis))));
     } catch (Throwable t) {
       LOG.error("LB {} request {} to {} threw error", request.getMethod(), loadBalancerRequestId, request.getUrl(), t);
-      return new LoadBalancerUpdateHolder(onFailure, Optional.of(String.format("Exception %s - %s", t.getClass().getSimpleName(), t.getMessage())));
+      return new LoadBalancerUpdateHolder(BaragonRequestState.UNKNOWN, Optional.of(String.format("Exception %s - %s", t.getClass().getSimpleName(), t.getMessage())));
     }
   }
   
@@ -149,7 +149,7 @@ public class LoadBalancerClient {
           .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest))
           .build();
 
-      return request(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, httpRequest, BaragonRequestState.FAILED);
+      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, httpRequest, BaragonRequestState.FAILED);
     } catch (JsonProcessingException e) {
       throw new SingularityJsonException(e);
     }
@@ -178,8 +178,8 @@ public class LoadBalancerClient {
     
     final Request request = httpClient.prepareDelete(uri)
         .build();
-    
-    return request(loadBalancerRequestId, LoadBalancerMethod.CANCEL, request, BaragonRequestState.UNKNOWN);
+
+    return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CANCEL, request, BaragonRequestState.UNKNOWN);
   }
   
 }
