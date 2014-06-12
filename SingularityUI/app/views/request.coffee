@@ -131,8 +131,6 @@ class RequestView extends View
             app.allRequests[requestLikeObject.id] = requestLikeObject
             context.request.fullObject = true
 
-            context.request.scheduled = utils.isScheduledRequest requestLikeObject
-            context.request.onDemand = utils.isOnDemandRequest requestLikeObject
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
             context.firstRequestHistoryItem = firstHistoryItem.attributes
@@ -195,6 +193,14 @@ class RequestView extends View
                     @render()
                 .done =>
                     @requestModel.fetched = true
+
+                    console.log @requestModel
+
+                    canBeBounced = @requestModel.get('state') in ["ACTIVE", "SYSTEM_COOLDOWN"]
+                    canBeBounced = canBeBounced and not @requestModel.get("scheduled")
+                    canBeBounced = canBeBounced and not @requestModel.get("onDemand")
+                    @requestModel.set "canBeBounced", canBeBounced
+
                     @render()
 
                     if @requestModel.get('activeDeploy')?
@@ -293,6 +299,18 @@ class RequestView extends View
                     app.collections.tasksScheduled.remove(taskModel)
                     $row.remove()
                     utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
+        
+        @$el.find('[data-action="bounce"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+            
+            vex.dialog.confirm
+                message: """<p>Are you sure you want to bounce this request?</p>
+                <pre>#{ requestModel.get('id') }</pre>
+                <p>Bouncing a request will cause replacement tasks to be scheduled (and under normal conditions) executed immediately. 
+                Existing tasks will be killed once replacement tasks are deemed healthy.</p>"""
+                callback: (confirmed) =>
+                    return unless confirmed
+                    requestModel.bounce().done => @refresh()
 
     # Leaving this code inside the parent view (instead of RequestDeployHistoryTableView) for now
     viewDeployJSON: (e) ->

@@ -48,5 +48,9 @@ class Request extends Model
 
         $.ajax options
         
+    bounce: =>
+        $.ajax
+            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/bounce"
+            type: "POST"
 
 module.exports = Request
