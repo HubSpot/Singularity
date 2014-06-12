@@ -24,7 +24,15 @@ public class MesosSlaveStateObject {
   private final int killedTasks;
 
   @JsonCreator
-  public MesosSlaveStateObject(@JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("start_time") long startTime, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("frameworks")  List<MesosSlaveFrameworkObject> frameworks, @JsonProperty("finished_tasks") int finishedTasks, @JsonProperty("lost_tasks") int lostTasks, @JsonProperty("started_tasks") int startedTasks, @JsonProperty("failed_tasks") int failedTasks, @JsonProperty("killed_tasks") int killedTasks) {
+  public MesosSlaveStateObject(@JsonProperty("id") String id, @JsonProperty("pid") String pid,
+                               @JsonProperty("hostname") String hostname, @JsonProperty("start_time") long startTime,
+                               @JsonProperty("resources") MesosResourcesObject resources,
+                               @JsonProperty("frameworks")  List<MesosSlaveFrameworkObject> frameworks,
+                               @JsonProperty("finished_tasks") int finishedTasks,
+                               @JsonProperty("lost_tasks") int lostTasks,
+                               @JsonProperty("started_tasks") int startedTasks,
+                               @JsonProperty("failed_tasks") int failedTasks,
+                               @JsonProperty("killed_tasks") int killedTasks) {
     this.id = id;
     this.pid = pid;
     this.hostname = hostname;
