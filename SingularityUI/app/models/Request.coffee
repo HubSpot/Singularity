@@ -7,8 +7,8 @@ class Request extends Model
             data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
             data.daemon = data.request.daemon
             
-            data.scheduled = utils.isScheduledRequest data
-            data.onDemand = utils.isOnDemandRequest data
+            data.scheduled = utils.isScheduledRequest data.request
+            data.onDemand = utils.isOnDemandRequest data.request
             
             if data.cleanupType?
                 data.displayState = contants.requestStates.CLEANUP
