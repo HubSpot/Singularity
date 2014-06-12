@@ -1,8 +1,9 @@
-exports.config =
+path = require 'path'
 
+exports.config =
     paths:
 
-        public: '../SingularityService/src/main/resources/static'
+        public: path.resolve(__dirname, '../SingularityService/src/main/resources/static')
 
     files:
 
