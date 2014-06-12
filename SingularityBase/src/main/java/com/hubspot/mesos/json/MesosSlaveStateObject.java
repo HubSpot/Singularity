@@ -20,18 +20,23 @@ public class MesosSlaveStateObject {
   private final int finishedTasks;
   private final int lostTasks;
   private final int startedTasks;
+  private final int failedTasks;
+  private final int killedTasks;
 
   @JsonCreator
-  public MesosSlaveStateObject(@JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("start_time") long startTime, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("frameworks")  List<MesosSlaveFrameworkObject> frameworks, @JsonProperty("finishedTasks") int finishedTasks, @JsonProperty("lostTasks") int lostTasks, @JsonProperty("startedTasks") int startedTasks) {
+  public MesosSlaveStateObject(@JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("start_time") long startTime, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("frameworks")  List<MesosSlaveFrameworkObject> frameworks, @JsonProperty("finished_tasks") int finishedTasks, @JsonProperty("lost_tasks") int lostTasks, @JsonProperty("started_tasks") int startedTasks, @JsonProperty("failed_tasks") int failedTasks, @JsonProperty("killed_tasks") int killedTasks) {
     this.id = id;
     this.pid = pid;
     this.hostname = hostname;
     this.startTime = startTime;
     this.resources = resources;
     this.frameworks = frameworks;
+
     this.finishedTasks = finishedTasks;
     this.lostTasks = lostTasks;
     this.startedTasks = startedTasks;
+    this.failedTasks = failedTasks;
+    this.killedTasks = killedTasks;
   }
 
   public String getId() {
@@ -68,5 +73,13 @@ public class MesosSlaveStateObject {
 
   public int getStartedTasks() {
     return startedTasks;
+  }
+
+  public int getFailedTasks() {
+    return failedTasks;
+  }
+
+  public int getKilledTasks() {
+    return killedTasks;
   }
 }
