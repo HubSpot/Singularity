@@ -22,6 +22,7 @@ public class MesosSlaveStateObject {
   private final int startedTasks;
   private final int failedTasks;
   private final int killedTasks;
+  private final int stagedTasks;
 
   @JsonCreator
   public MesosSlaveStateObject(@JsonProperty("id") String id, @JsonProperty("pid") String pid,
@@ -32,7 +33,8 @@ public class MesosSlaveStateObject {
                                @JsonProperty("lost_tasks") int lostTasks,
                                @JsonProperty("started_tasks") int startedTasks,
                                @JsonProperty("failed_tasks") int failedTasks,
-                               @JsonProperty("killed_tasks") int killedTasks) {
+                               @JsonProperty("killed_tasks") int killedTasks,
+                               @JsonProperty("staged_tasks") int stagedTasks) {
     this.id = id;
     this.pid = pid;
     this.hostname = hostname;
@@ -45,6 +47,7 @@ public class MesosSlaveStateObject {
     this.startedTasks = startedTasks;
     this.failedTasks = failedTasks;
     this.killedTasks = killedTasks;
+    this.stagedTasks = stagedTasks;
   }
 
   public String getId() {
@@ -89,5 +92,9 @@ public class MesosSlaveStateObject {
 
   public int getKilledTasks() {
     return killedTasks;
+  }
+
+  public int getStagedTasks() {
+    return stagedTasks;
   }
 }
