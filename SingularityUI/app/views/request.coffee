@@ -194,8 +194,6 @@ class RequestView extends View
                 .done =>
                     @requestModel.fetched = true
 
-                    console.log @requestModel
-
                     canBeBounced = @requestModel.get('state') in ["ACTIVE", "SYSTEM_COOLDOWN"]
                     canBeBounced = canBeBounced and not @requestModel.get("scheduled")
                     canBeBounced = canBeBounced and not @requestModel.get("onDemand")
