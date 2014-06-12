@@ -32,6 +32,9 @@
 <section>
     <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." value="{{ searchFilter }}" required />
+        <div data-requests-filter-container class="requests-filter-container">
+            {{> requestsFilter}}
+        </div>
     </div>
 </section>
 

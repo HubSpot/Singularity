@@ -25,11 +25,14 @@ class RequestsView extends View
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
+    # Which table views have sub-filters (daemon, scheduled, on-demand)
+    haveSubfilter: ['all', 'active', 'paused', 'cooldown']
+
     initialize: ->
         @lastRequestsFilter = @options.requestsFilter
         @lastRequestsSubFilter = @options.requestsSubFilter
 
-        if @lastRequestsFilter is 'active'
+        if @lastRequestsFilter in @haveSubfilter
             @lastRequestsActiveSubFilter = @lastRequestsSubFilter
 
     fetch: ->
@@ -66,7 +69,7 @@ class RequestsView extends View
         @lastSearchFilter = searchFilter
         @$el.find('input[type="search"]').val searchFilter
 
-        if @lastRequestsFilter is 'active'
+        if @lastRequestsFilter in @haveSubfilter
             if @lastRequestsActiveSubFilter
                 @lastRequestsSubFilter = @lastRequestsActiveSubFilter
         else
@@ -81,7 +84,6 @@ class RequestsView extends View
             @collection = app.collections.requestsActive
             template = @templateRequestsActive
             templateBody = @templateRequestsActiveBody
-            templateFilter = @templateRequestsActiveFilter
 
         if @lastRequestsFilter is 'cooldown'
             @collection = app.collections.requestsCooldown
@@ -92,6 +94,10 @@ class RequestsView extends View
             @collection = app.collections.requestsPaused
             template = @templateRequestsPaused
             templateBody = @templateRequestsPausedBody
+
+        # The following have filters
+        if @lastRequestsFilter in @haveSubfilter
+            templateFilter = @templateRequestsActiveFilter
 
         if @lastRequestsFilter is 'pending'
             @collection = app.collections.requestsPending
@@ -114,7 +120,7 @@ class RequestsView extends View
             context.requests.reverse()
             context.requestsScheduled.reverse()
 
-        if @lastRequestsFilter is 'active'
+        if @lastRequestsFilter in @haveSubfilter
             if requestsSubFilter is 'all'
                 context.requests = _.pluck(@collection.models, 'attributes')
 
@@ -149,7 +155,6 @@ class RequestsView extends View
         if @lastRequestsFilter is 'all'
             context.requests.reverse()
 
-        # Intersect starred requests before rendering
         for request in context.requests
             if app.collections.requestsStarred.get(request.name)?
                 request.starred = true
@@ -163,7 +168,7 @@ class RequestsView extends View
 
         $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
 
-        if @lastRequestsFilter is 'active'
+        if templateFilter?
             partials.partials.requestsFilter = templateFilter
             $requestsFilterContainer =  @$el.find('[data-requests-filter-container]')
 
@@ -171,7 +176,7 @@ class RequestsView extends View
             @$el.html template(context, partials)
 
         else
-            if @lastRequestsFilter is 'active'
+            if templateFilter?
                 $requestsFilterContainer.html templateFilter context
 
             $requestsBodyContainer.html templateBody context
@@ -280,7 +285,7 @@ class RequestsView extends View
                 requestsActiveFilter = $(e.target).data('requests-active-filter-shift')
             @lastRequestsActiveSubFilter = requestsActiveFilter
             @lastSearchFilter = _.trim @$el.find('input[type="search"]').val()
-            app.router.navigate "/requests/active/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
+            app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
 
     setUpSearchEvents: (refresh, searchWasFocused) ->
         $search = @$el.find('input[type="search"]')
