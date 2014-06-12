@@ -25,5 +25,5 @@
     </div>
 </h1>
 {{#if firstRequestHistoryItem}}
-    <p class="lead"><span class="request-state">{{ request.displayState }}</span>{{ firstRequestHistoryItem.stateHuman }} {{#if firstRequestHistoryItem.userHuman}}by {{ firstRequestHistoryItem.userHuman }}{{/if}} {{ firstRequestHistoryItem.createdAtHuman }}</p>
+    <p class="lead"><span class="request-state {{ request.state }}">{{ request.displayState }}</span>{{ firstRequestHistoryItem.stateHuman }} {{#if firstRequestHistoryItem.userHuman}}by {{ firstRequestHistoryItem.userHuman }}{{/if}} {{ firstRequestHistoryItem.createdAtHuman }}</p>
 {{/if}}
