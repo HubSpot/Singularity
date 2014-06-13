@@ -4,7 +4,8 @@ class HistoricalTasks extends Mixen(RequestTasks, Teeble.ServerCollection)
 
     model: Backbone.Model
 
-    comparator: undefined
+    comparator: (task0, task1) =>
+        -(task0.get("startedAt") - task1.get("startedAt"))
 
     url: ->
         params =
