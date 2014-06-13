@@ -1,7 +1,4 @@
 <section>
-    <div class="page-header">
-        <h1>Cooldown</h1>
-    </div>
     <div class="row-fluid">
         <div class="span12">
             {{#if requests.length}}
@@ -12,6 +9,13 @@
                             <th class="hidden-phone">Requested</th>
                             <th class="visible-desktop">Deploy user</th>
                             <th class="visible-desktop">Instances</th>
+
+                            {{#ifEqual requestsSubFilter "daemon"}}{{else}}
+                            {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
+                            {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
+                                <th class="visible-large-desktop">Schedule</th>
+                            {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+
                             <th class="hidden-phone" data-sortable="false"></th>
                         </tr>
                     </thead>
@@ -22,6 +26,13 @@
                                 <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-desktop">{{ deployUser }}</td>
                                 <td class="visible-desktop">{{ instances }}</td>
+
+                                {{#ifEqual requestsSubFilter "daemon"}}{{else}}
+                                {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
+                                {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
+                                    <td class="visible-large-desktop">{{ schedule }}</td>
+                                {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
+
                                 <td class="actions-column hidden-phone">
                                     {{#if onDemand}}
                                         <a data-request-id="{{ id }}" data-request-type="on-demand" data-action="run-now">Run now</a>

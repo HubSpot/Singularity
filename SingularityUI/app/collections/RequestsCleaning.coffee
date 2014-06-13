@@ -6,6 +6,7 @@ class RequestsCleaning extends Requests
 
     parse: (requests) ->
         _.each requests, (request, i) ->
+            request.displayState = constants.requestStates.CLEANUP
             request.JSONString = utils.stringJSON request
             request.id = request.requestId
             request.cleanupType = constants.requestCleanupTypes[request.cleanupType]

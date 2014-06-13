@@ -2,6 +2,9 @@
     {{> requestHeader}}
 </header>
 
+<p class="alert alert-warning hide" id="pending-alert">Request is currently in the pending queue</p>
+<p class="alert alert-warning hide" id="cleaning-alert">Request is currently in the cleanup queue</p>
+
 <div data-request-active-deploy>
     {{> requestActiveDeploy}}
 </div>
