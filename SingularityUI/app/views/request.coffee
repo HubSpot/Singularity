@@ -32,11 +32,6 @@ class RequestView extends View
 
         @requestActiveDeploy = { attributes: {}, mock: true }
 
-    events: ->
-        _.extend super,
-            'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
-
-
     fetch: ->
         # Note some other fetching is deferred until the request history subview/table is fetched
 
