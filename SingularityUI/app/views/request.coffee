@@ -47,6 +47,14 @@ class RequestView extends View
         app.collections.tasksScheduled.fetch().done =>
             app.collections.tasksScheduled.fetched = true
             @render()
+        
+        app.collections.requestsPending.fetch().done =>
+            if (app.collections.requestsPending.get @requestModel.get "id")?
+                @$el.find("#pending-alert").removeClass "hide"
+        
+        app.collections.requestsCleaning.fetch().done =>
+            if (app.collections.requestsCleaning.get @requestModel.get "id")?
+                @$el.find("#cleaning-alert").removeClass "hide"
 
     refresh: ->
         @refreshCount ?= 0

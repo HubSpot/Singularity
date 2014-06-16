@@ -9,13 +9,9 @@ class Request extends Model
             
             data.scheduled = utils.isScheduledRequest data.request
             data.onDemand = utils.isOnDemandRequest data.request
-            
-            if data.cleanupType?
-                data.displayState = contants.requestStates.CLEANUP
-            else if data.requestDeployState? and data.requestDeployState.pendingDeploy?
-                data.displayState = constants.requestStates.PENDING
-            else
-                data.displayState = constants.requestStates[data.state]
+
+            data.displayState = constants.requestStates[data.state]
+
         data
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"

@@ -6,6 +6,7 @@ class RequestsPending extends Requests
 
     parse: (requests) ->
         _.each requests, (request, i) =>
+            request.displayState = constants.requestStates.PENDING
             request.id = request.requestId
             request.JSONString = utils.stringJSON request
             request.timestampHuman = utils.humanTimeAgo request.timestamp
