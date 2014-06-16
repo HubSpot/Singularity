@@ -2,7 +2,30 @@ View = require './view'
 
 DeployHistory = require '../collections/DeployHistory'
 
+RequestActiveDeploy = require '../models/RequestActiveDeploy'
+
 class RequestDeployHistoryTableView extends View
+
+    events:
+        'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
+
+    viewDeployJSON: (e) ->
+        requestId = @options.requestId
+        deployId = $(e.target).data('deploy-id')
+        requestDeployId = "#{ @options.requestId }-#{ deployId }"
+
+        viewJSON = -> utils.viewJSON 'deploy', requestDeployId
+
+        if app.allDeploys[requestDeployId]
+            viewJSON()
+        else
+            requestActiveDeploy = new RequestActiveDeploy [], { requestId, deployId }
+            vex.showLoading()
+            requestActiveDeploy.fetch()
+                .error(=> vex.hideLoading())
+                .done =>
+                    vex.hideLoading()
+                    viewJSON()
 
     render: ->
         @$el.html '<div class="page-loader centered cushy"></div>'

@@ -302,24 +302,4 @@ class RequestView extends View
                     $row.remove()
                     utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
 
-    # Leaving this code inside the parent view (instead of RequestDeployHistoryTableView) for now
-    viewDeployJSON: (e) ->
-        requestId = @options.requestId
-        deployId = $(e.target).data('deploy-id')
-        requestDeployId = "#{ @options.requestId }-#{ deployId }"
-
-        viewJSON = -> utils.viewJSON 'deploy', requestDeployId
-
-        if app.allDeploys[requestDeployId]
-            viewJSON()
-        else
-            requestActiveDeploy = new RequestActiveDeploy [], { requestId, deployId }
-            vex.showLoading()
-            requestActiveDeploy.fetch()
-                .error(=> vex.hideLoading())
-                .done =>
-                    vex.hideLoading()
-                    viewJSON()
-
-
 module.exports = RequestView
