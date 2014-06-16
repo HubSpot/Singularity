@@ -11,6 +11,7 @@ class TailerView extends Backbone.View
 
     events:
         'scroll': 'handleScroll'
+        'mouseover [data-offset]': 'lineHover'
 
     initialize: ->
         @tailing = null
@@ -65,6 +66,13 @@ class TailerView extends Backbone.View
     remove: =>
         @stopTailing()
         super
+
+    lineHover: (event) =>
+        $last5 = @$container.find("[data-offset]:nth-last-child(-n+5)")
+        if event.currentTarget in $last5
+            @parent.$el.addClass "hover-last-5"
+        else
+            @parent.$el.removeClass "hover-last-5"
 
     scrollToBottom: =>
         @$el.scrollTop @el.scrollHeight
