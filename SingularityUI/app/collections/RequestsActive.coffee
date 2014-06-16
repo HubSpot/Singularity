@@ -30,8 +30,6 @@ class RequestsActive extends Requests
             request.timestamp = request.requestDeployState?.activeDeploy?.timestamp
             request.timestampHuman = utils.humanTimeAgo request.timestamp
             request.timestampHumanShort = utils.humanTimeShort request.timestamp
-            request.scheduled = utils.isScheduledRequest request
-            request.onDemand = utils.isOnDemandRequest request
             requests[i] = request
             app.allRequests[request.id] = request
 

@@ -19,6 +19,11 @@
                 {{/if}}
             {{/unless}}
         {{/if}}
+        
+        {{#if request.canBeBounced}}
+            <a data-request-id="{{ request.id }}" data-action="bounce">Bounce</a>
+        {{/if}}
+        
         {{#unless request.deleted}}
             <a data-request-id="{{ request.id }}" data-action="remove">Remove</a>
         {{/unless}}

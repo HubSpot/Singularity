@@ -6,7 +6,12 @@ class Request extends Model
         if data.request?
             data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
             data.daemon = data.request.daemon
+            
+            data.scheduled = utils.isScheduledRequest data.request
+            data.onDemand = utils.isOnDemandRequest data.request
+
             data.displayState = constants.requestStates[data.state]
+
         data
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
@@ -39,5 +44,9 @@ class Request extends Model
 
         $.ajax options
         
+    bounce: =>
+        $.ajax
+            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/bounce"
+            type: "POST"
 
 module.exports = Request
