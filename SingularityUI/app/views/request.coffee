@@ -32,11 +32,6 @@ class RequestView extends View
 
         @requestActiveDeploy = { attributes: {}, mock: true }
 
-    events: ->
-        _.extend super,
-            'click [data-action="viewDeployJSON"]': 'viewDeployJSON'
-
-
     fetch: ->
         # Note some other fetching is deferred until the request history subview/table is fetched
 
@@ -317,25 +312,5 @@ class RequestView extends View
                 callback: (confirmed) =>
                     return unless confirmed
                     requestModel.bounce().done => @refresh()
-
-    # Leaving this code inside the parent view (instead of RequestDeployHistoryTableView) for now
-    viewDeployJSON: (e) ->
-        requestId = @options.requestId
-        deployId = $(e.target).data('deploy-id')
-        requestDeployId = "#{ @options.requestId }-#{ deployId }"
-
-        viewJSON = -> utils.viewJSON 'deploy', requestDeployId
-
-        if app.allDeploys[requestDeployId]
-            viewJSON()
-        else
-            requestActiveDeploy = new RequestActiveDeploy [], { requestId, deployId }
-            vex.showLoading()
-            requestActiveDeploy.fetch()
-                .error(=> vex.hideLoading())
-                .done =>
-                    vex.hideLoading()
-                    viewJSON()
-
 
 module.exports = RequestView
