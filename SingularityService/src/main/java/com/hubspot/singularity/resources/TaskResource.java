@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -27,7 +28,6 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
-import com.hubspot.singularity.mesos.MesosClient;
 import com.sun.jersey.api.NotFoundException;
 
 @Path(SingularityService.API_BASE_PATH + "/tasks")
