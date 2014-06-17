@@ -10,27 +10,22 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.data.SlaveManager;
-import com.hubspot.singularity.mesos.MesosClient;
 
 @Path(SingularityService.API_BASE_PATH + "/slaves")
 @Produces({ MediaType.APPLICATION_JSON })
 public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   
   private final SlaveManager slaveManager;
-  private final MesosClient mesosClient;
   
   @Inject
-  public SlaveResource(SlaveManager slaveManager, MesosClient mesosClient) {
+  public SlaveResource(SlaveManager slaveManager) {
     super(slaveManager);
     
     this.slaveManager = slaveManager;
-    this.mesosClient = mesosClient;
   }
   
   @Override
@@ -72,17 +67,5 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}/decomission")
   public void decomissionRack(@PathParam("slaveId") String slaveId) {
     super.decomission(slaveId);
-  }
-
-  @GET
-  @Path("/slave/{slaveId}/statistics")
-  public Optional<List<MesosTaskMonitorObject>> getSlaveTaskStatistics(@PathParam("slaveId") String slaveId) {
-    final Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
-
-    if (maybeSlave.isPresent()) {
-      return Optional.of(mesosClient.getSlaveResourceUsage(maybeSlave.get().getHost()));
-    } else {
-      return Optional.absent();
-    }
   }
 }

@@ -13,6 +13,8 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityService;
@@ -25,6 +27,7 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.hubspot.singularity.mesos.MesosClient;
 import com.sun.jersey.api.NotFoundException;
 
 @Path(SingularityService.API_BASE_PATH + "/tasks")
@@ -34,12 +37,14 @@ public class TaskResource {
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;  
   private final TaskRequestManager taskRequestManager;
+  private final MesosClient mesosClient;
   
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
+    this.mesosClient = mesosClient;
   }
   
   @GET
@@ -95,6 +100,24 @@ public class TaskResource {
     }
     
     return task.get();
+  }
+
+  @GET
+  @Path("/task/{taskId}/statistics")
+  public MesosTaskStatisticsObject getTaskStatistics(@PathParam("taskId") String taskId) {
+    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
+
+    if (!task.isPresent()) {
+      throw new NotFoundException(String.format("No active task with id %s", taskId));
+    }
+
+    for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.get().getOffer().getHostname())) {
+      if (taskMonitor.getExecutorId().equals(task.get().getMesosTask().getExecutor().getExecutorId().getValue())) {
+        return taskMonitor.getStatistics();
+      }
+    }
+
+    throw new NotFoundException("Couldn't find task statistics");
   }
   
   @DELETE
