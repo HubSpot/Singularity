@@ -22,9 +22,13 @@ public class JsonObjectFileHelper {
   }
 
   public <T> Optional<T> read(Path file, Logger log, Class<T> clazz) throws IOException {
+    final long start = System.currentTimeMillis();
+
+    log.info("Reading {}", file);
+    
     byte[] bytes = Files.readAllBytes(file);
     
-    log.trace("Read {} bytes from {}", bytes.length, file);
+    log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
     
     if (bytes.length == 0) {
       return Optional.absent();
@@ -41,17 +45,21 @@ public class JsonObjectFileHelper {
   }
   
   public boolean writeObject(Object object, Path path, Logger log) {
+    final long start = System.currentTimeMillis();
+    
     try {
       final byte[] bytes = objectMapper.writeValueAsBytes(object);
       
-      log.info("Writing {} bytes of {} to {}", new Object[] { Integer.toString(bytes.length), object.toString(), path.toString() });
+      log.info("Writing {} bytes of {} to {}", bytes.length, object, path);
         
       Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     
       return true;
     } catch (Throwable t) {
-      log.error("Failed writing {}", object.toString(), t);
+      log.error("Failed writing {}", object, t);
       return false;
+    } finally {
+      log.trace("Finishing writing {} after {}", object, JavaUtils.duration(start));
     }
   }
   
