@@ -1,6 +1,6 @@
 Model = require './model'
 
-class TaskStatistics extends Model
+class TaskResourceUsage extends Model
 
     url: => "#{ config.apiRoot }/tasks/task/#{ @taskId }/statistics"
 
@@ -21,4 +21,4 @@ class TaskStatistics extends Model
         data
 
 
-module.exports = TaskStatistics
+module.exports = TaskResourceUsage

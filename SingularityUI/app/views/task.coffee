@@ -2,7 +2,7 @@ View = require './view'
 
 Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
-TaskStatistics = require '../models/TaskStatistics'
+TaskResourceUsage = require '../models/TaskResourceUsage'
 
 TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
@@ -19,14 +19,14 @@ class TaskView extends View
     logsTemplate:     require './templates/taskLogs'
     filesTemplate:    require './templates/taskFiles'
     infoTemplate:     require './templates/taskInfo'
-    statisticsTemplate: require './templates/taskStatistics'
+    resourceUsageTemplate: require './templates/taskResourceUsage'
 
     initialize: ->
         @sandboxTries = 0
         @firstRender = true
         @taskFiles = {}
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
-        @taskStatistics = new TaskStatistics {}, taskId: @options.taskId
+        @taskResourceUsage = new TaskResourceUsage {}, taskId: @options.taskId
 
         @taskS3Logs = new TaskS3Logs [], taskId: @options.taskId
 
@@ -66,7 +66,7 @@ class TaskView extends View
 
         @taskS3Logs.fetch()
 
-        @taskStatistics.fetch()
+        @taskResourceUsage.fetch()
 
         deferred
 
@@ -93,7 +93,7 @@ class TaskView extends View
             taskFilesFetchDone: @taskFilesFetchDone
             taskFilesSandboxUnavailable: @taskFilesSandboxUnavailable
             taskS3LogsCollectionJSON: JSON.stringify(@taskS3Logs.toJSON(), null, 4)
-            taskStatistics: @taskStatistics.attributes
+            taskResourceUsage: @taskResourceUsage.attributes
 
         context.taskIdStringLengthTens = Math.floor(context.taskHistory.task.id.length / 10) * 10
 
@@ -109,7 +109,7 @@ class TaskView extends View
             @$el.append @logsTemplate context, partials
             @$el.append @filesTemplate context, partials
             @$el.append @infoTemplate context, partials
-            @$el.append @statisticsTemplate context, partials
+            @$el.append @resourceUsageTemplate context, partials
 
             @saveSelectors()
             @setupSubviews()
@@ -118,7 +118,7 @@ class TaskView extends View
             @dom.historySection.replaceWith @historyTemplate context, partials
             @dom.filesSection.replaceWith @filesTemplate context, partials
             @dom.infoSection.replaceWith @infoTemplate context, partials
-            @dom.statisticsSection.replaceWith @statisticsTemplate context, partials
+            @dom.resourceUsageSection.replaceWith @resourceUsageTemplate context, partials
 
         @setupEvents()
 
@@ -153,7 +153,7 @@ class TaskView extends View
         @dom.logsWrapper = @$('[data-s3-logs-wrapper]')
         @dom.filesSection = @$('[data-task-files]')
         @dom.infoSection = @$('[data-task-info]')
-        @dom.statisticsSection = @$('[data-task-statistics]')
+        @dom.resourceUsageSection = @$('[data-task-resource-usage]')
 
     setupSubviews: ->
         @taskS3LogsTableView = new TaskS3LogsTableView { collection: @taskS3Logs }
