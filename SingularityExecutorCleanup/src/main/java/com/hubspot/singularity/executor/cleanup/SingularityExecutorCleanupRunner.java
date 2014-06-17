@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor.cleanup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
@@ -25,9 +26,10 @@ public class SingularityExecutorCleanupRunner {
       
       LOG.info("Starting cleanup");
       
-      cleanup.clean();
+      final Optional<SingularityExecutorCleanupStatistics> statistics = cleanup.clean();
 
-      LOG.info("Finished successfully after {}", JavaUtils.duration(start));
+      LOG.info("Finished with {} after {}", statistics, JavaUtils.duration(start));
+      
       System.exit(0);
     } catch (Throwable t) {
       LOG.error("Finished after {} with error", JavaUtils.duration(start), t);

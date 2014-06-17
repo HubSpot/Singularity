@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -49,18 +50,20 @@ public class SingularityExecutorCleanup {
     this.templateManager = templateManager;
   }
   
-  public void clean() {
+  public Optional<SingularityExecutorCleanupStatistics> clean() {
     final SingularityExecutorCleanupStatisticsBuilder statisticsBldr = new SingularityExecutorCleanupStatisticsBuilder();
     final Path directory = Paths.get(executorConfiguration.getGlobalTaskDefinitionDirectory());
     
     final Set<String> runningTaskIds = getRunningTaskIds();
    
     LOG.info("Found {} running tasks", runningTaskIds);
+   
+    statisticsBldr.setRunningTasks(runningTaskIds.size());
     
     if (runningTaskIds.isEmpty()) {
       if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
         LOG.error("Running in safe mode ({}) and found 0 running tasks - aborting cleanup", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
-        return;
+        return Optional.absent();
       } else {
         LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode ({})", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
       }
@@ -82,7 +85,7 @@ public class SingularityExecutorCleanup {
         }
         
         if (runningTaskIds.contains(taskDefinition.get().getTaskId())) {
-          statisticsBldr.incrRunningTasks();
+          statisticsBldr.incrRunningTasksIgnored();
           continue;
         }
         
@@ -98,12 +101,18 @@ public class SingularityExecutorCleanup {
         statisticsBldr.incrInvalidTasks();
       }
     }
+    
+    return Optional.of(statisticsBldr.build());
   }
  
   private MesosSlaveStateObject getSlaveState() {
-    final String slaveUri = mesosClient.getSlaveUri("localhost");
-    
-    return mesosClient.getSlaveState(slaveUri);
+    try {
+      final String slaveUri = mesosClient.getSlaveUri(JavaUtils.getHostAddress());
+      
+      return mesosClient.getSlaveState(slaveUri);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
   }
   
   private Set<String> getRunningTaskIds() {
