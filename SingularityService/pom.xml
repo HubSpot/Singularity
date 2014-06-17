@@ -33,6 +33,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>MesosClient</artifactId>
+      <version>0.3.7-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${sl4fj.version}</version>
@@ -43,7 +49,7 @@
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
     </dependency>
- 
+
     <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guice</artifactId>
@@ -108,11 +114,11 @@
       </exclusions>
     </dependency>
 
-      <dependency>
-          <groupId>io.dropwizard</groupId>
-          <artifactId>dropwizard-views-mustache</artifactId>
-          <version>${dropwizard.version}</version>
-      </dependency>
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-views-mustache</artifactId>
+      <version>${dropwizard.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.hubspot.jackson</groupId>
@@ -169,18 +175,18 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <dependency>
       <groupId>net.kencochrane.raven</groupId>
       <artifactId>raven-logback</artifactId>
       <version>${sentry.version}</version>
       <exclusions>
         <exclusion>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>    
+    </dependency>
 
     <dependency>
       <groupId>net.kencochrane.raven</groupId>
@@ -193,7 +199,7 @@
       <artifactId>snappy</artifactId>
       <version>0.4-SNAPSHOT</version>
     </dependency>
-    
+
     <dependency>
       <groupId>net.java.dev.jets3t</groupId>
       <artifactId>jets3t</artifactId>

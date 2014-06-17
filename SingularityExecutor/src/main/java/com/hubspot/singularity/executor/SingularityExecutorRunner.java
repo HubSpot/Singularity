@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
@@ -21,7 +22,7 @@ public class SingularityExecutorRunner {
     final long start = System.currentTimeMillis();
     
     try {
-      final Injector injector = Guice.createInjector(new SingularityExecutorModule());
+      final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityExecutorConfigurationLoader()), new SingularityExecutorModule());
       final SingularityExecutorRunner executorRunner = injector.getInstance(SingularityExecutorRunner.class);
       
       final Protos.Status driverStatus = executorRunner.run();
@@ -31,6 +32,7 @@ public class SingularityExecutorRunner {
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
     } catch (Throwable t) {
       LOG.error("Finished after {} with error", JavaUtils.duration(start), t);
+      System.exit(1);
     }
   }
   

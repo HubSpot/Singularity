@@ -1,12 +1,15 @@
-package com.hubspot.singularity.mesos;
+package com.hubspot.mesos.client;
 
 import java.util.List;
 
 import org.apache.mesos.Protos.MasterInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
@@ -15,6 +18,8 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
 public class MesosClient {
+
+  private final static Logger LOG = LoggerFactory.getLogger(MesosClient.class);
   
   private final static String MASTER_STATE_FORMAT = "http://%s/master/state.json";
   private final static String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state.json";
@@ -49,10 +54,16 @@ public class MesosClient {
   private Response getResponse(String uri) {
     Response response = null;
     
+    final long start = System.currentTimeMillis();
+    
+    LOG.debug("Fetching {} from mesos", uri);
+    
     try {
       response = asyncHttpClient.prepareGet(uri).execute().get();
+    
+      LOG.debug("Response {} - {} after {}", response.getStatusCode(), uri, JavaUtils.duration(start));
     } catch (Exception e) {
-      throw new MesosClientException("Exception fetching: " + uri, e);
+      throw new MesosClientException(String.format("Exception fetching %s after %s", uri, JavaUtils.duration(start)), e);
     }
     
     if (response.getStatusCode() < 200 || response.getStatusCode() > 299) {

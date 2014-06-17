@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;

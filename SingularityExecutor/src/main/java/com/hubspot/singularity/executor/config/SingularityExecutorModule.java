@@ -11,18 +11,15 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 
 public class SingularityExecutorModule extends AbstractModule {
 
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
-  
+
   @Override
-  protected void configure() {
-    install(new SingularityRunnerBaseModule("/etc/singularity.executor.properties", new SingularityExecutorConfigurationLoader()));
-    
+  protected void configure() {    
     bind(SingularityExecutorLogging.class).in(Scopes.SINGLETON);
     bind(SingularityExecutorTaskBuilder.class).in(Scopes.SINGLETON);
     bind(SingularityExecutorProcessKiller.class).in(Scopes.SINGLETON);

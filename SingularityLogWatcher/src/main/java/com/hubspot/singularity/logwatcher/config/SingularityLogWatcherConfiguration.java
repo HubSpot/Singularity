@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
 public class SingularityLogWatcherConfiguration {
 
@@ -30,8 +31,8 @@ public class SingularityLogWatcherConfiguration {
       @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, 
       @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
       @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
-      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
-      @Named(SingularityLogWatcherConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
+      @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
+      @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
       ) {
     this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
     this.pollMillis = Long.parseLong(pollMillis);
@@ -41,7 +42,7 @@ public class SingularityLogWatcherConfiguration {
     this.storeDirectory = JavaUtils.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
     this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
     this.logMetadataSuffix = logMetadataSuffix;
-    this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityLogWatcherConfigurationLoader.LOG_METADATA_DIRECTORY);
+    this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY);
   }
 
   public Path getLogMetadataDirectory() {

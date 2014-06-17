@@ -27,9 +27,14 @@ public class SingularityRunner {
     
     try {
       driver.startAndWait();
+      
+      LOG.info("Exiting normally");
+      
+      System.exit(0);
     } catch (Throwable t) {
       LOG.error("Caught unexpected exception, exiting", t);
       driver.shutdown();
+      System.exit(1);
     }
   }
 }

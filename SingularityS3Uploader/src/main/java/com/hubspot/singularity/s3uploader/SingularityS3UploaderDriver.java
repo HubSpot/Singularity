@@ -28,7 +28,6 @@ import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -38,9 +37,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
+import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
@@ -52,7 +50,6 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private final SingularityS3UploaderConfiguration configuration;
   private final ScheduledExecutorService scheduler;
-  private final ObjectMapper objectMapper;
   private final Map<S3UploadMetadata, SingularityS3Uploader> metadataToUploader;
   private final Map<SingularityS3Uploader, Long> uploaderLastHadFilesAt;
   private final Lock runLock;
@@ -60,12 +57,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final FileSystem fileSystem;
   private final S3Service s3Service;
   private final Map<SingularityS3Uploader, Boolean> isFinished;
+  private final SingularityS3UploaderMetrics metrics;
+  private final JsonObjectFileHelper jsonObjectFileHelper;
+  
   private ScheduledFuture<?> future;
   
-  private final SingularityS3UploaderMetrics metrics;
-
   @Inject
-  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, @Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper objectMapper, SingularityS3UploaderMetrics metrics) {
+  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper) {
     super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.metrics = metrics;
@@ -77,8 +75,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       throw Throwables.propagate(t);
     }
 
+    this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.configuration = configuration;
-    this.objectMapper = objectMapper;
 
     this.metadataToUploader = Maps.newHashMap();
     this.uploaderLastHadFilesAt = Maps.newHashMap();
@@ -351,23 +349,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
 
   private Optional<S3UploadMetadata> readS3UploadMetadata(Path filename) throws IOException {
-    byte[] s3MetadataBytes = Files.readAllBytes(configuration.getS3MetadataDirectory().resolve(filename));
-
-    LOG.trace("Read {} bytes from {}", s3MetadataBytes.length, filename);
-
-    if (s3MetadataBytes.length == 0) {
-      return Optional.absent();
-    }
-    
-    try {
-      S3UploadMetadata metadata = objectMapper.readValue(s3MetadataBytes, S3UploadMetadata.class);
-      return Optional.of(metadata);
-    } catch (Throwable t) {
-      LOG.warn("File {} was not a valid s3 metadata", filename, t);
-      return Optional.absent();
-    }
+    return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
   }
-
+  
   private boolean isS3MetadataFile(Path filename) {
     if (!filename.toString().endsWith(configuration.getS3MetadataSuffix())) {
       LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getS3MetadataSuffix());

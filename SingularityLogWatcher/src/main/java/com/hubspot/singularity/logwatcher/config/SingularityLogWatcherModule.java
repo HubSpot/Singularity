@@ -10,14 +10,12 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration.FluentdHost;
 import com.hubspot.singularity.logwatcher.driver.SingularityLogWatcherDriver;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 
 public class SingularityLogWatcherModule extends AbstractModule {
   
   @Override
   protected void configure() {
-    install(new SingularityRunnerBaseModule("/etc/singularity.logwatcher.properties", new SingularityLogWatcherConfigurationLoader()));
     bind(SingularityDriver.class).to(SingularityLogWatcherDriver.class);
   }
   

@@ -2,9 +2,9 @@ package com.hubspot.singularity.s3uploader.config;
 
 import java.util.Properties;
 
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
-public class SingularityS3UploaderConfigurationLoader extends SingularityRunnerBaseConfigurationLoader {
+public class SingularityS3UploaderConfigurationLoader extends SingularityConfigurationLoader {
 
   public static final String POLL_MILLIS = "s3uploader.poll.for.shutdown.millis";
   public static final String S3_ACCESS_KEY = "s3uploader.s3.access.key";
@@ -15,10 +15,12 @@ public class SingularityS3UploaderConfigurationLoader extends SingularityRunnerB
   
   public static final String EXECUTOR_CORE_THREADS = "s3uploader.core.threads";
   
-  @Override
-  protected void bindDefaults(Properties properties) {
-    super.bindDefaults(properties);
+  public SingularityS3UploaderConfigurationLoader() {
+    super("/etc/singularity.s3uploader.properties");
+  }
 
+  @Override
+  public void bindDefaults(Properties properties) {
     properties.put(POLL_MILLIS, "1000");
     properties.put(EXECUTOR_CORE_THREADS, "3");
     

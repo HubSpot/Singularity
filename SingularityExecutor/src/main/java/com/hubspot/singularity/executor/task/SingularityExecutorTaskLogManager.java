@@ -15,7 +15,7 @@ import com.hubspot.singularity.executor.SimpleProcessManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
-import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
@@ -25,15 +25,15 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   private final TemplateManager templateManager;
   private final SingularityExecutorConfiguration configuration;
   private final Logger log;
-  private final ExecutorUtils executorUtils;
+  private final JsonObjectFileHelper jsonObjectFileHelper;
   
-  public SingularityExecutorTaskLogManager(SingularityExecutorTaskConfiguration taskConfiguration, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, ExecutorUtils executorUtils) {
+  public SingularityExecutorTaskLogManager(SingularityExecutorTaskConfiguration taskConfiguration, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
     super(log);
     this.log = log;
     this.taskConfiguration = taskConfiguration;
     this.templateManager = templateManager;
     this.configuration = configuration;
-    this.executorUtils = executorUtils;
+    this.jsonObjectFileHelper = jsonObjectFileHelper;
   }
 
   public void setup() {
@@ -134,7 +134,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     final TailMetadata tailMetadata = new TailMetadata(taskConfiguration.getServiceLogOut().toString(), taskConfiguration.getExecutorData().getLoggingTag().get(), taskConfiguration.getExecutorData().getLoggingExtraFields(), finished);
     final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
     
-    return writeObject(tailMetadata, path);
+    return jsonObjectFileHelper.writeObject(tailMetadata, path, log);
   }
   
   private String getS3Glob() {
@@ -166,11 +166,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     
     Path s3UploadMetadataPath = configuration.getS3MetadataDirectory().resolve(s3UploadMetadatafilename);
     
-    return writeObject(s3UploadMetadata, s3UploadMetadataPath);
-  }
-
-  private boolean writeObject(Object o, Path path) {
-    return executorUtils.writeObject(o, path, log);
+    return jsonObjectFileHelper.writeObject(s3UploadMetadata, s3UploadMetadataPath, log);
   }
   
 }
