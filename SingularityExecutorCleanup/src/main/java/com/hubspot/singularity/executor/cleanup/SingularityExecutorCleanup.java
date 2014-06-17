@@ -70,8 +70,9 @@ public class SingularityExecutorCleanup {
     }
     
     for (Path file : JavaUtils.iterable(directory)) {
-      if (!file.getFileName().endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
+      if (!file.getFileName().toString().endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
         LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
+        statisticsBldr.incrInvalidTasks();
         continue;
       }
       
@@ -98,7 +99,7 @@ public class SingularityExecutorCleanup {
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
         
-        statisticsBldr.incrInvalidTasks();
+        statisticsBldr.incrIoErrorTasks();
       }
     }
     
