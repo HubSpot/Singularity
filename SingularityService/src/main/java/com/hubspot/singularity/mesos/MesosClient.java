@@ -1,12 +1,16 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.List;
+
 import org.apache.mesos.Protos.MasterInfo;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
@@ -14,6 +18,7 @@ public class MesosClient {
   
   private final static String MASTER_STATE_FORMAT = "http://%s/master/state.json";
   private final static String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state.json";
+  private final static String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics.json";
   
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
@@ -76,6 +81,18 @@ public class MesosClient {
     
     try {
       return objectMapper.readValue(response.getResponseBodyAsStream(), MesosSlaveStateObject.class);
+    } catch (Exception e) {
+      throw new MesosClientException("Invalid response from uri: " + uri, e);
+    }
+  }
+
+  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
+    final String uri = String.format(MESOS_SLAVE_STATISTICS_URL, hostname);
+
+    Response response = getResponse(uri);
+
+    try {
+      return objectMapper.readValue(response.getResponseBodyAsStream(), new TypeReference<List<MesosTaskMonitorObject>>() {});
     } catch (Exception e) {
       throw new MesosClientException("Invalid response from uri: " + uri, e);
     }
