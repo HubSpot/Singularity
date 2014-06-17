@@ -48,6 +48,9 @@ class TaskView extends View
         @taskHistory.fetch().done =>
             @render() if neverSynced
 
+            unless @taskHistory.attributes.task.isStopped
+                @taskResourceUsage.fetch()
+
             @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
             @taskFiles.testSandbox()
                 .done(=>
@@ -65,8 +68,6 @@ class TaskView extends View
             @sandboxTries += 1
 
         @taskS3Logs.fetch()
-
-        @taskResourceUsage.fetch()
 
         deferred
 
