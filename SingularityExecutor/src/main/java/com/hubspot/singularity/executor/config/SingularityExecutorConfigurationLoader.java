@@ -3,9 +3,9 @@ package com.hubspot.singularity.executor.config;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
-public class SingularityExecutorConfigurationLoader extends SingularityRunnerBaseConfigurationLoader {
+public class SingularityExecutorConfigurationLoader extends SingularityConfigurationLoader {
   
   public static final String SHUTDOWN_TIMEOUT_MILLIS = "executor.shutdown.timeout.millis";
   
@@ -28,6 +28,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
   public static final String ARTIFACT_CACHE_DIRECTORY = "executor.artifact.cache.directory";
 
   public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
+  public static final String GLOBAL_TASK_DEFINITION_SUFFIX = "executor.global.task.definition.suffix";  
 
   public static final String LOGROTATE_COMMAND = "executor.logrotate.command";
   public static final String LOGROTATE_CONFIG_DIRECTORY = "executor.logrotate.config.folder";
@@ -44,10 +45,11 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
   public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
   public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
   
-  @Override
-  protected void bindDefaults(Properties properties) {
-    super.bindDefaults(properties);
+  public SingularityExecutorConfigurationLoader() {
+    super("/etc/singularity.executor.properties");
+  }
 
+  public void bindDefaults(Properties properties) {
     properties.put(TASK_APP_DIRECTORY, "app");
     properties.put(TASK_EXECUTOR_BASH_LOG_PATH, "executor.bash.log");
     properties.put(TASK_EXECUTOR_JAVA_LOG_PATH, "executor.java.log");
@@ -61,6 +63,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityRunnerBas
   
     properties.put(TAIL_LOG_LINES_TO_SAVE, "500");
     properties.put(TAIL_LOG_FILENAME, "tail_of_finished_service.log");
+    
+    properties.put(GLOBAL_TASK_DEFINITION_SUFFIX, ".task.json");
     
     properties.put(LOGROTATE_COMMAND, "logrotate");
     properties.put(LOGROTATE_DIRECTORY, "logs");

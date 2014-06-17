@@ -12,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosExecutorObject;
 import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;

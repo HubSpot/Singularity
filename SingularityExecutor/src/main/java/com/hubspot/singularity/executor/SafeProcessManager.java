@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -75,9 +76,9 @@ public abstract class SafeProcessManager {
   }
   
   public Process startProcess(ProcessBuilder builder) {
-    String cmd = builder.command().get(0);
+    final String cmd = builder.command().get(0);
     
-    log.debug("Starting process {}", cmd);
+    log.debug("Starting process {}", Joiner.on(" ").join(builder.command()));
     
     processLock.lock();
     

@@ -20,6 +20,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
+import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 
 public class SingularityExecutorTaskBuilder {
 
@@ -32,16 +33,19 @@ public class SingularityExecutorTaskBuilder {
   private final ExecutorUtils executorUtils;
   
   private final String executorPid;
+
+  private final JsonObjectFileHelper jsonObjectFileHelper;
   
   @Inject
-  public SingularityExecutorTaskBuilder(@Named(SingularityRunnerBaseModule.JSON_MAPPER) ObjectMapper jsonObjectMapper, ExecutorUtils executorUtils, TemplateManager templateManager, SingularityExecutorLogging executorLogging, 
-      SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid) {
-    this.executorUtils = executorUtils;
+  public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper, JsonObjectFileHelper jsonObjectFileHelper, TemplateManager templateManager, 
+      SingularityExecutorLogging executorLogging,  SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid, ExecutorUtils executorUtils) {
+    this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
     this.executorLogging = executorLogging;
     this.configuration = configuration;
     this.executorPid = executorPid;
+    this.executorUtils = executorUtils;
   }
   
   public Logger buildTaskLogger(String taskId) {
@@ -55,11 +59,11 @@ public class SingularityExecutorTaskBuilder {
     
     SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData);
     
-    executorUtils.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);
+    jsonObjectFileHelper.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);
     
     ArtifactManager artifactManager = buildArtifactManager(taskId, log);
     
-    return new SingularityExecutorTask(driver, executorUtils, configuration, taskDefinition, executorPid, artifactManager, taskInfo, templateManager, jsonObjectMapper, log);
+    return new SingularityExecutorTask(driver, executorUtils, configuration, taskDefinition, executorPid, artifactManager, taskInfo, templateManager, jsonObjectMapper, log, jsonObjectFileHelper);
   }
   
   private ArtifactManager buildArtifactManager(String taskId, Logger log) {

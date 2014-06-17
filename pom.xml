@@ -65,9 +65,11 @@
   <modules>
     <module>SingularityBase</module>
     <module>SingularityRunnerBase</module>
+    <module>MesosClient</module>
     <module>SingularityClient</module>
     <module>SingularityService</module>
     <module>SingularityExecutor</module>
+    <module>SingularityExecutorCleanup</module>
     <module>SingularityLogWatcher</module>
     <module>SingularityS3Uploader</module>
   </modules>

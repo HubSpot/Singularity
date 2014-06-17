@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
 public class SingularityS3UploaderConfiguration {
 
@@ -25,8 +26,8 @@ public class SingularityS3UploaderConfiguration {
       @Named(SingularityS3UploaderConfigurationLoader.S3_ACCESS_KEY) String s3AccessKey, 
       @Named(SingularityS3UploaderConfigurationLoader.S3_SECRET_KEY) String s3SecretKey,
       @Named(SingularityS3UploaderConfigurationLoader.EXECUTOR_CORE_THREADS) String executorCoreThreads,
-      @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
-      @Named(SingularityS3UploaderConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
+      @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
+      @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
       @Named(SingularityS3UploaderConfigurationLoader.CHECK_FOR_UPLOADS_EVERY_SECONDS) String checkUploadsEverySeconds,
       @Named(SingularityS3UploaderConfigurationLoader.STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE) String stopCheckingAfterHoursWithoutNewFile
       ) {
@@ -34,7 +35,7 @@ public class SingularityS3UploaderConfiguration {
     this.s3AccessKey = s3AccessKey;
     this.s3SecretKey = s3SecretKey;
     this.executorCoreThreads = Integer.parseInt(executorCoreThreads);
-    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityS3UploaderConfigurationLoader.S3_METADATA_DIRECTORY);
+    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY);
     this.s3MetadataSuffix = s3MetadataSuffix;
     this.checkUploadsEverySeconds = Long.parseLong(checkUploadsEverySeconds);
     this.stopCheckingAfterMillisWithoutNewFile = TimeUnit.HOURS.toMillis(Long.parseLong(stopCheckingAfterHoursWithoutNewFile));

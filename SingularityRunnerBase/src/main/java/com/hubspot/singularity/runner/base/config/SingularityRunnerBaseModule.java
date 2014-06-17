@@ -8,28 +8,37 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.collect.ObjectArrays;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 
 public class SingularityRunnerBaseModule extends AbstractModule {
 
-  public static final String JSON_MAPPER = "object.mapper.json";
   public static final String PROCESS_NAME = "process.name";
   
-  private final String rootPath;
-  private final SingularityRunnerBaseConfigurationLoader configuration;
+  private final SingularityConfigurationLoader[] configurations;
   
-  public SingularityRunnerBaseModule(String rootPath, SingularityRunnerBaseConfigurationLoader configuration) {
-    this.rootPath = rootPath;
-    this.configuration = configuration;
+  public SingularityRunnerBaseModule(SingularityConfigurationLoader... configurations) {
+    this.configurations = ObjectArrays.concat(new SingularityRunnerBaseConfigurationLoader(), configurations);
   }
 
   @Override
   protected void configure() {
-    Properties properties = configuration.bindPropertiesFile(rootPath, binder());
+    Properties properties = new Properties();
+    
+    for (SingularityConfigurationLoader configurationLoader : configurations) {
+      configurationLoader.bindDefaults(properties);
+    }
+    
+    for (SingularityConfigurationLoader configurationLoader : configurations) {
+      configurationLoader.bindPropertiesFile(properties);
+    }
+    
+    Names.bindProperties(binder(), properties);
     
     bind(Properties.class).toInstance(properties);
     bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
@@ -48,8 +57,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   
   @Provides
   @Singleton
-  @Named(JSON_MAPPER)
-  public ObjectMapper getJsonObjectMapper() {
+  public ObjectMapper getObjectMapper() {
     final ObjectMapper mapper = new ObjectMapper();
     mapper.setSerializationInclusion(Include.NON_NULL);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

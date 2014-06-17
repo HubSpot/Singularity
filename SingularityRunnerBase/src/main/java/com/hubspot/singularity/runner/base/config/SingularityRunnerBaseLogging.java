@@ -1,6 +1,7 @@
 package com.hubspot.singularity.runner.base.config;
 
-import java.util.Map.Entry;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -35,8 +37,14 @@ public class SingularityRunnerBaseLogging {
   public void printProperties(Logger rootLogger) {
     rootLogger.debug("Loaded {} properties", properties.size());
     
-    for (Entry<Object, Object> entries : properties.entrySet()) {
-      rootLogger.debug("  {} -> {}", entries.getKey(), entries.getValue());
+    List<String> strKeys = Lists.newArrayListWithCapacity(properties.size());
+    for (Object object : properties.keySet()) {
+      strKeys.add(object.toString());
+    }
+    Collections.sort(strKeys);
+    
+    for (String key : strKeys) {
+      rootLogger.debug("  {} -> {}", key, properties.get(key));
     }
   }
   

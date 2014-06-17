@@ -82,7 +82,7 @@ public class ArtifactManager extends SimpleProcessManager {
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
     final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
     
-    log.info("Extracting {} to {}", embeddedArtifact.getName(), extractTo);
+    log.info("Extracting {} bytes of {} to {}", embeddedArtifact.getContent().length, embeddedArtifact.getName(), extractTo);
     
     try (SeekableByteChannel byteChannel = Files.newByteChannel(directory.resolve(embeddedArtifact.getFilename()), EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))) {
       byteChannel.write(ByteBuffer.wrap(embeddedArtifact.getContent()));

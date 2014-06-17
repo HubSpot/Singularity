@@ -15,6 +15,7 @@ import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 
 public class SingularityExecutorTask {
   
@@ -29,7 +30,7 @@ public class SingularityExecutorTask {
   private final SingularityExecutorTaskConfiguration taskConfiguration;
   
   public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log) {
+      ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;
@@ -39,7 +40,7 @@ public class SingularityExecutorTask {
 
     this.taskConfiguration = new SingularityExecutorTaskConfiguration(taskDefinition, configuration);
     
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskConfiguration, templateManager, configuration, log, executorUtils);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskConfiguration, templateManager, configuration, log, jsonObjectFileHelper);
     this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, configuration, taskDefinition, log);
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, taskDefinition.getExecutorData(), executorPid);
   }
