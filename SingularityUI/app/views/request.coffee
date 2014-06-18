@@ -46,10 +46,14 @@ class RequestView extends View
         app.collections.requestsPending.fetch().done =>
             if (app.collections.requestsPending.get @requestModel.get "id")?
                 @$el.find("#pending-alert").removeClass "hide"
+            else
+                @$el.find("#pending-alert").addClass "hide"
         
         app.collections.requestsCleaning.fetch().done =>
             if (app.collections.requestsCleaning.get @requestModel.get "id")?
                 @$el.find("#cleaning-alert").removeClass "hide"
+            else
+                @$el.find("#cleaning-alert").addClass "hide"
 
     refresh: ->
         @refreshCount ?= 0
