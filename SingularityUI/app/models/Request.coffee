@@ -18,22 +18,22 @@ class Request extends Model
 
     deletePaused: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/paused"
+            url: "#{ @url() }/paused"
             type: 'DELETE'
 
     unpause: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/unpause?user=#{app.getUsername()}"
+            url: "#{ @url() }/unpause?user=#{app.getUsername()}"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/pause?user=#{app.getUsername()}"
+            url: "#{ @url() }/pause?user=#{app.getUsername()}"
             type: 'POST'
 
     run: (confirmedOrPromptData) ->
         options =
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/run"
+            url: "#{ @url() }/run"
             type: 'POST'
             contentType: 'application/json'
 
@@ -46,12 +46,12 @@ class Request extends Model
         
     bounce: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/bounce"
+            url: "#{ @url() }/bounce"
             type: "POST"
 
     destroy: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }?user=#{app.getUsername()}"
+            url: "#{ @url() }?user=#{app.getUsername()}"
             type: "DELETE"
 
 module.exports = Request
