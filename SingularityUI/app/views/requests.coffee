@@ -151,9 +151,6 @@ class RequestsView extends View
 
         else
             context.requests = _.pluck(@collection.models, 'attributes')
-        
-        if @lastRequestsFilter is 'all'
-            context.requests.reverse()
 
         for request in context.requests
             if app.collections.requestsStarred.get(request.name)?
