@@ -27,7 +27,7 @@ public class SingularityExecutorTask {
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
   private final SingularityExecutorTaskCleanup taskCleanup;
-  private final SingularityExecutorTaskConfiguration taskConfiguration;
+  private final SingularityExecutorTaskDefinition taskDefinition;
   
   public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
       ArtifactManager artifactManager, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
@@ -38,9 +38,9 @@ public class SingularityExecutorTask {
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
 
-    this.taskConfiguration = new SingularityExecutorTaskConfiguration(taskDefinition, configuration);
+    this.taskDefinition = taskDefinition;
     
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskConfiguration, templateManager, configuration, log, jsonObjectFileHelper);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, configuration, log, jsonObjectFileHelper);
     this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, configuration, taskDefinition, log);
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactManager, templateManager, configuration, taskDefinition.getExecutorData(), executorPid);
   }
@@ -90,15 +90,15 @@ public class SingularityExecutorTask {
   }
 
   public String getTaskId() {
-    return taskConfiguration.getTaskId();
+    return taskDefinition.getTaskId();
   }
 
   public ExecutorData getExecutorData() {
-    return taskConfiguration.getExecutorData();
+    return taskDefinition.getExecutorData();
   }
   
-  public SingularityExecutorTaskConfiguration getTaskConfiguration() {
-    return taskConfiguration;
+  public SingularityExecutorTaskDefinition getTaskDefinition() {
+    return taskDefinition;
   }
 
   @Override

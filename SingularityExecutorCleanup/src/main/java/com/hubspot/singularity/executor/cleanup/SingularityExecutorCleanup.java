@@ -26,7 +26,6 @@ import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanu
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
-import com.hubspot.singularity.executor.task.SingularityExecutorTaskConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
@@ -56,9 +55,9 @@ public class SingularityExecutorCleanup {
     
     final Set<String> runningTaskIds = getRunningTaskIds();
    
-    LOG.info("Found {} running tasks", runningTaskIds);
+    LOG.info("Found {} running tasks from Mesos", runningTaskIds);
    
-    statisticsBldr.setRunningTasks(runningTaskIds.size());
+    statisticsBldr.setMesosRunningTasks(runningTaskIds.size());
     
     if (runningTaskIds.isEmpty()) {
       if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
@@ -76,7 +75,7 @@ public class SingularityExecutorCleanup {
         continue;
       }
       
-      statisticsBldr.incrTotalTasks();
+      statisticsBldr.incrTotalTaskFiles();
       
       try {
         Optional<SingularityExecutorTaskDefinition> taskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
@@ -133,7 +132,7 @@ public class SingularityExecutorCleanup {
   }
   
   private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition) {
-    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(new SingularityExecutorTaskConfiguration(taskDefinition, executorConfiguration), templateManager, executorConfiguration, LOG, jsonObjectFileHelper);
+    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, executorConfiguration, LOG, jsonObjectFileHelper);
     
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG);
   

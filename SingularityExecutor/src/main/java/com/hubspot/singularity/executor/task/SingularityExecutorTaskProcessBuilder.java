@@ -62,12 +62,12 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   }
   
   private Path getPath(String filename) {
-    return task.getTaskConfiguration().getTaskDirectory().resolve(filename);
+    return task.getTaskDefinition().getTaskDirectoryPath().resolve(filename);
   }
   
   private void extractFiles(ExecutorData executorData) {
     for (EmbeddedArtifact artifact : executorData.getEmbeddedArtifacts()) {
-      artifactManager.extract(artifact, task.getTaskConfiguration().getTaskDirectory());
+      artifactManager.extract(artifact, task.getTaskDefinition().getTaskDirectoryPath());
     }
   }
   
@@ -77,7 +77,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       
       Preconditions.checkState(fetched.getFileName().toString().endsWith(".tar.gz"), "%s did not appear to be a tar archive (did not end with .tar.gz)", fetched.getFileName());
       
-      artifactManager.untar(fetched, task.getTaskConfiguration().getTaskDirectory());
+      artifactManager.untar(fetched, task.getTaskDefinition().getTaskDirectoryPath());
     }
   }
   
@@ -105,10 +105,10 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     
-    processBuilder.directory(task.getTaskConfiguration().getTaskDirectory().toFile());
+    processBuilder.directory(task.getTaskDefinition().getTaskDirectoryPath().toFile());
     
-    processBuilder.redirectError(task.getTaskConfiguration().getExecutorBashOut().toFile());
-    processBuilder.redirectOutput(task.getTaskConfiguration().getExecutorBashOut().toFile());
+    processBuilder.redirectError(task.getTaskDefinition().getExecutorBashOutPath().toFile());
+    processBuilder.redirectOutput(task.getTaskDefinition().getExecutorBashOutPath().toFile());
     
     return processBuilder;
   }
