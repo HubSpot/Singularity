@@ -498,18 +498,24 @@ public class SingularityScheduler {
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest) {
     final long nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest.getPendingType());
   
-    int highestInstanceNo = 0;
-
+    final Set<Integer> inuseInstanceNumbers = Sets.newHashSetWithExpectedSize(matchingTaskIds.size());
+    
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
-      if (matchingTaskId.getInstanceNo() > highestInstanceNo) {
-        highestInstanceNo = matchingTaskId.getInstanceNo();
-      }
+      inuseInstanceNumbers.add(matchingTaskId.getInstanceNo());
     }
     
     final List<SingularityPendingTask> newTasks = Lists.newArrayListWithCapacity(numMissingInstances);
     
+    int nextInstanceNumber = 1;
+    
     for (int i = 0; i < numMissingInstances; i++) {
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, i + 1 + highestInstanceNo, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
+      while (inuseInstanceNumbers.contains(nextInstanceNumber)) {
+        nextInstanceNumber++;
+      }
+      
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, nextInstanceNumber, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
+    
+      nextInstanceNumber++;
     }
     
     return newTasks;
