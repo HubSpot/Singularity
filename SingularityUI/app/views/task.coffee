@@ -19,6 +19,7 @@ class TaskView extends View
     logsTemplate:     require './templates/taskLogs'
     filesTemplate:    require './templates/taskFiles'
     infoTemplate:     require './templates/taskInfo'
+    environmentTemplate: require './templates/taskEnvironment'
     resourceUsageTemplate: require './templates/taskResourceUsage'
 
     initialize: ->
@@ -111,6 +112,7 @@ class TaskView extends View
             @$el.append @filesTemplate context, partials
             @$el.append @infoTemplate context, partials
             @$el.append @resourceUsageTemplate context, partials
+            @$el.append @environmentTemplate context, partials
 
             @saveSelectors()
             @setupSubviews()
@@ -120,6 +122,7 @@ class TaskView extends View
             @dom.filesSection.replaceWith @filesTemplate context, partials
             @dom.infoSection.replaceWith @infoTemplate context, partials
             @dom.resourceUsageSection.replaceWith @resourceUsageTemplate context, partials
+            @dom.environmentSection.replaceWith @environmentTemplate context, partials
 
         @setupEvents()
 
@@ -154,6 +157,7 @@ class TaskView extends View
         @dom.logsWrapper = @$('[data-s3-logs-wrapper]')
         @dom.filesSection = @$('[data-task-files]')
         @dom.infoSection = @$('[data-task-info]')
+        @dom.environmentSection = @$('[data-task-environment]')
         @dom.resourceUsageSection = @$('[data-task-resource-usage]')
 
     setupSubviews: ->
