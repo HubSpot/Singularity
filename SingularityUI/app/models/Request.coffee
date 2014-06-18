@@ -23,12 +23,12 @@ class Request extends Model
 
     unpause: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/unpause"
+            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/unpause?user=#{app.getUsername()}"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/pause"
+            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/pause?user=#{app.getUsername()}"
             type: 'POST'
 
     run: (confirmedOrPromptData) ->
@@ -48,5 +48,10 @@ class Request extends Model
         $.ajax
             url: "#{ config.apiRoot }/requests/request/#{ @get('id') }/bounce"
             type: "POST"
+
+    destroy: =>
+        $.ajax
+            url: "#{ config.apiRoot }/requests/request/#{ @get('id') }?user=#{app.getUsername()}"
+            type: "DELETE"
 
 module.exports = Request
