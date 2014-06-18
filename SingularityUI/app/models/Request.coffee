@@ -33,7 +33,7 @@ class Request extends Model
 
     run: (confirmedOrPromptData) ->
         options =
-            url: "#{ @url() }/run"
+            url: "#{ @url() }/run?user=#{app.getUsername()}"
             type: 'POST'
             contentType: 'application/json'
 
@@ -46,7 +46,7 @@ class Request extends Model
         
     bounce: =>
         $.ajax
-            url: "#{ @url() }/bounce"
+            url: "#{ @url() }/bounce?user=#{app.getUsername()}"
             type: "POST"
 
     destroy: =>
