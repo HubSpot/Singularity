@@ -7,59 +7,69 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.deploy.ExecutorData;
-import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
 public class SingularityExecutorTaskDefinition {
 
   private final ExecutorData executorData;
   private final String taskId;
-  private final String taskDirectory;
+  private final Path taskDirectoryPath;
   private final String executorBashOut;
   private final String serviceLogOut;
-  
-  public SingularityExecutorTaskDefinition(String taskId, ExecutorData executorData, SingularityExecutorConfiguration configuration) {
-    this.taskId = taskId;
-    this.executorData = executorData;
-    this.serviceLogOut = configuration.getTaskDirectoryPath(taskId).resolve(configuration.getServiceLog()).toString();
-    this.taskDirectory = configuration.getTaskDirectoryPath(taskId).toString();
-    this.executorBashOut = configuration.getExecutorBashLogPath(taskId).toString();
-  }
+  private final String taskAppDirectory;
+  private final String logrotateStateFile;
   
   @JsonCreator
-  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("serviceLogOut") String serviceLogOut, 
-      @JsonProperty("taskDirectory") String taskDirectory, @JsonProperty("executorBashOut") String executorBashOut) {
+  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, 
+      @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile) {
     this.executorData = executorData;
     this.taskId = taskId;
-    this.taskDirectory = taskDirectory;
+    this.taskDirectoryPath = Paths.get(taskDirectory);
+
     this.executorBashOut = executorBashOut;
     this.serviceLogOut = serviceLogOut;
+    this.taskAppDirectory = taskAppDirectory;
+    this.logrotateStateFile = logrotateStateFile;
   }
 
   @JsonIgnore
   public Path getTaskDirectoryPath() {
-    return Paths.get(taskDirectory);
+    return taskDirectoryPath;
   }
 
   @JsonIgnore
   public Path getExecutorBashOutPath() {
-    return Paths.get(executorBashOut);
+    return taskDirectoryPath.resolve(executorBashOut);
   }
 
   @JsonIgnore
   public Path getServiceLogOutPath() {
-    return Paths.get(serviceLogOut);
+    return taskDirectoryPath.resolve(serviceLogOut);
   }
   
-  public String getTaskDirectory() {
-    return taskDirectory;
+  @JsonIgnore
+  public Path getTaskAppDirectoryPath() {
+    return taskDirectoryPath.resolve(taskAppDirectory);
   }
-
+  
+  @JsonIgnore
+  public Path getLogrotateStateFilePath() {
+    return taskDirectoryPath.resolve(logrotateStateFile);
+  }
+  
   public String getExecutorBashOut() {
     return executorBashOut;
   }
 
   public String getServiceLogOut() {
     return serviceLogOut;
+  }
+
+  public String getTaskAppDirectory() {
+    return taskAppDirectory;
+  }
+
+  public String getLogrotateStateFile() {
+    return logrotateStateFile;
   }
 
   public ExecutorData getExecutorData() {

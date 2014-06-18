@@ -53,8 +53,7 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
   }
   
   private boolean cleanupTaskAppDirectory() {
-    final Path taskAppDirectoryPath = configuration.getTaskAppDirectoryPath(taskDefinition.getTaskId());
-    final String pathToDelete = taskAppDirectoryPath.toString();
+    final String pathToDelete = taskDefinition.getTaskAppDirectory();
     
     log.info("Deleting: {}", pathToDelete);
     

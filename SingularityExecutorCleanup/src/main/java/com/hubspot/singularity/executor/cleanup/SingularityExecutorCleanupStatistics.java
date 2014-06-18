@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.cleanup;
 
+
 public class SingularityExecutorCleanupStatistics {
 
   private final int totalTaskFiles;

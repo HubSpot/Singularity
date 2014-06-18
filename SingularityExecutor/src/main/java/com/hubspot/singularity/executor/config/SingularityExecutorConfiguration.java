@@ -134,7 +134,7 @@ public class SingularityExecutorConfiguration {
   public String getLogrotateStateFile() {
     return logrotateStateFile;
   }
-
+  
   public int getMaxTaskMessageLength() {
     return maxTaskMessageLength;
   }
@@ -187,18 +187,6 @@ public class SingularityExecutorConfiguration {
     return taskId.replace(":", "_");
   }
   
-  public Path getTaskAppDirectoryPath(String taskId) {
-    return getTaskDirectoryPath(taskId).resolve(taskAppDirectory);
-  }
-  
-  public Path getExecutorBashLogPath(String taskId) { 
-    return getTaskDirectoryPath(taskId).resolve(getExecutorBashLog());
-  }
-  
-  public Path getExecutorJavaLogPath(String taskId) { 
-    return getTaskDirectoryPath(taskId).resolve(getExecutorJavaLog());
-  }
-
   public String getLogrotateCommand() {
     return logrotateCommand;
   }

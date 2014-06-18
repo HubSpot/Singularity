@@ -76,7 +76,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
     try {
       super.runCommand(cmd, Redirect.to(taskDefinition.getTaskDirectoryPath().resolve(configuration.getServiceFinishedTailLog()).toFile()));
     } catch (Throwable t) {
-      log.error("Failed saving tail of log {} to {}", new Object[] { taskDefinition.getServiceLogOut(), configuration.getServiceFinishedTailLog(), t});
+      log.error("Failed saving tail of log {} to {}", taskDefinition.getServiceLogOut(), configuration.getServiceFinishedTailLog(), t);
     }
   }
   
@@ -97,7 +97,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         configuration.getLogrotateCommand(), 
         "-f",
         "-s",
-        configuration.getLogrotateStateFile(),
+        taskDefinition.getLogrotateStateFilePath().toString(),
         getLogrotateConfPath().toString());
     
     try {
