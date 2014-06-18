@@ -222,7 +222,7 @@ public class RequestResource {
     
     checkRequestStateNotPaused(requestWithState, "bounce");
     
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.BOUNCE));
   
     return fillEntireRequest(requestWithState);
   }
