@@ -3,15 +3,19 @@
         <thead>
             <tr>
                 <th>Name</th>
+                <th class="visible-desktop">Deploy ID</th>
                 <th class="visible-desktop">Next run</th>
+                <th class="visible-desktop">Pending Type</th>
                 <th data-sortable="false"></th>
             </tr>
         </thead>
         <tbody>
             {{#eachWithFn tasks}}
                 <tr data-task-id="{{ id }}">
-                    <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
-                    <td class="visible-desktop" data-value="{{ nextRunAt}}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                    <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/request/{{ requestId }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
+                    <td class="visible-desktop">{{ pendingTaskId.deployId }}</td>
+                    <td class="visible-desktop" data-value="{{ pendingTask.nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
+                    <td class="visible-desktop">{{ pendingTaskId.pendingType }}</td>
                     <td class="actions-column">
                         <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                         <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
