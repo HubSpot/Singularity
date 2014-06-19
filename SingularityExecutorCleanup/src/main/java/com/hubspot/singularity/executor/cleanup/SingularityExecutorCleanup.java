@@ -90,7 +90,7 @@ public class SingularityExecutorCleanup {
           continue;
         }
         
-        if (!cleanTask(taskDefinition.get())) {
+        if (cleanTask(taskDefinition.get())) {
           statisticsBldr.incrSuccessfullyCleanedTasks();
         } else {
           statisticsBldr.incrErrorTasks();
