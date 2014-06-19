@@ -57,19 +57,19 @@ public class SingularityExecutorTaskDefinition {
   }
   
   public String getExecutorBashOut() {
-    return executorBashOut;
+    return getExecutorBashOutPath().toString();
   }
 
   public String getServiceLogOut() {
-    return serviceLogOut;
+    return getServiceLogOutPath().toString();
   }
 
   public String getTaskAppDirectory() {
-    return taskAppDirectory;
+    return getTaskAppDirectoryPath().toString();
   }
 
   public String getLogrotateStateFile() {
-    return logrotateStateFile;
+    return getLogrotateStateFilePath().toString();
   }
 
   public ExecutorData getExecutorData() {
