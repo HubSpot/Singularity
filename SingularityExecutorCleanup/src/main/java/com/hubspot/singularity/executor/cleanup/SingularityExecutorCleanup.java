@@ -82,6 +82,7 @@ public class SingularityExecutorCleanup {
      
         if (!taskDefinition.isPresent()) {
           statisticsBldr.incrInvalidTasks();
+          continue;
         }
         
         if (runningTaskIds.contains(taskDefinition.get().getTaskId())) {
