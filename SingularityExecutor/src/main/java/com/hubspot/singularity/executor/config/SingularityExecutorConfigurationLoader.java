@@ -39,6 +39,9 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String LOGROTATE_COUNT = "executor.logrotate.count";
   public static final String LOGROTATE_DATEFORMAT = "executor.logrotate.dateformat";
   
+  public static final String LOGROTATE_EXTRAS_DATEFORMAT = "executor.logrotate.extras.dateformat";
+  public static final String LOGROTATE_EXTRAS_FILES = "executor.logrotate.extras.files";
+  
   public static final String TAIL_LOG_LINES_TO_SAVE = "executor.service.log.tail.lines.to.save";
   public static final String TAIL_LOG_FILENAME = "executor.service.log.tail.file.name";
   
@@ -73,6 +76,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
     properties.put(LOGROTATE_DATEFORMAT, "-%Y%m%d%s");
     properties.put(LOGROTATE_CONFIG_DIRECTORY, "/etc/logrotate.d");
     properties.put(LOGROTATE_STATE_FILE, "logrotate.status");
+    properties.put(LOGROTATE_EXTRAS_FILES, "");
+    properties.put(LOGROTATE_EXTRAS_DATEFORMAT, "-%Y%m%d");
   }
   
 }

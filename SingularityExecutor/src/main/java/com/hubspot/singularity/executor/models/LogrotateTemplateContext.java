@@ -28,6 +28,14 @@ public class LogrotateTemplateContext {
     return configuration.getLogrotateToDirectory();
   }
   
+  public String[] getExtrasFiles() {
+    return configuration.getLogrotateExtrasFiles();
+  }
+  
+  public String getExtrasDateformat() {
+    return configuration.getLogrotateExtrasDateformat();
+  }
+  
   public String getLogfile() {
     return logfile;
   }

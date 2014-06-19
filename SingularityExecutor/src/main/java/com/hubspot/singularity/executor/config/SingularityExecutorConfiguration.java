@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -35,7 +36,10 @@ public class SingularityExecutorConfiguration {
   private final String logrotateMaxageDays;
   private final String logrotateCount; 
   private final String logrotateDateformat;
-
+  
+  private final String logrotateExtrasDateformat;
+  private final String[] logrotateExtrasFiles;
+  
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
   
@@ -77,6 +81,8 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory,
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_STATE_FILE) String logrotateStateFile,
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_EXTRAS_DATEFORMAT) String logrotateExtrasDateformat,
+      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_EXTRAS_FILES) String logrotateExtrasFiles,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog
       ) {
@@ -109,6 +115,12 @@ public class SingularityExecutorConfiguration {
     this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY);
     this.tailLogLinesToSave = Integer.parseInt(tailLogLinesToSave);
     this.serviceFinishedTailLog = serviceFinishedTailLog;
+    this.logrotateExtrasDateformat = logrotateExtrasDateformat;
+    if (logrotateExtrasFiles != null && logrotateExtrasFiles.trim().length() > 0) {
+      this.logrotateExtrasFiles = logrotateExtrasFiles.split(",");
+    } else {
+      this.logrotateExtrasFiles = new String[0];
+    }
   }
   
   public int getTailLogLinesToSave() {
@@ -129,6 +141,14 @@ public class SingularityExecutorConfiguration {
 
   public int getKillThreads() {
     return killThreads;
+  }
+
+  public String getLogrotateExtrasDateformat() {
+    return logrotateExtrasDateformat;
+  }
+
+  public String[] getLogrotateExtrasFiles() {
+    return logrotateExtrasFiles;
   }
 
   public String getLogrotateStateFile() {
@@ -245,9 +265,9 @@ public class SingularityExecutorConfiguration {
         + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
         + ", globalTaskDefinitionDirectory=" + globalTaskDefinitionDirectory + ", globalTaskDefinitionSuffix=" + globalTaskDefinitionSuffix + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads
         + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory="
-        + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logMetadataDirectory=" + logMetadataDirectory
-        + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory="
-        + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat
+        + ", logrotateExtrasFiles=" + Arrays.toString(logrotateExtrasFiles) + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave
+        + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
   }
-  
+
 }

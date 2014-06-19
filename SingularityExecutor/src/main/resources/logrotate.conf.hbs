@@ -1,15 +1,20 @@
-{{{ logfile }}} 
+dateext
+compress
+daily
+copytruncate
+nomail
+nosharedscripts
+rotate {{{ rotateCount }}}
+maxage {{{ maxageDays }}}
+notifempty
 
-{
-  dateext
+{{{ logfile }}} {
   dateformat {{{ rotateDateformat }}}
   olddir {{{ rotateDirectory }}}
-  compress
-  daily
-  copytruncate
-  nomail
-  nosharedscripts
-  rotate {{{ rotateCount }}}
-  maxage {{{ maxageDays }}}
-  notifempty
 }
+
+{{#if extrasFiles}}
+{{#each extrasFiles}}{{{this}}} {{/each}} {
+  dateformat {{{ extrasDateformat }}}
+}
+{{/if}}
