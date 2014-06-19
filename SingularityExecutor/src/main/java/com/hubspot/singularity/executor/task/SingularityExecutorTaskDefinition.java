@@ -56,6 +56,10 @@ public class SingularityExecutorTaskDefinition {
     return taskDirectoryPath.resolve(logrotateStateFile);
   }
   
+  public String getTaskDirectory() {
+    return taskDirectoryPath.toString();
+  }
+  
   public String getExecutorBashOut() {
     return getExecutorBashOutPath().toString();
   }
