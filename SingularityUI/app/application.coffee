@@ -142,6 +142,9 @@ class Application
             Backbone.history.once 'route', =>
                 setTimeout (=> @deployUserPrompt(welcome = true)), 1000
 
+    getUsername: =>
+        @user.get "deployUser" or "Unknown"
+
     deployUserPrompt: (welcome) ->
         vex.dialog.prompt
             message: """
