@@ -5,12 +5,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
+import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 
 
 public class SingularityExecutorCleanupRunner {
@@ -22,11 +25,11 @@ public class SingularityExecutorCleanupRunner {
     
     try {
       final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityExecutorConfigurationLoader(), new SingularityExecutorCleanupConfigurationLoader()), new SingularityExecutorModule());
-      final SingularityExecutorCleanup cleanup = injector.getInstance(SingularityExecutorCleanup.class);
+      final SingularityExecutorCleanupRunner runner = injector.getInstance(SingularityExecutorCleanupRunner.class);
       
       LOG.info("Starting cleanup");
       
-      final Optional<SingularityExecutorCleanupStatistics> statistics = cleanup.clean();
+      final Optional<SingularityExecutorCleanupStatistics> statistics = runner.cleanup();
 
       LOG.info("Finished with {} after {}", statistics, JavaUtils.duration(start));
       
@@ -35,6 +38,27 @@ public class SingularityExecutorCleanupRunner {
       LOG.error("Finished after {} with error", JavaUtils.duration(start), t);
       System.exit(1);
     }
+  }
+  
+  private final SingularityExecutorCleanup cleanup;
+  private final JsonObjectFileHelper fileHelper;
+  private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
+
+  @Inject
+  public SingularityExecutorCleanupRunner(SingularityExecutorCleanup cleanup, JsonObjectFileHelper fileHelper, SingularityExecutorCleanupConfiguration cleanupConfiguration) {
+    this.cleanup = cleanup;
+    this.fileHelper = fileHelper;
+    this.cleanupConfiguration = cleanupConfiguration;
+  }
+  
+  public Optional<SingularityExecutorCleanupStatistics> cleanup() {
+    Optional<SingularityExecutorCleanupStatistics> cleanupStatistics = cleanup.clean();
+   
+    if (cleanupStatistics.isPresent()) {
+      fileHelper.writeObject(cleanupStatistics.get(), cleanupConfiguration.getExecutorCleanupResultsDirectory().resolve(String.format("%s%s", System.currentTimeMillis(), cleanupConfiguration.getExecutorCleanupResultsSuffix())), LOG);
+    }
+    
+    return cleanupStatistics;
   }
   
 }
