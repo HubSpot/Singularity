@@ -8,6 +8,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfigurationLoader;

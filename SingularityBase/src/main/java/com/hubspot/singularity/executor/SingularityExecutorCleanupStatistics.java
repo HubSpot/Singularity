@@ -1,4 +1,7 @@
-package com.hubspot.singularity.executor.cleanup;
+package com.hubspot.singularity.executor;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 public class SingularityExecutorCleanupStatistics {
@@ -12,7 +15,17 @@ public class SingularityExecutorCleanupStatistics {
   private final int errorTasks;
   private final int invalidTasks; 
   
-  public SingularityExecutorCleanupStatistics(int totalTaskFiles, int mesosRunningTasks, int runningTasksIgnored, int staleTasks, int successfullyCleanedTasks, int ioErrorTasks, int errorTasks, int invalidTasks) {
+  @JsonCreator
+  public SingularityExecutorCleanupStatistics(
+      @JsonProperty("totalTaskFiles") int totalTaskFiles, 
+      @JsonProperty("mesosRunningTasks") int mesosRunningTasks, 
+      @JsonProperty("runningTasksIgnored") int runningTasksIgnored, 
+      @JsonProperty("staleTasks") int staleTasks, 
+      @JsonProperty("successfullyCleanedTasks") int successfullyCleanedTasks, 
+      @JsonProperty("ioErrorTasks") int ioErrorTasks, 
+      @JsonProperty("errorTasks") int errorTasks, 
+      @JsonProperty("invalidTasks") int invalidTasks
+    ) {
     this.totalTaskFiles = totalTaskFiles;
     this.mesosRunningTasks = mesosRunningTasks;
     this.runningTasksIgnored = runningTasksIgnored;
