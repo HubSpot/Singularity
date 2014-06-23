@@ -10,7 +10,6 @@ public class SingularityExecutorCleanupStatistics {
   private final int ioErrorTasks;
   private final int runningTasksIgnored;
   private final int mesosRunningTasks;
-  private final int staleTasks;
   private final int successfullyCleanedTasks;
   private final int errorTasks;
   private final int invalidTasks; 
@@ -20,7 +19,6 @@ public class SingularityExecutorCleanupStatistics {
       @JsonProperty("totalTaskFiles") int totalTaskFiles, 
       @JsonProperty("mesosRunningTasks") int mesosRunningTasks, 
       @JsonProperty("runningTasksIgnored") int runningTasksIgnored, 
-      @JsonProperty("staleTasks") int staleTasks, 
       @JsonProperty("successfullyCleanedTasks") int successfullyCleanedTasks, 
       @JsonProperty("ioErrorTasks") int ioErrorTasks, 
       @JsonProperty("errorTasks") int errorTasks, 
@@ -29,7 +27,6 @@ public class SingularityExecutorCleanupStatistics {
     this.totalTaskFiles = totalTaskFiles;
     this.mesosRunningTasks = mesosRunningTasks;
     this.runningTasksIgnored = runningTasksIgnored;
-    this.staleTasks = staleTasks;
     this.ioErrorTasks = ioErrorTasks;
     this.successfullyCleanedTasks = successfullyCleanedTasks;
     this.errorTasks = errorTasks;
@@ -52,9 +49,6 @@ public class SingularityExecutorCleanupStatistics {
     return mesosRunningTasks;
   }
 
-  public int getStaleTasks() {
-    return staleTasks;
-  }
 
   public int getSuccessfullyCleanedTasks() {
     return successfullyCleanedTasks;
@@ -70,7 +64,7 @@ public class SingularityExecutorCleanupStatistics {
 
   @Override
   public String toString() {
-    return "SingularityExecutorCleanupStatistics [totalTaskFiles=" + totalTaskFiles + ", ioErrorTasks=" + ioErrorTasks + ", runningTasksIgnored=" + runningTasksIgnored + ", mesosRunningTasks=" + mesosRunningTasks + ", staleTasks=" + staleTasks
+    return "SingularityExecutorCleanupStatistics [totalTaskFiles=" + totalTaskFiles + ", ioErrorTasks=" + ioErrorTasks + ", runningTasksIgnored=" + runningTasksIgnored + ", mesosRunningTasks=" + mesosRunningTasks
         + ", successfullyCleanedTasks=" + successfullyCleanedTasks + ", errorTasks=" + errorTasks + ", invalidTasks=" + invalidTasks + "]";
   }
 
@@ -79,7 +73,6 @@ public class SingularityExecutorCleanupStatistics {
     private int totalTaskFiles;
     private int runningTasksIgnored;
     private int mesosRunningTasks;
-    private int staleTasks;
     private int successfullyCleanedTasks;
     private int ioErrorTasks;
     private int errorTasks;
@@ -101,10 +94,6 @@ public class SingularityExecutorCleanupStatistics {
       this.mesosRunningTasks = mesosRunningTasks;
     }
     
-    public void incrStaleTasks() {
-      staleTasks++;
-    }
-    
     public void incrErrorTasks() {
       errorTasks++;
     }
@@ -118,7 +107,7 @@ public class SingularityExecutorCleanupStatistics {
     }
       
     public SingularityExecutorCleanupStatistics build() {
-      return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, runningTasksIgnored, staleTasks, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks);
+      return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, runningTasksIgnored, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks);
     }
     
   }
