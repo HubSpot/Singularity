@@ -37,6 +37,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   }
 
   public void setup() {
+    ensureServiceOutExists();
     writeLogrotateFile();
     writeTailMetadata(false);
     writeS3MetadataFile(false);
@@ -50,6 +51,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   public boolean teardown() {
     boolean writeTailMetadataSuccess = writeTailMetadata(true);
     
+    ensureServiceOutExists();
     copyLogTail();
     
     if (manualLogrotate()) {
@@ -111,9 +113,11 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   
   private void ensureServiceOutExists() {
     try {
-      Files.createFile(taskDefinition.getServiceLogOutPath());
+      if (!Files.exists(taskDefinition.getServiceLogOutPath())) {
+        Files.createFile(taskDefinition.getServiceLogOutPath());
+      }
     } catch (FileAlreadyExistsException faee) {
-      log.warn("Executor out {} already existed", taskDefinition.getServiceLogOut());
+      log.debug("Executor out {} already existed", taskDefinition.getServiceLogOut());
     } catch (Throwable t) {
       log.error("Failed creating executor out {}", taskDefinition.getServiceLogOut(), t);
     }
@@ -125,10 +129,6 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         log.warn("Not writing logging metadata because logging tag is absent");
       }
       return true;
-    }
-    
-    if (!finished) {
-      ensureServiceOutExists();
     }
     
     final TailMetadata tailMetadata = new TailMetadata(taskDefinition.getServiceLogOut(), taskDefinition.getExecutorData().getLoggingTag().get(), taskDefinition.getExecutorData().getLoggingExtraFields(), finished);
