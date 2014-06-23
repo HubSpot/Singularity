@@ -50,6 +50,7 @@ public class StateResource {
     final int activeTasks = taskManager.getNumActiveTasks();
     final int scheduledTasks = taskManager.getNumScheduledTasks();
     final int cleaningTasks = taskManager.getNumCleanupTasks();
+    final int lbCleanupTasks = taskManager.getNumLbCleanupTasks();
 
     final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getScheduledTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
     
@@ -99,7 +100,7 @@ public class StateResource {
       numDeploys++;
     }
     
-    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, 
+    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, 
         decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(), scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag());
   }
   

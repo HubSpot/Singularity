@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -88,6 +89,13 @@ public class TaskResource {
   @Path("/cleaning")
   public List<SingularityTaskCleanup> getCleaningTasks() {
     return taskManager.getCleanupTasks();
+  }
+  
+  @GET
+  @PropertyFiltering
+  @Path("/lbcleanup")
+  public List<SingularityTaskId> getLbCleanupTasks() {
+    return taskManager.getLBCleanupTasks();
   }
   
   @GET

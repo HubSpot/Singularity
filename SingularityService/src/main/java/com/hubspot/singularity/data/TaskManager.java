@@ -157,6 +157,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(CLEANUP_PATH_ROOT);
   }
   
+  public int getNumLbCleanupTasks() {
+    return getNumChildren(LB_CLEANUP_PATH_ROOT);
+  }
+  
   public int getNumActiveTasks() {
     return getNumChildren(ACTIVE_PATH_ROOT);
   }
