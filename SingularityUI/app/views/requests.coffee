@@ -162,10 +162,14 @@ class RequestsView extends View
         @
 
     setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
+        return if @$el.data('requestEventsSetup') is true
+
+        @$el.data('requestEventsSetup', true)
+
+        @$el.on 'click', '[data-action="viewJSON"]', (e) ->
             utils.viewJSON 'request', $(e.target).data('request-id')
 
-        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
+        @$el.on 'click', '[data-action="remove"]', (e) =>
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
@@ -193,7 +197,7 @@ class RequestsView extends View
                         @collection.remove(requestModel)
                         $row.remove()
 
-        @$el.find('[data-action="unpause"]').unbind('click').on 'click', (e) =>
+        @$el.on 'click', '[data-action="unpause"]', (e) =>
             $row = $(e.target).parents('tr')
             requestModel = @collection.get($(e.target).data('request-id'))
 
@@ -205,7 +209,7 @@ class RequestsView extends View
                     requestModel.unpause().done =>
                         @render()
 
-        @$el.find('[data-action="starToggle"]').unbind('click').on 'click', (e) =>
+        @$el.on 'click', '[data-action="starToggle"]', (e) =>
             $target = $(e.target)
             $table = $target.parents 'table'
 
@@ -220,7 +224,7 @@ class RequestsView extends View
             else
                 $requests.each -> $(@).attr('data-starred', 'true')
 
-        @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
+        @$el.on 'click', '[data-action="run-now"]', (e) =>
             requestModel = new Request id: $(e.target).data('request-id')
             $row = $(e.target).parents 'tr'
 
@@ -246,7 +250,7 @@ class RequestsView extends View
 
             dialogType dialogOptions
 
-        @$el.find('[data-requests-active-filter]').unbind('click').on 'click', (e) =>
+        @$el.on 'click', '[data-requests-active-filter]', (e) =>
             e.preventDefault()
             requestsActiveFilter = $(e.target).data('requests-active-filter')
             if e.metaKey or e.ctrlKey or e.shiftKey
