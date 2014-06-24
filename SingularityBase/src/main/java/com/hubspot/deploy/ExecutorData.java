@@ -24,11 +24,13 @@ public class ExecutorData {
   private final List<String> extraCmdLineArgs;
   private final Optional<String> loggingTag;
   private final Map<String, String> loggingExtraFields;
+  private final Optional<Long> sigKillProcessesAfterMillis;
   
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts, 
       @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user, @JsonProperty("runningSentinel") Optional<String> runningSentinel, 
-      @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag, @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields) {
+      @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag, @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, 
+      @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis) {
     this.cmd = cmd;
     this.embeddedArtifacts = nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = nonNullImmutable(externalArtifacts);
@@ -38,10 +40,11 @@ public class ExecutorData {
     this.runningSentinel = runningSentinel;
     this.loggingTag = loggingTag;
     this.loggingExtraFields = nonNullImmutable(loggingExtraFields);
+    this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
   }
   
   public ExecutorDataBuilder toBuilder() {
-    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields);
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
   }
   
   private <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
@@ -93,6 +96,10 @@ public class ExecutorData {
   public Optional<String> getUser() {
     return user;
   }
+ 
+  public Optional<Long> getSigKillProcessesAfterMillis() {
+    return sigKillProcessesAfterMillis;
+  }
 
   @Override
   public String toString() {
@@ -106,6 +113,7 @@ public class ExecutorData {
         .add("extraCmdLineArgs", extraCmdLineArgs)
         .add("loggingTag", loggingTag)
         .add("loggingExtraFields", loggingExtraFields)
+        .add("sigKillProcessesAfterMillis", sigKillProcessesAfterMillis)
         .toString();
   }
 }

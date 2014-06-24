@@ -17,9 +17,10 @@ public class ExecutorDataBuilder {
   private List<String> extraCmdLineArgs;
   private Optional<String> loggingTag;
   private Map<String, String> loggingExtraFields;
+  private Optional<Long> sigKillProcessesAfterMillis;
   
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
-      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields) {
+      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -36,7 +37,7 @@ public class ExecutorDataBuilder {
   }
   
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
   }
   
   public Optional<String> getLoggingTag() {
@@ -89,6 +90,15 @@ public class ExecutorDataBuilder {
     this.cmd = cmd;
     return this;
   }
+  
+  public Optional<Long> getSigKillProcessesAfterMillis() {
+    return sigKillProcessesAfterMillis;
+  }
+
+  public ExecutorDataBuilder setSigKillProcessesAfterMillis(Optional<Long> sigKillProcessesAfterMillis) {
+    this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
+    return this;
+  }
 
   public ExecutorDataBuilder setEmbeddedArtifacts(List<EmbeddedArtifact> embeddedArtifacts) {
     this.embeddedArtifacts = embeddedArtifacts;
@@ -132,6 +142,7 @@ public class ExecutorDataBuilder {
         .add("extraCmdLineArgs", extraCmdLineArgs)
         .add("loggingTag", loggingTag)
         .add("loggingExtraFields", loggingExtraFields)
+        .add("sigKillProcessesAfterMillis", sigKillProcessesAfterMillis)
         .toString();
   }
 }

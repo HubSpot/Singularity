@@ -29,6 +29,10 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     
     return process.waitFor();
   }
+  
+  public SingularityExecutorTask getTask() {
+    return task;
+  }
 
   @Override
   public String toString() {
