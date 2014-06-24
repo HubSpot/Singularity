@@ -92,7 +92,7 @@ public class TaskManager extends CuratorAsyncManager {
       public SingularityPendingTask apply(SingularityPendingTaskId input) {
         Optional<String> maybeCmdLineArgs = Optional.absent();
         
-        if (input.getPendingType() == PendingType.ONEOFF) {
+        if (input.getPendingType() == PendingType.ONEOFF || input.getPendingType() == PendingType.IMMEDIATE) {
           maybeCmdLineArgs = getStringData(ZKPaths.makePath(SCHEDULED_PATH_ROOT, input.getId()));
         }
         
