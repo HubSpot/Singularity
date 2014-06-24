@@ -95,6 +95,11 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   }
   
   public boolean manualLogrotate() {
+    if (!Files.exists(getLogrotateConfPath())) {
+      log.info("{} did not exist, skipping manual logrotation", getLogrotateConfPath());
+      return true;
+    }
+    
     final List<String> command = ImmutableList.of(
         configuration.getLogrotateCommand(), 
         "-f",
