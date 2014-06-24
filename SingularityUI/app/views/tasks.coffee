@@ -13,6 +13,15 @@ class TasksView extends View
 
     killTaskTemplate: require './templates/vex/killTask'
 
+    events:
+        'click [data-action="viewJSON"]': 'viewJson'
+        'click [data-action="remove"]': 'removeTask'
+        'click [data-action="run-now"]': 'runTask'
+
+        'change input[type="search"]': 'searchChange'
+        'keyup input[type="search"]': 'searchChange'
+        'input input[type="search"]': 'searchChange'
+
     initialize: ->
         @lastTasksFilter = @options.tasksFilter
 
@@ -73,9 +82,6 @@ class TasksView extends View
             partials:
                 tasksTable: templateTable
 
-        $search = @$el.find('input[type="search"]')
-        searchWasFocused = $search.is(':focus')
-
         $tasksTableContainer =  @$el.find('[data-tasks-table-container]')
 
         if not $tasksTableContainer.length or forceFullRender
@@ -83,63 +89,49 @@ class TasksView extends View
 
         else
             $tasksTableContainer.html templateTable context
-
-        @setupEvents()
-        @setUpSearchEvents(refresh, searchWasFocused)
         utils.setupSortableTables()
 
         @
 
-    setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'task', $(e.target).data('task-id')
+    viewJson: (e) ->
+        utils.viewJSON 'task', $(e.target).data('task-id')
 
-        $removeLinks = @$el.find('[data-action="remove"]')
+    removeTask: (e) ->
+        $row = $(e.target).parents('tr')
+        taskModel = @collection.get($(e.target).data('task-id'))
 
-        $removeLinks.unbind('click').on 'click', (e) =>
-            $row = $(e.target).parents('tr')
-            taskModel = @collection.get($(e.target).data('task-id'))
+        vex.dialog.confirm
+            buttons: [
+                $.extend({}, vex.dialog.buttons.YES, (text: 'Kill task', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
+                vex.dialog.buttons.NO
+            ]
+            message: @killTaskTemplate(taskId: taskModel.get('id'))
+            callback: (confirmed) =>
+                return unless confirmed
+                taskModel.destroy()
+                delete app.allTasks[taskModel.get('id')] # TODO - move to model on destroy?
+                @collection.remove(taskModel)
+                $row.remove()
 
-            vex.dialog.confirm
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, (text: 'Kill task', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                    vex.dialog.buttons.NO
-                ]
-                message: @killTaskTemplate(taskId: taskModel.get('id'))
-                callback: (confirmed) =>
-                    return unless confirmed
-                    taskModel.destroy()
-                    delete app.allTasks[taskModel.get('id')] # TODO - move to model on destroy?
-                    @collection.remove(taskModel)
-                    $row.remove()
+    runTask: (e) =>
+        taskModel = @collection.get($(e.target).data('task-id'))
+        $row = $(e.target).parents('tr')
 
-        $runNowLinks = @$el.find('[data-action="run-now"]')
+        vex.dialog.confirm
+            message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
+            callback: (confirmed) =>
+                return unless confirmed
+                taskModel.run()
+                @collection.remove(taskModel)
+                app.collections.tasksActive.fetch()
+                $row.remove()
 
-        $runNowLinks.unbind('click').on 'click', (e) =>
-            taskModel = @collection.get($(e.target).data('task-id'))
-            $row = $(e.target).parents('tr')
-
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    taskModel.run()
-                    @collection.remove(taskModel)
-                    app.collections.tasksActive.fetch()
-                    $row.remove()
-
-    setUpSearchEvents: (refresh, searchWasFocused) ->
-        $search = @$el.find('input[type="search"]')
-
-        if not app.isMobile and (not refresh or searchWasFocused)
-            setTimeout -> $search.focus()
-
-        $rows = @$el.find('tbody > tr')
-
-        lastText = ''
-
+    searchChange: ->
         onChange = =>
             return unless @ is app.views.current
+            $search = @$el.find('input[type="search"]')
+            $rows = @$el.find('tbody > tr')
+            lastText = ''
 
             searchText = _.trim $search.val()
 
@@ -166,11 +158,6 @@ class TasksView extends View
             @$('table').each ->
                 utils.handlePotentiallyEmptyFilteredTable $(@), 'task', searchText
 
-        onChangeDebounced = _.debounce onChange, 200
-
-        $search.unbind().on 'change keypress paste focus textInput input click keydown', onChangeDebounced
-
-        if refresh
-            onChange()
+        (_.debounce onChange, 200)()
 
 module.exports = TasksView
