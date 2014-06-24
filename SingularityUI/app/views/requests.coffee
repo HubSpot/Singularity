@@ -274,11 +274,8 @@ class RequestsView extends View
                 requestModel.run(confirmedOrPromptData)
                 utils.flashRow $row
 
-        if requestType is 'on-demand'
-            dialogType = vex.dialog.prompt
-            dialogOptions.message += '<p>Additional command line input (optional):</p>'
-        else
-            dialogType = vex.dialog.confirm
+        dialogType = vex.dialog.prompt
+        dialogOptions.message += '<p>Additional command line input (optional):</p>'
 
         dialogType dialogOptions
 
