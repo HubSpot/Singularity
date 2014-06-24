@@ -36,6 +36,10 @@ class RequestsView extends View
         'click [data-action="run-now"]': 'runRequest'
         'click [data-requests-active-filter]': 'changeFilters'
 
+        'change input[type="search"]': 'searchChange'
+        'keyup input[type="search"]': 'searchChange'
+        'input input[type="search"]': 'searchChange'
+
     initialize: ->
         @lastRequestsFilter = @options.requestsFilter
         @lastRequestsSubFilter = @options.requestsSubFilter
@@ -169,7 +173,6 @@ class RequestsView extends View
                 requestsBody: templateBody
 
         $search = @$el.find('input[type="search"]')
-        searchWasFocused = $search.is(':focus')
 
         $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
 
@@ -187,8 +190,7 @@ class RequestsView extends View
             $requestsBodyContainer.html templateBody context
 
             @$el.find('input[type="search"]').val context.searchFilter
-
-        @setUpSearchEvents(refresh, searchWasFocused)
+            
         utils.setupSortableTables()
 
         @
@@ -289,17 +291,11 @@ class RequestsView extends View
         @lastSearchFilter = _.trim @$el.find('input[type="search"]').val()
         app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
 
-    setUpSearchEvents: (refresh, searchWasFocused) ->
-        $search = @$el.find('input[type="search"]')
-
-        if not app.isMobile and (not refresh or searchWasFocused)
-            setTimeout -> $search.focus()
-
-        $rows = @$('tbody > tr')
-
-        previousLastSearchFilter = ''
-
+    searchChange: (event) =>
         onChange = =>
+            $search = $(event.currentTarget)
+            previousLastSearchFilter = ''
+            $rows = @$('tbody > tr')
             return unless @ is app.views.current
 
             @lastSearchFilter = _.trim $search.val()
@@ -327,11 +323,7 @@ class RequestsView extends View
             @$('table').each ->
                 utils.handlePotentiallyEmptyFilteredTable $(@), 'request', @lastSearchFilter
 
-        onChangeDebounced = _.debounce onChange, 200
+        (_.debounce onChange, 200)()
 
-        $search.unbind().on 'change keypress paste focus textInput input click keydown', onChangeDebounced
-
-        if refresh
-            onChange()
 
 module.exports = RequestsView
