@@ -268,11 +268,8 @@ class RequestView extends View
                             @refresh()
                         , 3000
 
-            if requestType is 'on-demand'
-                dialogType = vex.dialog.prompt
-                dialogOptions.message += '<p>Additional command line input (optional):</p>'
-            else
-                dialogType = vex.dialog.confirm
+            dialogType = vex.dialog.prompt
+            dialogOptions.message += '<p>Additional command line input (optional):</p>'
 
             dialogType dialogOptions
 
