@@ -28,6 +28,14 @@ class RequestsView extends View
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
+    events:
+        'click [data-action="viewJSON"]': 'viewJson'
+        'click [data-action="remove"]': 'removeRequest'
+        'click [data-action="unpause"]': 'unpauseRequest'
+        'click [data-action="starToggle"]': 'toggleStar'
+        'click [data-action="run-now"]': 'runRequest'
+        'click [data-requests-active-filter]': 'changeFilters'
+
     initialize: ->
         @lastRequestsFilter = @options.requestsFilter
         @lastRequestsSubFilter = @options.requestsSubFilter
@@ -180,21 +188,10 @@ class RequestsView extends View
 
             @$el.find('input[type="search"]').val context.searchFilter
 
-        @setupEvents()
         @setUpSearchEvents(refresh, searchWasFocused)
         utils.setupSortableTables()
 
         @
-
-    events:
-        'click [data-action="viewJSON"]': 'viewJson'
-        'click [data-action="remove"]': 'removeRequest'
-        'click [data-action="unpause"]': 'unpauseRequest'
-        'click [data-action="starToggle"]': 'toggleStar'
-        'click [data-action="run-now"]': 'runRequest'
-        'click [data-requests-active-filter]': 'changeFilters'
-
-    setupEvents: ->
 
     viewJson: (e) ->
         utils.viewJSON 'request', $(e.target).data('request-id')
