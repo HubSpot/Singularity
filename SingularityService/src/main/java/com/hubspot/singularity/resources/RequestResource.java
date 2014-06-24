@@ -242,12 +242,12 @@ public class RequestResource {
       pendingType = PendingType.IMMEDIATE;
     } else if (requestWithState.getRequest().isOneOff()) {
       pendingType = PendingType.ONEOFF;
-      
-      if (!Strings.isNullOrEmpty(commandLineArgs)) {
-        maybeCmdLineArgs = Optional.of(commandLineArgs);
-      }
     } else {
       throw WebExceptions.badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
+    }
+    
+    if (!Strings.isNullOrEmpty(commandLineArgs)) {
+      maybeCmdLineArgs = Optional.of(commandLineArgs);
     }
     
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
