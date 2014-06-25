@@ -268,17 +268,14 @@ class RequestView extends View
             @refresh()
 
     runTask: (e) =>
-        taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
         $row = $(e.target).parents('tr')
         $containingTable = $row.parents('table')
-
-        vex.dialog.confirm
-            message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
-            callback: (confirmed) =>
-                return unless confirmed
-                taskModel.run()
-                app.collections.tasksScheduled.remove(taskModel)
-                $row.remove()
-                utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
+        taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
+        
+        requestModel = new Request id: taskModel.get "requestId"
+        requestModel.promptRun =>
+            app.collections.tasksScheduled.remove(taskModel)
+            $row.remove()
+            utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
 
 module.exports = RequestView
