@@ -1,11 +1,5 @@
 package com.hubspot.singularity;
 
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.jdbi.DBIFactory;
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.SimpleServerFactory;
-import io.dropwizard.setup.Environment;
-
 import java.io.IOException;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -50,10 +44,14 @@ import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.smtp.JadeHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
-
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.jdbi.DBIFactory;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
+import io.dropwizard.setup.Environment;
 
 public class SingularityServiceModule extends AbstractModule {
   

@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -28,6 +29,7 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/history")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -36,6 +38,9 @@ public class HistoryResource extends AbstractHistoryResource {
   private final HistoryManager historyManager;
   private final DeployManager deployManager;
   private final TaskManager taskManager;
+
+  @Auth
+  SingularityUser user;
   
   @Inject
   public HistoryResource(HistoryManager historyManager, DeployManager deployManager, TaskManager taskManager) {

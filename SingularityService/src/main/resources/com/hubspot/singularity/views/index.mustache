@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css">
     <script>
         window.config = {
+            {{#user}}
+            username: "{{{username}}}",
+            {{/user}}
             appRoot: "{{{appRoot}}}",
             apiRoot: "{{{apiRoot}}}",
             mesosLogPort: {{{mesosLogsPort}}},
