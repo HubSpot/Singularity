@@ -50,12 +50,15 @@ class RequestsView extends View
         @collection.on "sync", =>
             @collectionSynced = true
             @renderTable()
+        # Initial fetch
         @collection.fetch()
 
+    # Called by app on active view
     refresh: ->
         return @ if @$el.find('[data-sorted-direction]').length
         @collection.fetch()
 
+    # Returns the array that need to be rendered
     filterCollection: =>
         requests = _.pluck @collection.models, "attributes"
 
