@@ -63,7 +63,7 @@ class Request extends Model
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
     ###
-    pomptPause: (callback) =>
+    promptPause: (callback) =>
         vex.dialog.confirm
             message: pauseTemplate id: @get "id"
             callback: (confirmed) =>
