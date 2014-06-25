@@ -99,6 +99,11 @@ public class JDBIHistoryManager implements HistoryManager {
     
     history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()), lastTaskStatus);
   }
+  
+  @Override
+  public boolean hasTaskUpdate(String taskId, String status) {
+    return !history.getTaskUpdate(taskId, status).isEmpty();
+  }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
