@@ -14,6 +14,7 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
+import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
+import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/state")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -33,6 +35,9 @@ public class StateResource {
   private final RackManager rackManager;
   private final StateManager stateManager;
   private final SingularityConfiguration singularityConfiguration;
+
+  @Auth
+  SingularityUser user;
   
   @Inject
   public StateResource(RequestManager requestManager, DeployManager deployManager, TaskManager taskManager, StateManager stateManager, SlaveManager slaveManager, RackManager rackManager, SingularityConfiguration singularityConfiguration) {

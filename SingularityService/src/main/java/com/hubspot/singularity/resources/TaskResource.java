@@ -26,10 +26,12 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.sun.jersey.api.NotFoundException;
+import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -39,6 +41,9 @@ public class TaskResource {
   private final SlaveManager slaveManager;  
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
+
+  @Auth
+  SingularityUser user;
   
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {

@@ -134,13 +134,16 @@ class Application
             @collections[r.collection_key] = new r.collection
 
     setupUser: ->
-        @user = new User
-        @user.fetch() # Syncronous because it uses localStorage
-        @user.set(@user.get('0')) # Hack because the Backbone.LocalStorage adapter I use is jank
+        if window.config.username isnt ''
+            @user = new User
+                deployUser: window.config.username
+        else
+            @user.fetch() # Syncronous because it uses localStorage
+            @user.set(@user.get('0')) # Hack because the Backbone.LocalStorage adapter I use is jank
 
-        if not @user.get('deployUser')
-            Backbone.history.once 'route', =>
-                setTimeout (=> @deployUserPrompt(welcome = true)), 1000
+            if not @user.get('deployUser')
+                Backbone.history.once 'route', =>
+                    setTimeout (=> @deployUserPrompt(welcome = true)), 1000
 
     getUsername: =>
         @user.get "deployUser" or "Unknown"

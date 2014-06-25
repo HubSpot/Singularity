@@ -42,12 +42,14 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
+import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/logs")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -59,6 +61,9 @@ public class S3LogResource extends AbstractHistoryResource {
   private final Optional<S3Configuration> configuration;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
+
+  @Auth
+  SingularityUser user;
   
   @Inject
   public S3LogResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3, Optional<S3Configuration> configuration) {

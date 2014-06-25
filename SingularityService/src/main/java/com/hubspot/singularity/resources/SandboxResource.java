@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
@@ -30,6 +31,7 @@ import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
+import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/sandbox")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -38,6 +40,9 @@ public class SandboxResource extends AbstractHistoryResource {
   private final SandboxManager sandboxManager;
   private final SingularityLogSupport logSupport;
   private final SingularityConfiguration configuration;
+
+  @Auth
+  SingularityUser user;
 
   @Inject
   public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
