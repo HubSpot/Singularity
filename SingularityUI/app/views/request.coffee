@@ -19,7 +19,19 @@ class RequestView extends View
     requestActiveDeployTemplate: require './templates/requestActiveDeploy'
     requestInfoTemplate: require './templates/requestInfo'
 
-    removeRequestTemplate: require './templates/vex/removeRequest'
+
+    events:
+        'click [data-action="viewJSON"]': 'viewJson'
+        'click [data-action="viewObjectJSON"]': 'viewObjectJson'
+        'click [data-action="viewRequestHistoryJSON"]': 'viewRequestHistoryJson'
+
+        'click [data-action="remove"]': 'removeRequest'
+        'click [data-action="run-request-now"]': 'runRequest'
+        'click [data-action="pause"]': 'pauseRequest'
+        'click [data-action="unpause"]': 'unpauseRequest'
+        'click [data-action="bounce"]': 'bounceRequest'
+
+        'click [data-action="run-now"]': 'runTask'
 
     firstRender: true
 
@@ -89,8 +101,6 @@ class RequestView extends View
         @renderHistoricalTasksPaginatedIfNeeded()
         @renderDeployHistoryPaginatedIfNeeded()
         @renderHistoryPaginatedIfNeeded()
-
-        @setupEvents()
 
         @$el.find('pre').each -> utils.setupCopyPre $ @
 
@@ -223,95 +233,52 @@ class RequestView extends View
                 @requestActiveDeploy.fetched = true
                 @requestActiveDeploy.noData = true
 
+    viewJson: (e) =>
+        utils.viewJSON 'task', $(e.target).data('task-id')
 
-    setupEvents: ->
+    viewObjectJson: (e) =>
+        utils.viewJSON 'request', $(e.target).data('request-id')
 
-        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'task', $(e.target).data('task-id')
+    viewRequestHistoryJson: (e) =>
+        utils.viewJSON 'requestHistory', $(e.target).data('local-request-history-id')
 
-        @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'request', $(e.target).data('request-id')
+    removeRequest: (e) =>
+        requestModel = new Request id: $(e.target).data('request-id')
+        requestModel.promptRemove =>
+            app.router.navigate 'requests', trigger: true
 
-        @$el.find('[data-action="viewRequestHistoryJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'requestHistory', $(e.target).data('local-request-history-id')
+    runRequest: (e) =>
+        requestModel = new Request id: $(e.target).data('request-id')
+        requestModel.promptRun =>
+            @refresh()
 
-        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
-            requestModel = new Request id: $(e.target).data('request-id')
+    pauseRequest: (e) =>
+        requestModel = new Request id: $(e.target).data('request-id')
+        requestModel.promptPause =>
+            @refresh()
 
-            vex.dialog.confirm
-                message: @removeRequestTemplate(requestId: requestModel.get('id'))
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                    vex.dialog.buttons.NO
-                ]
-                callback: (confirmed) =>
-                    return unless confirmed
-                    requestModel.destroy()
-                    app.router.navigate 'requests', trigger: true
+    unpauseRequest: (e) =>
+        requestModel = new Request id: $(e.target).data('request-id')
+        requestModel.promptUnpause =>
+            @refresh()
+    
+    bounceRequest: (e) =>
+        requestModel = new Request id: $(e.target).data('request-id')
+        requestModel.promptBounce =>
+            @refresh()
 
-        @$el.find('[data-action="run-request-now"]').unbind('click').on 'click', (e) =>
-            requestModel = new Request id: $(e.target).data('request-id')
+    runTask: (e) =>
+        taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
+        $row = $(e.target).parents('tr')
+        $containingTable = $row.parents('table')
 
-            requestType = $(e.target).data 'request-type'
-
-            dialogOptions =
-                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
-                    vex.dialog.buttons.NO
-                ]
-                callback: (confirmedOrPromptData) =>
-                    return if confirmedOrPromptData is false
-
-                    requestModel.run(confirmedOrPromptData).done =>
-                        setTimeout =>
-                            @refresh()
-                        , 3000
-
-            dialogType = vex.dialog.prompt
-            dialogOptions.message += '<p>Additional command line input (optional):</p>'
-
-            dialogType dialogOptions
-
-        @$el.find('[data-action="pause"]').unbind('click').on 'click', (e) =>
-            requestModel = new Request id: $(e.target).data('request-id')
-
-            unpause = $(e.target).data('action-unpause') is true
-            verb = if unpause then 'unpause' else 'pause'
-
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to #{verb} this request?</p><pre>#{ requestModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    if unpause
-                        requestModel.unpause().done => @refresh()
-                    else
-                        requestModel.pause().done => @refresh()
-
-        @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
-            taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
-            $row = $(e.target).parents('tr')
-            $containingTable = $row.parents('table')
-
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    taskModel.run()
-                    app.collections.tasksScheduled.remove(taskModel)
-                    $row.remove()
-                    utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
-        
-        @$el.find('[data-action="bounce"]').unbind('click').on 'click', (e) =>
-            requestModel = new Request id: $(e.target).data('request-id')
-            
-            vex.dialog.confirm
-                message: """<p>Are you sure you want to bounce this request?</p>
-                <pre>#{ requestModel.get('id') }</pre>
-                <p>Bouncing a request will cause replacement tasks to be scheduled (and under normal conditions) executed immediately. 
-                Existing tasks will be killed once replacement tasks are deemed healthy.</p>"""
-                callback: (confirmed) =>
-                    return unless confirmed
-                    requestModel.bounce().done => @refresh()
+        vex.dialog.confirm
+            message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
+            callback: (confirmed) =>
+                return unless confirmed
+                taskModel.run()
+                app.collections.tasksScheduled.remove(taskModel)
+                $row.remove()
+                utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
 
 module.exports = RequestView
