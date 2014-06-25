@@ -1,5 +1,10 @@
 Model = require './model'
 
+unpauseTemplate = require '../views/templates/vex/requestUnpause'
+runTemplate = require '../views/templates/vex/requestRun'
+removeTemplate = require '../views/templates/vex/requestRemove'
+bounceTemplate = require '../views/templates/vex/requestBounce'
+
 class Request extends Model
             
     parse: (data) ->
@@ -53,5 +58,41 @@ class Request extends Model
         $.ajax
             url: "#{ @url() }?user=#{app.getUsername()}"
             type: "DELETE"
+
+    ###
+    promptX opens a dialog asking the user to confirm an action and then does it
+    ###
+    promptUnpause: (callback) =>
+        vex.dialog.confirm
+            message: unpauseTemplate id: @get "id"
+            callback: (confirmed) =>
+                return unless confirmed
+                @unpause().done callback
+
+    promptRun: (callback) =>
+        vex.dialog.prompt
+            message: runTemplate id: @get "id"
+            buttons: [
+                $.extend vex.dialog.buttons.YES, text: 'Run now'
+                vex.dialog.buttons.NO
+            ]
+            callback: (data) =>
+                return if data is false
+                @run(data).done callback
+
+    promptRemove: (callback) =>
+        vex.dialog.confirm
+            message: removeTemplate id: @get "id"
+            callback: (confirmed) =>
+                return if not confirmed
+                @destroy().done callback
+
+    promptBounce: (callback) =>
+        vex.dialog.confirm
+            message: bounceTemplate id: @get "id"
+            callback: (confirmed) =>
+                return if not confirmed
+                @bounce().done callback
+
 
 module.exports = Request
