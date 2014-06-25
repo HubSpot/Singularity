@@ -121,45 +121,21 @@ class RequestsView extends View
     removeRequest: (e) ->
         $row = $(e.target).parents('tr')
         requestModel = @collection.get($(e.target).data('request-id'))
-
-        if $(e.target).data('action-remove-type') is 'deletePaused'
-            vex.dialog.confirm
-                message: "<p>Are you sure you want to delete the paused request?</p><pre>#{ requestModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    $row.remove()
-                    requestModel.deletePaused().done =>
-                        delete app.allRequests[requestModel.get('id')]
-                        @collection.remove(requestModel)
-
-        else
-            vex.dialog.confirm
-                message: @removeRequestTemplate(requestId: requestModel.get('id'))
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                    vex.dialog.buttons.NO
-                ]
-                callback: (confirmed) =>
-                    return unless confirmed
-                    requestModel.destroy()
-                    delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
-                    @collection.remove(requestModel)
-                    $row.remove()
+        requestModel.promptRemove =>
+            $row.remove()
 
     unpauseRequest: (e) ->
         $row = $(e.target).parents('tr')
         requestModel = @collection.get($(e.target).data('request-id'))
+        requestModel.promptUnpause =>
+            @refresh()
 
-        vex.dialog.confirm
-            message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
-            callback: (confirmed) =>
-                return unless confirmed
-                
-                if @requestsFilter is "paused"
-                    $row.remove()
-                    
-                requestModel.unpause().done =>
-                    @refresh()
+    runRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+
+        requestModel = new Request id: $(e.target).data('request-id')
+        requestModel.promptRun =>
+            utils.flashRow $row
                         
     toggleStar: (e) ->
         $target = $(e.target)
@@ -175,29 +151,6 @@ class RequestsView extends View
             $requests.each -> $(@).attr('data-starred', 'false')
         else
             $requests.each -> $(@).attr('data-starred', 'true')
-
-    runRequest: (e) ->
-        requestModel = new Request id: $(e.target).data('request-id')
-        $row = $(e.target).parents 'tr'
-
-        requestType = $(e.target).data 'request-type'
-
-        dialogOptions =
-            message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
-            buttons: [
-                $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
-                vex.dialog.buttons.NO
-            ]
-            callback: (confirmedOrPromptData) =>
-                return if confirmedOrPromptData is false
-
-                requestModel.run(confirmedOrPromptData)
-                utils.flashRow $row
-
-        dialogType = vex.dialog.prompt
-        dialogOptions.message += '<p>Additional command line input (optional):</p>'
-
-        dialogType dialogOptions
 
     changeFilters: (e) ->
         e.preventDefault()
