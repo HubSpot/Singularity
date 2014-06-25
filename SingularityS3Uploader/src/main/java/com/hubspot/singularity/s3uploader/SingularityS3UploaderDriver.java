@@ -56,7 +56,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final ExecutorService executorService;
   private final FileSystem fileSystem;
   private final S3Service s3Service;
-  private final Map<SingularityS3Uploader, Boolean> isFinished;
+  private final Set<SingularityS3Uploader> expiring;
   private final SingularityS3UploaderMetrics metrics;
   private final JsonObjectFileHelper jsonObjectFileHelper;
   
@@ -80,7 +80,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     this.metadataToUploader = Maps.newHashMap();
     this.uploaderLastHadFilesAt = Maps.newHashMap();
-    this.isFinished = Maps.newHashMap();
+    this.expiring = Sets.newHashSet();
+    
+    this.metrics.setExpiringCollection(expiring);
     
     this.runLock = new ReentrantLock();
 
@@ -99,7 +101,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         continue;
       }
       
-      if (handleNewS3Metadata(file)) {
+      if (handleNewOrModifiedS3Metadata(file)) {
         foundFiles++;
       }
     }
@@ -234,11 +236,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     
     for (SingularityS3Uploader expiredUploader : expiredUploaders) {
       metrics.getUploaderCounter().dec();
-      metrics.getExpiringUploaderCounter().dec();
       
       metadataToUploader.remove(expiredUploader.getUploadMetadata());
       uploaderLastHadFilesAt.remove(expiredUploader);
-      isFinished.remove(expiredUploader);
+      expiring.remove(expiredUploader);
+      
       try {
         Files.delete(expiredUploader.getMetadataPath());
       } catch (IOException e) {
@@ -250,12 +252,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
   
   private boolean isFinished(SingularityS3Uploader uploader) {
-    Boolean isUploaderFinished = isFinished.get(uploader);
-    
-    return (isUploaderFinished != null && isUploaderFinished.booleanValue()) || uploader.getUploadMetadata().isFinished();
+    return expiring.contains(uploader);
   }
 
-  private boolean handleNewS3Metadata(Path filename) throws IOException {
+  private boolean handleNewOrModifiedS3Metadata(Path filename) throws IOException {
     Optional<S3UploadMetadata> maybeMetadata = readS3UploadMetadata(filename);
 
     if (!maybeMetadata.isPresent()) {
@@ -273,13 +273,12 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       } else {
         LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
         
-        if (metadata.isFinished() && !isFinished(existingUploader)) {
-          metrics.getExpiringUploaderCounter().inc();
-        } else if (metadata.isFinished() && isFinished(existingUploader)) {
-          metrics.getExpiringUploaderCounter().dec();
+        if (metadata.isFinished()) {
+          expiring.add(existingUploader);
+        } else {
+          expiring.remove(existingUploader);
         }
         
-        isFinished.put(existingUploader, metadata.isFinished());
         return true;
       }
     }
@@ -287,11 +286,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     try {
       metrics.getUploaderCounter().inc();
       
-      if (metadata.isFinished()) {
-        metrics.getExpiringUploaderCounter().inc();
-      }
-      
       SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata, fileSystem, metrics, filename);
+
+      if (metadata.isFinished()) {
+        expiring.add(uploader);
+      }
       
       LOG.info("Created new uploader {}", uploader);
       
@@ -332,14 +331,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         LOG.trace("Found {} to match deleted path {}", found, filename);
 
-        if (found.isPresent() && !found.get().getUploadMetadata().isFinished()) {
-          Boolean existingValue = isFinished.put(found.get(), Boolean.TRUE);
-          if (existingValue == null || !existingValue.booleanValue()) {
-            metrics.getExpiringUploaderCounter().inc();
-          }
+        if (found.isPresent()) {
+          expiring.add(found.get());
         }
       } else {
-        return handleNewS3Metadata(fullPath);
+        return handleNewOrModifiedS3Metadata(fullPath);
       }
 
       return false;

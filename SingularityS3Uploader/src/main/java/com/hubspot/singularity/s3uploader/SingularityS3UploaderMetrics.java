@@ -1,5 +1,6 @@
 package com.hubspot.singularity.s3uploader;
 
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Counter;
@@ -8,17 +9,19 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 public class SingularityS3UploaderMetrics {
 
   private final MetricRegistry registry;
   private final Counter uploaderCounter;
-  private final Counter expiringUploaderCounter;
   private final Counter uploadCounter;
   private final Counter errorCounter;
   private final Timer uploadTimer;
   private final Meter filesystemEventsMeter;
+  
+  private Optional<Collection<SingularityS3Uploader>> expiring;
   
   private long timeOfLastSuccessUpload;
   private int lastUploadDuration;
@@ -28,11 +31,11 @@ public class SingularityS3UploaderMetrics {
   public SingularityS3UploaderMetrics(MetricRegistry registry) {
     this.registry = registry;
     this.uploaderCounter = registry.counter(name("uploaders", "total"));
-    this.expiringUploaderCounter = registry.counter(name("uploaders", "expiring"));
     this.uploadCounter = registry.counter(name("uploads", "success"));
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
     
+    this.expiring = Optional.absent();
     this.timeOfLastSuccessUpload = -1;
     
     registry.register(name("uploads", "millissincelast"), new Gauge<Integer>() {
@@ -56,6 +59,19 @@ public class SingularityS3UploaderMetrics {
       }
       
     });
+
+    registry.register(name("uploaders", "expiring"), new Gauge<Integer>() {
+
+      @Override
+      public Integer getValue() {
+        if (expiring.isPresent()) {
+          return 0;
+        }
+        
+        return expiring.get().size();
+      }
+      
+    });
     
     this.filesystemEventsMeter = registry.meter(name("filesystem", "events"));
     
@@ -66,6 +82,10 @@ public class SingularityS3UploaderMetrics {
     return MetricRegistry.name(SingularityS3UploaderMetrics.class, names);
   }
 
+  public void setExpiringCollection(Collection<SingularityS3Uploader> expiring) {
+    this.expiring = Optional.of(expiring);
+  }
+  
   public void upload() {
     uploadCounter.inc();
     timeOfLastSuccessUpload = System.currentTimeMillis();
@@ -97,10 +117,6 @@ public class SingularityS3UploaderMetrics {
 
   public Counter getErrorCounter() {
     return errorCounter;
-  }
-
-  public Counter getExpiringUploaderCounter() {
-    return expiringUploaderCounter;
   }
 
   public Counter getUploaderCounter() {
