@@ -16,8 +16,6 @@ class RequestsView extends View
         pending:  require './templates/requestsPendingBody'
         cleaning: require './templates/requestsCleaningBody'
 
-    removeRequestTemplate: require './templates/vex/removeRequest'
-
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
