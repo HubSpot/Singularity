@@ -58,7 +58,7 @@ class RequestsView extends View
         return @ if @$el.find('[data-sorted-direction]').length
         @collection.fetch()
 
-    # Returns the array that need to be rendered
+    # Returns the array of requests that need to be rendered
     filterCollection: =>
         requests = _.pluck @collection.models, "attributes"
 
