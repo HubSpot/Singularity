@@ -4,24 +4,17 @@ Request = require '../models/Request'
 
 class RequestsView extends View
 
-    templateRequestsAll: require './templates/requestsAll'
-    templateRequestsAllBody: require './templates/requestsAllBody'
+    templateBase:   require './templates/requestsBase'
+    templateFilter: require './templates/requestsFilter'
 
-    templateRequestsActive: require './templates/requestsActive'
-    templateRequestsActiveBody: require './templates/requestsActiveBody'
-    templateRequestsActiveFilter: require './templates/requestsActiveFilter'
-    
-    templateRequestsCooldown: require './templates/requestsCooldown'
-    templateRequestsCooldownBody: require './templates/requestsCooldownBody'
-    
-    templateRequestsPaused: require './templates/requestsPaused'
-    templateRequestsPausedBody: require './templates/requestsPausedBody'
-
-    templateRequestsPending: require './templates/requestsPending'
-    templateRequestsPendingBody: require './templates/requestsPendingBody'
-
-    templateRequestsCleaning: require './templates/requestsCleaning'
-    templateRequestsCleaningBody: require './templates/requestsCleaningBody'
+    # Figure out which template we'll use for the table based on the filter
+    bodyTemplateMap:
+        all:      require './templates/requestsAllBody'
+        active:   require './templates/requestsActiveBody'
+        cooldown: require './templates/requestsCooldownBody'
+        paused:   require './templates/requestsPausedBody'
+        pending:  require './templates/requestsPendingBody'
+        cleaning: require './templates/requestsCleaningBody'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
@@ -40,160 +33,87 @@ class RequestsView extends View
         'keyup input[type="search"]': 'searchChange'
         'input input[type="search"]': 'searchChange'
 
-    initialize: ->
-        @lastRequestsFilter = @options.requestsFilter
-        @lastRequestsSubFilter = @options.requestsSubFilter
+    initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
+        @bodyTemplate = @bodyTemplateMap[@requestsFilter]
 
-        if @lastRequestsFilter in @haveSubfilter
-            @lastRequestsActiveSubFilter = @lastRequestsSubFilter
+        # Set up collection
+        collectionMap =
+            all:      app.collections.requestsAll
+            active:   app.collections.requestsActive
+            cooldown: app.collections.requestsCooldown
+            paused:   app.collections.requestsPaused
+            pending:  app.collections.requestsPending
+            cleaning: app.collections.requestsCleaning
 
-    fetch: ->
-        @collection = switch @lastRequestsFilter
-            when 'all'
-                app.collections.requestsAll
-            when 'active'
-                app.collections.requestsActive
-            when 'cooldown'
-                app.collections.requestsCooldown
-            when 'paused'
-                app.collections.requestsPaused
-            when 'pending'
-                app.collections.requestsPending
-            when 'cleaning'
-                app.collections.requestsCleaning
-
+        @collectionSynced = false
+        @collection = collectionMap[@requestsFilter]
+        @collection.on "sync", =>
+            @collectionSynced = true
+            @renderTable()
+        # Initial fetch
         @collection.fetch()
 
+    # Called by app on active view
     refresh: ->
         return @ if @$el.find('[data-sorted-direction]').length
+        @collection.fetch()
 
-        @fetch(@lastRequestsFilter).done =>
-            @render(@lastRequestsFilter, @lastRequestsSubFilter, @lastSearchFilter, refresh = true)
+    # Returns the array of requests that need to be rendered
+    filterCollection: =>
+        requests = _.pluck @collection.models, "attributes"
 
-        @
+        # Only show requests that match the search query
+        if @searchFilter
+            requests = _.filter requests, (request) =>
+                request.name.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
+        
+        # Only show requests that match the clicky filters
+        if @requestsFilter in @haveSubfilter and @requestsSubFilter isnt 'all'
+            requests = _.filter requests, (request) =>
+                filter = false
 
-    render: (requestsFilter, requestsSubFilter, searchFilter, refresh) =>
-        return @ unless @ is app.views.current
+                if @requestsSubFilter.indexOf('daemon') isnt -1
+                    filter = filter or request.daemon
+                if @requestsSubFilter.indexOf('scheduled') isnt -1
+                    filter = filter or request.scheduled
+                if @requestsSubFilter.indexOf('on-demand') isnt -1
+                    filter = filter or request.onDemand
+                filter
 
-        forceFullRender = requestsFilter isnt @lastRequestsFilter
+        requests.reverse()
 
-        @lastRequestsFilter = requestsFilter
-        @lastSearchFilter = searchFilter
-        @$el.find('input[type="search"]').val searchFilter
-
-        if @lastRequestsFilter in @haveSubfilter
-            if @lastRequestsActiveSubFilter
-                @lastRequestsSubFilter = @lastRequestsActiveSubFilter
-        else
-            @lastRequestsSubFilter = requestsSubFilter
-
-        if @lastRequestsFilter is 'all'
-            @collection = app.collections.requestsAll
-            template = @templateRequestsAll
-            templateBody = @templateRequestsAllBody
-
-        if @lastRequestsFilter is 'active'
-            @collection = app.collections.requestsActive
-            template = @templateRequestsActive
-            templateBody = @templateRequestsActiveBody
-
-        if @lastRequestsFilter is 'cooldown'
-            @collection = app.collections.requestsCooldown
-            template = @templateRequestsCooldown
-            templateBody = @templateRequestsCooldownBody
-
-        if @lastRequestsFilter is 'paused'
-            @collection = app.collections.requestsPaused
-            template = @templateRequestsPaused
-            templateBody = @templateRequestsPausedBody
-
-        # The following have filters
-        if @lastRequestsFilter in @haveSubfilter
-            templateFilter = @templateRequestsActiveFilter
-
-        if @lastRequestsFilter is 'pending'
-            @collection = app.collections.requestsPending
-            template = @templateRequestsPending
-            templateBody = @templateRequestsPendingBody
-
-        if @lastRequestsFilter is 'cleaning'
-            @collection = app.collections.requestsCleaning
-            template = @templateRequestsCleaning
-            templateBody = @templateRequestsCleaningBody
-
+    render: =>
         context =
-            collectionSynced: @collection.synced
-            requestsSubFilter: requestsSubFilter
-            searchFilter: searchFilter
+            requestsFilter: @requestsFilter
+            requestsSubFilter: @requestsSubFilter
+            searchFilter: @searchFilter
 
-        if @lastRequestsFilter is 'paused'
-            context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
-            context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
-            context.requests.reverse()
-            context.requestsScheduled.reverse()
+            hasSubFilter: @requestsFilter in @haveSubfilter
 
-        if @lastRequestsFilter in @haveSubfilter
-            if requestsSubFilter is 'all'
-                context.requests = _.pluck(@collection.models, 'attributes')
+            collectionSynced: @collectionSynced
+            requests: @filterCollection()
 
-            else
-                filterFunction = => false
-
-                if requestsSubFilter is 'daemon'
-                    filterFunction = (r) => not r.scheduled and not r.onDemand
-
-                if requestsSubFilter is 'daemon-on-demand'
-                    filterFunction = (r) => not r.scheduled
-
-                if requestsSubFilter is 'daemon-scheduled'
-                    filterFunction = (r) => not r.onDemand
-
-                if requestsSubFilter is 'on-demand'
-                    filterFunction = (r) => r.onDemand
-
-                if requestsSubFilter is 'on-demand-scheduled'
-                    filterFunction = (r) => r.onDemand or r.scheduled
-
-                if requestsSubFilter is 'scheduled'
-                    filterFunction = (r) => r.scheduled
-
-                context.requests = _.filter(_.pluck(@collection.models, 'attributes'), filterFunction)
-
-            context.requests.reverse()
-
-        else
-            context.requests = _.pluck(@collection.models, 'attributes')
-
-        for request in context.requests
-            if app.collections.requestsStarred.get(request.name)?
-                request.starred = true
-
-        partials =
+        partials = 
             partials:
-                requestsBody: templateBody
+                requestsBody: @bodyTemplate
 
-        $search = @$el.find('input[type="search"]')
+        if @requestsFilter in @haveSubfilter
+            partials.partials.requestsFilter = @templateFilter
 
-        $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
+        @$el.html @templateBase context, partials
 
-        if templateFilter?
-            partials.partials.requestsFilter = templateFilter
-            $requestsFilterContainer =  @$el.find('[data-requests-filter-container]')
-
-        if not $requestsBodyContainer.length or forceFullRender
-            @$el.html template(context, partials)
-
-        else
-            if templateFilter?
-                $requestsFilterContainer.html templateFilter context
-
-            $requestsBodyContainer.html templateBody context
-
-            @$el.find('input[type="search"]').val context.searchFilter
-            
         utils.setupSortableTables()
 
         @
+
+    renderTable: =>
+        $table = @$ "[data-requests-body-container]"
+        $table.html @bodyTemplate
+            requests: @filterCollection()
+            collectionSynced: @collectionSynced
+
+    updateUrl: =>
+        app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
         utils.viewJSON 'request', $(e.target).data('request-id')
@@ -235,7 +155,7 @@ class RequestsView extends View
             callback: (confirmed) =>
                 return unless confirmed
                 
-                if @lastRequestsFilter is "paused"
+                if @requestsFilter is "paused"
                     $row.remove()
                     
                 requestModel.unpause().done =>
@@ -281,46 +201,29 @@ class RequestsView extends View
 
     changeFilters: (e) ->
         e.preventDefault()
-        requestsActiveFilter = $(e.target).data('requests-active-filter')
+        @requestsSubFilter = $(e.target).data('requests-active-filter')
         if e.metaKey or e.ctrlKey or e.shiftKey
-            requestsActiveFilter = $(e.target).data('requests-active-filter-shift')
-        @lastRequestsActiveSubFilter = requestsActiveFilter
-        @lastSearchFilter = _.trim @$el.find('input[type="search"]').val()
-        app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
+            @requestsSubFilter = $(e.target).data('requests-active-filter-shift')
+
+        @updateUrl()
+        @render()
 
     searchChange: (event) =>
-        onChange = =>
-            $search = $(event.currentTarget)
-            previousLastSearchFilter = ''
-            $rows = @$('tbody > tr')
-            return unless @ is app.views.current
+        # Add a little delay to the event so we don't run it for every keystroke
+        if @searchTimeout?
+            clearTimeout @searchTimeout
 
-            @lastSearchFilter = _.trim $search.val()
+        @searchTimeout = setTimeout @processSearchChange, 200
 
-            if @lastSearchFilter is ''
-                $rows.removeClass('filtered')
-                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
+    processSearchChange: =>
+        return unless @ is app.views.current
 
-            if previousLastSearchFilter isnt @lastSearchFilter
-                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
-                previousLastSearchFilter = @lastSearchFilter
+        previousSearchFilter = @searchFilter
+        $search = @$ "input[type='search']"
+        @searchFilter = _.trim $search.val()
 
-                $rows.each (i, row) =>
-                    $row = $(row)
-
-                    rowText = $row.data('request-id')
-                    user = $row.data('request-deploy-user')
-                    rowText = "#{ rowText } #{ user }" if user?
-
-                    if utils.matchLowercaseOrWordsInWords(@lastSearchFilter, rowText)
-                        $row.removeClass('filtered')
-                    else
-                        $row.addClass('filtered')
-
-            @$('table').each ->
-                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', @lastSearchFilter
-
-        (_.debounce onChange, 200)()
-
+        if @searchFilter isnt previousSearchFilter
+            @updateUrl()
+            @renderTable()
 
 module.exports = RequestsView
