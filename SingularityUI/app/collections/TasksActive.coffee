@@ -8,20 +8,16 @@ class TasksActive extends Tasks
     url: ->
         properties = [
             # offer
-            'offer.slaveId'
             'offer.hostname'
 
             # taskRequest
             'taskRequest.request.id'
-            'taskRequest.request.executorData'
-            'taskRequest.request.executorData.ports' # Necessary?
 
             # taskId
             'taskId'
 
             # mesosTask
             'mesosTask.resources'
-            'mesosTask.executor'
             'mesosTask.name'
         ]
 
