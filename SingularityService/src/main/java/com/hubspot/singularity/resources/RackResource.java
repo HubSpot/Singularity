@@ -13,18 +13,13 @@ import javax.ws.rs.core.MediaType;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.data.RackManager;
-import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/racks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
   
   private final RackManager rackManager;
-
-  @Auth
-  SingularityUser user;
   
   @Inject
   public RackResource(RackManager rackManager) {

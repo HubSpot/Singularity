@@ -37,27 +37,22 @@ import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.WebExceptions;
-import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.sun.jersey.api.NotFoundException;
-import io.dropwizard.auth.Auth;
 
 @Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
-public class RequestResource {
+public class RequestResource extends BaseResource {
 
   private final SingularityValidator validator;
   
   private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
-
-  @Auth
-  SingularityUser user;
   
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager, HistoryManager historyManager) {

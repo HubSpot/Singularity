@@ -6,18 +6,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.auth.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.views.IndexView;
-import io.dropwizard.auth.Auth;
 
 @Path("/{wildcard:.*}")
 @Produces(MediaType.TEXT_HTML)
-public class IndexResource {
+public class IndexResource extends BaseResource {
   private final SingularityConfiguration configuration;
-
-  @Auth
-  SingularityUser user;
 
   @Inject
   public IndexResource(SingularityConfiguration configuration) {
