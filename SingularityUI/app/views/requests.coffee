@@ -68,9 +68,9 @@ class RequestsView extends View
                 request.name.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Only show requests that match the clicky filters
-        if @requestsFilter in @haveSubfilter
+        if @requestsFilter in @haveSubfilter and @subFilter isnt 'all'
             requests = _.filter requests, (request) =>
-                filter = @requestsSubFilter is 'all' then true else false
+                filter = false
 
                 if @requestsSubFilter.indexOf('daemon') isnt -1
                     filter = filter or request.daemon
