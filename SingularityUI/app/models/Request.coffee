@@ -1,5 +1,6 @@
 Model = require './model'
 
+pauseTemplate = require '../views/templates/vex/requestPause'
 unpauseTemplate = require '../views/templates/vex/requestUnpause'
 runTemplate = require '../views/templates/vex/requestRun'
 removeTemplate = require '../views/templates/vex/requestRemove'
@@ -62,6 +63,13 @@ class Request extends Model
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
     ###
+    pomptPause: (callback) =>
+        vex.dialog.confirm
+            message: pauseTemplate id: @get "id"
+            callback: (confirmed) =>
+                return unless confirmed
+                @pause().done callback
+
     promptUnpause: (callback) =>
         vex.dialog.confirm
             message: unpauseTemplate id: @get "id"
