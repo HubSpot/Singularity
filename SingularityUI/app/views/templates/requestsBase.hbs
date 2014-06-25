@@ -1,27 +1,23 @@
-<header class="jumbotron subhead" id="overview">
-    <h1>Cleaning requests</h1>
-</header>
-
 <section>
     <div class="row-fluid">
         <div class="span12">
             <ul class="nav nav-pills" id="table-nav-pills">
-                <li>
+                <li {{#ifEqual requestsFilter "all"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/requests">All</a>
                 </li>
-                <li>
+                <li {{#ifEqual requestsFilter "active"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/requests/active">Active</a>
                 </li>
-                <li>
+                <li {{#ifEqual requestsFilter "cooldown"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/requests/cooldown">Cooldown</a>
                 </li>
-                <li id="paused-pill">
+                <li {{#ifEqual requestsFilter "paused"}}class="active"{{/ifEqual}} id="paused-pill">
                     <a href="{{#appRoot}}{{/appRoot}}/requests/paused">Paused</a>
                 </li>
-                <li>
+                <li {{#ifEqual requestsFilter "pending"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/requests/pending">Pending</a>
                 </li>
-                <li class="active">
+                <li {{#ifEqual requestsFilter "cleaning"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/requests/cleaning">Cleaning</a>
                 </li>
             </ul>
@@ -32,7 +28,14 @@
 <section>
     <div class="row-fluid">
         <input type="search" placeholder="Filter requests..." value="{{ searchFilter }}" required />
+
+        {{#if hasSubFilter}}
+            <div data-requests-filter-container class="requests-filter-container">
+                {{> requestsFilter}}
+            </div>
+        {{/if}}
     </div>
+
     <div class="row-fluid">
         <div data-requests-body-container class="span12">
             {{> requestsBody}}
