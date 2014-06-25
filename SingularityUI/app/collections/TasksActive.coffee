@@ -8,21 +8,13 @@ class TasksActive extends Tasks
     url: ->
         properties = [
             # offer
-            'offer.slaveId'
             'offer.hostname'
-
-            # taskRequest
-            'taskRequest.request.id'
-            'taskRequest.request.executorData'
-            'taskRequest.request.executorData.ports' # Necessary?
 
             # taskId
             'taskId'
 
             # mesosTask
             'mesosTask.resources'
-            'mesosTask.executor'
-            'mesosTask.name'
         ]
 
         propertiesString = "?property=#{ properties.join('&property=') }"
@@ -33,8 +25,8 @@ class TasksActive extends Tasks
         _.each tasks, (task, i) =>
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
-            task.requestId = task.taskRequest?.request.id
-            task.name = task.mesosTask.name
+            task.requestId = task.taskId.requestId
+            task.name = task.requestId
             task.resources = @parseResources task
             task.memoryHuman = if task.resources?.memoryMb? then "#{ task.resources.memoryMb }Mb" else ''
             task.host = task.offer.hostname?.split('.')[0]
