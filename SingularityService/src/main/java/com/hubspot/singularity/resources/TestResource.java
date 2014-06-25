@@ -12,8 +12,9 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityLeaderController;
+import com.hubspot.singularity.SingularityService;
 
-@Path("/test")
+@Path(SingularityService.API_BASE_PATH + "/test")
 public class TestResource {
 
   private final SingularityAbort abort;

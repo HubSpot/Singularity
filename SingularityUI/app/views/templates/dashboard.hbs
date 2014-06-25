@@ -13,7 +13,7 @@
         </div>
         <div class="row-fluid">
             <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/all/{{ deployUser }}" data-requests-active-filter="all">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/all/{{ deployUser }}" data-requests-active-filter="all">
                     <div class="well">
                         <div class="big-number">
                             <div class="number" data-state-attribute="requests">
@@ -29,7 +29,7 @@
                 </a>
             </div>
             <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/daemon/{{ deployUser }}" data-requests-active-filter="daemon">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/daemon/{{ deployUser }}" data-requests-active-filter="daemon">
                     <div class="well">
                         <div class="big-number">
                             <div class="number" data-state-attribute="requests">
@@ -45,7 +45,7 @@
                 </a>
             </div>
             <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/on-demand/{{ deployUser }}" data-requests-active-filter="on-demand">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/on-demand/{{ deployUser }}" data-requests-active-filter="on-demand">
                     <div class="well">
                         <div class="big-number">
                             <div class="number" data-state-attribute="requests">
@@ -61,7 +61,7 @@
                 </a>
             </div>
             <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}requests/active/scheduled/{{ deployUser }}" data-requests-active-filter="scheduled">
+                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/scheduled/{{ deployUser }}" data-requests-active-filter="scheduled">
                     <div class="well">
                         <div class="big-number">
                             <div class="number" data-state-attribute="requests">
@@ -82,7 +82,7 @@
 
 <section>
     <div class="page-header">
-        <h1>Starred Requests</h1>
+        <h1>Starred requests</h1>
     </div>
 </section>
 
@@ -104,7 +104,7 @@
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}">
                                 <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
-                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}request/{{ id }}" data-route="request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
+                                <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
                                 <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-desktop">{{ deployUser }}</td>
                                 <td class="visible-large-desktop">{{ instances }}</td>
@@ -121,7 +121,7 @@
     {{#if requestsNotFound.length}}
         <section>
             <div class="page-header">
-                <h1>Starred Non-active Requests</h1>
+                <h1>Starred non-active requests</h1>
             </div>
             <div class="row-fluid">
                 <table class="table" data-sortable>

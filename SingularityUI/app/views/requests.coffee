@@ -4,300 +4,226 @@ Request = require '../models/Request'
 
 class RequestsView extends View
 
-    templateRequestsActive: require './templates/requestsActive'
-    templateRequestsActiveBody: require './templates/requestsActiveBody'
-    templateRequestsActiveFilter: require './templates/requestsActiveFilter'
+    templateBase:   require './templates/requestsBase'
+    templateFilter: require './templates/requestsFilter'
 
-    templateRequestsPaused: require './templates/requestsPaused'
-    templateRequestsPausedBody: require './templates/requestsPausedBody'
-
-    templateRequestsPending: require './templates/requestsPending'
-    templateRequestsPendingBody: require './templates/requestsPendingBody'
-
-    templateRequestsCleaning: require './templates/requestsCleaning'
-    templateRequestsCleaningBody: require './templates/requestsCleaningBody'
+    # Figure out which template we'll use for the table based on the filter
+    bodyTemplateMap:
+        all:      require './templates/requestsAllBody'
+        active:   require './templates/requestsActiveBody'
+        cooldown: require './templates/requestsCooldownBody'
+        paused:   require './templates/requestsPausedBody'
+        pending:  require './templates/requestsPendingBody'
+        cleaning: require './templates/requestsCleaningBody'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
-    initialize: ->
-        @lastRequestsFilter = @options.requestsFilter
-        @lastRequestsSubFilter = @options.requestsSubFilter
+    # Which table views have sub-filters (daemon, scheduled, on-demand)
+    haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
-        if @lastRequestsFilter is 'active'
-            @lastRequestsActiveSubFilter = @lastRequestsSubFilter
+    events:
+        'click [data-action="viewJSON"]': 'viewJson'
+        'click [data-action="remove"]': 'removeRequest'
+        'click [data-action="unpause"]': 'unpauseRequest'
+        'click [data-action="starToggle"]': 'toggleStar'
+        'click [data-action="run-now"]': 'runRequest'
+        'click [data-requests-active-filter]': 'changeFilters'
 
-    fetch: ->
-        @collection = switch @lastRequestsFilter
-            when 'active'
-                app.collections.requestsActive
-            when 'paused'
-                app.collections.requestsPaused
-            when 'pending'
-                app.collections.requestsPending
-            when 'cleaning'
-                app.collections.requestsCleaning
+        'change input[type="search"]': 'searchChange'
+        'keyup input[type="search"]': 'searchChange'
+        'input input[type="search"]': 'searchChange'
 
+    initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
+        @bodyTemplate = @bodyTemplateMap[@requestsFilter]
+
+        # Set up collection
+        collectionMap =
+            all:      app.collections.requestsAll
+            active:   app.collections.requestsActive
+            cooldown: app.collections.requestsCooldown
+            paused:   app.collections.requestsPaused
+            pending:  app.collections.requestsPending
+            cleaning: app.collections.requestsCleaning
+
+        @collectionSynced = false
+        @collection = collectionMap[@requestsFilter]
+        @collection.on "sync", =>
+            @collectionSynced = true
+            @renderTable()
+        # Initial fetch
         @collection.fetch()
 
+    # Called by app on active view
     refresh: ->
         return @ if @$el.find('[data-sorted-direction]').length
+        @collection.fetch()
 
-        @fetch(@lastRequestsFilter).done =>
-            @render(@lastRequestsFilter, @lastRequestsSubFilter, @lastSearchFilter, refresh = true)
+    # Returns the array of requests that need to be rendered
+    filterCollection: =>
+        requests = _.pluck @collection.models, "attributes"
 
-        @
+        # Only show requests that match the search query
+        if @searchFilter
+            requests = _.filter requests, (request) =>
+                request.name.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
+        
+        # Only show requests that match the clicky filters
+        if @requestsFilter in @haveSubfilter and @requestsSubFilter isnt 'all'
+            requests = _.filter requests, (request) =>
+                filter = false
 
-    render: (requestsFilter, requestsSubFilter, searchFilter, refresh) =>
-        return @ unless @ is app.views.current
+                if @requestsSubFilter.indexOf('daemon') isnt -1
+                    filter = filter or request.daemon
+                if @requestsSubFilter.indexOf('scheduled') isnt -1
+                    filter = filter or request.scheduled
+                if @requestsSubFilter.indexOf('on-demand') isnt -1
+                    filter = filter or request.onDemand
+                filter
 
-        forceFullRender = requestsFilter isnt @lastRequestsFilter
+        requests.reverse()
 
-        @lastRequestsFilter = requestsFilter
-        @lastSearchFilter = searchFilter
-        @$el.find('input[type="search"]').val searchFilter
-
-        if @lastRequestsFilter is 'active'
-            if @lastRequestsActiveSubFilter
-                @lastRequestsSubFilter = @lastRequestsActiveSubFilter
-        else
-            @lastRequestsSubFilter = requestsSubFilter
-
-        if @lastRequestsFilter is 'active'
-            @collection = app.collections.requestsActive
-            template = @templateRequestsActive
-            templateBody = @templateRequestsActiveBody
-            templateFilter = @templateRequestsActiveFilter
-
-        if @lastRequestsFilter is 'paused'
-            @collection = app.collections.requestsPaused
-            template = @templateRequestsPaused
-            templateBody = @templateRequestsPausedBody
-
-        if @lastRequestsFilter is 'pending'
-            @collection = app.collections.requestsPending
-            template = @templateRequestsPending
-            templateBody = @templateRequestsPendingBody
-
-        if @lastRequestsFilter is 'cleaning'
-            @collection = app.collections.requestsCleaning
-            template = @templateRequestsCleaning
-            templateBody = @templateRequestsCleaningBody
-
+    render: =>
         context =
-            collectionSynced: @collection.synced
-            requestsSubFilter: requestsSubFilter
-            searchFilter: searchFilter
+            requestsFilter: @requestsFilter
+            requestsSubFilter: @requestsSubFilter
+            searchFilter: @searchFilter
 
-        if @lastRequestsFilter is 'paused'
-            context.requests = _.filter(_.pluck(@collection.models, 'attributes'), (r) => not r.scheduled and not r.onDemand)
-            context.requestsScheduled = _.filter(_.pluck(@collection.models, 'attributes'), (r) => r.scheduled)
-            context.requests.reverse()
-            context.requestsScheduled.reverse()
+            hasSubFilter: @requestsFilter in @haveSubfilter
 
-        if @lastRequestsFilter is 'active'
-            if requestsSubFilter is 'all'
-                context.requests = _.pluck(@collection.models, 'attributes')
+            collectionSynced: @collectionSynced
+            requests: @filterCollection()
 
-            else
-                filterFunction = => false
-
-                if requestsSubFilter is 'daemon'
-                    filterFunction = (r) => not r.scheduled and not r.onDemand
-
-                if requestsSubFilter is 'daemon-on-demand'
-                    filterFunction = (r) => not r.scheduled
-
-                if requestsSubFilter is 'daemon-scheduled'
-                    filterFunction = (r) => not r.onDemand
-
-                if requestsSubFilter is 'on-demand'
-                    filterFunction = (r) => r.onDemand
-
-                if requestsSubFilter is 'on-demand-scheduled'
-                    filterFunction = (r) => r.onDemand or r.scheduled
-
-                if requestsSubFilter is 'scheduled'
-                    filterFunction = (r) => r.scheduled
-
-                context.requests = _.filter(_.pluck(@collection.models, 'attributes'), filterFunction)
-
-            context.requests.reverse()
-
-        else
-            context.requests = _.pluck(@collection.models, 'attributes')
-
-        # Intersect starred requests before rendering
-        for request in context.requests
-            if app.collections.requestsStarred.get(request.name)?
-                request.starred = true
-
-        partials =
+        partials = 
             partials:
-                requestsBody: templateBody
+                requestsBody: @bodyTemplate
 
-        $search = @$el.find('input[type="search"]')
-        searchWasFocused = $search.is(':focus')
+        if @requestsFilter in @haveSubfilter
+            partials.partials.requestsFilter = @templateFilter
 
-        $requestsBodyContainer =  @$el.find('[data-requests-body-container]')
+        @$el.html @templateBase context, partials
 
-        if @lastRequestsFilter is 'active'
-            partials.partials.requestsFilter = templateFilter
-            $requestsFilterContainer =  @$el.find('[data-requests-filter-container]')
-
-        if not $requestsBodyContainer.length or forceFullRender
-            @$el.html template(context, partials)
-
-        else
-            if @lastRequestsFilter is 'active'
-                $requestsFilterContainer.html templateFilter context
-
-            $requestsBodyContainer.html templateBody context
-
-            @$el.find('input[type="search"]').val context.searchFilter
-
-        @setupEvents()
-        @setUpSearchEvents(refresh, searchWasFocused)
         utils.setupSortableTables()
 
         @
 
-    setupEvents: ->
-        @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'request', $(e.target).data('request-id')
+    renderTable: =>
+        $table = @$ "[data-requests-body-container]"
+        $table.html @bodyTemplate
+            requests: @filterCollection()
+            collectionSynced: @collectionSynced
 
-        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
-            $row = $(e.target).parents('tr')
-            requestModel = @collection.get($(e.target).data('request-id'))
+    updateUrl: =>
+        app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
 
-            if $(e.target).data('action-remove-type') is 'deletePaused'
-                vex.dialog.confirm
-                    message: "<p>Are you sure you want to delete the paused request?</p><pre>#{ requestModel.get('id') }</pre>"
-                    callback: (confirmed) =>
-                        return unless confirmed
-                        $row.remove()
-                        requestModel.deletePaused().done =>
-                            delete app.allRequests[requestModel.get('id')]
-                            @collection.remove(requestModel)
+    viewJson: (e) ->
+        utils.viewJSON 'request', $(e.target).data('request-id')
 
-            else
-                vex.dialog.confirm
-                    message: @removeRequestTemplate(requestId: requestModel.get('id'))
-                    buttons: [
-                        $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                        vex.dialog.buttons.NO
-                    ]
-                    callback: (confirmed) =>
-                        return unless confirmed
-                        requestModel.destroy()
-                        delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
-                        @collection.remove(requestModel)
-                        $row.remove()
+    removeRequest: (e) ->
+        $row = $(e.target).parents('tr')
+        requestModel = @collection.get($(e.target).data('request-id'))
 
-        @$el.find('[data-action="unpause"]').unbind('click').on 'click', (e) =>
-            $row = $(e.target).parents('tr')
-            requestModel = @collection.get($(e.target).data('request-id'))
-
+        if $(e.target).data('action-remove-type') is 'deletePaused'
             vex.dialog.confirm
-                message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to delete the paused request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     $row.remove()
-                    requestModel.unpause().done =>
-                        @render()
+                    requestModel.deletePaused().done =>
+                        delete app.allRequests[requestModel.get('id')]
+                        @collection.remove(requestModel)
 
-        @$el.find('[data-action="starToggle"]').unbind('click').on 'click', (e) =>
-            $target = $(e.target)
-            $table = $target.parents 'table'
-
-            requestName = $target.data 'request-name'
-            starred = $target.attr('data-starred') is 'true'
-
-            app.collections.requestsStarred.toggle(requestName)
-            $requests = $table.find("""[data-request-name="#{ requestName }"]""")
-
-            if starred
-                $requests.each -> $(@).attr('data-starred', 'false')
-            else
-                $requests.each -> $(@).attr('data-starred', 'true')
-
-        @$el.find('[data-action="run-now"]').unbind('click').on 'click', (e) =>
-            requestModel = new Request id: $(e.target).data('request-id')
-            $row = $(e.target).parents 'tr'
-
-            requestType = $(e.target).data 'request-type'
-
-            dialogOptions =
-                message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
+        else
+            vex.dialog.confirm
+                message: @removeRequestTemplate(requestId: requestModel.get('id'))
                 buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
+                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
                     vex.dialog.buttons.NO
                 ]
-                callback: (confirmedOrPromptData) =>
-                    return if confirmedOrPromptData is false
+                callback: (confirmed) =>
+                    return unless confirmed
+                    requestModel.destroy()
+                    delete app.allRequests[requestModel.get('id')] # TODO - move to model on destroy?
+                    @collection.remove(requestModel)
+                    $row.remove()
 
-                    requestModel.run(confirmedOrPromptData)
-                    utils.flashRow $row
+    unpauseRequest: (e) ->
+        $row = $(e.target).parents('tr')
+        requestModel = @collection.get($(e.target).data('request-id'))
 
-            if requestType is 'on-demand'
-                dialogType = vex.dialog.prompt
-                dialogOptions.message += '<p>Additional command line input (optional):</p>'
-            else
-                dialogType = vex.dialog.confirm
+        vex.dialog.confirm
+            message: "<p>Are you sure you want to unpause the request?</p><pre>#{ requestModel.get('id') }</pre>"
+            callback: (confirmed) =>
+                return unless confirmed
+                
+                if @requestsFilter is "paused"
+                    $row.remove()
+                    
+                requestModel.unpause().done =>
+                    @refresh()
+                        
+    toggleStar: (e) ->
+        $target = $(e.target)
+        $table = $target.parents 'table'
 
-            dialogType dialogOptions
+        requestName = $target.data 'request-name'
+        starred = $target.attr('data-starred') is 'true'
 
-        @$el.find('[data-requests-active-filter]').unbind('click').on 'click', (e) =>
-            e.preventDefault()
-            requestsActiveFilter = $(e.target).data('requests-active-filter')
-            if e.metaKey or e.ctrlKey or e.shiftKey
-                requestsActiveFilter = $(e.target).data('requests-active-filter-shift')
-            @lastRequestsActiveSubFilter = requestsActiveFilter
-            @lastSearchFilter = _.trim @$el.find('input[type="search"]').val()
-            app.router.navigate "/requests/active/#{ requestsActiveFilter }/#{ @lastSearchFilter }", trigger: true
+        app.collections.requestsStarred.toggle(requestName)
+        $requests = $table.find("""[data-request-name="#{ requestName }"]""")
 
-    setUpSearchEvents: (refresh, searchWasFocused) ->
-        $search = @$el.find('input[type="search"]')
+        if starred
+            $requests.each -> $(@).attr('data-starred', 'false')
+        else
+            $requests.each -> $(@).attr('data-starred', 'true')
 
-        if not app.isMobile and (not refresh or searchWasFocused)
-            setTimeout -> $search.focus()
+    runRequest: (e) ->
+        requestModel = new Request id: $(e.target).data('request-id')
+        $row = $(e.target).parents 'tr'
 
-        $rows = @$('tbody > tr')
+        requestType = $(e.target).data 'request-type'
 
-        previousLastSearchFilter = ''
+        dialogOptions =
+            message: "<p>Are you sure you want to run a task for this #{ requestType } request immediately?</p><pre>#{ requestModel.get('id') }</pre>"
+            buttons: [
+                $.extend({}, vex.dialog.buttons.YES, text: 'Run now')
+                vex.dialog.buttons.NO
+            ]
+            callback: (confirmedOrPromptData) =>
+                return if confirmedOrPromptData is false
 
-        onChange = =>
-            return unless @ is app.views.current
+                requestModel.run(confirmedOrPromptData)
+                utils.flashRow $row
 
-            @lastSearchFilter = _.trim $search.val()
+        dialogType = vex.dialog.prompt
+        dialogOptions.message += '<p>Additional command line input (optional):</p>'
 
-            if @lastSearchFilter is ''
-                $rows.removeClass('filtered')
-                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }", { replace: true }
+        dialogType dialogOptions
 
-            if previousLastSearchFilter isnt @lastSearchFilter
-                app.router.navigate "/requests/#{ @lastRequestsFilter }/#{ @lastRequestsSubFilter }/#{ @lastSearchFilter }", { replace: true }
-                previousLastSearchFilter = @lastSearchFilter
+    changeFilters: (e) ->
+        e.preventDefault()
+        @requestsSubFilter = $(e.target).data('requests-active-filter')
+        if e.metaKey or e.ctrlKey or e.shiftKey
+            @requestsSubFilter = $(e.target).data('requests-active-filter-shift')
 
-                $rows.each (i, row) =>
-                    $row = $(row)
+        @updateUrl()
+        @render()
 
-                    rowText = $row.data('request-id')
-                    user = $row.data('request-deploy-user')
-                    rowText = "#{ rowText } #{ user }" if user?
+    searchChange: (event) =>
+        # Add a little delay to the event so we don't run it for every keystroke
+        if @searchTimeout?
+            clearTimeout @searchTimeout
 
-                    if utils.matchLowercaseOrWordsInWords(@lastSearchFilter, rowText)
-                        $row.removeClass('filtered')
-                    else
-                        $row.addClass('filtered')
+        @searchTimeout = setTimeout @processSearchChange, 200
 
-            @$('table').each ->
-                utils.handlePotentiallyEmptyFilteredTable $(@), 'request', @lastSearchFilter
+    processSearchChange: =>
+        return unless @ is app.views.current
 
-        onChangeDebounced = _.debounce onChange, 200
+        previousSearchFilter = @searchFilter
+        $search = @$ "input[type='search']"
+        @searchFilter = _.trim $search.val()
 
-        $search.unbind().on 'change keypress paste focus textInput input click keydown', onChangeDebounced
-
-        if refresh
-            onChange()
+        if @searchFilter isnt previousSearchFilter
+            @updateUrl()
+            @renderTable()
 
 module.exports = RequestsView

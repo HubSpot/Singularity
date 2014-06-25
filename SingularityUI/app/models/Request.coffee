@@ -1,27 +1,39 @@
 Model = require './model'
 
 class Request extends Model
+            
+    parse: (data) ->
+        if data.request?
+            data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
+            data.daemon = data.request.daemon
+            
+            data.scheduled = utils.isScheduledRequest data.request
+            data.onDemand = utils.isOnDemandRequest data.request
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }"
+            data.displayState = constants.requestStates[data.state]
+
+        data
+
+    url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
 
     deletePaused: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/paused"
+            url: "#{ @url() }/paused"
             type: 'DELETE'
 
     unpause: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/unpause"
+            url: "#{ @url() }/unpause?user=#{app.getUsername()}"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/pause"
+            url: "#{ @url() }/pause?user=#{app.getUsername()}"
             type: 'POST'
 
     run: (confirmedOrPromptData) ->
         options =
-            url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/requests/request/#{ @get('id') }/run"
+            url: "#{ @url() }/run?user=#{app.getUsername()}"
             type: 'POST'
             contentType: 'application/json'
 
@@ -31,5 +43,15 @@ class Request extends Model
             options.contentType = 'text/plain'
 
         $.ajax options
+        
+    bounce: =>
+        $.ajax
+            url: "#{ @url() }/bounce?user=#{app.getUsername()}"
+            type: "POST"
+
+    destroy: =>
+        $.ajax
+            url: "#{ @url() }?user=#{app.getUsername()}"
+            type: "DELETE"
 
 module.exports = Request

@@ -2,8 +2,9 @@ View = require './view'
 
 numberAttributes = [
     'activeTasks'
-    'requests'
     'pausedRequests'
+    'activeRequests'
+    'cooldownRequests'
     'scheduledTasks'
     'pendingRequests'
     'cleaningRequests'
@@ -13,7 +14,6 @@ numberAttributes = [
     'activeRacks'
     'deadRacks'
     'decomissioningRacks'
-    'numWebhooks'
     'cleaningTasks'
     'lateTasks'
     'futureTasks'

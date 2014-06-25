@@ -1,0 +1,53 @@
+{{#unless taskHistory.task.isStopped}}
+<section data-task-resource-usage>
+    <div class="page-header">
+        <h1>Resource Usage</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <dl>
+                {{#if taskResourceUsage.cpusNrPeriods }}
+                    <dt>CPUs number of periods</dt>
+                    <dd><pre>{{ taskResourceUsage.cpusNrPeriods }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.cpusNrThrottled }}
+                    <dt>CPUs number throttled</dt>
+                    <dd><pre>{{ taskResourceUsage.cpusNrThrottled }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.cpusSystemTimeSecs }}
+                    <dt>System time (sec)</dt>
+                    <dd><pre>{{ taskResourceUsage.cpusSystemTimeSecs }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.cpusThrottledTimeSecs }}
+                    <dt>Throttled time (sec)</dt>
+                    <dd><pre>{{ taskResourceUsage.cpusThrottledTimeSecs }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.cpusUserTimeSecs }}
+                    <dt>User time (sec)</dt>
+                    <dd><pre>{{ taskResourceUsage.cpusUserTimeSecs }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.memAnonBytes }}
+                    <dt>Memory (anon)</dt>
+                    <dd><pre>{{ taskResourceUsage.memAnonHuman }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.memFileBytes }}
+                    <dt>Memory (file)</dt>
+                    <dd><pre>{{ taskResourceUsage.memFileHuman }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.memMappedFileBytes }}
+                    <dt>Memory (mapped file)</dt>
+                    <dd><pre>{{ taskResourceUsage.memMappedFileHuman }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.memRssBytes }}
+                    <dt>Memory (rss)</dt>
+                    <dd><pre>{{ taskResourceUsage.memRssHuman }}</pre></dd>
+                {{/if}}
+                {{#if taskResourceUsage.memLimitBytes }}
+                    <dt>Memory (limit)</dt>
+                    <dd><pre>{{ taskResourceUsage.memLimitHuman }}</pre></dd>
+                {{/if}}
+            </dl>
+        </div>
+    </div>
+</section>
+{{/unless}}

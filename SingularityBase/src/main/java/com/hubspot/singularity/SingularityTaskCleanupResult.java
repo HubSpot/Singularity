@@ -1,10 +1,10 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityTaskCleanupResult extends SingularityJsonObject {
+  
   private final SingularityCreateResult result;
   private final SingularityTask task;
 
@@ -14,12 +14,7 @@ public class SingularityTaskCleanupResult extends SingularityJsonObject {
     this.task = task;
   }
 
-  public String getResult() {
-    return result.name();
-  }
-
-  @JsonIgnore
-  public SingularityCreateResult getResultEnum() {
+  public SingularityCreateResult getResult() {
     return result;
   }
 

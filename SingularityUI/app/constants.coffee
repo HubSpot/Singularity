@@ -1,11 +1,4 @@
 constants =
-
-    appRoot: '/singularity/'
-    apiBase: 'singularity/v1'
-
-    mesosLogsPort: '5051'
-    mesosLogsPortHttps: '5151'
-
     taskStates:
         TASK_RUNNING:
             isActive: true
@@ -36,6 +29,14 @@ constants =
             label: 'Lost while down'
 
     requestStates:
+        ACTIVE: "Active"
+        SYSTEM_COOLDOWN: "Cooldown"
+        PAUSED: "Paused"
+        DELETED: "Deleted"
+        PENDING: "Pending"
+        CLEANUP: "Cleaning"
+
+    requestHistoryStates:
         CREATED: 'Created'
         UPDATED: 'Updated'
         DELETED: 'Deleted'
@@ -47,17 +48,27 @@ constants =
         PAUSING: 'Pausing'
 
     taskCleanupTypes:
-        BOUNCING:
-            label: 'Bouncing'
-        USER_REQUESTED:
-            label: 'User requested'
-        DECOMISSIONING:
-            label: 'Decomissioning'
+        BOUNCING: 'Bouncing'
+        USER_REQUESTED: 'User requested'
+        DECOMISSIONING: 'Decomissioning'
 
     driverStates:
         DRIVER_ABORTED: 'aborted'
         DRIVER_NOT_STARTED: 'not started'
         DRIVER_RUNNING: 'running'
         DRIVER_STOPPED: 'stopped'
+
+    deployStates:
+        SUCCEEDED: 'Succeeded'
+        FAILED_INTERNAL_STATE: 'Failed internal state'
+        WAITING: 'Waiting'
+        OVERDUE: 'Overdue'
+        FAILED: 'Failed'
+        CANCELED: 'Canceled'
+
+constants.inactiveTaskStates = []
+for state, stateObj of constants.taskStates
+    if stateObj.isActive is false
+        constants.inactiveTaskStates.push state
 
 module.exports = constants

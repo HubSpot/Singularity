@@ -5,7 +5,7 @@ class Racks extends Collection
 
     model: Rack
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/racks/#{ @rackType }"
+    url: => "#{ config.apiRoot }/racks/#{ @rackType }"
 
     initialize: (models, { @rackType }) =>
 

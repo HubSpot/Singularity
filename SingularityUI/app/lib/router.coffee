@@ -3,6 +3,8 @@ SearchView = require 'views/search'
 RequestsView = require 'views/requests'
 RequestView = require 'views/request'
 RequestHistoricalTasksView = require 'views/requestHistoricalTasks'
+RequestDeployHistoryView = require 'views/requestDeployHistory'
+RequestHistoryView = require 'views/requestHistory'
 TasksView = require 'views/tasks'
 TaskView = require 'views/task'
 FilesView = require 'views/files'
@@ -10,7 +12,6 @@ TailView = require 'views/tail'
 StatusView = require 'views/status'
 RacksView = require 'views/racks'
 SlavesView = require 'views/slaves'
-WebhooksView = require 'views/webhooks'
 PageNotFoundView = require 'views/pageNotFound'
 NavigationView = require 'views/navigation'
 
@@ -35,7 +36,7 @@ $(window).on 'blur', ->
 
 $(window).on 'focus', ->
     windowBlurred = false
-    refresh()
+    refresh() unless env.disablePageRefresh is true
 
 nav = ->
     if not app.views.navigationView?
@@ -46,7 +47,7 @@ window.globalRefreshTimeout = undefined
 globalRefresh = ->
     clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
     window.globalRefreshTimeout = setInterval ->
-        refresh()
+        refresh() unless env.disablePageRefresh is true
     , 20 * 1000
 
 refresh = ->
@@ -57,7 +58,6 @@ class Router extends Backbone.Router
 
     routes:
         '(/)': 'dashboard'
-        'search(/)': 'search'
         'status(/)': 'status'
         'requests/:requestsFilter/:requestsSubFilter/:searchFilter(/)': 'requestsFiltered'
         'requests/:requestsFilter/:requestsSubFilter(/)': 'requestsFiltered'
@@ -65,6 +65,8 @@ class Router extends Backbone.Router
         'requests(/)': 'requestsFiltered'
         'request/:requestId(/)': 'request'
         'request/:requestId/historical-tasks': 'requestHistoricalTasks'
+        'request/:requestId/deploy-history': 'requestDeployHistory'
+        'request/:requestId/request-history': 'requestHistory'
         'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
         'tasks(/)': 'tasksFiltered'
@@ -74,7 +76,6 @@ class Router extends Backbone.Router
         'task/:taskId/tail/*path': 'tail'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
-        'webhooks(/)': 'webhooks'
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
@@ -98,23 +99,13 @@ class Router extends Backbone.Router
         app.views.current = app.views.status
         app.show app.views.status.refresh(fromRoute = true)
 
-    requestsFiltered: (requestsFilter = 'active', requestsSubFilter = 'all', searchFilter = '') ->
+    requestsFiltered: (requestsFilter = 'all', requestsSubFilter = 'all', searchFilter = '') ->
         if requestsSubFilter is 'running'
             requestsSubFilter = 'daemon' # Front end URL migration :P
 
-        if not app.views.requests?
-            app.views.requests = new RequestsView { requestsFilter, requestsSubFilter, searchFilter }
-
-        if app.views.requests is app.views.current and @lastRequestsFilter is requestsFilter
-            app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter)
-        else
-            @lastRequestsFilter = requestsFilter
-            app.views.current = app.views.requests
-
-            if requestsFilter is 'active' and app.views.requests.lastRequestsActiveSubFilter
-                requestsSubFilter = app.views.requests.lastRequestsActiveSubFilter
-
-            app.show app.views.requests.render(requestsFilter, requestsSubFilter, searchFilter).refresh()
+        app.views.requests = new RequestsView { requestsFilter, requestsSubFilter, searchFilter }
+        app.views.current = app.views.requests
+        app.show app.views.requests.render()
 
     request: (requestId) ->
         app.views.requestViews = {} if not app.views.requestViews
@@ -135,6 +126,26 @@ class Router extends Backbone.Router
         else
             app.views.current = app.views.requestHistoricalTasksViews[requestId]
             app.show app.views.requestHistoricalTasksViews[requestId].refresh()
+
+    requestDeployHistory: (requestId) ->
+        app.views.requestDeployHistoryViews = {} if not app.views.requestDeployHistoryViews
+        if not app.views.requestDeployHistoryViews[requestId]
+            app.views.requestDeployHistoryViews[requestId] = new RequestDeployHistoryView requestId: requestId
+            app.views.current = app.views.requestDeployHistoryViews[requestId]
+            app.show app.views.requestDeployHistoryViews[requestId].render().refresh()
+        else
+            app.views.current = app.views.requestDeployHistoryViews[requestId]
+            app.show app.views.requestDeployHistoryViews[requestId].refresh()
+
+    requestHistory: (requestId) ->
+        app.views.requestHistoryViews = {} if not app.views.requestHistoryViews
+        if not app.views.requestHistoryViews[requestId]
+            app.views.requestHistoryViews[requestId] = new RequestHistoryView requestId: requestId
+            app.views.current = app.views.requestHistoryViews[requestId]
+            app.show app.views.requestHistoryViews[requestId].render().refresh()
+        else
+            app.views.current = app.views.requestHistoryViews[requestId]
+            app.show app.views.requestHistoryViews[requestId].refresh()
 
     tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
         if not app.views.tasks?
@@ -182,15 +193,6 @@ class Router extends Backbone.Router
         else
             app.views.current = app.views.slaves
             app.show app.views.slaves.refresh()
-
-    webhooks: ->
-        if not app.views.webhooks?
-            app.views.webhooks = new WebhooksView
-            app.views.current = app.views.webhooks
-            app.show app.views.webhooks.render().refresh()
-        else
-            app.views.current = app.views.webhooks
-            app.show app.views.webhooks.refresh()
 
     templateFromURLFragment: ->
         app.views.current = undefined

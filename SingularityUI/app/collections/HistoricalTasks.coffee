@@ -4,19 +4,14 @@ class HistoricalTasks extends Mixen(RequestTasks, Teeble.ServerCollection)
 
     model: Backbone.Model
 
-    comparator: undefined
+    comparator: (task0, task1) =>
+        -(task0.get("updated") - task1.get("updated"))
 
     url: ->
-        sortDirection = @sortDirection.toUpperCase()
-        if @sortColumn in ['updatedAt', 'createdAt']
-            sortDirection = if sortDirection is 'ASC' then 'DESC' else 'ASC'
-
         params =
             count: @perPage
             page: @currentPage
-            orderBy: @sortColumn
-            orderDirection: sortDirection
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks?#{ $.param params }"
+        "#{ config.apiRoot }/history/request/#{ @requestId }/tasks?#{ $.param params }"
 
 module.exports = HistoricalTasks

@@ -34,4 +34,17 @@ CREATE TABLE `taskUpdates` (
   `createdAt` timestamp NOT NULL DEFAULT '1971-01-01 00:00:01',
   PRIMARY KEY (`id`),
   KEY `taskId` (`taskId`)
-) ENGINE=InnoDB AUTO_INCREMENT=197678 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--changeset tpetr:2 dbms:mysql
+CREATE TABLE `deployHistory` (
+  `requestId` varchar(100) NOT NULL,
+  `deployId` varchar(100) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT '1971-01-01 00:00:01',
+  `user` varchar(100) DEFAULT NULL,
+  `deployStateAt` timestamp NOT NULL DEFAULT '1971-01-01 00:00:01',
+  `deployState` varchar(25) NOT NULL,
+  `bytes` blob NOT NULL,
+  PRIMARY KEY (`requestId`,`deployId`),
+  KEY `requestId` (`requestId`,`createdAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

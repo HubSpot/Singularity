@@ -3,7 +3,9 @@ Router = require 'lib/router'
 User = require 'models/User'
 State = require 'models/State'
 
+RequestsAll = require "collections/RequestsAll"
 RequestsActive = require 'collections/RequestsActive'
+RequestsCooldown = require 'collections/RequestsCooldown'
 RequestsPaused = require 'collections/RequestsPaused'
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
@@ -30,6 +32,7 @@ class Application
 
         @allTasks = {}
         @allRequests = {}
+        @allDeploys = {}
         @allRequestHistories = {}
 
         @setupAppCollections()
@@ -39,9 +42,13 @@ class Application
 
         @router = new Router
 
+        # so sneaky
+        el = document.createElement('a')
+        el.href = config.appRoot
+
         Backbone.history.start
-            pushState: location.hostname.substr(0, 'local'.length).toLowerCase() isnt 'local'
-            root: constants.appRoot
+            pushState: true
+            root: el.pathname
 
         Object.freeze? @
 
@@ -61,7 +68,7 @@ class Application
             return if unloading
             return if blurred and jqxhr.statusText is 'timeout'
 
-            url = settings.url.replace(env.SINGULARITY_BASE, '')
+            url = settings.url.replace(config.appRoot, '')
 
             if jqxhr.status is 502
                 Messenger().post "<p>A request failed because Singularity is deploying. Things should resolve in a few seconds so just hang tight...</p>"
@@ -86,10 +93,18 @@ class Application
         @state = new State
 
         resources = [{
+            collection_key: 'requestsAll'
+            collection: RequestsAll
+            error_phrase: 'all requests'
+        },  {
             collection_key: 'requestsActive'
             collection: RequestsActive
-            error_phrase: 'requests'
-        }, {
+            error_phrase: 'active requests'
+        },  {
+            collection_key: 'requestsCooldown'
+            collection: RequestsCooldown
+            error_phrase: 'requests on cooldown'
+        },  {
             collection_key: 'requestsPaused'
             collection: RequestsPaused
             error_phrase: 'paused requests'
@@ -127,6 +142,9 @@ class Application
             Backbone.history.once 'route', =>
                 setTimeout (=> @deployUserPrompt(welcome = true)), 1000
 
+    getUsername: =>
+        @user.get "deployUser" or "Unknown"
+
     deployUserPrompt: (welcome) ->
         vex.dialog.prompt
             message: """
@@ -146,26 +164,6 @@ class Application
     setupGlobalSearchView: ->
         $globalSearch = $('.global-search')
 
-        app.collections.requestsActive.fetch().done =>
-            $(window).keydown (e) =>
-                return unless $(e.target).is('body')
-                if e.keyCode is 84 # t
-                    toggleGlobalSearch()
-                    e.preventDefault()
-                if e.keyCode is 27 # ESC
-                    hideGlobalSearch()
-
-            $globalSearch.find('input').keydown (e) ->
-                if e.keyCode is 27 # ESC
-                    e.preventDefault()
-                    hideGlobalSearch()
-
-            $globalSearch.find('input').removeData('typeahead').typeahead
-                source: _.pluck(app.collections.requestsActive.models, 'attributes')
-                itemSelected: (id) =>
-                    app.router.navigate "/request/#{ id }", { trigger: true }
-                    toggleGlobalSearch()
-
         toggleGlobalSearch = ->
             if $('body').hasClass('global-search-active')
                 hideGlobalSearch()
@@ -174,11 +172,39 @@ class Application
 
         showGlobalSearch = ->
             $globalSearch.find('input').val('')
+            $globalSearch.find('ul').removeClass('dropdown-menu-hidden').find('li').remove()
 
             $('body').addClass('global-search-active')
             $globalSearch.find('input').focus()
 
         hideGlobalSearch = ->
             $('body').removeClass('global-search-active')
+
+        $(window).keydown (e) =>
+            return unless $(e.target).is('body')
+            if e.keyCode is 84 # t
+                toggleGlobalSearch()
+                e.preventDefault()
+            if e.keyCode is 27 # ESC
+                hideGlobalSearch()
+
+        $('[data-invoke-global-search]').click -> toggleGlobalSearch()
+        $('[data-close-global-search]').click (event) -> toggleGlobalSearch() if event.target.hasAttribute('data-close-global-search')
+
+        $globalSearch.find('input').keydown (e) ->
+            if e.keyCode is 27 # ESC
+                e.preventDefault()
+                hideGlobalSearch()
+
+        $globalSearch.find('input').typeahead
+            source: (query, process) ->
+                $.get "#{ config.apiRoot }/history/requests/search", { requestIdLike: query }, (data) ->
+                    process data
+                return undefined
+            matcher: -> true
+            highlighter: (item) -> item
+            updater: (id) ->
+                app.router.navigate "/request/#{ id }", { trigger: true }
+                toggleGlobalSearch()
 
 module.exports = new Application

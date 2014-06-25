@@ -1,0 +1,35 @@
+<section data-task-info>
+    <div class="page-header">
+        <h1>Info</h1>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <dl>
+                {{#if taskHistory.task.name }}
+                    <dt>Task Name</dt>
+                    <dd><pre>{{ taskHistory.task.name }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.task.id }}
+                    <dt>Task ID</dt>
+                    <dd><pre>{{ taskHistory.task.id }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.task.mesosTask.executor.executorId.value }}
+                    <dt>Executor GUID</dt>
+                    <dd><pre>{{ taskHistory.task.mesosTask.executor.executorId.value }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.directory }}
+                    <dt>Directory</dt>
+                    <dd><pre>{{ taskHistory.directory }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.task.offer.hostname }}
+                    <dt>Hostname</dt>
+                    <dd><pre>{{ taskHistory.task.offer.hostname }}</pre></dd>
+                {{/if}}
+                {{#if taskHistory.task.taskRequest.request.executorData.ports }}
+                    <dt>Task request ports</dt>
+                    <dd><pre>{{ taskHistory.task.taskRequest.request.executorData.ports }}</pre></dd>
+                {{/if}}
+            </dl>
+        </div>
+    </div>
+</section>

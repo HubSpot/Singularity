@@ -2,6 +2,8 @@ package com.hubspot.singularity.config;
 
 import javax.validation.constraints.NotNull;
 
+import com.google.common.base.Optional;
+
 public class MesosConfiguration {
 
   @NotNull
@@ -22,7 +24,21 @@ public class MesosConfiguration {
   private String rackIdAttributeKey = "rackid";
   @NotNull
   private String defaultRackId = "DEFAULT";
+  @NotNull
+  private Boolean allowMissingAllExistingTasksOnStartup = false;
+  @NotNull
+  private Integer slaveHttpPort = 5051;
+  @NotNull
+  private Optional<Integer> slaveHttpsPort = Optional.absent();
     
+  public Boolean getAllowMissingAllExistingTasksOnStartup() {
+    return allowMissingAllExistingTasksOnStartup;
+  }
+
+  public void setAllowMissingAllExistingTasksOnStartup(Boolean allowMissingAllExistingTasksOnStartup) {
+    this.allowMissingAllExistingTasksOnStartup = allowMissingAllExistingTasksOnStartup;
+  }
+
   public String getRackIdAttributeKey() {
     return rackIdAttributeKey;
   }
@@ -95,4 +111,19 @@ public class MesosConfiguration {
     this.defaultMemory = defaultMemory;
   }
 
+  public Integer getSlaveHttpPort() {
+    return slaveHttpPort;
+  }
+
+  public void setSlaveHttpPort(Integer slaveHttpPort) {
+    this.slaveHttpPort = slaveHttpPort;
+  }
+
+  public Optional<Integer> getSlaveHttpsPort() {
+    return slaveHttpsPort;
+  }
+
+  public void setSlaveHttpsPort(Optional<Integer> slaveHttpsPort) {
+    this.slaveHttpsPort = slaveHttpsPort;
+  }
 }

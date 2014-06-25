@@ -12,9 +12,10 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRack;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.data.RackManager;
 
-@Path("/racks")
+@Path(SingularityService.API_BASE_PATH + "/racks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
   

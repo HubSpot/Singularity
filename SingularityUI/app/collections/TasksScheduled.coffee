@@ -5,11 +5,13 @@ class TasksScheduled extends Tasks
 
     model: TaskScheduled
 
-    url: "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/tasks/scheduled"
+    url: "#{ config.apiRoot }/tasks/scheduled"
 
     parse: (tasks) ->
         _.each tasks, (task, i) =>
             task.JSONString = utils.stringJSON task
+            if not task.pendingTaskId?
+                task.pendingTaskId = task.pendingTask.pendingTaskId
             task.id = @parsePendingId task.pendingTaskId
             task.requestId = task.pendingTaskId.requestId
             task.name = task.id

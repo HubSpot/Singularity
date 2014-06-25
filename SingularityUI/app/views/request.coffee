@@ -1,9 +1,11 @@
 View = require './view'
 
 RequestHistoricalTasksTableView = require './requestHistoricalTasksTable'
+RequestDeployHistoryTableView = require './requestDeployHistoryTable'
+RequestHistoryTableView = require './requestHistoryTable'
 
 Request = require '../models/Request'
-RequestHistory = require '../models/RequestHistory'
+RequestActiveDeploy = require '../models/RequestActiveDeploy'
 
 RequestTasks = require '../collections/RequestTasks'
 
@@ -14,41 +16,87 @@ class RequestView extends View
     requestHeaderTemplate: require './templates/requestHeader'
     requestTasksActiveTableTemplate: require './templates/requestTasksActiveTable'
     requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
-    requestHistoryTemplate: require './templates/requestHistory'
+    requestActiveDeployTemplate: require './templates/requestActiveDeploy'
+    requestInfoTemplate: require './templates/requestInfo'
 
     removeRequestTemplate: require './templates/vex/removeRequest'
 
+    firstRender: true
+
     initialize: ->
-        @requestHistory = new RequestHistory {}, requestId: @options.requestId
+        @requestModel = new Request id: @options.requestId
+        @requestModel.fetched = false
+
         @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-
-    fetch: ->
-        promises = []
-
-        @requestHistory.fetched = false
         @requestTasksActive.fetched = false
 
-        promises.push @requestHistory.fetch().done =>
-            @requestHistory.fetched = true
-            @render()
+        @requestActiveDeploy = { attributes: {}, mock: true }
 
-        promises.push @requestTasksActive.fetch().done =>
+    fetch: ->
+        # Note some other fetching is deferred until the request history subview/table is fetched
+
+        @requestTasksActive.fetch().done =>
             @requestTasksActive.fetched = true
             @render()
 
-        promises.push app.collections.tasksScheduled.fetch().done =>
+        app.collections.tasksScheduled.fetch().done =>
             app.collections.tasksScheduled.fetched = true
             @render()
-
-        $.when(promises...)
+        
+        app.collections.requestsPending.fetch().done =>
+            if (app.collections.requestsPending.get @requestModel.get "id")?
+                @$el.find("#pending-alert").removeClass "hide"
+            else
+                @$el.find("#pending-alert").addClass "hide"
+        
+        app.collections.requestsCleaning.fetch().done =>
+            if (app.collections.requestsCleaning.get @requestModel.get "id")?
+                @$el.find("#cleaning-alert").removeClass "hide"
+            else
+                @$el.find("#cleaning-alert").addClass "hide"
 
     refresh: ->
-        @fetch().done =>
-            @render()
+        @refreshCount ?= 0
+        @refreshCount += 1
+
+        # Will automatically kick off several renders (yuck)
+        @fetch()
+
+        # Since the parent view is calling refresh immediately, don't refresh
+        # all subviews on the first fetch (ghetto way to prevent unnecessary HTTP
+        # calls from too tightly coupled views)
+        if @refreshCount > 1
+            @requestHistoricalTasksTable?.refresh()
+            @requestDeployHistoryTable?.refresh()
+            @requestHistoryTable?.refresh()
 
         @
 
     render: ->
+        context = @gatherContext()
+
+        if @firstRender
+            @$el.html @template context, @gatherPartials()
+            @saveSelectors()
+            @firstRender = false
+        else
+            @$requestHeader.html @requestHeaderTemplate context
+            @$requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
+            @$requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
+            @$requestActiveDeploy.html @requestActiveDeployTemplate context
+            @$requestInfo.html @requestInfoTemplate context
+
+        @renderHistoricalTasksPaginatedIfNeeded()
+        @renderDeployHistoryPaginatedIfNeeded()
+        @renderHistoryPaginatedIfNeeded()
+
+        @setupEvents()
+
+        @$el.find('pre').each -> utils.setupCopyPre $ @
+
+        @
+
+    gatherContext: ->
         context =
             request:
                 id: @options.requestId
@@ -58,10 +106,11 @@ class RequestView extends View
                 scheduledOrOnDemand: false
                 fullObject: false
 
-            requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
+            fetchDoneRequestActiveDeploy: @requestActiveDeploy.fetched
+            noDataRequestActiveDeploy: @requestActiveDeploy.noData
+            requestActiveDeploy: @requestActiveDeploy.attributes
 
-            fetchDoneHistory: @requestHistory.fetched
-            requestHistory: @requestHistory.attributes
+            requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
 
             fetchDoneActive: @requestTasksActive.fetched
             requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
@@ -69,58 +118,114 @@ class RequestView extends View
             fetchDoneScheduled: app.collections.tasksScheduled.fetched
             requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
 
-        if @requestHistory.attributes.requestUpdates?.length
-            requestLikeObject = $.extend {}, @requestHistory.attributes.requestUpdates[0].request
+        _.extend context.request, @requestModel.attributes
+
+
+        # Reaching into a subview to pick out a model (just to get things done) :/
+        if @requestHistoryTable?.hasHistoryItems()
+            firstHistoryItem = @requestHistoryTable.firstItem()
+            requestLikeObject = $.extend {}, firstHistoryItem.get 'request'
             delete requestLikeObject.JSONString
             delete requestLikeObject.localRequestHistoryId
 
-            if @requestHistory.attributes.requestUpdates[0].state is 'PAUSED'
+            if firstHistoryItem.get('state') is 'PAUSED'
                 context.request.paused = true
+
+            if firstHistoryItem.get('state') is 'DELETED'
+                context.request.deleted = true
 
             requestLikeObject.JSONString = utils.stringJSON requestLikeObject
             app.allRequests[requestLikeObject.id] = requestLikeObject
             context.request.fullObject = true
 
-            context.request.scheduled = utils.isScheduledRequest requestLikeObject
-            context.request.onDemand = utils.isOnDemandRequest requestLikeObject
             context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
 
-        $requestHeader = @$el.find('[data-request-header]')
-        $requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
-        $requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
-        $requestHistory = @$el.find('[data-request-history]')
+            context.firstRequestHistoryItem = firstHistoryItem.attributes
 
+        context
+
+
+    gatherPartials: ->
         partials =
             partials:
                 requestHeader: @requestHeaderTemplate
                 requestTasksActiveTable: @requestTasksActiveTableTemplate
                 requestTasksScheduledTable: @requestTasksScheduledTableTemplate
-                requestHistory: @requestHistoryTemplate
+                requestActiveDeploy: @requestActiveDeployTemplate
+                requestInfo: @requestInfoTemplate
 
-        if not $requestTasksActiveTableContainer.length or not $requestTasksScheduledTableContainer.length
-            @$el.html @template context, partials
-            @renderHistoricalTasksPaginated()
-        else
-            $requestHeader.html @requestHeaderTemplate context
-            $requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
-            $requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
-            $requestHistory.html @requestHistoryTemplate context
+    saveSelectors: ->
+        @$requestHeader = @$el.find('[data-request-header]')
+        @$requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
+        @$requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
+        @$requestActiveDeploy = @$el.find('[data-request-active-deploy]')
+        @$requestInfo = @$el.find('[data-request-info]')
+        @$requestDeployHistory = @$el.find('[data-request-deploy-history]')
 
-        @setupEvents()
 
-        utils.setupSortableTables()
-        @$el.find('pre').each -> utils.setupCopyPre $ @
+    renderHistoricalTasksPaginatedIfNeeded: ->
+        return if @requestHistoricalTasksTable?
 
-        @
-
-    renderHistoricalTasksPaginated: ->
-        requestHistoricalTasksTable = new RequestHistoricalTasksTableView
+        @requestHistoricalTasksTable = new RequestHistoricalTasksTableView
             requestId: @options.requestId
             count: 10
 
-        @$el.find('.historical-tasks-paginated').html requestHistoricalTasksTable.render().$el
+        @$el.find('.historical-tasks-paginated').html @requestHistoricalTasksTable.render().$el
+
+    renderDeployHistoryPaginatedIfNeeded: ->
+        return if @requestDeployHistoryTable?
+
+        @requestDeployHistoryTable = new RequestDeployHistoryTableView
+            requestId: @options.requestId
+            count: 10
+
+        @$el.find('.deploy-history-paginated').html @requestDeployHistoryTable.render().$el
+
+    renderHistoryPaginatedIfNeeded: ->
+        return if @requestHistoryTable?
+
+        @requestHistoryTable = new RequestHistoryTableView
+            requestId: @options.requestId
+            count: 10
+
+        @$el.find('.history-paginated').html @requestHistoryTable.render().$el
+
+        # More fetching after we know the latest request state (from the first item of the history)
+        @listenTo @requestHistoryTable.history, 'sync', =>
+            if @requestHistoryTable.hasHistoryItems() and not @requestHistoryTable.isPausedOrDeleted()
+                @requestModel.fetch({ suppressErrors: true }).fail =>
+                    @requestModel.fetched = true
+                    @requestActiveDeploy.fetched = true
+                    @requestActiveDeploy.noData = true
+                    @render()
+                .done =>
+                    @requestModel.fetched = true
+
+                    canBeBounced = @requestModel.get('state') in ["ACTIVE", "SYSTEM_COOLDOWN"]
+                    canBeBounced = canBeBounced and not @requestModel.get("scheduled")
+                    canBeBounced = canBeBounced and not @requestModel.get("onDemand")
+                    @requestModel.set "canBeBounced", canBeBounced
+
+                    @render()
+
+                    if @requestModel.get('activeDeploy')?
+                        if @requestActiveDeploy.mock
+                            @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
+                        @requestActiveDeploy.fetch().done =>
+                            @requestActiveDeploy.fetched = true
+                            @render()
+                    else
+                        @requestActiveDeploy.fetched = true
+                        @requestActiveDeploy.noData = true
+                        @render()
+            else
+                @requestModel.fetched = true
+                @requestActiveDeploy.fetched = true
+                @requestActiveDeploy.noData = true
+
 
     setupEvents: ->
+
         @$el.find('[data-action="viewJSON"]').unbind('click').on 'click', (e) ->
             utils.viewJSON 'task', $(e.target).data('task-id')
 
@@ -163,11 +268,8 @@ class RequestView extends View
                             @refresh()
                         , 3000
 
-            if requestType is 'on-demand'
-                dialogType = vex.dialog.prompt
-                dialogOptions.message += '<p>Additional command line input (optional):</p>'
-            else
-                dialogType = vex.dialog.confirm
+            dialogType = vex.dialog.prompt
+            dialogOptions.message += '<p>Additional command line input (optional):</p>'
 
             dialogType dialogOptions
 
@@ -175,9 +277,10 @@ class RequestView extends View
             requestModel = new Request id: $(e.target).data('request-id')
 
             unpause = $(e.target).data('action-unpause') is true
+            verb = if unpause then 'unpause' else 'pause'
 
             vex.dialog.confirm
-                message: "<p>Are you sure you want to pause this request?</p><pre>#{ requestModel.get('id') }</pre>"
+                message: "<p>Are you sure you want to #{verb} this request?</p><pre>#{ requestModel.get('id') }</pre>"
                 callback: (confirmed) =>
                     return unless confirmed
                     if unpause
@@ -198,5 +301,17 @@ class RequestView extends View
                     app.collections.tasksScheduled.remove(taskModel)
                     $row.remove()
                     utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
+        
+        @$el.find('[data-action="bounce"]').unbind('click').on 'click', (e) =>
+            requestModel = new Request id: $(e.target).data('request-id')
+            
+            vex.dialog.confirm
+                message: """<p>Are you sure you want to bounce this request?</p>
+                <pre>#{ requestModel.get('id') }</pre>
+                <p>Bouncing a request will cause replacement tasks to be scheduled (and under normal conditions) executed immediately. 
+                Existing tasks will be killed once replacement tasks are deemed healthy.</p>"""
+                callback: (confirmed) =>
+                    return unless confirmed
+                    requestModel.bounce().done => @refresh()
 
 module.exports = RequestView

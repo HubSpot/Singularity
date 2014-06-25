@@ -2,19 +2,41 @@ View = require './view'
 
 Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
+TaskResourceUsage = require '../models/TaskResourceUsage'
 
+TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
+
+TaskS3LogsTableView = require '../views/taskS3LogsTable'
+
 
 class TaskView extends View
 
-    template: require './templates/task'
-
     killTaskTemplate: require './templates/vex/killTask'
+
+    overviewTemplate: require './templates/taskOverview'
+    historyTemplate:  require './templates/taskHistory'
+    logsTemplate:     require './templates/taskLogs'
+    filesTemplate:    require './templates/taskFiles'
+    infoTemplate:     require './templates/taskInfo'
+    environmentTemplate: require './templates/taskEnvironment'
+    resourceUsageTemplate: require './templates/taskResourceUsage'
 
     initialize: ->
         @sandboxTries = 0
+        @firstRender = true
         @taskFiles = {}
         @taskHistory = new TaskHistory {}, taskId: @options.taskId
+        @taskResourceUsage = new TaskResourceUsage {}, taskId: @options.taskId
+
+        @taskS3Logs = new TaskS3Logs [], taskId: @options.taskId
+
+        $.extend @taskS3Logs,
+            totalPages: 100
+            totalRecords: 10000
+            currentPage: 1
+            firstPage: 1
+            perPage: 10
 
     fetch: ->
         deferred = $.Deferred()
@@ -26,6 +48,9 @@ class TaskView extends View
 
         @taskHistory.fetch().done =>
             @render() if neverSynced
+
+            unless @taskHistory.attributes.task.isStopped
+                @taskResourceUsage.fetch()
 
             @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
             @taskFiles.testSandbox()
@@ -43,11 +68,16 @@ class TaskView extends View
                 )
             @sandboxTries += 1
 
+        @taskS3Logs.fetch()
+
         deferred
 
     refresh: ->
         @fetch().done =>
             @render()
+
+        # Refresh the current logs table page
+        @taskS3Logs.goTo @taskS3Logs.currentPage
 
         @
 
@@ -64,6 +94,8 @@ class TaskView extends View
             taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
             taskFilesFetchDone: @taskFilesFetchDone
             taskFilesSandboxUnavailable: @taskFilesSandboxUnavailable
+            taskS3LogsCollectionJSON: JSON.stringify(@taskS3Logs.toJSON(), null, 4)
+            taskResourceUsage: @taskResourceUsage.attributes
 
         context.taskIdStringLengthTens = Math.floor(context.taskHistory.task.id.length / 10) * 10
 
@@ -71,11 +103,29 @@ class TaskView extends View
             partials:
                 filesTable: require './templates/filesTable'
 
-        @$el.html @template context, partials
+        if @firstRender
+            @firstRender = false
+
+            @$el.append @overviewTemplate context, partials
+            @$el.append @historyTemplate context, partials
+            @$el.append @logsTemplate context, partials
+            @$el.append @filesTemplate context, partials
+            @$el.append @infoTemplate context, partials
+            @$el.append @resourceUsageTemplate context, partials
+            @$el.append @environmentTemplate context, partials
+
+            @saveSelectors()
+            @setupSubviews()
+        else
+            @dom.overview.replaceWith @overviewTemplate context, partials
+            @dom.historySection.replaceWith @historyTemplate context, partials
+            @dom.filesSection.replaceWith @filesTemplate context, partials
+            @dom.infoSection.replaceWith @infoTemplate context, partials
+            @dom.resourceUsageSection.replaceWith @resourceUsageTemplate context, partials
+            @dom.environmentSection.replaceWith @environmentTemplate context, partials
 
         @setupEvents()
 
-        utils.setupSortableTables()
         @$el.find('pre').each -> utils.setupCopyPre $ @
 
         @
@@ -96,6 +146,22 @@ class TaskView extends View
                 callback: (confirmed) =>
                     return unless confirmed
                     taskModel.destroy()
-                    app.router.navigate 'tasks', trigger: true
+                    setTimeout (=> @refresh()), 500
+
+    saveSelectors: ->
+        @dom ?= {}
+
+        @dom.overview = @$('#overview')
+        @dom.historySection = @$('[data-task-history]')
+        @dom.logsSection = @$('[data-task-logs]')
+        @dom.logsWrapper = @$('[data-s3-logs-wrapper]')
+        @dom.filesSection = @$('[data-task-files]')
+        @dom.infoSection = @$('[data-task-info]')
+        @dom.environmentSection = @$('[data-task-environment]')
+        @dom.resourceUsageSection = @$('[data-task-resource-usage]')
+
+    setupSubviews: ->
+        @taskS3LogsTableView = new TaskS3LogsTableView { collection: @taskS3Logs }
+        @dom.logsWrapper.append @taskS3LogsTableView.render().$el
 
 module.exports = TaskView

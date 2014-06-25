@@ -5,7 +5,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -15,85 +14,100 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
-import com.hubspot.singularity.BadRequestException;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
+import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
-import com.sun.jersey.api.NotFoundException;
 
-@Path("/sandbox")
+@Path(SingularityService.API_BASE_PATH + "/sandbox")
 @Produces({ MediaType.APPLICATION_JSON })
-public class SandboxResource {
+public class SandboxResource extends AbstractHistoryResource {
   
-  private final HistoryManager historyManager;
   private final SandboxManager sandboxManager;
   private final SingularityLogSupport logSupport;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, SandboxManager sandboxManager, SingularityLogSupport logSupport) {
-    this.historyManager = historyManager;
+  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
+    super(historyManager, taskManager, deployManager);
+    
+    this.configuration = configuration;
     this.sandboxManager = sandboxManager;
     this.logSupport = logSupport;
   }
 
   private SingularityTaskHistory checkHistory(String taskId) {
-    SingularityTaskId taskIdObj = null;
+    final SingularityTaskId taskIdObj = getTaskIdObject(taskId);
+    final SingularityTaskHistory taskHistory = getTaskHistory(taskIdObj);
     
-    try {
-      taskIdObj = SingularityTaskId.fromString(taskId);
-    } catch (InvalidSingularityTaskIdException invalidException) {
-      throw new BadRequestException(invalidException.getMessage());
-    }
-    
-    final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId, true);
-    
-    if (!maybeTaskHistory.isPresent()) {
-      throw new NotFoundException(String.format("Task %s did not have a history", taskId));
-    }
-
-    if (!maybeTaskHistory.get().getDirectory().isPresent()) {
+    if (!taskHistory.getDirectory().isPresent()) {
       logSupport.checkDirectory(taskIdObj);
       
-      throw new BadRequestException(String.format("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId));
+      throw WebExceptions.badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }
     
-    return maybeTaskHistory.get();
+    return taskHistory;
+  }
+  
+  private String getDefaultPath(String taskId, String qPath) {
+    if (!Strings.isNullOrEmpty(qPath)) {
+      return qPath;
+    }
+    if (configuration.isSandboxDefaultsToTaskId()) {
+      return taskId;
+    }
+    return "";
   }
   
   @GET
   @Path("/{taskId}/browse")
-  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path) {
+  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") String qPath) {
+    final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
-    return sandboxManager.browse(slaveHostname, fullPath);
+    try {
+      return sandboxManager.browse(slaveHostname, fullPath);
+    } catch (SlaveNotFoundException snfe) {
+      throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
+    }
   }
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") @DefaultValue("") String path,
+  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String qPath,
                                    @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
+    final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
-    final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
+    try {
+      final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
 
-    if (!maybeChunk.isPresent()) {
-      throw new NotFoundException(String.format("File %s does not exist for task ID %s", fullPath, taskId));
+      if (!maybeChunk.isPresent()) {
+        throw WebExceptions.notFound("File %s does not exist for task ID %s", fullPath, taskId);
+      }
+
+      return maybeChunk.get();
+    } catch (SlaveNotFoundException snfe) {
+      throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
-
-    return maybeChunk.get();
   }
 
   @GET

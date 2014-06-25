@@ -13,32 +13,39 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.TaskRequestManager;
 import com.sun.jersey.api.NotFoundException;
 
-@Path("/tasks")
+@Path(SingularityService.API_BASE_PATH + "/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class TaskResource {
   
   private final TaskManager taskManager;
-  private final RequestManager requestManager;
   private final SlaveManager slaveManager;  
+  private final TaskRequestManager taskRequestManager;
+  private final MesosClient mesosClient;
   
   @Inject
-  public TaskResource(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
     this.taskManager = taskManager;
-    this.requestManager = requestManager;
+    this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
+    this.mesosClient = mesosClient;
   }
   
   @GET
@@ -47,7 +54,7 @@ public class TaskResource {
   public List<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getScheduledTasks();
     
-    return requestManager.getTaskRequests(tasks);
+    return taskRequestManager.getTaskRequests(tasks);
   }
   
   @GET
@@ -85,6 +92,13 @@ public class TaskResource {
   }
   
   @GET
+  @PropertyFiltering
+  @Path("/lbcleanup")
+  public List<SingularityTaskId> getLbCleanupTasks() {
+    return taskManager.getLBCleanupTasks();
+  }
+  
+  @GET
   @Path("/task/{taskId}")
   public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
@@ -94,6 +108,24 @@ public class TaskResource {
     }
     
     return task.get();
+  }
+
+  @GET
+  @Path("/task/{taskId}/statistics")
+  public MesosTaskStatisticsObject getTaskStatistics(@PathParam("taskId") String taskId) {
+    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
+
+    if (!task.isPresent()) {
+      throw new NotFoundException(String.format("No active task with id %s", taskId));
+    }
+
+    for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.get().getOffer().getHostname())) {
+      if (taskMonitor.getExecutorId().equals(task.get().getMesosTask().getExecutor().getExecutorId().getValue())) {
+        return taskMonitor.getStatistics();
+      }
+    }
+
+    throw new NotFoundException("Couldn't find task statistics");
   }
   
   @DELETE
@@ -105,7 +137,7 @@ public class TaskResource {
       throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
     }
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), taskId, task.get().getTaskRequest().getRequest().getId());
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.get().getTaskId());
     
     final SingularityCreateResult result = taskManager.createCleanupTask(taskCleanup);
 

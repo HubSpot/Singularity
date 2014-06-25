@@ -1,7 +1,8 @@
 package com.hubspot.singularity.smtp;
 
-import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,36 +17,34 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.mesos.Protos.TaskState;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityServiceModule;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
-import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 import com.hubspot.singularity.data.SandboxManager;
-import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.data.TaskManager;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.Jade4J;
@@ -61,26 +60,32 @@ public class SingularityMailer implements SingularityCloseable {
 
   private final SingularityCloser closer;
 
-  private final HistoryManager historyManager;
-
-  private JadeTemplate taskFailedTemplate;
-  private JadeTemplate requestPausedTemplate;
-  private JadeTemplate taskNotRunningWarningTemplate;
-
+  private final TaskManager taskManager;
+  
+  private final JadeTemplate taskFailedTemplate;
+  private final JadeTemplate requestInCooldownTemplate;
+  private final JadeTemplate taskNotRunningWarningTemplate;
+  
+  private final JadeHelper jadeHelper;
+  
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 
   private final Optional<String> uiHostnameAndPath;
 
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
+  private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
 
   @Inject
-  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, HistoryManager historyManager, AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper) {
+  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient, 
+      ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate, 
+      @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
+    this.jadeHelper = jadeHelper;
     this.configuration = configuration;
     this.uiHostnameAndPath = configuration.getSingularityUIHostnameAndPath();
-    this.historyManager = historyManager;
+    this.taskManager = taskManager;
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
 
@@ -93,14 +98,10 @@ public class SingularityMailer implements SingularityCloseable {
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }
-
-    try {
-      this.taskFailedTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/task_failed.jade");
-      this.requestPausedTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/request_paused.jade");
-      this.taskNotRunningWarningTemplate = Jade4J.getTemplate("./SingularityService/src/main/resources/templates/task_not_running_warning.jade");
-    } catch (IOException e) {
-      Throwables.propagate(e);
-    }
+    
+    this.taskFailedTemplate = taskFailedTemplate;
+    this.requestInCooldownTemplate = requestInCooldownTemplate;
+    this.taskNotRunningWarningTemplate = taskNotRunningWarningTemplate;
   }
 
   @Override
@@ -124,28 +125,28 @@ public class SingularityMailer implements SingularityCloseable {
     queueMail(to, subject, "");
   }
 
-  private String getEmailLogFormat(List<String> toList, String subject, String body) {
-    return String.format("[to: %s, subject: %s, body: %s]", toList, subject, body);
+  private String getEmailLogFormat(List<String> toList, String subject) {
+    return String.format("[to: %s, subject: %s]", toList, subject);
   }
 
   private Optional<String[]> getTaskLogFile(SingularityTaskId taskId, String filename) {
-    final Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
-
-    if (!maybeTaskHistory.isPresent()) {
-      LOG.error("No task history found for %s. This shouldn't happen.", taskId.getId());
+    final Optional<SingularityTask> task = taskManager.getTask(taskId);
+    
+    if (!task.isPresent()) {
+      LOG.error(String.format("No task found for %s", taskId.getId()));
       return Optional.absent();
     }
-
-    final SingularityTaskHistory taskHistory = maybeTaskHistory.get();
-
-    if (!taskHistory.getDirectory().isPresent()) {
+    
+    final Optional<String> directory = taskManager.getDirectory(taskId);
+    
+    if (!directory.isPresent()) {
       LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
       return Optional.absent();
     }
 
-    final String slaveHostname = taskHistory.getTask().getOffer().getHostname();
+    final String slaveHostname = task.get().getOffer().getHostname();
 
-    final String directory = String.format("%s/%s", taskHistory.getDirectory().get(), filename);
+    final String fullPath = String.format("%s/%s", directory.get(), filename);
 
     final Long logLength = new Long(this.maybeSmtpConfiguration.get().getTaskLogLength());
 
@@ -154,9 +155,9 @@ public class SingularityMailer implements SingularityCloseable {
     final Optional<MesosFileChunkObject> logChunkObject;
     
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, directory, Optional.of(0L), Optional.of(logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
-      LOG.error(String.format("Sanboxmanager failed to read %s/%s on slave %s with error %s", directory, filename, slaveHostname, e));
+      LOG.error(String.format("Sanboxmanager failed to read %s/%s on slave %s", directory, filename, slaveHostname),  e);
       return Optional.absent();
     }
 
@@ -168,36 +169,44 @@ public class SingularityMailer implements SingularityCloseable {
     }
   }
 
-  private String populateGenericEmailTemplate(JadeTemplate template, SingularityRequest request, SingularityTaskId taskId, Optional<SingularityTaskHistory> maybeTaskHistory, Optional<TaskState> taskState,
+  private String populateGenericEmailTemplate(JadeTemplate template, SingularityRequest request, Optional<SingularityTaskId> taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, Optional<ExtendedTaskState> taskState,
       Map<String, Object> additionalBindings) {
     Builder<String, Object> templateSubs = ImmutableMap.<String, Object> builder();
 
     templateSubs.put("request_id", request.getId());
-    templateSubs.put("singularity_task_link", getSingularityTaskLink(taskId));
-    templateSubs.put("stdout", getTaskLogFile(taskId, "stdout").or(new String[0]));
-    templateSubs.put("stderr", getTaskLogFile(taskId, "stderr").or(new String[0]));
-    templateSubs.put("duration_left", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())));
-    templateSubs.put("task_id", taskId.getId());
+    templateSubs.put("singularity_request_link", getSingularityRequestLink(request));
+    
+    if (taskId.isPresent()) {
+      templateSubs.put("singularity_task_link", getSingularityTaskLink(taskId.get()));
+      templateSubs.put("stdout", getTaskLogFile(taskId.get(), "stdout").or(new String[0]));
+      templateSubs.put("stderr", getTaskLogFile(taskId.get(), "stderr").or(new String[0]));
+      templateSubs.put("duration_left", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())));
+      templateSubs.put("task_id", taskId.get().getId());
+      templateSubs.put("deploy_id", taskId.get().getDeployId());
+
+      templateSubs.put("task_directory", taskManager.getDirectory(taskId.get()).or("directory missing"));
+    
+      Optional<SingularityTask> task = taskManager.getTask(taskId.get());
+      
+      if (task.isPresent()) {
+        templateSubs.put("slave_hostname", task.get().getOffer().getHostname());
+      }
+    }
 
     templateSubs.put("taskScheduled", request.isScheduled());
     
-    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure() != null && request.getNumRetriesOnFailure() > 0);
-    templateSubs.put("num_retries", request.getNumRetriesOnFailure() == null ? "" : request.getNumRetriesOnFailure());
+    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
+    templateSubs.put("num_retries", request.getNumRetriesOnFailure().or(0));
     
     if (taskState.isPresent()) {
-      templateSubs.put("status", taskState.get().name());
-      templateSubs.put("taskStateLost", (taskState.get() == TaskState.TASK_LOST));
-      templateSubs.put("taskStateFailed", (taskState.get() == TaskState.TASK_FAILED));
+      templateSubs.put("status", taskState.get().getDisplayName());
+      templateSubs.put("taskStateLost", (taskState.get() == ExtendedTaskState.TASK_LOST || taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN));
+      templateSubs.put("taskStateFailed", (taskState.get() == ExtendedTaskState.TASK_FAILED));
     }
 
-    if (maybeTaskHistory.isPresent()) {
-      final SingularityTaskHistory taskHistory = maybeTaskHistory.get();
-      templateSubs.put("task_updates", taskHistory.getTaskHistoryJade());
-      templateSubs.put("task_directory", taskHistory.getDirectory().or("directory missing"));
-      templateSubs.put("slave_hostname", taskHistory.getTask().getOffer().getHostname());
-      templateSubs.put("taskEverRan", taskEverRan(taskHistory));
-    }
-
+    templateSubs.put("task_updates", jadeHelper.getJadeTaskHistory(taskHistory));
+    templateSubs.put("taskEverRan", taskEverRan(taskHistory));
+    
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()) {
       templateSubs.put(bindingEntry.getKey(), bindingEntry.getValue());
     }
@@ -205,73 +214,75 @@ public class SingularityMailer implements SingularityCloseable {
     return Jade4J.render(template, templateSubs.build());
   }
 
+  private List<String> getOwners(SingularityRequest request) {
+    return request.getOwners().or(Collections.<String> emptyList());
+  }
+  
   public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
+    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
-    final List<String> to = request.getOwners();
+    final List<String> to = getOwners(request);
     final String subject = String.format("Task %s has not started yet — Singularity", taskId.getId());
 
-    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder().put("duration_running", DurationFormatUtils.formatDurationHMS(duration)).build();
+    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
+        .put("duration_running", DurationFormatUtils.formatDurationHMS(duration))
+        .build();
 
-    final String body = populateGenericEmailTemplate(this.taskNotRunningWarningTemplate, request, taskId, maybeTaskHistory, Optional.<TaskState> absent(), additionalBindings);
-
-    queueMail(to, subject, body);
-  }
-
-  public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, TaskState taskState) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
-
-    final List<String> to = request.getOwners();
-    final String subject = getSubjectForTaskHistory(taskId, taskState, maybeTaskHistory);
-
-    Joiner joiner = Joiner.on(", ").skipNulls();
-    final String adminEmails = joiner.join(this.maybeSmtpConfiguration.get().getAdmins());
-
-    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder().put("adminEmails", adminEmails.toString()).build();
-
-    final String body = populateGenericEmailTemplate(this.taskFailedTemplate, request, taskId, maybeTaskHistory, Optional.of(taskState), additionalBindings);
+    final String body = populateGenericEmailTemplate(this.taskNotRunningWarningTemplate, request, Optional.of(taskId), taskHistory, Optional.<ExtendedTaskState> absent(), additionalBindings);
 
     queueMail(to, subject, body);
   }
 
-  public void sendRequestPausedMail(SingularityTaskId taskId, SingularityRequest request) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId(), true);
+  public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
+    if (maybeSmtpConfiguration.isPresent()) {
+      Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
-    final int maxFailures = request.getMaxFailuresBeforePausing();
+      final List<String> to = getOwners(request);
+      final String subject = getSubjectForTaskHistory(taskId, taskState, taskHistory);
 
-    final List<SingularityRequestHistory> requestHistories = historyManager.getRequestHistory(request.getId(), Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, maxFailures);
-    final List<Map<String, String>> requestHistoryFormatted = Lists.newArrayList();
+      Joiner joiner = Joiner.on(", ").skipNulls();
+      final String adminEmails = joiner.join(maybeSmtpConfiguration.get().getAdmins());
 
-    for (SingularityRequestHistory requestHistory : requestHistories) {
-      requestHistoryFormatted.add(requestHistory.formatJadeJson());
+      ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object>builder()
+          .put("adminEmails", adminEmails.toString())
+          .build();
+
+      final String body = populateGenericEmailTemplate(taskFailedTemplate, request, Optional.of(taskId), taskHistory, Optional.of(taskState), additionalBindings);
+
+      queueMail(to, subject, body);
     }
+  }
 
-    final List<String> to = request.getOwners();
-    final String subject = String.format("Request %s is paused — Singularity", request.getId());
+  public void sendRequestInCooldownMail(SingularityRequest request) {
+    // should have task history
+    
+    final List<String> to = getOwners(request);
+    final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
+    
+    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
+        .put("num_failures", configuration.getCooldownAfterFailures())
+        .put("cooldown_delay_format", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())))
+        .put("cooldown_expires_format", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())))
+        .build();
 
-    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder().put("num_failures", maxFailures).put("request_history", requestHistoryFormatted).build();
-
-    final String body = populateGenericEmailTemplate(this.requestPausedTemplate, request, taskId, maybeTaskHistory, Optional.<TaskState> absent(), additionalBindings);
+    final String body = populateGenericEmailTemplate(this.requestInCooldownTemplate, request, Optional.<SingularityTaskId> absent(), Collections.<SingularityTaskHistoryUpdate> emptyList(), 
+        Optional.<ExtendedTaskState> absent(), additionalBindings);
 
     queueMail(to, subject, body);
   }
 
-  private boolean taskEverRan(SingularityTaskHistory taskHistory) {
-    for (SingularityTaskHistoryUpdate update : taskHistory.getTaskUpdates()) {
-      if (TaskState.valueOf(update.getStatusUpdate()) == TaskState.TASK_RUNNING) {
-        return true;
-      }
-    }
-
-    return false;
+  private boolean taskEverRan(Collection<SingularityTaskHistoryUpdate> history) {
+    SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
+    
+    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
   }
-
-  private String getSubjectForTaskHistory(SingularityTaskId taskId, TaskState state, Optional<SingularityTaskHistory> taskHistory) {
-    if (!taskHistory.isPresent() || !taskEverRan(taskHistory.get())) {
-      return String.format("Task %s never started in mesos (State: %s) — Singularity", taskId.toString(), state.name());
+  
+  private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
+    if (!taskEverRan(history)) {
+      return String.format("Task %s (%s) never started — Singularity", state.getDisplayName(), taskId.toString());
     }
 
-    return String.format("Task %s failed after running (State: %s) — Singularity", taskId.toString(), state.name());
+    return String.format("Task %s (%s) after running — Singularity", state.getDisplayName(), taskId.toString());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {
@@ -282,14 +293,22 @@ public class SingularityMailer implements SingularityCloseable {
     return String.format(TASK_LINK_FORMAT, uiHostnameAndPath.get(), taskId.getId());
   }
 
+  private String getSingularityRequestLink(SingularityRequest request) {
+    if (!uiHostnameAndPath.isPresent()) {
+      return "";
+    }
+
+    return String.format(REQUEST_LINK_FORMAT, uiHostnameAndPath.get(), request.getId());
+  }
+  
   private void queueMail(final List<String> toList, final String subject, final String body) {
     if (toList.isEmpty()) {
-      LOG.warn(String.format("Couldn't queue email %s because no to address is present", getEmailLogFormat(toList, subject, body)));
+      LOG.warn(String.format("Couldn't queue email %s because no to address is present", getEmailLogFormat(toList, subject)));
       return;
     }
 
     if (!mailSenderExecutorService.isPresent()) {
-      LOG.warn(String.format("Couldn't queue email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject, body)));
+      LOG.warn(String.format("Couldn't queue email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject)));
       return;
     }
 
@@ -325,7 +344,7 @@ public class SingularityMailer implements SingularityCloseable {
 
   public void sendMail(List<String> toList, String subject, String body) {
     if (!maybeSmtpConfiguration.isPresent()) {
-      LOG.warn(String.format("Couldn't send email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject, body)));
+      LOG.warn(String.format("Couldn't send email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject)));
     }
 
     final SMTPConfiguration smtpConfiguration = maybeSmtpConfiguration.get();
@@ -360,11 +379,11 @@ public class SingularityMailer implements SingularityCloseable {
 
       message.addRecipients(RecipientType.TO, toArray);
 
-      LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), message));
+      LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), getEmailLogFormat(toList, subject)));
 
       Transport.send(message);
     } catch (Throwable t) {
-      LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject, body)), t);
+      LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject)), t);
     }
   }
 

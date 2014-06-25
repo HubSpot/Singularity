@@ -6,7 +6,7 @@ class TaskFiles extends Collection
         params =
             path: @path
 
-        "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/browse?#{ $.param params }"
+        "#{ config.apiRoot }/sandbox/#{ @taskId }/browse?#{ $.param params }"
 
     initialize: (models, { @taskId, @offerHostname, @directory, @path }) ->
 
@@ -18,7 +18,7 @@ class TaskFiles extends Collection
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
             taskLogFile.mtimeHuman = utils.humanTimeAgo(taskLogFile.mtime * 1000)
             taskLogFile.sizeHuman = Humanize.fileSize(taskLogFile.size)
-            taskLogFile.downloadLink = "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/sandbox/#{ @taskId }/download?#{ downloadParams }"
+            taskLogFile.downloadLink = "#{ config.apiRoot }/sandbox/#{ @taskId }/download?#{ downloadParams }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.relPath = relPath
             taskLogFile.taskId = @taskId

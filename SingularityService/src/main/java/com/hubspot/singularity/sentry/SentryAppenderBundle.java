@@ -1,5 +1,8 @@
 package com.hubspot.singularity.sentry;
 
+import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
 import net.kencochrane.raven.logback.SentryAppender;
@@ -9,12 +12,8 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Logger;
 
 import com.google.common.base.Optional;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
-
-import io.dropwizard.ConfiguredBundle;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SentryAppenderBundle implements ConfiguredBundle<SingularityConfiguration> {
 

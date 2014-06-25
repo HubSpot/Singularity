@@ -40,7 +40,7 @@ public class SingularityScheduledTasksInfo {
     long maxTaskLag = 0;
     
     for (SingularityPendingTask pendingTask : pendingTasks) {
-      long delta = now - pendingTask.getTaskId().getNextRunAt();
+      long delta = now - pendingTask.getPendingTaskId().getNextRunAt();
       
       if (delta > millisDeltaForLateTasks) {
         numLateTasks++;

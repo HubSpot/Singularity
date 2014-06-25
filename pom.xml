@@ -14,19 +14,23 @@
   </parent>
 
   <properties>
-    <mesos.version>0.14.0-rc4</mesos.version>
-    <sentry.version>4.1.2</sentry.version>
+    <mesos.version>0.18.0</mesos.version>
+    <sentry.version>4.1.2</sentry.version>	
     <java.abi>1.7</java.abi>
     <dropwizard.version>0.7.0-rc2</dropwizard.version>
     <sl4fj.version>1.7.6</sl4fj.version>
     <jackson.version>2.3.1</jackson.version>
-    <curator.version>2.2.0-incubating</curator.version>
-    <ning.async.version>1.7.20</ning.async.version>
+    <curator.version>2.4.1</curator.version>
+    <ning.async.version>1.7.24</ning.async.version>
+    <guice.version>3.0</guice.version>
+    <jets3t.version>0.9.0</jets3t.version>
+    <guava.version>15.0</guava.version>
+    <baragon.version>0.1.0-SNAPSHOT</baragon.version> <!-- TODO: use release version of Baragon when complete -->
   </properties>
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.2.20</version>
+  <version>0.3.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -60,8 +64,14 @@
 
   <modules>
     <module>SingularityBase</module>
+    <module>SingularityRunnerBase</module>
+    <module>MesosClient</module>
     <module>SingularityClient</module>
     <module>SingularityService</module>
+    <module>SingularityExecutor</module>
+    <module>SingularityExecutorCleanup</module>
+    <module>SingularityLogWatcher</module>
+    <module>SingularityS3Uploader</module>
   </modules>
 
   <build>
@@ -115,6 +125,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8</version>
       </plugin>
     </plugins>
   </build>

@@ -7,8 +7,13 @@ public class StringTranscoder implements Transcoder<String> {
   public final static StringTranscoder STRING_TRANSCODER = new StringTranscoder();
   
   @Override
-  public String transcode(byte[] data) throws Exception {
+  public String transcode(byte[] data) {
     return JavaUtils.toString(data);
+  }
+
+  @Override
+  public byte[] toBytes(String object) {
+    return JavaUtils.toBytes(object);
   }
   
 }

@@ -1,3 +1,5 @@
+@import nib
+
 .icon
     display inline-block
     position relative
@@ -49,3 +51,24 @@
 
     &:after, a:hover &:after
         box-shadow 0 -1px, inset 0 -1px, inset 0 1px, 0 1px
+
+.icon-search
+
+    &:before
+        top -1px
+        left 0
+        height 13px
+        width 13px
+        border 2px solid
+        border-radius 50%
+
+    &:after
+        top 10px
+        left 12px
+        height 5px
+        width 0px
+        border-right 3px solid
+        transform rotateZ(-45deg)
+
+.icon-search-adjacent-text
+    opacity .6

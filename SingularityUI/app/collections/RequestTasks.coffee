@@ -2,7 +2,7 @@ Collection = require './collection'
 
 class RequestTasks extends Collection
 
-    url: => "#{ env.SINGULARITY_BASE }/#{ constants.apiBase }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
+    url: => "#{ config.apiRoot }/history/request/#{ @requestId }/tasks#{ if @active then '/active' else '' }"
 
     comparator: -> - @get('createdAt')
 
@@ -14,10 +14,12 @@ class RequestTasks extends Collection
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.name = task.id
+            task.deployId = task.taskId.deployId
             task.updatedAtHuman = utils.humanTimeAgo task.updatedAt
-            task.createdAtHuman = utils.humanTimeAgo task.createdAt
-            task.lastStatusHuman = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].label else ''
-            task.isActive = if constants.taskStates[task.lastStatus] then constants.taskStates[task.lastStatus].isActive else false
+            task.startedAt = task.taskId.startedAt
+            task.startedAtHuman = utils.humanTimeAgo task.startedAt
+            task.lastTaskStateHuman = if constants.taskStates[task.lastTaskState] then constants.taskStates[task.lastTaskState].label else ''
+            task.isActive = if constants.taskStates[task.lastTaskState] then constants.taskStates[task.lastTaskState].isActive else false
             app.allTasks[task.id] = task
 
         tasks

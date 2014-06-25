@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.GetDataBuilder;
+import org.apache.curator.framework.api.ProtectACLCreateModePathAndBytesable;
+import org.apache.curator.framework.api.SetDataBuilder;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
@@ -41,16 +44,20 @@ public abstract class CuratorManager {
     return 0;
   }
   
-  protected boolean exists(String path) {
+  protected Optional<Stat> checkExists(String path) {
     try {
-      Stat s = curator.checkExists().forPath(path);
-      return s != null;
+      Stat stat = curator.checkExists().forPath(path);
+      return Optional.fromNullable(stat);
     } catch (NoNodeException nne) {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
     
-    return false;
+    return Optional.absent();
+  }
+  
+  protected boolean exists(String path) {
+    return checkExists(path).isPresent();
   }
   
   protected List<String> getChildren(String root) {
@@ -65,10 +72,10 @@ public abstract class CuratorManager {
   
   protected SingularityDeleteResult delete(String path) {
     try {
-      curator.delete().forPath(path);
+      curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Tried to delete an item at path %s that didn't exist", path));
+      LOG.trace("Tried to delete an item at path {} that didn't exist", path);
       return SingularityDeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
@@ -81,11 +88,8 @@ public abstract class CuratorManager {
   
   protected SingularityCreateResult create(String path, Optional<byte[]> data) {
     try {
-      if (data.isPresent()) {
-        curator.create().creatingParentsIfNeeded().forPath(path, data.get());
-      } else {
-        curator.create().creatingParentsIfNeeded().forPath(path);
-      }
+      privateCreate(path, data);
+      
       return SingularityCreateResult.CREATED;
     } catch (NodeExistsException nee) {
       return SingularityCreateResult.EXISTED;
@@ -94,9 +98,55 @@ public abstract class CuratorManager {
     }
   }
   
-  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
+  private void privateCreate(String path, Optional<byte[]> data) throws Exception {
+    ProtectACLCreateModePathAndBytesable<String> createBuilder = curator.create().creatingParentsIfNeeded();
+    
+    if (data.isPresent()) {
+      createBuilder.forPath(path, data.get());
+    } else {
+      createBuilder.forPath(path);
+    }
+  }
+  
+  protected SingularityCreateResult save(String path, Optional<byte[]> data) {
     try {
-      byte[] data = curator.getData().forPath(path);
+      privateCreate(path, data);
+      
+      return SingularityCreateResult.CREATED;
+    } catch (NodeExistsException nee) {
+      return set(path, data);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+  
+  protected SingularityCreateResult set(String path, Optional<byte[]> data) {
+    try {
+      SetDataBuilder setDataBuilder = curator.setData();
+      
+      if (data.isPresent()) {
+        setDataBuilder.forPath(path, data.get());
+      } else {
+        setDataBuilder.forPath(path);
+      }
+      
+      return SingularityCreateResult.EXISTED;
+    } catch (NoNodeException nne) {
+      return save(path, data);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }  
+  
+  protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder) {
+    try {
+      GetDataBuilder bldr = curator.getData();
+      
+      if (stat.isPresent()) {
+        bldr.storingStatIn(stat.get());
+      }
+      
+      byte[] data = bldr.forPath(path);
       
       if (data == null || data.length == 0) {
         return Optional.absent();
@@ -108,6 +158,10 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+  
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
+    return getData(path, Optional.<Stat> absent(), transcoder);
   }
   
   protected Optional<String> getStringData(String path) {

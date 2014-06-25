@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data;
 
+import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -25,7 +26,14 @@ public class SandboxManager {
     this.objectMapper = objectMapper;
   }
 
-  public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) {
+  @SuppressWarnings("serial")
+  public static class SlaveNotFoundException extends RuntimeException {
+    public SlaveNotFoundException(Exception e) {
+      super(e);
+    }
+  }
+  
+  public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) throws SlaveNotFoundException {
     try {
       Response response = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/browse.json", slaveHostname))
           .addQueryParameter("path", fullPath)
@@ -40,12 +48,14 @@ public class SandboxManager {
       }
 
       return objectMapper.readValue(response.getResponseBodyAsStream(), MESOS_FILE_OBJECTS);
+    } catch (ConnectException ce) {
+      throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
 
-  public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) {
+  public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) throws SlaveNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read.json", slaveHostname))
           .addQueryParameter("path", fullPath);
@@ -69,6 +79,8 @@ public class SandboxManager {
       }
 
       return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), MesosFileChunkObject.class));
+    } catch (ConnectException ce) {
+      throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

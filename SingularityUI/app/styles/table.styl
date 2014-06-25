@@ -12,7 +12,10 @@
         white-space nowrap
 
 .table, table, table[data-sortable]
-
+    
+    th
+        vertical-align top
+    
     th, td
 
         // Regular links
@@ -58,6 +61,17 @@
 
     .icon
         margin-right 10px
+
+    th.half-table
+        width: 50%
+
+    a.long-link
+        max-width: 40em
+        display: inline-block
+        white-space: nowrap
+        text-overflow: ellipsis
+        overflow: hidden
+        line-height: 18px
 
 .empty-table-message
     text-align center
