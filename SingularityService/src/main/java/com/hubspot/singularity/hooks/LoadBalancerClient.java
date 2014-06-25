@@ -117,7 +117,7 @@ public class LoadBalancerClient {
       
       LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
       
-      if (!isSuccess(response)) {
+      if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
         return new LoadBalancerUpdateHolder(onFailure, Optional.of(String.format("Response status code %s", response.getStatusCode())));
       }
       
@@ -153,10 +153,6 @@ public class LoadBalancerClient {
     } catch (JsonProcessingException e) {
       throw new SingularityJsonException(e);
     }
-  }
-  
-  private boolean isSuccess(Response response) {
-    return response.getStatusCode() > 199 && response.getStatusCode() < 300;
   }
 
   private List<String> transformTasksToUpstreams(List<SingularityTask> tasks) {
