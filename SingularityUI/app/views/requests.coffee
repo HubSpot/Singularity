@@ -56,16 +56,16 @@ class RequestsView extends View
 
         @collectionSynced = false
         @collection = collectionMap[@requestsFilter]
-        @collection.on "sync", =>
-            @collectionSynced = true
-            @render()
         # Initial fetch
-        @collection.fetch()
+        @collection.fetch().done =>
+            @render()
+            @collectionSynced = true
 
     # Called by app on active view
     refresh: ->
         return @ if @$el.find('[data-sorted-direction]').length
-        @collection.fetch()
+        @collection.fetch().done =>
+            @renderTable()
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
@@ -93,11 +93,6 @@ class RequestsView extends View
         @currentRequests = requests
 
     render: =>
-        $(window).scrollTop 0
-
-        clearTimeout @renderTimeout
-        @renderProgress = 0
-
         context =
             requestsFilter: @requestsFilter
             requestsSubFilter: @requestsSubFilter
@@ -115,13 +110,20 @@ class RequestsView extends View
 
         @$el.html @templateBase context, partials
 
-        @filterCollection()
         @renderTable()
 
         @
 
     renderTable: =>
+        $(window).scrollTop 0
+        @filterCollection()
+
         clearTimeout @renderTimeout
+        @renderProgress = 0
+
+        @renderTableChunk()
+
+    renderTableChunk: =>
         if @ isnt app.views.current
             return
 
@@ -142,7 +144,7 @@ class RequestsView extends View
             $table.append $contents
 
         if @renderProgress < @currentRequests.length
-            @rendertimeout = setTimeout @renderTable, @renderDelay
+            @rendertimeout = setTimeout @renderTableChunk, @renderDelay
         else
             clearTimeout @renderTimeout
 
