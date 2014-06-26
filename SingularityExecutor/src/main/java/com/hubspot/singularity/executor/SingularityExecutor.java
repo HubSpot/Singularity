@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,7 @@ import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
 import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
+import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutor implements Executor {
 
@@ -20,11 +22,13 @@ public class SingularityExecutor implements Executor {
 
   private final SingularityExecutorTaskBuilder taskBuilder;
   private final SingularityExecutorMonitor monitor;
+  private final ExecutorUtils executorUtils;
   
   @Inject
-  public SingularityExecutor(SingularityExecutorMonitor monitor, SingularityExecutorTaskBuilder taskBuilder) {
+  public SingularityExecutor(SingularityExecutorMonitor monitor, ExecutorUtils executorUtils, SingularityExecutorTaskBuilder taskBuilder) {
     this.taskBuilder = taskBuilder;
     this.monitor = monitor;
+    this.executorUtils = executorUtils;
   }
   
   /**
@@ -86,6 +90,8 @@ public class SingularityExecutor implements Executor {
       }
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
+      
+      executorUtils.sendStatusUpdate(executorDriver, taskInfo, TaskState.TASK_LOST, String.format("Unexpected exception while launching task %s - %s", taskId, t.getMessage()), LOG);
     }
   }
   

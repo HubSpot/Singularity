@@ -16,8 +16,8 @@ public class ExecutorUtils {
     this.configuration = configuration;
   }
   
-  public void sendStatusUpdate(ExecutorDriver driver, Protos.TaskInfo taskInfo, Protos.TaskState taskState, String message, Logger taskLogger) {
-    taskLogger.info("Sending status update \"{}\" ({})", message, taskState.name());
+  public void sendStatusUpdate(ExecutorDriver driver, Protos.TaskInfo taskInfo, Protos.TaskState taskState, String message, Logger logger) {
+    logger.info("Sending status update \"{}\" ({})", message, taskState.name());
 
     message = message.substring(0, Math.min(configuration.getMaxTaskMessageLength(), message.length()));
     
@@ -29,7 +29,11 @@ public class ExecutorUtils {
     
       driver.sendStatusUpdate(builder.build());
     } catch (Throwable t) {
-      taskLogger.error("While sending status update", t);
+      try {
+        logger.error("Exception while sending status updates, exiting", t);
+      } finally {
+        System.exit(4);
+      }
     }
   }
   

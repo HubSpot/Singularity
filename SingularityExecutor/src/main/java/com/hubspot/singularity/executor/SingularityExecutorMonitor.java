@@ -189,6 +189,8 @@ public class SingularityExecutorMonitor {
     
     try {
       if (runState == RunState.SHUTDOWN) {
+        finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.<String> absent());
+        
         return SubmitState.REJECTED;
       }
       
@@ -198,19 +200,15 @@ public class SingularityExecutorMonitor {
       tasks.put(task.getTaskId(), task);
 
       clearExitCheckerUnsafe();
+
+      final ListenableFuture<ProcessBuilder> processBuildFuture = processBuilderPool.submit(task.getProcessBuilder());
+
+      processBuildingTasks.put(task.getTaskId(), processBuildFuture);
+        
+      watchProcessBuilder(task, processBuildFuture);
     } finally {
       task.getLock().unlock();
       exitLock.unlock();
-    }
-    
-    try {
-      final ListenableFuture<ProcessBuilder> processBuildFuture = processBuilderPool.submit(task.getProcessBuilder());
-      
-      watchProcessBuilder(task, processBuildFuture);
-    } catch (Throwable t) {
-      finishTask(task, TaskState.TASK_LOST, "Task couldn't start due to: " + t.getMessage(), Optional.of("Couldn't start task"), t);
-      
-      return SubmitState.REJECTED;
     }
     
     return SubmitState.SUBMITTED;
@@ -224,7 +222,7 @@ public class SingularityExecutorMonitor {
     }
   }
   
-  private void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
+  public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
     try {
       if (errorMsg.isPresent()) {
         task.getLog().error(errorMsg.get(), errorObjects);
