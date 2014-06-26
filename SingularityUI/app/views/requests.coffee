@@ -21,6 +21,14 @@ class RequestsView extends View
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
+    # For staged rendering
+    renderProgress: 0
+    renderAtOnce: 50
+    renderDelay: 2000
+    renderTimeout: null
+    # Cache for the request array we're currently rendering
+    currentRequests: []
+
     events: =>
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
@@ -50,7 +58,7 @@ class RequestsView extends View
         @collection = collectionMap[@requestsFilter]
         @collection.on "sync", =>
             @collectionSynced = true
-            @renderTable()
+            @render()
         # Initial fetch
         @collection.fetch()
 
@@ -82,17 +90,21 @@ class RequestsView extends View
                 filter
 
         requests.reverse()
+        @currentRequests = requests
 
     render: =>
+        $(window).scrollTop 0
+
+        clearTimeout @renderTimeout
+        @renderProgress = 0
+
         context =
             requestsFilter: @requestsFilter
             requestsSubFilter: @requestsSubFilter
             searchFilter: @searchFilter
-
             hasSubFilter: @requestsFilter in @haveSubfilter
-
             collectionSynced: @collectionSynced
-            requests: @filterCollection()
+            haveRequests: @collection.length
 
         partials = 
             partials:
@@ -103,15 +115,36 @@ class RequestsView extends View
 
         @$el.html @templateBase context, partials
 
-        utils.setupSortableTables()
+        @filterCollection()
+        @renderTable()
 
         @
 
     renderTable: =>
-        $table = @$ "[data-requests-body-container]"
-        $table.html @bodyTemplate
-            requests: @filterCollection()
-            collectionSynced: @collectionSynced
+        clearTimeout @renderTimeout
+        if @ isnt app.views.current
+            return
+
+        firstStage = @renderProgress is 0
+
+        newProgress = @renderAtOnce + @renderProgress
+        requests = @currentRequests.slice(@renderProgress, newProgress)
+        @renderProgress = newProgress
+
+        $contents = @bodyTemplate
+            requests: requests
+            rowsOnly: true
+        
+        $table = @$ "tbody"
+        if firstStage
+            $table.html $contents
+        else
+            $table.append $contents
+
+        if @renderProgress < @currentRequests.length
+            @rendertimeout = setTimeout @renderTable, @renderDelay
+        else
+            clearTimeout @renderTimeout
 
     updateUrl: =>
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }

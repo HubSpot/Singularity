@@ -1,7 +1,8 @@
+{{#unless rowsOnly}}
 <section>
     <div class="row-fluid">
         <div class="span12">
-            {{#if requests.length}}
+            {{#if haveRequests}}
                 <table class="table" data-sortable>
                     <thead>
                         <tr>
@@ -23,6 +24,8 @@
                         </tr>
                     </thead>
                     <tbody>
+            {{/if}}
+{{/unless}}
                         {{#eachWithFn requests}}
                             <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}" {{#ifFilteredRequest this ../searchFilter}}class="filtered"{{/ifFilteredRequest}}>
                                 <td><a class="star" data-action="starToggle" data-starred="{{ starred }}" data-request-id="{{ id }}" data-request-name="{{ name }}">★</a></td>
@@ -64,6 +67,8 @@
                                 </td>
                             </tr>
                         {{/eachWithFn}}
+{{#unless rowsOnly}}
+            {{#if haveRequests}}
                     </tbody>
                 </table>
             {{else}}
@@ -76,3 +81,4 @@
         </div>
     </div>
 </section>
+{{/unless}}
