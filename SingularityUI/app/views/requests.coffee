@@ -19,17 +19,18 @@ class RequestsView extends View
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
-    events:
-        'click [data-action="viewJSON"]': 'viewJson'
-        'click [data-action="remove"]': 'removeRequest'
-        'click [data-action="unpause"]': 'unpauseRequest'
-        'click [data-action="starToggle"]': 'toggleStar'
-        'click [data-action="run-now"]': 'runRequest'
-        'click [data-requests-active-filter]': 'changeFilters'
+    events: =>
+        _.extend super,
+            'click [data-action="viewJSON"]': 'viewJson'
+            'click [data-action="remove"]': 'removeRequest'
+            'click [data-action="unpause"]': 'unpauseRequest'
+            'click [data-action="starToggle"]': 'toggleStar'
+            'click [data-action="run-now"]': 'runRequest'
+            'click [data-requests-active-filter]': 'changeFilters'
 
-        'change input[type="search"]': 'searchChange'
-        'keyup input[type="search"]': 'searchChange'
-        'input input[type="search"]': 'searchChange'
+            'change input[type="search"]': 'searchChange'
+            'keyup input[type="search"]': 'searchChange'
+            'input input[type="search"]': 'searchChange'
 
     initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
