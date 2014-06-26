@@ -64,7 +64,7 @@ public class SingularityS3UploaderMetrics {
 
       @Override
       public Integer getValue() {
-        if (expiring.isPresent()) {
+        if (!expiring.isPresent()) {
           return 0;
         }
         
