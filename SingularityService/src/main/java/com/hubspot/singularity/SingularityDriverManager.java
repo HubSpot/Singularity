@@ -106,8 +106,6 @@ public class SingularityDriverManager {
       if (driver != null) {
         newStatus = driver.abort();
       }
-      
-      driver = null;
     } finally {
       driverLock.unlock();
     }

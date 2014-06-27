@@ -53,6 +53,8 @@ public class SingularityDriver {
   }
   
   public Protos.Status start() {
+    LOG.info("Calling driver.start() ...");
+    
     Protos.Status status = driver.start();
   
     LOG.info("Started with status: {}", status);
@@ -69,7 +71,11 @@ public class SingularityDriver {
   }
   
   public Protos.Status abort() {
+    LOG.info("Notifying scheduler about impending driver abort");
+    
     scheduler.notifyStopping();
+    
+    LOG.info("Calling driver.abort() ...");
     
     Protos.Status status = driver.abort();
     

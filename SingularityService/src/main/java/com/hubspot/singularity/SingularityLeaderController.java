@@ -106,8 +106,10 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         currentStatus = driverManager.stop();
 
         statePoller.updateStateNow();
+        
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
+      } finally {
         abort.abort();
       }
     }
