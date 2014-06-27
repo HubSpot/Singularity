@@ -13,7 +13,7 @@
         {{#if request.fullObject}}
             {{#unless request.deleted}}
                 {{#if request.paused}}
-                    <a data-request-id="{{ request.id }}" data-action="pause" data-action-unpause="true">Unpause</a>
+                    <a data-request-id="{{ request.id }}" data-action="unpause">Unpause</a>
                 {{else}}
                     <a data-request-id="{{ request.id }}" data-action="pause">Pause</a>
                 {{/if}}

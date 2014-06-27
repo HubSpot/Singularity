@@ -1,5 +1,7 @@
 View = require './view'
 
+Request = require '../models/Request'
+
 class TasksView extends View
 
     templateTasksActive: require './templates/tasksActive'
@@ -117,14 +119,11 @@ class TasksView extends View
         taskModel = @collection.get($(e.target).data('task-id'))
         $row = $(e.target).parents('tr')
 
-        vex.dialog.confirm
-            message: "<p>Are you sure you want to run this task immediately?</p><pre>#{ taskModel.get('id') }</pre>"
-            callback: (confirmed) =>
-                return unless confirmed
-                taskModel.run()
-                @collection.remove(taskModel)
-                app.collections.tasksActive.fetch()
-                $row.remove()
+        requestModel = new Request id: taskModel.get "requestId"
+        requestModel.promptRun =>
+            @collection.remove(taskModel)
+            app.collections.tasksActive.fetch()
+            $row.remove()
 
     searchChange: ->
         onChange = =>
