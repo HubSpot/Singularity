@@ -26,6 +26,7 @@ public class SingularityAbort {
   private final SingularityMailer mailer;
   
   private volatile boolean aborting;
+  private volatile boolean stopping;
   
   @Inject
   public SingularityAbort(@Named(SingularityServiceModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer) {
@@ -36,6 +37,7 @@ public class SingularityAbort {
     this.mailer = mailer;
   
     this.aborting = false;
+    this.stopping = false;
     
     this.curator.getConnectionStateListenable().addListener(new ConnectionStateListener() {
       
@@ -54,7 +56,17 @@ public class SingularityAbort {
       aborting = true;
       return false;
     } else {
-      LOG.info("Abort asked to abort, but it was already aborting");
+      LOG.warn("Abort asked to abort, but already aborting");
+      return true;
+    }
+  }
+  
+  private synchronized boolean checkAlreadyStopping() {
+    if (!stopping) {
+      stopping = true;
+      return false;
+    } else {
+      LOG.warn("Abort asked to stop, but already stopping");
       return true;
     }
   }
@@ -78,9 +90,13 @@ public class SingularityAbort {
   }
 
   public void stop() {
-    closeCloseables();
+    if (checkAlreadyStopping()) {
+      return;
+    }
     
     closeDriver();
+    
+    closeCloseables();
     
     closeLeader();
   
