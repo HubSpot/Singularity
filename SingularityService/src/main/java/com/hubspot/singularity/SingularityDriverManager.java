@@ -19,29 +19,37 @@ public class SingularityDriverManager {
   private final Provider<SingularityDriver> driverProvider;
   private final Lock driverLock;
 
-  private SingularityDriver driver;
+  private Optional<SingularityDriver> driver;
+  private Protos.Status currentStatus;
 
   @Inject
   public SingularityDriverManager(Provider<SingularityDriver> driverProvider) {
     this.driverProvider = driverProvider;
     
-    driverLock = new ReentrantLock();
+    this.driverLock = new ReentrantLock();
+    
+    this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
+    this.driver = Optional.absent();
+  }
+  
+  public Protos.Status getCurrentStatus() {
+    return currentStatus;
   }
   
   @VisibleForTesting
   public SingularityDriver getDriver() {
-    return driver;
+    return driver.get();
   }
   
   public Optional<MasterInfo> getMaster() {
     driverLock.lock();
     
     try {
-      if (driver == null) {
+      if (!driver.isPresent()) {
         return Optional.absent();
       }
       
-      return Optional.fromNullable(driver.getMaster());
+      return Optional.fromNullable(driver.get().getMaster());
     } finally {
       driverLock.unlock();
     }
@@ -51,66 +59,72 @@ public class SingularityDriverManager {
     driverLock.lock();
     
     try {
-      if (driver == null) {
+      if (!driver.isPresent()) {
         return Optional.absent();
       }
       
-      return driver.getLastOfferTimestamp();
+      return driver.get().getLastOfferTimestamp();
     } finally {
       driverLock.unlock();
     } 
   }
   
   public Protos.Status kill(String taskId) {
-    Protos.Status newStatus = null;
-    
     driverLock.lock();
     
     try {
-      Preconditions.checkState(driver != null);
-
-      newStatus = driver.kill(taskId);
+      Preconditions.checkState(canKillTask());
       
-      Preconditions.checkState(newStatus == Status.DRIVER_RUNNING);
+      currentStatus = driver.get().kill(taskId);
+      
+      Preconditions.checkState(currentStatus == Status.DRIVER_RUNNING);
     } finally {
       driverLock.unlock();
     }
     
-    return newStatus;
+    return currentStatus;
   }
   
   public Protos.Status start() {
-    Protos.Status newStatus = null;
-    
     driverLock.lock();
     
     try {
-      Preconditions.checkState(driver == null);
+      Preconditions.checkState(isStartable());
       
-      driver = driverProvider.get();
+      driver = Optional.of(driverProvider.get());
       
-      newStatus = driver.start();
+      currentStatus = driver.get().start();
     } finally {
       driverLock.unlock();
     }
     
-    return newStatus;
+    return currentStatus;
+  }
+  
+  private boolean canKillTask() {
+    return driver.isPresent() && currentStatus == Status.DRIVER_RUNNING;
+  }
+  
+  private boolean isStartable() {
+    return !driver.isPresent() && currentStatus == Status.DRIVER_NOT_STARTED;
+  }
+  
+  private boolean isStoppable() {
+    return driver.isPresent() && currentStatus == Status.DRIVER_RUNNING;
   }
   
   public Protos.Status stop() {
-    Protos.Status newStatus = null;
-    
     driverLock.lock();
     
     try {
-      if (driver != null) {
-        newStatus = driver.abort();
+      if (isStoppable()) {
+        currentStatus = driver.get().abort();
       }
     } finally {
       driverLock.unlock();
     }
     
-    return newStatus;
+    return currentStatus;
   }
   
 }

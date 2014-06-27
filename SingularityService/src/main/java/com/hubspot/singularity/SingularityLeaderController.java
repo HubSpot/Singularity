@@ -22,7 +22,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final SingularityStatePoller statePoller;
   
   private boolean isMaster;
-  private Protos.Status currentStatus;
   
   @Inject
   public SingularityLeaderController(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller) {
@@ -31,7 +30,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     this.abort = abort;
     this.statePoller = statePoller;
     
-    this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
     this.isMaster = false;
     
     leaderLatch.addListener(this);
@@ -57,26 +55,23 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   
   @Override
   public void isLeader() {
-    LOG.info("We are now the leader!");
+    LOG.info("We are now the leader! Current status {}", driverManager.getCurrentStatus());
     
     isMaster = true;
     
-    if (currentStatus != Protos.Status.DRIVER_RUNNING) {
+    if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
       try {
-        currentStatus = driverManager.start();
+        driverManager.start();
         statePoller.updateStateNow();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
         abort.abort();
       }
       
-      if (currentStatus != Protos.Status.DRIVER_RUNNING) {
+      if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
         abort.abort();
       }
-      
-    } else {
-      LOG.warn("Driver was already running - took no action.");
-    }    
+    }
   }
   
   public boolean isMaster() {
@@ -92,21 +87,20 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   }
   
   public Protos.Status getCurrentStatus() {
-    return currentStatus;
+    return driverManager.getCurrentStatus();
   }
 
   @Override
   public void notLeader() {
-    LOG.info("We are not the leader! - current status: " + currentStatus);
+    LOG.info("We are not the leader! Current status {}", driverManager.getCurrentStatus());
 
     isMaster = false;
     
-    if (currentStatus == Protos.Status.DRIVER_RUNNING) {
+    if (driverManager.getCurrentStatus() == Protos.Status.DRIVER_RUNNING) {
       try {
-        currentStatus = driverManager.stop();
+        driverManager.stop();
 
         statePoller.updateStateNow();
-        
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
       } finally {
