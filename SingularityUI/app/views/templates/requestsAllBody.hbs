@@ -7,12 +7,12 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th data-sort-attribute="">Name</th>
-                            <th data-sort-attribute="">State</th>
-                            <th data-sort-attribute="" class="visible-large-desktop">Instances</th>
-                            <th data-sort-attribute="" class="visible-large-desktop">Deploy ID</th>
-                            <th data-sort-attribute="" class="visible-large-desktop">Deploy user</th>
-                            <th data-sort-attribute="" class="hidden-phone">Deploy time</th>
+                            <th data-sort-attribute="name">Name</th>
+                            <th data-sort-attribute="state">State</th>
+                            <th data-sort-attribute="instances" class="visible-large-desktop">Instances</th>
+                            <th data-sort-attribute="deployId" class="visible-large-desktop">Deploy ID</th>
+                            <th data-sort-attribute="deployUser" class="visible-large-desktop">Deploy user</th>
+                            <th data-sort-attribute="timestamp" class="hidden-phone">Deploy time</th>
 
                             {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                             {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
@@ -20,7 +20,7 @@
                                 <th class="visible-large-desktop">Schedule</th>
                             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
 
-                            <th class="hidden-phone" data-sortable="false"></th>
+                            <th class="hidden-phone"></th>
                         </tr>
                     </thead>
                     <tbody>

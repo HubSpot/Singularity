@@ -42,6 +42,8 @@ class RequestsView extends View
             'keyup input[type="search"]': 'searchChange'
             'input input[type="search"]': 'searchChange'
 
+            'click th[data-sort-attribute]': 'sortTable'
+
     initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
 
@@ -89,7 +91,14 @@ class RequestsView extends View
                     filter = filter or request.onDemand
                 filter
 
-        requests.reverse()
+        # Sort the table if the user clicked on the table heading things
+        if @sortAttribute?
+            requests = _.sortBy requests, (request) =>
+                value = request[@sortAttribute]
+                if @sortAscending then value else -value
+        else
+            requests.reverse()
+            
         @currentRequests = requests
 
     render: =>
@@ -127,6 +136,8 @@ class RequestsView extends View
         if @ isnt app.views.current
             return
 
+        console.log "Render tick"
+
         firstStage = @renderProgress is 0
 
         newProgress = @renderAtOnce + @renderProgress
@@ -138,11 +149,11 @@ class RequestsView extends View
             rowsOnly: true
         
         $table = @$ "tbody"
-        if firstStage
+        $headings = @$ "thead th"
+        if firstStage and $headings.length > 0 and not @fixedColumns
             # After the first stage of rendering we want to fix
             # the width of the columns to prevent having to recalculate
             # it constantly
-            $headings = @$ "thead th"
 
             # Reset any previous widths
             $table.parent().css "table-layout", "auto"
@@ -160,6 +171,9 @@ class RequestsView extends View
 
             # Set the table layout to be fixed based on these new widths
             $table.parent().css "table-layout", "fixed"
+            @fixedColumns = true
+        else if firstStage
+            $table.html $contents
         else
             $table.append $contents
 
@@ -167,6 +181,26 @@ class RequestsView extends View
             @rendertimeout = setTimeout @renderTableChunk, @renderDelay
         else
             clearTimeout @renderTimeout
+
+    sortTable: (event) =>
+        $target = $ event.currentTarget
+        newSortAttribute = $target.attr "data-sort-attribute"
+
+        $currentlySortedHeading = @$ "[data-sorted=true]"
+        $currentlySortedHeading.removeAttr "data-sorted"
+        $currentlySortedHeading.removeAttr "data-sorted-direction"
+
+        if newSortAttribute is @sortAttribute and @sortAscending?
+           @sortAscending = not @sortAscending
+        else
+           @sortAscending = true
+
+        @sortAttribute = newSortAttribute
+
+        $target.attr "data-sorted", "true"
+        $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
+
+        @renderTable()
 
     updateUrl: =>
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }

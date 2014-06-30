@@ -6,18 +6,18 @@
                 <table class="table" data-sortable>
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th class="hidden-phone">Requested</th>
-                            <th class="visible-desktop">Deploy user</th>
-                            <th class="visible-desktop">Instances</th>
+                            <th data-sort-attribute="name">Name</th>
+                            <th data-sort-attribute="timestamp" class="hidden-phone">Requested</th>
+                            <th data-sort-attribute="deployUser" class="visible-desktop">Deploy user</th>
+                            <th data-sort-attribute="instances" class="visible-desktop">Instances</th>
 
                             {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                             {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
                             {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
-                                <th class="visible-large-desktop">Schedule</th>
+                                <th data-sort-attribute="schedule" class="visible-large-desktop">Schedule</th>
                             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
 
-                            <th class="hidden-phone" data-sortable="false"></th>
+                            <th class="hidden-phone"></th>
                         </tr>
                     </thead>
                     <tbody>
