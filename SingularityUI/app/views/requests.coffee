@@ -203,6 +203,8 @@ class RequestsView extends View
         @renderTable()
 
     handleScroll: (event) =>
+        return if @renderProgress >= @collection.length
+
         $table = @$ "tbody"
         tableBottom = $table.height() + $table.offset().top
         $window = $(window)
