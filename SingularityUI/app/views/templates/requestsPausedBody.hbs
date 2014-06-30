@@ -31,7 +31,7 @@
                                 <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/request/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></span></td>
                                 <td class="hidden-phone" data-value="{{ timestamp }}"><span title="{{ timestamp }}">{{ timestampHuman }}</span></td>
                                 <td class="visible-desktop">{{ deployUser }}</td>
-                                <td class="visible-desktop">{{ instances }}</td>
+                                <td class="visible-desktop centered">{{ instances }}</td>
 
                                 {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                                 {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
