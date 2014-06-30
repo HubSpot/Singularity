@@ -66,6 +66,8 @@ class RequestsView extends View
     # Called by app on active view
     refresh: ->
         return @ if @$el.find('[data-sorted-direction]').length
+        # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
+        return @ if $(window).scrollTop() > 200
         @collection.fetch().done =>
             @renderTable()
 
