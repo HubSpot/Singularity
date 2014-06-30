@@ -93,9 +93,9 @@ class RequestsView extends View
 
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
-            requests = _.sortBy requests, (request) =>
-                value = request[@sortAttribute]
-                if @sortAscending then value else -value
+            requests = _.sortBy requests, @sortAttribute
+            if not @sortAscending
+                requests = requests.reverse()
         else
             requests.reverse()
             
@@ -184,9 +184,10 @@ class RequestsView extends View
         $currentlySortedHeading.removeAttr "data-sorted-direction"
 
         if newSortAttribute is @sortAttribute and @sortAscending?
-           @sortAscending = not @sortAscending
+            @sortAscending = not @sortAscending
         else
-           @sortAscending = true
+            # timestamp should be DESC by default
+            @sortAscending = if newSortAttribute is "timestamp" then false else true
 
         @sortAttribute = newSortAttribute
 
