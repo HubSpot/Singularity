@@ -23,9 +23,7 @@ class RequestsView extends View
 
     # For staged rendering
     renderProgress: 0
-    renderAtOnce: 50
-    renderDelay: 2000
-    renderTimeout: null
+    renderAtOnce: 100
     # Cache for the request array we're currently rendering
     currentRequests: []
 
@@ -46,6 +44,8 @@ class RequestsView extends View
 
     initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
+
+        $(window).on "scroll", @handleScroll
 
         # Set up collection
         collectionMap =
@@ -126,8 +126,6 @@ class RequestsView extends View
     renderTable: =>
         $(window).scrollTop 0
         @filterCollection()
-
-        clearTimeout @renderTimeout
         @renderProgress = 0
 
         @renderTableChunk()
@@ -177,11 +175,6 @@ class RequestsView extends View
         else
             $table.append $contents
 
-        if @renderProgress < @currentRequests.length
-            @rendertimeout = setTimeout @renderTableChunk, @renderDelay
-        else
-            clearTimeout @renderTimeout
-
     sortTable: (event) =>
         $target = $ event.currentTarget
         newSortAttribute = $target.attr "data-sort-attribute"
@@ -201,6 +194,14 @@ class RequestsView extends View
         $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
 
         @renderTable()
+
+    handleScroll: (event) =>
+        $table = @$ "tbody"
+        tableBottom = $table.height() + $table.offset().top
+        $window = $(window)
+        scrollBottom = $window.scrollTop() + $window.height()
+        if scrollBottom >= tableBottom
+            @renderTableChunk()
 
     updateUrl: =>
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
