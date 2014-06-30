@@ -52,7 +52,11 @@ public abstract class SafeProcessManager {
   
     this.killed = new AtomicBoolean(false);
   }
-    
+  
+  public Logger getLog() {
+    return log;
+  }
+
   public boolean wasKilled() {
     return killed.get();
   }
@@ -82,12 +86,12 @@ public abstract class SafeProcessManager {
     
     processLock.lock();
     
-    Preconditions.checkState(!killed.get(), "Can not start new process, killed is set");
-    Preconditions.checkState(!currentProcess.isPresent(), "Can not start new process, already had process");
-    
     Process process = null;
     
     try {
+      Preconditions.checkState(!killed.get(), "Can not start new process, killed is set");
+      Preconditions.checkState(!currentProcess.isPresent(), "Can not start new process, already had process");
+      
       currentProcessStart = Optional.of(System.currentTimeMillis());
       
       process = builder.start();
