@@ -55,6 +55,9 @@ import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 
+import net.kencochrane.raven.Raven;
+import net.kencochrane.raven.RavenFactory;
+
 public class SingularityServiceModule extends AbstractModule {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityServiceModule.class);
@@ -278,4 +281,13 @@ public class SingularityServiceModule extends AbstractModule {
     return getJadeTemplate("task_not_running_warning.jade");
   }
 
+  @Provides
+  @Singleton
+  public Optional<Raven> providesRavenIfConfigured(SingularityConfiguration configuration) {
+    if (configuration.getSentryConfiguration().isPresent()) {
+      return Optional.of(RavenFactory.ravenInstance(configuration.getSentryConfiguration().get().getDsn()));
+    } else {
+      return Optional.absent();
+    }
+  }
 }

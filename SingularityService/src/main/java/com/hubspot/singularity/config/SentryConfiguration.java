@@ -1,18 +1,16 @@
 package com.hubspot.singularity.config;
 
-import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SentryConfiguration {
 
-  @NotNull
+  @NotEmpty
+  @JsonProperty("dsn")
   private String dsn;
 
-  @NotNull
-  private String level;
-
-  public Optional<String> getDsn() {
-    return Optional.fromNullable(dsn);
+  public String getDsn() {
+    return dsn;
   }
 }
