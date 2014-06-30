@@ -6,13 +6,13 @@
                 <table class="table" data-sortable>
                     <thead>
                         <tr>
-                            <th data-sortable="false"></th>
-                            <th>Name</th>
-                            <th>State</th>
-                            <th class="visible-large-desktop">Instances</th>
-                            <th class="visible-large-desktop">Deploy ID</th>
-                            <th class="visible-large-desktop">Deploy user</th>
-                            <th class="hidden-phone">Deploy time</th>
+                            <th></th>
+                            <th data-sort-attribute="">Name</th>
+                            <th data-sort-attribute="">State</th>
+                            <th data-sort-attribute="" class="visible-large-desktop">Instances</th>
+                            <th data-sort-attribute="" class="visible-large-desktop">Deploy ID</th>
+                            <th data-sort-attribute="" class="visible-large-desktop">Deploy user</th>
+                            <th data-sort-attribute="" class="hidden-phone">Deploy time</th>
 
                             {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                             {{#ifEqual requestsSubFilter "on-demand"}}{{else}}

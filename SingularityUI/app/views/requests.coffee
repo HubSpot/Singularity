@@ -58,8 +58,8 @@ class RequestsView extends View
         @collection = collectionMap[@requestsFilter]
         # Initial fetch
         @collection.fetch().done =>
-            @render()
             @collectionSynced = true
+            @render()
 
     # Called by app on active view
     refresh: ->
@@ -99,7 +99,7 @@ class RequestsView extends View
             searchFilter: @searchFilter
             hasSubFilter: @requestsFilter in @haveSubfilter
             collectionSynced: @collectionSynced
-            haveRequests: @collection.length
+            haveRequests: @collection.length and @collectionSynced
 
         partials = 
             partials:
@@ -157,7 +157,7 @@ class RequestsView extends View
                 $heading = $ $heading
                 percentage = $heading.width() / totalWidth * 100
                 $heading.css "width", "#{ percentage }%"
-            
+
             # Set the table layout to be fixed based on these new widths
             $table.parent().css "table-layout", "fixed"
         else
