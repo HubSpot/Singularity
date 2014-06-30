@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.data.history.SingularityHistoryPersister;
 import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
+import com.hubspot.singularity.scheduler.SingularityCooldownPoller;
 import com.hubspot.singularity.scheduler.SingularityDeployPoller;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
@@ -46,18 +47,21 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
   private final SingularityDeployPoller deployPoller;
+  private final SingularityCooldownPoller cooldownPoller;
   private final SingularityHistoryPersister historyPersister;
   
   private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
   
   @Inject
-  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityHistoryPersister historyPersister, SingularityStartup startup, SingularityAbort abort, SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller) {
+  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityHistoryPersister historyPersister, SingularityStartup startup, SingularityAbort abort, 
+      SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller, SingularityCooldownPoller cooldownPoller) {
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
     this.cleanupPoller = cleanupPoller;
     this.deployPoller = deployPoller;
+    this.cooldownPoller = cooldownPoller;
     this.historyPersister = historyPersister;
     
     this.queuedUpdates = Lists.newArrayList();
@@ -92,6 +96,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     
     cleanupPoller.stop();
     deployPoller.stop();
+    cooldownPoller.stop();
     
     state = SchedulerState.STOPPED;
   
@@ -114,6 +119,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     historyPersister.start();
     cleanupPoller.start(this);
     deployPoller.start(this);
+    cooldownPoller.start(this);
     
     stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
 
