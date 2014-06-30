@@ -102,6 +102,11 @@ class RequestsView extends View
         @currentRequests = requests
 
     render: =>
+        ###
+        Renders the base template
+
+        The table contents are rendered bit by bit as the user scrolls down.
+        ###
         context =
             requestsFilter: @requestsFilter
             requestsSubFilter: @requestsSubFilter
@@ -123,6 +128,7 @@ class RequestsView extends View
 
         @
 
+    # Prepares the staged rendering and triggers the first one
     renderTable: =>
         $(window).scrollTop 0
         @filterCollection()
@@ -133,8 +139,6 @@ class RequestsView extends View
     renderTableChunk: =>
         if @ isnt app.views.current
             return
-
-        console.log "Render tick"
 
         firstStage = @renderProgress is 0
 
