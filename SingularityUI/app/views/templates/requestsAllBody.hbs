@@ -17,7 +17,7 @@
                             {{#ifEqual requestsSubFilter "daemon"}}{{else}}
                             {{#ifEqual requestsSubFilter "on-demand"}}{{else}}
                             {{#ifEqual requestsSubFilter "daemon-on-demand"}}{{else}}
-                                <th class="visible-large-desktop">Schedule</th>
+                                <th data-sort-attribute="schedule" class="visible-large-desktop">Schedule</th>
                             {{/ifEqual}}{{/ifEqual}}{{/ifEqual}}
 
                             <th class="hidden-phone"></th>
