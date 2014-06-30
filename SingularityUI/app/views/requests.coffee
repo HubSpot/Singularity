@@ -139,7 +139,27 @@ class RequestsView extends View
         
         $table = @$ "tbody"
         if firstStage
+            # After the first stage of rendering we want to fix
+            # the width of the columns to prevent having to recalculate
+            # it constantly
+            $headings = @$ "thead th"
+
+            # Reset any previous widths
+            $table.parent().css "table-layout", "auto"
+            $headings.css "width", "auto"
+
+            # Render the first batch
             $table.html $contents
+
+            # Set a %-width to each table header heading based on current values
+            totalWidth = $table.width()
+            for $heading in $headings
+                $heading = $ $heading
+                percentage = $heading.width() / totalWidth * 100
+                $heading.css "width", "#{ percentage }%"
+            
+            # Set the table layout to be fixed based on these new widths
+            $table.parent().css "table-layout", "fixed"
         else
             $table.append $contents
 
