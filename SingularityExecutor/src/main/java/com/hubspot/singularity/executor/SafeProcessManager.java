@@ -118,14 +118,14 @@ public abstract class SafeProcessManager {
     currentProcessStart = Optional.absent();
   }
   
-  public void processFinished() {
+  public void processFinished(int exitCode) {
     lockInterruptibly();
     
-    if (currentProcessCmd.isPresent() && currentProcessStart.isPresent()) {
-      log.debug("Process {} finished after {}", currentProcessCmd.get(), JavaUtils.duration(currentProcessStart.get()));
-    }
-    
     try {
+      if (currentProcessCmd.isPresent() && currentProcessStart.isPresent()) {
+        log.debug("Process {} exited with {} after {}", currentProcessCmd.get(), exitCode, JavaUtils.duration(currentProcessStart.get()));
+      }
+      
       resetCurrentVariables();
     } finally {
       processLock.unlock();
@@ -185,8 +185,6 @@ public abstract class SafeProcessManager {
     try {
       if (currentProcess.isPresent()) {
         sendSignal(Signal.SIGKILL);
-        
-        resetCurrentVariables();
       }
     } finally {
       this.processLock.unlock();

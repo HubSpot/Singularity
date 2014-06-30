@@ -41,7 +41,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     try {
       exitCode = runLoop(process, command.get(0));
   
-      processFinished();
+      processFinished(exitCode);
     } catch (Throwable t) {
       getLog().error("SimpleProcessManager caught unexpected exception while running {}", command, t);
       
