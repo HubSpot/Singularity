@@ -17,14 +17,12 @@
     "dependencies": {
         "javascript-brunch": ">= 1.0 < 1.8",
         "coffee-script-brunch": ">= 1.0 < 1.8",
-
         "handlebars-brunch": "git+ssh://git@github.com:HubSpot/handlebars-brunch.git",
-
         "css-brunch": ">= 1.0 < 1.8",
         "stylus-brunch": ">= 1.0 < 1.8",
-
         "uglify-js-brunch": ">= 1.0 < 1.8",
-        "clean-css-brunch": ">= 1.0 < 1.8"
+        "clean-css-brunch": ">= 1.0 < 1.8",
+        "js-yaml": "~3.0.2"
     },
     "devDependencies": {
         "mocha": "0.14.0",
