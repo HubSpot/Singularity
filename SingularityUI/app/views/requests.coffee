@@ -152,34 +152,18 @@ class RequestsView extends View
             requests: requests
             rowsOnly: true
         
-        $table = @$ "tbody"
-        $headings = @$ "thead th"
-        if firstStage and $headings.length > 0 and not @fixedColumns
+        $table = @$ ".table-staged table"
+        $tableBody = $table.find "tbody"
+
+        if firstStage
+            # Render the first batch
+            $tableBody.html $contents
             # After the first stage of rendering we want to fix
             # the width of the columns to prevent having to recalculate
             # it constantly
-
-            # Reset any previous widths
-            $table.parent().css "table-layout", "auto"
-            $headings.css "width", "auto"
-
-            # Render the first batch
-            $table.html $contents
-
-            # Set a %-width to each table header heading based on current values
-            totalWidth = $table.width()
-            for $heading in $headings
-                $heading = $ $heading
-                percentage = $heading.width() / totalWidth * 100
-                $heading.css "width", "#{ percentage }%"
-
-            # Set the table layout to be fixed based on these new widths
-            $table.parent().css "table-layout", "fixed"
-            @fixedColumns = true
-        else if firstStage
-            $table.html $contents
+            utils.fixTableColumns $table
         else
-            $table.append $contents
+            $tableBody.append $contents
 
     sortTable: (event) =>
         $target = $ event.currentTarget
