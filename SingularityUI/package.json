@@ -21,8 +21,7 @@
         "css-brunch": ">= 1.0 < 1.8",
         "stylus-brunch": ">= 1.0 < 1.8",
         "uglify-js-brunch": ">= 1.0 < 1.8",
-        "clean-css-brunch": ">= 1.0 < 1.8",
-        "js-yaml": "~3.0.2"
+        "clean-css-brunch": ">= 1.0 < 1.8"
     },
     "devDependencies": {
         "mocha": "0.14.0",
