@@ -38,6 +38,8 @@ Later on if you want to change the API root manually, open up your browser's JS 
 localStorage.set("apiRoot", "http://example/singularity/api")
 ```
 
+----
+
 Your browser will not allow cross-domain requests. You have 2 options to get around this:
 
 ### Run Chrome with security disabled
