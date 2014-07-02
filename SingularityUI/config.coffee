@@ -64,7 +64,7 @@ exports.config =
     onCompile: =>
         destination = path.resolve @config.paths.public, 'index.html'
 
-        templatePath = path.resolve 'app/assets/_index.moustache'
+        templatePath = path.resolve 'app/assets/_index.mustache'
         indexTemplate = fs.readFileSync templatePath, 'utf-8'
 
         templateData =
