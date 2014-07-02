@@ -20,19 +20,27 @@ Then npm install `Singularity/SingularityUI/package.json`:
 npm install
 ```
 
-Run Chrome or Chrome Canary with web security disabled (to allow cross-domain requests):
+### Using a remote API while developing locally
 
-```shell
-open -a Google\ Chrome\ Canary --args --disable-web-security
-```
-
-Run brunch on your preferred port. Example with port `4000`:
+If you're using a remote API for your data, run SingularityUI through Brunch on your preferred port. Example with port `4000`:
 
 ```shell
 brunch watch --server -p 4000
 ```
 
-Finally, navigate to: `[http://localhost:4000/singularity](http://localhost:4000/singularity)`.
+Afterwards you will need to specify the API path. Open up [http://localhost:4000/singularity](http://localhost:4000/singularity) and in your JS console type:
+
+```javascript
+window.localStorage.singularityApiRoot = "http://example/singularity/api"
+```
+
+Your browser will not allow cross-domain requests. To get around this, you can run Chrome or Chrome Canary with web security disabled:
+
+```shell
+open -a Google\ Chrome\ Canary --args --disable-web-security
+```
+
+And you're set! SingularityUI is now available at [http://localhost:4000/singularity](http://localhost:4000/singularity).
 
 ----
 
@@ -52,3 +60,15 @@ routes:
 ```
 
 And then you can navigate to: `https://local.<QA domain>/singularity` (assuming you have the necessary host/DNS config to make `local.<QA domain>` point to `127.0.0.1`).
+
+### Developing with SingularityService running locally
+
+No need to jump through any hoops here. Just tell Brunch to watch for changes and auto-compile:
+
+```shell
+brunch watch
+```
+
+And open up Singularity in your browser as served by SingularityService, eg [http://localhost:7099/singularity](http://localhost:7099/singularity).
+
+Brunch will make sure your static files are always up to date and SingularityService will serve them.
