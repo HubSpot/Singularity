@@ -36,7 +36,7 @@ $(window).on 'blur', ->
 
 $(window).on 'focus', ->
     windowBlurred = false
-    refresh() unless env.disablePageRefresh is true
+    refresh()
 
 nav = ->
     if not app.views.navigationView?
@@ -47,7 +47,7 @@ window.globalRefreshTimeout = undefined
 globalRefresh = ->
     clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
     window.globalRefreshTimeout = setInterval ->
-        refresh() unless env.disablePageRefresh is true
+        refresh()
     , 20 * 1000
 
 refresh = ->
