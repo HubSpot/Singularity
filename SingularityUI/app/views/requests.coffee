@@ -186,16 +186,15 @@ class RequestsView extends View
 
     handleScroll: =>
         return if @renderProgress >= @collection.length
-        window.requestAnimationFrame @handleScroll
 
         $table = @$ "tbody"
-        return if $table.length is 0
-
         tableBottom = $table.height() + $table.offset().top
         $window = $(window)
         scrollBottom = $window.scrollTop() + $window.height()
         if scrollBottom >= tableBottom
             @renderTableChunk()
+
+        window.requestAnimationFrame @handleScroll
 
     updateUrl: =>
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
