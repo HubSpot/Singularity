@@ -24,6 +24,7 @@ import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -105,7 +106,7 @@ public class SingularityStartup {
     
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(activeTaskMap.keySet());
     
-    final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
+    final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(deployManager.getPendingDeploys(), SingularityDeployKey.fromPendingDeployToDeployKey);
     
     int enqueuedNewTaskChecks = 0;
     int enqueuedHealthchecks = 0;
@@ -115,13 +116,15 @@ public class SingularityStartup {
       SingularityTask task = activeTaskMap.get(taskId);
       
       if (simplifiedTaskState != SimplifiedTaskState.DONE) {
-        if (!hasMatchingPendingDeploy(pendingDeploys, taskId)) {
+        SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
+        Optional<SingularityPendingDeploy> pendingDeploy = Optional.fromNullable(pendingDeploys.get(deployKey));
+        
+        if (!pendingDeploy.isPresent()) {
           newTaskChecker.enqueueNewTaskCheck(task);
           enqueuedNewTaskChecks++;
         }
         if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
-          if (healthchecker.shouldHealthcheck(task)) {
-            healthchecker.enqueueHealthcheck(task);
+          if (healthchecker.enqueueHealthcheck(task, pendingDeploy)) {
             enqueuedHealthchecks++;
           }
         } 
@@ -130,17 +133,7 @@ public class SingularityStartup {
     
     LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), JavaUtils.duration(start));
   }
-  
-  private boolean hasMatchingPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
-    for (SingularityPendingDeploy pendingDeploy : pendingDeploys) {
-      if (pendingDeploy.getDeployMarker().getRequestId().equals(taskId.getRequestId()) && pendingDeploy.getDeployMarker().getDeployId().equals(taskId.getDeployId())) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
-  
+
   private void checkForMissingActiveTasks(MesosMasterStateObject state, boolean frameworkIsNew) {    
     final long start = System.currentTimeMillis();
     

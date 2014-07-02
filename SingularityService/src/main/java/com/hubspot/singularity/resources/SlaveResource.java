@@ -8,8 +8,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
@@ -65,7 +67,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   
   @POST
   @Path("/slave/{slaveId}/decomission")
-  public void decomissionRack(@PathParam("slaveId") String slaveId) {
-    super.decomission(slaveId);
+  public void decomissionRack(@PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> user) {
+    super.decomission(slaveId, user);
   }
 }

@@ -143,6 +143,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     }
   
     activeObject.get().setState(SingularityMachineState.DEAD);
+    activeObject.get().setDeadAt(Optional.of(System.currentTimeMillis()));
     
     if (create(getDeadPath(objectId), Optional.of(activeObject.get().getAsBytes(objectMapper))) != SingularityCreateResult.CREATED) {
       LOG.warn(String.format("Creating dead object at %s failed", getDeadPath(objectId)));
@@ -164,6 +165,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
   
   public void markAsDecomissioned(T object) {
+    object.setDecomissionedAt(Optional.of(System.currentTimeMillis()));
     mark(object, getDecomissioningPath(object.getId()), SingularityMachineState.DECOMISSIONED);
   }
   
@@ -179,7 +181,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     SUCCESS_DECOMISSIONING, FAILURE_NOT_FOUND, FAILURE_ALREADY_DECOMISSIONING, FAILURE_DEAD;
   }
   
-  public DecomissionResult decomission(String objectId) {
+  public DecomissionResult decomission(String objectId, Optional<String> user) {
     Optional<T> object = getActiveObject(objectId);
     
     if (!object.isPresent()) {
@@ -192,6 +194,8 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     }
     
     object.get().setState(SingularityMachineState.DECOMISSIONING);
+    object.get().setDecomissioningAt(Optional.of(System.currentTimeMillis()));
+    object.get().setDecomissioningBy(user);
     
     create(getDecomissioningPath(objectId), Optional.of(object.get().getAsBytes(objectMapper)));
     

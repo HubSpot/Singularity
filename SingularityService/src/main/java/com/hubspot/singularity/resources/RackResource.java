@@ -8,8 +8,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
@@ -64,8 +66,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   
   @POST
   @Path("/rack/{rackId}/decomission")
-  public void decomissionRack(@PathParam("rackId") String rackId) {
-    super.decomission(rackId);
+  public void decomissionRack(@PathParam("rackId") String rackId, @QueryParam("user") Optional<String> user) {
+    super.decomission(rackId, user);
   }
    
 }
