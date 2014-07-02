@@ -12,7 +12,7 @@ Then npm install the dependencies:
 npm install
 ```
 
-## Developing with SingularityService running locally
+## Using a local API
 
 If you have SingularityService running locally, it will serve all the static files itself. Tell Brunch to watch for changes and auto-compile:
 
@@ -22,7 +22,7 @@ brunch watch
 
 And open up Singularity in your browser, e.g. [http://localhost:7099/singularity](http://localhost:7099/singularity) with default config.
 
-## Using a remote API while developing locally
+## Using a remote API
 
 If you're using a remote API for your data, run SingularityUI through Brunch on your preferred port. Example with port `4000`:
 
