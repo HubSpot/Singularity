@@ -43,13 +43,15 @@ public class SingularityDeployKey extends SingularityId {
   }
   
   public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(Collection<SingularityPendingDeploy> pendingDeploys) {
-    return Maps.toMap(pendingDeploys, new Function<SingularityPendingDeploy, SingularityDeployKey>() {
-      @Override
-      public SingularityDeployKey apply(SingularityPendingDeploy input) {
-        return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
-      }
-    });
+    return Maps.toMap(pendingDeploys, fromPendingDeployToDeployKey);
   }
+  
+  public static Function<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeployToDeployKey = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
+    @Override
+    public SingularityDeployKey apply(SingularityPendingDeploy input) {
+      return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
+    }
+  };
  
   public SingularityDeployKey(String requestId, String deployId) {
     this.requestId = requestId;

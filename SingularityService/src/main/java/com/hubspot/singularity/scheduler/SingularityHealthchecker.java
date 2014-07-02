@@ -19,6 +19,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
@@ -81,12 +82,14 @@ public class SingularityHealthchecker implements SingularityCloseable {
     }  
   }
   
-  public void enqueueHealthcheck(SingularityTask task) {
-    if (!shouldHealthcheck(task)) {
-      return;
+  public boolean enqueueHealthcheck(SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
+    if (!shouldHealthcheck(task, pendingDeploy)) {
+      return false;
     }
     
     privateEnqueueHealthcheck(task);
+    
+    return true;
   }
 
   public void cancelHealthcheck(String taskId) {
@@ -156,8 +159,12 @@ public class SingularityHealthchecker implements SingularityCloseable {
     handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message));
   }
   
-  public boolean shouldHealthcheck(final SingularityTask task) {
+  private boolean shouldHealthcheck(final SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
     if (task.getTaskRequest().getRequest().isScheduled() || !task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
+      return false;
+    }
+    
+    if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().or(false)) {
       return false;
     }
     
