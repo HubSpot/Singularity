@@ -45,8 +45,6 @@ class RequestsView extends View
     initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
 
-        window.requestAnimationFrame @handleScroll
-
         # Set up collection
         collectionMap =
             all:      app.collections.requestsAll
@@ -135,6 +133,9 @@ class RequestsView extends View
 
         @renderTableChunk()
 
+        # Start following the render frames for scrolls
+        window.requestAnimationFrame @handleScroll
+
     renderTableChunk: =>
         if @ isnt app.views.current
             return
@@ -184,8 +185,8 @@ class RequestsView extends View
         @renderTable()
 
     handleScroll: =>
-        window.requestAnimationFrame @handleScroll
         return if @renderProgress >= @collection.length
+        window.requestAnimationFrame @handleScroll
 
         $table = @$ "tbody"
         return if $table.length is 0
