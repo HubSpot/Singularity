@@ -35,7 +35,7 @@ Open up SingularityUI in your browser by going to [http://localhost:4000/singula
 Later on if you want to change the API root manually, open up your browser's JS console and type:
 
 ```javascript
-localStorage.set("apiRoot", "http://example/singularity/api")
+localStorage.set("apiRootOverride", "http://example/singularity/api")
 ```
 
 ----

@@ -13,7 +13,7 @@
     <script>
         window.config = {
             appRoot: "{{{appRoot}}}",
-            apiRoot: localStorage.getItem("apiRoot") || "{{{apiRoot}}}",
+            apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
             mesosLogPort: {{{mesosLogsPort}}},
             {{#mesosLogsPortHttps}}
             mesosLogsPortHttps: {{{mesosLogsPortHttps}}}

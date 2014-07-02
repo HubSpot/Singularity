@@ -19,5 +19,5 @@ $ ->
 			message: apiRootPromptTemplate()
 			callback: (value) =>
 				if value
-					localStorage.setItem "apiRoot", value
+					localStorage.setItem "apiRootOverride", value
 				window.location = window.location.href
