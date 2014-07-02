@@ -46,7 +46,7 @@ import com.sun.jersey.api.NotFoundException;
 
 @Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
-public class RequestResource {
+public class RequestResource extends BaseResource {
 
   private final SingularityValidator validator;
   

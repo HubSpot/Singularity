@@ -8,7 +8,7 @@ import com.hubspot.singularity.data.AbstractMachineManager.DecomissionResult;
 import com.sun.jersey.api.ConflictException;
 import com.sun.jersey.api.NotFoundException;
 
-public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction> {
+public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction> extends BaseResource {
   
   private final AbstractMachineManager<T> manager;
   

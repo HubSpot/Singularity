@@ -11,7 +11,7 @@ import com.hubspot.singularity.views.IndexView;
 
 @Path("/{wildcard:.*}")
 @Produces(MediaType.TEXT_HTML)
-public class IndexResource {
+public class IndexResource extends BaseResource {
   private final SingularityConfiguration configuration;
 
   @Inject
@@ -21,6 +21,6 @@ public class IndexResource {
 
   @GET
   public IndexView getIndex() {
-    return new IndexView(configuration);
+    return new IndexView(configuration, user);
   }
 }

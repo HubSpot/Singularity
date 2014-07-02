@@ -24,7 +24,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 @Path(SingularityService.API_BASE_PATH + "/state")
 @Produces({ MediaType.APPLICATION_JSON })
-public class StateResource {
+public class StateResource extends BaseResource {
 
   private final RequestManager requestManager;
   private final TaskManager taskManager;

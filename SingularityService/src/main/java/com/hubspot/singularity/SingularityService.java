@@ -1,6 +1,15 @@
 package com.hubspot.singularity;
 
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.google.inject.Stage;
+import com.hubspot.dropwizard.guice.GuiceBundle;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
+import com.hubspot.singularity.auth.SingularityAuthBundle;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.sentry.SentryAppenderBundle;
+import com.hubspot.singularity.smtp.SMTPAppenderBundle;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.db.DataSourceFactory;
@@ -8,15 +17,6 @@ import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.google.inject.Stage;
-import com.hubspot.dropwizard.guice.GuiceBundle;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.sentry.SentryAppenderBundle;
-import com.hubspot.singularity.smtp.SMTPAppenderBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
 
@@ -41,6 +41,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         return configuration.getDataSourceFactory();
       }
     });
+    bootstrap.addBundle(new SingularityAuthBundle());
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

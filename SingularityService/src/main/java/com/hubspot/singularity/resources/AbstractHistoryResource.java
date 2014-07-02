@@ -10,7 +10,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 
-public abstract class AbstractHistoryResource {
+public abstract class AbstractHistoryResource extends BaseResource {
   
   private final HistoryManager historyManager;
   private final TaskManager taskManager;

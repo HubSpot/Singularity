@@ -206,6 +206,18 @@
       <version>${jets3t.version}</version>
     </dependency>
 
+      <dependency>
+          <groupId>io.dropwizard</groupId>
+          <artifactId>dropwizard-auth</artifactId>
+          <version>${dropwizard.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.yammer.dropwizard</groupId>
+          <artifactId>dropwizard-auth-ldap</artifactId>
+          <version>0.1.1-SNAPSHOT</version>
+      </dependency>
+
   </dependencies>
 
   <build>

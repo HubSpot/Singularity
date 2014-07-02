@@ -15,7 +15,7 @@ import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityService;
 
 @Path(SingularityService.API_BASE_PATH + "/test")
-public class TestResource {
+public class TestResource extends BaseResource {
 
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;

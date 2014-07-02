@@ -1,8 +1,5 @@
 package com.hubspot.singularity.config;
 
-import io.dropwizard.Configuration;
-import io.dropwizard.db.DataSourceFactory;
-
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -11,6 +8,9 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.yammer.dropwizard.authenticator.LdapConfiguration;
+import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -38,6 +38,9 @@ public class SingularityConfiguration extends Configuration {
   
   @JsonProperty("sentry")
   private SentryConfiguration sentryConfiguration;
+
+  @JsonProperty("ldap")
+  private LdapConfiguration ldapConfiguration;
   
   @Valid
   @NotNull
@@ -436,4 +439,11 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
+  public LdapConfiguration getLdapConfiguration() {
+    return ldapConfiguration;
+  }
+
+  public void setLdapConfiguration(LdapConfiguration ldapConfiguration) {
+    this.ldapConfiguration = ldapConfiguration;
+  }
 }
