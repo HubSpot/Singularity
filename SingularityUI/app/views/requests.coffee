@@ -45,7 +45,7 @@ class RequestsView extends View
     initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
 
-        $(window).on "scroll", @handleScroll
+        window.requestAnimationFrame @handleScroll
 
         # Set up collection
         collectionMap =
@@ -104,11 +104,8 @@ class RequestsView extends View
         @currentRequests = requests
 
     render: =>
-        ###
-        Renders the base template
-
-        The table contents are rendered bit by bit as the user scrolls down.
-        ###
+        # Renders the base template
+        # The table contents are rendered bit by bit as the user scrolls down.
         context =
             requestsFilter: @requestsFilter
             requestsSubFilter: @requestsSubFilter
@@ -186,10 +183,13 @@ class RequestsView extends View
 
         @renderTable()
 
-    handleScroll: (event) =>
+    handleScroll: =>
+        window.requestAnimationFrame @handleScroll
         return if @renderProgress >= @collection.length
 
         $table = @$ "tbody"
+        return if $table.length is 0
+
         tableBottom = $table.height() + $table.offset().top
         $window = $(window)
         scrollBottom = $window.scrollTop() + $window.height()
