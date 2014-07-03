@@ -184,7 +184,9 @@ class RequestsView extends View
         @renderTable()
 
     handleScroll: =>
-        return if @renderProgress >= @collection.length
+        if @renderProgress >= @collection.length
+            $(window).off "scroll"
+            return
 
         if @animationFrameRequest?
             window.cancelAnimationFrame @animationFrameRequest
