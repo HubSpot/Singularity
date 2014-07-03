@@ -357,7 +357,7 @@ public class SingularityDeployChecker {
       return checkOverdue(deploy, isDeployOverdue);
     }
     
-    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks);
+    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks, true);
     
     switch (deployHealth) {
     case WAITING:
