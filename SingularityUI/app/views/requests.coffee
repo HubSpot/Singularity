@@ -133,8 +133,7 @@ class RequestsView extends View
 
         @renderTableChunk()
 
-        # Start following the render frames for scrolls
-        window.requestAnimationFrame @handleScroll
+        $(window).on "scroll", @handleScroll
 
     renderTableChunk: =>
         if @ isnt app.views.current
@@ -187,14 +186,16 @@ class RequestsView extends View
     handleScroll: =>
         return if @renderProgress >= @collection.length
 
-        $table = @$ "tbody"
-        tableBottom = $table.height() + $table.offset().top
-        $window = $(window)
-        scrollBottom = $window.scrollTop() + $window.height()
-        if scrollBottom >= tableBottom
-            @renderTableChunk()
-
-        window.requestAnimationFrame @handleScroll
+        if @animationFrameRequest?
+            window.cancelAnimationFrame @animationFrameRequest
+            
+        @animationFrameRequest = window.requestAnimationFrame =>
+            $table = @$ "tbody"
+            tableBottom = $table.height() + $table.offset().top
+            $window = $(window)
+            scrollBottom = $window.scrollTop() + $window.height()
+            if scrollBottom >= tableBottom
+                @renderTableChunk()
 
     updateUrl: =>
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
