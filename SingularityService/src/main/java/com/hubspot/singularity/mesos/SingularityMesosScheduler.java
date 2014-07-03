@@ -107,6 +107,8 @@ public class SingularityMesosScheduler implements Scheduler {
       for (Protos.Offer offer : offers) {
         LOG.trace("Evaluating offer {}", offer);
 
+
+
         Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, stateCache);
 
         if (!accepted.isPresent()) {
@@ -132,6 +134,8 @@ public class SingularityMesosScheduler implements Scheduler {
 
     LOG.info("Finished handling offers ({}), {} accepted, {} declined, {} outstanding tasks", JavaUtils.duration(start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size());
+
+    throw new RuntimeException("test 123");
   }
 
   private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularitySchedulerStateCache stateCache) {
