@@ -43,10 +43,16 @@ public class S3ArtifactDownloader {
   }
   
   public void download(S3Artifact s3Artifact, Path downloadTo) {
+    final long start = System.currentTimeMillis();
+    boolean success = false;
+    
     try {
       downloadThrows(s3Artifact, downloadTo);
+      success = true;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      log.info("S3 Download {}/{} finished {} after {}", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), success ? "successfully" : "with error", JavaUtils.duration(start));
     }
   }
   
