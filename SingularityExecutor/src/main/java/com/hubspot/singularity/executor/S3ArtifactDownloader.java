@@ -100,7 +100,7 @@ public class S3ArtifactDownloader {
       numChunks++;
     }
     
-    log.info("Downloading {}/{} in {} chunks of {} size", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), numChunks, configuration.getS3ChunkSize());
+    log.info("Downloading {}/{} in {} chunks of {} bytes to {}", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), numChunks, configuration.getS3ChunkSize(), downloadTo);
     
     final ExecutorService chunkExecutorService = Executors.newFixedThreadPool(numChunks, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("S3ArtifactDownloaderChunkThread-%d").build());
     final List<Future<Path>> futures = Lists.newArrayListWithCapacity(numChunks);
