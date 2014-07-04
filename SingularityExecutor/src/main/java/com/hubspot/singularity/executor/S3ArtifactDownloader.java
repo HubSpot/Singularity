@@ -106,7 +106,7 @@ public class S3ArtifactDownloader {
       numChunks++;
     }
     
-    final long chunkSize = length / numChunks;
+    final long chunkSize = length / numChunks + (length % numChunks);
     
     log.info("Downloading {}/{} in {} chunks of {} bytes to {}", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), numChunks, chunkSize, downloadTo);
     
