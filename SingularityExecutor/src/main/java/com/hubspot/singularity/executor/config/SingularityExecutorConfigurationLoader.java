@@ -48,6 +48,12 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
   public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
   
+  public static final String S3_ACCESS_KEY = "executor.downloader.s3.access.key";
+  public static final String S3_SECRET_KEY = "executor.downloader.s3.secret.key";
+  
+  public static final String S3_CHUNK_SIZE = "executor.downloader.s3.chunk.size";
+  public static final String S3_DOWNLOAD_TIMEOUT_MILLIS = "executor.downloader.s3.timeout.millis";
+  
   public SingularityExecutorConfigurationLoader() {
     super("/etc/singularity.executor.properties");
   }
@@ -78,6 +84,12 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
     properties.put(LOGROTATE_STATE_FILE, "logrotate.status");
     properties.put(LOGROTATE_EXTRAS_FILES, "");
     properties.put(LOGROTATE_EXTRAS_DATEFORMAT, "-%Y%m%d");
+    
+    properties.put(S3_ACCESS_KEY, "");
+    properties.put(S3_SECRET_KEY, "");
+    
+    properties.put(S3_CHUNK_SIZE, "104857600");
+    properties.put(S3_DOWNLOAD_TIMEOUT_MILLIS, "180000");
   }
   
 }

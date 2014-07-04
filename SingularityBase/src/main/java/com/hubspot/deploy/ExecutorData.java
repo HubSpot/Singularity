@@ -18,6 +18,7 @@ public class ExecutorData {
   private final String cmd;
   private final List<EmbeddedArtifact> embeddedArtifacts;
   private final List<ExternalArtifact> externalArtifacts;
+  private final List<S3Artifact> s3Artifacts;
   private final List<Integer> successfulExitCodes;
   private final Optional<String> runningSentinel;
   private final Optional<String> user;
@@ -28,12 +29,13 @@ public class ExecutorData {
   
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts, 
-      @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user, @JsonProperty("runningSentinel") Optional<String> runningSentinel, 
-      @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag, @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, 
-      @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis) {
+      @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user, 
+      @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag, 
+      @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis) {
     this.cmd = cmd;
     this.embeddedArtifacts = nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = nonNullImmutable(externalArtifacts);
+    this.s3Artifacts = nonNullImmutable(s3Artifacts);
     this.user = user;
     this.successfulExitCodes = nonNullImmutable(successfulExitCodes);
     this.extraCmdLineArgs = nonNullImmutable(extraCmdLineArgs);
@@ -44,7 +46,7 @@ public class ExecutorData {
   }
   
   public ExecutorDataBuilder toBuilder() {
-    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
   }
   
   private <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
@@ -100,6 +102,10 @@ public class ExecutorData {
   public Optional<Long> getSigKillProcessesAfterMillis() {
     return sigKillProcessesAfterMillis;
   }
+  
+  public List<S3Artifact> getS3Artifacts() {
+    return s3Artifacts;
+  }
 
   @Override
   public String toString() {
@@ -107,6 +113,7 @@ public class ExecutorData {
         .add("cmd", cmd)
         .add("embeddedArtifacts", embeddedArtifacts)
         .add("externalArtifacts", externalArtifacts)
+        .add("s3Artifacts", s3Artifacts)
         .add("user", user)
         .add("successfulExitCodes", successfulExitCodes)
         .add("runningSentinel", runningSentinel)

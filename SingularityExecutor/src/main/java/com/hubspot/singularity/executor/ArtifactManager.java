@@ -20,6 +20,8 @@ import com.google.common.hash.Hashing;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.deploy.RemoteArtifact;
+import com.hubspot.deploy.S3Artifact;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
 public class ArtifactManager extends SimpleProcessManager {
@@ -27,6 +29,7 @@ public class ArtifactManager extends SimpleProcessManager {
   private final Path cacheDirectory;
   private final Logger log;
   private final String taskId;
+  private final S3ArtifactDownloader s3ArtifactDownloader;
   
   public ArtifactManager(SingularityExecutorConfiguration configuration, String taskId, Logger log) {
     super(log);
@@ -34,6 +37,7 @@ public class ArtifactManager extends SimpleProcessManager {
     this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
     this.log = log;
     this.taskId = taskId;
+    this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log);
   }
 
   private long getSize(Path path) {
@@ -44,7 +48,7 @@ public class ArtifactManager extends SimpleProcessManager {
     }
   }
   
-  private boolean filesSizeMatches(ExternalArtifact artifact, Path path) {
+  private boolean filesSizeMatches(RemoteArtifact artifact, Path path) {
     return !artifact.getFilesize().isPresent() || artifact.getFilesize().get() == getSize(path);
   }
   
@@ -52,7 +56,7 @@ public class ArtifactManager extends SimpleProcessManager {
     return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equals(calculateMd5sum(path));
   }
   
-  private void checkFilesize(ExternalArtifact artifact, Path path) {
+  private void checkFilesize(RemoteArtifact artifact, Path path) {
     if (!filesSizeMatches(artifact, path)) {
       throw new RuntimeException(String.format("Filesize %s (%s) does not match expected (%s)", getSize(path), path, artifact.getFilesize()));
     }
@@ -72,8 +76,14 @@ public class ArtifactManager extends SimpleProcessManager {
     }
   }
   
-  private void downloadAndCheck(ExternalArtifact artifact, Path downloadTo) {
-    downloadUri(artifact.getUrl(), downloadTo);
+  private void downloadAndCheck(RemoteArtifact artifact, Path downloadTo) {
+    if (artifact instanceof ExternalArtifact) {
+      downloadExternalArtifact((ExternalArtifact) artifact, downloadTo);
+    } else if (artifact instanceof S3Artifact) {
+      downloadS3Artifact((S3Artifact) artifact, downloadTo);
+    } else {
+      throw new IllegalArgumentException("Unknown artifact type: " + artifact.getClass());
+    }
     
     checkFilesize(artifact, downloadTo);
     checkMd5(artifact, downloadTo);
@@ -93,7 +103,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(embeddedArtifact, extractTo);
   }
   
-  private Path downloadAndCache(ExternalArtifact artifact, String filename) {
+  private Path downloadAndCache(RemoteArtifact artifact, String filename) {
     Path tempFilePath = createTempPath(filename);
     
     downloadAndCheck(artifact, tempFilePath);
@@ -113,7 +123,7 @@ public class ArtifactManager extends SimpleProcessManager {
     return cacheDirectory.resolve(filename);
   }
   
-  private boolean checkCached(ExternalArtifact artifact, Path cachedPath) {
+  private boolean checkCached(RemoteArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
       log.debug("Cached {} did not exist", taskId, cachedPath);
       return false;
@@ -132,7 +142,7 @@ public class ArtifactManager extends SimpleProcessManager {
     return true;
   }
   
-  public Path fetch(ExternalArtifact artifact) {
+  public Path fetch(RemoteArtifact artifact) {
     String filename = artifact.getFilename();
     Path cachedPath = getCachedPath(filename);
     
@@ -143,6 +153,14 @@ public class ArtifactManager extends SimpleProcessManager {
     }
   
     return cachedPath;
+  }
+  
+  private void downloadExternalArtifact(ExternalArtifact externalArtifact, Path downloadTo) {
+    downloadUri(externalArtifact.getUrl(), downloadTo);
+  }
+  
+  private void downloadS3Artifact(S3Artifact s3Artifact, Path downloadTo) {
+    s3ArtifactDownloader.download(s3Artifact, downloadTo);
   }
   
   private void downloadUri(String uri, Path path) {

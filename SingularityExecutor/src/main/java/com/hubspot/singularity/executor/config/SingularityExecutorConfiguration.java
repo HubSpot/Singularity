@@ -52,6 +52,12 @@ public class SingularityExecutorConfiguration {
   private final String s3KeyPattern;
   private final String s3Bucket;
   
+  private final String s3AccessKey;
+  private final String s3SecretKey;
+  
+  private final long s3ChunkSize;
+  private final long s3DownloadTimeoutMillis;
+  
   @Inject
   public SingularityExecutorConfiguration(
       @Named(SingularityExecutorConfigurationLoader.ARTIFACT_CACHE_DIRECTORY) String cacheDirectory, 
@@ -84,7 +90,11 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_EXTRAS_DATEFORMAT) String logrotateExtrasDateformat,
       @Named(SingularityExecutorConfigurationLoader.LOGROTATE_EXTRAS_FILES) String logrotateExtrasFiles,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
-      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog
+      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog,
+      @Named(SingularityExecutorConfigurationLoader.S3_ACCESS_KEY) String s3AccessKey,
+      @Named(SingularityExecutorConfigurationLoader.S3_SECRET_KEY) String s3SecretKey,
+      @Named(SingularityExecutorConfigurationLoader.S3_CHUNK_SIZE) String s3ChunkSize,
+      @Named(SingularityExecutorConfigurationLoader.S3_DOWNLOAD_TIMEOUT_MILLIS) String s3DownloadTimeoutMillis
       ) {
     this.executorBashLog = executorBashLog;
     this.globalTaskDefinitionDirectory = globalTaskDefinitionDirectory;
@@ -121,6 +131,10 @@ public class SingularityExecutorConfiguration {
     } else {
       this.logrotateExtrasFiles = new String[0];
     }
+    this.s3AccessKey = s3AccessKey;
+    this.s3SecretKey = s3SecretKey;
+    this.s3ChunkSize = Long.parseLong(s3ChunkSize);
+    this.s3DownloadTimeoutMillis = Long.parseLong(s3DownloadTimeoutMillis);
   }
   
   public int getTailLogLinesToSave() {
@@ -258,6 +272,22 @@ public class SingularityExecutorConfiguration {
   public Path getTaskDefinitionPath(String taskId) {
     return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
   }
+  
+  public String getS3AccessKey() {
+    return s3AccessKey;
+  }
+
+  public String getS3SecretKey() {
+    return s3SecretKey;
+  }
+  
+  public long getS3ChunkSize() {
+    return s3ChunkSize;
+  }
+  
+  public long getS3DownloadTimeoutMillis() {
+    return s3DownloadTimeoutMillis;
+  }
 
   @Override
   public String toString() {
@@ -267,7 +297,8 @@ public class SingularityExecutorConfiguration {
         + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory="
         + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat
         + ", logrotateExtrasFiles=" + Arrays.toString(logrotateExtrasFiles) + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave
-        + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + "]";
+        + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + ", s3AccessKey="
+        + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", s3ChunkSize=" + s3ChunkSize + ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis + "]";
   }
-
+  
 }

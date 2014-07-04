@@ -11,6 +11,7 @@ public class ExecutorDataBuilder {
   private String cmd;
   private List<EmbeddedArtifact> embeddedArtifacts;
   private List<ExternalArtifact> externalArtifacts;
+  private List<S3Artifact> s3Artifacts;
   private List<Integer> successfulExitCodes;
   private Optional<String> runningSentinel;
   private Optional<String> user;
@@ -19,11 +20,12 @@ public class ExecutorDataBuilder {
   private Map<String, String> loggingExtraFields;
   private Optional<Long> sigKillProcessesAfterMillis;
   
-  public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
+  public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
       Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
+    this.s3Artifacts = s3Artifacts;
     this.successfulExitCodes = successfulExitCodes;
     this.runningSentinel = runningSentinel;
     this.user = user;
@@ -37,7 +39,7 @@ public class ExecutorDataBuilder {
   }
   
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
   }
   
   public Optional<String> getLoggingTag() {
@@ -129,6 +131,15 @@ public class ExecutorDataBuilder {
     this.extraCmdLineArgs = extraCmdLineArgs;
     return this;
   }
+  
+  public List<S3Artifact> getS3Artifacts() {
+    return s3Artifacts;
+  }
+
+  public ExecutorDataBuilder setS3Artifacts(List<S3Artifact> s3Artifacts) {
+    this.s3Artifacts = s3Artifacts;
+    return this;
+  }
 
   @Override
   public String toString() {
@@ -136,6 +147,7 @@ public class ExecutorDataBuilder {
         .add("cmd", cmd)
         .add("embeddedArtifacts", embeddedArtifacts)
         .add("externalArtifacts", externalArtifacts)
+        .add("s3Artifacts", s3Artifacts)
         .add("user", user)
         .add("successfulExitCodes", successfulExitCodes)
         .add("runningSentinel", runningSentinel)

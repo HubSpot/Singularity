@@ -5,24 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
-public class ExternalArtifact extends Artifact {
+public class ExternalArtifact extends RemoteArtifact {
   
   private final String url;
-  private final Optional<Long> filesize;  
 
   @JsonCreator
   public ExternalArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum, @JsonProperty("url") String url, @JsonProperty("filesize") Optional<Long> filesize) {
-    super(name, filename, md5sum);
+    super(name, filename, md5sum, filesize);
     this.url = url;
-    this.filesize = filesize;
   }
 
   public String getUrl() {
     return url;
-  }
-
-  public Optional<Long> getFilesize() {
-    return filesize;
   }
 
   @Override
@@ -32,7 +26,7 @@ public class ExternalArtifact extends Artifact {
         .add("filaname", getFilename())
         .add("md5sum", getMd5sum())
         .add("url", url)
-        .add("filesize", filesize)
+        .add("filesize", getFilesize())
         .toString();
   }
   

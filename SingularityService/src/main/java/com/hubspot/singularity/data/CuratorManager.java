@@ -106,6 +106,7 @@ public abstract class CuratorManager {
     } else {
       createBuilder.forPath(path);
     }
+    
   }
   
   protected SingularityCreateResult save(String path, Optional<byte[]> data) {
@@ -149,6 +150,7 @@ public abstract class CuratorManager {
       byte[] data = bldr.forPath(path);
       
       if (data == null || data.length == 0) {
+        LOG.trace("Empty data found for path {}", path);
         return Optional.absent();
       }
       

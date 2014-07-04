@@ -37,7 +37,7 @@ public class SingularityExecutorTaskBuilder {
   private final JsonObjectFileHelper jsonObjectFileHelper;
   
   @Inject
-  public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper, JsonObjectFileHelper jsonObjectFileHelper, TemplateManager templateManager, 
+  public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper, JsonObjectFileHelper jsonObjectFileHelper, TemplateManager templateManager,
       SingularityExecutorLogging executorLogging,  SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid, ExecutorUtils executorUtils) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.jsonObjectMapper = jsonObjectMapper;
