@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -12,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -72,13 +74,20 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   }
   
   private void downloadFiles(ExecutorData executorData) {
-    for (ExternalArtifact artifact : executorData.getExternalArtifacts()) {
-      Path fetched = artifactManager.fetch(artifact);
-      
-      Preconditions.checkState(fetched.getFileName().toString().endsWith(".tar.gz"), "%s did not appear to be a tar archive (did not end with .tar.gz)", fetched.getFileName());
-      
-      artifactManager.untar(fetched, task.getTaskDefinition().getTaskDirectoryPath());
+    for (RemoteArtifact externalArtifact : executorData.getExternalArtifacts()) {
+      downloadRemoteArtifact(externalArtifact);
     }
+    for (RemoteArtifact s3Artifact : executorData.getS3Artifacts()) {
+      downloadRemoteArtifact(s3Artifact);
+    }
+  }
+  
+  private void downloadRemoteArtifact(RemoteArtifact remoteArtifact) {
+    Path fetched = artifactManager.fetch(remoteArtifact);
+      
+    Preconditions.checkState(fetched.getFileName().toString().endsWith(".tar.gz"), "%s did not appear to be a tar archive (did not end with .tar.gz)", fetched.getFileName());
+      
+    artifactManager.untar(fetched, task.getTaskDefinition().getTaskDirectoryPath());
   }
   
   private String getCommand(ExecutorData executorData) {
