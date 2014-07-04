@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor;
 
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
@@ -66,9 +67,9 @@ public class S3ArtifactDownloader {
         
         S3Object fetchedObject = s3.getObject(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), null, null, null, null, byteRangeStart, byteRangeEnd);
         
-        Files.copy(fetchedObject.getDataInputStream(), chunkPath, StandardCopyOption.REPLACE_EXISTING);
-      
-        fetchedObject.getDataInputStream().close();
+        try (InputStream is = fetchedObject.getDataInputStream()) {
+          Files.copy(is, chunkPath, StandardCopyOption.REPLACE_EXISTING);
+        }
       
         log.info("Finished downloading chunk {} ({} bytes) in {}", chunk, byteRangeEnd - byteRangeStart, JavaUtils.duration(startTime));
         
