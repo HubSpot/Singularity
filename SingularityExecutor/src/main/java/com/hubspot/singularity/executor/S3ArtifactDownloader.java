@@ -60,10 +60,10 @@ public class S3ArtifactDownloader {
         
         final long startTime = System.currentTimeMillis();
         
-        log.info("Downloading chunk {} to {}", chunk, chunkPath);
-        
         final long byteRangeStart = chunk * configuration.getS3ChunkSize();
-        final long byteRangeEnd = Math.min((chunk + 1) * configuration.getS3ChunkSize(), length);
+        final long byteRangeEnd = Math.min((chunk + 1) * configuration.getS3ChunkSize() - 1, length);
+
+        log.info("Downloading chunk {} ({}-{}) to {}", chunk, byteRangeStart, byteRangeEnd, chunkPath);
         
         S3Object fetchedObject = s3.getObject(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), null, null, null, null, byteRangeStart, byteRangeEnd);
         
@@ -99,6 +99,8 @@ public class S3ArtifactDownloader {
     if (length % configuration.getS3ChunkSize() > 0) {
       numChunks++;
     }
+    
+    log.info("Downloading {}/{} in {} chunks of {} size", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), numChunks, configuration.getS3ChunkSize());
     
     final ExecutorService chunkExecutorService = Executors.newFixedThreadPool(numChunks, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("S3ArtifactDownloaderChunkThread-%d").build());
     final List<Future<Path>> futures = Lists.newArrayListWithCapacity(numChunks);
