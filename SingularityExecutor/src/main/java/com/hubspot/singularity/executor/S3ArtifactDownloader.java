@@ -55,6 +55,7 @@ public class S3ArtifactDownloader {
       @Override
       public Path call() throws Exception {
         final Path chunkPath = (chunk == 0) ? downloadTo : Paths.get(downloadTo + "_" + chunk);
+        chunkPath.toFile().deleteOnExit();
         
         final long startTime = System.currentTimeMillis();
         
@@ -165,7 +166,7 @@ public class S3ArtifactDownloader {
     log.info("Writing {} to {}", path, downloadTo);
     
     try (WritableByteChannel wbs = Files.newByteChannel(downloadTo, EnumSet.of(StandardOpenOption.APPEND, StandardOpenOption.WRITE))) {
-      try (FileChannel readChannel = FileChannel.open(path, StandardOpenOption.READ)) {
+      try (FileChannel readChannel = FileChannel.open(path, EnumSet.of(StandardOpenOption.READ, StandardOpenOption.DELETE_ON_CLOSE))) {
         bytes = readChannel.size();
         readChannel.transferTo(0, bytes, wbs);
       }

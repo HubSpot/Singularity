@@ -125,7 +125,7 @@ public class ArtifactManager extends SimpleProcessManager {
   
   private boolean checkCached(RemoteArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
-      log.debug("Cached {} did not exist", taskId, cachedPath);
+      log.debug("Cached {} did not exist", cachedPath);
       return false;
     }
     
