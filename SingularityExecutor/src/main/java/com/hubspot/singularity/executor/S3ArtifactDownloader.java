@@ -56,7 +56,7 @@ public class S3ArtifactDownloader {
     }
   }
   
-  private Callable<Path> buildChunkDownloader(final S3Service s3, final S3Artifact s3Artifact, final Path downloadTo, final int chunk, final long length) {
+  private Callable<Path> buildChunkDownloader(final S3Service s3, final S3Artifact s3Artifact, final Path downloadTo, final int chunk, final long chunkSize, final long length) {
     return new Callable<Path>() {
 
       @Override
@@ -66,8 +66,8 @@ public class S3ArtifactDownloader {
         
         final long startTime = System.currentTimeMillis();
         
-        final long byteRangeStart = chunk * configuration.getS3ChunkSize();
-        final long byteRangeEnd = Math.min((chunk + 1) * configuration.getS3ChunkSize() - 1, length);
+        final long byteRangeStart = chunk * chunkSize;
+        final long byteRangeEnd = Math.min((chunk + 1) * chunkSize - 1, length);
 
         log.info("Downloading chunk {} ({}-{}) to {}", chunk, byteRangeStart, byteRangeEnd, chunkPath);
         
@@ -106,7 +106,9 @@ public class S3ArtifactDownloader {
       numChunks++;
     }
     
-    log.info("Downloading {}/{} in {} chunks of {} bytes to {}", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), numChunks, configuration.getS3ChunkSize(), downloadTo);
+    final long chunkSize = length / configuration.getS3ChunkSize();
+    
+    log.info("Downloading {}/{} in {} chunks of {} bytes to {}", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), numChunks, chunkSize, downloadTo);
     
     final ExecutorService chunkExecutorService = Executors.newFixedThreadPool(numChunks, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("S3ArtifactDownloaderChunkThread-%d").build());
     final List<Future<Path>> futures = Lists.newArrayListWithCapacity(numChunks);
@@ -114,7 +116,7 @@ public class S3ArtifactDownloader {
     for (int i = 0; i < numChunks; i++) {
       final int chunk = i;
       
-      futures.add(chunkExecutorService.submit(buildChunkDownloader(s3, s3Artifact, downloadTo, chunk, length)));
+      futures.add(chunkExecutorService.submit(buildChunkDownloader(s3, s3Artifact, downloadTo, chunk, chunkSize, length)));
     }
     
     long remainingMillis = configuration.getS3DownloadTimeoutMillis();
