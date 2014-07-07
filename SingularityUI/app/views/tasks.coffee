@@ -13,14 +13,15 @@ class TasksView extends View
 
     killTaskTemplate: require './templates/vex/killTask'
 
-    events:
-        'click [data-action="viewJSON"]': 'viewJson'
-        'click [data-action="remove"]': 'removeTask'
-        'click [data-action="run-now"]': 'runTask'
+    events: =>
+        _.extend super,
+            'click [data-action="viewJSON"]': 'viewJson'
+            'click [data-action="remove"]': 'removeTask'
+            'click [data-action="run-now"]': 'runTask'
 
-        'change input[type="search"]': 'searchChange'
-        'keyup input[type="search"]': 'searchChange'
-        'input input[type="search"]': 'searchChange'
+            'change input[type="search"]': 'searchChange'
+            'keyup input[type="search"]': 'searchChange'
+            'input input[type="search"]': 'searchChange'
 
     initialize: ->
         @lastTasksFilter = @options.tasksFilter
