@@ -1,10 +1,16 @@
 View = require './view'
 
+Slave = require '../models/Slave'
 Slaves = require '../collections/Slaves'
 
 class SlavesView extends View
 
     template: require './templates/slaves'
+
+    events: =>
+        _.extend super,
+            'click [data-action="remove"]': 'removeSlave'
+            'click [data-action="decommission"]': 'decommissionSlave'
 
     initialize: ->
         @slavesActive = new Slaves [], slaveType: 'active'
@@ -21,8 +27,6 @@ class SlavesView extends View
         $.when(promises...)
 
     refresh: ->
-        return @ if @$el.find('[data-sorted-direction]').length
-
         @fetchDone = false
         @fetch().done =>
             @fetchDone = true
@@ -38,37 +42,23 @@ class SlavesView extends View
             slavesDecomissioning: _.pluck(@slavesDecomissioning.models, 'attributes')
 
         @$el.html @template context
-
-        @setupEvents()
-
         utils.setupSortableTables()
 
         @
 
-    setupEvents: ->
-        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
-            $row = $(e.target).parents('tr')
+    decommissionSlave: (event) =>
+        $target = $(event.currentTarget)
 
-            collection = undefined
+        slaveModel = new Slave id: $target.data 'slave-id'
+        slaveModel.promptDecommission => @refresh()
 
-            if $(e.target).data('collection') is 'slavesDead'
-                collection = @slavesDead
-            if $(e.target).data('collection') is 'slavesDecomissioning'
-                collection = @slavesDecomissioning
-            return new Error('No collection specified to find the model.') unless collection
+    removeSlave: (event) =>
+        $target = $(event.currentTarget)
 
-            slaveModel = collection.get($(e.target).data('slave-id'))
-
-            vex.dialog.confirm
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, (text: 'Remove', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                    vex.dialog.buttons.NO
-                ]
-                message: "<p>Are you sure you want to remove the slave?</p><pre>#{ slaveModel.get('id') }</pre>"
-                callback: (confirmed) =>
-                    return unless confirmed
-                    slaveModel.destroy()
-                    collection.remove(slaveModel)
-                    $row.remove()
+        slaveModel = new Slave
+            id: $target.data 'slave-id'
+            state: $target.data 'state'
+        slaveModel.promptRemove => @refresh()
+            
 
 module.exports = SlavesView
