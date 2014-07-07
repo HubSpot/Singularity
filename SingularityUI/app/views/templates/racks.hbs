@@ -88,6 +88,7 @@
                             <th>State</th>
                             <th>Triggered by</th>
                             <th>Started</th>
+                            <th>Uptime</th>
                             <th data-sortable="false"></th>
                         </tr>
                     </thead>
@@ -98,7 +99,8 @@
                                 <td>{{ state }}</td>
                                 <td>{{ decomissioningBy }}</td>
                                 <td>{{ decomissioningAtHuman }}</td>
-                                <td class="actions-column"><a data-rack-id="{{ id }}" data-action="remove" data-state="{{ state }}">Activate | Remove</a></td>
+                                <td>{{ uptimeHuman }}</td>
+                                <td class="actions-column"><a data-rack-id="{{ id }}" data-action="remove" data-state="{{ state }}">Reactivate | Remove</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>

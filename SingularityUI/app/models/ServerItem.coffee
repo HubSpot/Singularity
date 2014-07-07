@@ -11,16 +11,19 @@ class ServerItem extends Model
 
     parse: (item) =>
         if item.firstSeenAt
-            item.uptimeHuman = utils.humanTimeAgo(item.firstSeenAt).replace ' ago', ''
+            if not item.decomissioningAt?
+                item.uptimeHuman = utils.humanTime(item.firstSeenAt).replace ' ago', ''
+            else
+                item.uptimeHuman = utils.humanTime(item.firstSeenAt, item.decomissioningAt).replace ' ago', ''
 
         if item.decomissioningAt?
-            item.decomissioningAtHuman = utils.humanTimeAgo item.decomissioningAt
+            item.decomissioningAtHuman = utils.humanTime item.decomissioningAt
 
         if item.decomissionedAt?
-            item.decomissionedAtHuman = utils.humanTimeAgo item.decomissionedAt
+            item.decomissionedAtHuman = utils.humanTime item.decomissionedAt
 
         if item.deadAt?
-            item.deadAtHuman = utils.humanTimeAgo item.deadAt
+            item.deadAtHuman = utils.humanTime item.deadAt
 
         item
 
