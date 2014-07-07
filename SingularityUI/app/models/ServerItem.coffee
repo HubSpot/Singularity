@@ -3,7 +3,10 @@ Model = require './model'
 # Not used by itself. Subclassed by Rack & Slave
 class ServerItem extends Model
 
-    removeTemplate: require '../views/templates/vex/serverRemoveDead'
+    removeTemplates:
+        DEAD: require '../views/templates/vex/serverRemoveDead'
+        DECOMISSIONING: require '../views/templates/vex/serverRemoveDecomissioned'
+        DECOMISSIONED: require '../views/templates/vex/serverRemoveDecomissioned'
     decomissionTemplate: require '../views/templates/vex/serverDecomission'
 
     parse: (item) =>
@@ -11,11 +14,13 @@ class ServerItem extends Model
             item.uptimeHuman = utils.humanTimeAgo(item.firstSeenAt).replace ' ago', ''
 
         if item.decomissioningAt?
-            item.decommissioningAtHuman = utils.humanTimeAgo item.decomissioningAt
+            item.decomissioningAtHuman = utils.humanTimeAgo item.decomissioningAt
 
-        if item.decomissionedAt? and item.deadAt?
-            item.decommissionedAtHuman = utils.humanTimeAgo item.decommissionedAt
-            item.deadAthuman = utils.humanTimeAgo item.deadAt
+        if item.decomissionedAt?
+            item.decomissionedAtHuman = utils.humanTimeAgo item.decomissionedAt
+
+        if item.deadAt?
+            item.deadAtHuman = utils.humanTimeAgo item.deadAt
 
         item
 
@@ -26,16 +31,15 @@ class ServerItem extends Model
 
     destroy: =>
         state = @get('state')
+        state = if state is 'DECOMISSIONED' then 'DECOMISSIONING' else state
+
         unless state?
             return new Error 'Need to know the state of a server item to remove it.'
             
-            unless state in ['DECOMISSIONED', 'DEAD']
-                return new Error "Can't remove an active server item. Decommission first." 
-
-        console.log "#{ @url() }/#{@get('state').toLowerCase()}?user=#{app.getUsername()}"
-        return
+            unless state in ['DECOMISSIONING', 'DEAD']
+                return new Error "Can only remove dead & decommissioning slaves."
         $.ajax
-            url: "#{ @url() }/#{@get('state').toLowerCase()}?user=#{app.getUsername()}"
+            url: "#{ @url() }/#{ state.toLowerCase() }?user=#{ app.getUsername() }"
             type: "DELETE"
 
     # 
@@ -43,7 +47,7 @@ class ServerItem extends Model
     #
     promptRemove: (callback) =>
         vex.dialog.confirm
-            message: @removeTemplate {@id, @type}
+            message: @removeTemplates[@get 'state'] {@id, @type}
 
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
@@ -69,7 +73,6 @@ class ServerItem extends Model
 
             callback: (data) =>
                 return if data is false
-                console.log "Decomissioning"
                 @decomission().done callback
 
 module.exports = ServerItem
