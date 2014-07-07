@@ -304,7 +304,7 @@ public class SingularityRackManager {
     SaveResultHolder rackHolder = checkRack(rackId);
     
     if (rackHolder.saveResult == SaveResult.NEW) {
-      LOG.info("Offer revealed a new rack {}", slaveHolder.newObject.get());
+      LOG.info("Offer revealed a new rack {}", rackHolder.newObject.get());
     }
   }
 
