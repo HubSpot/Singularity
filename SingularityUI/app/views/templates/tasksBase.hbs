@@ -1,18 +1,14 @@
-<header class="jumbotron subhead" id="overview">
-    <h1>Cleaning tasks</h1>
-</header>
-
 <section>
     <div class="row-fluid">
         <div class="span12">
             <ul class="nav nav-pills">
-                <li>
+                <li {{#ifEqual tasksFilter "active"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/tasks">Active</a>
                 </li>
-                <li>
+                <li {{#ifEqual tasksFilter "scheduled"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/tasks/scheduled">Scheduled</a>
                 </li>
-                <li class="active">
+                <li {{#ifEqual tasksFilter "cleaning"}}class="active"{{/ifEqual}}>
                     <a href="{{#appRoot}}{{/appRoot}}/tasks/cleaning">Cleaning</a>
                 </li>
             </ul>
@@ -22,10 +18,9 @@
 
 <section>
     <input type="search" placeholder="Filter tasks..." value="{{ searchFilter }}" required />
-
     <div class="row-fluid">
-        <div data-tasks-table-container class="span12">
-            {{> tasksTable}}
+        <div data-tasks-table-container class="span12 table-staged">
+            {{> tasksBody}}
         </div>
     </div>
 </section>
