@@ -13,14 +13,16 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>State</th>
+                            <th>Uptime</th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#eachWithFn racksActive}}
                             <tr>
                                 <td>{{ id }}</td>
-                                <td>{{ state }}</td>
+                                <td data-value="{{ firstSeenAt }}">{{ uptimeHuman }}</td>
+                                <td class="actions-column"><a data-rack-id="{{ id }}" data-action="decomission">Decommission</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
@@ -47,7 +49,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>State</th>
+                            <th>Died</th>
                             <th data-sortable="false"></th>
                         </tr>
                     </thead>
@@ -55,7 +57,7 @@
                         {{#eachWithFn racksDead}}
                             <tr>
                                 <td>{{ id }}</td>
-                                <td>{{ state }}</td>
+                                <td>{{ deadAtHuman }}</td>
                                 <td class="actions-column"><a data-rack-id="{{ id }}" data-action="remove">Remove</a>
                             </tr>
                         {{/eachWithFn}}
@@ -84,6 +86,9 @@
                         <tr>
                             <th>ID</th>
                             <th>State</th>
+                            <th>Triggered by</th>
+                            <th>Started</th>
+                            <th data-sortable="false"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -91,6 +96,9 @@
                             <tr>
                                 <td>{{ id }}</td>
                                 <td>{{ state }}</td>
+                                <td>{{ decomissioningBy }}</td>
+                                <td>{{ decomissioningAtHuman }}</td>
+                                <td class="actions-column"><a data-rack-id="{{ id }}" data-action="remove" data-state="{{ state }}">Activate | Remove</a></td>
                             </tr>
                         {{/eachWithFn}}
                     </tbody>
