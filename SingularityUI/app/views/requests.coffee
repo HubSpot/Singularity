@@ -123,8 +123,6 @@ class RequestsView extends View
 
         @renderTable()
 
-        @
-
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
         $(window).scrollTop 0
