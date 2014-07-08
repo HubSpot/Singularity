@@ -1,24 +1,30 @@
-{{#if requests.length}}
-    <table class="table" data-sortable>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Pending Type</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#eachWithFn requests}}
-                <tr data-request-id="{{ id }}">
-                    <td>{{#hardBreak id}}{{/hardBreak}}</td>
-                    <td>{{ pendingType }}</td>
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+        <table class="table" data-sortable>
+            <thead>
+                <tr>
+                    <th data-sort-attribute="id">ID</th>
+                    <th data-sort-attribute="pendingType">Pending Type</th>
                 </tr>
-            {{/eachWithFn}}
-        </tbody>
-    </table>
-{{else}}
-    {{#if collectionSynced}}
-        <div class="empty-table-message"><p>No pending requests</p></div>
-    {{else}}
-        <div class="page-loader centered cushy"></div>
+            </thead>
+            <tbody>
     {{/if}}
-{{/if}}
+{{/unless}}
+                {{#eachWithFn requests}}
+                    <tr data-request-id="{{ id }}">
+                        <td>{{#hardBreak id}}{{/hardBreak}}</td>
+                        <td>{{ pendingType }}</td>
+                    </tr>
+                {{/eachWithFn}}
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+            </tbody>
+        </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No pending requests</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

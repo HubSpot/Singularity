@@ -19,6 +19,12 @@ class RequestsView extends View
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
+    # For staged rendering
+    renderProgress: 0
+    renderAtOnce: 100
+    # Cache for the request array we're currently rendering
+    currentRequests: []
+
     events: =>
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
@@ -31,6 +37,8 @@ class RequestsView extends View
             'change input[type="search"]': 'searchChange'
             'keyup input[type="search"]': 'searchChange'
             'input input[type="search"]': 'searchChange'
+
+            'click th[data-sort-attribute]': 'sortTable'
 
     initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
@@ -46,16 +54,18 @@ class RequestsView extends View
 
         @collectionSynced = false
         @collection = collectionMap[@requestsFilter]
-        @collection.on "sync", =>
-            @collectionSynced = true
-            @renderTable()
         # Initial fetch
-        @collection.fetch()
+        @collection.fetch().done =>
+            @collectionSynced = true
+            @render()
 
     # Called by app on active view
     refresh: ->
         return @ if @$el.find('[data-sorted-direction]').length
-        @collection.fetch()
+        # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
+        return @ if $(window).scrollTop() > 200
+        @collection.fetch().done =>
+            @renderTable()
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
@@ -80,18 +90,26 @@ class RequestsView extends View
                     filter = filter or request.onDemand
                 filter
 
-        requests.reverse()
+        # Sort the table if the user clicked on the table heading things
+        if @sortAttribute?
+            requests = _.sortBy requests, @sortAttribute
+            if not @sortAscending
+                requests = requests.reverse()
+        else
+            requests.reverse()
+            
+        @currentRequests = requests
 
     render: =>
+        # Renders the base template
+        # The table contents are rendered bit by bit as the user scrolls down.
         context =
             requestsFilter: @requestsFilter
             requestsSubFilter: @requestsSubFilter
             searchFilter: @searchFilter
-
             hasSubFilter: @requestsFilter in @haveSubfilter
-
             collectionSynced: @collectionSynced
-            requests: @filterCollection()
+            haveRequests: @collection.length and @collectionSynced
 
         partials = 
             partials:
@@ -102,15 +120,81 @@ class RequestsView extends View
 
         @$el.html @templateBase context, partials
 
-        utils.setupSortableTables()
+        @renderTable()
 
-        @
-
+    # Prepares the staged rendering and triggers the first one
     renderTable: =>
-        $table = @$ "[data-requests-body-container]"
-        $table.html @bodyTemplate
-            requests: @filterCollection()
-            collectionSynced: @collectionSynced
+        $(window).scrollTop 0
+        @filterCollection()
+        @renderProgress = 0
+
+        @renderTableChunk()
+
+        $(window).on "scroll", @handleScroll
+
+    renderTableChunk: =>
+        if @ isnt app.views.current
+            return
+
+        firstStage = @renderProgress is 0
+
+        newProgress = @renderAtOnce + @renderProgress
+        requests = @currentRequests.slice(@renderProgress, newProgress)
+        @renderProgress = newProgress
+
+        $contents = @bodyTemplate
+            requests: requests
+            rowsOnly: true
+        
+        $table = @$ ".table-staged table"
+        $tableBody = $table.find "tbody"
+
+        if firstStage
+            # Render the first batch
+            $tableBody.html $contents
+            # After the first stage of rendering we want to fix
+            # the width of the columns to prevent having to recalculate
+            # it constantly
+            utils.fixTableColumns $table
+        else
+            $tableBody.append $contents
+
+    sortTable: (event) =>
+        $target = $ event.currentTarget
+        newSortAttribute = $target.attr "data-sort-attribute"
+
+        $currentlySortedHeading = @$ "[data-sorted=true]"
+        $currentlySortedHeading.removeAttr "data-sorted"
+        $currentlySortedHeading.removeAttr "data-sorted-direction"
+
+        if newSortAttribute is @sortAttribute and @sortAscending?
+            @sortAscending = not @sortAscending
+        else
+            # timestamp should be DESC by default
+            @sortAscending = if newSortAttribute is "timestamp" then false else true
+
+        @sortAttribute = newSortAttribute
+
+        $target.attr "data-sorted", "true"
+        $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
+
+        @renderTable()
+
+    handleScroll: =>
+        if @renderProgress >= @collection.length
+            $(window).off "scroll"
+            return
+
+        if @animationFrameRequest?
+            window.cancelAnimationFrame @animationFrameRequest
+            
+        @animationFrameRequest = window.requestAnimationFrame =>
+            $table = @$ "tbody"
+            tableBottom = $table.height() + $table.offset().top
+            $window = $(window)
+            scrollBottom = $window.scrollTop() + $window.height()
+            if scrollBottom >= tableBottom
+                @renderTableChunk()
 
     updateUrl: =>
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }

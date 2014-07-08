@@ -82,8 +82,6 @@ class RequestView extends View
             @requestDeployHistoryTable?.refresh()
             @requestHistoryTable?.refresh()
 
-        @
-
     render: ->
         context = @gatherContext()
 
@@ -103,8 +101,6 @@ class RequestView extends View
         @renderHistoryPaginatedIfNeeded()
 
         @$el.find('pre').each -> utils.setupCopyPre $ @
-
-        @
 
     gatherContext: ->
         context =

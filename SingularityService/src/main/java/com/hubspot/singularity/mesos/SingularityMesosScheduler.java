@@ -183,21 +183,25 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {    
     final String taskId = status.getTaskId().getValue();
+    
     LOG.debug("Got a status update for task: {}, status - {}", taskId, status);
-    
-    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
-    
-    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
-      healthchecker.enqueueHealthcheck(maybeActiveTask.get());
-    }
-
-    final long now = System.currentTimeMillis();
     
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
     
+    final long now = System.currentTimeMillis();
+    
+    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
+    
+    Optional<SingularityPendingDeploy> pendingDeploy = null;
+    
+    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
+      pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      
+      healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);
+    }
+    
     final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, now, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
-
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
     
     logSupport.checkDirectory(taskIdObj);
@@ -208,7 +212,9 @@ public class SingularityMesosScheduler implements Scheduler {
       
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     } else if (maybeActiveTask.isPresent()) {
-      Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      if (pendingDeploy == null) {
+        pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      }
       
       if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
         newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());

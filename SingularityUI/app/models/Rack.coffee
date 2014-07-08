@@ -1,7 +1,10 @@
-Model = require './model'
+ServerItem = require './ServerItem'
 
-class Rack extends Model
 
-    url: => "#{ config.apiRoot }/racks/rack/#{ @get('id') }/#{ @get('rackType') }"
+class Rack extends ServerItem
+
+    type: 'rack'
+
+    url: => "#{ config.apiRoot }/racks/rack/#{ @get('id') }"
 
 module.exports = Rack

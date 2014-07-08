@@ -119,13 +119,13 @@ class Utils
             else
                 $emptyMessage.find('p').html message
 
-    @humanTime: (date, future = false) ->
+    @humanTime: (date, comparison = undefined, future = false) ->
         return '' unless date?
-        now = moment()
+        now = if not comparison? then moment() else moment(comparison)
         time = moment(date)
         wasToday = time.date() is now.date() and Math.abs(time.diff(now)) < 86400000
         wasJustNow = Math.abs(time.diff(now)) < 120000
-        """#{ if future then time.from() else time.fromNow() } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
+        """#{ if future then time.from() else time.from(now) } #{ if wasJustNow then '' else time.format('(' + (if wasToday then '' else 'l ') + 'h:mma)') }"""
 
     @humanTimeShort: (date) ->
         return '' unless date?
@@ -199,5 +199,22 @@ class Utils
                 copiedTimeout = setTimeout ->
                     $pre.removeClass 'copied'
                 , 600
+
+    @fixTableColumns: ($table) =>
+        $headings = $table.find "th"
+        if $headings.length and $table.css('table-layout') isnt 'fixed'
+            # Reset any previous widths
+            $table.css "table-layout", "auto"
+            $headings.css "width", "auto"
+
+            totalWidth = $table.width()
+            for $heading in $headings
+                $heading = $ $heading
+                percentage = $heading.width() / totalWidth * 100
+                # Set a %-width to each table heading based on current values
+                $heading.css "width", "#{ percentage }%"
+
+            # Set the table layout to be fixed based on these new widths
+            $table.css "table-layout", "fixed"
 
 module.exports = Utils

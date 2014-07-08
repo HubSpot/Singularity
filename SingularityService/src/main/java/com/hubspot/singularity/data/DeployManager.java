@@ -221,7 +221,7 @@ public class DeployManager extends CuratorAsyncManager {
       return Optional.absent();
     }
     
-    Optional<SingularityDeployResult> deployState = getDeployState(requestId, deployId);
+    Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
     
     if (!loadEntireHistory) {
       return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics >absent()));
@@ -389,7 +389,7 @@ public class DeployManager extends CuratorAsyncManager {
     return save(getDeployResultPath(deploy.getRequestId(), deploy.getDeployId()), Optional.of(deployStateTranscoder.toBytes(result)));
   }
   
-  public Optional<SingularityDeployResult> getDeployState(String requestId, String deployId) {
+  public Optional<SingularityDeployResult> getDeployResult(String requestId, String deployId) {
     return getData(getDeployResultPath(requestId, deployId), deployStateTranscoder);
   }
 

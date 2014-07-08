@@ -28,6 +28,8 @@ class TasksActive extends Tasks
             task.requestId = task.taskId.requestId
             task.name = task.requestId
             task.resources = @parseResources task
+            task.cpus = task.resources.cpus
+            task.memoryMb = task.resources.memoryMb
             task.memoryHuman = if task.resources?.memoryMb? then "#{ task.resources.memoryMb }Mb" else ''
             task.host = task.offer.hostname?.split('.')[0]
             task.startedAt = task.taskId.startedAt

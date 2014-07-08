@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 
 public class SingularitySlave extends SingularityMachineAbstraction {
 
@@ -19,9 +20,17 @@ public class SingularitySlave extends SingularityMachineAbstraction {
     }
   }
   
+  public SingularitySlave(String slaveId, String host, String rackId) {
+    super(slaveId);
+    this.host = host;
+    this.rackId = rackId;
+  }
+ 
   @JsonCreator
-  public SingularitySlave(@JsonProperty("slaveId") String slaveId, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId, @JsonProperty("state") SingularityMachineState state) {
-    super(slaveId, state);
+  public SingularitySlave(@JsonProperty("slaveId") String slaveId, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId, @JsonProperty("state") SingularityMachineState state, 
+      @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("decomissioningBy") Optional<String> decomissioningBy, @JsonProperty("decomissioningAt") Optional<Long> decomissioningAt, 
+      @JsonProperty("decomissionedAt") Optional<Long> decomissionedAt, @JsonProperty("deadAt") Optional<Long> deadAt) {
+    super(slaveId, state, firstSeenAt, decomissioningBy, decomissioningAt, decomissionedAt, deadAt);
     this.host = host;
     this.rackId = rackId;
   }
@@ -36,7 +45,8 @@ public class SingularitySlave extends SingularityMachineAbstraction {
 
   @Override
   public String toString() {
-    return "SingularitySlave [slaveId=" + getId() + ", host=" + host + ", rackId=" + rackId + ", state=" + getState() + "]";
+    return "SingularitySlave [host=" + host + ", rackId=" + rackId + ", getDecomissioningBy()=" + getDecomissioningBy() + ", getDecomissioningAt()=" + getDecomissioningAt() + ", getId()=" + getId() + ", getDeadAt()=" + getDeadAt()
+        + ", getDecomissionedAt()=" + getDecomissionedAt() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getState()=" + getState() + "]";
   }
   
 }

@@ -202,7 +202,7 @@ public class SingularityDeployChecker {
   private final long getAllowedMillis(SingularityDeploy deploy) {
     long seconds = deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
     
-    if (deploy.getHealthcheckUri().isPresent()) {
+    if (deploy.getHealthcheckUri().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {
       seconds += deploy.getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()) + deploy.getHealthcheckTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
     }
     
@@ -357,7 +357,7 @@ public class SingularityDeployChecker {
       return checkOverdue(deploy, isDeployOverdue);
     }
     
-    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks);
+    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks, true);
     
     switch (deployHealth) {
     case WAITING:

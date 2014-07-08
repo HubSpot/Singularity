@@ -103,19 +103,15 @@ class Router extends Backbone.Router
         if requestsSubFilter is 'running'
             requestsSubFilter = 'daemon' # Front end URL migration :P
 
-        app.views.requests = new RequestsView { requestsFilter, requestsSubFilter, searchFilter }
-        app.views.current = app.views.requests
-        app.show app.views.requests.render()
+        app.views.current = new RequestsView {requestsFilter, requestsSubFilter, searchFilter}
+        app.views.current.render()
+        app.show app.views.current
 
     request: (requestId) ->
-        app.views.requestViews = {} if not app.views.requestViews
-        if not app.views.requestViews[requestId]
-            app.views.requestViews[requestId] = new RequestView requestId: requestId
-            app.views.current = app.views.requestViews[requestId]
-            app.show app.views.requestViews[requestId].render().refresh()
-        else
-            app.views.current = app.views.requestViews[requestId]
-            app.show app.views.requestViews[requestId].refresh()
+        app.views.current = new RequestView requestId: requestId
+        app.views.current.refresh()
+        app.views.current.render()
+        app.show app.views.current
 
     requestHistoricalTasks: (requestId) ->
         app.views.requestHistoricalTasksViews = {} if not app.views.requestHistoricalTasksViews
@@ -148,10 +144,10 @@ class Router extends Backbone.Router
             app.show app.views.requestHistoryViews[requestId].refresh()
 
     tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
-        if not app.views.tasks?
-            app.views.tasks = new TasksView { tasksFilter, searchFilter }
-        app.views.current = app.views.tasks
-        app.show app.views.tasks.render(tasksFilter, searchFilter).refresh()
+        app.views.current = new TasksView {tasksFilter, searchFilter}
+
+        app.views.current.render()
+        app.show app.views.current
 
     task: (taskId) ->
         app.views.taskViews = {} if not app.views.taskViews

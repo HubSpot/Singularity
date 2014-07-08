@@ -35,6 +35,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
   private final Optional<Long> healthcheckTimeoutSeconds;
+  private final Optional<Boolean> skipHealthchecksOnDeploy;
   
   private final Optional<Long> deployHealthTimeoutSeconds;
   
@@ -62,7 +63,7 @@ public class SingularityDeploy extends SingularityJsonObject {
       @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
       @JsonProperty("serviceBasePath") Optional<String> serviceBasePath, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
-      @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions) {
+      @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions, @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy) {
     this.requestId = requestId;
     
     this.command = command;
@@ -82,6 +83,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
+    this.skipHealthchecksOnDeploy = skipHealthchecksOnDeploy;
     
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
     
@@ -102,6 +104,7 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setHealthcheckUri(healthcheckUri)
         .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
         .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
+        .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
         
         .setMetadata(metadata.isPresent() ? Optional.<Map<String, String>> of(Maps.newHashMap(metadata.get())) : metadata)
         .setVersion(version)
@@ -191,6 +194,10 @@ public class SingularityDeploy extends SingularityJsonObject {
     return loadBalancerOptions;
   }
 
+  public Optional<Boolean> getSkipHealthchecksOnDeploy() {
+    return skipHealthchecksOnDeploy;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy [" +
@@ -205,6 +212,7 @@ public class SingularityDeploy extends SingularityJsonObject {
         ", command=" + command +
         ", env=" + env +
         ", uris=" + uris +
+        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
         ", executorData=" + executorData +
         ", healthcheckUri=" + healthcheckUri +
         ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +

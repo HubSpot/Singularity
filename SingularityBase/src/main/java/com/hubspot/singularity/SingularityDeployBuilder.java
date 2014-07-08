@@ -29,6 +29,7 @@ public class SingularityDeployBuilder {
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
   private Optional<Long> healthcheckTimeoutSeconds;
+  private Optional<Boolean> skipHealthchecksOnDeploy;
   
   private Optional<Long> deployHealthTimeoutSeconds;
   
@@ -54,6 +55,7 @@ public class SingularityDeployBuilder {
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
+    this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
     this.considerHealthyAfterRunningForSeconds = Optional.absent();
     this.serviceBasePath = Optional.absent();
@@ -63,7 +65,7 @@ public class SingularityDeployBuilder {
   
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, 
-        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions);
+        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
   }
 
   public String getRequestId() {
@@ -241,6 +243,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Boolean> getSkipHealthchecksOnDeploy() {
+    return skipHealthchecksOnDeploy;
+  }
+
+  public SingularityDeployBuilder setSkipHealthchecksOnDeploy(Optional<Boolean> skipHealthchecksOnDeploy) {
+    this.skipHealthchecksOnDeploy = skipHealthchecksOnDeploy;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder [" +
@@ -260,6 +271,7 @@ public class SingularityDeployBuilder {
         ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
         ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
         ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy + 
         ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
         ", serviceBasePath=" + serviceBasePath +
         ", loadBalancerGroups=" + loadBalancerGroups +

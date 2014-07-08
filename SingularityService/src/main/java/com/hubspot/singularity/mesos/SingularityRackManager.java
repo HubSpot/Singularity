@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
-import com.hubspot.singularity.SingularityMachineAbstraction.SingularityMachineState;
+import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskId;
@@ -174,11 +174,11 @@ public class SingularityRackManager {
       String rackId = getSafeString(maybeRackId.or(defaultRackId));
       String host = getHost(slave.getHostname());
       
-      if (checkSlave(slaveId, host, rackId) == SaveResult.NEW) {
+      if (checkSlave(slaveId, host, rackId).saveResult == SaveResult.NEW) {
         slaves++;
       }
       
-      if (checkRack(rackId) == SaveResult.NEW) {
+      if (checkRack(rackId).saveResult == SaveResult.NEW) {
         racks++;
       }
     }
@@ -200,44 +200,66 @@ public class SingularityRackManager {
     return string.replace("-", "_");
   }
   
-  private SaveResult checkRack(String rackId) {
+  private SaveResultHolder checkRack(String rackId) {
     if (isRackActive(rackId)) {
-      return SaveResult.ALREADY_ACTIVE;
+      return ALREADY_ACTIVE_HOLDER;
     }
     
     if (isRackDecomissioning(rackId)) {
-      return SaveResult.DECOMISSIONING;
+      return DECOMISSIONING_HOLDER;
     }
     
     if (isRackDead(rackId)) {
       rackManager.removeDead(rackId);
     }
     
-    rackManager.save(new SingularityRack(rackId, SingularityMachineState.ACTIVE));
+    SingularityRack newRack = new SingularityRack(rackId);
     
-    return SaveResult.NEW;
+    rackManager.save(newRack);
+    
+    return new SaveResultHolder(Optional.of((SingularityMachineAbstraction) newRack), SaveResult.NEW);
   }
+  
+  private static class SaveResultHolder {
+    private final Optional<SingularityMachineAbstraction> newObject;
+    private final SaveResult saveResult;
     
+    public SaveResultHolder(SaveResult saveResult) {
+      this(Optional.<SingularityMachineAbstraction> absent(), saveResult);
+    }
+    
+    public SaveResultHolder(Optional<SingularityMachineAbstraction> newObject, SaveResult saveResult) {
+      this.newObject = newObject;
+      this.saveResult = saveResult;
+    }
+    
+  }
+  
+  private static final SaveResultHolder DECOMISSIONING_HOLDER = new SaveResultHolder(SaveResult.DECOMISSIONING);
+  private static final SaveResultHolder ALREADY_ACTIVE_HOLDER = new SaveResultHolder(SaveResult.ALREADY_ACTIVE);
+  
   private enum SaveResult {
     NEW, DECOMISSIONING, ALREADY_ACTIVE;
   }
   
-  private SaveResult checkSlave(String slaveId, String host, String rackId) {
+  private SaveResultHolder checkSlave(String slaveId, String host, String rackId) {
     if (isSlaveActive(slaveId)) {
-      return SaveResult.ALREADY_ACTIVE;
+      return ALREADY_ACTIVE_HOLDER;
     }
     
     if (isSlaveDecomissioning(slaveId)) {
-      return SaveResult.DECOMISSIONING;
+      return DECOMISSIONING_HOLDER;
     }
     
     if (isSlaveDead(slaveId)) {
       slaveManager.removeDead(slaveId);
     } 
       
-    slaveManager.save(new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE));
+    SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId);
     
-    return SaveResult.NEW;
+    slaveManager.save(newSlave);
+    
+    return new SaveResultHolder(Optional.of((SingularityMachineAbstraction) newSlave), SaveResult.NEW);
   }
   
   private int getNumRacks() {
@@ -273,16 +295,16 @@ public class SingularityRackManager {
     final String rackId = getRackId(offer);
     final String host = getSlaveHost(offer);
     
-    SaveResult slaveSave = checkSlave(slaveId, host, rackId);
+    SaveResultHolder slaveHolder = checkSlave(slaveId, host, rackId);
     
-    if (slaveSave == SaveResult.NEW) {
-      LOG.info("Offer revealed a new slave {}", new SingularitySlave(slaveId, host, rackId, SingularityMachineState.ACTIVE));
+    if (slaveHolder.saveResult == SaveResult.NEW) {
+      LOG.info("Offer revealed a new slave {}", slaveHolder.newObject.get());
     }
     
-    SaveResult rackSave = checkRack(rackId);
+    SaveResultHolder rackHolder = checkRack(rackId);
     
-    if (rackSave == SaveResult.NEW) {
-      LOG.info("Offer revealed a new rack {}", new SingularityRack(rackId, SingularityMachineState.ACTIVE));
+    if (rackHolder.saveResult == SaveResult.NEW) {
+      LOG.info("Offer revealed a new rack {}", rackHolder.newObject.get());
     }
   }
 

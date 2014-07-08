@@ -53,6 +53,7 @@ public class SingularityScheduler {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
   
   private final SingularityConfiguration configuration;
+  private final SingularityCooldown cooldown;
   
   private final TaskManager taskManager;
   private final RequestManager requestManager;
@@ -65,7 +66,8 @@ public class SingularityScheduler {
   private final SingularityMailer mailer;
   
   @Inject
-  public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
+  public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager, 
+      TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -74,6 +76,7 @@ public class SingularityScheduler {
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.mailer = mailer;
+    this.cooldown = cooldown;
   }
   
   private void checkTaskForDecomissionCleanup(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject) {
@@ -482,7 +485,7 @@ public class SingularityScheduler {
       return failedTooManyTimes;
     }
     
-    if (hasCooldownExpired(deployStatistics)) {
+    if (cooldown.hasCooldownExpired(deployStatistics)) {
       return false;
     }
     
@@ -549,7 +552,7 @@ public class SingularityScheduler {
     }
         
     if (state == RequestState.SYSTEM_COOLDOWN) {
-      if (hasCooldownExpired(deployStatistics)) {
+      if (cooldown.hasCooldownExpired(deployStatistics)) {
         requestManager.saveRequest(request);
       } else if (pendingType != PendingType.NEW_DEPLOY) {
         final long prevNextRunAt = nextRunAt;
@@ -560,24 +563,5 @@ public class SingularityScheduler {
     
     return nextRunAt;
   }
-  
-  private boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics) {
-    if (configuration.getCooldownExpiresAfterMinutes() < 1 || !deployStatistics.getLastFinishAt().isPresent()) {
-      return false;
-    }
-    
-    final long cooldownExpiresMillis = TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes());
-    
-    final long lastFinishAt = deployStatistics.getLastFinishAt().get().longValue();
-    final long timeSinceLastFinish = System.currentTimeMillis() - lastFinishAt;
-    
-    final boolean hasCooldownExpired = timeSinceLastFinish > cooldownExpiresMillis;
-    
-    if (hasCooldownExpired) {
-      LOG.trace("Request {} cooldown has expired or is not valid because the last task finished {} ago (cooldowns expire after {})", deployStatistics.getRequestId(), JavaUtils.durationFromMillis(timeSinceLastFinish), JavaUtils.durationFromMillis(cooldownExpiresMillis));
-    }
-    
-    return hasCooldownExpired;
-  }
-    
+      
 }

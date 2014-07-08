@@ -5,7 +5,7 @@
         {{#ifEqual requestsSubFilter "daemon-scheduled"}} class="active" {{/ifEqual}}
         {{#ifEqual requestsSubFilter "all"}}              class="active" {{/ifEqual}}
     >
-        <a href="{{#appRoot}}{{/appRoot}}/requests"
+        <a
             {{#ifEqual requestsSubFilter "on-demand"}}           data-requests-active-filter="daemon-on-demand"    {{else}}
             {{#ifEqual requestsSubFilter "scheduled"}}           data-requests-active-filter="daemon-scheduled"    {{else}}
             {{#ifEqual requestsSubFilter "on-demand-scheduled"}} data-requests-active-filter="all"                 {{else}}
@@ -23,7 +23,7 @@
         {{#ifEqual requestsSubFilter "on-demand-scheduled"}} class="active" {{/ifEqual}}
         {{#ifEqual requestsSubFilter "all"}}                 class="active" {{/ifEqual}}
     >
-        <a href="{{#appRoot}}{{/appRoot}}/requests/active/on-demand"
+        <a
             {{#ifEqual requestsSubFilter "daemon"}}              data-requests-active-filter="daemon-on-demand"    {{else}}
             {{#ifEqual requestsSubFilter "scheduled"}}           data-requests-active-filter="on-demand-scheduled" {{else}}
             {{#ifEqual requestsSubFilter "daemon-scheduled"}}    data-requests-active-filter="all"                 {{else}}
@@ -41,7 +41,7 @@
         {{#ifEqual requestsSubFilter "on-demand-scheduled"}} class="active" {{/ifEqual}}
         {{#ifEqual requestsSubFilter "all"}}                 class="active" {{/ifEqual}}
     >
-        <a href="{{#appRoot}}{{/appRoot}}/requests/active/scheduled"
+        <a
             {{#ifEqual requestsSubFilter "daemon"}}              data-requests-active-filter="daemon-scheduled"     {{else}}
             {{#ifEqual requestsSubFilter "on-demand"}}           data-requests-active-filter="on-demand-scheduled" {{else}}
             {{#ifEqual requestsSubFilter "daemon-on-demand"}}    data-requests-active-filter="all"                  {{else}}
