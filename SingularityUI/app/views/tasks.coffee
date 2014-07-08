@@ -59,7 +59,8 @@ class TasksView extends View
         # Only show tasks that match the search query
         if @searchFilter
             tasks = _.filter tasks, (request) =>
-                request.name.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
+                searchField = "#{ request.name }#{ request.host }"
+                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
@@ -137,7 +138,7 @@ class TasksView extends View
             @sortAscending = not @sortAscending
         else
             # timestamp should be DESC by default
-            @sortAscending = if newSortAttribute is "timestamp" then false else true
+            @sortAscending = if newSortAttribute is "startedAt" then false else true
 
         @sortAttribute = newSortAttribute
 
