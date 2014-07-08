@@ -47,6 +47,7 @@ import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.JadeHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -54,6 +55,9 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+
+import net.kencochrane.raven.Raven;
+import net.kencochrane.raven.RavenFactory;
 
 public class SingularityServiceModule extends AbstractModule {
   
@@ -82,6 +86,7 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityLogSupport.class).in(Scopes.SINGLETON);
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
+    bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
   }
   
@@ -278,4 +283,13 @@ public class SingularityServiceModule extends AbstractModule {
     return getJadeTemplate("task_not_running_warning.jade");
   }
 
+  @Provides
+  @Singleton
+  public Optional<Raven> providesRavenIfConfigured(SingularityConfiguration configuration) {
+    if (configuration.getSentryConfiguration().isPresent()) {
+      return Optional.of(RavenFactory.ravenInstance(configuration.getSentryConfiguration().get().getDsn()));
+    } else {
+      return Optional.absent();
+    }
+  }
 }

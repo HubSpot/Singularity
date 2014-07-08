@@ -14,6 +14,7 @@ import javax.mail.Address;
 import javax.mail.Message.RecipientType;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -45,6 +46,7 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.Jade4J;
@@ -73,13 +75,15 @@ public class SingularityMailer implements SingularityCloseable {
 
   private final Optional<String> uiHostnameAndPath;
 
+  private final SingularityExceptionNotifier exceptionNotifier;
+
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
 
   @Inject
   public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient, 
       ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate, 
-      @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate) {
+      @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate, SingularityExceptionNotifier exceptionNotifier) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
     this.jadeHelper = jadeHelper;
@@ -102,6 +106,8 @@ public class SingularityMailer implements SingularityCloseable {
     this.taskFailedTemplate = taskFailedTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.taskNotRunningWarningTemplate = taskNotRunningWarningTemplate;
+
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   @Override
@@ -157,7 +163,7 @@ public class SingularityMailer implements SingularityCloseable {
     try {
       logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
-      LOG.error(String.format("Sanboxmanager failed to read %s/%s on slave %s", directory, filename, slaveHostname),  e);
+      LOG.error(String.format("Sandboxmanager failed to read %s/%s on slave %s", directory, filename, slaveHostname),  e);
       return Optional.absent();
     }
 
@@ -384,6 +390,7 @@ public class SingularityMailer implements SingularityCloseable {
       Transport.send(message);
     } catch (Throwable t) {
       LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject)), t);
+      exceptionNotifier.notify(t);
     }
   }
 
@@ -393,7 +400,7 @@ public class SingularityMailer implements SingularityCloseable {
     for (String to : toList) {
       try {
         addresses.add(new InternetAddress(to));
-      } catch (Throwable t) {
+      } catch (AddressException t) {
         LOG.warn(String.format("Invalid address %s - ignoring", to), t);
       }
     }

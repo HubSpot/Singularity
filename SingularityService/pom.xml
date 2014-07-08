@@ -178,19 +178,7 @@
 
     <dependency>
       <groupId>net.kencochrane.raven</groupId>
-      <artifactId>raven-logback</artifactId>
-      <version>${sentry.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>net.kencochrane.raven</groupId>
-      <artifactId>raven-getsentry</artifactId>
+      <artifactId>raven</artifactId>
       <version>${sentry.version}</version>
     </dependency>
 

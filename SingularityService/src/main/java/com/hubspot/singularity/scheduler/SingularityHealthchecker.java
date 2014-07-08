@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
@@ -42,15 +43,18 @@ public class SingularityHealthchecker implements SingularityCloseable {
   
   private final ScheduledExecutorService executorService;
   private final SingularityCloser closer;
+
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
     this.abort = abort;
     this.closer = closer;
+    this.exceptionNotifier = exceptionNotifier;
     
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
     
@@ -117,6 +121,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
+          exceptionNotifier.notify(t);
         }
       }
       
@@ -172,7 +177,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
   
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(configuration, this, newTaskChecker, taskManager, abort, task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, abort, task);
     final Optional<String> uri = getHealthcheckUri(task);
     
     if (!uri.isPresent()) {
@@ -195,7 +200,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      
+      exceptionNotifier.notify(t);
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }

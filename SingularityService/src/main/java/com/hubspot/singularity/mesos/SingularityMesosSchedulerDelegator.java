@@ -26,10 +26,13 @@ import com.hubspot.singularity.data.history.SingularityHistoryPersister;
 import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
 import com.hubspot.singularity.scheduler.SingularityCooldownPoller;
 import com.hubspot.singularity.scheduler.SingularityDeployPoller;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosSchedulerDelegator.class);
+
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   private final SingularityMesosScheduler scheduler;
   private final SingularityStartup startup;
@@ -54,8 +57,10 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private MasterInfo master;
   
   @Inject
-  public SingularityMesosSchedulerDelegator(SingularityMesosScheduler scheduler, SingularityHistoryPersister historyPersister, SingularityStartup startup, SingularityAbort abort, 
+  public SingularityMesosSchedulerDelegator(SingularityExceptionNotifier exceptionNotifier, SingularityMesosScheduler scheduler, SingularityHistoryPersister historyPersister, SingularityStartup startup, SingularityAbort abort,
       SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller, SingularityCooldownPoller cooldownPoller) {
+    this.exceptionNotifier = exceptionNotifier;
+
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
@@ -105,6 +110,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
+
+    exceptionNotifier.notify(t);
 
     abort.abort();
   }

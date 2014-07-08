@@ -14,11 +14,13 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCooldownPoller {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityCooldownPoller.class);
 
+  private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityCooldownChecker checker;
   private final SingularityConfiguration configuration;
   private final ScheduledExecutorService executorService;
@@ -26,7 +28,8 @@ public class SingularityCooldownPoller {
   private final SingularityCloser closer;
   
   @Inject
-  public SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityCooldownPoller(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityCooldownChecker checker, SingularityAbort abort, SingularityCloser closer) {
+    this.exceptionNotifier = exceptionNotifier;
     this.checker = checker;
     this.abort = abort;
     this.configuration = configuration;
@@ -51,6 +54,7 @@ public class SingularityCooldownPoller {
           
         } catch (Throwable t) {
           LOG.error("Caught an exception while checking cooldown queue -- aborting", t);
+          exceptionNotifier.notify(t);
           abort.abort();
         } finally {
           mesosScheduler.release();

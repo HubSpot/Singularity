@@ -32,6 +32,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityNewTaskChecker implements SingularityCloseable {
   
@@ -46,13 +47,15 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   private final Map<String, Future<?>> taskIdToCheck;
   
   private final ScheduledExecutorService executorService;
+
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   // only tasks we need to check for staleness | load balancer state, etc. is tasks that are not part of a deploy. ie, new replacement tasks.
   // since we are making changes to these tasks, either killing them or blessing them, we don't have to do it actually as part of alock.
   // b/c we will use q to kill them. we sould assume everythign in here is safe to be in here.
   
   @Inject
-  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityCloser closer) {
+  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lbClient = lbClient;
@@ -62,6 +65,8 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     this.killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
     
     this.executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
+
+    this.exceptionNotifier = exceptionNotifier;
   }
   
   @Override
@@ -152,6 +157,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
           checkTask(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in task check for task {}", task, t);
+          exceptionNotifier.notify(t);
         }
       }
     };

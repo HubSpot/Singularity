@@ -17,6 +17,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Scopes;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCloser {
 
@@ -24,11 +25,13 @@ public class SingularityCloser {
 
   private final Injector injector;
   private final long waitSeconds;
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   @Inject
-  public SingularityCloser(Injector injector, SingularityConfiguration configuration) {
+  public SingularityCloser(Injector injector, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
     this.injector = injector;
     this.waitSeconds = configuration.getCloseWaitSeconds();
+    this.exceptionNotifier = exceptionNotifier;
   }
   
   public void closeAllCloseables() {
@@ -52,6 +55,7 @@ public class SingularityCloser {
       executorService.shutdownNow();
     } catch (Throwable t) {
       LOG.warn(String.format("While shutting down %s executor service", name), t);
+      exceptionNotifier.notify(t);
     }
   }
   
@@ -70,6 +74,7 @@ public class SingularityCloser {
           } catch (Throwable t) {
             String msg = String.format("Error closing %s", close.getClass().getName());
             LOG.error(msg, t);
+            exceptionNotifier.notify(t);
           }
         }
       });
