@@ -108,14 +108,10 @@ class Router extends Backbone.Router
         app.show app.views.current
 
     request: (requestId) ->
-        app.views.requestViews = {} if not app.views.requestViews
-        if not app.views.requestViews[requestId]
-            app.views.requestViews[requestId] = new RequestView requestId: requestId
-            app.views.current = app.views.requestViews[requestId]
-            app.show app.views.requestViews[requestId].render().refresh()
-        else
-            app.views.current = app.views.requestViews[requestId]
-            app.show app.views.requestViews[requestId].refresh()
+        app.views.current = new RequestView requestId: requestId
+        app.views.current.refresh()
+        app.views.current.render()
+        app.show app.views.current
 
     requestHistoricalTasks: (requestId) ->
         app.views.requestHistoricalTasksViews = {} if not app.views.requestHistoricalTasksViews
