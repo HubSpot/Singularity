@@ -72,14 +72,13 @@ class Application
 
             if jqxhr.status is 502
                 Messenger().post "<p>A request failed because Singularity is deploying. Things should resolve in a few seconds so just hang tight...</p>"
-                return
-
-            if jqxhr.statusText is 'timeout'
+            else if jqxhr.statusText is 'timeout'
                 Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
-                return
-
-            vex.dialog.alert "<p>A <code>#{ jqxhr.statusText }</code> error occurred when trying to access:</p><pre>#{ url }</pre><p>The request had status code <code>#{ jqxhr.status }</code>.</p><p>Here's the full <code>jqxhr</code> object:</p><pre>#{ utils.htmlEncode utils.stringJSON jqxhr }</pre>"
-
+            else
+                console.error "AJAX Error response"
+                console.error jqxhr
+                Messenger().post "<p>An error occurred when trying to access:</p><pre>#{ url }</pre><p>Check JS console for response.</p>"
+                
     show: (view) ->
         if @page.children.length
             @page.replaceChild view.el, @page.children[0]
