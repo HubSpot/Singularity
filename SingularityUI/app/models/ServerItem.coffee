@@ -10,11 +10,18 @@ class ServerItem extends Model
     decomissionTemplate: require '../views/templates/vex/serverDecomission'
 
     parse: (item) =>
-        if item.firstSeenAt
-            if not item.decomissioningAt?
-                item.uptimeHuman = utils.humanTime(item.firstSeenAt).replace ' ago', ''
+        if item.firstSeenAt?
+            if item.decomissioningAt?
+                item.uptime = item.decomissioningAt - item.firstSeenAt
+                item.uptimeHuman = utils.humanTime(item.firstSeenAt, item.decomissioningAt)
+            else if item.deadAt?
+                item.uptime = item.deadAt - item.firstSeenAt
+                item.uptimeHuman = utils.humanTime(item.firstSeenAt, item.deadAt)
             else
-                item.uptimeHuman = utils.humanTime(item.firstSeenAt, item.decomissioningAt).replace ' ago', ''
+                item.uptime = moment() - item.firstSeenAt
+                item.uptimeHuman = utils.humanTime(item.firstSeenAt)
+
+            item.uptimeHuman = item.uptimeHuman?.replace(' ago', '')
 
         if item.decomissioningAt?
             item.decomissioningAtHuman = utils.humanTime item.decomissioningAt

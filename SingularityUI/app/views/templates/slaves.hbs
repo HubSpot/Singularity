@@ -27,7 +27,7 @@
                                 </td>
                                 <td>{{ rackId }}</td>
                                 <td>{{ host }}</td>
-                                <td data-value="{{ firstSeenAt }}">{{ uptimeHuman }}</td>
+                                <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
                                 <td class="actions-column"><a data-slave-id="{{ id }}" data-action="decommission">Decommission</a></td>
                             </tr>
                         {{/eachWithFn}}
@@ -58,6 +58,7 @@
                             <th>Rack</th>
                             <th>Host</th>
                             <th>Died</th>
+                            <th>Uptime</th>
                             <th data-sortable="false"></th>
                         </tr>
                     </thead>
@@ -68,6 +69,7 @@
                                 <td>{{ rackId }}</td>
                                 <td>{{ host }}</td>
                                 <td data-value="{{ deadAt }}">{{ deadAtHuman }}</td>
+                                <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
                                 <td class="actions-column"><a data-slave-id="{{ id }}" data-action="remove" data-state="{{ state }}">Remove</a>
                             </tr>
                         {{/eachWithFn}}
@@ -112,8 +114,8 @@
                                 <td>{{ host }}</td>
                                 <td>{{ state }}</td>
                                 <td>{{ decomissioningBy }}</td>
-                                <td>{{ decomissioningAtHuman }}</td>
-                                <td>{{ uptimeHuman }}</td>
+                                <td data-value="{{ decomissioningAt }}">{{ decomissioningAtHuman }}</td>
+                                <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
                                 <td class="actions-column"><a data-slave-id="{{ id }}" data-action="remove" data-state="{{ state }}">Reactivate | Remove</a>
                             </tr>
                         {{/eachWithFn}}

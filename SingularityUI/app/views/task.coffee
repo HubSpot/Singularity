@@ -68,7 +68,8 @@ class TaskView extends View
                 )
             @sandboxTries += 1
 
-        @taskS3Logs.fetch()
+        @taskS3Logs.fetch().error =>
+            console.log "wot"
 
         deferred
 
