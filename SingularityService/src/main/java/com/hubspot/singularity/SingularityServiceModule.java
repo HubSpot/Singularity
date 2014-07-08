@@ -47,6 +47,7 @@ import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.JadeHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -85,6 +86,7 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityLogSupport.class).in(Scopes.SINGLETON);
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
+    bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
   }
   

@@ -22,7 +22,7 @@ import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.sentry.ExceptionNotifier;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
@@ -43,10 +43,10 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final ScheduledExecutorService executorService;
   private final SingularityCloser closer;
 
-  private final ExceptionNotifier exceptionNotifier;
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer, ExceptionNotifier exceptionNotifier) {
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;

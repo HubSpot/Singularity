@@ -3,9 +3,9 @@ package com.hubspot.singularity.sentry;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 public class NotifyingUncaughtExceptionManager implements UncaughtExceptionHandler {
-  private final ExceptionNotifier notifier;
+  private final SingularityExceptionNotifier notifier;
 
-  public NotifyingUncaughtExceptionManager(ExceptionNotifier notifier) {
+  public NotifyingUncaughtExceptionManager(SingularityExceptionNotifier notifier) {
     this.notifier = notifier;
   }
 

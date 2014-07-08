@@ -11,13 +11,13 @@ import net.kencochrane.raven.event.Event;
 import net.kencochrane.raven.event.EventBuilder;
 import net.kencochrane.raven.event.interfaces.ExceptionInterface;
 
-public class ExceptionNotifier {
-  private final static Logger LOG = LoggerFactory.getLogger(ExceptionNotifier.class);
+public class SingularityExceptionNotifier {
+  private final static Logger LOG = LoggerFactory.getLogger(SingularityExceptionNotifier.class);
 
   private final Optional<Raven> raven;
 
   @Inject
-  public ExceptionNotifier(Optional<Raven> raven) {
+  public SingularityExceptionNotifier(Optional<Raven> raven) {
     this.raven = raven;
   }
 

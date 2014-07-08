@@ -7,13 +7,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-public class ExceptionNotifierManaged implements Managed {
+public class SingularityExceptionNotifierManaged implements Managed {
   private final static Logger LOG = LoggerFactory.getLogger(NotifyingExceptionMapper.class);
 
-  private final ExceptionNotifier exceptionNotifier;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public ExceptionNotifierManaged(ExceptionNotifier exceptionNotifier) {
+  public SingularityExceptionNotifierManaged(SingularityExceptionNotifier exceptionNotifier) {
     this.exceptionNotifier = exceptionNotifier;
   }
 

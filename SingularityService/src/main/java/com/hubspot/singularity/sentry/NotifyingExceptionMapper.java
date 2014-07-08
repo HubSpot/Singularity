@@ -4,19 +4,14 @@ import io.dropwizard.jersey.errors.LoggingExceptionMapper;
 
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 
 @javax.ws.rs.ext.Provider
 public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> {
-  private final static Logger LOG = LoggerFactory.getLogger(NotifyingExceptionMapper.class);
-
-  private final ExceptionNotifier notifier;
+  private final SingularityExceptionNotifier notifier;
 
   @Inject
-  public NotifyingExceptionMapper(ExceptionNotifier notifier) {
+  public NotifyingExceptionMapper(SingularityExceptionNotifier notifier) {
     this.notifier = notifier;
   }
 
