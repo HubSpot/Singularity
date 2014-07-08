@@ -200,4 +200,21 @@ class Utils
                     $pre.removeClass 'copied'
                 , 600
 
+    @fixTableColumns: ($table) =>
+        $headings = $table.find "th"
+        if $headings.length and $table.css('table-layout') isnt 'fixed'
+            # Reset any previous widths
+            $table.css "table-layout", "auto"
+            $headings.css "width", "auto"
+
+            totalWidth = $table.width()
+            for $heading in $headings
+                $heading = $ $heading
+                percentage = $heading.width() / totalWidth * 100
+                # Set a %-width to each table heading based on current values
+                $heading.css "width", "#{ percentage }%"
+
+            # Set the table layout to be fixed based on these new widths
+            $table.css "table-layout", "fixed"
+
 module.exports = Utils

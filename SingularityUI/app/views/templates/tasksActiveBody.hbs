@@ -1,0 +1,43 @@
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+        <table class="table" data-sortable>
+            <thead>
+                <tr>
+                    <th data-sort-attribute="name">Name</th>
+                    <th data-sort-attribute="startedAt" class="hidden-phone">Started</th>
+                    <th data-sort-attribute="host" class="visible-desktop">Host</th>
+                    <th data-sort-attribute="rack" class="visible-desktop">Rack</th>
+                    <th data-sort-attribute="cpus" class="visible-large-desktop">CPUs</th>
+                    <th data-sort-attribute="memoryMb" class="visible-large-desktop">Memory</th>
+                    <th class="hidden-phone"></th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+            {{#eachWithFn tasks}}
+                <tr data-task-id="{{ id }}" data-task-host="{{ host }}">
+                    <td><a class="ellipsize-300" title="{{ id }}" href="{{#appRoot}}{{/appRoot}}/task/{{ id }}">{{#hardBreak name}}{{/hardBreak}}</a></td>
+                    <td class="hidden-phone" data-value="{{ startedAt }}"><span title="{{ startedAt }}">{{ startedAtHuman }}</span></td>
+                    <td class="visible-desktop">{{ host }}</td>
+                    <td class="visible-large-desktop">{{ rack }}</td>
+                    <td class="visible-large-desktop">{{ resources.cpus }}</td>
+                    <td class="visible-desktop" data-value="{{ resources.memoryMb }}">{{ memoryHuman }}</td>
+                    <td class="actions-column hidden-phone">
+                        <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
+                        <a data-task-id="{{ id }}" data-action="remove">Kill task</a>
+                    </td>
+                </tr>
+            {{/eachWithFn}}
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+            </tbody>
+        </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No active tasks</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}
