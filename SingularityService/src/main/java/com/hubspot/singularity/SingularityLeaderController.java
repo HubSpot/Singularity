@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityLeaderController implements Managed, LeaderLatchListener {
   
@@ -20,15 +21,17 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final SingularityDriverManager driverManager;
   private final SingularityAbort abort;
   private final SingularityStatePoller statePoller;
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   private boolean isMaster;
   
   @Inject
-  public SingularityLeaderController(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller) {
+  public SingularityLeaderController(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller, SingularityExceptionNotifier exceptionNotifier) {
     this.driverManager = driverManager;
     this.leaderLatch = leaderLatch;
     this.abort = abort;
     this.statePoller = statePoller;
+    this.exceptionNotifier = exceptionNotifier;
     
     this.isMaster = false;
     
@@ -65,6 +68,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.updateStateNow();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
+        exceptionNotifier.notify(t);
         abort.abort();
       }
       
@@ -103,6 +107,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.updateStateNow();
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
+        exceptionNotifier.notify(t);
       } finally {
         abort.abort();
       }

@@ -13,11 +13,13 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCleanupPoller {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityCleanupPoller.class);
 
+  private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityCleaner cleaner;
   private final SingularityConfiguration configuration;
   private final ScheduledExecutorService executorService;
@@ -25,7 +27,8 @@ public class SingularityCleanupPoller {
   private final SingularityCloser closer;
   
   @Inject
-  public SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityCleanupPoller(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort, SingularityCloser closer) {
+    this.exceptionNotifier = exceptionNotifier;
     this.cleaner = cleaner;
     this.abort = abort;
     this.configuration = configuration;
@@ -48,6 +51,7 @@ public class SingularityCleanupPoller {
         
         } catch (Throwable t) {
           LOG.error("Caught an exception while draining cleanup queue -- aborting", t);
+          exceptionNotifier.notify(t);
           abort.abort();
         } finally {
           mesosScheduler.release();

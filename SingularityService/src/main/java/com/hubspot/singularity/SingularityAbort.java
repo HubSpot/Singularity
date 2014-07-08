@@ -13,6 +13,7 @@ import ch.qos.logback.classic.LoggerContext;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityAbort {
@@ -24,12 +25,13 @@ public class SingularityAbort {
   private final SingularityDriverManager driverManager;
   private final SingularityCloser closer;
   private final SingularityMailer mailer;
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   private volatile boolean aborting;
   private volatile boolean stopping;
   
   @Inject
-  public SingularityAbort(@Named(SingularityServiceModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer) {
+  public SingularityAbort(@Named(SingularityServiceModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer, SingularityExceptionNotifier exceptionNotifier) {
     this.curator = curator;
     this.leaderLatch = leaderLatch;
     this.driverManager = driverManager;
@@ -38,6 +40,8 @@ public class SingularityAbort {
   
     this.aborting = false;
     this.stopping = false;
+
+    this.exceptionNotifier = exceptionNotifier;
     
     this.curator.getConnectionStateListenable().addListener(new ConnectionStateListener() {
       
@@ -112,6 +116,7 @@ public class SingularityAbort {
       driverManager.stop();
     } catch (Throwable t) {
       LOG.warn("While stopping driver", t);
+      exceptionNotifier.notify(t);
     }
   }
   
@@ -120,6 +125,7 @@ public class SingularityAbort {
       Closeables.close(curator, false);
     } catch (Throwable t) {
       LOG.warn("While closing curator", t);
+      exceptionNotifier.notify(t);
     }
   }
 
@@ -128,6 +134,7 @@ public class SingularityAbort {
       Closeables.close(leaderLatch, false);
     } catch (Throwable t) {
       LOG.warn("While closing leader latch", t);
+      exceptionNotifier.notify(t);
     }
   }
   
@@ -144,6 +151,7 @@ public class SingularityAbort {
       Thread.sleep(5000);
     } catch (Exception e) {
       LOG.info("While sleeping for log flush", e);
+      exceptionNotifier.notify(e);
     }
   }
 

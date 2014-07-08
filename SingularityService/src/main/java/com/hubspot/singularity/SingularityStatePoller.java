@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityStatePoller implements SingularityCloseable {
 
@@ -20,15 +21,17 @@ public class SingularityStatePoller implements SingularityCloseable {
   private final long saveStateEverySeconds;
   
   private final SingularityCloser closer;
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   private ScheduledExecutorService executorService;
   private Runnable stateUpdateRunnable;
   
   @Inject
-  public SingularityStatePoller(StateManager stateManager, SingularityConfiguration configuration, SingularityCloser closer) {
+  public SingularityStatePoller(StateManager stateManager, SingularityConfiguration configuration, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
     this.stateManager = stateManager;
     this.saveStateEverySeconds = configuration.getSaveStateEverySeconds();
     this.closer = closer;
+    this.exceptionNotifier = exceptionNotifier;
   }
   
   public void start(final SingularityLeaderController managed, final SingularityAbort abort) {
@@ -48,6 +51,7 @@ public class SingularityStatePoller implements SingularityCloseable {
           stateManager.save(state);
         } catch (Throwable t) {
           LOG.error("Caught exception while saving state", t);
+          exceptionNotifier.notify(t);
           abort.abort();
         }
       }

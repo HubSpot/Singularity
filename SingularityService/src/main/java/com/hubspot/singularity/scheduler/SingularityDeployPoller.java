@@ -14,11 +14,13 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityDeployPoller {
   
   private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployPoller.class);
 
+  private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityConfiguration configuration;
   private final ScheduledExecutorService executorService;
   private final SingularityAbort abort;
@@ -26,7 +28,8 @@ public class SingularityDeployPoller {
   private final SingularityDeployChecker deployChecker;
   
   @Inject
-  public SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer) {
+  public SingularityDeployPoller(SingularityExceptionNotifier exceptionNotifier, SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer) {
+    this.exceptionNotifier = exceptionNotifier;
     this.abort = abort;
     this.deployChecker = deployChecker;
     this.configuration = configuration;
@@ -56,6 +59,7 @@ public class SingularityDeployPoller {
           }
         } catch (Throwable t) {
           LOG.error("Caught an exception while checking deploys -- aborting", t);
+          exceptionNotifier.notify(t);
           abort.abort();
         } finally {
           mesosScheduler.release();

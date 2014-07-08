@@ -177,7 +177,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
   
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(configuration, this, newTaskChecker, taskManager, abort, task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, abort, task);
     final Optional<String> uri = getHealthcheckUri(task);
     
     if (!uri.isPresent()) {
@@ -200,7 +200,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      
+      exceptionNotifier.notify(t);
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }
