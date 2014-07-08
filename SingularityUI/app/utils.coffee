@@ -139,7 +139,7 @@ class Utils
         utils.humanTime date
 
     @humanTimeSoon: (date) ->
-        utils.humanTime date, future = true
+        utils.humanTime date, undefined, true
 
     @flashRow: ($row) ->
         $row.removeClass('flash-prime flash')
