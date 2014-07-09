@@ -16,6 +16,7 @@ TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
 TasksCleaning = require 'collections/TasksCleaning'
 
+NavView = require 'views/nav'
 GlobalSearchView = require 'views/globalSearch'
 
 class Application
@@ -38,6 +39,7 @@ class Application
         @allRequestHistories = {}
 
         @setupAppCollections()
+        @setupNav()
         @setupGlobalSearchView()
 
         $('.page-loader.fixed').hide()
@@ -162,8 +164,12 @@ class Application
                     @user.set('deployUser', @user.deployUser = user)
                     @user.save()
 
+    setupNav: ->
+        @views.nav = new NavView
+        @views.nav.render()
+
     setupGlobalSearchView: ->
-        @globalSearch = new GlobalSearchView
-        @globalSearch.render()
+        @views.globalSearch = new GlobalSearchView
+        @views.globalSearch.render()
 
 module.exports = new Application
