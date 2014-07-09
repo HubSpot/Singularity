@@ -84,15 +84,6 @@ class Router extends Backbone.Router
         app.views.current = app.views.dashboard
         app.show app.views.dashboard.render()
 
-    search: ->
-        if not app.views.search?
-            app.views.search = new SearchView
-            app.views.current = app.views.search
-            app.show app.views.search.render()
-        else
-            app.views.current = app.views.search
-            app.show app.views.search
-
     status: ->
         if not app.views.status?
             app.views.status = new StatusView
