@@ -1,7 +1,6 @@
 Router = require 'lib/router'
 
 User = require 'models/User'
-State = require 'models/State'
 
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
@@ -88,8 +87,6 @@ class Application
         @show view
 
     setupAppCollections: ->
-        @state = new State
-
         resources = [{
             collection_key: 'tasksActive'
             collection: TasksActive
