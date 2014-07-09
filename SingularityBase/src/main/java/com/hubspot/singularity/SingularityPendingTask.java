@@ -10,12 +10,23 @@ public class SingularityPendingTask extends SingularityJsonObject {
   private final SingularityPendingTaskId taskId;
   private final Optional<String> maybeCmdLineArgs;
   
-  public static Predicate<SingularityPendingTask> matching(final String requestId) {
+  public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
 
       @Override
       public boolean apply(SingularityPendingTask input) {
         return input.getPendingTaskId().getRequestId().equals(requestId);
+      }
+      
+    };
+  }
+  
+  public static Predicate<SingularityPendingTask> matchingDeploy(final String deployId) {
+    return new Predicate<SingularityPendingTask>() {
+
+      @Override
+      public boolean apply(SingularityPendingTask input) {
+        return input.getPendingTaskId().getDeployId().equals(deployId);
       }
       
     };

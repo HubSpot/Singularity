@@ -199,7 +199,7 @@ public class SingularityDeployChecker {
     deployManager.deletePendingDeploy(pendingDeploy.getDeployMarker().getRequestId());
   }
 
-  private final long getAllowedMillis(SingularityDeploy deploy) {
+  private long getAllowedMillis(SingularityDeploy deploy) {
     long seconds = deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
     
     if (deploy.getHealthcheckUri().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {

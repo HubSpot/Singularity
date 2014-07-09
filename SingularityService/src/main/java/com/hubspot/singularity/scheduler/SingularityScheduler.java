@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -13,15 +14,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
@@ -153,16 +157,37 @@ public class SingularityScheduler {
     }
   }
   
+  private Collection<SingularityPendingRequest> filterPendingRequestsByDeployAndPriority(List<SingularityPendingRequest> pendingRequests) {
+    Map<SingularityDeployKey, SingularityPendingRequest> deployKeyToMostImportantPendingRequest = Maps.newHashMapWithExpectedSize(pendingRequests.size());
+    
+    for (SingularityPendingRequest pendingRequest : pendingRequests) {
+      SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+      SingularityPendingRequest existingRequest = deployKeyToMostImportantPendingRequest.get(deployKey);
+      if (existingRequest == null) {
+        deployKeyToMostImportantPendingRequest.put(deployKey, pendingRequest);
+      } else {
+        if (pendingRequest.hasPriority(existingRequest)) {
+          LOG.debug("Dropping pending request {} because {} has priority {}", existingRequest, pendingRequest);
+          deployKeyToMostImportantPendingRequest.put(deployKey, pendingRequest);
+        } else {
+          LOG.debug("Dropping pending request {} because {} has priority {}", pendingRequest, existingRequest);
+        }
+      }
+    }
+    
+    return deployKeyToMostImportantPendingRequest.values();
+  }
+    
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
     
-    final List<SingularityPendingRequest> pendingRequests = requestManager.getPendingRequests();
+    final Collection<SingularityPendingRequest> pendingRequests = filterPendingRequestsByDeployAndPriority(requestManager.getPendingRequests());
     
     if (pendingRequests.isEmpty()) {
       LOG.trace("Pending queue was empty");
       return;
     }
-
+    
     LOG.info("Pending queue had {} requests", pendingRequests.size());
     
     int totalNewScheduledTasks = 0;
@@ -273,14 +298,14 @@ public class SingularityScheduler {
     return deployMarker.isPresent() && deployMarker.get().getDeployId().equals(deployId);
   }
   
-  private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId) {
-    for (SingularityPendingTask task : Iterables.filter(scheduledTasks, SingularityPendingTask.matching(requestId))) {
+  private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId, String deployId) {
+    for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(requestId), SingularityPendingTask.matchingDeploy(deployId)))) {
       taskManager.deleteScheduledTask(task.getPendingTaskId().getId());
     }
   }
   
   private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest) {
-    deleteScheduledTasks(stateCache.getScheduledTasks(), request.getId());
+    deleteScheduledTasks(stateCache.getScheduledTasks(), request.getId(), pendingRequest.getDeployId());
     
     final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), pendingRequest.getDeployId(), stateCache.getCleaningTasks());
     
@@ -492,7 +517,7 @@ public class SingularityScheduler {
     return failedTooManyTimes;
   }
   
-  private final int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
+  private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request) {
     final int numInstances = request.getInstancesSafe();
     
     return numInstances - matchingTaskIds.size();

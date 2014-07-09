@@ -176,7 +176,7 @@ public class SingularityCleaner {
           numTasksKilled++;
         }
      
-        for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matching(requestId))) {
+        for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matchingRequest(requestId))) {
           LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
           taskManager.deleteScheduledTask(matchingTask.getPendingTaskId().getId());
           numScheduledTasksRemoved++;
@@ -253,6 +253,7 @@ public class SingularityCleaner {
     case DONE:
     case NOT_LOAD_BALANCED:
     case MISSING_TASK:
+    case LOAD_BALANCE_FAILED:
       return true;
     case WAITING:
     }
@@ -261,14 +262,18 @@ public class SingularityCleaner {
   }
   
   private enum CheckLBState {
-    NOT_LOAD_BALANCED, MISSING_TASK, WAITING, DONE;
+    NOT_LOAD_BALANCED, LOAD_BALANCE_FAILED, MISSING_TASK, WAITING, DONE;
   }
   
   private CheckLBState checkLbState(SingularityTaskId taskId) {
     Optional<SingularityLoadBalancerUpdate> lbAddUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
     
-    if (!lbAddUpdate.isPresent() || lbAddUpdate.get().getLoadBalancerState() != BaragonRequestState.SUCCESS) {
+    if (!lbAddUpdate.isPresent()) {
       return CheckLBState.NOT_LOAD_BALANCED;
+    }
+    if (lbAddUpdate.get().getLoadBalancerState() != BaragonRequestState.SUCCESS) {
+      LOG.trace("Task {} had abnormal LBState {}", taskId, lbAddUpdate.get().getLoadBalancerState());
+      return CheckLBState.LOAD_BALANCE_FAILED;
     }
     
     Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
@@ -340,6 +345,7 @@ public class SingularityCleaner {
         cleanedTasks++;
         break;
       case NOT_LOAD_BALANCED:
+      case LOAD_BALANCE_FAILED:
         ignoredTasks++;
       }
       

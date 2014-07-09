@@ -10,7 +10,18 @@ import com.google.common.base.Optional;
 public class SingularityPendingRequest extends SingularityJsonObject {
 
   public enum PendingType {
-    IMMEDIATE, STARTUP, REGULAR, UNPAUSED, RETRY, BOUNCE, ONEOFF, UPDATED_REQUEST, NEW_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, NEW_DEPLOY
+    IMMEDIATE(true), ONEOFF(true), BOUNCE(true), NEW_DEPLOY(false), UNPAUSED(false), RETRY(false), UPDATED_REQUEST(false), DECOMISSIONED_SLAVE_OR_RACK(false), TASK_DONE(false);
+  
+    private final boolean hasPriority;
+
+    private PendingType(boolean hasPriority) {
+      this.hasPriority = hasPriority;
+    }
+
+    public boolean hasPriority() {
+      return hasPriority;
+    }
+    
   }
   
   private final String requestId;
@@ -66,6 +77,18 @@ public class SingularityPendingRequest extends SingularityJsonObject {
     return pendingType;
   }
   
+  public boolean hasPriority(SingularityPendingRequest otherRequest) {
+    if (pendingType.hasPriority == otherRequest.pendingType.hasPriority) {
+      if (timestamp > otherRequest.timestamp) {
+        return true;
+      }
+    } else if (pendingType.hasPriority) {
+      return true;
+    }
+    
+    return false;
+  }
+
   @Override
   public String toString() {
     return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + ", pendingType=" + pendingType + ", cmdLineArgs=" + cmdLineArgs + "]";
