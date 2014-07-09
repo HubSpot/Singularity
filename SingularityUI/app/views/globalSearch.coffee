@@ -20,8 +20,6 @@ class GlobalSearchView extends View
             if event.keyCode is 27 # ESC
                 @hide()
 
-        @inputEvent = _.debounce @inputEvent, 200
-
     render: ->
         @setElement @template()
         $('body').append @$el
