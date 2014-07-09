@@ -155,8 +155,6 @@ class Application
             message: require('views/templates/vex/usernamePrompt')()
             value: @user.get('deployUser')
             placeholder: 'user'
-            # afterOpen: ($vexContent) ->
-            #     $vexContent.find('input[type="text"]').focus()
             callback: (user) =>
                 if _.isString(user) and user isnt ''
                     @user.set('deployUser', @user.deployUser = user)
