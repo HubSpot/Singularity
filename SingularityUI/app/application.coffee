@@ -99,11 +99,6 @@ class Application
 
         @state = new State
 
-        @collections.requestsAll = new Requests state: ''
-        @collections.requestsActive = new Requests state: 'active'
-        @collections.requestsCooldown = new Requests state: 'cooldown'
-        @collections.requestsPaused = new Requests state: 'paused'
-
         resources = [{
             collection_key: 'requestsPending'
             collection: RequestsPending
