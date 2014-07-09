@@ -12,8 +12,6 @@ TaskS3LogsTableView = require '../views/taskS3LogsTable'
 
 class TaskView extends View
 
-    killTaskTemplate: require './templates/vex/killTask'
-
     overviewTemplate: require './templates/taskOverview'
     historyTemplate:  require './templates/taskHistory'
     logsTemplate:     require './templates/taskLogs'
@@ -21,6 +19,11 @@ class TaskView extends View
     infoTemplate:     require './templates/taskInfo'
     environmentTemplate: require './templates/taskEnvironment'
     resourceUsageTemplate: require './templates/taskResourceUsage'
+
+    events: ->
+        _.extend super,
+            'click [data-action="viewObjectJSON"]': 'viewJson'
+            'click [data-action="remove"]': 'killTask'
 
     initialize: ->
         @sandboxTries = 0
@@ -125,29 +128,17 @@ class TaskView extends View
             @dom.resourceUsageSection.replaceWith @resourceUsageTemplate context, partials
             @dom.environmentSection.replaceWith @environmentTemplate context, partials
 
-        @setupEvents()
-
         @$el.find('pre').each -> utils.setupCopyPre $ @
 
         @
 
-    setupEvents: =>
-        @$el.find('[data-action="viewObjectJSON"]').unbind('click').on 'click', (e) ->
-            utils.viewJSON 'task', $(e.target).data('task-id')
+    viewJson: (event) ->
+        utils.viewJSON 'task', $(event.target).data 'task-id'
 
-        @$el.find('[data-action="remove"]').unbind('click').on 'click', (e) =>
-            taskModel = new Task id: $(e.target).data('task-id')
-
-            vex.dialog.confirm
-                buttons: [
-                    $.extend({}, vex.dialog.buttons.YES, (text: 'Kill task', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                    vex.dialog.buttons.NO
-                ]
-                message: @killTaskTemplate(taskId: taskModel.get('id'))
-                callback: (confirmed) =>
-                    return unless confirmed
-                    taskModel.destroy()
-                    setTimeout (=> @refresh()), 500
+    killTask: (event) ->
+        taskModel = new Task id: $(event.target).data 'task-id'
+        taskModel.promptKill =>
+            setTimeout (=> @refresh()), 1000
 
     saveSelectors: ->
         @dom ?= {}
