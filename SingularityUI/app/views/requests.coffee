@@ -79,7 +79,7 @@ class RequestsView extends View
         # Only show requests that match the search query
         if @searchFilter
             requests = _.filter requests, (request) =>
-                searchTarget = request.name + request.deployUser
+                searchTarget = "#{ request.name }#{ request.deployUser}"
                 searchTarget.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Only show requests that match the clicky filters
