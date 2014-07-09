@@ -21,6 +21,14 @@ GlobalSearchView = require 'views/globalSearch'
 
 class Application
 
+    views: {}
+    collections: {}
+
+    allTasks: {}
+    allRequests: {}
+    allDeploys: {}
+    allRequestHistories: {}
+
     initialize: ->
         @isMobile = touchDevice = 'ontouchstart' of document.documentElement
         @setupGlobalErrorHandling()
@@ -30,13 +38,6 @@ class Application
         @$page = $('#page')
         @page = @$page[0]
 
-        @views = {}
-        @collections = {}
-
-        @allTasks = {}
-        @allRequests = {}
-        @allDeploys = {}
-        @allRequestHistories = {}
 
         @setupAppCollections()
         @setupNav()
@@ -83,6 +84,7 @@ class Application
                 console.error jqxhr
                 Messenger().post "<p>An error occurred when trying to access:</p><pre>#{ url }</pre><p>Check JS console for response.</p>"
                 
+    # Called in Router. Shows the passed view's $el on the page
     show: (view) ->
         if @page.children.length
             @page.replaceChild view.el, @page.children[0]
@@ -150,15 +152,11 @@ class Application
 
     deployUserPrompt: (welcome) ->
         vex.dialog.prompt
-            message: """
-                <h2>Set a deploy user</h2>
-                #{ if welcome then '<p>Now you can set your deploy user (as a cookie) for a more tailored experience!</p>' else '' }
-                <p>What deploy user would you like to view Singularity as?</p>
-            """
+            message: require('views/templates/vex/usernamePrompt')()
             value: @user.get('deployUser')
             placeholder: 'user'
-            afterOpen: ($vexContent) ->
-                $vexContent.find('input[type="text"]').focus()
+            # afterOpen: ($vexContent) ->
+            #     $vexContent.find('input[type="text"]').focus()
             callback: (user) =>
                 if _.isString(user) and user isnt ''
                     @user.set('deployUser', @user.deployUser = user)
