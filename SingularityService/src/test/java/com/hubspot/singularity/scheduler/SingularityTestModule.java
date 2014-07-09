@@ -1,8 +1,8 @@
 package com.hubspot.singularity.scheduler;
 
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import net.kencochrane.raven.Raven;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.RetrySleeper;
@@ -13,6 +13,7 @@ import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -82,6 +83,12 @@ public class SingularityTestModule extends AbstractModule {
     });
     cf.start();
     return cf;
+  }
+  
+  @Provides
+  @Singleton
+  public Optional<Raven> providesNoRaven() {
+    return Optional.<Raven> absent();
   }
   
 }
