@@ -1,14 +1,15 @@
 path = require 'path'
+fs = require 'fs'
 
+handlebars = require 'handlebars-brunch/node_modules/handlebars'
+
+# Brunch settings
 exports.config =
     paths:
-
         public: path.resolve(__dirname, '../SingularityService/src/main/resources/static')
 
     files:
-
         javascripts:
-
             defaultExtension: 'coffee'
 
             joinTo:
@@ -54,3 +55,23 @@ exports.config =
 
     server:
         base: '/singularity/v2'
+
+
+    # When running SingularityUI via brunch server we need to make an index.html for it
+    # bsed on the template that's shared with SingularityService
+    # 
+    # After we compile the static files, compile index.html using some required configs
+    onCompile: =>
+        destination = path.resolve @config.paths.public, 'index.html'
+
+        templatePath = path.resolve 'app/assets/_index.mustache'
+        indexTemplate = fs.readFileSync templatePath, 'utf-8'
+
+        templateData =
+            staticRoot: "#{ @config.server.base }/static"
+            appRoot: @config.server.base
+            apiRoot: ""
+            mesosLogsPort: 5051
+
+        compiledTemplate = handlebars.compile(indexTemplate)(templateData)
+        fs.writeFileSync destination, compiledTemplate

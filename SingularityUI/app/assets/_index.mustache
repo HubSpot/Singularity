@@ -1,4 +1,3 @@
-
 <!doctype html>
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
 <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en">        <![endif]-->
@@ -8,18 +7,21 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Singularity</title>
-    <link rel="shortcut icon" href="/singularity/v2/static/images/favicon.ico" />
+    <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="/singularity/v2/static/css/app.css">
+    <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css">
     <script>
         window.config = {
-            appRoot: "/singularity/v2",
-            apiRoot: window.localStorage.singularityApiRoot,
-            mesosLogPort: 5051,
+            appRoot: "{{{appRoot}}}",
+            apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
+            mesosLogPort: {{{mesosLogsPort}}},
+            {{#mesosLogsPortHttps}}
+            mesosLogsPortHttps: {{{mesosLogsPortHttps}}}
+            {{/mesosLogsPortHttps}}
         };
     </script>
-    <script src="/singularity/v2/static/js/vendor.js"></script>
-    <script src="/singularity/v2/static/js/app.js"></script>
+    <script src="{{{staticRoot}}}/js/vendor.js"></script>
+    <script src="{{{staticRoot}}}/js/app.js"></script>
     <script>require('initialize');</script>
 </head>
 <body>
