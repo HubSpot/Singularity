@@ -2,6 +2,10 @@ View = require './view'
 
 Request = require '../models/Request'
 
+Requests = require '../collections/Requests'
+RequestsPending = require '../collections/RequestsPending'
+RequestsCleaning = require '../collections/RequestsCleaning'
+
 class RequestsView extends View
 
     templateBase:   require './templates/requestsBase'
@@ -15,6 +19,15 @@ class RequestsView extends View
         paused:   require './templates/requestsPausedBody'
         pending:  require './templates/requestsPendingBody'
         cleaning: require './templates/requestsCleaningBody'
+
+    # Used to figure out which collection to use
+    collectionMap:
+        all:      Requests
+        active:   Requests
+        cooldown: Requests
+        paused:   Requests
+        pending:  RequestsPending
+        cleaning: RequestsCleaning
 
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
@@ -44,16 +57,8 @@ class RequestsView extends View
         @bodyTemplate = @bodyTemplateMap[@requestsFilter]
 
         # Set up collection
-        collectionMap =
-            all:      app.collections.requestsAll
-            active:   app.collections.requestsActive
-            cooldown: app.collections.requestsCooldown
-            paused:   app.collections.requestsPaused
-            pending:  app.collections.requestsPending
-            cleaning: app.collections.requestsCleaning
-
         @collectionSynced = false
-        @collection = collectionMap[@requestsFilter]
+        @collection = new @collectionMap[@requestsFilter] state: @requestsFilter
         # Initial fetch
         @collection.fetch().done =>
             @collectionSynced = true

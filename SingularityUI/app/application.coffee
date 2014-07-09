@@ -3,10 +3,7 @@ Router = require 'lib/router'
 User = require 'models/User'
 State = require 'models/State'
 
-RequestsAll = require "collections/RequestsAll"
-RequestsActive = require 'collections/RequestsActive'
-RequestsCooldown = require 'collections/RequestsCooldown'
-RequestsPaused = require 'collections/RequestsPaused'
+Requests = require "collections/Requests"
 RequestsPending = require 'collections/RequestsPending'
 RequestsCleaning = require 'collections/RequestsCleaning'
 
@@ -91,29 +88,23 @@ class Application
         else
             @page.appendChild view.el
 
+    showView: (view) ->
+        view.render()
+        @views.current = view
+        @show view
+
     setupAppCollections: ->
         @collections.requestsStarred = new RequestsStarred
         @collections.requestsStarred.fetch() # Syncronous because it uses localStorage
 
         @state = new State
 
+        @collections.requestsAll = new Requests state: ''
+        @collections.requestsActive = new Requests state: 'active'
+        @collections.requestsCooldown = new Requests state: 'cooldown'
+        @collections.requestsPaused = new Requests state: 'paused'
+
         resources = [{
-            collection_key: 'requestsAll'
-            collection: RequestsAll
-            error_phrase: 'all requests'
-        },  {
-            collection_key: 'requestsActive'
-            collection: RequestsActive
-            error_phrase: 'active requests'
-        },  {
-            collection_key: 'requestsCooldown'
-            collection: RequestsCooldown
-            error_phrase: 'requests on cooldown'
-        },  {
-            collection_key: 'requestsPaused'
-            collection: RequestsPaused
-            error_phrase: 'paused requests'
-        }, {
             collection_key: 'requestsPending'
             collection: RequestsPending
             error_phrase: 'pending requests'
