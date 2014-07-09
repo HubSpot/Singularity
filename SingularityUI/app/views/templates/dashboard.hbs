@@ -6,90 +6,74 @@
     {{/if}}
 </header>
 
-{{#if deployUser}}
+{{#if collectionSynced}}
+    {{#if deployUser}}
+        <section>
+            <div class="page-header">
+                <h1>My requests</h1>
+            </div>
+            <div class="row-fluid">
+                <div class="span3">
+                    <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/all/{{ deployUser }}" data-requests-active-filter="all">
+                        <div class="well">
+                            <div class="big-number">
+                                <div class="number" data-state-attribute="requests">
+                                    {{ userRequestTotals.all }}
+                                </div>
+                                <div class="number-label">total</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="span3">
+                    <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/daemon/{{ deployUser }}" data-requests-active-filter="daemon">
+                        <div class="well">
+                            <div class="big-number">
+                                <div class="number" data-state-attribute="requests">
+                                    {{ userRequestTotals.daemon }}
+                                </div>
+                                <div class="number-label">daemon</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="span3">
+                    <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/on-demand/{{ deployUser }}" data-requests-active-filter="on-demand">
+                        <div class="well">
+                            <div class="big-number">
+                                <div class="number" data-state-attribute="requests">
+                                    {{ userRequestTotals.onDemand }}
+                                </div>
+                                <div class="number-label">on-demand</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="span3">
+                    <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/scheduled/{{ deployUser }}" data-requests-active-filter="scheduled">
+                        <div class="well">
+                            <div class="big-number">
+                                <div class="number" data-state-attribute="requests">
+                                    {{ userRequestTotals.scheduled }}
+                                </div>
+                                <div class="number-label">scheduled</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    {{/if}}
+
     <section>
         <div class="page-header">
-            <h1>Requests</h1>
-        </div>
-        <div class="row-fluid">
-            <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/all/{{ deployUser }}" data-requests-active-filter="all">
-                    <div class="well">
-                        <div class="big-number">
-                            <div class="number" data-state-attribute="requests">
-                                {{#if collectionSycned}}
-                                    {{ userRequestTotals.all }}
-                                {{else}}
-                                    &nbsp;
-                                {{/if}}
-                            </div>
-                            <div class="number-label">total</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/daemon/{{ deployUser }}" data-requests-active-filter="daemon">
-                    <div class="well">
-                        <div class="big-number">
-                            <div class="number" data-state-attribute="requests">
-                                {{#if collectionSycned}}
-                                    {{ userRequestTotals.daemon }}
-                                {{else}}
-                                    &nbsp;
-                                {{/if}}
-                            </div>
-                            <div class="number-label">daemon</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/on-demand/{{ deployUser }}" data-requests-active-filter="on-demand">
-                    <div class="well">
-                        <div class="big-number">
-                            <div class="number" data-state-attribute="requests">
-                                {{#if collectionSycned}}
-                                    {{ userRequestTotals.onDemand }}
-                                {{else}}
-                                    &nbsp;
-                                {{/if}}
-                            </div>
-                            <div class="number-label">on-demand</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="span3">
-                <a class="big-number-link" href="{{#appRoot}}{{/appRoot}}/requests/active/scheduled/{{ deployUser }}" data-requests-active-filter="scheduled">
-                    <div class="well">
-                        <div class="big-number">
-                            <div class="number" data-state-attribute="requests">
-                                {{#if collectionSycned}}
-                                    {{ userRequestTotals.scheduled }}
-                                {{else}}
-                                    &nbsp;
-                                {{/if}}
-                            </div>
-                            <div class="number-label">scheduled</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
+            <h1>Starred requests</h1>
         </div>
     </section>
-{{/if}}
 
-<section>
-    <div class="page-header">
-        <h1>Starred requests</h1>
-    </div>
-</section>
-
-{{#if collectionSycned}}
     <section>
         <div class="row-fluid">
-            {{#if requests.length}}
+            {{#if starredRequests.length}}
                 <table class="table" data-sortable>
                     <thead>
                         <tr>
@@ -101,7 +85,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#eachWithFn requests}}
+                        {{#eachWithFn starredRequests}}
                             <tr data-request-id="{{ id }}">
                                 <td><a class="star" data-request-id="{{ id }}" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
                                 <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/request/{{ id }}">{{#hardBreak id}}{{/hardBreak}}</a></span></td>
@@ -117,32 +101,6 @@
             {{/if}}
         </div>
     </section>
-
-    {{#if requestsNotFound.length}}
-        <section>
-            <div class="page-header">
-                <h1>Starred non-active requests</h1>
-            </div>
-            <div class="row-fluid">
-                <table class="table" data-sortable>
-                    <thead>
-                        <tr>
-                            <th data-sortable="false"></th>
-                            <th>Name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#eachWithFn requestsNotFound}}
-                            <tr>
-                                <td><a class="star" data-request-name="{{ name }}" data-action="unstar" data-starred="true">★</a></td>
-                                <td>{{#hardBreak name}}{{/hardBreak}}</td>
-                            </tr>
-                        {{/eachWithFn}}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    {{/if}}
 {{else}}
     <div class="page-loader centered cushy"></div>
 {{/if}}

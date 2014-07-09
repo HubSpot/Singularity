@@ -1,79 +1,72 @@
 View = require './view'
 
+Requests = require '../collections/Requests'
+RequestsStarred = require '../collections/RequestsStarred'
+
 class DashboardView extends View
 
     template: require './templates/dashboard'
 
+    events: ->
+        _.extend super,
+            'click [data-action="unstar"]': 'unstar'
+            'click [data-action="change-user"]': 'changeUser'
+
     initialize: =>
         app.user.on 'change', @render, @
 
-    render: (fromRoute) =>
+        @starredRequests = new RequestsStarred
+        @starredRequests.fetch()
+
+        @collection = new Requests state: 'all'
+        @collection.fetch().done @render
+
+    render: =>
         deployUser = app.user.get('deployUser')
 
-        if not app.collections.requestsActive.synced
-            app.collections.requestsActive.fetch().done => @render()
+        # Filter starred requests
+        starredRequests = @collection.filter (request) =>
+            @starredRequests.get(request.get 'id')?
+
+        starredRequests = _.pluck starredRequests, 'attributes'
+
+        # Count up the Requests for the clicky boxes
+        userRequests = @collection.where {deployUser}
+        userRequestTotals =
+            all: userRequests.length
+            daemon:    0
+            onDemand:  0
+            scheduled: 0
+
+        _.each userRequests, (request) =>
+            if request.get('onDemand')  then userRequestTotals.onDemand  += 1
+            if request.get('scheduled') then userRequestTotals.scheduled += 1
+            if request.get('daemon')    then userRequestTotals.daemon    += 1
 
         context =
-            collectionSycned: app.collections.requestsActive.synced
-            requests: []
-            requestsNotFound: []
             deployUser: deployUser
-
-        # Intersect active requests before rendering
-        for request in _.pluck(app.collections.requestsStarred.models, 'attributes')
-            activeRequestModels = app.collections.requestsActive.filter (r) -> r.get('name') is request.name
-            if activeRequestModels?
-                _.each activeRequestModels, (activeRequestModel) ->
-                    context.requests.push activeRequestModel.attributes
-            else
-                context.requestsNotFound.push request
-
-        userRequestTotals = {}
-        userRequests = app.collections.requestsActive.filter((r) -> r.get('deployUser') is deployUser)
-        userRequestTotals.all = userRequests.length
-        userRequestTotals.daemon = userRequests.filter((r) -> not r.get('scheduled') and not r.get('onDemand')).length
-        userRequestTotals.onDemand = userRequests.filter((r) -> r.get('onDemand')).length
-        userRequestTotals.scheduled = userRequests.filter((r) -> r.get('scheduled')).length
-
-        _.extend context, { userRequestTotals }
+            collectionSynced: @collection.synced
+            userRequestTotals: userRequestTotals or { }
+            starredRequests: starredRequests or []
 
         @$el.html @template context
 
-        @setupEvents()
         utils.setupSortableTables()
 
-        @
+    unstar: (e) =>
+        $target = $(e.target)
+        $table = $target.parents('table')
 
-    setupEvents: ->
-        @$el.find('[data-action="unstar"]').unbind('click').on 'click', (e) =>
-            $target = $(e.target)
-            $table = $target.parents('table')
+        requestName = $target.data('request-name')
 
-            requestName = $target.data('request-name')
+        app.collections.requestsStarred.toggle(requestName)
 
-            app.collections.requestsStarred.toggle(requestName)
+        $table.find("""[data-request-name="#{ requestName }"]""").each -> $(@).parents('tr').remove()
 
-            $table.find("""[data-request-name="#{ requestName }"]""").each -> $(@).parents('tr').remove()
+        if $table.find('tbody tr').length is 0
+            @render()
 
-            if $table.find('tbody tr').length is 0
-                @render()
-
-        @$el.find('[data-requests-active-filter]').unbind('click').on 'click', (e) =>
-            e.preventDefault()
-
-            $link = $(e.target)
-            $link = $(e.target).parents('a') if $(e.target).parents('a').length
-
-            lastRequestsActiveSubFilter = $link.data('requests-active-filter')
-            lastSearchFilter = app.user.get('deployUser')
-
-            if app.views.requests?
-                app.views.requests.lastRequestsActiveSubFilter = lastRequestsActiveSubFilter
-                app.views.requests.lastSearchFilter = lastSearchFilter
-
-            app.router.navigate "/requests/active/#{ lastRequestsActiveSubFilter }/#{ lastSearchFilter }", trigger: true
-
-        @$el.find('[data-action="change-user"]').unbind('click').on 'click', (e) =>
-            app.deployUserPrompt()
+    changeUser: =>
+        app.deployUserPrompt()
 
 module.exports = DashboardView
