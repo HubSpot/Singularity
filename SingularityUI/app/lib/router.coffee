@@ -1,19 +1,23 @@
 DashboardView = require 'views/dashboard'
-SearchView = require 'views/search'
+StatusView = require 'views/status'
+
 RequestsView = require 'views/requests'
+
 RequestView = require 'views/request'
 RequestHistoricalTasksView = require 'views/requestHistoricalTasks'
 RequestDeployHistoryView = require 'views/requestDeployHistory'
 RequestHistoryView = require 'views/requestHistory'
+
 TasksView = require 'views/tasks'
+
 TaskView = require 'views/task'
 FilesView = require 'views/files'
 TailView = require 'views/tail'
-StatusView = require 'views/status'
+
 RacksView = require 'views/racks'
 SlavesView = require 'views/slaves'
+
 PageNotFoundView = require 'views/pageNotFound'
-NavigationView = require 'views/navigation'
 
 currentViewIsTailView = ->
     Backbone.history.fragment.match(/^task\/.+\/tail\//)?.length is 1
@@ -25,8 +29,7 @@ htmlClasses = ->
         $('html').removeClass('tail-view')
 
 Backbone.history.on 'route', ->
-    nav()
-    globalRefresh()
+    app.views.nav.render()
     htmlClasses()
 
 windowBlurred = false
@@ -37,11 +40,6 @@ $(window).on 'blur', ->
 $(window).on 'focus', ->
     windowBlurred = false
     refresh()
-
-nav = ->
-    if not app.views.navigationView?
-        app.views.navigationView = new NavigationView
-    app.views.navigationView.render()
 
 window.globalRefreshTimeout = undefined
 globalRefresh = ->
