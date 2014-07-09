@@ -94,9 +94,6 @@ class Application
         @show view
 
     setupAppCollections: ->
-        @collections.requestsStarred = new RequestsStarred
-        @collections.requestsStarred.fetch() # Syncronous because it uses localStorage
-
         @state = new State
 
         resources = [{
