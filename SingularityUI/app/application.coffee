@@ -16,6 +16,8 @@ TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
 TasksCleaning = require 'collections/TasksCleaning'
 
+GlobalSearchView = require 'views/globalSearch'
+
 class Application
 
     initialize: ->
@@ -161,49 +163,7 @@ class Application
                     @user.save()
 
     setupGlobalSearchView: ->
-        $globalSearch = $('.global-search')
-
-        toggleGlobalSearch = ->
-            if $('body').hasClass('global-search-active')
-                hideGlobalSearch()
-            else
-                showGlobalSearch()
-
-        showGlobalSearch = ->
-            $globalSearch.find('input').val('')
-            $globalSearch.find('ul').removeClass('dropdown-menu-hidden').find('li').remove()
-
-            $('body').addClass('global-search-active')
-            $globalSearch.find('input').focus()
-
-        hideGlobalSearch = ->
-            $('body').removeClass('global-search-active')
-
-        $(window).keydown (e) =>
-            return unless $(e.target).is('body')
-            if e.keyCode is 84 # t
-                toggleGlobalSearch()
-                e.preventDefault()
-            if e.keyCode is 27 # ESC
-                hideGlobalSearch()
-
-        $('[data-invoke-global-search]').click -> toggleGlobalSearch()
-        $('[data-close-global-search]').click (event) -> toggleGlobalSearch() if event.target.hasAttribute('data-close-global-search')
-
-        $globalSearch.find('input').keydown (e) ->
-            if e.keyCode is 27 # ESC
-                e.preventDefault()
-                hideGlobalSearch()
-
-        $globalSearch.find('input').typeahead
-            source: (query, process) ->
-                $.get "#{ config.apiRoot }/history/requests/search", { requestIdLike: query }, (data) ->
-                    process data
-                return undefined
-            matcher: -> true
-            highlighter: (item) -> item
-            updater: (id) ->
-                app.router.navigate "/request/#{ id }", { trigger: true }
-                toggleGlobalSearch()
+        @globalSearch = new GlobalSearchView
+        @globalSearch.render()
 
 module.exports = new Application
