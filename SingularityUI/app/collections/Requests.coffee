@@ -15,11 +15,8 @@ class Requests extends Collection
         @state = if not @state? or @state is 'all' then '' else @state
 
     url: ->
-        properties = @propertyFilters[@state]
-        if properties?
-            propertyString = "?property=#{ properties.join '&property=' }"
-
-        "#{ config.apiRoot }/requests/#{ @state }#{ propertyString or '' }"
+        propertyString = $.param property: @propertyFilters[@state] or [], true
+        "#{ config.apiRoot }/requests/#{ @state }?#{ propertyString or '' }"
 
     parse: (requests) ->
         _.each requests, (request, i) =>
