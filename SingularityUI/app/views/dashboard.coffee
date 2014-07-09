@@ -15,8 +15,8 @@ class DashboardView extends View
     initialize: =>
         app.user.on 'change', @render, @
 
-        @starredRequests = new RequestsStarred
-        @starredRequests.fetch()
+        @starredCollection = new RequestsStarred
+        @starredCollection.fetch()
 
         @collection = new Requests state: 'all'
         @collection.fetch().done @render
@@ -26,7 +26,7 @@ class DashboardView extends View
 
         # Filter starred requests
         starredRequests = @collection.filter (request) =>
-            @starredRequests.get(request.get 'id')?
+            @starredCollection.get(request.get 'id')?
 
         starredRequests = _.pluck starredRequests, 'attributes'
 
