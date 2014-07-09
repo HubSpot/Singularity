@@ -3,12 +3,6 @@ Router = require 'lib/router'
 User = require 'models/User'
 State = require 'models/State'
 
-Requests = require "collections/Requests"
-RequestsPending = require 'collections/RequestsPending'
-RequestsCleaning = require 'collections/RequestsCleaning'
-
-RequestsStarred = require 'collections/RequestsStarred'
-
 TasksActive = require 'collections/TasksActive'
 TasksScheduled = require 'collections/TasksScheduled'
 TasksCleaning = require 'collections/TasksCleaning'
