@@ -48,6 +48,15 @@ class Application
 
         Object.freeze? @
 
+    caughtError: ->
+        # Ghetto try-catch
+        #
+        # If there's some sort of AJAX error we can choose to handle this ourselves
+        # If we do handle it, we can call app.caughtError() in that bit of code
+        # and it'll prevent the default error message from being displayed,
+        # e.g. `model.fetch().error => app.caughtError()`
+        @caughtThisError = true
+
     setupGlobalErrorHandling: ->
         unloading = false
         $(window).on 'beforeunload', ->
@@ -58,7 +67,14 @@ class Application
         $(window).on 'blur', -> blurred = true
         $(window).on 'focus', -> blurred = false
 
+        # When an Ajax error occurs this is the default message that is displayed.
+        # You can add your own custom error handling using app.caughtError() above.
         $(document).on 'ajaxError', (e, jqxhr, settings) ->
+            # If we handled this already, ignore it
+            if app.caughtThisError
+                app.caughtThisError = false
+                return
+
             return if settings.suppressErrors
             return if jqxhr.statusText is 'abort'
             return if unloading
