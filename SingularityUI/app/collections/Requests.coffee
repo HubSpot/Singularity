@@ -6,6 +6,8 @@ class Requests extends Collection
 
     model: Request
 
+    comparator: 'timestamp'
+
     # If you only want to get certain properties for a particual state, put them here
     propertyFilters:
         active: [ 'request', 'requestDeployState' ]
