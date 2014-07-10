@@ -1,7 +1,7 @@
 class Model extends Backbone.Model
 
     # Model keeps track of whether or not it's been fetched
-    synced: true
+    synced: false
 
     initialize: ->
         @on 'sync', => @synced = true
