@@ -69,7 +69,7 @@ class TasksView extends View
             tasks = _.sortBy tasks, @sortAttribute
             if not @sortAscending
                 tasks = tasks.reverse()
-        else
+        else unless @tasksFilter is 'scheduled'
             tasks.reverse()
             
         @currentTasks = tasks
