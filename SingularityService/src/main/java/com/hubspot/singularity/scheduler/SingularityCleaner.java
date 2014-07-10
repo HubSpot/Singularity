@@ -35,6 +35,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCleaner {
   
@@ -46,18 +47,20 @@ public class SingularityCleaner {
   private final SingularityDriverManager driverManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final LoadBalancerClient lbClient;
+  private final SingularityExceptionNotifier exceptionNotifier;
   
   private final long killScheduledTasksAfterDecomissionedMillis;
   
   @Inject
   public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager, 
-      SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient) {
+      SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.driverManager = driverManager;
+    this.exceptionNotifier = exceptionNotifier;
     
     this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillScheduledTasksWhichAreDecomissionedAfterSeconds());
   }
@@ -144,7 +147,7 @@ public class SingularityCleaner {
     LOG.info("Cleaning up {} requests", cleanupRequests.size());
     
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-    final List<SingularityPendingTask> pendingTasks = taskManager.getScheduledTasks();
+    final List<SingularityPendingTask> pendingTasks = taskManager.getPendingTasks();
     
     int numTasksKilled = 0;
     int numScheduledTasksRemoved = 0;
@@ -178,7 +181,7 @@ public class SingularityCleaner {
      
         for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matchingRequest(requestId))) {
           LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
-          taskManager.deleteScheduledTask(matchingTask.getPendingTaskId().getId());
+          taskManager.deletePendingTask(matchingTask.getPendingTaskId().getId());
           numScheduledTasksRemoved++;
         }
       }
@@ -264,6 +267,18 @@ public class SingularityCleaner {
   private enum CheckLBState {
     NOT_LOAD_BALANCED, LOAD_BALANCE_FAILED, MISSING_TASK, WAITING, DONE;
   }
+
+  private boolean shouldRemoveLbState(SingularityTaskId taskId, SingularityLoadBalancerUpdate loadBalancerUpdate) {
+    switch (loadBalancerUpdate.getLoadBalancerState()) {
+    case UNKNOWN:
+    case WAITING:
+    case SUCCESS:
+      return true;
+    default:
+      LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
+      return false;
+    }
+  }
   
   private CheckLBState checkLbState(SingularityTaskId taskId) {
     Optional<SingularityLoadBalancerUpdate> lbAddUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
@@ -271,8 +286,8 @@ public class SingularityCleaner {
     if (!lbAddUpdate.isPresent()) {
       return CheckLBState.NOT_LOAD_BALANCED;
     }
-    if (lbAddUpdate.get().getLoadBalancerState() != BaragonRequestState.SUCCESS) {
-      LOG.trace("Task {} had abnormal LBState {}", taskId, lbAddUpdate.get().getLoadBalancerState());
+    
+    if (!shouldRemoveLbState(taskId, lbAddUpdate.get())) {
       return CheckLBState.LOAD_BALANCE_FAILED;
     }
     
@@ -304,7 +319,9 @@ public class SingularityCleaner {
     case FAILED:
     case CANCELED:
     case CANCELING:
-      LOG.error("LB request {} is in an invalid, unexpected state {}", loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+      final String errorMsg = String.format("LB request for %s (%s) is in an invalid, unexpected state %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+      LOG.error(errorMsg);
+      exceptionNotifier.notify(errorMsg);
     case SUCCESS:
       return CheckLBState.DONE;
     case UNKNOWN:

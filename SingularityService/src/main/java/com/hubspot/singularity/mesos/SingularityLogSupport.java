@@ -96,7 +96,7 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     LOG.debug("Found a directory {} for task {}", directory.get(), task.getTaskId());
 
-    taskManager.updateTaskDirectory(task.getTaskId(), directory.get());
+    taskManager.saveTaskDirectory(task.getTaskId(), directory.get());
     
     LOG.trace("Updated task {} directory in {}", task.getTaskId(), JavaUtils.duration(start));
   }

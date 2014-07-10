@@ -65,8 +65,11 @@ public class JavaUtils {
 
   public static String[] reverseSplit(String string, int numItems, String separator) {
     final String[] splits = string.split("\\" + separator);
-    final String[] reverseSplit = new String[numItems];
 
+    Preconditions.checkState(splits.length >= numItems, "There must be at least %s instances of %s (there were %s)", numItems - 1, separator, splits.length - 1);
+    
+    final String[] reverseSplit = new String[numItems];
+    
     for (int i = 1; i < numItems; i++) {
       reverseSplit[numItems - i] = splits[splits.length - i];
     }

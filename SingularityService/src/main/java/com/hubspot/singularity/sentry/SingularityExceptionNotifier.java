@@ -22,19 +22,50 @@ public class SingularityExceptionNotifier {
   }
 
   public void notify(Throwable t) {
+    if (!raven.isPresent()) {
+      return;
+    }
+    
     try {
-      if (raven.isPresent()) {
-        final EventBuilder eventBuilder = new EventBuilder()
-            .setMessage(t.getMessage())
-            .setLevel(Event.Level.ERROR)
-            .addSentryInterface(new ExceptionInterface(t));
-
-        raven.get().runBuilderHelpers(eventBuilder);
-
-        raven.get().sendEvent(eventBuilder.build());
-      }
-    } catch (Exception e) {
-      LOG.error("Caught exception while trying to report to Sentry", e);
+      notify(raven.get(), t);
+    } catch (Throwable e) {
+      LOG.error("Caught exception while trying to report {} to Sentry", t.getMessage(), e);
     }
   }
+  
+  public void notify(String message) {
+    if (!raven.isPresent()) {
+      return;
+    }
+    
+    try {
+      notify(raven.get(), message);
+    } catch (Throwable e) {
+      LOG.error("Caught exception while trying to report {} to Sentry", message, e);
+    }
+  }
+  
+  private void notify(Raven raven, String message) {
+    final EventBuilder eventBuilder = new EventBuilder()
+      .setMessage(message)
+      .setLevel(Event.Level.ERROR);
+    
+    sendEvent(raven, eventBuilder);    
+  }
+  
+  private void notify(Raven raven, Throwable t) {
+    final EventBuilder eventBuilder = new EventBuilder()
+      .setMessage(t.getMessage())
+      .setLevel(Event.Level.ERROR)
+      .addSentryInterface(new ExceptionInterface(t));
+
+    sendEvent(raven, eventBuilder);
+  }
+  
+  private void sendEvent(Raven raven, final EventBuilder eventBuilder) {
+    raven.runBuilderHelpers(eventBuilder);
+
+    raven.sendEvent(eventBuilder.build());    
+  }
+  
 }

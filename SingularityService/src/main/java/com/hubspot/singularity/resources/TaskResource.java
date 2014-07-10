@@ -52,7 +52,7 @@ public class TaskResource {
   @PropertyFiltering
   @Path("/scheduled")
   public List<SingularityTaskRequest> getScheduledTasks() {
-    final List<SingularityPendingTask> tasks = taskManager.getScheduledTasks();
+    final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
     
     return taskRequestManager.getTaskRequests(tasks);
   }

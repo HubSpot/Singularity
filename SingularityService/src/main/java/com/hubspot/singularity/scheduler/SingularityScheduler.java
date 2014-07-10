@@ -236,7 +236,7 @@ public class SingularityScheduler {
   }
     
   public List<SingularityTaskRequest> getDueTasks() {
-    final List<SingularityPendingTask> tasks = taskManager.getScheduledTasks();
+    final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
       
     final long now = System.currentTimeMillis();
     
@@ -264,7 +264,7 @@ public class SingularityScheduler {
     for (SingularityPendingTask pendingTask : pendingTasks) {
       if (!foundRequestIds.contains(pendingTask.getPendingTaskId().getRequestId())) {
         LOG.info("Removing stale pending task {} because there was no found request id", pendingTask.getPendingTaskId());
-        taskManager.deleteScheduledTask(pendingTask.getPendingTaskId().getId());
+        taskManager.deletePendingTask(pendingTask.getPendingTaskId().getId());
       }
     }
     
@@ -277,7 +277,7 @@ public class SingularityScheduler {
       
       if (!matchesDeploy(requestDeployState, taskRequest)) {
         LOG.info("Removing stale pending task {} because the deployId did not match active/pending deploys {}", taskRequest.getPendingTask().getPendingTaskId(), requestDeployState);
-        taskManager.deleteScheduledTask(taskRequest.getPendingTask().getPendingTaskId().getId());
+        taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId().getId());
       } else {
         taskRequestsWithValidDeploys.add(taskRequest);
       }
@@ -300,7 +300,7 @@ public class SingularityScheduler {
   
   private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId, String deployId) {
     for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(requestId), SingularityPendingTask.matchingDeploy(deployId)))) {
-      taskManager.deleteScheduledTask(task.getPendingTaskId().getId());
+      taskManager.deletePendingTask(task.getPendingTaskId().getId());
     }
   }
   
@@ -318,7 +318,7 @@ public class SingularityScheduler {
       
       LOG.trace("Scheduling tasks: {}", scheduledTasks);
       
-      taskManager.persistScheduleTasks(scheduledTasks);
+      taskManager.createPendingTasks(scheduledTasks);
     } else if (numMissingInstances < 0) {
       LOG.debug("Missing instances is negative: {}, request {}, matching tasks: {}", numMissingInstances, request, matchingTaskIds);
       

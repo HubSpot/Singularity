@@ -52,7 +52,7 @@ public class StateResource {
     final int cleaningTasks = taskManager.getNumCleanupTasks();
     final int lbCleanupTasks = taskManager.getNumLbCleanupTasks();
 
-    final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getScheduledTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
+    final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getPendingTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
     
     final List<SingularityRequestWithState> requests = requestManager.getRequests();
     

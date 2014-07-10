@@ -14,7 +14,7 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
   private final BaragonRequestState loadBalancerState;
   private final Optional<String> message;
   private final long timestamp;
-  private final String uri;
+  private final Optional<String> uri;
   private final LoadBalancerMethod method;
   private final LoadBalancerRequestId loadBalancerRequestId;
   
@@ -27,12 +27,12 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
   }
   
   public enum LoadBalancerMethod { 
-    ENQUEUE, CHECK_STATE, CANCEL;
+    PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL;
   }
   
   @JsonCreator
   public SingularityLoadBalancerUpdate(@JsonProperty("state") BaragonRequestState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId, @JsonProperty("message") Optional<String> message,
-      @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") String uri) {
+      @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") Optional<String> uri) {
     this.loadBalancerState = loadBalancerState;
     this.message = message;
     this.timestamp = timestamp;
@@ -53,7 +53,7 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
     return timestamp;
   }
 
-  public String getUri() {
+  public Optional<String> getUri() {
     return uri;
   }
 

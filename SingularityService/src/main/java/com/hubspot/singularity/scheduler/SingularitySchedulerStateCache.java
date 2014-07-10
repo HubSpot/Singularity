@@ -55,7 +55,7 @@ public class SingularitySchedulerStateCache {
 
   public List<SingularityPendingTask> getScheduledTasks() {
     if (!scheduledTasks.isPresent()) {
-      scheduledTasks = Optional.of(taskManager.getScheduledTasks());
+      scheduledTasks = Optional.of(taskManager.getPendingTasks());
     }
     
     return scheduledTasks.get();

@@ -184,7 +184,7 @@ public class DeployManager extends CuratorAsyncManager {
     return deployKeyToDeploy;
   }
   
-  public ConditionalPersistResult persistDeploy(SingularityRequest request, SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
+  public ConditionalSaveResult saveDeploy(SingularityRequest request, SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
     final SingularityCreateResult deploySaveResult = create(getDeployDataPath(deploy.getRequestId(), deploy.getId()), Optional.of(deployTranscoder.toBytes(deploy)));
     
     if (deploySaveResult == SingularityCreateResult.EXISTED) {
@@ -298,13 +298,13 @@ public class DeployManager extends CuratorAsyncManager {
     
   }
   
-  public enum ConditionalPersistResult {
+  public enum ConditionalSaveResult {
     
     SAVED, STATE_CHANGED;
   
   }
   
-  public ConditionalPersistResult saveNewRequestDeployState(SingularityRequestDeployState newDeployState, Optional<Stat> maybeStat, boolean createNew) {
+  public ConditionalSaveResult saveNewRequestDeployState(SingularityRequestDeployState newDeployState, Optional<Stat> maybeStat, boolean createNew) {
     final String statePath = getRequestDeployStatePath(newDeployState.getRequestId());
     final byte[] data = newDeployState.getAsBytes(objectMapper);
     
@@ -322,7 +322,7 @@ public class DeployManager extends CuratorAsyncManager {
         curator.create().creatingParentsIfNeeded().forPath(statePath, data);
       }
       
-      return ConditionalPersistResult.SAVED;
+      return ConditionalSaveResult.SAVED;
     
     } catch (NodeExistsException nee) {
       LOG.trace(String.format("Conflict - NodeExists while persisting new deploy state (%s)", newDeployState), nee);
@@ -334,7 +334,7 @@ public class DeployManager extends CuratorAsyncManager {
       throw Throwables.propagate(t);
     }
     
-    return ConditionalPersistResult.STATE_CHANGED;
+    return ConditionalSaveResult.STATE_CHANGED;
   }
   
   public Optional<SingularityDeployStatistics> getDeployStatistics(String requestId, String deployId) {
@@ -353,7 +353,7 @@ public class DeployManager extends CuratorAsyncManager {
     return ZKPaths.makePath(CANCEL_ROOT, String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId()));
   }
   
-  public SingularityCreateResult cancelDeploy(SingularityDeployMarker deployMarker) {
+  public SingularityCreateResult createCancelDeployRequest(SingularityDeployMarker deployMarker) {
     return create(getCancelDeployPath(deployMarker), Optional.of(deployMarker.getAsBytes(objectMapper)));
   }
 
@@ -369,7 +369,7 @@ public class DeployManager extends CuratorAsyncManager {
     return delete(getPendingDeployPath(requestId));
   }
   
-  public SingularityDeleteResult deleteCancelRequest(SingularityDeployMarker deployMarker) {
+  public SingularityDeleteResult deleteCancelDeployRequest(SingularityDeployMarker deployMarker) {
     return delete(getCancelDeployPath(deployMarker));
   }
   

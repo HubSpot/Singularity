@@ -38,7 +38,7 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.DeployManager.ConditionalPersistResult;
+import com.hubspot.singularity.data.DeployManager.ConditionalSaveResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -162,9 +162,9 @@ public class RequestResource {
       throw WebExceptions.conflict("Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
     }
     
-    ConditionalPersistResult persistResult = deployManager.persistDeploy(request, deployMarker, pendingDeploy);
+    ConditionalSaveResult persistResult = deployManager.saveDeploy(request, deployMarker, pendingDeploy);
     
-    if (persistResult == ConditionalPersistResult.STATE_CHANGED) {
+    if (persistResult == ConditionalSaveResult.STATE_CHANGED) {
       throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getRequestDeployState(requestId).orNull(), deployManager.getPendingDeploy(requestId).orNull());
     }
     
@@ -192,7 +192,7 @@ public class RequestResource {
       throw WebExceptions.badRequest("Request %s does not have a pending deploy %s", requestId, deployId);
     }
     
-    deployManager.cancelDeploy(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user));
+    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user));
     
     return fillEntireRequest(requestWithState);
   }

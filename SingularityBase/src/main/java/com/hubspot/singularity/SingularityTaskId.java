@@ -86,10 +86,12 @@ public class SingularityTaskId extends SingularityId {
   }
     
   public static SingularityTaskId fromString(String string) throws InvalidSingularityTaskIdException {
-    final String[] splits = JavaUtils.reverseSplit(string, 6, "-");
+    String[] splits = null;
     
-    if (splits.length != 6) {
-      throw new InvalidSingularityTaskIdException(String.format("TaskId %s should had split length of %s (instead of 6)", string, splits.length));
+    try {
+      splits = JavaUtils.reverseSplit(string, 6, "-");
+    } catch (IllegalStateException ise) {
+      throw new InvalidSingularityTaskIdException(String.format("TaskId %s was invalid (%s)", string, ise.getMessage()));
     }
     
     try {

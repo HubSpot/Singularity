@@ -44,6 +44,8 @@ import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
@@ -55,7 +57,6 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
-
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
 
@@ -87,6 +88,7 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
+    bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
   }
   
