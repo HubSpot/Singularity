@@ -1,6 +1,7 @@
 View = require './view'
 
 Request = require '../models/Request'
+RequestsStarred = require '../collections/RequestsStarred'
 
 class RequestsView extends View
 
@@ -18,6 +19,8 @@ class RequestsView extends View
 
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
+    # Which views you can star requests in
+    haveStars: ['all', 'active']
 
     # For staged rendering
     renderProgress: 0
@@ -58,6 +61,15 @@ class RequestsView extends View
         @collection.fetch().done =>
             @collectionSynced = true
             @render()
+
+        # Gonna need to know which requests are starred
+        if @requestsFilter in @haveStars
+            @starredRequests = new RequestsStarred
+            @starredRequests.fetch() # synchronous
+            
+            @collection.on 'sync', =>
+                @collection.each (request) =>
+                    request.set 'starred', @starredRequests.get(request.id)?
 
     # Called by app on active view
     refresh: ->
