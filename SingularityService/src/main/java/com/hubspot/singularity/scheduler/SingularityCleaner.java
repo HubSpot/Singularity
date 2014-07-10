@@ -319,7 +319,7 @@ public class SingularityCleaner {
     case FAILED:
     case CANCELED:
     case CANCELING:
-      final String errorMsg = String.format("LB request for %s (%s) is in an invalid, unexpected state %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+      final String errorMsg = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
       LOG.error(errorMsg);
       exceptionNotifier.notify(errorMsg);
     case SUCCESS:
