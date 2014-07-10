@@ -46,8 +46,6 @@ class Application
             pushState: true
             root: el.pathname
 
-        Object.freeze? @
-
     caughtError: ->
         # Ghetto try-catch
         #
@@ -64,15 +62,15 @@ class Application
             return
 
         blurred = false
-        $(window).on 'blur', -> blurred = true
+        $(window).on 'blur',  -> blurred = true
         $(window).on 'focus', -> blurred = false
 
         # When an Ajax error occurs this is the default message that is displayed.
         # You can add your own custom error handling using app.caughtError() above.
-        $(document).on 'ajaxError', (e, jqxhr, settings) ->
+        $(document).on 'ajaxError', (e, jqxhr, settings) =>
             # If we handled this already, ignore it
-            if app.caughtThisError
-                app.caughtThisError = false
+            if @caughtThisError
+                @caughtThisError = false
                 return
 
             return if settings.suppressErrors
@@ -87,7 +85,7 @@ class Application
             else if jqxhr.statusText is 'timeout'
                 Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
             else
-                console.error "AJAX Error response"
+                console.error "AJAX Error"
                 console.error jqxhr
                 Messenger().post "<p>An error occurred when trying to access:</p><pre>#{ url }</pre><p>Check JS console for response.</p>"
                 
