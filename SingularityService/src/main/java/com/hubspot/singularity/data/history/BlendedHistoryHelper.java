@@ -12,7 +12,7 @@ public abstract class BlendedHistoryHelper<T> {
   public List<T> getBlendedHistory(Integer limitCount, Integer limitStart) {
     final List<T> fromZk = getFromZk();
     
-    final int numFromZk = Math.max(0, fromZk.size() - limitStart);
+    final int numFromZk = Math.max(0, Math.min(limitCount, fromZk.size() - limitStart));
     
     final Integer numFromHistory = limitCount - numFromZk;
     final Integer historyStart = Math.max(0, limitStart - fromZk.size());
