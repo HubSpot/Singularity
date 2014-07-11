@@ -11,7 +11,6 @@ class Requests extends Collection
         active: [ 'request', 'requestDeployState' ]
 
     initialize: ({ @state }) ->
-        super
         @state = if not @state? or @state is 'all' then '' else @state
 
     url: ->

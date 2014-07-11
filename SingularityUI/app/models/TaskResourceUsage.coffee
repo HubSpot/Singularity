@@ -4,7 +4,7 @@ class TaskResourceUsage extends Model
 
     url: => "#{ config.apiRoot }/tasks/task/#{ @taskId }/statistics"
 
-    initialize: (models, { @taskId }) =>
+    initialize: ({ @taskId }) =>
 
     parse: (data) ->
         if data.memAnonBytes

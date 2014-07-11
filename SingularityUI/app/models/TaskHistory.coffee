@@ -4,8 +4,7 @@ class TaskHistory extends Model
 
     url: -> "#{ config.apiRoot }/history/task/#{ @taskId }"
 
-    initialize: (models, { @taskId }) =>
-        @on 'sync', => @synced = true
+    initialize: ({ @taskId }) ->
 
     parse: (taskHistory) ->
         taskHistory.task.JSONString = utils.stringJSON taskHistory
