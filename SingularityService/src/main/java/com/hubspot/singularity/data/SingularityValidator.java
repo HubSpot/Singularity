@@ -10,6 +10,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
@@ -22,9 +23,17 @@ public class SingularityValidator {
   
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
+  private final int maxCpusPerRequest;
+  private final int maxCpusPerInstance;
+  private final int maxInstancesPerRequest;
+  private final int maxMemoryMbPerRequest;
+  private final int defaultCpus;
+  private final int defaultMemoryMb;
+  private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final HistoryManager historyManager;
   private final DeployManager deployManager;
+  private final Resources DEFAULT_RESOURCES;
   
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
@@ -33,6 +42,17 @@ public class SingularityValidator {
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.deployManager = deployManager;
     this.historyManager = historyManager;
+
+    this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
+    this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
+    
+    DEFAULT_RESOURCES = new Resources(defaultCpus, defaultMemoryMb, 0);
+    
+    this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
+    this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
+    this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
+    this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
+    this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
   
   private void check(boolean expression, String message) {
@@ -46,8 +66,23 @@ public class SingularityValidator {
     check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
     check(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
+
+  private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
+    int instances = request.getInstancesSafe();
+    int cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
+    int memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
+    
+    check(cpusPerInstance > 0, "Request must have more than 0 cpus");
+    check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
+    
+    check(cpusPerInstance <= maxCpusPerInstance, String.format("Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance));
+    check(cpusPerInstance * instances <= maxCpusPerRequest, String.format("Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest));
+    
+    check(memoryMbPerInstance <= maxMemoryMbPerInstance, String.format("Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance));
+    check(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, String.format("Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(), memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest));
+  }
   
-  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest) {
+  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
     check(request.getId() != null, "Id must not be null");
     
     if (!allowRequestsWithoutOwners) {
@@ -56,9 +91,19 @@ public class SingularityValidator {
     
     check(request.getId().length() < maxRequestIdSize, String.format("Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId()));
     check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
+
+    check(request.getInstancesSafe() <= maxInstancesPerRequest, String.format("Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest));
     
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
+    }
+    
+    if (activeDeploy.isPresent()) {
+      checkForIllegalResources(request, activeDeploy.get());
+    }
+    
+    if (pendingDeploy.isPresent()) {
+      checkForIllegalResources(request, pendingDeploy.get());
     }
     
     String newSchedule = null;
@@ -93,6 +138,8 @@ public class SingularityValidator {
     if (request.isLoadBalanced()) {
       check(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
     }
+    
+    checkForIllegalResources(request, deploy);
     
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 
         "If not using custom executor, specify a command. If using custom executor, specify executorData and customExecutorCmd and no command.");

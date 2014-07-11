@@ -30,6 +30,57 @@ public class MesosConfiguration {
   private Integer slaveHttpPort = 5051;
   @NotNull
   private Optional<Integer> slaveHttpsPort = Optional.absent();
+  @NotNull
+  private int maxNumInstancesPerRequest = 25;
+  @NotNull
+  private int maxNumCpusPerInstance = 50;
+  @NotNull
+  private int maxNumCpusPerRequest = 900;
+  @NotNull
+  private int maxMemoryMbPerInstance = 24000;
+  @NotNull
+  private int maxMemoryMbPerRequest = 450000;
+  
+  public int getMaxNumInstancesPerRequest() {
+    return maxNumInstancesPerRequest;
+  }
+
+  public void setMaxNumInstancesPerRequest(int maxNumInstancesPerRequest) {
+    this.maxNumInstancesPerRequest = maxNumInstancesPerRequest;
+  }
+
+  public int getMaxNumCpusPerInstance() {
+    return maxNumCpusPerInstance;
+  }
+
+  public void setMaxNumCpusPerInstance(int maxNumCpusPerInstance) {
+    this.maxNumCpusPerInstance = maxNumCpusPerInstance;
+  }
+
+  public int getMaxNumCpusPerRequest() {
+    return maxNumCpusPerRequest;
+  }
+
+  public void setMaxNumCpusPerRequest(int maxNumCpusPerRequest) {
+    this.maxNumCpusPerRequest = maxNumCpusPerRequest;
+  }
+
+  public int getMaxMemoryMbPerInstance() {
+    return maxMemoryMbPerInstance;
+  }
+
+  public void setMaxMemoryMbPerInstance(int maxMemoryMbPerInstance) {
+    this.maxMemoryMbPerInstance = maxMemoryMbPerInstance;
+  }
+
+  public int getMaxMemoryMbPerRequest() {
+    return maxMemoryMbPerRequest;
+  }
+
+  public void setMaxMemoryMbPerRequest(int maxMemoryMbPerRequest) {
+    this.maxMemoryMbPerRequest = maxMemoryMbPerRequest;
+  }
+  
     
   public Boolean getAllowMissingAllExistingTasksOnStartup() {
     return allowMissingAllExistingTasksOnStartup;

@@ -72,7 +72,21 @@ public class RequestResource {
     
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
-    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest);
+    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
+    
+    Optional<SingularityDeploy> activeDeploy = Optional.absent();
+    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+    
+    if (requestDeployState.isPresent()) {
+      if (requestDeployState.get().getActiveDeploy().isPresent()) {
+        activeDeploy = deployManager.getDeploy(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId());
+      }
+      if (requestDeployState.get().getPendingDeploy().isPresent()) {
+        pendingDeploy = deployManager.getDeploy(request.getId(), requestDeployState.get().getPendingDeploy().get().getDeployId());
+      }
+    }
+    
+    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, activeDeploy, pendingDeploy);
     
     if (!maybeOldRequest.isPresent() && requestManager.getCleanupRequest(request.getId()).isPresent()) {
       throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
