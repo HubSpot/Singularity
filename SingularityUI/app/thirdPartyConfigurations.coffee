@@ -47,3 +47,6 @@ Messenger.options =
 # ZeroClipboard options
 ZeroClipboard.config
     debug: false
+
+# Overwrite Handlebars logging
+Handlebars.log = (stuff) => console.log stuff
