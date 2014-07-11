@@ -1,6 +1,6 @@
-Requests = require './Requests'
+Collection = require './collection'
 
-class RequestsCleaning extends Requests
+class RequestsCleaning extends Collection
 
     url: "#{ config.apiRoot }/requests/queued/cleanup"
 

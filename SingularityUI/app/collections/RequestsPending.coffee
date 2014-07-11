@@ -1,6 +1,6 @@
-Requests = require './Requests'
+Collection = require './collection'
 
-class RequestsPending extends Requests
+class RequestsPending extends Collection
 
     url: "#{ config.apiRoot }/requests/queued/pending"
 

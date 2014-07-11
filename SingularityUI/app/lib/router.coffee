@@ -77,16 +77,10 @@ class Router extends Backbone.Router
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
-        if not app.views.dashboard?
-            app.views.dashboard = new DashboardView
-        app.views.current = app.views.dashboard
-        app.show app.views.dashboard.render()
+        app.showView new DashboardView
 
     status: ->
-        if not app.views.status?
-            app.views.status = new StatusView
-        app.views.current = app.views.status
-        app.show app.views.status.refresh(fromRoute = true)
+        app.showView new StatusView
 
     requestsFiltered: (requestsFilter = 'all', requestsSubFilter = 'all', searchFilter = '') ->
         if requestsSubFilter is 'running'
