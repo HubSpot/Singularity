@@ -1,0 +1,43 @@
+{{#if synced}}
+    <div class="page-header">
+        <h1>S3 Logs</h1>
+    </div>
+    {{#if data.length}}
+        <table class="table" data-sortable>
+            <thead>
+                <tr>
+                    <th class="half-table">Log file</th>
+                    <th>Size</th>
+                    <th>Last modified</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each data}}
+                    <tr>
+                        <td>
+                            <a class="long-link" href="{{ url }}" target="_blank" title="{{ key }}">
+                                {{ shortKey }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ sizeHuman }}
+                        </td>
+                        <td data-value="{{ lastModified }}">
+                            {{ lastModifiedHuman }}
+                        </td>
+                        <td class="actions-column">
+                            <a href="{{ url }}" target="_blank">Download</a>
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    {{else}}
+        <div class="empty-table-message">
+            Sorry, nothing here
+        </div>
+    {{/if}}
+{{else}}
+    <div class="page-loader centered cushy"></div>
+{{/if}}

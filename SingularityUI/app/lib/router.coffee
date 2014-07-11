@@ -136,11 +136,7 @@ class Router extends Backbone.Router
         app.show app.views.current
 
     task: (taskId) ->
-        app.views.taskViews = {} if not app.views.taskViews
-        if not app.views.taskViews[taskId]
-            app.views.taskViews[taskId] = new TaskView taskId: taskId
-        app.views.current = app.views.taskViews[taskId]
-        app.show app.views.taskViews[taskId].render().refresh()
+        app.showView new TaskView id: taskId
 
     files: (taskId, path = '') ->
         app.views.filesViews = {} if not app.views.filesViews

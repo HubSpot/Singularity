@@ -1,23 +1,26 @@
 View = require './view'
 
-Task = require '../models/Task'
 TaskHistory = require '../models/TaskHistory'
 TaskResourceUsage = require '../models/TaskResourceUsage'
 
 TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 
-TaskS3LogsTableView = require '../views/taskS3LogsTable'
-
+ExpandableTableSubview = require './ExpandableTableSubview'
 
 class TaskView extends View
 
-    overviewTemplate: require './templates/taskOverview'
-    historyTemplate:  require './templates/taskHistory'
-    logsTemplate:     require './templates/taskLogs'
-    filesTemplate:    require './templates/taskFiles'
-    infoTemplate:     require './templates/taskInfo'
-    environmentTemplate: require './templates/taskEnvironment'
+    baseTemplate:          require './templates/taskBase'
+
+    overviewTemplate:      require './templates/taskOverview'
+    historyTemplate:       require './templates/taskHistory'
+
+    filesTemplate:         require './templates/taskFiles'
+    logsTemplate:          require './templates/taskS3Logs'
+
+    infoTemplate:          require './templates/taskInfo'
+
+    environmentTemplate:   require './templates/taskEnvironment'
     resourceUsageTemplate: require './templates/taskResourceUsage'
 
     events: ->
@@ -25,112 +28,71 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="remove"]': 'killTask'
 
-    initialize: ->
-        @sandboxTries = 0
-        @firstRender = true
-        @taskFiles = {}
-        @taskHistory = new TaskHistory {}, taskId: @options.taskId
-        @taskResourceUsage = new TaskResourceUsage {}, taskId: @options.taskId
+    initialize: ({ @id }) ->
+        # Use the history API because it might not be an active task
+        @taskHistory = new TaskHistory taskId: @id
+        @listenTo @taskHistory, 'sync',  =>
+            @renderOverview()
+            @renderEnvironment()
+        @listenTo @taskHistory, 'error', @catchAjaxError
 
-        @taskS3Logs = new TaskS3Logs [], taskId: @options.taskId
+        @taskResourceUsage = new TaskResourceUsage taskId: @id
+        @listenTo @taskResourceUsage, 'sync',  @renderResourceUsage
+        @listenTo @taskResourceUsage, 'error', @ignoreAjaxError
 
-        $.extend @taskS3Logs,
-            totalPages: 100
-            totalRecords: 10000
-            currentPage: 1
-            firstPage: 1
-            perPage: 10
+        @taskS3Logs = new TaskS3Logs taskId: @id
+        @listenTo @taskS3Logs, 'error', @catchAjaxError
 
-    fetch: ->
-        deferred = $.Deferred()
+        @s3Subview = new ExpandableTableSubview
+            collection: @taskS3Logs
+            template:   @logsTemplate
 
-        @taskFilesFetchDone = false
-        @taskFilesSandboxUnavailable = true
-
-        neverSynced = not @taskHistory.synced
-
-        @taskHistory.fetch().done =>
-            @render() if neverSynced
-
-            unless @taskHistory.attributes.task.isStopped
-                @taskResourceUsage.fetch()
-
-            @taskFiles = new TaskFiles {}, { taskId: @options.taskId, offerHostname: @taskHistory.attributes.task.offer.hostname, directory: @taskHistory.attributes.directory }
-            @taskFiles.testSandbox()
-                .done(=>
-                    @sandboxTries = 0
-                    @taskFiles.fetch().done =>
-                        @taskFilesFetchDone = true
-                        @taskFilesSandboxUnavailable = false
-                        deferred.resolve()
-                )
-                .error(=>
-                    @taskFilesFetchDone = true
-                    @taskFilesSandboxUnavailable = true
-                    deferred.resolve()
-                )
-            @sandboxTries += 1
-
-        @taskS3Logs.fetch().error =>
-            console.log "wot"
-
-        deferred
+        @refresh()
 
     refresh: ->
-        @fetch().done =>
-            @render()
+        @taskHistory.fetch()
+        @taskResourceUsage.fetch()
+        @s3Subview.fetch()
 
-        # Refresh the current logs table page
-        @taskS3Logs.goTo @taskS3Logs.currentPage
+    ignoreAjaxError: -> app.caughtError()
 
-        @
-
+    catchAjaxError: (collection, response) ->
+        if response.status is 404
+            app.caughtError()
+            @$el.html "<h1>Task does not exist</h1>"
+        else if response.status is 501
+            app.caughtError()
+            @$('[data-s3-logs]').html "<h1>S3 logs not configured</h1>"
+            
     render: ->
-        return @ unless @taskHistory.attributes?.task?.id
+        # Render the base template only. This is only fired at the start.
+        # The different bits of the page are rendered via collection/model events
+        # by other functions
+        @$el.html @baseTemplate
 
-        if @taskHistory.attributes.taskUpdates?.length is 0
-            @taskHistory.attributes.hasNoTaskUpdates = true
-            setTimeout (=> @refresh()), (1 + Math.pow(1.5, @sandboxTries)) * 1000
+        # Plot subview contents in there. It'll take care of everything itself
+        @$('section[data-s3-logs]').html @s3Subview.$el
 
+    renderOverview: ->
+        # Overview is the header at the top as well as the history table
         context =
-            request: @taskHistory.attributes.task.taskRequest.request
+            synced: @taskHistory.synced
             taskHistory: @taskHistory.attributes
-            taskFiles: _.pluck(@taskFiles.models, 'attributes').reverse()
-            taskFilesFetchDone: @taskFilesFetchDone
-            taskFilesSandboxUnavailable: @taskFilesSandboxUnavailable
-            taskS3LogsCollectionJSON: JSON.stringify(@taskS3Logs.toJSON(), null, 4)
-            taskResourceUsage: @taskResourceUsage.attributes
 
-        context.taskIdStringLengthTens = Math.floor(context.taskHistory.task.id.length / 10) * 10
+        @$('.task-overview-container').html @overviewTemplate context
+        @$('.task-history-container').html @historyTemplate context
 
-        partials =
-            partials:
-                filesTable: require './templates/filesTable'
+    renderEnvironment: ->
+        @$('.task-env-container').html @environmentTemplate {@taskHistory}
 
-        if @firstRender
-            @firstRender = false
-
-            @$el.append @overviewTemplate context, partials
-            @$el.append @historyTemplate context, partials
-            @$el.append @logsTemplate context, partials
-            @$el.append @filesTemplate context, partials
-            @$el.append @infoTemplate context, partials
-            @$el.append @resourceUsageTemplate context, partials
-            @$el.append @environmentTemplate context, partials
-
-            @saveSelectors()
-            @setupSubviews()
+    renderResourceUsage: ->
+        $container = @$ '.task-resource-container'
+        # If we refresh and we find that the task was stopped, remove the resources
+        if @taskHistory.get('task')?.isStopped
+            $container.empty()
         else
-            @dom.overview.replaceWith @overviewTemplate context, partials
-            @dom.historySection.replaceWith @historyTemplate context, partials
-            @dom.filesSection.replaceWith @filesTemplate context, partials
-            @dom.infoSection.replaceWith @infoTemplate context, partials
-            @dom.resourceUsageSection.replaceWith @resourceUsageTemplate context, partials
-            @dom.environmentSection.replaceWith @environmentTemplate context, partials
-
-        @$el.find('pre').each -> utils.setupCopyPre $ @
-
-        @
+            $container.html @resourceUsageTemplate
+                taskResourceUsage: @taskResourceUsage.attributes
 
     viewJson: (event) ->
         utils.viewJSON 'task', $(event.target).data 'task-id'
@@ -139,21 +101,5 @@ class TaskView extends View
         taskModel = new Task id: $(event.target).data 'task-id'
         taskModel.promptKill =>
             setTimeout (=> @refresh()), 1000
-
-    saveSelectors: ->
-        @dom ?= {}
-
-        @dom.overview = @$('#overview')
-        @dom.historySection = @$('[data-task-history]')
-        @dom.logsSection = @$('[data-task-logs]')
-        @dom.logsWrapper = @$('[data-s3-logs-wrapper]')
-        @dom.filesSection = @$('[data-task-files]')
-        @dom.infoSection = @$('[data-task-info]')
-        @dom.environmentSection = @$('[data-task-environment]')
-        @dom.resourceUsageSection = @$('[data-task-resource-usage]')
-
-    setupSubviews: ->
-        @taskS3LogsTableView = new TaskS3LogsTableView { collection: @taskS3Logs }
-        @dom.logsWrapper.append @taskS3LogsTableView.render().$el
 
 module.exports = TaskView
