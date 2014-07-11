@@ -6,8 +6,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -29,7 +31,7 @@ public class TaskRequestManager {
   }
 
   public List<SingularityTaskRequest> getTaskRequests(List<SingularityPendingTask> tasks) {
-    final Map<String, SingularityPendingTask> requestIdToPendingTaskId = Maps.newHashMapWithExpectedSize(tasks.size());
+    final Multimap<String, SingularityPendingTask> requestIdToPendingTaskId = ArrayListMultimap.create(tasks.size(), 1);
     
     for (SingularityPendingTask task : tasks) {
       requestIdToPendingTaskId.put(task.getPendingTaskId().getRequestId(), task);
@@ -38,26 +40,26 @@ public class TaskRequestManager {
     final List<SingularityRequestWithState> matchingRequests = requestManager.getRequests(requestIdToPendingTaskId.keySet());
     
     final Map<SingularityPendingTask, SingularityDeployKey> deployKeys = SingularityDeployKey.fromPendingTasks(requestIdToPendingTaskId.values());
-    final Map<SingularityDeployKey, SingularityDeploy> matchingDeploys = deployManager.getDeploysForKeys(deployKeys.values());
+    final Map<SingularityDeployKey, SingularityDeploy> matchingDeploys = deployManager.getDeploysForKeys(Sets.newHashSet(deployKeys.values()));
     
     final List<SingularityTaskRequest> taskRequests = Lists.newArrayListWithCapacity(matchingRequests.size());
     
     for (SingularityRequestWithState request : matchingRequests) {
-      SingularityPendingTask task = requestIdToPendingTaskId.get(request.getRequest().getId());
-    
-      SingularityDeploy foundDeploy = matchingDeploys.get(deployKeys.get(task));
-      
-      if (foundDeploy == null) {
-        LOG.warn("Couldn't find a matching deploy for pending task {}", task);
-        continue;
+      for (SingularityPendingTask task : requestIdToPendingTaskId.get(request.getRequest().getId())) {
+        SingularityDeploy foundDeploy = matchingDeploys.get(deployKeys.get(task));
+        
+        if (foundDeploy == null) {
+          LOG.warn("Couldn't find a matching deploy for pending task {}", task);
+          continue;
+        }
+        
+        if (!request.getState().isRunnable()) {
+          LOG.warn("Request was in state {} for pending task {}", request.getState(), task);
+          continue;
+        }
+        
+        taskRequests.add(new SingularityTaskRequest(request.getRequest(), foundDeploy, task));
       }
-      
-      if (!request.getState().isRunnable()) {
-        LOG.warn("Request was in state {} for pending task {}", request.getState(), task);
-        continue;
-      }
-      
-      taskRequests.add(new SingularityTaskRequest(request.getRequest(), foundDeploy, task));
     }
     
     return taskRequests;
