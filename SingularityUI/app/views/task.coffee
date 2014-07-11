@@ -32,7 +32,7 @@ class TaskView extends View
         # Use the history API because it might not be an active task
         @taskHistory = new TaskHistory taskId: @id
         @listenTo @taskHistory, 'sync',  =>
-            @renderOverview()
+            @renderTask()
             @renderEnvironment()
         @listenTo @taskHistory, 'error', @catchAjaxError
 
@@ -73,17 +73,19 @@ class TaskView extends View
         # Plot subview contents in there. It'll take care of everything itself
         @$('section[data-s3-logs]').html @s3Subview.$el
 
-    renderOverview: ->
-        # Overview is the header at the top as well as the history table
+    renderTask: ->
+        # Renders everything taht depends on @taskHistory
         context =
             synced: @taskHistory.synced
             taskHistory: @taskHistory.attributes
 
         @$('.task-overview-container').html @overviewTemplate context
+        @$('.task-info-container').html @infoTemplate context
         @$('.task-history-container').html @historyTemplate context
 
     renderEnvironment: ->
-        @$('.task-env-container').html @environmentTemplate {@taskHistory}
+        @$('.task-environment-container').html @environmentTemplate
+            taskHistory: @taskHistory.attributes
 
     renderResourceUsage: ->
         $container = @$ '.task-resource-container'
