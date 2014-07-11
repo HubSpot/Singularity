@@ -9,6 +9,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.Stage;
 import com.hubspot.dropwizard.guice.GuiceBundle;
@@ -41,6 +42,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
     });
     
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
+    bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_NULL);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
