@@ -8,7 +8,7 @@ TaskFiles = require '../collections/TaskFiles'
 
 FileBrowserSubview = require './fileBrowserSubview'
 
-ExpandableTableSubview = require './ExpandableTableSubview'
+ExpandableTableSubview = require './expandableTableSubview'
 
 class TaskView extends View
 
