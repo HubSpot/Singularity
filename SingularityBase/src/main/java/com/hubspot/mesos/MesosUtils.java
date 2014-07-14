@@ -3,6 +3,7 @@ package com.hubspot.mesos;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -17,9 +18,11 @@ import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
+import com.google.common.primitives.Longs;
 
 public class MesosUtils {
 
@@ -33,8 +36,8 @@ public class MesosUtils {
     return (int) r.getScalar().getValue();
   }
 
-  private static int getScalar(Offer offer, String name) {
-    for (Resource r : offer.getResourcesList()) {
+  private static int getScalar(List<Resource> resources, String name) {
+    for (Resource r : resources) {
       if (r.hasName() && r.getName().equals(name) && r.hasScalar()) {
         return getScalar(r);
       }
@@ -43,8 +46,8 @@ public class MesosUtils {
     return 0;
   }
   
-  private static Ranges getRanges(Offer offer, String name) {
-    for (Resource r: offer.getResourcesList()) {
+  private static Ranges getRanges(List<Resource> resources, String name) {
+    for (Resource r : resources) {
       if (r.hasName() && r.getName().equals(name) && r.hasRanges()) {
         return r.getRanges();
       }
@@ -54,19 +57,13 @@ public class MesosUtils {
   }
 
   private static Ranges getRanges(TaskInfo taskInfo, String name) {
-    for (Resource r: taskInfo.getResourcesList()) {
-      if (r.hasName() && r.getName().equals(name) && r.hasRanges()) {
-        return r.getRanges();
-      }
-    }
-
-    return null;
+    return getRanges(taskInfo.getResourcesList(), name);
   }
-  
-  private static int getNumRanges(Offer offer, String name) {
+    
+  private static int getNumRanges(List<Resource> resources, String name) {
     int totalRanges = 0;
     
-    Ranges ranges = getRanges(offer, name);
+    Ranges ranges = getRanges(resources, name);
     
     if (ranges == null) {
       return 0;
@@ -118,11 +115,13 @@ public class MesosUtils {
   }
   
   public static Resource getPortsResource(int numPorts, Offer offer) {
-    Ranges ranges = getRanges(offer, PORTS);
+    return getPortsResource(numPorts, offer.getResourcesList());
+  }
+  
+  public static Resource getPortsResource(int numPorts, List<Resource> resources) {
+    Ranges ranges = getRanges(resources, PORTS);
     
-    if (ranges == null) {
-      throw new IllegalStateException(String.format("Ports %s should have existed in offer %s", PORTS, offer));
-    }
+    Preconditions.checkState(ranges != null, "Ports %s should have existed in resources %s", PORTS, resources);
     
     Ranges.Builder rangesBldr = Ranges.newBuilder();
     
@@ -166,31 +165,43 @@ public class MesosUtils {
   }
 
   public static int getNumCpus(Offer offer) {
-    return getScalar(offer, CPUS);
+    return getNumCpus(offer.getResourcesList());
   }
 
   public static int getMemory(Offer offer) {
-    return getScalar(offer, MEMORY);
-  }
-
-  public static int getNumPorts(Offer offer) {
-    return getNumRanges(offer, PORTS);
+    return getMemory(offer.getResourcesList());
   }
   
-  public static boolean doesOfferMatchResources(Resources resources, Offer offer) {
-    int numCpus = getNumCpus(offer);
+  public static int getNumCpus(List<Resource> resources) {
+    return getScalar(resources, CPUS);
+  }
+
+  public static int getMemory(List<Resource> resources) {
+    return getScalar(resources, MEMORY);
+  }
+
+  public static int getNumPorts(List<Resource> resources) {
+    return getNumRanges(resources, PORTS);
+  }
+  
+  public static int getNumPorts(Offer offer) {
+    return getNumPorts(offer.getResourcesList());
+  }
+  
+  public static boolean doesOfferMatchResources(Resources resources, List<Resource> offerResources) {
+    int numCpus = getNumCpus(offerResources);
 
     if (numCpus < resources.getCpus()) {
       return false;
     }
 
-    int memory = getMemory(offer);
+    int memory = getMemory(offerResources);
 
     if (memory < resources.getMemoryMb()) {
       return false;
     }
     
-    int numPorts = getNumPorts(offer);
+    int numPorts = getNumPorts(offerResources);
     
     if (numPorts < resources.getNumPorts()) {
       return false;
@@ -224,4 +235,86 @@ public class MesosUtils {
 
     return Optional.absent();
   }
+  
+  private static Optional<Resource> getMatchingResource(Resource toMatch, List<Resource> resources) {
+    for (Resource resource : resources) {
+      if (toMatch.getName().equals(resource.getName())) {
+        return Optional.of(resource);
+      }
+    }
+    
+    return Optional.absent();
+  }
+  
+  private static final Comparator<Range> RANGE_COMPARATOR = new Comparator<Range>() {
+    @Override
+    public int compare(Range o1, Range o2) {
+      return Longs.compare(o1.getBegin(), o2.getBegin());
+    }
+  };
+  
+  private static Ranges subtractRanges(Ranges ranges, Ranges toSubtract) {
+    Ranges.Builder newRanges = Ranges.newBuilder();
+
+    List<Range> sortedRanges = Lists.newArrayList(ranges.getRangeList());
+    Collections.sort(sortedRanges, RANGE_COMPARATOR);
+    
+    List<Range> subtractRanges = Lists.newArrayList(toSubtract.getRangeList());
+    Collections.sort(subtractRanges, RANGE_COMPARATOR);
+    
+    int s = 0;
+    
+    for (Range range : ranges.getRangeList()) {
+      Range.Builder currentRange = range.toBuilder();
+      
+      for (int i = s; i < subtractRanges.size(); i++) {
+        Range matchedRange = subtractRanges.get(i);
+      
+        if (matchedRange.getBegin() < currentRange.getBegin() || matchedRange.getEnd() > currentRange.getEnd()) {
+          s = i;
+          break;
+        }
+        
+        currentRange.setEnd(matchedRange.getBegin() - 1);
+        if (currentRange.getEnd() >= currentRange.getBegin()) {
+          newRanges.addRange(currentRange.build());
+        }
+        currentRange = Range.newBuilder();
+        currentRange.setBegin(matchedRange.getEnd() + 1);
+        currentRange.setEnd(range.getEnd());
+      }
+    
+      if (currentRange.getEnd() >= currentRange.getBegin()) {
+        newRanges.addRange(currentRange.build());
+      }
+    }
+      
+    return newRanges.build();
+  }
+  
+  public static List<Resource> subtractResources(List<Resource> resources, List<Resource> subtract) {
+    List<Resource> remaining = Lists.newArrayListWithCapacity(resources.size());
+    
+    for (Resource resource : resources) {
+      Optional<Resource> matched = getMatchingResource(resource, subtract);
+      
+      if (!matched.isPresent()) {
+        remaining.add(resource.toBuilder().clone().build());
+      } else {
+        Resource.Builder resourceBuilder = resource.toBuilder().clone();
+        if (resource.hasScalar()) {
+          resourceBuilder.setScalar(resource.toBuilder().getScalarBuilder().setValue(resource.getScalar().getValue() - matched.get().getScalar().getValue()).build());
+        } else if (resource.hasRanges()) {
+          resourceBuilder.setRanges(subtractRanges(resource.getRanges(), matched.get().getRanges()));
+        } else {
+          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", resource));
+        }
+        
+        remaining.add(resourceBuilder.build());
+      }
+    }
+    
+    return remaining;
+  }
+  
 }

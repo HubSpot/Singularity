@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.List;
+
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
@@ -7,10 +9,12 @@ import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
+import org.apache.mesos.Protos.Value.Scalar;
 import org.apache.mesos.Protos.Value.Type;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.hubspot.mesos.MesosUtils;
 
 public class MesosUtilsTest {
@@ -30,6 +34,41 @@ public class MesosUtilsTest {
   }
   
   @Test
+  public void testSubtractResources() {
+    Assert.assertEquals(createResources(3, 60, "23:23", "100:175", "771:1000"),
+        MesosUtils.subtractResources(createResources(5, 100, "23:23", "100:1000"), createResources(2, 40, "176:770")));
+    
+    List<Resource> subtracted = createResources(100, 1000, "1:100", "101:1000");
+    
+    subtracted = MesosUtils.subtractResources(subtracted, createResources(5, 100, "23:74", "101:120", "125:130", "750:756"));
+
+    Assert.assertEquals(createResources(95, 900, "1:22", "75:100", "121:124", "131:749", "757:1000"), subtracted);
+        
+    subtracted = MesosUtils.subtractResources(subtracted, createResources(20, 20, "75:90", "121:121", "757:1000"));
+    
+    Assert.assertEquals(createResources(75, 880, "1:22", "91:100", "122:124", "131:749"), subtracted);
+  }
+  
+  
+  private List<Resource> createResources(int cpus, int memory, String... ranges) {
+    List<Resource> resources = Lists.newArrayList();
+    
+    if (cpus > 0) {
+      resources.add(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus).build()).build());
+    }
+    
+    if (memory > 0) {
+      resources.add(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory).build()).build());
+    }
+    
+    if (ranges.length > 0) {
+      resources.add(buildRanges(ranges));
+    }
+    
+    return resources;
+  }
+  
+  @Test
   public void testRangeSelection() {
     test(4, "23:24", "26:26", "28:28", "29:29", "31:32");
     test(2, "22:23");
@@ -38,14 +77,8 @@ public class MesosUtilsTest {
     test(23, "90:100", "9100:9100", "185:1000");
     
   }
-
-  private Offer buildOffer(String... ranges) {
-    Offer.Builder offer = Offer.newBuilder()
-        .setId(OfferID.newBuilder().setValue("offerid").build())
-        .setFrameworkId(FrameworkID.newBuilder().setValue("frameworkid").build())
-        .setHostname("hostname")
-        .setSlaveId(SlaveID.newBuilder().setValue("slaveid").build());
-    
+  
+  private Resource buildRanges(String... ranges) {
     Resource.Builder resources = Resource.newBuilder()
         .setType(Type.RANGES)
         .setName(MesosUtils.PORTS);
@@ -63,7 +96,17 @@ public class MesosUtilsTest {
     
     resources.setRanges(rangesBuilder);
     
-    offer.addResources(resources);
+    return resources.build();
+  }
+
+  private Offer buildOffer(String... ranges) {
+    Offer.Builder offer = Offer.newBuilder()
+        .setId(OfferID.newBuilder().setValue("offerid").build())
+        .setFrameworkId(FrameworkID.newBuilder().setValue("frameworkid").build())
+        .setHostname("hostname")
+        .setSlaveId(SlaveID.newBuilder().setValue("slaveid").build());
+    
+    offer.addResources(buildRanges(ranges));
     
     return offer.build();
   }
