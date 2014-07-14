@@ -10,7 +10,7 @@ class Requests extends Collection
     propertyFilters:
         active: [ 'request', 'requestDeployState' ]
 
-    initialize: ({ @state }) ->
+    initialize: (models, { @state }) ->
         @state = if not @state? or @state is 'all' then '' else @state
 
     url: ->
