@@ -11,7 +11,6 @@ RequestHistoryView = require 'views/requestHistory'
 TasksView = require 'views/tasks'
 
 TaskView = require 'views/task'
-FilesView = require 'views/files'
 TailView = require 'views/tail'
 
 RacksView = require 'views/racks'
