@@ -50,7 +50,7 @@ class TaskView extends View
         @fileBrowserSubview = new FileBrowserSubview
             collection:      @taskFiles
             # If we've been given a path we want the files, so scroll directly to it
-            scrollWhenReady: path?
+            scrollWhenReady: path? or path is null
 
         @s3Subview = new ExpandableTableSubview
             collection: @taskS3Logs
