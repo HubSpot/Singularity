@@ -1,10 +1,13 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.Status;
+import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -107,13 +111,15 @@ public class SingularityMesosScheduler implements Scheduler {
       for (Protos.Offer offer : offers) {
         LOG.trace("Evaluating offer {}", offer);
 
-        Optional<SingularityTask> accepted = acceptOffer(driver, offer, tasks, stateCache);
+        Collection<SingularityTask> accepted = acceptOffer(driver, offer, tasks, stateCache);
 
-        if (!accepted.isPresent()) {
+        if (accepted.isEmpty()) {
           driver.declineOffer(offer.getId());
         } else {
           acceptedOffers.add(offer.getId());
-          tasks.remove(accepted.get().getTaskRequest());
+          for (SingularityTask acceptedTask : accepted) {
+            tasks.remove(acceptedTask.getTaskRequest());
+          }
         }
       }
     } catch (Throwable t) {
@@ -130,11 +136,14 @@ public class SingularityMesosScheduler implements Scheduler {
       throw t;
     }
 
-    LOG.info("Finished handling offers ({}), {} accepted, {} declined, {} outstanding tasks", JavaUtils.duration(start), acceptedOffers.size(),
+    LOG.info("Finished handling {} offer(s) ({}), {} accepted, {} declined, {} outstanding tasks", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size(), numTasksSeen - acceptedOffers.size());
   }
 
-  private Optional<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularitySchedulerStateCache stateCache) {
+  private List<SingularityTask> acceptOffer(SchedulerDriver driver, Protos.Offer offer, List<SingularityTaskRequest> tasks, SingularitySchedulerStateCache stateCache) {
+    final List<SingularityTask> accepted = Lists.newArrayListWithCapacity(tasks.size());
+    List<Resource> resources = offer.getResourcesList();
+    
     for (SingularityTaskRequest taskRequest : tasks) {
       Resources taskResources = DEFAULT_RESOURCES;
 
@@ -142,33 +151,45 @@ public class SingularityMesosScheduler implements Scheduler {
         taskResources = taskRequest.getDeploy().getResources().get();
       }
 
-      LOG.trace("Attempting to match resources {} with offer resources {}", taskResources, offer.getResourcesList());
+      LOG.trace("Attempting to match task {} resources {} with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), taskResources, resources);
           
-      final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offer);
+      final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, resources);
       final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, stateCache);
             
       if (matchesResources && rackCheckState.isRackAppropriate()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
 
+        resources = MesosUtils.subtractResources(resources, task.getMesosTask().getResourcesList());
+        
         LOG.trace("Accepted and built task {}", task);
         
-        LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offer.getSlaveId(), offer.getHostname());
+        LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offer.getSlaveId().getValue(), offer.getHostname());
 
         taskManager.createTaskAndDeletePendingTask(task);
 
-        LOG.debug("Launching mesos task: {}", task.getMesosTask());
-
-        Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), ImmutableList.of(task.getMesosTask()));
-
-        LOG.trace("Task {} launched with status {}", task.getTaskId(), initialStatus.name());
-        
-        return Optional.of(task);
+        accepted.add(task);
       } else {
-        LOG.trace("Turning down offer {} for task {}; matched resources: {}, rack state: {}", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState);
+        LOG.trace("Ignoring offer {} for task {}; matched resources: {}, rack state: {}", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState);
       }
     }
+  
+    if (accepted.isEmpty()) {
+      return accepted;
+    }
+    
+    final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(accepted.size());
+    final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(accepted.size());
+    for (SingularityTask task : accepted) {
+      taskIds.add(task.getTaskId());
+      toLaunch.add(task.getMesosTask());
+      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), task.getMesosTask()); 
+    }
 
-    return Optional.absent();
+    Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), toLaunch);
+    
+    LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus.name());
+    
+    return accepted;
   }
 
   @Override
@@ -180,7 +201,7 @@ public class SingularityMesosScheduler implements Scheduler {
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {    
     final String taskId = status.getTaskId().getValue();
     
-    LOG.debug("Got a status update for task: {}, status - {}", taskId, status);
+    LOG.debug("Task {} is now {}", taskId, status.getState());
     
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
