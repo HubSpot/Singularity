@@ -70,8 +70,8 @@ class Router extends Backbone.Router
         'tasks/:tasksFilter(/)': 'tasksFiltered'
         'tasks(/)': 'tasksFiltered'
         'task/:taskId(/)': 'task'
-        'task/:taskId/files(/)': 'files'
-        'task/:taskId/files/*path': 'files'
+        'task/:taskId/files(/)': 'task'
+        'task/:taskId/files/*path': 'task'
         'task/:taskId/tail/*path': 'tail'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
@@ -136,17 +136,8 @@ class Router extends Backbone.Router
         app.views.current.render()
         app.show app.views.current
 
-    task: (taskId) ->
-        app.showView new TaskView id: taskId
-
-    files: (taskId, path = '') ->
-        app.views.filesViews = {} if not app.views.filesViews
-        if not app.views.filesViews[taskId] or app.views.filesViews[taskId].path isnt path
-            app.views.filesViews[taskId] = new FilesView taskId: taskId, path: path
-        else
-            app.views.filesViews[taskId].browse path
-        app.views.current = app.views.filesViews[taskId]
-        app.show app.views.filesViews[taskId].render()
+    task: (taskId, path) ->
+        app.showView new TaskView id: taskId, path: path
 
     tail: (taskId, path = '') ->
         app.views.tailViews = {} if not app.views.tailViews

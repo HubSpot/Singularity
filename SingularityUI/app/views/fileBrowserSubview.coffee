@@ -9,7 +9,7 @@ class FileBrowserSubview extends View
     events: ->
         'click [data-directory-path]': 'navigate'
 
-    initialize: ->
+    initialize: ({ @scrollWhenReady }) ->
         @listenTo @collection, 'sync', @render
         @listenTo @collection, 'error', @catchAjaxError
 
@@ -28,14 +28,21 @@ class FileBrowserSubview extends View
             path:        @collection.path
             breadcrumbs: breadcrumbs
 
+        if @scrollWhenReady
+            offset = @$el.offset().top
+            $(window).scrollTop offset
+
+            # Only do it once
+            @scrollWhenReady = false
+
     catchAjaxError: ->
         @$('.span-12').html '<h3>Could not get files :(</h3>'
 
     navigate: (event) ->
         event.preventDefault()
 
-        $table = @$ 'table'
 
+        $table = @$ 'table'
         # Get table height for later
         if $table.length
             tableHeight = $table.height()
@@ -45,6 +52,8 @@ class FileBrowserSubview extends View
             @collection.path = "#{ @collection.taskId }/#{ path }"
         else
             @collection.path = "#{ path }"
+
+        app.router.navigate "#task/#{ @collection.taskId }/files/#{ @collection.path }"
 
         @collection.reset()
         @collection.fetch()

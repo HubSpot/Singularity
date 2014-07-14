@@ -17,7 +17,6 @@ class TaskView extends View
     overviewTemplate:      require './templates/taskOverview'
     historyTemplate:       require './templates/taskHistory'
 
-    filesTemplate:         require './templates/taskFiles'
     logsTemplate:          require './templates/taskS3Logs'
 
     infoTemplate:          require './templates/taskInfo'
@@ -30,7 +29,7 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="remove"]': 'killTask'
 
-    initialize: ({ @id }) ->
+    initialize: ({ @id, path }) ->
         # Use the history API because it might not be an active task
         @taskHistory = new TaskHistory taskId: @id
         @listenTo @taskHistory, 'sync',  =>
@@ -43,13 +42,15 @@ class TaskView extends View
         @listenTo @taskResourceUsage, 'sync',  @renderResourceUsage
         @listenTo @taskResourceUsage, 'error', @ignoreAjaxError
 
-        @taskFiles = new TaskFiles taskId: @id
+        @taskFiles = new TaskFiles taskId: @id, path: path
 
         @taskS3Logs = new TaskS3Logs taskId: @id
         @listenTo @taskS3Logs, 'error', @catchAjaxError
 
         @fileBrowserSubview = new FileBrowserSubview
-            collection: @taskFiles
+            collection:      @taskFiles
+            # If we've been given a path we want the files, so scroll directly to it
+            scrollWhenReady: path?
 
         @s3Subview = new ExpandableTableSubview
             collection: @taskS3Logs
