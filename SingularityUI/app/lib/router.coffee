@@ -139,11 +139,7 @@ class Router extends Backbone.Router
         app.showView new TaskView id: taskId, path: path
 
     tail: (taskId, path = '') ->
-        app.views.tailViews = {} if not app.views.tailViews
-        if not app.views.tailViews[taskId] or app.views.tailViews[taskId].path isnt path
-            app.views.tailViews[taskId] = new TailView taskId: taskId, path: path
-        app.views.current = app.views.tailViews[taskId]
-        app.show app.views.tailViews[taskId].render()
+        app.showView new TailView taskId: taskId, path: path
 
     racks: ->
         if not app.views.racks?
