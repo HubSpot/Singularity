@@ -5,4 +5,5 @@ module.exports = class Collection extends Backbone.Collection
 
     constructor: ->
         super
-        @on 'sync', => @synced = true
+        @on 'sync',  => @synced = true
+        @on 'reset', => @synced = false
