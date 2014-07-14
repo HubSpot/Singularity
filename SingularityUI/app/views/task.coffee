@@ -81,8 +81,8 @@ class TaskView extends View
         @$el.html @baseTemplate
 
         # Plot subview contents in there. It'll take care of everything itself
-        @$('section[data-s3-logs]').html @s3Subview.$el
-        @$('section[data-file-browser]').html @fileBrowserSubview.$el
+        @$('.task-s3-logs-container').html @s3Subview.$el
+        @$('.task-file-browser-container').html @fileBrowserSubview.$el
 
     renderTask: ->
         # Renders everything taht depends on @taskHistory

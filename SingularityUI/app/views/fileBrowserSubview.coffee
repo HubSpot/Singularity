@@ -39,7 +39,7 @@ class FileBrowserSubview extends View
 
     scrollToTop: ->
         offset = @$el.offset().top
-        $(window).scrollTop offset
+        $(window).scrollTop offset - 20
 
     navigate: (event) ->
         event.preventDefault()
