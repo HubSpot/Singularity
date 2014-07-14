@@ -49,6 +49,7 @@ globalRefresh = ->
     , 20 * 1000
 
 refresh = ->
+    return if localStorage.getItem("preventGlobalRefresh") == "true"
     if not $('body > .vex').length and not windowBlurred
         app.views.current?.refresh?()
 
