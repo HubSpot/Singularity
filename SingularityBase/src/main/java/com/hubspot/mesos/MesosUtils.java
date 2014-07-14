@@ -2,7 +2,9 @@ package com.hubspot.mesos;
 
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
@@ -126,16 +128,26 @@ public class MesosUtils {
     
     int portsSoFar = 0;
     
-    for (Range range : ranges.getRangeList()) {
-      long rangeEnd = Math.min(numPorts - portsSoFar + range.getBegin(), range.getEnd());
+    List<Range> offerRangeList = Lists.newArrayList(ranges.getRangeList());
+    
+    Random random = new Random();
+    Collections.shuffle(offerRangeList, random);
+    
+    for (Range range : offerRangeList) {
+      long rangeStartSelection = Math.max(range.getBegin(), range.getEnd() - (numPorts - portsSoFar + 1));
       
-      long numPortsInRange = rangeEnd - range.getBegin();
+      if (rangeStartSelection != range.getBegin()) {
+        int rangeDelta = (int) (rangeStartSelection - range.getBegin()) + 1;
+        rangeStartSelection = random.nextInt(rangeDelta) + range.getBegin();
+      }
+      
+      long rangeEndSelection = Math.min(range.getEnd(), rangeStartSelection + (numPorts - portsSoFar - 1));
     
       rangesBldr.addRange(Range.newBuilder()
-          .setBegin(range.getBegin())
-          .setEnd(rangeEnd));
-      
-      portsSoFar += numPortsInRange;
+          .setBegin(rangeStartSelection)
+          .setEnd(rangeEndSelection));
+    
+      portsSoFar += (rangeEndSelection - rangeStartSelection) + 1;
       
       if (portsSoFar == numPorts) {
         break;
@@ -148,7 +160,7 @@ public class MesosUtils {
         .setRanges(rangesBldr)
         .build();
   }
-
+  
   private static Resource newScalar(String name, int value) {
     return Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build()).build();
   }
