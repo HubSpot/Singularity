@@ -97,9 +97,16 @@ class Application
             @page.appendChild view.el
 
     showView: (view) ->
+        # Clean up events & stuff
+        @currentView.remove()
+
+        @currentView = view
+        # Render & display the view
         view.render()
-        @views.current = view
-        @show view
+        if @page.children.length
+            @page.replaceChild view.el, @page.children[0]
+        else
+            @page.appendChild view.el
 
     setupAppCollections: ->
         @state = new State
