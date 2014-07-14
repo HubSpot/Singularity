@@ -1,0 +1,63 @@
+<div class="page-header">
+    <h1>Files</h1>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <ul class="breadcrumb">
+            {{#each breadcrumbs}}
+                <li>
+                    <a data-directory-path="{{ path }}">{{ name }}</a>
+                </li>
+            {{/each}}
+        </ul>
+        {{#if files}}
+            <table class="table" data-sortable>
+                <thead>
+                    <tr>
+                        <th><span class="icon icon-directory invisible"></span>Name</a></th>
+                        <th>Size</th>
+                        <th>Last modified</th>
+                        <th data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn files}}
+                        <tr>
+                            <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ shortPath }}">
+                                {{#if isDirectory}}
+                                    <a data-directory-path="{{ requestPath }}" href="{{#appRoot}}{{/appRoot}}/task/{{ taskId }}/files/{{ shortPath }}">
+                                        <span class="icon icon-directory"></span>{{ shortPath }}/
+                                    </a>
+                                {{else}}
+                                    <a href="{{#appRoot}}{{/appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
+                                        <span class="icon icon-file"></span>{{ shortPath }}
+                                    </a>
+                                {{/if}}
+                            </td>
+                            <td data-value="{{ size }}">
+                                {{#unless isDirectory}}{{ sizeHuman }}{{/unless}}
+                            </td>
+                            <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
+                            <td class="actions-column">
+                                {{#unless isDirectory}}
+                                    <a href="{{#appRoot}}{{/appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">View</a>
+                                    <a href="{{ downloadLink }}" target="_blank">Download</a>
+                                {{/unless}}
+                            </td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        {{else}}
+            {{#if synced}}
+                <div class="empty-table-message">
+                    This directory is empty
+                </div>
+            {{else}}
+                <div class="page-loader-container">
+                    <div class="page-loader centered"></div>
+                </div>
+            {{/if}}
+        {{/if}}
+    </div>
+</div>

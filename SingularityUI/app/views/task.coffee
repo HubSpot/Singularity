@@ -6,6 +6,8 @@ TaskResourceUsage = require '../models/TaskResourceUsage'
 TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 
+FileBrowserSubview = require './fileBrowserSubview'
+
 ExpandableTableSubview = require './ExpandableTableSubview'
 
 class TaskView extends View
@@ -34,14 +36,20 @@ class TaskView extends View
         @listenTo @taskHistory, 'sync',  =>
             @renderTask()
             @renderEnvironment()
+
         @listenTo @taskHistory, 'error', @catchAjaxError
 
         @taskResourceUsage = new TaskResourceUsage taskId: @id
         @listenTo @taskResourceUsage, 'sync',  @renderResourceUsage
         @listenTo @taskResourceUsage, 'error', @ignoreAjaxError
 
+        @taskFiles = new TaskFiles taskId: @id
+
         @taskS3Logs = new TaskS3Logs taskId: @id
         @listenTo @taskS3Logs, 'error', @catchAjaxError
+
+        @fileBrowserSubview = new FileBrowserSubview
+            collection: @taskFiles
 
         @s3Subview = new ExpandableTableSubview
             collection: @taskS3Logs
@@ -52,6 +60,7 @@ class TaskView extends View
     refresh: ->
         @taskHistory.fetch()
         @taskResourceUsage.fetch()
+        @taskFiles.fetch()
         @s3Subview.fetch()
 
     ignoreAjaxError: -> app.caughtError()
@@ -72,6 +81,7 @@ class TaskView extends View
 
         # Plot subview contents in there. It'll take care of everything itself
         @$('section[data-s3-logs]').html @s3Subview.$el
+        @$('section[data-file-browser]').html @fileBrowserSubview.$el
 
     renderTask: ->
         # Renders everything taht depends on @taskHistory
@@ -83,9 +93,13 @@ class TaskView extends View
         @$('.task-info-container').html @infoTemplate context
         @$('.task-history-container').html @historyTemplate context
 
+        utils.setupCopyLinks @$el
+
     renderEnvironment: ->
         @$('.task-environment-container').html @environmentTemplate
             taskHistory: @taskHistory.attributes
+
+        utils.setupCopyLinks @$el
 
     renderResourceUsage: ->
         $container = @$ '.task-resource-container'
@@ -95,6 +109,8 @@ class TaskView extends View
         else
             $container.html @resourceUsageTemplate
                 taskResourceUsage: @taskResourceUsage.attributes
+
+            utils.setupCopyLinks @$el
 
     viewJson: (event) ->
         utils.viewJSON 'task', $(event.target).data 'task-id'
