@@ -85,8 +85,8 @@ class Application
             else if jqxhr.statusText is 'timeout'
                 Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
             else
-                console.error "AJAX Error"
                 console.error jqxhr
+                throw new Error "AJAX Error"
                 Messenger().post "<p>An error occurred when trying to access:</p><pre>#{ url }</pre><p>Check JS console for response.</p>"
                 
     # Called in Router. Shows the passed view's $el on the page
