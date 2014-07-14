@@ -29,8 +29,7 @@ class FileBrowserSubview extends View
             breadcrumbs: breadcrumbs
 
         if @scrollWhenReady
-            offset = @$el.offset().top
-            $(window).scrollTop offset
+            @scrollToTop()
 
             # Only do it once
             @scrollWhenReady = false
@@ -38,9 +37,12 @@ class FileBrowserSubview extends View
     catchAjaxError: ->
         @$('.span-12').html '<h3>Could not get files :(</h3>'
 
+    scrollToTop: ->
+        offset = @$el.offset().top
+        $(window).scrollTop offset
+
     navigate: (event) ->
         event.preventDefault()
-
 
         $table = @$ 'table'
         # Get table height for later
@@ -55,11 +57,11 @@ class FileBrowserSubview extends View
 
         app.router.navigate "#task/#{ @collection.taskId }/files/#{ @collection.path }"
 
-        @collection.reset()
-        @collection.fetch()
+        @collection.fetch reset: true
 
         @render()
 
+        @scrollWhenReady = true
         $loaderContainer = @$ '.page-loader-container'
         if tableHeight?
             $loaderContainer.css 'height', "#{ tableHeight }px"
