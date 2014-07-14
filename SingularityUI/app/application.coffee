@@ -98,7 +98,7 @@ class Application
 
     showView: (view) ->
         # Clean up events & stuff
-        @currentView.remove()
+        @currentView?.remove()
 
         @currentView = view
         # Render & display the view
