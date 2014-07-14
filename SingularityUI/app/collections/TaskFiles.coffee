@@ -4,7 +4,7 @@ class TaskFiles extends Collection
 
     url: -> "#{ config.apiRoot }/sandbox/#{ @taskId }/browse"
 
-    initialize: ({ @taskId, @path }) ->
+    initialize: (models, { @taskId, @path }) ->
         @path = if not @path? then @taskId else @path
 
     fetch: (params) ->

@@ -42,9 +42,9 @@ class TaskView extends View
         @listenTo @taskResourceUsage, 'sync',  @renderResourceUsage
         @listenTo @taskResourceUsage, 'error', @ignoreAjaxError
 
-        @taskFiles = new TaskFiles taskId: @id, path: path
+        @taskFiles = new TaskFiles [], taskId: @id, path: path
 
-        @taskS3Logs = new TaskS3Logs taskId: @id
+        @taskS3Logs = new TaskS3Logs [], taskId: @id
         @listenTo @taskS3Logs, 'error', @catchAjaxError
 
         @fileBrowserSubview = new FileBrowserSubview

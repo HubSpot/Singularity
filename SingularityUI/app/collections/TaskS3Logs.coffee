@@ -14,6 +14,6 @@ class TaskS3Logs extends Collection
 
         "#{ config.apiRoot }/logs/task/#{ @taskId }?#{ $.param params }"
 
-    initialize: ({ @taskId }) => super
+    initialize: (models, { @taskId }) => super
 
 module.exports = TaskS3Logs

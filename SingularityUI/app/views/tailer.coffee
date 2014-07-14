@@ -25,7 +25,7 @@ class TailerView extends Backbone.View
 
         @$container = @$('.tail-container')
 
-        @taskHistory = new TaskHistory {}, taskId: @options.taskId
+        @taskHistory = new TaskHistory taskId: @options.taskId
 
         @lines.on 'sort', =>
             @handleEmpty()
