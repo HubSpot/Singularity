@@ -32,11 +32,11 @@
                                     {{else}}
                                         <a href="{{#appRoot}}{{/appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
                                             <span class="icon icon-file"></span>{{ shortPath }}
-                                            {{#ifEqual shortPath 'service.log'}}
-                                                <span class="label label-info">stdout</span>
-                                                <span class="label label-info">stderr</span>
-                                            {{/ifEqual}}
                                         </a>
+                                        {{#ifEqual shortPath 'service.log'}}
+                                            <span class="label label-info">stdout</span>
+                                            <span class="label label-info">stderr</span>
+                                        {{/ifEqual}}
                                     {{/if}}
                                 </td>
                                 <td data-value="{{ size }}">
