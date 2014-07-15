@@ -40,6 +40,7 @@ public class SingularityClient {
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
+  private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
   
   private static final String REQUESTS_FORMAT = "http://%s/%s/requests";
@@ -664,6 +665,26 @@ public class SingularityClient {
     LOG.info(String.format("Got active task history from Singularity in %sms", System.currentTimeMillis() - start));
 
     checkResponse("get active task history", getResponse);
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKID_HISTORY_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
+  public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId) {
+    final String requestUri = String.format(REQUEST_INACTIVE_TASKS_HISTORY_FORMAT, getHost(), contextPath, requestId);
+
+    LOG.info(String.format("Getting inactive (failed, killed, lost) task  history for request %s - (%s)", requestId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    LOG.info(String.format("Got inactive task history from Singularity in %sms", System.currentTimeMillis() - start));
+
+    checkResponse("get inactive task history", getResponse);
 
     try {
       return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKID_HISTORY_COLLECTION);
