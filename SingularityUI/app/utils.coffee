@@ -230,4 +230,13 @@ class Utils
             # Set the table layout to be fixed based on these new widths
             $table.css "table-layout", "fixed"
 
+    @pathToBreadcrumbs: (path) ->
+        # a/b/c => [a, b, c]
+        pathComponents = path.split '/'
+        # [a, b, c] => [a, a/b, a/b/c]
+        _.map pathComponents, (crumb, index) =>
+            path = _.first pathComponents, index
+            path.push crumb
+            return { name: crumb, path: path.join '/' }
+
 module.exports = Utils

@@ -14,13 +14,7 @@ class FileBrowserSubview extends View
         @listenTo @collection, 'error', @catchAjaxError
 
     render: ->
-        # a/b/c => [a, b, c]
-        pathComponents = @collection.path.split '/'
-        # [a, b, c] => [a, a/b, a/b/c]
-        breadcrumbs = _.map pathComponents, (crumb, index) =>
-            path = _.first pathComponents, index
-            path.push crumb
-            return { name: crumb, path: path.join '/' }
+        breadcrumbs = utils.pathToBreadcrumbs @collection.path
 
         @$el.html @template
             synced:      @collection.synced
