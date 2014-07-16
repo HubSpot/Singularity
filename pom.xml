@@ -72,6 +72,7 @@
     <module>SingularityExecutorCleanup</module>
     <module>SingularityLogWatcher</module>
     <module>SingularityS3Uploader</module>
+    <module>SingularityOOMKiller</module>
   </modules>
 
   <build>
