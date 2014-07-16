@@ -7,6 +7,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,7 +43,7 @@ public class SingularityClusterManager {
     }
   }
 
-  public List<String> getClusterMembers(String cluster) {
+  public String getClusterMembers(String cluster) {
     try {
       final List<String> leaders = curator.getChildren().forPath(LEADER_PATH);
       final List<String> hosts = Lists.newArrayListWithCapacity(leaders.size());
@@ -53,7 +54,7 @@ public class SingularityClusterManager {
         hosts.add(JavaUtils.toString(data));
       }
 
-      return hosts;
+      return Joiner.on(",").join(hosts);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

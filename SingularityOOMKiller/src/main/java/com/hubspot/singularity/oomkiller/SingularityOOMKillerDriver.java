@@ -35,6 +35,8 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
 
   @Override
   public void startAndWait() {
+    LOG.info("Starting an OOMKiller that will run every {}", JavaUtils.durationFromMillis(configuration.getCheckForOOMEveryMillis()));
+    
     future = this.scheduler.scheduleAtFixedRate(new Runnable() {
 
       @Override

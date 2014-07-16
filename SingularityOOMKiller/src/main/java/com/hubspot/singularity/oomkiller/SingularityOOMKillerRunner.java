@@ -2,6 +2,7 @@ package com.hubspot.singularity.oomkiller;
 
 import java.util.Arrays;
 
+import com.hubspot.singularity.client.SingularityClientModule;
 import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfigurationLoader;
 import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
@@ -16,7 +17,7 @@ public class SingularityOOMKillerRunner {
   private SingularityOOMKillerRunner() {}
   
   public void run(String[] args) {
-    new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(new SingularityOOMKillerConfigurationLoader()), new SingularityOOMKillerModule()));
+    new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(new SingularityOOMKillerConfigurationLoader()), new SingularityOOMKillerModule(), new SingularityClientModule()));
   }
 
 }

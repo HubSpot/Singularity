@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -71,24 +70,24 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   
   private final Random random;
-  private final List<String> hosts;
+  private final String[] hosts;
   private final String contextPath;
 
   private final ObjectMapper objectMapper;
   private final AsyncHttpClient httpClient;
   
   @Inject
-  public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) List<String> hosts) {
+  public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.contextPath = contextPath;
     
-    this.hosts = hosts;
+    this.hosts = hosts.split(",");
     this.random = new Random();
   }
 
   private String getHost() {
-    return hosts.get(random.nextInt(hosts.size()));
+    return hosts[random.nextInt(hosts.length)];
   }
   
   private void checkResponse(String type, Response response) {
