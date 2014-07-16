@@ -63,7 +63,6 @@ class LogLines extends Collection
         request = super _.extend params, defaultParams
         
         request.done ({data}) =>
-            @sort()
             @moreToFetch = data.length is @requestLength
 
         request
