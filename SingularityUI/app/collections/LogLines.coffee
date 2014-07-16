@@ -61,13 +61,15 @@ class LogLines extends Collection
             data: _.extend {@path, length: @requestLength}, params.data
 
         request = super _.extend params, defaultParams
-        
-        request.done ({data}) =>
-            @moreToFetch = data.length is @requestLength
 
         request
 
     parse: (result) =>
+        # We have more stuff to fetch if we got `requestLength` data back
+        @moreToFetch = result.length is @requestLength
+        # And (we're going forwards or we're at the start)
+        @moreToFetch = @moreToFetch and result.offset > @getMaxOffset() or @getMinOffset() is 0
+
         offset = result.offset
 
         # split on newlines
