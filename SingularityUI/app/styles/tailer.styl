@@ -1,206 +1,84 @@
 @import colors
 
-.tail-wrapper
+.tail-header
 
-    .tail-corner-container
-        display inline-block
-        bottom 30px
-        right 30px
-        
-        .tail-button-container
-            display inline-block
-        
-        .tail-indicator-container
-            display: block
-        
-        .tail-indicator, .tail-button-container a
-            font-size 12px
-            line-height 12px
-            padding .75em .7em .7em
-            font-weight 200
-            letter-spacing .2em
-            border-radius 5px
-            text-transform uppercase
-            float right
-        
-        .tail-button-container a
-            display inline-block
-            margin .5em 0 0 .5em
-            background #ddd // fallback
-            background rgba(200, 200, 200, .8)
-            color #666
-            
-            &:hover
-                text-decoration none
-        
-        .tail-indicator
-            color #fff
-            margin auto
-            opacity .8
-            background $red
-            display none
+    .breadcrumb
+        margin-bottom 0
 
-            .page-loader
-                display none
-                border-top-color inherit
-                border-right-color inherit
+    .tail-buttons
+        text-align right
+        padding-top 8px
 
-            &:hover
-                opacity 1
+.tail-indicator
+    z-index 500
+    position absolute
+    bottom 0
+    right 0
+    padding 1em
+    background rgba(255, 255, 255, .8)
+    opacity .9
+    border-radius 4px 0 0 0
+    width 90px
+    text-align center
 
-    &.tailing
-        
-        .tail-indicator
-            background $green
-            display inline-block
-        
-        .tail-bottom-button
-            opacity .5
+    &:hover
+        opacity .33
 
-    &.at-top
-        
-        .tail-top-button
-            opacity .5
-
-    &.fetchNext, &.fetchPrev
-        
-        .tail-indicator
-            display inline-block
-            background $orange
-
-    &.tailing .tail-indicator:before
-        content "Tailing"
-
-    &.fetchNext
-        
-        .tail-indicator
-            
-            .page-loader
-                display block
-
-            &:before
-                content ""
-
-    &.fetchPrev .tail-indicator
-
-        .page-loader
-            display block
-
-        &:before
-            content ""
-
-    &.hover-last-5
-
-        .tail-corner-container
-            opacity .25
-        
-            &:hover
-                opacity 1
-
-.tail-outer
-    position relative
-    font-family Consolas, "Liberation Mono", Courier, monospace
-    overflow auto
-    -webkit-overflow-scrolling touch
-
-    @media (max-width: 1199px)
-        height 500px
-
-    .tail-loader
+    &, span, .page-loader
         display none
 
-    &.loading .tail-loader
-        display block
+    span
+        font-weight 600
+        text-shadow 0 0 0 #fff
+        letter-spacing .15em
 
-    &.empty
-        font-family inherit
-        text-align center
-        font-size 1.3em
+    .page-loader
+        height 14px
+        width 14px
+        border-width 1px
 
-        &:before
-            content "This file is empty."
-            opacity .7
-            position absolute
-            margin auto
-            top 0
-            left 0
-            right 0
-            bottom 4em
-            height 1em
+.tail-contents
+    overflow scroll
+    position absolute
+    top 150px
+    left 0
+    bottom 0
+    right 0
+    background #f6f6f6
+    
+    .line
+        font-family Consolas, "Liberation Mono", Courier, monospace
+        min-height 1.6em // Show empty lines too
+        line-height 1.6em
+        padding 0 2em
+        white-space pre-wrap
+        word-break break-all
+        
+        &:nth-child(2n)
+            background rgba(0, 0, 0, .05)
 
-    .tail-container
+        &:hover
+            background rgba(0, 0, 0, .1)
 
-        > div
-            width 100%
-            white-space pre
+// States
+.tailing
+    
+    .tail-indicator
+        display inline-block !important
+        
+        span
+            display inline-block
+        
+        .page-loader
+            display none
 
-            &:hover
-                background #eee
-
-@media (min-width: 1200px)
-
-    .tail-wrapper
-
-        .tail-corner-container
-            position absolute
-
-    html.tail-view
-
-        &, body
-            height 100%
-            overflow hidden
-
-        .navbar-inner .container
-            width 100% !important
-            max-width 100% !important
-            padding-left 20px
-            padding-right 20px
-
-        #page
-            position fixed
-            width 100%
-            max-width: 100%
-            top 40px
-            bottom 0
-            left 0
-            right 0
-
-            header
-                position absolute
-                top 0
-                left 0
-                right 0
-                padding 13px 20px
-                height 90px
-                background #fcfcfc
-                margin 0
-
-                h1
-                    display block
-                    overflow hidden
-                    white-space nowrap
-                    text-overflow ellipsis
-                    font-size 25px
-                    height 1.4em
-                    line-height 1.4em
-                    padding-right 0
-
-                    wbr
-                        display none
-
-            .tail-outer
-                position absolute
-                top 90px
-                left 0
-                right 0
-                bottom 0
-                background #f3f3f3
-
-                .tail-container
-                    display inline-block
-
-                    > div
-                        padding 0 20px
-
-                        &:hover
-                            background #ccc
+.fetching-data
+    
+    .tail-indicator
+        display inline-block !important
+        
+        span
+            display none
+        
+        .page-loader
+            display inline-block
