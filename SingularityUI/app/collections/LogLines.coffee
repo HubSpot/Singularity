@@ -65,12 +65,12 @@ class LogLines extends Collection
         request
 
     parse: (result) =>
+        offset = result.offset
+
         # We have more stuff to fetch if we got `requestLength` data back
         @moreToFetch = result.length is @requestLength
         # And (we're going forwards or we're at the start)
-        @moreToFetch = @moreToFetch and result.offset > @getMaxOffset() or @getMinOffset() is 0
-
-        offset = result.offset
+        @moreToFetch = @moreToFetch and (offset >= @getMaxOffset() or @getMinOffset() is 0)
 
         # split on newlines
         lines = result.data.split @delimiter
