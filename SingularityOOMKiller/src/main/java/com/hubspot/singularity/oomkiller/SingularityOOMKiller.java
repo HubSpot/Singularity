@@ -23,4 +23,9 @@ public class SingularityOOMKiller {
     this.singularity = singularity;
   }
   
+  public void checkForOOMS() {
+    
+  }
+  
+  
 }
