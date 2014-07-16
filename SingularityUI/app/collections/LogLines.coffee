@@ -68,7 +68,7 @@ class LogLines extends Collection
         offset = result.offset
 
         # We have more stuff to fetch if we got `requestLength` data back
-        @moreToFetch = result.length is @requestLength
+        @moreToFetch = result.data.length is @requestLength
         # And (we're going forwards or we're at the start)
         @moreToFetch = @moreToFetch and (offset >= @getMaxOffset() or @getMinOffset() is 0)
 
