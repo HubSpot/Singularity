@@ -1,8 +1,11 @@
 package com.hubspot.singularity.resources;
 
+import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
@@ -22,8 +25,20 @@ public class StateResource {
   }
   
   @GET
-  public SingularityState getState() {
-    return stateManager.getState();
+  public SingularityState getState(@QueryParam("skipCache") boolean skipCache, @QueryParam("includeRequestIds") boolean includeRequestIds) {
+    return stateManager.getState(skipCache, includeRequestIds);
   }
-    
+  
+  @GET
+  @Path("/requests/under-provisioned")
+  public List<String> getUnderProvisionedTaskIds(@QueryParam("skipCache") boolean skipCache) {
+    return stateManager.getState(skipCache, true).getUnderProvisionedRequestIds();
+  }
+
+  @GET
+  @Path("/requests/over-provisioned")
+  public List<String> getOverProvisionedTaskIds(@QueryParam("skipCache") boolean skipCache) {
+    return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
+  }
+  
 }

@@ -109,8 +109,12 @@ public class StateManager extends CuratorManager {
     return numTasks.toCountMap();
   }
   
-  public SingularityState getState() {
-    Optional<SingularityState> fromZk = getData(STATE_PATH, stateTranscoder);
+  public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
+    Optional<SingularityState> fromZk = Optional.absent();
+    
+    if (!skipCache) {
+      fromZk = getData(STATE_PATH, stateTranscoder);
+    }
     
     if (fromZk.isPresent()) {
       final long now = System.currentTimeMillis();
@@ -123,16 +127,19 @@ public class StateManager extends CuratorManager {
     
     final long start = System.currentTimeMillis();
     
-    SingularityState newState = generateState();
-    final byte[] bytes = stateTranscoder.toBytes(newState);
-    save(STATE_PATH, Optional.of(bytes));
+    SingularityState newState = generateState(includeRequestIds);
     
-    LOG.info("Generated new state and saved {} bytes in {}", bytes.length, JavaUtils.duration(start));
+    if (!skipCache) {
+      final byte[] bytes = stateTranscoder.toBytes(newState);
+      save(STATE_PATH, Optional.of(bytes));
+
+      LOG.info("Generated new state and saved {} bytes in {}", bytes.length, JavaUtils.duration(start));
+    }
     
     return newState;
   }
   
-  public SingularityState generateState() {
+  public SingularityState generateState(boolean includeRequestIds) {
     final int activeTasks = taskManager.getNumActiveTasks();
     final int scheduledTasks = taskManager.getNumScheduledTasks();
     final int cleaningTasks = taskManager.getNumCleanupTasks();
@@ -203,8 +210,10 @@ public class StateManager extends CuratorManager {
       numDeploys++;
     }
     
-    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves, deadSlaves, decomissioningSlaves, activeRacks, deadRacks, 
-        decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(), scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), overProvisionedRequests, underProvisionedRequests);
+    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves, 
+        deadSlaves, decomissioningSlaves, activeRacks, deadRacks,  decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(), 
+        scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequests : null, 
+            includeRequestIds ? underProvisionedRequests : null, overProvisionedRequests.size(), underProvisionedRequests.size());
   }
   
 }

@@ -255,21 +255,23 @@ public class SingularityScheduler {
   }
   
   private List<SingularityTaskRequest> checkForStaleScheduledTasks(List<SingularityPendingTask> pendingTasks, List<SingularityTaskRequest> taskRequests) {
-    final Set<String> foundRequestIds = Sets.newHashSetWithExpectedSize(taskRequests.size());
-    
+    final Set<String> foundPendingTaskId = Sets.newHashSetWithExpectedSize(taskRequests.size());
+    final Set<String> requestIds = Sets.newHashSetWithExpectedSize(taskRequests.size());
+   
     for (SingularityTaskRequest taskRequest : taskRequests) {
-      foundRequestIds.add(taskRequest.getRequest().getId());
+      foundPendingTaskId.add(taskRequest.getPendingTask().getPendingTaskId().getId());
+      requestIds.add(taskRequest.getRequest().getId());
     }
     
     for (SingularityPendingTask pendingTask : pendingTasks) {
-      if (!foundRequestIds.contains(pendingTask.getPendingTaskId().getRequestId())) {
-        LOG.info("Removing stale pending task {} because there was no found request id", pendingTask.getPendingTaskId());
+      if (!foundPendingTaskId.contains(pendingTask.getPendingTaskId().getId())) {
+        LOG.info("Removing stale pending task {}", pendingTask.getPendingTaskId());
         taskManager.deletePendingTask(pendingTask.getPendingTaskId().getId());
       }
     }
     
     // TODO this check isn't necessary if we keep track better during deploys
-    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(foundRequestIds);
+    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
     final List<SingularityTaskRequest> taskRequestsWithValidDeploys = Lists.newArrayListWithCapacity(taskRequests.size());
     
     for (SingularityTaskRequest taskRequest : taskRequests) {

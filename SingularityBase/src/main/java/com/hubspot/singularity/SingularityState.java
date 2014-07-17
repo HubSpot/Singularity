@@ -39,8 +39,11 @@ public class SingularityState extends SingularityJsonObject {
   
   private final List<SingularityHostState> hostStates;
 
-  private final List<String> overProvisionedRequests;
-  private final List<String> underProvisionedRequests;
+  private final List<String> overProvisionedRequestIds;
+  private final List<String> underProvisionedRequestIds;
+  
+  private final int overProvisionedRequests;
+  private final int underProvisionedRequests;
   
   public static SingularityState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
@@ -57,7 +60,9 @@ public class SingularityState extends SingularityJsonObject {
       @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks, 
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt, 
-      @JsonProperty("overProvisionedRequests") List<String> overProvisionedRequests, @JsonProperty("underProvisionedRequests") List<String> underProvisionedRequests) {
+      @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
+      @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests
+      ) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -82,18 +87,12 @@ public class SingularityState extends SingularityJsonObject {
     this.lbCleanupTasks = lbCleanupTasks;
     this.underProvisionedRequests = underProvisionedRequests;
     this.overProvisionedRequests = overProvisionedRequests;
+    this.overProvisionedRequestIds = overProvisionedRequestIds;
+    this.underProvisionedRequestIds = underProvisionedRequestIds;
   }
   
-  public List<String> getOverProvisionedRequests() {
-    return overProvisionedRequests;
-  }
-
   public long getGeneratedAt() {
     return generatedAt;
-  }
-
-  public List<String> getUnderProvisionedRequests() {
-    return underProvisionedRequests;
   }
 
   public long getOldestDeploy() {
@@ -182,6 +181,22 @@ public class SingularityState extends SingularityJsonObject {
   
   public int getLbCleanupTasks() {
     return lbCleanupTasks;
+  }
+
+  public List<String> getOverProvisionedRequestIds() {
+    return overProvisionedRequestIds;
+  }
+
+  public List<String> getUnderProvisionedRequestIds() {
+    return underProvisionedRequestIds;
+  }
+
+  public int getOverProvisionedRequests() {
+    return overProvisionedRequests;
+  }
+
+  public int getUnderProvisionedRequests() {
+    return underProvisionedRequests;
   }
   
 }
