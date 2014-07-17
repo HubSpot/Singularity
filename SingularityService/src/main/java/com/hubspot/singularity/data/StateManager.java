@@ -22,6 +22,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityState;
@@ -147,8 +148,8 @@ public class StateManager extends CuratorManager {
 
     final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getPendingTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
 
-    final List<String> overProvisionedRequests = new ArrayList<>();
-    final List<String> underProvisionedRequests = new ArrayList<>();
+    final List<String> overProvisionedRequestIds = new ArrayList<>();
+    final List<String> possiblyUnderProvisionedRequestIds = new ArrayList<>();
     
     final List<SingularityRequestWithState> requests = requestManager.getRequests();
     
@@ -178,9 +179,20 @@ public class StateManager extends CuratorManager {
         final Long numActualInstances = numInstances.get(requestWithState.getRequest().getId());
         
         if (numActualInstances == null || numActualInstances.longValue() < instances) {
-          underProvisionedRequests.add(requestWithState.getRequest().getId());
+          possiblyUnderProvisionedRequestIds.add(requestWithState.getRequest().getId());
         } else if (numActualInstances.longValue() > instances) {
-          overProvisionedRequests.add(requestWithState.getRequest().getId());
+          overProvisionedRequestIds.add(requestWithState.getRequest().getId());
+        }
+      }
+    }
+    
+    final List<String> underProvisionedRequestIds = new ArrayList<>(possiblyUnderProvisionedRequestIds.size());
+    if (!possiblyUnderProvisionedRequestIds.isEmpty()) {
+      Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(possiblyUnderProvisionedRequestIds);
+      
+      for (SingularityRequestDeployState deployState : deployStates.values()) {
+        if (deployState.getActiveDeploy().isPresent() || deployState.getPendingDeploy().isPresent()) {
+          underProvisionedRequestIds.add(deployState.getRequestId());
         }
       }
     }
@@ -212,8 +224,8 @@ public class StateManager extends CuratorManager {
     
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves, 
         deadSlaves, decomissioningSlaves, activeRacks, deadRacks,  decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(), 
-        scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequests : null, 
-            includeRequestIds ? underProvisionedRequests : null, overProvisionedRequests.size(), underProvisionedRequests.size());
+        scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null, 
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size());
   }
   
 }
