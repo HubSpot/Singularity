@@ -104,7 +104,7 @@ public class StateManager extends CuratorManager {
     }
     
     for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
-      numTasks.incr(pendingTaskId.getId());
+      numTasks.incr(pendingTaskId.getRequestId());
     }
     
     return numTasks.toCountMap();
