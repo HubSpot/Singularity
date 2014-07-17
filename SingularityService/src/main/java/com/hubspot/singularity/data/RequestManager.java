@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -56,8 +57,8 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(NORMAL_PATH_ROOT, requestId);
   }
   
-  private String getPendingPath(String requestId) {
-    return ZKPaths.makePath(PENDING_PATH_ROOT, requestId);
+  private String getPendingPath(String requestId, String deployId) {
+    return ZKPaths.makePath(PENDING_PATH_ROOT, new SingularityDeployKey(requestId, deployId).getId());
   }
   
   private String getCleanupPath(String requestId) {
@@ -77,7 +78,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
   
   public void deletePendingRequest(SingularityPendingRequest pendingRequest) {
-    delete(getPendingPath(pendingRequest.getRequestId()));
+    delete(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()));
   }
   
   public void deleteCleanRequest(String requestId) {
@@ -106,9 +107,9 @@ public class RequestManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
-    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId()), Optional.of(pendingRequest.getAsBytes(objectMapper)));
+    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()), Optional.of(pendingRequest.getAsBytes(objectMapper)));
   
-    LOG.info(String.format("%s added to pending queue with result: %s", pendingRequest, result));
+    LOG.info("{} added to pending queue with result: {}", pendingRequest, result);
 
     return result;
   }

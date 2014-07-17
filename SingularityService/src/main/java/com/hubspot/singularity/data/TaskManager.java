@@ -390,8 +390,12 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(path, taskTranscoder);
   }
   
+  public List<SingularityPendingTaskId> getPendingTaskIds() {
+    return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+  }
+  
   public List<SingularityPendingTask> getPendingTasks() {
-    return Lists.transform(getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder), pendingTaskIdToPendingTaskFunction);
+    return Lists.transform(getPendingTaskIds(), pendingTaskIdToPendingTaskFunction);
   }
   
   public void createTaskAndDeletePendingTask(SingularityTask task) {

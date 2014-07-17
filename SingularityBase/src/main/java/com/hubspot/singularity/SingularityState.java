@@ -1,11 +1,13 @@
 package com.hubspot.singularity;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityState {
+public class SingularityState extends SingularityJsonObject {
   
   private final int activeTasks;
   private final int pausedRequests;
@@ -33,15 +35,29 @@ public class SingularityState {
   private final long oldestDeploy;
   private final int numDeploys;
   
+  private final long generatedAt;
+  
   private final List<SingularityHostState> hostStates;
 
+  private final List<String> overProvisionedRequests;
+  private final List<String> underProvisionedRequests;
+  
+  public static SingularityState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+    try {
+      return objectMapper.readValue(bytes, SingularityState.class);
+    } catch (IOException e) {
+      throw new SingularityJsonException(e);
+    }
+  }
+  
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests, 
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
       @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves, 
       @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks, 
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
-      @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag) {
+      @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt, 
+      @JsonProperty("overProvisionedRequests") List<String> overProvisionedRequests, @JsonProperty("underProvisionedRequests") List<String> underProvisionedRequests) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -50,6 +66,7 @@ public class SingularityState {
     this.pendingRequests = pendingRequests;
     this.cleaningRequests = cleaningRequests;
     this.activeRacks = activeRacks;
+    this.generatedAt = generatedAt;
     this.activeSlaves = activeSlaves;
     this.deadRacks = deadRacks;
     this.deadSlaves = deadSlaves;
@@ -63,6 +80,20 @@ public class SingularityState {
     this.oldestDeploy = oldestDeploy;
     this.numDeploys = numDeploys;
     this.lbCleanupTasks = lbCleanupTasks;
+    this.underProvisionedRequests = underProvisionedRequests;
+    this.overProvisionedRequests = overProvisionedRequests;
+  }
+  
+  public List<String> getOverProvisionedRequests() {
+    return overProvisionedRequests;
+  }
+
+  public long getGeneratedAt() {
+    return generatedAt;
+  }
+
+  public List<String> getUnderProvisionedRequests() {
+    return underProvisionedRequests;
   }
 
   public long getOldestDeploy() {
@@ -151,14 +182,6 @@ public class SingularityState {
   
   public int getLbCleanupTasks() {
     return lbCleanupTasks;
-  }
-
-  @Override
-  public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks + ", lateTasks="
-        + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests="
-        + cleaningRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks=" + deadRacks + ", decomissioningRacks="
-        + decomissioningRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", hostStates=" + hostStates + "]";
   }
   
 }
