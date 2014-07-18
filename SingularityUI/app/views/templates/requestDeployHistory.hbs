@@ -1,17 +1,39 @@
-<header class="jumbotron subhead" id="overview" data-request-header>
-    <h3><a href="{{#appRoot}}{{/appRoot}}/request/{{ request.id }}">Back to request</a></h3>
-    <h1 data-string-length-tens="{{ requestNameStringLengthTens }}">
-        {{#hardBreak request.name}}{{/hardBreak}}
-    </h1>
-</header>
-
-<section>
-    <div class="page-header">
-        <h1>Deploy history</h1>
-    </div>
-    <div class="row-fluid">
-        <div class="span12">
-            <div class="deploy-history-paginated"></div>
+<div class="page-header">
+    <h1>Deploy history</h1>
+</div>
+{{#if data.length}}
+    <table class="table" data-sortable>
+        <thead>
+            <tr>
+                <th>Deploy ID</th>
+                <th>Status</th>
+                <th>User</th>
+                <th>Timestamp</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr>
+                    <td>{{ deployId }}</td>
+                    <td>{{ deployResult.deployStateHuman }}</td>
+                    <td>{{ user }}</td>
+                    <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
+                    <td class="actions-column">
+                        <a data-deploy-id="{{ deployId }}" data-action="viewDeployJSON">
+                            JSON
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    {{#if synced}}
+        <div class="empty-table-message">
+            No deploys
         </div>
-    </div>
-</section>
+    {{else}}
+        <div class="page-loader centered cushy"></div>
+    {{/if}}
+{{/if}}

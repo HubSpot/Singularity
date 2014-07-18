@@ -16,7 +16,14 @@ class Request extends Model
             data.scheduled = utils.isScheduledRequest data.request
             data.onDemand = utils.isOnDemandRequest data.request
 
+            data.paused = data.state is 'PAUSED'
+            data.deleted = data.state is 'DELETED'
+            data.canBeRunNow = (data.scheduled or data.onDemand) and not data.daemon and data.activeDeploy?
+            data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
+
             data.displayState = constants.requestStates[data.state]
+
+            data.activeDeploy?.timestampHuman = utils.humanTime data.activeDeploy.timestamp
 
         data
 
@@ -29,17 +36,17 @@ class Request extends Model
 
     unpause: =>
         $.ajax
-            url: "#{ @url() }/unpause?user=#{app.getUsername()}"
+            url: "#{ @url() }/unpause?user=#{ app.getUsername() }"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ @url() }/pause?user=#{app.getUsername()}"
+            url: "#{ @url() }/pause?user=#{ app.getUsername() }"
             type: 'POST'
 
     run: (confirmedOrPromptData) ->
         options =
-            url: "#{ @url() }/run?user=#{app.getUsername()}"
+            url: "#{ @url() }/run?user=#{ app.getUsername() }"
             type: 'POST'
             contentType: 'application/json'
 

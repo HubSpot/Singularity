@@ -1,233 +1,137 @@
 View = require './view'
 
-RequestHistoricalTasksTableView = require './requestHistoricalTasksTable'
-RequestDeployHistoryTableView = require './requestDeployHistoryTable'
-RequestHistoryTableView = require './requestHistoryTable'
+ExpandableTableSubview = require './expandableTableSubview'
 
 Request = require '../models/Request'
-RequestActiveDeploy = require '../models/RequestActiveDeploy'
-
 RequestTasks = require '../collections/RequestTasks'
+
+# Subview collections
+RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
+RequestDeployHistory = require '../collections/RequestDeployHistory'
+RequestHistory = require '../collections/RequestHistory'
 
 class RequestView extends View
 
-    template: require './templates/request'
+    baseTemplate: require './templates/requestBase'
 
-    requestHeaderTemplate: require './templates/requestHeader'
-    requestTasksActiveTableTemplate: require './templates/requestTasksActiveTable'
-    requestTasksScheduledTableTemplate: require './templates/requestTasksScheduledTable'
-    requestActiveDeployTemplate: require './templates/requestActiveDeploy'
-    requestInfoTemplate: require './templates/requestInfo'
+    headerTemplate: require './templates/requestHeader'
 
+    activeTasksTemplate: require './templates/requestActiveTasks'
+    scheduledTasksTemplate: require './templates/requestScheduledTasks'
 
-    events:
-        'click [data-action="viewJSON"]': 'viewJson'
-        'click [data-action="viewObjectJSON"]': 'viewObjectJson'
-        'click [data-action="viewRequestHistoryJSON"]': 'viewRequestHistoryJson'
+    # Subview templates
+    historicalTasksTemplate: require './templates/requestHistoricalTasks'
+    deployHistoryTemplate: require './templates/requestDeployHistory'
+    requestHistoryTemplate: require './templates/requestHistory'
 
-        'click [data-action="remove"]': 'removeRequest'
-        'click [data-action="run-request-now"]': 'runRequest'
-        'click [data-action="pause"]': 'pauseRequest'
-        'click [data-action="unpause"]': 'unpauseRequest'
-        'click [data-action="bounce"]': 'bounceRequest'
+    events: ->
+        _.extend super,
+            'click [data-action="viewJSON"]': 'viewJson'
+            'click [data-action="viewObjectJSON"]': 'viewObjectJson'
+            'click [data-action="viewRequestHistoryJSON"]': 'viewRequestHistoryJson'
 
-        'click [data-action="run-now"]': 'runTask'
+            'click [data-action="remove"]': 'removeRequest'
+            'click [data-action="run-request-now"]': 'runRequest'
+            'click [data-action="pause"]': 'pauseRequest'
+            'click [data-action="unpause"]': 'unpauseRequest'
+            'click [data-action="bounce"]': 'bounceRequest'
 
-    firstRender: true
+            'click [data-action="run-now"]': 'runTask'
 
-    initialize: ->
-        @requestModel = new Request id: @options.requestId
-        @requestModel.fetched = false
+            'click [data-action="expand-deploy-history"]': 'expandDeployHistory'
 
-        @requestTasksActive = new RequestTasks [], { requestId: @options.requestId, active: true }
-        @requestTasksActive.fetched = false
+    initialize: ({@requestId}) ->
+        # Base Request we get a bunch of info from
+        @model = new Request id: @requestId
+        @listenTo @model, 'sync',  @renderHeader
+        @listenTo @model, 'error', @handleAjaxError
 
-        @requestActiveDeploy = { attributes: {}, mock: true }
+        # @activeDeploy = new RequestActiveDeploy {@requestId}
+        # @listenTo @activeDeploy, 'sync',  @renderActiveDeploy
+        # @listenTo @activeDeploy, 'error', @handleAjaxError
 
-    fetch: ->
-        # Note some other fetching is deferred until the request history subview/table is fetched
+        # List of tasks currently running
+        @collections.activeTasks = new RequestTasks [],
+            requestId: @requestId,
+            state: 'active'
+        @listenTo @collections.activeTasks, 'sync',  @renderActiveTasks
+        @listenTo @collections.activeTasks, 'error', @handleAjaxError
 
-        @requestTasksActive.fetch().done =>
-            @requestTasksActive.fetched = true
-            @render()
+        # Tasks that are scheduled
+        # @scheduledTasks = new RequestTasks [],
+        #     requestId: @requestId,
+        #     state: 'scheduled'
+        # @listenTo @scheduledTasks, 'sync',  @renderScheduledTasks
+        # @listenTo @scheduledTasks, 'error', @handleAjaxError
 
-        app.collections.tasksScheduled.fetch().done =>
-            app.collections.tasksScheduled.fetched = true
-            @render()
-        
-        app.collections.requestsPending.fetch().done =>
-            if (app.collections.requestsPending.get @requestModel.get "id")?
-                @$el.find("#pending-alert").removeClass "hide"
-            else
-                @$el.find("#pending-alert").addClass "hide"
-        
-        app.collections.requestsCleaning.fetch().done =>
-            if (app.collections.requestsCleaning.get @requestModel.get "id")?
-                @$el.find("#cleaning-alert").removeClass "hide"
-            else
-                @$el.find("#cleaning-alert").addClass "hide"
+        # Here be subviews!
+        #
+        # The subviews are fed a collection and template and take care
+        # of everything themselves
+        #
+        @collections.requestHistory = new RequestHistory [], {@requestId}
+        # We want this for the header too!
+        @listenTo @collections.requestHistory, 'sync', @renderHeader
+
+        @collections.historicalTasks = new RequestHistoricalTasks [], {@requestId}
+        @collections.deployHistory = new RequestDeployHistory [], {@requestId}
+
+        @subviews.historicalTasks = new ExpandableTableSubview
+            collection: @collections.historicalTasks
+            template:   @historicalTasksTemplate
+
+        @subviews.deployHistory = new ExpandableTableSubview
+            collection: @collections.deployHistory
+            template:   @deployHistoryTemplate
+
+        @subviews.requestHistory = new ExpandableTableSubview
+            collection: @collections.requestHistory
+            template:   @requestHistoryTemplate
+
+        @refresh()
 
     refresh: ->
-        @refreshCount ?= 0
-        @refreshCount += 1
+        @model.fetch()
+        @collections.requestHistory.fetch() # Also used by subview
+        @collections.activeTasks.fetch()
+        # @scheduledTasks.fetch()
 
-        # Will automatically kick off several renders (yuck)
-        @fetch()
-
-        # Since the parent view is calling refresh immediately, don't refresh
-        # all subviews on the first fetch (ghetto way to prevent unnecessary HTTP
-        # calls from too tightly coupled views)
-        if @refreshCount > 1
-            @requestHistoricalTasksTable?.refresh()
-            @requestDeployHistoryTable?.refresh()
-            @requestHistoryTable?.refresh()
+        # Subview collections
+        @collections.historicalTasks.fetch()
+        @collections.deployHistory.fetch()
 
     render: ->
-        context = @gatherContext()
+        @$el.html @baseTemplate()
 
-        if @firstRender
-            @$el.html @template context, @gatherPartials()
-            @saveSelectors()
-            @firstRender = false
-        else
-            @$requestHeader.html @requestHeaderTemplate context
-            @$requestTasksActiveTableContainer.html @requestTasksActiveTableTemplate context
-            @$requestTasksScheduledTableContainer.html @requestTasksScheduledTableTemplate context
-            @$requestActiveDeploy.html @requestActiveDeployTemplate context
-            @$requestInfo.html @requestInfoTemplate context
+        # Attach subview elements
+        @$('.historical-tasks-container').html @subviews.historicalTasks.$el
+        @$('.deploy-history-container').html   @subviews.deployHistory.$el
+        @$('.request-history-container').html  @subviews.requestHistory.$el
 
-        @renderHistoricalTasksPaginatedIfNeeded()
-        @renderDeployHistoryPaginatedIfNeeded()
-        @renderHistoryPaginatedIfNeeded()
+    renderHeader: ->
+        context = request: @model.attributes
 
-        @$el.find('pre').each -> utils.setupCopyPre $ @
+        if @collections.requestHistory.synced
+            context.firstRequestHistoryItem = @collections.requestHistory.first().attributes
 
-    gatherContext: ->
-        context =
-            request:
-                id: @options.requestId
-                name: utils.getRequestNameFromID @options.requestId
-                scheduled: false
-                onDemand: false
-                scheduledOrOnDemand: false
-                fullObject: false
+        @$('.header-container').html @headerTemplate context
 
-            fetchDoneRequestActiveDeploy: @requestActiveDeploy.fetched
-            noDataRequestActiveDeploy: @requestActiveDeploy.noData
-            requestActiveDeploy: @requestActiveDeploy.attributes
+    renderStatus: ->
+        # This is the bit right of the state badge in the header
+        @renderHeader() unless not @$('.request-status').is ':empty'
 
-            requestNameStringLengthTens: Math.floor(@options.requestId.length / 10) * 10
+    renderActiveTasks: ->
+        @$('.active-tasks-container').html @activeTasksTemplate
+            activeTasks: _.pluck @collections.activeTasks.models, 'attributes'
 
-            fetchDoneActive: @requestTasksActive.fetched
-            requestTasksActive: _.pluck(@requestTasksActive.models, 'attributes')
+    # renderScheduledTasks: ->
+    #     @$('.scheduled-tasks-container').html @scheduledTasksTemplate
+    #         scheduledTasks: _.pluck @scheduledTasks.models, 'attributes'
 
-            fetchDoneScheduled: app.collections.tasksScheduled.fetched
-            requestTasksScheduled: _.filter(_.pluck(app.collections.tasksScheduled.models, 'attributes'), (t) => t.requestId is @options.requestId)
-
-        _.extend context.request, @requestModel.attributes
-
-
-        # Reaching into a subview to pick out a model (just to get things done) :/
-        if @requestHistoryTable?.hasHistoryItems()
-            firstHistoryItem = @requestHistoryTable.firstItem()
-            requestLikeObject = $.extend {}, firstHistoryItem.get 'request'
-            delete requestLikeObject.JSONString
-            delete requestLikeObject.localRequestHistoryId
-
-            if firstHistoryItem.get('state') is 'PAUSED'
-                context.request.paused = true
-
-            if firstHistoryItem.get('state') is 'DELETED'
-                context.request.deleted = true
-
-            requestLikeObject.JSONString = utils.stringJSON requestLikeObject
-            app.allRequests[requestLikeObject.id] = requestLikeObject
-            context.request.fullObject = true
-
-            context.request.scheduledOrOnDemand = context.request.scheduled or context.request.onDemand
-
-            context.firstRequestHistoryItem = firstHistoryItem.attributes
-
-        context
-
-
-    gatherPartials: ->
-        partials =
-            partials:
-                requestHeader: @requestHeaderTemplate
-                requestTasksActiveTable: @requestTasksActiveTableTemplate
-                requestTasksScheduledTable: @requestTasksScheduledTableTemplate
-                requestActiveDeploy: @requestActiveDeployTemplate
-                requestInfo: @requestInfoTemplate
-
-    saveSelectors: ->
-        @$requestHeader = @$el.find('[data-request-header]')
-        @$requestTasksActiveTableContainer = @$el.find('[data-request-tasks-active-table-container]')
-        @$requestTasksScheduledTableContainer = @$el.find('[data-request-tasks-scheduled-table-container]')
-        @$requestActiveDeploy = @$el.find('[data-request-active-deploy]')
-        @$requestInfo = @$el.find('[data-request-info]')
-        @$requestDeployHistory = @$el.find('[data-request-deploy-history]')
-
-
-    renderHistoricalTasksPaginatedIfNeeded: ->
-        return if @requestHistoricalTasksTable?
-
-        @requestHistoricalTasksTable = new RequestHistoricalTasksTableView
-            requestId: @options.requestId
-            count: 10
-
-        @$el.find('.historical-tasks-paginated').html @requestHistoricalTasksTable.render().$el
-
-    renderDeployHistoryPaginatedIfNeeded: ->
-        return if @requestDeployHistoryTable?
-
-        @requestDeployHistoryTable = new RequestDeployHistoryTableView
-            requestId: @options.requestId
-            count: 10
-
-        @$el.find('.deploy-history-paginated').html @requestDeployHistoryTable.render().$el
-
-    renderHistoryPaginatedIfNeeded: ->
-        return if @requestHistoryTable?
-
-        @requestHistoryTable = new RequestHistoryTableView
-            requestId: @options.requestId
-            count: 10
-
-        @$el.find('.history-paginated').html @requestHistoryTable.render().$el
-
-        # More fetching after we know the latest request state (from the first item of the history)
-        @listenTo @requestHistoryTable.history, 'sync', =>
-            if @requestHistoryTable.hasHistoryItems() and not @requestHistoryTable.isPausedOrDeleted()
-                @requestModel.fetch({ suppressErrors: true }).fail =>
-                    @requestModel.fetched = true
-                    @requestActiveDeploy.fetched = true
-                    @requestActiveDeploy.noData = true
-                    @render()
-                .done =>
-                    @requestModel.fetched = true
-
-                    canBeBounced = @requestModel.get('state') in ["ACTIVE", "SYSTEM_COOLDOWN"]
-                    canBeBounced = canBeBounced and not @requestModel.get("scheduled")
-                    canBeBounced = canBeBounced and not @requestModel.get("onDemand")
-                    @requestModel.set "canBeBounced", canBeBounced
-
-                    @render()
-
-                    if @requestModel.get('activeDeploy')?
-                        if @requestActiveDeploy.mock
-                            @requestActiveDeploy = new RequestActiveDeploy [], { requestId: @options.requestId, deployId: @requestModel.get('activeDeploy').id }
-                        @requestActiveDeploy.fetch().done =>
-                            @requestActiveDeploy.fetched = true
-                            @render()
-                    else
-                        @requestActiveDeploy.fetched = true
-                        @requestActiveDeploy.noData = true
-                        @render()
-            else
-                @requestModel.fetched = true
-                @requestActiveDeploy.fetched = true
-                @requestActiveDeploy.noData = true
+    handleAjaxError: (stuffWeDontCareAbout, response) =>
+        if response.status is 404
+            app.caughtError()
+            @$el.html "<h1>Request not found.</h1>"
 
     viewJson: (e) =>
         utils.viewJSON 'task', $(e.target).data('task-id')
@@ -239,28 +143,23 @@ class RequestView extends View
         utils.viewJSON 'requestHistory', $(e.target).data('local-request-history-id')
 
     removeRequest: (e) =>
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptRemove =>
+        @model.promptRemove =>
             app.router.navigate 'requests', trigger: true
 
     runRequest: (e) =>
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptRun =>
+        @model.promptRun =>
             @refresh()
 
     pauseRequest: (e) =>
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptPause =>
+        @model.promptPause =>
             @refresh()
 
     unpauseRequest: (e) =>
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptUnpause =>
+        @model.promptUnpause =>
             @refresh()
     
     bounceRequest: (e) =>
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptBounce =>
+        @model.promptBounce =>
             @refresh()
 
     runTask: (e) =>
@@ -268,10 +167,12 @@ class RequestView extends View
         $containingTable = $row.parents('table')
         taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
         
-        requestModel = new Request id: taskModel.get "requestId"
-        requestModel.promptRun =>
+        @model.promptRun =>
             app.collections.tasksScheduled.remove(taskModel)
             $row.remove()
             utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
+
+    expandDeployHistory: ->
+        @subviews.deployHistory.expand()
 
 module.exports = RequestView

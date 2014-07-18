@@ -1,17 +1,37 @@
-<header class="jumbotron subhead" id="overview" data-request-header>
-    <h3><a href="{{#appRoot}}{{/appRoot}}/request/{{ request.id }}">Back to request</a></h3>
-    <h1 data-string-length-tens="{{ requestNameStringLengthTens }}">
-        {{#hardBreak request.name}}{{/hardBreak}}
-    </h1>
-</header>
-
-<section>
-    <div class="page-header">
-        <h1>Request history</h1>
-    </div>
-    <div class="row-fluid">
-        <div class="span12">
-            <div class="history-paginated"></div>
+<div class="page-header">
+    <h1>Request history</h1>
+</div>
+{{#if data.length}}
+    <table class="table" data-sortable>
+        <thead>
+            <tr>
+                <th>State</th>
+                <th>User</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr>
+                    <td>{{ stateHuman }}</td>
+                    <td>{{ userHuman }}</td>
+                    <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                    <td class="actions-column">
+                        <a data-local-request-history-id="{{ request.localRequestHistoryId }}" data-action="viewRequestHistoryJSON">
+                            JSON
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    {{#if synced}}
+        <div class="empty-table-message">
+            No historical tasks
         </div>
-    </div>
-</section>
+    {{else}}
+        <div class="page-loader centered cushy"></div>
+    {{/if}}
+{{/if}}

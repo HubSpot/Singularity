@@ -1,4 +1,8 @@
-{{#if requestTasksActive}}
+{{! Part of requestBase }}
+<div class="page-header">
+    <h1>Active tasks</h1>
+</div>
+{{#if activeTasks}}
     <div class="row-fluid">
         <div class="span12">
             <table class="table">
@@ -13,7 +17,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{#eachWithFn requestTasksActive}}
+                    {{#eachWithFn activeTasks}}
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}"><a href="{{#appRoot}}{{/appRoot}}/task/{{ id }}">{{#getShortTaskIDMiddleEllipsis name}}{{/getShortTaskIDMiddleEllipsis}}</a></span></td>
                             <td class="visible-desktop">{{ lastTaskStateHuman }}</td>
@@ -31,9 +35,5 @@
         </div>
     </div>
 {{else}}
-    {{#if fetchDoneActive}}
-        <div class="empty-table-message"><p>No active tasks</p></div>
-    {{else}}
-        <div class="page-loader centered"></div>
-    {{/if}}
+    <div class="empty-table-message"><p>No active tasks</p></div>
 {{/if}}
