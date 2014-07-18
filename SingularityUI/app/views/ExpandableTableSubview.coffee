@@ -43,9 +43,9 @@ class ExpandableTableSubview extends View
         $header = @$('.page-header h1')
         if $header.length
             $header.find('small').remove()
-            if not @expanded
+            if not @expanded and @collection.length is @atATime
                 $header.append '<small><a data-action="expand">more at once</a></small>'
-            else
+            else if @expanded
                 $header.append '<small><a data-action="shrink">fewer at once</a></small>'
 
         # Append next / previous page buttons
