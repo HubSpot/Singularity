@@ -32,12 +32,15 @@ class ExpandableTableSubview extends View
             @collection.currentPage -= 1
             return
 
+        # For after the render
+        haveButtons = @$('.table-subview-buttons').length
+
         @$el.html @template
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
 
         # Stop right here if we don't need to append the expand links and the buttons
-        return if @collection.length isnt @collection.atATime and not @$('.table-subview-buttons').length
+        return if @collection.length isnt @collection.atATime and not haveButtons
 
         # Append expand / shrink link
         $header = @$('.page-header h1')
