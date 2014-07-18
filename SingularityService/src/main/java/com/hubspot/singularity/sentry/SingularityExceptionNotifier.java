@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.hubspot.singularity.config.SentryConfiguration;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.event.Event;
@@ -15,10 +17,20 @@ public class SingularityExceptionNotifier {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExceptionNotifier.class);
 
   private final Optional<Raven> raven;
+  private final Optional<SentryConfiguration> sentryConfiguration;
 
   @Inject
-  public SingularityExceptionNotifier(Optional<Raven> raven) {
+  public SingularityExceptionNotifier(Optional<Raven> raven, Optional<SentryConfiguration> sentryConfiguration) {
     this.raven = raven;
+    this.sentryConfiguration = sentryConfiguration;
+  }
+
+  private String getPrefix() {
+    if (!sentryConfiguration.isPresent() || Strings.isNullOrEmpty(sentryConfiguration.get().getPrefix())) {
+      return "";
+    }
+
+    return sentryConfiguration.get().getPrefix() + " ";
   }
 
   public void notify(Throwable t) {
@@ -47,7 +59,7 @@ public class SingularityExceptionNotifier {
   
   private void notify(Raven raven, String message) {
     final EventBuilder eventBuilder = new EventBuilder()
-      .setMessage(message)
+      .setMessage(getPrefix() + message)
       .setLevel(Event.Level.ERROR);
     
     sendEvent(raven, eventBuilder);    
@@ -55,7 +67,7 @@ public class SingularityExceptionNotifier {
   
   private void notify(Raven raven, Throwable t) {
     final EventBuilder eventBuilder = new EventBuilder()
-      .setMessage(t.getMessage())
+      .setMessage(getPrefix() + t.getMessage())
       .setLevel(Event.Level.ERROR)
       .addSentryInterface(new ExceptionInterface(t));
 

@@ -39,6 +39,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.config.SMTPConfiguration;
+import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
@@ -143,6 +144,12 @@ public class SingularityServiceModule extends AbstractModule {
   @Singleton
   public ZooKeeperConfiguration zooKeeperConfiguration(SingularityConfiguration config) {
     return config.getZooKeeperConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public Optional<SentryConfiguration> sentryConfiguration(SingularityConfiguration config) {
+    return config.getSentryConfiguration();
   }
 
   @Provides
