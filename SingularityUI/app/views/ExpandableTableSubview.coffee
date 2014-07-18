@@ -32,7 +32,6 @@ class ExpandableTableSubview extends View
             @collection.currentPage -= 1
             return
 
-        console.log @collection
         @$el.html @template
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'

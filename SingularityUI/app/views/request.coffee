@@ -71,7 +71,7 @@ class RequestView extends View
         #
         @collections.requestHistory = new RequestHistory [], {@requestId}
         # We want this for the header too!
-        @listenTo @collections.requestHistory, 'sync', @renderHeader
+        @listenTo @collections.requestHistory, 'sync', @renderStatus
 
         @collections.historicalTasks = new RequestHistoricalTasks [], {@requestId}
         @collections.deployHistory = new RequestDeployHistory [], {@requestId}

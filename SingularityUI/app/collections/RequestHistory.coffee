@@ -4,6 +4,8 @@ class RequestHistory extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/requests"
 
+    comparator: (r0, r1) => r1.get("createdAt") - r0.get("createdAt")
+
     initialize: (models, { @requestId }) =>
 
     parse: (requestHistoryObjects) ->
