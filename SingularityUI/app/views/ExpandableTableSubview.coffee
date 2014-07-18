@@ -11,9 +11,6 @@ class ExpandableTableSubview extends View
 
     buttonsTemplate: require './templates/tableSubviewButtons'
 
-    atATime: 5
-    currentPage: 1
-
     expanded: false
 
     events: ->
@@ -32,42 +29,38 @@ class ExpandableTableSubview extends View
         if @collection.length is 0 and not @$el.is ':empty'
             # Disable the next button and don't render anything
             @$('[data-action="next-page"]').attr 'disabled', true
-            @currentPage -= 1
+            @collection.currentPage -= 1
             return
 
         @$el.html @template
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
 
+        # Stop right here if we don't need to append the expand links and the buttons
+        return if @collection.length isnt @collection.atATime and not @$('.table-subview-buttons').length
+
         # Append expand / shrink link
         $header = @$('.page-header h1')
         if $header.length
             $header.find('small').remove()
-            if not @expanded and @collection.length is @atATime
+            if not @expanded
                 $header.append '<small><a data-action="expand">more at once</a></small>'
             else if @expanded
                 $header.append '<small><a data-action="shrink">fewer at once</a></small>'
 
         # Append next / previous page buttons
-        hasPrevButton = @currentPage isnt 1
-        hasNextButton = @collection.length is @atATime
+        hasPrevButton = @collection.currentPage isnt 1
+        hasNextButton = @collection.length is @collection.atATime
 
         @$el.append @buttonsTemplate {hasPrevButton, hasNextButton}
 
-    fetch: ->
-        @collection.fetch
-            data:
-                count: @atATime
-                page:  @currentPage
-            reset: true
-
     nextPage: ->
-        @currentPage += 1 unless @collection.length isnt @atATime
-        @fetch()
+        @collection.currentPage += 1 unless @collection.length isnt @collection.atATime
+        @collection.fetch()
 
     previousPage: ->
-        @currentPage -= 1 unless @currentPage is 1
-        @fetch()
+        @collection.currentPage -= 1 unless @collection.currentPage is 1
+        @collection.fetch()
 
     expand: ->
         @expanded = true
@@ -97,17 +90,17 @@ class ExpandableTableSubview extends View
         canFit = Math.floor availableSpace / firstRowHeight
 
         # - 1 just in case
-        @atATime = canFit - 1
-        @currentPage = 1
+        @collection.atATime = canFit - 1
+        @collection.currentPage = 1
 
-        @fetch().done =>
+        @collection.fetch().done =>
             $(window).scrollTop @$el.offset().top - navHeight
 
     shrink: ->
         @expanded = false
 
-        @atATime = 5
-        @currentPage = 1
-        @fetch()
+        @collection.atATime = 5
+        @collection.currentPage = 1
+        @collection.fetch()
 
 module.exports = ExpandableTableSubview
