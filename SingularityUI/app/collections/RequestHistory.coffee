@@ -8,6 +8,12 @@ class RequestHistory extends PaginableCollection
 
     initialize: (models, { @requestId }) =>
 
+    fetch: (params = {}) ->
+        params = _.extend params,
+            data: _.extend params.data or {},
+                orderDirection: 'DESC'
+        super params
+
     parse: (requestHistoryObjects) ->
         _.each requestHistoryObjects, (requestUpdate, i) =>
             if requestUpdate.request?

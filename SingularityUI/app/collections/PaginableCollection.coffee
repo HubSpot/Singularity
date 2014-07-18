@@ -16,6 +16,6 @@ class PaginableCollection extends Mixen(Backbone.Collection, Collection)
             reset: true
             data: _.extend defaultData, params.data
 
-        super _.extend defaultParams, params
+        super _.extend params, defaultParams
 
 module.exports = PaginableCollection
