@@ -224,18 +224,6 @@ public class MesosUtils {
     }
   }
   
-  public static Optional<Long> getFirstPort(Offer offer) {
-    for (Resource resource : offer.getResourcesList()) {
-      if (resource.getName().equals(MesosUtils.PORTS)) {
-        if (resource.getRanges().getRangeCount() > 0) {
-          return Optional.of(resource.getRanges().getRange(0).getBegin());
-        }
-      }
-    }
-
-    return Optional.absent();
-  }
-  
   private static Optional<Resource> getMatchingResource(Resource toMatch, List<Resource> resources) {
     for (Resource resource : resources) {
       if (toMatch.getName().equals(resource.getName())) {

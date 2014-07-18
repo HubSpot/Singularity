@@ -19,7 +19,6 @@ import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonResponse;
 import com.hubspot.baragon.models.BaragonService;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
@@ -139,6 +138,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
 
     try {
+      LOG.trace("Deploy {} is preparing to send {}", deploy.getId(), loadBalancerRequest);
+      
       final Request httpRequest = httpClient.preparePost(loadBalancerUri)
           .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
           .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest))
@@ -154,10 +155,12 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<String> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
-      final Optional<Long> maybeFirstPort = MesosUtils.getFirstPort(task.getOffer());
+      final Optional<Long> maybeFirstPort = task.getFirstPort();
 
       if (maybeFirstPort.isPresent()) {
         upstreams.add(String.format("%s:%d", task.getOffer().getHostname(), maybeFirstPort.get()));
+      } else {
+        LOG.warn("Task {} is missing port but is being passed to LB  ({})", task.getTaskId(), task);
       }
     }
 

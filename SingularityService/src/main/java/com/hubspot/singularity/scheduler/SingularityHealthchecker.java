@@ -7,7 +7,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.mesos.Protos.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
@@ -135,16 +133,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
     
     final String hostname = task.getOffer().getHostname();
     
-    Optional<Long> firstPort = Optional.absent();
-    
-    for (Resource resource : task.getMesosTask().getResourcesList()) {
-      if (resource.getName().equals(MesosUtils.PORTS)) {
-        if (resource.getRanges().getRangeCount() > 0) {
-          firstPort = Optional.of(resource.getRanges().getRange(0).getBegin());
-          break;
-        }
-      }
-    }
+    Optional<Long> firstPort = task.getFirstPort();
     
     if (!firstPort.isPresent() || firstPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);
