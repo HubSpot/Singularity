@@ -58,7 +58,7 @@ class RequestsView extends View
 
         # Set up collection
         @collectionSynced = false
-        @collection = new @collectionMap[@requestsFilter] state: @requestsFilter
+        @collection = new @collectionMap[@requestsFilter] [], state: @requestsFilter
         # Initial fetch
         @collection.fetch().done =>
             @collectionSynced = true

@@ -13,7 +13,6 @@ class RequestHistory extends Mixen(Teeble.ServerCollection)
         "#{ config.apiRoot }/history/request/#{ @requestId }/requests?#{ $.param params }"
 
     initialize: (models, { @requestId }) =>
-        super
 
     parse: (requestHistoryObjects) ->
         requestHistoryObjects

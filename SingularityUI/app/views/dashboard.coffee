@@ -18,7 +18,7 @@ class DashboardView extends View
         @starredCollection = new RequestsStarred
         @starredCollection.fetch()
 
-        @collection = new Requests state: 'all'
+        @collection = new Requests [], state: 'all'
         @collection.fetch().done @render
 
     render: =>

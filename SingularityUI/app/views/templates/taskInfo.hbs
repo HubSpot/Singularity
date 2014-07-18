@@ -2,34 +2,54 @@
     <div class="page-header">
         <h1>Info</h1>
     </div>
-    <div class="row-fluid">
-        <div class="span12">
-            <dl>
-                {{#if taskHistory.task.name }}
-                    <dt>Task Name</dt>
-                    <dd><pre>{{ taskHistory.task.name }}</pre></dd>
-                {{/if}}
-                {{#if taskHistory.task.id }}
-                    <dt>Task ID</dt>
-                    <dd><pre>{{ taskHistory.task.id }}</pre></dd>
-                {{/if}}
-                {{#if taskHistory.task.mesosTask.executor.executorId.value }}
-                    <dt>Executor GUID</dt>
-                    <dd><pre>{{ taskHistory.task.mesosTask.executor.executorId.value }}</pre></dd>
-                {{/if}}
-                {{#if taskHistory.directory }}
-                    <dt>Directory</dt>
-                    <dd><pre>{{ taskHistory.directory }}</pre></dd>
-                {{/if}}
-                {{#if taskHistory.task.offer.hostname }}
-                    <dt>Hostname</dt>
-                    <dd><pre>{{ taskHistory.task.offer.hostname }}</pre></dd>
-                {{/if}}
-                {{#if taskHistory.task.taskRequest.request.executorData.ports }}
-                    <dt>Task request ports</dt>
-                    <dd><pre>{{ taskHistory.task.taskRequest.request.executorData.ports }}</pre></dd>
-                {{/if}}
-            </dl>
-        </div>
-    </div>
+    <ul class="row-fluid horizontal-description-list">
+        {{#if taskHistory.task.name }}
+            <li class="span4">
+                <div>
+                    <h4>Task Name</h4>
+                    <p>{{ taskHistory.task.name }}</p>
+                </div>
+            </li>
+            {{/if}}
+            {{#if taskHistory.task.mesosTask.executor.executorId.value }}
+            <li class="span4">
+                <div>
+                    <h4>Directory</h4>
+                    <p>{{ taskHistory.directory }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskHistory.task.id }}
+            <li class="span4">
+                <div>
+                    <h4>Task ID</h4>
+                    <p>{{ taskHistory.task.id }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskHistory.task.mesosTask.executor.executorId.value }}
+            <li class="span4">
+                <div>
+                    <h4>Executor GUID</h4>
+                    <p>{{ taskHistory.task.mesosTask.executor.executorId.value }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskHistory.task.offer.hostname }}
+            <li class="span4">
+                <div>
+                    <h4>Hostname</h4>
+                    <p>{{ taskHistory.task.offer.hostname }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskHistory.task.taskRequest.request.executorData.ports }}
+            <li class="span4">
+                <div>
+                    <h4>Task request ports</h4>
+                    <p>{{ taskHistory.task.taskRequest.request.executorData.ports }}</p>
+                </div>
+            </li>
+        {{/if}}
+    </ul>
 </section>

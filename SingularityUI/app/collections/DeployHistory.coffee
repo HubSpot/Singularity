@@ -13,7 +13,6 @@ class DeployHistory extends Mixen(Teeble.ServerCollection)
     comparator: undefined
 
     initialize: (models, { @requestId }) =>
-        super
 
     parse: (requestDeployHistoryObjects) ->
         _.each requestDeployHistoryObjects, (deploy, i) =>

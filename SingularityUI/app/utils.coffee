@@ -200,6 +200,19 @@ class Utils
                     $pre.removeClass 'copied'
                 , 600
 
+    # For .horizontal-description-list
+    @setupCopyLinks: ($element) =>
+        $items = $element.find ".horizontal-description-list li"
+        _.each $items, ($item) =>
+            $item = $($item)
+            # Don't do it if there's already a button
+            if not $item.find('a').length
+                text = $item.find('p').html()
+                $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>Copy</a>"
+                $item.find("h4").append $copyLink
+                new ZeroClipboard $copyLink[0],
+                    moviePath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
+
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"
         if $headings.length and $table.css('table-layout') isnt 'fixed'
@@ -216,5 +229,14 @@ class Utils
 
             # Set the table layout to be fixed based on these new widths
             $table.css "table-layout", "fixed"
+
+    @pathToBreadcrumbs: (path) ->
+        # a/b/c => [a, b, c]
+        pathComponents = path.split '/'
+        # [a, b, c] => [a, a/b, a/b/c]
+        _.map pathComponents, (crumb, index) =>
+            path = _.first pathComponents, index
+            path.push crumb
+            return { name: crumb, path: path.join '/' }
 
 module.exports = Utils

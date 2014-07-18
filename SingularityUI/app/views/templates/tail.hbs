@@ -1,24 +1,34 @@
-<header class="jumbotron subhead" id="overview">
-    <h3><a href="{{#appRoot}}{{/appRoot}}/task/{{ taskId }}">{{#hardBreak taskId}}{{/hardBreak}}</a></h3>
-    <h1><a href="{{#appRoot}}{{/appRoot}}/task/{{ taskId }}/files/">...</a>/{{#each subfolders}}<a href="{{#appRoot}}{{/appRoot}}/task/{{ ../taskId }}/files/{{ fullPath }}">{{name}}</a>/{{/each}}{{#hardBreak filename }}{{/hardBreak}}</h1>
+<header class="tail-header jumbotron subhead" id="overview">
+    <div class="container">
+        <div class="row">
+            <div class="span9">
+                <ul class="breadcrumb">
+                    {{#each breadcrumbs}}
+                        <li>
+                            {{#ifEqual name ../filename}}
+                                <strong>{{ name }}</strong>
+                            {{else}}
+                                <a href="{{#appRoot}}{{/appRoot}}/task/{{ ../../taskId }}/files/{{ path }}">
+                                    {{ name }}
+                                </a>
+                            {{/ifEqual}}
+                        </li>
+                    {{/each}}
+                </ul>
+            </div>
+            <div class="span3 visible-desktop tail-buttons">
+                <a class="btn tail-top-button">To top</a>
+                <a class="btn tail-bottom-button">To bottom</a>
+            </div>
+        </div>
+    </div>
 </header>
 
-<div class="tail-outer">
-    <div class="tail-container"></div>
-    <div class="tail-loader">
-        <div class="page-loader fixed"></div>
-    </div>
+<div class="tail-indicator">
+    <div class="page-loader centered"></div>
+    <span>Tailing</span>
 </div>
 
-<div class="tail-corner-container">
-	<div class="tail-indicator-container">
-		<div class="tail-indicator">
-		    <div class="page-loader small centered"></div>
-		</div>
-	</div>
-	
-	<div class="tail-button-container">	
-		<a class="tail-bottom-button">To bottom</a>
-		<a class="tail-top-button">To top</a>
-	</div>
+<div class="tail-contents">
+
 </div>

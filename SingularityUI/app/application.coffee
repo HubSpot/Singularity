@@ -45,7 +45,14 @@ class Application
             pushState: true
             root: el.pathname
 
-        Object.freeze? @
+    caughtError: ->
+        # Ghetto try-catch
+        #
+        # If there's some sort of AJAX error we can choose to handle this ourselves
+        # If we do handle it, we can call app.caughtError() in that bit of code
+        # and it'll prevent the default error message from being displayed,
+        # e.g. `model.fetch().error => app.caughtError()`
+        @caughtThisError = true
 
     setupGlobalErrorHandling: ->
         unloading = false
@@ -54,10 +61,17 @@ class Application
             return
 
         blurred = false
-        $(window).on 'blur', -> blurred = true
+        $(window).on 'blur',  -> blurred = true
         $(window).on 'focus', -> blurred = false
 
-        $(document).on 'ajaxError', (e, jqxhr, settings) ->
+        # When an Ajax error occurs this is the default message that is displayed.
+        # You can add your own custom error handling using app.caughtError() above.
+        $(document).on 'ajaxError', (e, jqxhr, settings) =>
+            # If we handled this already, ignore it
+            if @caughtThisError
+                @caughtThisError = false
+                return
+
             return if settings.suppressErrors
             return if jqxhr.statusText is 'abort'
             return if unloading
@@ -70,8 +84,8 @@ class Application
             else if jqxhr.statusText is 'timeout'
                 Messenger().post "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
             else
-                console.error "AJAX Error response"
                 console.error jqxhr
+                throw new Error "AJAX Error"
                 Messenger().post "<p>An error occurred when trying to access:</p><pre>#{ url }</pre><p>Check JS console for response.</p>"
                 
     # Called in Router. Shows the passed view's $el on the page
@@ -82,9 +96,16 @@ class Application
             @page.appendChild view.el
 
     showView: (view) ->
+        # Clean up events & stuff
+        @currentView?.remove()
+
+        @currentView = view
+        # Render & display the view
         view.render()
-        @views.current = view
-        @show view
+        if @page.children.length
+            @page.replaceChild view.el, @page.children[0]
+        else
+            @page.appendChild view.el
 
     setupAppCollections: ->
         resources = [{
