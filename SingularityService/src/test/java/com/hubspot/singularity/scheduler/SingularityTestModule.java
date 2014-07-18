@@ -1,9 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import net.kencochrane.raven.Raven;
-
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.RetrySleeper;
 import org.apache.curator.framework.CuratorFramework;
@@ -26,18 +22,19 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityDriverManager;
-import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityServiceModule;
-import com.hubspot.singularity.SingularityStatePoller;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
+import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
+
+import net.kencochrane.raven.Raven;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SingularityTestModule extends AbstractModule {
 
@@ -122,5 +119,10 @@ public class SingularityTestModule extends AbstractModule {
   public Optional<Raven> providesNoRaven() {
     return Optional.<Raven> absent();
   }
-  
+
+  @Provides
+  @Singleton
+  public Optional<SentryConfiguration> providesNoSentryConfiguration() {
+    return Optional.absent();
+  }
 }
