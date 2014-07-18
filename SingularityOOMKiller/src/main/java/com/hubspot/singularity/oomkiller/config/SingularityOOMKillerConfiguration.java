@@ -9,20 +9,27 @@ public class SingularityOOMKillerConfiguration {
   private final double killProcessDirectlyThresholdRatio;
 
   private final long checkForOOMEveryMillis;
+  private final String slaveHostname;;
   
   @Inject
   public SingularityOOMKillerConfiguration(
       @Named(SingularityOOMKillerConfigurationLoader.CHECK_FOR_OOM_EVERY_MILLIS) String checkForOOMEveryMillis, 
       @Named(SingularityOOMKillerConfigurationLoader.REQUEST_KILL_THRESHOLD_RATIO) String requestKillThresholdRatio, 
-      @Named(SingularityOOMKillerConfigurationLoader.KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO) String killProcessDirectlyThresholdRatio
+      @Named(SingularityOOMKillerConfigurationLoader.KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO) String killProcessDirectlyThresholdRatio,
+      @Named(SingularityOOMKillerConfigurationLoader.SLAVE_HOSTNAME) String slaveHostname
       ) {
     this.checkForOOMEveryMillis = Long.parseLong(checkForOOMEveryMillis);
     this.requestKillThresholdRatio = Double.parseDouble(requestKillThresholdRatio);
     this.killProcessDirectlyThresholdRatio = Double.parseDouble(requestKillThresholdRatio);
+    this.slaveHostname = slaveHostname;
   }
 
   public double getRequestKillThresholdRatio() {
     return requestKillThresholdRatio;
+  }
+  
+  public String getSlaveHostname() {
+    return slaveHostname;
   }
 
   public double getKillProcessDirectlyThresholdRatio() {
@@ -36,7 +43,8 @@ public class SingularityOOMKillerConfiguration {
   @Override
   public String toString() {
     return "SingularityOOMKillerConfiguration [requestKillThresholdRatio=" + requestKillThresholdRatio + ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio + ", checkForOOMEveryMillis=" + checkForOOMEveryMillis
-        + "]";
+        + ", slaveHostname=" + slaveHostname + "]";
   }
+
   
 }

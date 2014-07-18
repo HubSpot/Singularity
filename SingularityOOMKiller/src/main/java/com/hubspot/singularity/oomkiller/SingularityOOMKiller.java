@@ -1,10 +1,13 @@
 package com.hubspot.singularity.oomkiller;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfiguration;
 
@@ -24,6 +27,10 @@ public class SingularityOOMKiller {
   }
   
   public void checkForOOMS() {
+    List<MesosTaskMonitorObject> taskMonitors = mesos.getSlaveResourceUsage("localhost");
+    
+    for (MesosTaskMonitorObject taskMonitor : taskMonitors) {
+    }
     
   }
   

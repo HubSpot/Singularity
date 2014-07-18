@@ -6,31 +6,27 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.ning.http.client.AsyncHttpClient;
 
 public class SingularityClusterManager {
 
   private final CuratorFramework curator;
   private final String contextPath;
-  private final AsyncHttpClient httpClient;
-  private final ObjectMapper objectMapper;
+  
+  private final SingularityClientProvider clientProvider;
 
   private static final String LEADER_PATH = "/leader";
 
   @Inject
-  public SingularityClusterManager(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.CURATOR_NAME) CuratorFramework curator, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient,
-      @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper) {
+  public SingularityClusterManager(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.CURATOR_NAME) CuratorFramework curator, SingularityClientProvider clientProvider) {
     this.contextPath = contextPath;
     this.curator = curator;
-    this.httpClient = httpClient;
-    this.objectMapper = objectMapper;
+    this.clientProvider = clientProvider;
   }
 
   public List<String> getClusterNames() {
@@ -61,7 +57,7 @@ public class SingularityClusterManager {
   }
 
   public SingularityClient getClusterClient(String cluster) {
-    return new SingularityClient(contextPath, httpClient, objectMapper, getClusterMembers(cluster));
+    return clientProvider.buildClient(contextPath, getClusterMembers(cluster));
   }
 
 }

@@ -130,6 +130,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private boolean allowRequestsWithoutOwners = true;
   
+  @NotNull
+  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
+  
+  public long getCacheStateForMillis() {
+    return cacheStateForMillis;
+  }
+
+  public void setCacheStateForMillis(long cacheStateForMillis) {
+    this.cacheStateForMillis = cacheStateForMillis;
+  }
+
   public boolean isAllowRequestsWithoutOwners() {
     return allowRequestsWithoutOwners;
   }

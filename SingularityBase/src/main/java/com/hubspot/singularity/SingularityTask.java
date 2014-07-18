@@ -3,11 +3,16 @@ package com.hubspot.singularity;
 import java.io.IOException;
 
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.Value.Range;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.hubspot.mesos.MesosUtils;
 
 public class SingularityTask extends SingularityTaskIdHolder {
 
@@ -44,7 +49,20 @@ public class SingularityTask extends SingularityTaskIdHolder {
   public TaskInfo getMesosTask() {
     return mesosTask;
   }
-
+  
+  @JsonIgnore
+  public Optional<Long> getFirstPort() {
+    for (Resource resource : mesosTask.getResourcesList()) {
+      if (resource.getName().equals(MesosUtils.PORTS)) {
+        for (Range range : resource.getRanges().getRangeList()) {
+          return Optional.of(range.getBegin());
+        }
+      }
+    }
+    
+    return Optional.absent();
+  }
+  
   @Override
   public String toString() {
     return "SingularityTask [taskRequest=" + taskRequest + ", taskId=" + taskId + ", offer=" + offer + ", task=" + mesosTask + "]";
