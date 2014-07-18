@@ -90,8 +90,12 @@ public class MesosUtils {
     int idx = 0;
     
     for (Range r : portsResource.getRanges().getRangeList()) {
-      for (long port = r.getBegin(); port < r.getEnd(); port++) {
+      for (long port = r.getBegin(); port <= r.getEnd(); port++) {
         ports[idx++] = port;
+
+        if (idx >= numPorts) {
+          return ports;
+        }
       }
     }
     
