@@ -26,7 +26,7 @@
     "bootstrap": "~3.2.0",
     "backbone": "~1.1.2",
     "jquery": "1.11.1",
-    "mixen": "HubSpot/mixen#b75194b",
+    "mixen": "HubSpot/mixen#b75194b791002519128e4e242ce1e90970d3064e",
     "moment": "moment/moment#~2.7.0",
     "sortable": "HubSpot/sortable#~0.6.0"
   }
