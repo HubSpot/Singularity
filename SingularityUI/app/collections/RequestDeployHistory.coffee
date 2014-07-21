@@ -10,7 +10,7 @@ class DeployHistory extends PaginableCollection
     initialize: (models, { @requestId }) =>
 
     parse: (requestDeployHistoryObjects) ->
-        _.each requestDeployHistoryObjects, (deploy, i) =>
+        for deploy in requestDeployHistoryObjects
             if deploy.deployResult?
                 deploy.deployResult.deployStateHuman = constants.deployStates[deploy.deployResult.deployState]
             deploy.deployId = deploy.deployMarker.deployId

@@ -9,7 +9,7 @@ class RequestTasks extends Collection
     initialize: (models, { @requestId, @state, @sortColumn, @sortDirection }) => super
 
     parse: (tasks) ->
-        _.each tasks, (task) ->
+        for task in tasks
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.name = task.id
@@ -19,7 +19,6 @@ class RequestTasks extends Collection
             task.startedAtHuman = utils.humanTimeAgo task.startedAt
             task.lastTaskStateHuman = if constants.taskStates[task.lastTaskState] then constants.taskStates[task.lastTaskState].label else ''
             task.isActive = if constants.taskStates[task.lastTaskState] then constants.taskStates[task.lastTaskState].isActive else false
-            app.allTasks[task.id] = task
 
         tasks
 

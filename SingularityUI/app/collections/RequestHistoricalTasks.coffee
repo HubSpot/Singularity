@@ -11,7 +11,7 @@ class HistoricalTasks extends Mixen(PaginableCollection, RequestTasks)
         -(task0.get("updatedAt") - task1.get("updatedAt"))
 
     parse: (tasks) ->
-        _.each tasks, (task) ->
+        for task in tasks
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.name = task.id
@@ -21,7 +21,6 @@ class HistoricalTasks extends Mixen(PaginableCollection, RequestTasks)
             task.startedAtHuman = utils.humanTimeAgo task.startedAt
             task.lastTaskStateHuman = if constants.taskStates[task.lastTaskState] then constants.taskStates[task.lastTaskState].label else ''
             task.isActive = if constants.taskStates[task.lastTaskState] then constants.taskStates[task.lastTaskState].isActive else false
-            app.allTasks[task.id] = task
 
         tasks
 

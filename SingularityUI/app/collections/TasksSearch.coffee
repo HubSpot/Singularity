@@ -7,7 +7,7 @@ class TasksSearch extends Tasks
     initialize: (models, { @query, @params }) =>
 
     parse: (tasks) ->
-        _.each tasks, (task, i) =>
+        for task in tasks
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.requestId = task.taskId.requestId
@@ -19,7 +19,6 @@ class TasksSearch extends Tasks
             task.createdAtHuman = utils.humanTimeAgo task.createdAt
             task.host = task.taskId.host
             task.rack = task.taskId.rackId
-            app.allTasks[task.id] = task
 
         tasks
 

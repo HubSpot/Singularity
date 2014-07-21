@@ -7,6 +7,8 @@ removeTemplate = require '../views/templates/vex/requestRemove'
 bounceTemplate = require '../views/templates/vex/requestBounce'
 
 class Request extends Model
+
+    url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
             
     parse: (data) ->
         if data.request?
@@ -26,8 +28,6 @@ class Request extends Model
             data.activeDeploy?.timestampHuman = utils.humanTime data.activeDeploy.timestamp
 
         data
-
-    url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
 
     deletePaused: =>
         $.ajax

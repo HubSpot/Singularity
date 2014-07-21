@@ -9,6 +9,6 @@ class TaskS3Logs extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/logs/task/#{ @taskId }"
 
-    initialize: (models, { @taskId }) => super
+    initialize: (models, { @taskId }) =>
 
 module.exports = TaskS3Logs

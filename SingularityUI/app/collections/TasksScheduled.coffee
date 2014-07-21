@@ -1,14 +1,15 @@
 Tasks = require './Tasks'
-TaskScheduled = require '../models/TaskScheduled'
+
+Task = require '../models/Task'
 
 class TasksScheduled extends Tasks
 
-    model: TaskScheduled
+    model: Task
 
     url: "#{ config.apiRoot }/tasks/scheduled"
 
     parse: (tasks) ->
-        _.each tasks, (task, i) =>
+        for task in tasks
             task.JSONString = utils.stringJSON task
             if not task.pendingTaskId?
                 task.pendingTaskId = task.pendingTask.pendingTaskId
@@ -18,8 +19,6 @@ class TasksScheduled extends Tasks
             task.nextRunAt = task.pendingTaskId.nextRunAt
             task.nextRunAtHuman = utils.humanTimeSoon task.nextRunAt
             task.schedule = task.request.schedule
-            tasks[i] = task
-            app.allTasks[task.id] = task
 
         tasks
 

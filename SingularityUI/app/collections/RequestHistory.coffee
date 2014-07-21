@@ -1,5 +1,9 @@
 PaginableCollection = require './PaginableCollection'
 
+# I didn't name it! This is a collection that returns a bunch
+# of logs detailing what's been going on with the request.
+#
+# Eg: Created by sbacanu
 class RequestHistory extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/requests"
@@ -15,7 +19,7 @@ class RequestHistory extends PaginableCollection
         super params
 
     parse: (requestHistoryObjects) ->
-        _.each requestHistoryObjects, (requestUpdate, i) =>
+        for requestUpdate in requestHistoryObjects
             if requestUpdate.request?
                 requestUpdate.request.JSONString = utils.stringJSON requestUpdate.request
                 requestUpdate.request.daemon = if _.isNull(requestUpdate.request.daemon) then true else requestUpdate.request.daemon
