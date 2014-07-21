@@ -27,8 +27,10 @@
     "backbone": "~1.1.2",
     "jquery": "1.11.1",
     "moment": "moment/moment#~2.7.0",
-    "sortable": "HubSpot/sortable#~0.6.0",
     "backbone.localstorage": "~1.1.9",
-    "zeroclipboard": "~2.1.5"
+    "zeroclipboard": "~2.1.5",
+    "vex": "~2.1.1",
+    "messenger": "~1.4.1",
+    "typeahead.js": "~0.10.4"
   }
 }
