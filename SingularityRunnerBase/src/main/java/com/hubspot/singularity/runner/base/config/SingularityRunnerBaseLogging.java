@@ -20,15 +20,17 @@ import com.google.inject.name.Named;
 public class SingularityRunnerBaseLogging {
 
   private final String rootLogPath;
+  private final String hubSpotLogLevel;
   private final String loggingPattern;
   private final Properties properties;
   
   @Inject
   public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_PATH) String rootLogPath, @Named(SingularityRunnerBaseConfigurationLoader.LOGGING_PATTERN) String loggingPattern, 
-      @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_LEVEL) String rootLogLevel, Properties properties) {
+      @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_LEVEL) String rootLogLevel, @Named(SingularityRunnerBaseConfigurationLoader.HUBSPOT_LOG_LEVEL) String hubSpotLogLevel, Properties properties) {
     this.rootLogPath = rootLogPath;
     this.loggingPattern = loggingPattern;
     this.properties = properties;
+    this.hubSpotLogLevel = hubSpotLogLevel;
     
     Logger rootLogger = configureRootLogger(rootLogLevel);
     printProperties(rootLogger);
@@ -64,8 +66,12 @@ public class SingularityRunnerBaseLogging {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
 
     Logger rootLogger = prepareRootLogger(context);
-    
+
     rootLogger.setLevel(Level.toLevel(rootLogLevel));
+    
+    Logger hubSpotLogger = context.getLogger("com.hubspot");
+    
+    hubSpotLogger.setLevel(Level.toLevel(hubSpotLogLevel));
     
     rootLogger.addAppender(buildFileAppender(context, rootLogPath));
     

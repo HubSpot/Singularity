@@ -9,19 +9,27 @@ public class SingularityOOMKillerConfiguration {
   private final double killProcessDirectlyThresholdRatio;
 
   private final long checkForOOMEveryMillis;
-  private final String slaveHostname;;
+  private final String slaveHostname;
+  
+  private final String cgroupProcsPathFormat;
   
   @Inject
   public SingularityOOMKillerConfiguration(
       @Named(SingularityOOMKillerConfigurationLoader.CHECK_FOR_OOM_EVERY_MILLIS) String checkForOOMEveryMillis, 
       @Named(SingularityOOMKillerConfigurationLoader.REQUEST_KILL_THRESHOLD_RATIO) String requestKillThresholdRatio, 
       @Named(SingularityOOMKillerConfigurationLoader.KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO) String killProcessDirectlyThresholdRatio,
-      @Named(SingularityOOMKillerConfigurationLoader.SLAVE_HOSTNAME) String slaveHostname
+      @Named(SingularityOOMKillerConfigurationLoader.SLAVE_HOSTNAME) String slaveHostname,
+      @Named(SingularityOOMKillerConfigurationLoader.CGROUP_PROCS_PATH_FORMAT) String cgroupsProcPathFormat
       ) {
     this.checkForOOMEveryMillis = Long.parseLong(checkForOOMEveryMillis);
     this.requestKillThresholdRatio = Double.parseDouble(requestKillThresholdRatio);
     this.killProcessDirectlyThresholdRatio = Double.parseDouble(requestKillThresholdRatio);
     this.slaveHostname = slaveHostname;
+    this.cgroupProcsPathFormat = cgroupsProcPathFormat;
+  }
+  
+  public String getCgroupProcsPathFormat() {
+    return cgroupProcsPathFormat;
   }
 
   public double getRequestKillThresholdRatio() {
@@ -43,8 +51,7 @@ public class SingularityOOMKillerConfiguration {
   @Override
   public String toString() {
     return "SingularityOOMKillerConfiguration [requestKillThresholdRatio=" + requestKillThresholdRatio + ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio + ", checkForOOMEveryMillis=" + checkForOOMEveryMillis
-        + ", slaveHostname=" + slaveHostname + "]";
+        + ", slaveHostname=" + slaveHostname + ", cgroupProcsPathFormat=" + cgroupProcsPathFormat + "]";
   }
-
-  
+ 
 }

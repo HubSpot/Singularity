@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.ning.http.client.AsyncHttpClient;
@@ -33,6 +34,7 @@ public class SingularityClient {
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
+  private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
@@ -602,6 +604,33 @@ public class SingularityClient {
     }
   }
 
+  public Optional<SingularityTaskCleanupResult> killTask(String taskId) {
+    final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getHost(), contextPath, taskId);
+    
+    LOG.info(String.format("Killing task %s - (%s)", taskId, requestUri));
+
+    final long start = System.currentTimeMillis();
+    
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Killed task (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+    
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to kill task - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+      return Optional.absent();
+    }
+    
+    try {
+      return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), SingularityTaskCleanupResult.class));
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
   //
   // SCHEDULED TASKS
   //

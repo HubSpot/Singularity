@@ -130,7 +130,7 @@ public class TaskResource {
   
   @DELETE
   @Path("/task/{taskId}")
-  public SingularityTaskCleanupResult deleteTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
+  public SingularityTaskCleanupResult killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
     
     if (!task.isPresent()) {

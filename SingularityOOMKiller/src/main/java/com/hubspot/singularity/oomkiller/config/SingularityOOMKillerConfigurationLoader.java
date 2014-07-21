@@ -10,6 +10,7 @@ public class SingularityOOMKillerConfigurationLoader extends SingularityConfigur
   public static final String KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO = "oomkiller.kill.process.directly.threshold.ratio";
   public static final String CHECK_FOR_OOM_EVERY_MILLIS = "oomkiller.check.for.oom.every.millis";
   public static final String SLAVE_HOSTNAME = "oomkiller.slave.hostname";
+  public static final String CGROUP_PROCS_PATH_FORMAT = "oomkiller.cgroups.procs.path.format";
   
   public SingularityOOMKillerConfigurationLoader() {
     super("/etc/singularity.oomkiller.properties");
@@ -22,6 +23,8 @@ public class SingularityOOMKillerConfigurationLoader extends SingularityConfigur
 
     properties.put(CHECK_FOR_OOM_EVERY_MILLIS, "100");
     properties.put(SLAVE_HOSTNAME, "localhost");
+    
+    properties.put(CGROUP_PROCS_PATH_FORMAT, "/cgroup/cpu/mesos/%s/cgroup.procs");
   }
   
 }

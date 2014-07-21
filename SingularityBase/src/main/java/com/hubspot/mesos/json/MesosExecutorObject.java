@@ -9,14 +9,16 @@ public class MesosExecutorObject {
   
   private final String directory;
   private final String id;
+  private final String container;
   private final String name;
   private final MesosResourcesObject resources;
   private final List<MesosTaskObject> tasks;
   private final List<MesosTaskObject> completedTasks;
   
   @JsonCreator
-  public MesosExecutorObject(@JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("directory") String directory, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("tasks") List<MesosTaskObject> tasks,  @JsonProperty("completed_tasks") List<MesosTaskObject> completedTasks) {
+  public MesosExecutorObject(@JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("container") String container, @JsonProperty("directory") String directory, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("tasks") List<MesosTaskObject> tasks,  @JsonProperty("completed_tasks") List<MesosTaskObject> completedTasks) {
     this.name = name;
+    this.container = container;
     this.id = id;
     this.directory = directory;
     this.resources = resources;
@@ -24,6 +26,10 @@ public class MesosExecutorObject {
     this.completedTasks = completedTasks;
   }
   
+  public String getContainer() {
+    return container;
+  }
+
   public List<MesosTaskObject> getCompletedTasks() {
     return completedTasks;
   }

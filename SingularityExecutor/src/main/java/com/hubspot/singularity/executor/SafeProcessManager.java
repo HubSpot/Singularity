@@ -13,6 +13,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.shared.Signal;
 
 public abstract class SafeProcessManager {
   
@@ -25,21 +26,6 @@ public abstract class SafeProcessManager {
   private volatile Optional<Long> currentProcessStart;
   
   private final AtomicBoolean killed;
-  
-  public enum Signal {
-    SIGTERM(15), SIGKILL(9);
-    
-    private final int code;
-
-    private Signal(int code) {
-      this.code = code;
-    }
-
-    public int getCode() {
-      return code;
-    }
-    
-  }
   
   public SafeProcessManager(Logger log) {
     this.log = log;
