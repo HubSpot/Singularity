@@ -91,7 +91,7 @@ class Utils
         $('<div>').text(value).html()
 
     @setupSortableTables: ->
-        sortable.init()
+        # sortable.init()
 
     @handlePotentiallyEmptyFilteredTable: ($table, object = 'object', query = '') ->
         message = "No #{ object }s found matching "
