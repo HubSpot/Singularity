@@ -23,10 +23,12 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "~3.2.0",
+    "bootstrap": "~2.3.2",
     "backbone": "~1.1.2",
     "jquery": "1.11.1",
     "moment": "moment/moment#~2.7.0",
-    "sortable": "HubSpot/sortable#~0.6.0"
+    "sortable": "HubSpot/sortable#~0.6.0",
+    "backbone.localstorage": "~1.1.9",
+    "zeroclipboard": "~2.1.5"
   }
 }
