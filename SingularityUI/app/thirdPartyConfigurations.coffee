@@ -1,12 +1,5 @@
-# Make all string methods available on _
-_.mixin _.string.exports()
-
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
-
-# Set Vex dialog default afterOpen to include scroll prevention
-vex.dialog.defaultOptions.afterOpen = ($vexContent) ->
-    utils.scrollPreventDefaultAtBounds $vexContent.parent()
 
 # Time out requests within 10 seconds
 $.ajaxSetup
@@ -47,6 +40,7 @@ Messenger.options =
 # ZeroClipboard options
 ZeroClipboard.config
     debug: false
+    swfPath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
 
 # Overwrite Handlebars logging
 Handlebars.logger.log = (stuff...) =>
