@@ -1,0 +1,33 @@
+{
+  "name": "SingularityUI",
+  "version": "0.3",
+  "homepage": "https://github.com/HubSpot/Singularity",
+  "authors": [
+    "Seb Bacanu <sbacanu@hubspot.com>",
+    "Tom Petr <tpetr@hubspot.com>",
+    "Tim Finley <tfinley@hubspot.com>"
+  ],
+  "description": "UI For the Mesos framework Singularity",
+  "keywords": [
+    "mesos",
+    "brunch",
+    "coffeescript",
+    "stylus"
+  ],
+  "license": "Apache",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.2.0",
+    "backbone": "~1.1.2",
+    "jquery": "1.11.1",
+    "mixen": "https://github.com/HubSpot/mixen/",
+    "modernizr": "~2.8.3",
+    "moment": "https://github.com/moment/moment/"
+  }
+}
