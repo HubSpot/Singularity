@@ -28,7 +28,7 @@ exports.config =
 
 
     # When running SingularityUI via brunch server we need to make an index.html for it
-    # bsed on the template that's shared with SingularityService
+    # based on the template that's shared with SingularityService
     # 
     # After we compile the static files, compile index.html using some required configs
     onCompile: =>
