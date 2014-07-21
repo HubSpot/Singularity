@@ -12,7 +12,11 @@ exports.config =
         javascripts:
             defaultExtension: 'coffee'
             joinTo: 'static/js/app.js'
-            order: before: [/^(bower_components|vendor)/]
+            order: before: [
+                /^(bower_components|vendor)\/jquery/,
+                /^(bower_components|vendor)\/bootstrap/,
+                /^(bower_components|vendor)/
+            ]
 
         stylesheets:
             defaultExtension: 'styl'
