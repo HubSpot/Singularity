@@ -1,5 +1,5 @@
 path = require 'path'
-fs = require 'fs'
+fs =   require 'fs'
 
 handlebars = require 'handlebars-brunch/node_modules/handlebars'
 
@@ -11,9 +11,7 @@ exports.config =
     files:
         javascripts:
             defaultExtension: 'coffee'
-
-            joinTo:
-                'static/js/app.js': /^app/
+            joinTo: 'static/js/app.js': /^app/
 
         stylesheets:
             defaultExtension: 'styl'
@@ -40,7 +38,7 @@ exports.config =
         templateData =
             staticRoot: "#{ @config.server.base }/static"
             appRoot: @config.server.base
-            apiRoot: ""
+            apiRoot: ''
             mesosLogsPort: 5051
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
