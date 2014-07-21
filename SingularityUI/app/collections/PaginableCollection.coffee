@@ -2,7 +2,17 @@ Collection = require './collection'
 
 # Another base collection used for stuff that can be server-paginated
 # Used in stuff that's in ExpandableTableSubview
-class PaginableCollection extends Mixen(Backbone.Collection, Collection)
+class PaginableCollection extends Backbone.Collection
+
+    # Tracks if the collection has synced
+    synced: false
+
+    constructor: ->
+        super
+        @on 'sync',  => @synced = true
+        @on 'reset', => @synced = false
+
+    # End of stuff from Collection
 
     atATime: 5
     currentPage: 1
