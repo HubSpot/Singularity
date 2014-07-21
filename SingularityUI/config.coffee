@@ -11,7 +11,8 @@ exports.config =
     files:
         javascripts:
             defaultExtension: 'coffee'
-            joinTo: 'static/js/app.js': /^app/
+            joinTo: 'static/js/app.js'
+            order: before: [/^(bower_components|vendor)/]
 
         stylesheets:
             defaultExtension: 'styl'
