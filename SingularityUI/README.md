@@ -1,15 +1,21 @@
 # SingularityUI
 
-The Singularity UI is a brunch app. To develop locally, first install brunch.
+SingularityUI uses [Brunch](http://brunch.io/) to build its files and [Bower](http://bower.io/) to manage dependencies. First, install them both:
 
 ```shell
-npm install -g brunch
+sudo npm install -g brunch bower
 ```
 
-Then npm install the dependencies:
+Then install the Brunch dependencies:
 
 ```shell
 npm install
+```
+
+Now that Brunch is all set up, install SingularityUI's dependencies:
+
+```shell
+bower install
 ```
 
 ## Using a local API

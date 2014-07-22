@@ -1,7 +1,7 @@
 RequestTasks = require './RequestTasks'
 PaginableCollection = require './PaginableCollection'
 
-class HistoricalTasks extends Mixen(PaginableCollection, RequestTasks)
+class HistoricalTasks extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/tasks"
 
