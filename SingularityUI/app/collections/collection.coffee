@@ -1,4 +1,5 @@
-module.exports = class Collection extends Backbone.Collection
+# Base collection extended by the others
+class Collection extends Backbone.Collection
 
     # Tracks if the collection has synced
     synced: false
@@ -7,3 +8,5 @@ module.exports = class Collection extends Backbone.Collection
         super
         @on 'sync',  => @synced = true
         @on 'reset', => @synced = false
+
+module.exports = Collection

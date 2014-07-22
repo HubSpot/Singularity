@@ -5,24 +5,14 @@ class TasksActive extends Tasks
 
     model: Task
 
+    propertyFilter = ['offer.hostname', 'taskId', 'mesosTask.resources']
+
     url: ->
-        properties = [
-            # offer
-            'offer.hostname'
-
-            # taskId
-            'taskId'
-
-            # mesosTask
-            'mesosTask.resources'
-        ]
-
-        propertiesString = "?property=#{ properties.join('&property=') }"
-
-        "#{ config.apiRoot }/tasks/active#{ propertiesString }"
+        propertyString = $.param 'property': @propertyFilter or [], true
+        "#{ config.apiRoot }/tasks/active#{ propertyString }"
 
     parse: (tasks) ->
-        _.each tasks, (task, i) =>
+        for task in tasks
             task.JSONString = utils.stringJSON task
             task.id = task.taskId.id
             task.requestId = task.taskId.requestId
@@ -35,8 +25,6 @@ class TasksActive extends Tasks
             task.startedAt = task.taskId.startedAt
             task.startedAtHuman = utils.humanTimeAgo task.taskId.startedAt
             task.rack = task.taskId.rackId
-            tasks[i] = task
-            app.allTasks[task.id] = task
 
         tasks
 

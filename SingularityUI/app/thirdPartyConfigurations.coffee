@@ -49,4 +49,6 @@ ZeroClipboard.config
     debug: false
 
 # Overwrite Handlebars logging
-Handlebars.log = (stuff) => console.log stuff
+Handlebars.logger.log = (stuff...) =>
+    for thing in stuff[1..]
+        console.log thing

@@ -1,4 +1,7 @@
-{{#if requestTasksScheduled}}
+<div class="page-header">
+    <h1>Scheduled tasks</h1>
+</div>
+{{#if scheduledTasks}}
     <div class="row-fluid">
         <div class="span12">
             <table class="table">
@@ -10,7 +13,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{#eachWithFn requestTasksScheduled}}
+                    {{#eachWithFn scheduledTasks}}
                         <tr data-task-id="{{ id }}">
                             <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
                             <td data-value="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>

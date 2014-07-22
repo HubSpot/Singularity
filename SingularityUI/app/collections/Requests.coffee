@@ -20,7 +20,7 @@ class Requests extends Collection
         "#{ config.apiRoot }/requests/#{ @state }?#{ propertyString or '' }"
 
     parse: (requests) ->
-        _.each requests, (request, i) =>
+        for request in requests
             request.JSONString = utils.stringJSON request
             request.id = request.request.id
             request.request.instances = if _.isNull(request.request.instances) then 1 else request.request.instances
@@ -34,8 +34,6 @@ class Requests extends Collection
             request.timestamp = request.requestDeployState?.activeDeploy?.timestamp
             request.timestampHuman = utils.humanTimeAgo request.timestamp
             request.timestampHumanShort = utils.humanTimeShort request.timestamp
-            requests[i] = request
-            app.allRequests[request.id] = request
 
         requests
 

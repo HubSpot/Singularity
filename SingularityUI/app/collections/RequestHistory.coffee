@@ -1,28 +1,28 @@
+PaginableCollection = require './PaginableCollection'
 
-localRequestHistoryIdNumber = 1
+# I didn't name it! This is a collection that returns a bunch
+# of logs detailing what's been going on with the request.
+#
+# Eg: Created by sbacanu
+class RequestHistory extends PaginableCollection
 
-# Can't just extend Teeble.ServerCollection directly due to Mixen bugs :(
-class RequestHistory extends Mixen(Teeble.ServerCollection)
+    url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/requests"
 
-    url: ->
-        params =
-            count: @perPage
-            page: @currentPage
-            orderDirection: 'DESC'
-
-        "#{ config.apiRoot }/history/request/#{ @requestId }/requests?#{ $.param params }"
+    comparator: (r0, r1) => r1.get("createdAt") - r0.get("createdAt")
 
     initialize: (models, { @requestId }) =>
 
-    parse: (requestHistoryObjects) ->
-        requestHistoryObjects
+    fetch: (params = {}) ->
+        params = _.extend params,
+            data: _.extend params.data or {},
+                orderDirection: 'DESC'
+        super params
 
-        _.each requestHistoryObjects, (requestUpdate, i) =>
+    parse: (requestHistoryObjects) ->
+        for requestUpdate in requestHistoryObjects
             if requestUpdate.request?
                 requestUpdate.request.JSONString = utils.stringJSON requestUpdate.request
                 requestUpdate.request.daemon = if _.isNull(requestUpdate.request.daemon) then true else requestUpdate.request.daemon
-                requestUpdate.request.localRequestHistoryId = "__localRequestHistoryId-#{ localRequestHistoryIdNumber }"
-                localRequestHistoryIdNumber += 1
                 app.allRequestHistories[requestUpdate.request.localRequestHistoryId] = requestUpdate.request
 
             requestUpdate.userHuman = requestUpdate.user

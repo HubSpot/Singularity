@@ -12,6 +12,6 @@ class Slaves extends Collection
     parse: (slaves) ->
         _.map slaves, (slave) =>
             slave.slaveType = @slaveType
-            return slave
+            slave
 
 module.exports = Slaves

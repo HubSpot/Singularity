@@ -1,13 +1,8 @@
+PaginableCollection = require './PaginableCollection'
 
-# Can't just extend Teeble.ServerCollection directly due to Mixen bugs :(
-class DeployHistory extends Mixen(Teeble.ServerCollection)
+class DeployHistory extends PaginableCollection
 
-    url: ->
-        params =
-            count: @perPage
-            page: @currentPage
-
-        "#{ config.apiRoot }/history/request/#{ @requestId }/deploys?#{ $.param params }"
+    url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/deploys"
 
     model: Backbone.Model
     comparator: undefined
@@ -15,7 +10,7 @@ class DeployHistory extends Mixen(Teeble.ServerCollection)
     initialize: (models, { @requestId }) =>
 
     parse: (requestDeployHistoryObjects) ->
-        _.each requestDeployHistoryObjects, (deploy, i) =>
+        for deploy in requestDeployHistoryObjects
             if deploy.deployResult?
                 deploy.deployResult.deployStateHuman = constants.deployStates[deploy.deployResult.deployState]
             deploy.deployId = deploy.deployMarker.deployId

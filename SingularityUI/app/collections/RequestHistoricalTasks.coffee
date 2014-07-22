@@ -1,12 +1,14 @@
-Collection = require './collection'
+RequestTasks = require './RequestTasks'
+PaginableCollection = require './PaginableCollection'
 
-class RequestTasks extends Collection
+class HistoricalTasks extends Mixen(PaginableCollection, RequestTasks)
 
-    url: => "#{ config.apiRoot }/history/request/#{ @requestId }/tasks/#{ @state }"
+    url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/tasks"
 
-    comparator: -> - @get('createdAt')
+    initialize: (models, {@requestId}) ->
 
-    initialize: (models, { @requestId, @state, @sortColumn, @sortDirection }) => super
+    comparator: (task0, task1) =>
+        -(task0.get("updatedAt") - task1.get("updatedAt"))
 
     parse: (tasks) ->
         for task in tasks
@@ -22,4 +24,4 @@ class RequestTasks extends Collection
 
         tasks
 
-module.exports = RequestTasks
+module.exports = HistoricalTasks

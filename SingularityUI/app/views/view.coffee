@@ -1,6 +1,12 @@
 require 'lib/view_helper'
 
 class View extends Backbone.View
+
+    models:      {}
+    collections: {}
+
+    subviews:    {}
+
     events: ->
         'click a': 'routeLink'
 

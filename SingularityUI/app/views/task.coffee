@@ -62,7 +62,7 @@ class TaskView extends View
         @taskHistory.fetch()
         @taskResourceUsage.fetch()
         @taskFiles.fetch()
-        @s3Subview.fetch()
+        @taskS3Logs.fetch()
 
     ignoreAjaxError: -> app.caughtError()
 

@@ -1,19 +1,14 @@
 S3Log = require '../models/S3Log'
 
-Collection = require './collection'
+PaginableCollection = require './PaginableCollection'
 
 # Can't just extend Teeble.ServerCollection directly due to Mixen bugs :(
-class TaskS3Logs extends Collection
+class TaskS3Logs extends PaginableCollection
     
     model: S3Log
 
-    url: ->
-        params =
-            count: @perPage
-            page: @currentPage
+    url: -> "#{ config.apiRoot }/logs/task/#{ @taskId }"
 
-        "#{ config.apiRoot }/logs/task/#{ @taskId }?#{ $.param params }"
-
-    initialize: (models, { @taskId }) => super
+    initialize: (models, { @taskId }) =>
 
 module.exports = TaskS3Logs
