@@ -5,12 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Resources {
 
-  private final int cpus;
-  private final int memoryMb;
+  private final double cpus;
+  private final double memoryMb;
   private final int numPorts;
 
   @JsonCreator
-  public Resources(@JsonProperty("cpus") int cpus, @JsonProperty("memoryMb") int memoryMb, @JsonProperty("numPorts") int numPorts) {
+  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts) {
     this.cpus = cpus;
     this.memoryMb = memoryMb;
     this.numPorts = numPorts;
@@ -20,11 +20,11 @@ public class Resources {
     return numPorts;
   }
   
-  public int getCpus() {
+  public double getCpus() {
     return cpus;
   }
 
-  public int getMemoryMb() {
+  public double getMemoryMb() {
     return memoryMb;
   }
 

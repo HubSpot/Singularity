@@ -69,8 +69,8 @@ public class SingularityValidator {
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
-    int cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
-    int memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
+    double cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
+    double memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
     
     check(cpusPerInstance > 0, "Request must have more than 0 cpus");
     check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");

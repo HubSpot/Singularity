@@ -32,11 +32,11 @@ public class MesosUtils {
 
   private MesosUtils() { }
 
-  private static int getScalar(Resource r) {
-    return (int) r.getScalar().getValue();
+  private static double getScalar(Resource r) {
+    return r.getScalar().getValue();
   }
 
-  private static int getScalar(List<Resource> resources, String name) {
+  private static double getScalar(List<Resource> resources, String name) {
     for (Resource r : resources) {
       if (r.hasName() && r.getName().equals(name) && r.hasScalar()) {
         return getScalar(r);
@@ -77,11 +77,11 @@ public class MesosUtils {
     return totalRanges;
   }
   
-  public static Resource getCpuResource(int cpus) {
+  public static Resource getCpuResource(double cpus) {
     return newScalar(CPUS, cpus);
   }
 
-  public static Resource getMemoryResource(int memory) {
+  public static Resource getMemoryResource(double memory) {
     return newScalar(MEMORY, memory);
   }
   
@@ -164,23 +164,23 @@ public class MesosUtils {
         .build();
   }
   
-  private static Resource newScalar(String name, int value) {
+  private static Resource newScalar(String name, double value) {
     return Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build()).build();
   }
 
-  public static int getNumCpus(Offer offer) {
+  public static double getNumCpus(Offer offer) {
     return getNumCpus(offer.getResourcesList());
   }
 
-  public static int getMemory(Offer offer) {
+  public static double getMemory(Offer offer) {
     return getMemory(offer.getResourcesList());
   }
   
-  public static int getNumCpus(List<Resource> resources) {
+  public static double getNumCpus(List<Resource> resources) {
     return getScalar(resources, CPUS);
   }
 
-  public static int getMemory(List<Resource> resources) {
+  public static double getMemory(List<Resource> resources) {
     return getScalar(resources, MEMORY);
   }
 
@@ -193,13 +193,13 @@ public class MesosUtils {
   }
   
   public static boolean doesOfferMatchResources(Resources resources, List<Resource> offerResources) {
-    int numCpus = getNumCpus(offerResources);
+    double numCpus = getNumCpus(offerResources);
 
     if (numCpus < resources.getCpus()) {
       return false;
     }
 
-    int memory = getMemory(offerResources);
+    double memory = getMemory(offerResources);
 
     if (memory < resources.getMemoryMb()) {
       return false;
