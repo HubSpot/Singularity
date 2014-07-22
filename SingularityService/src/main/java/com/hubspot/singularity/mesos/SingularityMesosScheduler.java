@@ -166,7 +166,10 @@ public class SingularityMesosScheduler implements Scheduler {
         LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offer.getSlaveId().getValue(), offer.getHostname());
 
         taskManager.createTaskAndDeletePendingTask(task);
-
+        
+        stateCache.getActiveTaskIds().add(task.getTaskId());
+        stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
+        
         accepted.add(task);
       } else {
         LOG.trace("Ignoring offer {} for task {}; matched resources: {}, rack state: {}", offer.getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, rackCheckState);
