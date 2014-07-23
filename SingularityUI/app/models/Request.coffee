@@ -20,8 +20,8 @@ class Request extends Model
             data.paused = data.state is 'PAUSED'
             data.deleted = data.state is 'DELETED'
 
-            hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
-            data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and hasActiveDeploy
+            data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
+            data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and data.hasActiveDeploy
             data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
 
             data.displayState = constants.requestStates[data.state]
