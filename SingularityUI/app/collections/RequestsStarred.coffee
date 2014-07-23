@@ -1,16 +1,23 @@
 class RequestsStarred extends Backbone.Collection
 
-    localStorage: new Backbone.LocalStorage('RequestNamesStarred-2')
+    fetch: ->
+        @add JSON.parse localStorage.getItem 'starredRequests'
+
+    saveState: ->
+        localStorage.setItem 'starredRequests', JSON.stringify @models
 
     toggle: (requestName) ->
-        model = @get(requestName)
+        model = @get requestName
 
         if model?
-            model.destroy()
+            @remove model
+            @saveState()
         else
             @create
                 id: requestName
                 name: requestName
                 added: + new Date()
+            @saveState()
+
 
 module.exports = RequestsStarred
