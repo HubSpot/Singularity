@@ -17,9 +17,9 @@
                         <th>
                             Name
                         </th>
-                        <th>Size</th>
-                        <th>Last modified</th>
-                        <th></th>
+                        <th class="hidden-xs">Size</th>
+                        <th class="hidden-xs">Last modified</th>
+                        <th class="hidden-xs"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,11 +36,11 @@
                                     </a>
                                 {{/if}}
                             </td>
-                            <td data-value="{{ size }}">
+                            <td class="hidden-xs" data-value="{{ size }}">
                                 {{#unless isDirectory}}{{ sizeHuman }}{{/unless}}
                             </td>
-                            <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
-                            <td class="actions-column">
+                            <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
+                            <td class="actions-column hidden-xs">
                                 {{#unless isDirectory}}
                                     <a href="{{ downloadLink }}" target="_blank">
                                         <span class="glyphicon glyphicon-download-alt" title="Download"></span>

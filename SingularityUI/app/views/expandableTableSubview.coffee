@@ -47,9 +47,9 @@ class ExpandableTableSubview extends View
         if $header.length
             $header.find('small').remove()
             if not @expanded
-                $header.append '<small><a data-action="expand">more at once</a></small>'
+                $header.append '<small class="hidden-xs"><a data-action="expand">more at once</a></small>'
             else if @expanded
-                $header.append '<small><a data-action="shrink">fewer at once</a></small>'
+                $header.append '<small class="hidden-xs"><a data-action="shrink">fewer at once</a></small>'
 
         # Append next / previous page buttons
         hasPrevButton = @collection.currentPage isnt 1

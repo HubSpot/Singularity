@@ -9,8 +9,8 @@
                     <tr>
                         <th>State</th>
                         <th>User</th>
-                        <th>Created</th>
-                        <th></th>
+                        <th class="hidden-xs">Created</th>
+                        <th class="hidden-xs"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -18,8 +18,8 @@
                         <tr>
                             <td>{{ stateHuman }}</td>
                             <td>{{ userHuman }}</td>
-                            <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
-                            <td class="actions-column">
+                            <td class="hidden-xs" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                            <td class="hidden-xs" class="actions-column">
                                 <a data-local-request-history-id="{{ request.localRequestHistoryId }}" data-action="viewRequestHistoryJSON">
                                     <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                                 </a>

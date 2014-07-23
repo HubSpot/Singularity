@@ -9,7 +9,7 @@
                     <th data-sort-attribute="nextRunAt" class="hidden-xs">
                         Next run
                     </th>
-                    <th>
+                    <th class="hidden-xs">
                         {{! Actions column }}
                     </th>
                 </tr>
@@ -29,7 +29,7 @@
                             {{ nextRunAtHuman }}
                         </span>
                     </td>
-                    <td class="actions-column">
+                    <td class="actions-column hidden-xs">
                         <a data-task-id="{{ id }}" data-action="run-now">
                             <span class="glyphicon glyphicon-repeat" title="Run now"></span>
                         </a>

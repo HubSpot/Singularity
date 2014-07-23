@@ -9,9 +9,9 @@
                     <tr>
                         <th>Deploy ID</th>
                         <th>Status</th>
-                        <th>User</th>
-                        <th>Timestamp</th>
-                        <th></th>
+                        <th class="hidden-xs">User</th>
+                        <th class="hidden-xs">Timestamp</th>
+                        <th class="hidden-xs"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -19,9 +19,9 @@
                         <tr>
                             <td>{{ deployId }}</td>
                             <td>{{ deployResult.deployStateHuman }}</td>
-                            <td>{{ user }}</td>
-                            <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
-                            <td class="actions-column">
+                            <td class="hidden-xs">{{ user }}</td>
+                            <td class="hidden-xs" data-value="{{ timestamp }}">{{ timestampHuman }}</td>
+                            <td class="hidden-xs" class="actions-column">
                                 <a data-deploy-id="{{ deployId }}" data-action="viewDeployJSON">
                                     <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                                 </a>
