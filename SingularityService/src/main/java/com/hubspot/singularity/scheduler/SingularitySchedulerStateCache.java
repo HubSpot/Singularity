@@ -47,7 +47,7 @@ public class SingularitySchedulerStateCache {
   
   public List<SingularityTaskId> getActiveTaskIds() {
     if (!activeTaskIds.isPresent()) {
-      activeTaskIds = Optional.of(taskManager.getActiveTaskIds());
+      activeTaskIds = getMutableList(taskManager.getActiveTaskIds());
     }
     
     return activeTaskIds.get();
@@ -55,7 +55,7 @@ public class SingularitySchedulerStateCache {
 
   public List<SingularityPendingTask> getScheduledTasks() {
     if (!scheduledTasks.isPresent()) {
-      scheduledTasks = Optional.of(taskManager.getPendingTasks());
+      scheduledTasks = getMutableList(taskManager.getPendingTasks());
     }
     
     return scheduledTasks.get();
@@ -99,10 +99,14 @@ public class SingularitySchedulerStateCache {
     return decomissioningSlaves.get();
   }
   
+  private <T> Optional<List<T>> getMutableList(List<T> immutableList) {
+    List<T> mutableList = Lists.newArrayList(immutableList);
+    return Optional.of(mutableList);
+  }
+  
   public List<SingularityTaskId> getCleaningTasks() {
     if (!cleaningTasks.isPresent()) {
-      List<SingularityTaskId> mutableList = Lists.newArrayList(taskManager.getCleanupTaskIds());
-      cleaningTasks = Optional.of(mutableList);
+      cleaningTasks = getMutableList(taskManager.getCleanupTaskIds());
     }
     
     return cleaningTasks.get();   
