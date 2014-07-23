@@ -116,7 +116,7 @@ public class TaskResource {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
 
     if (!task.isPresent()) {
-      throw new NotFoundException(String.format("No active task with id %s", taskId));
+      throw new NotFoundException(String.format("No active task found in Singularity with id %s", taskId));
     }
 
     for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.get().getOffer().getHostname())) {
@@ -125,7 +125,7 @@ public class TaskResource {
       }
     }
 
-    throw new NotFoundException("Couldn't find task statistics");
+    throw new NotFoundException(String.format("Couldn't find executor %s on slave %s", task.get().getMesosTask().getExecutor().getExecutorId().getValue(), task.get().getOffer().getHostname()));
   }
   
   @DELETE
