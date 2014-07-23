@@ -138,7 +138,7 @@ class Application
 
     deployUserPrompt: (welcome) ->
         vex.dialog.prompt
-            message: require('views/templates/vex/usernamePrompt')()
+            message: require('templates/vex/usernamePrompt')()
             value: @user.get('deployUser')
             placeholder: 'user'
             callback: (user) =>

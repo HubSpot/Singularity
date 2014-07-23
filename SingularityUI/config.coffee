@@ -10,16 +10,12 @@ exports.config =
 
     files:
         javascripts:
-            defaultExtension: 'coffee'
             joinTo: 'static/js/app.js'
             order: before: [
-                /^(bower_components|vendor)\/jquery/,
-                /^(bower_components|vendor)\/bootstrap/,
                 /^(bower_components|vendor)/
             ]
 
         stylesheets:
-            defaultExtension: 'styl'
             joinTo: 'static/css/app.css'
 
         templates:

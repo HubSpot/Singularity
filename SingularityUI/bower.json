@@ -34,5 +34,10 @@
   },
   "resolutions": {
     "jquery": "1.11.1"
+  },
+  "overrides": {
+    "vex": {
+      "main": "js/vex.combined.min.js"
+    }
   }
 }
