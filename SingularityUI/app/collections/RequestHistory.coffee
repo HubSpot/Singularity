@@ -23,7 +23,6 @@ class RequestHistory extends PaginableCollection
             if requestUpdate.request?
                 requestUpdate.request.JSONString = utils.stringJSON requestUpdate.request
                 requestUpdate.request.daemon = if _.isNull(requestUpdate.request.daemon) then true else requestUpdate.request.daemon
-                app.allRequestHistories[requestUpdate.request.localRequestHistoryId] = requestUpdate.request
 
             requestUpdate.userHuman = requestUpdate.user
             requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt

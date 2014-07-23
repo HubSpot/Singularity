@@ -32,11 +32,9 @@ class TaskHistory extends Model
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
 
         # Construct mesos logs link
-        taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"
+        # taskHistory.mesosMasterLogsLink = "http://#{ app.state.get('masterLogsDomain') }/#/slaves/#{ taskHistory.task.offer.slaveId.value }/browse?path=#{ taskHistory.directory }"
 
         taskHistory.task.mesosTask.executor.command.environment.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
-
-        app.allTasks[taskHistory.task.id] = taskHistory.task
 
         taskHistory
 

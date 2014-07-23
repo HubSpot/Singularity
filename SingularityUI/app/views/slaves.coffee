@@ -31,7 +31,6 @@ class SlavesView extends View
         @fetch().done =>
             @fetchDone = true
             @render()
-
         @
 
     render: ->
@@ -42,8 +41,6 @@ class SlavesView extends View
             slavesDecomissioning: _.pluck(@slavesDecomissioning.models, 'attributes')
 
         @$el.html @template context
-        utils.setupSortableTables()
-
         @
 
     decommissionSlave: (event) =>

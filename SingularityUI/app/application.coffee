@@ -2,22 +2,12 @@ Router = require 'lib/router'
 
 User = require 'models/User'
 
-TasksActive = require 'collections/TasksActive'
-TasksScheduled = require 'collections/TasksScheduled'
-TasksCleaning = require 'collections/TasksCleaning'
-
 NavView = require 'views/nav'
 GlobalSearchView = require 'views/globalSearch'
 
 class Application
 
     views: {}
-    collections: {}
-
-    allTasks: {}
-    allRequests: {}
-    allDeploys: {}
-    allRequestHistories: {}
 
     initialize: ->
         @isMobile = touchDevice = 'ontouchstart' of document.documentElement
@@ -28,8 +18,6 @@ class Application
         @$page = $('#page')
         @page = @$page[0]
 
-
-        @setupAppCollections()
         @setupNav()
         @setupGlobalSearchView()
 
@@ -97,33 +85,17 @@ class Application
 
     showView: (view) ->
         # Clean up events & stuff
-        @currentView?.remove()
+        @views.current?.remove()
 
-        @currentView = view
+        $(window).scrollTop 0
+
+        @views.current = view
         # Render & display the view
         view.render()
         if @page.children.length
             @page.replaceChild view.el, @page.children[0]
         else
             @page.appendChild view.el
-
-    setupAppCollections: ->
-        resources = [{
-            collection_key: 'tasksActive'
-            collection: TasksActive
-            error_phrase: 'active tasks'
-        }, {
-            collection_key: 'tasksScheduled'
-            collection: TasksScheduled
-            error_phrase: 'scheduled tasks'
-        }, {
-            collection_key: 'tasksCleaning'
-            collection: TasksCleaning
-            error_phrase: 'cleaning tasks'
-        }]
-
-        _.each resources, (r) =>
-            @collections[r.collection_key] = new r.collection
 
     setupUser: ->
         @user = new User

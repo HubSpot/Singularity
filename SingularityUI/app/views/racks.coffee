@@ -29,7 +29,6 @@ class RacksView extends View
         @fetch().done =>
             @fetchDone = true
             @render()
-
         @
 
     render: ->
@@ -40,9 +39,6 @@ class RacksView extends View
             racksDecomissioning: _.pluck(@racksDecomissioning.models, 'attributes')
 
         @$el.html @template context
-
-        utils.setupSortableTables()
-
         @
 
     removeRack: (event) ->

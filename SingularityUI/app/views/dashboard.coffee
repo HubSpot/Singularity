@@ -51,8 +51,6 @@ class DashboardView extends View
 
         @$el.html @template context
 
-        utils.setupSortableTables()
-
     unstar: (e) =>
         $target = $(e.target)
         $table = $target.parents('table')

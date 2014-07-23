@@ -53,6 +53,4 @@ class StatusView extends View
                 $number.html @state.attributes[attributeName]
                 do ($bigNumber, changeClassName) -> setTimeout (-> $bigNumber.removeClass changeClassName), 2000
 
-        utils.setupSortableTables()
-
 module.exports = StatusView
