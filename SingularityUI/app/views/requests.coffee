@@ -6,6 +6,8 @@ Requests = require '../collections/Requests'
 RequestsPending = require '../collections/RequestsPending'
 RequestsCleaning = require '../collections/RequestsCleaning'
 
+RequestsStarred = require '../collections/RequestsStarred'
+
 class RequestsView extends View
 
     templateBase:   require '../templates/requestsTable/requestsBase'
@@ -63,6 +65,8 @@ class RequestsView extends View
         @collection.fetch().done =>
             @collectionSynced = true
             @render()
+        @requestsStarred = new RequestsStarred
+        @requestsStarred.fetch()
 
     # Called by app on active view
     refresh: ->
@@ -209,23 +213,26 @@ class RequestsView extends View
         utils.viewJSON 'request', $(e.target).data('request-id')
 
     removeRequest: (e) ->
-        $row = $(e.target).parents('tr')
-        requestModel = @collection.get($(e.target).data('request-id'))
-        requestModel.promptRemove =>
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        @collection.get(id).promptRemove =>
             $row.remove()
 
     unpauseRequest: (e) ->
-        $row = $(e.target).parents('tr')
-        requestModel = @collection.get($(e.target).data('request-id'))
-        requestModel.promptUnpause =>
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        @collection.get(id).promptUnpause =>
             @refresh()
 
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
 
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptRun =>
-            utils.flashRow $row
+        @collection.get(id).promptRun =>
+            $row.addClass 'flash'
+            setTimeout (=> $row.removeClass 'flash'), 500
                         
     toggleStar: (e) ->
         $target = $(e.target)
@@ -234,7 +241,7 @@ class RequestsView extends View
         requestName = $target.data 'request-name'
         starred = $target.attr('data-starred') is 'true'
 
-        app.collections.requestsStarred.toggle(requestName)
+        @requestsStarred.toggle(requestName)
         $requests = $table.find("""[data-request-name="#{ requestName }"]""")
 
         if starred

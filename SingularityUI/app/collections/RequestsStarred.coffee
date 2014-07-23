@@ -1,6 +1,6 @@
 class RequestsStarred extends Backbone.Collection
 
-    fetch: ->
+    fetch: (params) ->
         @add JSON.parse localStorage.getItem 'starredRequests'
 
     saveState: ->

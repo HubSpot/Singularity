@@ -54,11 +54,11 @@
                         {{ memoryHuman }}
                     </td>
                     <td class="actions-column hidden-xs">
+                        <a data-task-id="{{ id }}" data-action="remove">
+                            <span class="glyphicon glyphicon-remove" title="Kill task"></span>
+                        </a>
                         <a data-task-id="{{ id }}" data-action="viewJSON">
                             <span class="glyphicon glyphicon-th-list" title="JSON"></span>
-                        </a>
-                        <a data-task-id="{{ id }}" data-action="remove">
-                            <span class="glyphicon glyphicon-trash" title="Remove"></span>
                         </a>
                     </td>
                 </tr>

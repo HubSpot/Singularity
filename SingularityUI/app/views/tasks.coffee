@@ -2,6 +2,10 @@ View = require './view'
 
 Request = require '../models/Request'
 
+TasksActive = require '../collections/TasksActive'
+TasksScheduled = require '../collections/TasksScheduled'
+TasksCleaning = require '../collections/TasksCleaning'
+
 class TasksView extends View
 
     templateBase:  require '../templates/tasksTable/tasksBase'
@@ -34,12 +38,12 @@ class TasksView extends View
         @bodyTemplate = @bodyTemplateMap[@tasksFilter]
 
         collectionMap =
-            active: app.collections.tasksActive
-            scheduled: app.collections.tasksScheduled
-            cleaning: app.collections.tasksCleaning
+            active:    TasksActive
+            scheduled: TasksScheduled
+            cleaning:  TasksCleaning
 
         @collectionSynced = false
-        @collection = collectionMap[@tasksFilter]
+        @collection = new collectionMap[@tasksFilter]
 
         @collection.fetch().done =>
             @collectionSynced = true
@@ -170,18 +174,18 @@ class TasksView extends View
         utils.viewJSON 'task', $(e.target).data('task-id')
 
     removeTask: (e) ->
-        taskModel = @collection.get($(e.target).data('task-id'))
-        taskModel.promptKill =>
-            @refresh()
+        $row = $(e.target).parents 'tr'
+        id = $row.data 'task-id' 
+
+        @collection.get(id).promptKill =>
+            $row.remove()
 
     runTask: (e) =>
-        taskModel = @collection.get($(e.target).data('task-id'))
-        $row = $(e.target).parents('tr')
+        $row = $(e.target).parents 'tr'
+        id = $row.data 'task-id' 
 
-        requestModel = new Request id: taskModel.get "requestId"
-        requestModel.promptRun =>
+        @collection.get(id).promptRun =>
             @collection.remove(taskModel)
-            app.collections.tasksActive.fetch()
             $row.remove()
 
     searchChange: (event) =>

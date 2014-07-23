@@ -86,12 +86,6 @@ class Utils
     @humanTimeSoon: (date) ->
         utils.humanTime date, undefined, true
 
-    @flashRow: ($row) ->
-        $row.removeClass('flash-prime flash')
-        $row.addClass('flash-prime')
-        $row[0].clientHeight
-        $row.addClass('flash')
-
     # For .horizontal-description-list
     @setupCopyLinks: ($element) =>
         $items = $element.find ".horizontal-description-list li"
