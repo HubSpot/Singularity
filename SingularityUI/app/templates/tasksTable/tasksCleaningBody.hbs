@@ -1,0 +1,48 @@
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th data-sort-attribute="name">
+                        Name
+                    </th>
+                    <th data-sort-attribute="cleanupTypeHuman">
+                        Cleanup type
+                    </th>
+                    <th>
+                        {{! Actions column }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+            {{#eachWithFn tasks}}
+                <tr data-task-id="{{ id }}">
+                    <td>
+                        <a title="{{ id }}" href="{{appRoot}}/task/{{ id }}">
+                            {{ name }}
+                        </a>
+                    </td>
+                    <td>
+                        {{ cleanupTypeHuman }}
+                    </td>
+                    <td class="actions-column">
+                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                            <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/eachWithFn}}
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+        </tbody>
+    </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No cleaning tasks</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

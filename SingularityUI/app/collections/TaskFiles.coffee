@@ -18,7 +18,7 @@ class TaskFiles extends Collection
 
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
             taskLogFile.mtimeHuman = utils.humanTimeAgo(taskLogFile.mtime * 1000)
-            taskLogFile.sizeHuman = Humanize.fileSize(taskLogFile.size)
+            taskLogFile.sizeHuman = utils.humanizeFileSize taskLogFile.size
             taskLogFile.downloadLink = "#{ config.apiRoot }/sandbox/#{ @taskId }/download?#{ downloadParams }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.taskId = @taskId

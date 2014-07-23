@@ -1,0 +1,134 @@
+<header>
+    <h1>Slaves</h1>
+</header>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="page-header">
+            <h1>Active slaves</h1>
+        </div>
+        {{#if slavesActive.length}}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rack</th>
+                        <th>Host</th>
+                        <th>Uptime</th>
+                        <th data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn slavesActive}}
+                        <tr>
+                            <td>
+                                <a href="{{appRoot}}/tasks/active/{{ host }}">{{ id }}</a>
+                            </td>
+                            <td>{{ rackId }}</td>
+                            <td>{{ host }}</td>
+                            <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                            <td class="actions-column">
+                                <a data-slave-id="{{ id }}" data-action="decommission">
+                                    <span class="glyphicon glyphicon-remove" title="Decommission"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        {{else}}
+            {{#if fetchDone}}
+                <div class="empty-table-message"><p>No active slaves</p></div>
+            {{else}}
+                <div class="page-loader centered"></div>
+            {{/if}}
+        {{/if}}
+    </div>
+
+    <div class="col-md-12">
+        <div class="page-header">
+            <h1>Dead slaves</h1>
+        </div>
+        {{#if slavesDead.length}}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rack</th>
+                        <th>Host</th>
+                        <th>Died</th>
+                        <th>Uptime</th>
+                        <th data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn slavesDead}}
+                        <tr>
+                            <td>{{ id }}</td>
+                            <td>{{ rackId }}</td>
+                            <td>{{ host }}</td>
+                            <td data-value="{{ deadAt }}">{{ deadAtHuman }}</td>
+                            <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                            <td class="actions-column">
+                                <a data-slave-id="{{ id }}" data-action="remove" data-state="{{ state }}">
+                                     <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                                </a>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        {{else}}
+            {{#if fetchDone}}
+                <div class="empty-table-message"><p>No dead slaves</p></div>
+            {{else}}
+                <div class="page-loader centered"></div>
+            {{/if}}
+        {{/if}}
+    </div>
+
+    <div class="col-md-12">
+        <div class="page-header">
+            <h1>Decomissioning slaves</h1>
+        </div>
+        {{#if slavesDecomissioning.length}}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rack</th>
+                        <th>Host</th>
+                        <th>State</th>
+                        <th>Triggered by</th>
+                        <th>Started</th>
+                        <th>Uptime</th>
+                        <th data-sortable="false"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn slavesDecomissioning}}
+                        <tr>
+                            <td>{{ id }}</td>
+                            <td>{{ rackId }}</td>
+                            <td>{{ host }}</td>
+                            <td>{{ state }}</td>
+                            <td>{{ decomissioningBy }}</td>
+                            <td data-value="{{ decomissioningAt }}">{{ decomissioningAtHuman }}</td>
+                            <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                            <td class="actions-column">
+                                <a data-slave-id="{{ id }}" data-action="remove" data-state="{{ state }}">
+                                     <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        {{else}}
+            {{#if fetchDone}}
+                <div class="empty-table-message"><p>No decomissioning slaves</p></div>
+            {{else}}
+                <div class="page-loader centered"></div>
+            {{/if}}
+        {{/if}}
+    </div>
+</div>

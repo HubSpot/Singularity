@@ -8,17 +8,17 @@ RequestsCleaning = require '../collections/RequestsCleaning'
 
 class RequestsView extends View
 
-    templateBase:   require './templates/requestsBase'
-    templateFilter: require './templates/requestsFilter'
+    templateBase:   require '../templates/requestsTable/requestsBase'
+    templateFilter: require '../templates/requestsTable/requestsFilter'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
-        all:      require './templates/requestsAllBody'
-        active:   require './templates/requestsActiveBody'
-        cooldown: require './templates/requestsCooldownBody'
-        paused:   require './templates/requestsPausedBody'
-        pending:  require './templates/requestsPendingBody'
-        cleaning: require './templates/requestsCleaningBody'
+        all:      require '../templates/requestsTable/requestsAllBody'
+        active:   require '../templates/requestsTable/requestsActiveBody'
+        cooldown: require '../templates/requestsTable/requestsCooldownBody'
+        paused:   require '../templates/requestsTable/requestsPausedBody'
+        pending:  require '../templates/requestsTable/requestsPendingBody'
+        cleaning: require '../templates/requestsTable/requestsCleaningBody'
 
     # Used to figure out which collection to use
     collectionMap:
@@ -45,7 +45,7 @@ class RequestsView extends View
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="starToggle"]': 'toggleStar'
             'click [data-action="run-now"]': 'runRequest'
-            'click [data-requests-active-filter]': 'changeFilters'
+            'click [data-filter]': 'changeFilters'
 
             'change input[type="search"]': 'searchChange'
             'keyup input[type="search"]': 'searchChange'
@@ -91,7 +91,7 @@ class RequestsView extends View
                     filter = filter or request.daemon
                 if @requestsSubFilter.indexOf('scheduled') isnt -1
                     filter = filter or request.scheduled
-                if @requestsSubFilter.indexOf('on-demand') isnt -1
+                if @requestsSubFilter.indexOf('ondemand') isnt -1
                     filter = filter or request.onDemand
                 filter
 
@@ -148,8 +148,9 @@ class RequestsView extends View
         @renderProgress = newProgress
 
         $contents = @bodyTemplate
-            requests: requests
-            rowsOnly: true
+            requests:          requests
+            rowsOnly:          true
+            requestsSubFilter: @requestsSubFilter
         
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
@@ -170,7 +171,7 @@ class RequestsView extends View
 
         $currentlySortedHeading = @$ "[data-sorted=true]"
         $currentlySortedHeading.removeAttr "data-sorted"
-        $currentlySortedHeading.removeAttr "data-sorted-direction"
+        $currentlySortedHeading.find('span').remove()
 
         if newSortAttribute is @sortAttribute and @sortAscending?
             @sortAscending = not @sortAscending
@@ -181,7 +182,7 @@ class RequestsView extends View
         @sortAttribute = newSortAttribute
 
         $target.attr "data-sorted", "true"
-        $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
+        $target.append "<span class='glyphicon glyphicon-chevron-#{ if @sortAscending then 'up' else 'down' }'></span>"
 
         @renderTable()
 
@@ -241,11 +242,27 @@ class RequestsView extends View
         else
             $requests.each -> $(@).attr('data-starred', 'true')
 
-    changeFilters: (e) ->
-        e.preventDefault()
-        @requestsSubFilter = $(e.target).data('requests-active-filter')
-        if e.metaKey or e.ctrlKey or e.shiftKey
-            @requestsSubFilter = $(e.target).data('requests-active-filter-shift')
+    changeFilters: (event) ->
+        event.preventDefault()
+
+        filter = $(event.currentTarget).data 'filter'
+
+        if not event.metaKey
+            # Select individual filters
+            @requestsSubFilter = filter
+        else
+            # Select multiple filters
+            currentFilter = if @requestsSubFilter is 'all' then 'daemon-ondemand-scheduled' else  @requestsSubFilter
+
+            currentFilter = currentFilter.split '-'
+            needToAdd = not _.contains currentFilter, filter
+
+            if needToAdd
+                currentFilter.push filter
+            else
+                currentFilter = _.without currentFilter, filter
+
+            @requestsSubFilter = currentFilter.join '-'
 
         @updateUrl()
         @render()
@@ -262,7 +279,7 @@ class RequestsView extends View
 
         previousSearchFilter = @searchFilter
         $search = @$ "input[type='search']"
-        @searchFilter = _.trim $search.val()
+        @searchFilter = $search.val()
 
         if @searchFilter isnt previousSearchFilter
             @updateUrl()

@@ -5,7 +5,7 @@ RequestsStarred = require '../collections/RequestsStarred'
 
 class DashboardView extends View
 
-    template: require './templates/dashboard'
+    template: require '../templates/dashboard'
 
     events: ->
         _.extend super,

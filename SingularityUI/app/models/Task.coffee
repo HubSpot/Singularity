@@ -1,8 +1,12 @@
 Model = require './model'
 
+<<<<<<< HEAD
 Request = require './Request'
 
 killTemplate = require '../views/templates/vex/taskKill'
+=======
+killTemplate = require '../templates/vex/taskKill'
+>>>>>>> bootstrap-3
 
 class Task extends Model
 

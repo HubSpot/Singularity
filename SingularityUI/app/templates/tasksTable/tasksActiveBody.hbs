@@ -1,0 +1,77 @@
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th data-sort-attribute="name">
+                        Name
+                    </th>
+                    <th data-sort-attribute="startedAt" class="hidden-xs">
+                        Started
+                    </th>
+                    <th data-sort-attribute="host" class="hidden-xs">
+                        Host
+                    </th>
+                    <th data-sort-attribute="rack" class="hidden-xs">
+                        Rack
+                    </th>
+                    <th data-sort-attribute="cpus" class="visible-large-desktop">
+                        CPUs
+                    </th>
+                    <th data-sort-attribute="memoryMb" class="visible-large-desktop">
+                        Memory
+                    </th>
+                    <th class="hidden-xs">
+                        {{! Actions column }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+            {{#eachWithFn tasks}}
+                <tr data-task-id="{{ id }}" data-task-host="{{ host }}">
+                    <td>
+                        <a class="ellipsize-300" title="{{ id }}" href="{{appRoot}}/task/{{ id }}">
+                            {{ name }}
+                        </a>
+                    </td>
+                    <td class="hidden-xs" data-value="{{ startedAt }}">
+                        <span title="{{ startedAt }}">
+                            {{ startedAtHuman }}
+                        </span>
+                    </td>
+                    <td class="hidden-xs">
+                        {{ host }}
+                    </td>
+                    <td class="visible-large-desktop">
+                        {{ rack }}
+                    </td>
+                    <td class="visible-large-desktop">
+                        {{ resources.cpus }}
+                    </td>
+                    <td class="hidden-xs" data-value="{{ resources.memoryMb }}">
+                        {{ memoryHuman }}
+                    </td>
+                    <td class="actions-column hidden-xs">
+                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                            <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                        </a>
+                        <a data-task-id="{{ id }}" data-action="remove">
+                            <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/eachWithFn}}
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+            </tbody>
+        </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No active tasks</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

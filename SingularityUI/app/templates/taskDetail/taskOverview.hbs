@@ -1,0 +1,43 @@
+{{! Part of taskBase }}
+<header class='detail-header'>
+    <div class="row">
+        {{! Left side }}
+        <div class="col-md-8">
+            {{#with taskHistory.task.taskRequest}}
+                <h5>
+                    Request
+                    <a href="{{appRoot}}/request/{{ request.id }}">
+                        {{ request.id }}
+                    </a>
+                </h5>
+            {{/with}}
+            <h2>
+                {{ taskHistory.task.id }}
+            </h2>
+        </div>
+
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-action="viewObjectJSON">
+                JSON
+            </a>
+            <a class="btn btn-danger" data-action="remove">
+                Kill task
+            </a>
+        </div>
+    </div>
+</header>
+
+{{#if taskHistory.taskUpdates}}
+    {{#eachWithFn taskHistory.taskUpdates}}
+        {{#if _last}}
+            <div class="well text-muted">
+                {{ taskStateHuman }} as of
+                {{ timestampHuman }}
+                {{#if statusMessage}}
+                    &mdash; {{ statusMessage }}
+                {{/if}}
+            </div>
+        {{/if}}
+    {{/eachWithFn}}
+{{/if}}

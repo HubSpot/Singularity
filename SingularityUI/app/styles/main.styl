@@ -1,6 +1,7 @@
 @import nib
 
 html
+    overflow-y scroll
     height 100%
 
     body
@@ -24,23 +25,17 @@ a.disabled:hover
 .subtle
     opacity 0.5
 
-.ellipsis
-    overflow ellipsis
-
-.hard-wrap
-    word-wrap break-word
-
-tr.filtered
-    display none
-
-table.filtered
-    display none
-
-.requests-filter-container
-    margin-top -1rem
-    margin-bottom 1rem
-
 // Overrides
+
+.page-header
+    margin-top 20px
+    margin-bottom 10px
+    
+    h1, h2, h3
+        margin 0
+
+.row
+    margin-bottom 1em
 
 #nav-user-name
     cursor default
@@ -49,8 +44,8 @@ table th
     text-align left
 
 #page
-    padding-bottom 40px
+    max-width 1500px
+    padding 0 20px 50px 20px
 
-.row-fluid .span2dot5
-    width 17.95%
-    *width 17.95%
+.page-header small
+    margin-left 1em

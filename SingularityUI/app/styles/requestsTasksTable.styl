@@ -1,0 +1,38 @@
+.table-nav-pills
+
+    .separator-pill
+        margin-right 20px
+        padding-right 20px
+        border-right 1px dashed #ccc
+
+.table-staged
+
+    .centered
+        text-align center
+
+    th, td
+        min-width 35px
+
+        &.keep-in-check
+            max-width 350px
+
+    th[data-sort-attribute]
+        cursor pointer
+        white-space nowrap
+        overflow hidden
+
+    th[data-sorted="true"]
+        overflow visible
+        position relative
+        z-index 500
+        background #f0f0f0
+
+        span.glyphicon
+            font-size 10px
+            line-height 19px
+            height 19px
+            width 10px
+            margin-left 2px
+
+    td
+        overflow hidden

@@ -1,10 +1,10 @@
 Model = require './model'
 
-pauseTemplate = require '../views/templates/vex/requestPause'
-unpauseTemplate = require '../views/templates/vex/requestUnpause'
-runTemplate = require '../views/templates/vex/requestRun'
-removeTemplate = require '../views/templates/vex/requestRemove'
-bounceTemplate = require '../views/templates/vex/requestBounce'
+pauseTemplate = require '../templates/vex/requestPause'
+unpauseTemplate = require '../templates/vex/requestUnpause'
+runTemplate = require '../templates/vex/requestRun'
+removeTemplate = require '../templates/vex/requestRemove'
+bounceTemplate = require '../templates/vex/requestBounce'
 
 class Request extends Model
 
@@ -12,15 +12,16 @@ class Request extends Model
             
     parse: (data) ->
         if data.request?
-            data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
-            data.daemon = data.request.daemon
-            
-            data.scheduled = utils.isScheduledRequest data.request
-            data.onDemand = utils.isOnDemandRequest data.request
+            # Gotta fecking figure out what kind of request this is
+            data.scheduled = typeof data.request.schedule is 'string'
+            data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
+            data.daemon = not data.scheduled and not data.onDemand
 
             data.paused = data.state is 'PAUSED'
             data.deleted = data.state is 'DELETED'
-            data.canBeRunNow = (data.scheduled or data.onDemand) and not data.daemon and data.activeDeploy?
+
+            hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
+            data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and hasActiveDeploy
             data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
 
             data.displayState = constants.requestStates[data.state]
@@ -59,12 +60,12 @@ class Request extends Model
         
     bounce: =>
         $.ajax
-            url: "#{ @url() }/bounce?user=#{app.getUsername()}"
+            url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
             type: "POST"
 
     destroy: =>
         $.ajax
-            url: "#{ @url() }?user=#{app.getUsername()}"
+            url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
 
     ###

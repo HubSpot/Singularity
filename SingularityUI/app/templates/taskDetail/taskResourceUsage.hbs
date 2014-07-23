@@ -1,0 +1,92 @@
+<div class="page-header">
+    <h2>
+        Resource Usage
+        <small><a data-action="expandList">
+            view
+        </a></small>
+    </h2>
+</div>
+<div class="row hidden">
+    <ul class="list-unstyled horizontal-description-list">
+        {{#if taskResourceUsage.cpusNrPeriods }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>CPUs number of periods</h4>
+                    <p>{{ taskResourceUsage.cpusNrPeriods }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.cpusNrThrottled }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>CPUs number throttled</h4>
+                    <p>{{ taskResourceUsage.cpusNrThrottled }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.cpusSystemTimeSecs }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>System time (sec)</h4>
+                    <p>{{ taskResourceUsage.cpusSystemTimeSecs }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.cpusThrottledTimeSecs }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>Throttled time (sec)</h4>
+                    <p>{{ taskResourceUsage.cpusThrottledTimeSecs }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.cpusUserTimeSecs }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>User time (sec)</h4>
+                    <p>{{ taskResourceUsage.cpusUserTimeSecs }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.memAnonBytes }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>Memory (anon)</h4>
+                    <p>{{ taskResourceUsage.memAnonHuman }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.memFileBytes }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>Memory (file)</h4>
+                    <p>{{ taskResourceUsage.memFileHuman }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.memMappedFileBytes }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>Memory (mapped file)</h4>
+                    <p>{{ taskResourceUsage.memMappedFileHuman }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.memRssBytes }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>Memory (rss)</h4>
+                    <p>{{ taskResourceUsage.memRssHuman }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if taskResourceUsage.memLimitBytes }}
+            <li class='col-md-4'>
+                <div>
+                    <h4>Memory (limit)</h4>
+                    <p>{{ taskResourceUsage.memLimitHuman }}</p>
+                </div>
+            </li>
+        {{/if}}
+    </ul>
+</div>

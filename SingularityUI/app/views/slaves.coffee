@@ -5,7 +5,7 @@ Slaves = require '../collections/Slaves'
 
 class SlavesView extends View
 
-    template: require './templates/slaves'
+    template: require '../templates/slaves'
 
     events: =>
         _.extend super,

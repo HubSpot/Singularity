@@ -12,17 +12,17 @@ RequestHistory = require '../collections/RequestHistory'
 
 class RequestView extends View
 
-    baseTemplate: require './templates/requestBase'
+    baseTemplate:           require '../templates/requestDetail/requestBase'
 
-    headerTemplate: require './templates/requestHeader'
+    headerTemplate:         require '../templates/requestDetail/requestHeader'
 
-    activeTasksTemplate: require './templates/requestActiveTasks'
-    scheduledTasksTemplate: require './templates/requestScheduledTasks'
+    activeTasksTemplate:    require '../templates/requestDetail/requestActiveTasks'
+    scheduledTasksTemplate: require '../templates/requestDetail/requestScheduledTasks'
 
     # Subview templates
-    historicalTasksTemplate: require './templates/requestHistoricalTasks'
-    deployHistoryTemplate: require './templates/requestDeployHistory'
-    requestHistoryTemplate: require './templates/requestHistory'
+    historicalTasksTemplate: require '../templates/requestDetail/requestHistoricalTasks'
+    deployHistoryTemplate:   require '../templates/requestDetail/requestDeployHistory'
+    requestHistoryTemplate:  require '../templates/requestDetail/requestHistory'
 
     events: ->
         _.extend super,
@@ -70,9 +70,6 @@ class RequestView extends View
         # of everything themselves
         #
         @collections.requestHistory = new RequestHistory [], {@requestId}
-        # We want this for the header too!
-        @listenTo @collections.requestHistory, 'sync', @renderStatus
-
         @collections.historicalTasks = new RequestHistoricalTasks [], {@requestId}
         @collections.deployHistory = new RequestDeployHistory [], {@requestId}
 
@@ -111,14 +108,7 @@ class RequestView extends View
     renderHeader: ->
         context = request: @model.attributes
 
-        if @collections.requestHistory.synced
-            context.firstRequestHistoryItem = @collections.requestHistory.first().attributes
-
         @$('.header-container').html @headerTemplate context
-
-    renderStatus: ->
-        # This is the bit right of the state badge in the header
-        @renderHeader() unless not @$('.request-status').is ':empty'
 
     renderActiveTasks: ->
         @$('.active-tasks-container').html @activeTasksTemplate

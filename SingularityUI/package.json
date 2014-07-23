@@ -1,29 +1,27 @@
 {
-    "name": "SingularityUI",
-    "description": "UI For the Mesos framework Singularity",
-    "version": "0.3.0",
-    "homepage": "https://github.com/HubSpot/Singularity",
-    "repository": {
-        "type": "git",
-        "url": "git@git.hubteam.com:HubSpot/singularity.git"
-    },
-    "engines": {
-        "node": "~0.6.10"
-    },
-    "scripts": {
-        "start": "brunch watch --server"
-    },
-    "dependencies": {
-        "javascript-brunch": ">= 1.0 < 1.8",
-        "coffee-script-brunch": ">= 1.0 < 1.8",
-        "handlebars-brunch": "git+https://git@github.com/HubSpot/handlebars-brunch.git",
-        "css-brunch": ">= 1.0 < 1.8",
-        "stylus-brunch": ">= 1.0 < 1.8",
-        "uglify-js-brunch": ">= 1.0 < 1.8",
-        "clean-css-brunch": ">= 1.0 < 1.8"
-    },
-    "devDependencies": {
-        "mocha": "0.14.0",
-        "expect.js": "0.1.2"
-    }
+  "name": "SingularityUI",
+  "description": "UI For the Mesos framework Singularity",
+  "version": "0.3.0",
+  "homepage": "https://github.com/HubSpot/Singularity",
+  "repository": {
+    "type": "git",
+    "url": "git@git.hubteam.com:HubSpot/singularity.git"
+  },
+  "scripts": {
+    "start": "brunch watch --server"
+  },
+  "dependencies": {
+    "clean-css-brunch": ">= 1.0 < 1.8",
+    "coffee-script-brunch": ">= 1.0 < 1.8",
+    "css-brunch": ">= 1.0 < 1.8",
+    "handlebars-brunch": "git+https://git@github.com/HubSpot/handlebars-brunch.git",
+    "javascript-brunch": ">= 1.0 < 1.8",
+    "less-brunch": "^1.7.2",
+    "stylus-brunch": ">= 1.0 < 1.8",
+    "uglify-js-brunch": ">= 1.0 < 1.8"
+  },
+  "devDependencies": {
+    "mocha": "0.14.0",
+    "expect.js": "0.1.2"
+  }
 }

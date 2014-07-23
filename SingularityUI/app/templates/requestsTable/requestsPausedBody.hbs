@@ -1,0 +1,80 @@
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th data-sort-attribute="name">
+                        Name
+                    </th>
+                    <th data-sort-attribute="timestamp" class="hidden-xs">
+                        Requested
+                    </th>
+                    <th data-sort-attribute="deployUser" class="visible-md">
+                        Deploy user
+                    </th>
+                    <th data-sort-attribute="instances" class="visible-md">
+                        Instances
+                    </th>
+
+                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
+                        <th data-sort-attribute="schedule" class="visible-lg visible-xl">
+                            Schedule
+                        </th>
+                    {{/ifInSubFilter}}
+
+                    <th class="hidden-xs">
+                        {{! Actions column }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+                {{#eachWithFn requests}}
+                    <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
+                        <td>
+                            <a href="{{appRoot}}/request/{{ id }}" title={{ id }}>
+                                {{ name }}
+                            </a>
+                        </span></td>
+                        <td class="hidden-xs">
+                            <span title="{{ timestampHuman }}">{{ timestampHumanShort }}</span>
+                        </td>
+                        <td class="visible-md">
+                            {{ deployUser }}
+                        </td>
+                        <td class="visible-md centered">
+                            {{ instances }}
+                        </td>
+
+                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                            <td class="visible-lg visible-xl">
+                                {{ schedule }}
+                            </td>
+                        {{/ifInSubFilter}}
+
+                        <td class="actions-column hidden-xs">
+                            <a data-request-id="{{ id }}" data-action="unpause">
+                                <span class="glyphicon glyphicon-play" title="Unpause"></span>
+                            </a>
+                            <a data-request-id="{{ id }}" data-action="viewJSON">
+                                <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                            </a>
+                            <a data-request-id="{{ id }}" data-action="remove">
+                                <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                            </a>
+                        </td>
+                    </tr>
+                {{/eachWithFn}}
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+            </tbody>
+        </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No requests on cooldown</p></div>
+        {{else}}
+            <div class="page-loader centered"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

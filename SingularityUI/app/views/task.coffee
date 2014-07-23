@@ -12,22 +12,23 @@ ExpandableTableSubview = require './expandableTableSubview'
 
 class TaskView extends View
 
-    baseTemplate:          require './templates/taskBase'
+    baseTemplate:          require '../templates/taskDetail/taskBase'
 
-    overviewTemplate:      require './templates/taskOverview'
-    historyTemplate:       require './templates/taskHistory'
+    overviewTemplate:      require '../templates/taskDetail/taskOverview'
+    historyTemplate:       require '../templates/taskDetail/taskHistory'
 
-    logsTemplate:          require './templates/taskS3Logs'
+    logsTemplate:          require '../templates/taskDetail/taskS3Logs'
 
-    infoTemplate:          require './templates/taskInfo'
+    infoTemplate:          require '../templates/taskDetail/taskInfo'
 
-    environmentTemplate:   require './templates/taskEnvironment'
-    resourceUsageTemplate: require './templates/taskResourceUsage'
+    environmentTemplate:   require '../templates/taskDetail/taskEnvironment'
+    resourceUsageTemplate: require '../templates/taskDetail/taskResourceUsage'
 
     events: ->
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="remove"]': 'killTask'
+            'click [data-action="expandList"]': 'expandList'
 
     initialize: ({ @id, path }) ->
         # Use the history API because it might not be an active task
@@ -112,6 +113,11 @@ class TaskView extends View
                 taskResourceUsage: @taskResourceUsage.attributes
 
             utils.setupCopyLinks @$el
+
+    expandList: (event) ->
+        $target = $(event.currentTarget)
+        $target.parent().parent().parent().parent().find('.row.hidden').removeClass 'hidden'
+        $target.parent().remove()
 
     viewJson: (event) ->
         utils.viewJSON 'task', $(event.target).data 'task-id'

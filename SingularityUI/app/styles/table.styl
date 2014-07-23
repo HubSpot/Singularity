@@ -1,20 +1,15 @@
 @import colors
 
-.table tbody tr:hover td, .table tbody tr:hover th
-    background-color rgba(0, 0, 0, .05)
-
-.table
-    background #f9f9f9
-
-.table
-
-    td > span
-        white-space nowrap
-
-.table, table, table[data-sortable]
+.table, table
+    
+    tbody
+        font-size 13px
     
     th
         vertical-align top
+
+        td
+            padding 10px
     
     th, td
 
@@ -73,6 +68,15 @@
         overflow: hidden
         line-height: 18px
 
+    .star
+        float left
+        font-size 15px
+        line-height 18px
+        color #ddd
+
+        &[data-starred="true"]
+            color $linkBlue
+
 .empty-table-message
     text-align center
     border 3px dashed #e7e7e7
@@ -85,6 +89,7 @@
     p:last-child
         margin-bottom 0
 
-.results > section + section > .empty-table-message, .empty-table-message + .empty-table-message
-    margin-top 0
-    border-top 0
+table.files-table
+    
+    tr td:first-child span.glyphicon
+        margin-right 1em

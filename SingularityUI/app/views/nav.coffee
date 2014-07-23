@@ -2,11 +2,11 @@ View = require './view'
 
 class NavView extends View
 
-    template: require './templates/nav'
+    template: require '../templates/nav'
 
     events: ->
         _.extend super,
-            'click [data-invoke-global-search]': 'showSearch'
+            'click .global-search-button': 'showSearch'
 
     render: ->
         fragment = Backbone.history.fragment?.split("/")[0]

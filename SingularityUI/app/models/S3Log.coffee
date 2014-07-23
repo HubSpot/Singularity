@@ -8,7 +8,7 @@ class S3Log extends Model
         logJSON.shortKey = @_truncateToShortKey logJSON.key
         logJSON.url = logJSON.getUrl
         logJSON.lastModifiedHuman = utils.humanTimeAgo logJSON.lastModified
-        logJSON.sizeHuman = Humanize.fileSize logJSON.size
+        logJSON.sizeHuman = utils.humanizeFileSize logJSON.size
 
         logJSON
 

@@ -1,90 +1,51 @@
 .global-search
     display none
+
+.global-search-active .global-search
+    display block
+
+.global-search
     position fixed
-    z-index 99999
+    z-index 8000
     top 0
     left 0
     bottom 0
     right 0
     background rgba(255, 255, 255, .9)
 
-    .global-search-close
-        position absolute
-        top 0
-        right 0
-        font-size 4em
-        padding .5em
-        color inherit
-        opacity .5
-        text-decoration none
-
-        &:hover
-            opacity 1
-
-    .global-search-tip
+    .close-button-container
+        margin 20px 0 50px
         text-align right
 
-    body.global-search-active &
-        display block
-
-    .global-search-input-wrapper
-        position absolute
-        width 60rem
-        max-width 80%
-        top 8rem
-        left 0
-        right 0
-        margin-left auto
-        margin-right auto
-
-    input[type="search"][required]
-        width 100%
-        height 2.5em
-        line-height 2.5em
-        font-size 2em
-        padding .5em
-        margin-bottom 0
-        background #eee
-
-        &::-webkit-search-cancel-button:after
-            font-size 1.7em
-            height 1.6em
-            line-height 1.6em
-            right .7em
-            top 0
-            bottom 0
-            margin auto
-
-.typeahead.dropdown-menu
-    display none
-
-    body.global-search-active &
-        display block
-        z-index 999999
-        background transparent
-        width 100%
-        box-shadow none
-        font-size 2em
-        margin-top 0
-        padding-top 0
-
         a
-            line-height 2em
+            color inherit
+            font-size 50px
 
-        li:not(.active) a
-            color #666
+            &:hover
+                text-decoration none
 
-        &.dropdown-menu-hidden
+    .tip
+        text-align right
 
-            li
-                display: none
+    strong
+        font-weight 400
+        color rgba(0, 0, 0, .25)
 
-            &:after
-                content "No requests found"
-                display block
-                text-align center
-                padding 2em
-                color #888
-                display block
-                font-weight 300
-                letter-spacing .02em
+    input[type="search"]
+        background rgba(240, 240, 240, .9)
+
+        &, &::-webkit-search-cancel-button:after
+            font-size 20px !important
+
+    // Overwrite twitter typeahead styles
+    .twitter-typeahead
+
+        &, .tt-suggestions, .tt-suggestion
+            display block !important
+            width 100%
+
+        .tt-suggestion
+            padding 15px 10px
+
+            &.tt-cursor
+                background rgba(0, 0, 0, .03)

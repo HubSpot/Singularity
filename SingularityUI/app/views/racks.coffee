@@ -5,7 +5,7 @@ Racks = require '../collections/Racks'
 
 class RacksView extends View
 
-    template: require './templates/racks'
+    template: require '../templates/racks'
 
     events: =>
         _.extend super, 

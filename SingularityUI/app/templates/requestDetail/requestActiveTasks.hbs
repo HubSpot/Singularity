@@ -1,0 +1,43 @@
+{{! Part of requestBase }}
+<div class="page-header">
+    <h2>Active tasks</h2>
+</div>
+{{#if activeTasks}}
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th class="visible-md">Status</th>
+                        <th class="visible-md">Deploy ID</th>
+                        <th class="visible-md">Started</th>
+                        <th class="hidden-xs">Updated</th>
+                        <th class="hidden-xs"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#eachWithFn activeTasks}}
+                        <tr data-task-id="{{ id }}">
+                            <td><span title="{{ id }}"><a href="{{appRoot}}/task/{{ id }}">{{ name }}</a></span></td>
+                            <td class="visible-md">{{ lastTaskStateHuman }}</td>
+                            <td class="visible-md">{{ deployId }}</td>
+                            <td class="visible-md" data-value="{{ startedAt }}">{{ startedAtHuman }}</td>
+                            <td class="hidden-xs" data-value="{{ updatedAt }}">{{ updatedAtHuman }}</td>
+                            <td class="actions-column hidden-xs">
+                                <a href="{{appRoot}}/task/{{ id }}/files/">
+                                    <span class="glyphicon glyphicon-file" title="Files"></span>
+                                </a>
+                                <a data-task-id="{{ id }}" data-action="viewJSON">
+                                    <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{/eachWithFn}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{else}}
+    <div class="empty-table-message"><p>No active tasks</p></div>
+{{/if}}

@@ -1,0 +1,84 @@
+{{! Part of requestBase }}
+<header class='detail-header'>
+    <div class="row">
+        {{! Left side, info }}
+        <div class="col-md-8">
+            <h4>
+                <span class="request-state" data-state="{{ request.state }}">
+                    {{ request.displayState }}
+                </span>
+
+                <span class="request-type">
+                    {{#if request.daemon}}daemon{{/if}}
+                    {{#if request.onDemand}}on-demand{{/if}}
+                    {{#if request.scheduled}}scheduled{{/if}}
+                </span>
+            </h4>
+
+            <h2>{{ request.id }}</h2>
+        </div>
+
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-request-id="{{ request.id }}" data-action="viewObjectJSON">
+                JSON
+            </a>
+
+            {{#if request.canBeRunNow}}
+                {{#unless request.deleted}}
+                    <a class="btn btn-primary" data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">
+                        Run now
+                    </a>
+                {{/unless}}
+            {{/if}}
+
+            {{#unless request.deleted}}
+                {{#if request.paused}}
+                    <a class="btn btn-primary" data-request-id="{{ request.id }}" data-action="unpause">
+                        Unpause
+                    </a>
+                {{else}}
+                    <a class="btn btn-primary" data-request-id="{{ request.id }}" data-action="pause">
+                        Pause
+                    </a>
+                {{/if}}
+            {{/unless}}
+            
+            {{#if request.canBeBounced}}
+                <a class="btn btn-primary" data-request-id="{{ request.id }}" data-action="bounce">
+                    Bounce
+                </a>
+            {{/if}}
+            
+            {{#unless request.deleted}}
+                <a class="btn btn-danger" data-request-id="{{ request.id }}" data-action="remove">
+                    Remove
+                </a>
+            {{/unless}}
+        </div>
+    </div>
+
+    {{! Active deploy well }}
+    <div class="well">
+        {{#if request.activeDeploy}}
+            {{#with request.activeDeploy}}
+                Active deploy <code>{{ id }}</code>
+                {{#if metadata.deployedBy}}
+                    by {{ metadata.deployedBy }}
+                {{/if}}
+                {{#if timestampHuman}}
+                    &mdash;
+                    {{ timestampHuman }}
+                {{/if}}
+            {{/with}}
+        {{else}}
+            <span class="text-danger">
+                No active deploy
+            </span>
+        {{/if}}
+        
+        <a data-action="expand-deploy-history" class="pull-right">
+            Deploy history
+        </a>
+    </div>
+</header>

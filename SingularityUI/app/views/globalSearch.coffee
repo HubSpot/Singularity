@@ -5,20 +5,26 @@ class GlobalSearchView extends View
     lastSearchQuery: ''
     lastResponse: []
 
-    template: require './templates/globalSearch'
+    template: require '../templates/globalSearch'
 
     events: ->
         _.extend super,
-            'click [data-close-global-search]': 'hide'
+            'click [data-action="close-global-seach"]': 'hide'
 
     initialize: ->
         $(window).on 'keydown', (event) =>
-            return unless $(event.target).is 'body'
-            if event.keyCode is 84 # t
+            focusBody = $(event.target).is 'body'
+            focusInput = $(event.target).is @$ 'input[type="search"]'
+
+            modifierKey = event.metaKey or event.shiftKey
+            sPressed = event.keyCode is 83 and not modifierKey
+            escPressed = event.keyCode is 27
+
+            if escPressed and (focusBody or focusInput)
+                @hide()
+            else if sPressed and focusBody
                 @show()
                 event.preventDefault()
-            if event.keyCode is 27 # ESC
-                @hide()
 
     render: ->
         @setElement @template()
@@ -27,36 +33,40 @@ class GlobalSearchView extends View
         @setUpTypeahead()
 
     setUpTypeahead: ->
-        @$('input').typeahead
-            # Debounce event so we don't spam the server
-            source: _.debounce (query, process) =>
-                # Ignore empty queries
-                return if not query
-                # Use the same data if it's the same query
-                if query is @lastSearchQuery
-                    process @lastResponse
-                    return
+        sourceFunction = (query, process) =>
+            # Ignore empty queries
+            return if not query
+            # Use the same data if it's the same query
+            if query is @lastSearchQuery
+                process @lastResponse
+                return
 
-                @lastSearchQuery = query
+            @lastSearchQuery = query
 
-                $.ajax
-                    url: "#{ config.apiRoot }/history/requests/search"
-                    data: requestIdLike: query
+            $.ajax
+                url: "#{ config.apiRoot }/history/requests/search"
+                data: requestIdLike: query
 
-                    success: (response) =>
-                        @lastResponse = response
-                        process response
-            , 200
+                success: (response) =>
+                    @lastResponse = response
+                    process response
 
-            matcher: -> true
-            highlighter: (item) -> item
-            updater: (id) =>
-                app.router.navigate "/request/#{ id }", { trigger: true }
-                @toggle()
+        # Debounce event so we don't spam the server
+        sourceFunction = _.debounce sourceFunction, 200
 
+        @$('input').typeahead 
+            highlight: true
+        ,
+            source: sourceFunction
+            displayKey: (key) -> key
+
+        @$('input').on 'typeahead:selected', (event, requestId) =>
+            @hide()
+            app.router.navigate "/request/#{ requestId }", { trigger: true }
+            
     reset: ->
         @$('input').val ''
-        @$('ul').removeClass('dropdown-menu-hidden')
+        @$('ul').removeClass 'dropdown-menu-hidden'
         @$('li').remove()
 
     show: ->
@@ -66,7 +76,7 @@ class GlobalSearchView extends View
 
     hide: (event) ->
         if event?
-            return if not $(event.target).attr('data-close-global-search')?
+            return if not $(event.target).data('action')? is 'close-global-seach'
 
         @$el.parent().removeClass 'global-search-active'
 

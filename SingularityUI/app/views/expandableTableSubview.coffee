@@ -9,7 +9,7 @@ View = require './view'
 # expanded to fit the entire page and shrunk back down after
 class ExpandableTableSubview extends View
 
-    buttonsTemplate: require './templates/tableSubviewButtons'
+    buttonsTemplate: require '../templates/tableSubviewButtons'
 
     expanded: false
 
@@ -43,7 +43,7 @@ class ExpandableTableSubview extends View
         return if @collection.length isnt @collection.atATime and not haveButtons
 
         # Append expand / shrink link
-        $header = @$('.page-header h1')
+        $header = @$('.page-header h1, .page-header h2, .page-header h3')
         if $header.length
             $header.find('small').remove()
             if not @expanded
@@ -85,10 +85,11 @@ class ExpandableTableSubview extends View
 
         pageHeight = $(window).height()
 
-        # Since it's fixed. 1.5 for a little margin
-        navHeight = app.views.nav.$el.height() * 1.5
+        # A little padding
+        arbitrarySpace = 10
+
         # Take away the stuff above and under the table from the size of the page
-        availableSpace = pageHeight - spaceAboveTable - spaceUnderTable - navHeight
+        availableSpace = pageHeight - spaceAboveTable - spaceUnderTable - arbitrarySpace
         # How many rows d'ya think we can fit in?
         canFit = Math.floor availableSpace / firstRowHeight
 
@@ -97,10 +98,13 @@ class ExpandableTableSubview extends View
         @collection.currentPage = 1
 
         @collection.fetch().done =>
-            $(window).scrollTop @$el.offset().top - navHeight
+            @$('table').parent().css 'min-height', "#{ availableSpace }px"
+            $(window).scrollTop @$el.offset().top - arbitrarySpace
 
     shrink: ->
         @expanded = false
+
+        @$('table').parent().css 'min-height', 'auto'
 
         @collection.atATime = 5
         @collection.currentPage = 1

@@ -8,17 +8,16 @@ class TaskResourceUsage extends Model
 
     parse: (data) ->
         if data.memAnonBytes
-            data.memAnonHuman = Humanize.fileSize data.memAnonBytes
+            data.memAnonHuman = utils.humanizeFileSize data.memAnonBytes
         if data.memFileBytes
-            data.memFileHuman = Humanize.fileSize data.memFileBytes
+            data.memFileHuman = utils.humanizeFileSize data.memFileBytes
         if data.memLimitBytes
-            data.memLimitHuman = Humanize.fileSize data.memLimitBytes
+            data.memLimitHuman = utils.humanizeFileSize data.memLimitBytes
         if data.memMappedFileBytes
-            data.memMappedFileHuman = Humanize.fileSize data.memMappedFileBytes
+            data.memMappedFileHuman = utils.humanizeFileSize data.memMappedFileBytes
         if data.memRssBytes
-            data.memRssHuman = Humanize.fileSize data.memRssBytes
+            data.memRssHuman = utils.humanizeFileSize data.memRssBytes
 
         data
-
 
 module.exports = TaskResourceUsage

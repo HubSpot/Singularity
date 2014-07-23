@@ -3,29 +3,22 @@
 // Okay so it's not REALLY a definition list, but hey
 ul.horizontal-description-list
     
-    .span4:nth-child(3n+4)
-        margin-left 0
-
-    &, li
-        margin 0
-        padding 0
-        list-style none
-    
     li
         position relative
         overflow hidden
-        height 56px
+        height 69px
         margin-bottom 20px
 
         &, div
             border-radius 4px
 
         div
-            position absolute
-            top 0
-            left 0
+            position relative
             width 100%
-            height 56px
+            height 69px
+
+            h4
+                margin-top 0
 
         &:hover
             overflow visible
@@ -42,14 +35,13 @@ ul.horizontal-description-list
                     white-space pre-wrap
         
         div
-            background #f1f1f1
+            background #f3f3f3
             padding 10px
 
         h4 a
             float right
             font-weight 400
             font-size 12px
-            margin-top -5px
 
             &:hover
                 text-decoration none
@@ -60,63 +52,3 @@ ul.horizontal-description-list
             white-space nowrap
             text-overflow ellipsis
             overflow hidden
-
-dl
-    clearfix()
-    margin 0 0 1.5em
-
-    dt
-        display inline-block
-        font-size 1.2em
-        line-height 2em
-        margin-bottom .5em
-        font-weight 500
-        position relative
-
-    dd
-        margin-left 2em
-
-    @media (min-width: 769px)
-
-        dt, dd
-            float left
-
-        dt
-            width 30%
-            padding-right 5%
-            clear left
-
-        dd
-            width 70%
-            margin 0 0 1.5em
-
-    @media (min-width: 1000px)
-
-        dt
-            width 20%
-
-        dd
-            width 80%
-
-dl.wider
-    @media (min-width: 769px)
-
-        dt, dd
-            float left
-
-        dt
-            width 40%
-            padding-right 5%
-            clear left
-
-        dd
-            width 60%
-            margin 0 0 1.5em
-
-    @media (min-width: 1000px)
-
-        dt
-            width 30%
-
-        dd
-            width 70%

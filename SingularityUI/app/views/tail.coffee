@@ -6,9 +6,9 @@ class TailView extends View
 
     pollingTimeout: 3000
 
-    template: require './templates/tail'
+    template: require '../templates/tail'
 
-    linesTemplate: require './templates/tailLogLines'
+    linesTemplate: require '../templates/tailLogLines'
 
     events: ->
         _.extend super,

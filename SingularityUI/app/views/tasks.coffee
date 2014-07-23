@@ -4,13 +4,13 @@ Request = require '../models/Request'
 
 class TasksView extends View
 
-    templateBase: require './templates/tasksBase'
+    templateBase:  require '../templates/tasksTable/tasksBase'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
-        active:    require './templates/tasksActiveBody'
-        scheduled: require './templates/tasksScheduledBody'
-        cleaning:  require './templates/tasksCleaningBody'
+        active:    require '../templates/tasksTable/tasksActiveBody'
+        scheduled: require '../templates/tasksTable/tasksScheduledBody'
+        cleaning:  require '../templates/tasksTable/tasksCleaningBody'
 
     # For staged rendering
     renderProgress: 0
@@ -132,7 +132,7 @@ class TasksView extends View
 
         $currentlySortedHeading = @$ "[data-sorted=true]"
         $currentlySortedHeading.removeAttr "data-sorted"
-        $currentlySortedHeading.removeAttr "data-sorted-direction"
+        $currentlySortedHeading.find('span').remove()
 
         if newSortAttribute is @sortAttribute and @sortAscending?
             @sortAscending = not @sortAscending
@@ -143,7 +143,7 @@ class TasksView extends View
         @sortAttribute = newSortAttribute
 
         $target.attr "data-sorted", "true"
-        $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
+        $target.append "<span class='glyphicon glyphicon-chevron-#{ if @sortAscending then 'up' else 'down' }'></span>"
 
         @renderTable()
 
@@ -196,7 +196,7 @@ class TasksView extends View
 
         previousSearchFilter = @searchFilter
         $search = @$ "input[type='search']"
-        @searchFilter = _.trim $search.val()
+        @searchFilter = $search.val()
 
         if @searchFilter isnt previousSearchFilter
             @updateUrl()

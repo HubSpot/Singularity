@@ -4,7 +4,7 @@ class FileBrowserSubview extends View
 
     path = ''
 
-    template: require './templates/taskFileBrowser'
+    template: require '../templates/taskDetail/taskFileBrowser'
 
     events: ->
         'click [data-directory-path]': 'navigate'

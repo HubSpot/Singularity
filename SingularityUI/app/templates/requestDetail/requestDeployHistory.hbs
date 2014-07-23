@@ -1,0 +1,43 @@
+<div class="page-header">
+    <h2>Deploy history</h2>
+</div>
+{{#if data.length}}
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Deploy ID</th>
+                        <th>Status</th>
+                        <th>User</th>
+                        <th>Timestamp</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each data}}
+                        <tr>
+                            <td>{{ deployId }}</td>
+                            <td>{{ deployResult.deployStateHuman }}</td>
+                            <td>{{ user }}</td>
+                            <td data-value="{{ timestamp }}">{{ timestampHuman }}</td>
+                            <td class="actions-column">
+                                <a data-deploy-id="{{ deployId }}" data-action="viewDeployJSON">
+                                    <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{else}}
+    {{#if synced}}
+        <div class="empty-table-message">
+            No deploys
+        </div>
+    {{else}}
+        <div class="page-loader centered cushy"></div>
+    {{/if}}
+{{/if}}

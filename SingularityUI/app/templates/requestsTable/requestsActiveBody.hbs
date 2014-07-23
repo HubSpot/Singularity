@@ -1,0 +1,97 @@
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>
+                        {{! Star column }}
+                    </th>
+                    <th data-sort-attribute="name">
+                        Name
+                    </th>
+                    <th data-sort-attribute="instances" class="visible-lg visible-xl">
+                        Instances
+                    </th>
+                    <th data-sort-attribute="deployId" class="visible-lg visible-xl">
+                        Deploy ID
+                    </th>
+                    <th data-sort-attribute="deployUser" class="visible-lg visible-xl">
+                        Deploy user
+                    </th>
+                    <th data-sort-attribute="timestamp" class="hidden-xs">
+                        Deploy time
+                    </th>
+
+                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
+                        <th data-sort-attribute="schedule" class="visible-lg visible-xl">
+                            Schedule
+                        </th>
+                    {{/ifInSubFilter}}
+
+                    <th class="hidden-xs">
+                        {{! Actions column }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+                {{#each requests}}
+                    <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
+                        <td>
+                            <a class="star" data-action="starToggle" data-starred="{{ starred
+                         }}" data-request-id="{{ id }}" data-request-name="{{ name }}">
+                                <span class="glyphicon glyphicon-star"></span>
+                            </a>
+                        </td>
+                        <td class="keep-in-check">
+                            <a href="{{appRoot}}/request/{{ id }}" title="{{ id }}">
+                                {{ name }}
+                            </a>
+                        </td>
+                        <td class="visible-lg visible-xl centered">
+                            {{ instances }}
+                        </td>
+                        <td class="visible-lg visible-xl">
+                            {{ deployId }}
+                        </td>
+                        <td class="visible-lg visible-xl">
+                            {{ deployUser }}
+                        </td>
+                        <td class="hidden-xs" data-value="{{ timestamp }}">
+                            <span title="{{ timestampHuman }}">{{ timestampHumanShort }}</span>
+                        </td>
+                        
+                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                            <td class="visible-lg visible-xl">
+                                {{ schedule }}
+                            </td>
+                        {{/ifInSubFilter}}
+
+                        <td class="actions-column hidden-xs">
+                            {{#if canBeRunNow}}
+                                <a data-request-id="{{ id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now">
+                                    <span class="glyphicon glyphicon-repeat" title="Run now"></span>
+                                </a>
+                            {{/if}}
+                            <a data-request-id="{{ id }}" data-action="viewJSON">
+                                <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                            </a>
+                            <a data-request-id="{{ id }}" data-action="remove">
+                                <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                            </a>
+                        </td>
+                    </tr>
+                {{/each}}
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+            </tbody>
+        </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No requests</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

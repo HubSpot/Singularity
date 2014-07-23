@@ -1,0 +1,41 @@
+<div class="page-header">
+    <h2>Request history</h2>
+</div>
+{{#if data.length}}
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>State</th>
+                        <th>User</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each data}}
+                        <tr>
+                            <td>{{ stateHuman }}</td>
+                            <td>{{ userHuman }}</td>
+                            <td data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
+                            <td class="actions-column">
+                                <a data-local-request-history-id="{{ request.localRequestHistoryId }}" data-action="viewRequestHistoryJSON">
+                                    <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{else}}
+    {{#if synced}}
+        <div class="empty-table-message">
+            No historical tasks
+        </div>
+    {{else}}
+        <div class="page-loader centered cushy"></div>
+    {{/if}}
+{{/if}}
