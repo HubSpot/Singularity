@@ -106,6 +106,9 @@ class RequestsView extends View
                 requests = requests.reverse()
         else
             requests.reverse()
+
+        for request in requests
+            request.starred = @requestsStarred.get(request.id)?
             
         @currentRequests = requests
 
@@ -235,19 +238,18 @@ class RequestsView extends View
             setTimeout (=> $row.removeClass 'flash'), 500
                         
     toggleStar: (e) ->
-        $target = $(e.target)
-        $table = $target.parents 'table'
+        $target = $(e.currentTarget)
+        $row = $target.parents 'tr'
 
-        requestName = $target.data 'request-name'
-        starred = $target.attr('data-starred') is 'true'
+        id = $row.data 'request-id'
 
-        @requestsStarred.toggle(requestName)
-        $requests = $table.find("""[data-request-name="#{ requestName }"]""")
+        @requestsStarred.toggle id
 
+        starred = $target.attr('data-starred') is "true"
         if starred
-            $requests.each -> $(@).attr('data-starred', 'false')
+            $target.attr 'data-starred', 'false'
         else
-            $requests.each -> $(@).attr('data-starred', 'true')
+            $target.attr 'data-starred', 'true'
 
     changeFilters: (event) ->
         event.preventDefault()

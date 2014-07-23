@@ -52,16 +52,16 @@ class DashboardView extends View
         @$el.html @template context
 
     unstar: (e) =>
-        $target = $(e.target)
-        $table = $target.parents('table')
+        $target = $ e.currentTarget
+        $row = $target.parents 'tr'
 
-        requestName = $target.data('request-name')
+        id = $row.data 'request-id'
 
-        app.collections.requestsStarred.toggle(requestName)
+        @starredCollection.toggle id
 
-        $table.find("""[data-request-name="#{ requestName }"]""").each -> $(@).parents('tr').remove()
+        $row.remove()
 
-        if $table.find('tbody tr').length is 0
+        if @$('tbody tr').length is 0
             @render()
 
     changeUser: =>
