@@ -119,13 +119,21 @@ public class TaskResource {
       throw new NotFoundException(String.format("No active task found in Singularity with id %s", taskId));
     }
 
+    String executorIdToMatch = null;
+    
+    if (task.get().getMesosTask().getExecutor().hasExecutorId()) {
+      executorIdToMatch = task.get().getMesosTask().getExecutor().getExecutorId().getValue();
+    } else {
+      executorIdToMatch = taskId;
+    }
+    
     for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.get().getOffer().getHostname())) {
-      if (taskMonitor.getExecutorId().equals(task.get().getMesosTask().getExecutor().getExecutorId().getValue())) {
+      if (taskMonitor.getExecutorId().equals(executorIdToMatch)) {
         return taskMonitor.getStatistics();
       }
     }
 
-    throw new NotFoundException(String.format("Couldn't find executor %s on slave %s", task.get().getMesosTask().getExecutor().getExecutorId().getValue(), task.get().getOffer().getHostname()));
+    throw new NotFoundException(String.format("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.get().getOffer().getHostname()));
   }
   
   @DELETE
