@@ -1,7 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -12,7 +11,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
-import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.singularity.executor.ArtifactManager;
 import com.hubspot.singularity.executor.TemplateManager;
