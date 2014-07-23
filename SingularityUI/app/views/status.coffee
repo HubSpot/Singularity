@@ -4,13 +4,7 @@ State = require '../models/State'
 
 class StatusView extends View
 
-<<<<<<< HEAD
-    lastState: undefined
-
-    template: require './templates/status'
-=======
     template: require '../templates/status'
->>>>>>> bootstrap-3
 
     initialize: ->
         @state = new State
