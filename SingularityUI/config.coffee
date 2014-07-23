@@ -23,7 +23,7 @@ exports.config =
             joinTo: 'static/js/app.js'
 
     server:
-        base: '/singularity/v2'
+        base: '/singularity'
 
 
     # When running SingularityUI via brunch server we need to make an index.html for it
