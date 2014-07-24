@@ -89,7 +89,7 @@ class Request extends Model
         vex.dialog.prompt
             message: runTemplate id: @get "id"
             buttons: [
-                $.extend vex.dialog.buttons.YES, text: 'Run now'
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
             ]
             callback: (data) =>
