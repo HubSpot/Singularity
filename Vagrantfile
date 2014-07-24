@@ -4,6 +4,18 @@
 # vagrant-berkshelf, vagrant-omnibus, vagrant-hostsupdater
 
 Vagrant.configure("2") do |config|
+  if !Vagrant.has_plugin?("vagrant-berkshelf")
+    raise "Please install vagrant-berkshelf 2.0.1 via `vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1`"
+  end
+
+  if !Vagrant.has_plugin?("vagrant-omnibus")
+    raise "Please install vagrant-omnibus via `vagrant plugin install vagrant-ominbus --plugin-version=1.4.1`"
+  end
+
+  if !Vagrant.has_plugin?("vagrant-hostsupdater")
+    raise "Please install vagrant-hostsupdater via `vagrant plugin install vagrant-hostsupdater`"
+  end
+
   config.vm.box = "opscode_ubuntu-12.04_provisionerless"
   config.vm.box_url = "https://opscode-vm-bento.s3.amazonaws.com/vagrant/opscode_ubuntu-12.04_provisionerless.box"
 
