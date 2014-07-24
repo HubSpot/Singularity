@@ -1,4 +1,4 @@
-Controller = require 'Controller'
+Controller = require './Controller'
 
 Requests = require '../collections/Requests'
 RequestsStarred = require '../collections/RequestsStarred'

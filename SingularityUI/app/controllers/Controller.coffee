@@ -2,11 +2,11 @@
 class Controller
     
     # Reference to the primary view being used
-    view = undefined
+    view: undefined
 
     # Keep track of models and collections
-    models      = {}
-    collections = {}
+    models:      {}
+    collections: {}
 
     # Initialize should bootstrap models/controllers and views
     initialize: ->

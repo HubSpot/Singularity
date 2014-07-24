@@ -18,7 +18,7 @@ class DashboardView extends View
 
         # Filter starred requests
         starredRequests = @collections.requests.filter (request) =>
-            @starredCollection.get(request.get 'id')?
+            @collections.starredRequests.get(request.get 'id')?
 
         starredRequests = _.pluck starredRequests, 'attributes'
 
@@ -49,7 +49,7 @@ class DashboardView extends View
 
         id = $row.data 'request-id'
 
-        @starredCollection.toggle id
+        @collections.starredRequests.toggle id
 
         $row.remove()
 

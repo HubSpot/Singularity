@@ -10,10 +10,10 @@ class View extends Backbone.View
     # Keep track of any subviews we may have
     subviews:    {}
 
-    contructor: (params) ->
-        super params
-        @models      = params.models if params.models?
+    constructor: (params = {}) ->
+        @models      = params.models      if params.models?
         @collections = params.collections if params.collections?
+        super params
 
     events: ->
         'click a': 'routeLink'
