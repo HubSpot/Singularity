@@ -86,6 +86,8 @@ class Application
     bootstrapController: (controller) ->
         controller.initialize()
         controller.refresh()
+        
+        @currentController = controller
         @showView controller.view
 
     showView: (view) ->
