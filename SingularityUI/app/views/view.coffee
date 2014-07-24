@@ -1,9 +1,19 @@
 class View extends Backbone.View
 
+    # Reference to our controller in case we cant to call @controller.refresh
+    controller: undefined
+
+    # In addition to @model & @collection that Backbone.View already takes care of
     models:      {}
     collections: {}
 
+    # Keep track of any subviews we may have
     subviews:    {}
+
+    contructor: (params) ->
+        super params
+        @models      = params.models if params.models?
+        @collections = params.collections if params.collections?
 
     events: ->
         'click a': 'routeLink'
