@@ -1,8 +1,5 @@
 View = require './view'
 
-Requests = require '../collections/Requests'
-RequestsStarred = require '../collections/RequestsStarred'
-
 class DashboardView extends View
 
     template: require '../templates/dashboard'
@@ -13,25 +10,20 @@ class DashboardView extends View
             'click [data-action="change-user"]': 'changeUser'
 
     initialize: =>
-        app.user.on 'change', @render, @
-
-        @starredCollection = new RequestsStarred
-        @starredCollection.fetch()
-
-        @collection = new Requests [], state: 'all'
-        @collection.fetch().done @render
+        @listenTo app.user, 'change', @render
+        @listenTo @collections.requests, 'sync', @render
 
     render: =>
-        deployUser = app.user.get('deployUser')
+        deployUser = app.user.get 'deployUser'
 
         # Filter starred requests
-        starredRequests = @collection.filter (request) =>
+        starredRequests = @collections.requests.filter (request) =>
             @starredCollection.get(request.get 'id')?
 
         starredRequests = _.pluck starredRequests, 'attributes'
 
         # Count up the Requests for the clicky boxes
-        userRequests = @collection.where {deployUser}
+        userRequests = @collections.requests.where {deployUser}
         userRequestTotals =
             all: userRequests.length
             daemon:    0
@@ -45,7 +37,7 @@ class DashboardView extends View
 
         context =
             deployUser: deployUser
-            collectionSynced: @collection.synced
+            collectionSynced: @collections.requests.synced
             userRequestTotals: userRequestTotals or { }
             starredRequests: starredRequests or []
 

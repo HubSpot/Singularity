@@ -1,4 +1,5 @@
-DashboardView = require 'views/dashboard'
+DashboardController = require 'controllers/Dashboard'
+
 StatusView = require 'views/status'
 
 RequestsView = require 'views/requests'
@@ -71,7 +72,7 @@ class Router extends Backbone.Router
         '*anything': 'templateFromURLFragment'
 
     dashboard: ->
-        app.showView new DashboardView
+        app.bootstrapController new DashboardController
 
     status: ->
         app.showView new StatusView

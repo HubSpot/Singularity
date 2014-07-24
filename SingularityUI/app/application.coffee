@@ -83,6 +83,10 @@ class Application
         else
             @page.appendChild view.el
 
+    bootstrapController: (controller) ->
+        controller.initialize()
+        @showView controller.view
+
     showView: (view) ->
         # Clean up events & stuff
         @views.current?.remove()
