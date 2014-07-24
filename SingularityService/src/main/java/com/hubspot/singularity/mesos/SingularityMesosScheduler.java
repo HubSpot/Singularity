@@ -157,7 +157,7 @@ public class SingularityMesosScheduler implements Scheduler {
       final RackCheckState rackCheckState = rackManager.checkRack(offer, taskRequest, stateCache);
             
       if (matchesResources && rackCheckState.isRackAppropriate()) {
-        final SingularityTask task = mesosTaskBuilder.buildTask(offer, taskRequest, taskResources);
+        final SingularityTask task = mesosTaskBuilder.buildTask(offer, resources, taskRequest, taskResources);
 
         resources = MesosUtils.subtractResources(resources, task.getMesosTask().getResourcesList());
         

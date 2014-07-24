@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.mesos.Protos;
@@ -46,7 +47,7 @@ public class SingularityMesosTaskBuilder {
     this.idGenerator = idGenerator;
   }
   
-  public SingularityTask buildTask(Protos.Offer offer, SingularityTaskRequest taskRequest, Resources resources) {
+  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources) {
     final String rackId = rackManager.getRackId(offer);
     final String host = rackManager.getSlaveHost(offer);
     
@@ -58,9 +59,9 @@ public class SingularityMesosTaskBuilder {
     Optional<long[]> ports = Optional.absent();
     Optional<Resource> portsResource = Optional.absent();
     
-    if (resources.getNumPorts() > 0) {
-      portsResource = Optional.of(MesosUtils.getPortsResource(resources.getNumPorts(), offer));
-      ports = Optional.of(MesosUtils.getPorts(portsResource.get(), resources.getNumPorts()));
+    if (desiredTaskResources.getNumPorts() > 0) {
+      portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources));
+      ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
     }
     
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
@@ -73,8 +74,8 @@ public class SingularityMesosTaskBuilder {
       bldr.addResources(portsResource.get());
     }
     
-    bldr.addResources(MesosUtils.getCpuResource(resources.getCpus()));
-    bldr.addResources(MesosUtils.getMemoryResource(resources.getMemoryMb()));
+    bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus()));
+    bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb()));
     
     bldr.setSlaveId(offer.getSlaveId());
     
