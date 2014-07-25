@@ -13,9 +13,20 @@ Validates and creates a new request or update the fields on an existing request.
 - Endpoint: **/requests**
 - Method: **POST**
 - Example: http POST localhost:5060/singularity/v1/requests @request.json
-- Response: Posted Request object
+- Response: Singularity Request Parent object
 
-request.json: `{ "id" : "test-singularity-1", "command": "sleep 100000" }`
+request.json: `{ "id" : "test-singularity-1" }`
+
+#### Posting a Deploy
+
+Validates and creates a new pending deploy object for a Request. Requests may only have a single pending deploy at a time.
+
+- Endpoint: **/requests/request/{requestId}/deploy**
+- Method: **POST**
+- Example: http POST localhost:5060/singularity/v1/requests/request/test-singularity-1/deploy @deploy.json
+- Response: Singularity Request Parent object
+
+deploy.json: `{ "id" : "deploy1", "requestId" : "test-singularity-1", "command" : "sleep 1000" }`
 
 #### Deleting a Request
 
