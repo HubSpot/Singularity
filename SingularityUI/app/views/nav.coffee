@@ -5,7 +5,7 @@ class NavView extends View
     template: require '../templates/nav'
 
     initialize: ->
-        Backbone.history.on 'route', ->
+        Backbone.history.on 'route', =>
             @render()
 
     events: ->
