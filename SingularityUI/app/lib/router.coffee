@@ -48,11 +48,7 @@ class Router extends Backbone.Router
         app.showView new RequestView requestId: requestId
 
     tasksTable: (state = 'active', searchFilter = '') ->
-
-        app.views.current = new TasksView {tasksFilter, searchFilter}
-
-        app.views.current.render()
-        app.show app.views.current
+        app.bootstrapController new TasksTableController {state, searchFilter}
 
     task: (taskId, path) ->
         app.showView new TaskView id: taskId, path: path
