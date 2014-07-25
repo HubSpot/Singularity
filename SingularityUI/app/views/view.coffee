@@ -18,6 +18,10 @@ class View extends Backbone.View
     events: ->
         'click a': 'routeLink'
 
+    remove: ->
+        super
+        subview.remove() for subview in @subviews
+
     routeLink: (e) =>
         $link = $(e.target)
 
