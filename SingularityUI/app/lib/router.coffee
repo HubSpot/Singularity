@@ -1,14 +1,10 @@
 DashboardController = require 'controllers/Dashboard'
-
 StatusController = require 'controllers/Status'
-
 RequestsTableController = require 'controllers/RequestsTable'
+TasksTableController = require 'controllers/TasksTable'
 
-RequestsView = require 'views/requests'
 
 RequestView = require 'views/request'
-
-TasksView = require 'views/tasks'
 
 TaskView = require 'views/task'
 TailView = require 'views/tail'
@@ -17,40 +13,6 @@ RacksView = require 'views/racks'
 SlavesView = require 'views/slaves'
 
 PageNotFoundView = require 'views/pageNotFound'
-
-currentViewIsTailView = ->
-    Backbone.history.fragment.match(/^task\/.+\/tail\//)?.length is 1
-
-htmlClasses = ->
-    if currentViewIsTailView()
-        $('html').addClass('tail-view')
-    else
-        $('html').removeClass('tail-view')
-
-Backbone.history.on 'route', ->
-    app.views.nav.render()
-    htmlClasses()
-
-windowBlurred = false
-
-$(window).on 'blur', ->
-    windowBlurred = true
-
-$(window).on 'focus', ->
-    windowBlurred = false
-    refresh()
-
-window.globalRefreshTimeout = undefined
-globalRefresh = ->
-    clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
-    window.globalRefreshTimeout = setInterval ->
-        refresh()
-    , 20 * 1000
-
-refresh = ->
-    return if localStorage.getItem("preventGlobalRefresh") == "true"
-    if not $('body > .vex').length and not windowBlurred
-        app.views.current?.refresh?()
 
 class Router extends Backbone.Router
 
@@ -62,9 +24,9 @@ class Router extends Backbone.Router
         'requests/:state(/)': 'requestsTable'
         'requests(/)': 'requestsTable'
         'request/:requestId(/)': 'request'
-        'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
-        'tasks/:tasksFilter(/)': 'tasksFiltered'
-        'tasks(/)': 'tasksFiltered'
+        'tasks/:state/:searchFilter(/)': 'tasksTable'
+        'tasks/:state(/)': 'tasksTable'
+        'tasks(/)': 'tasksTable'
         'task/:taskId(/)': 'task'
         # 'task/:taskId/files(/)': 'task'
         'task/:taskId/files(/)*path': 'task'
@@ -85,7 +47,8 @@ class Router extends Backbone.Router
     request: (requestId) ->
         app.showView new RequestView requestId: requestId
 
-    tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
+    tasksTable: (state = 'active', searchFilter = '') ->
+
         app.views.current = new TasksView {tasksFilter, searchFilter}
 
         app.views.current.render()
