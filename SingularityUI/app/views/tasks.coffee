@@ -2,10 +2,6 @@ View = require './view'
 
 Request = require '../models/Request'
 
-TasksActive = require '../collections/TasksActive'
-TasksScheduled = require '../collections/TasksScheduled'
-TasksCleaning = require '../collections/TasksCleaning'
-
 class TasksView extends View
 
     isSorted: false
