@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Singularity by HubSpot</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Singularity</h1>
+        <p>Scheduler (HTTP API and webapp) for running mesos tasks—long running processes, one-off tasks, and scheduled jobs. #hubspot-open-source</p>
+
+        <p class="view"><a href="https://github.com/HubSpot/Singularity">View the Project on GitHub <small>HubSpot/Singularity</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/HubSpot/Singularity/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/HubSpot/Singularity/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/HubSpot/Singularity">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="singularity" class="anchor" href="#singularity"><span class="octicon octicon-link"></span></a>Singularity</h1>
+
+<p>Scheduler (HTTP API and web interface) for running <a href="http://mesos.apache.org/">mesos</a> tasks - long running processes, one-off tasks, and scheduled jobs.</p>
+
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>Singularity is used by HubSpot to run hundreds of concurrent services and has executed many millions of tasks. It provides the ability to quickly and reliably run thousands of tasks inside of a Mesos cluster and provides easy access to them through a modern web interface. Singularity will automatically reschedule tasks that are killed or lost; it can mitigate hardware failures and allow slaves to be gracefully decommissioned. It supports the concept of deployments and healthchecks and will automatically rollback bad deploys. It can integrate with a load balancer API like <a href="https://github.com/HubSpot/Baragon">Baragon</a> to coordinate web service deployments. Singularity provides a Mesos executor which supports additional features like downloading and caching of build files from S3, and tailing, archiving, and cleaning of service logs.</p>
+
+<h2>
+<a name="how-it-works" class="anchor" href="#how-it-works"><span class="octicon octicon-link"></span></a>How it works</h2>
+
+<p>You make a Request to Singularity to define the type of task that you would like to run (cron schedule, # of task instances, rack awareness, etc.) You then post a Deploy to that Request with the command or executor data about how to run that task, and a variety of optional configuration options (like cpu, memory resources or healthcheck urls.) Singularity registers with a Mesos master and receives resource offers from Mesos and attempts to match those offers (which include resources as well as rack information and what else is running on that Slave) with its list of Requests that have yet to be fulfilled. Once an offer is accepted by Singularity, a task is launched inside of Mesos on the Slave which the offer referenced. Singularity maintains its own state about Requests and Deploys and the Mesos tasks which fulfill them.</p>
+
+<p><a href="overview.md">Overview, Features, and Design</a></p>
+
+<h2>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>Mesos</li>
+<li>ZooKeeper</li>
+<li>MySQL</li>
+</ul><h2>
+<a name="installation--deployment" class="anchor" href="#installation--deployment"><span class="octicon octicon-link"></span></a>Installation &amp; Deployment</h2>
+
+<ul>
+<li><a href="vagrant.md">Local development using Vagrant</a></li>
+<li><a href="database.md">Database configuration and schema</a></li>
+<li>Singularity configuration</li>
+</ul><h2>
+<a name="operation--documentation" class="anchor" href="#operation--documentation"><span class="octicon octicon-link"></span></a>Operation &amp; Documentation</h2>
+
+<ul>
+<li><a href="SingularityService/api.md">API Endpoints</a></li>
+<li><a href="SingularityService/objects.md">API Objects</a></li>
+<li>Suggested practices (monitoring &amp; HA)</li>
+</ul><h2>
+<a name="developer-info" class="anchor" href="#developer-info"><span class="octicon octicon-link"></span></a>Developer Info</h2>
+
+<ul>
+<li><a href="scheduled.md">Scheduled Execution</a></li>
+<li><a href="maven.md">Maven deployment</a></li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/HubSpot">HubSpot</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
