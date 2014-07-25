@@ -31,6 +31,7 @@ public class SingularityExecutorProcessKiller {
       
       @Override
       public void run() {
+        processCallable.getTask().markDestroyed();
         processCallable.destroyProcessIfActive();
       }
     }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS);
