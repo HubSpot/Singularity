@@ -11,19 +11,17 @@ class DashboardView extends View
 
     initialize: =>
         @listenTo app.user, 'change', @render
-        @listenTo @collections.requests, 'sync', @render
+        @listenTo @collection, 'sync', @render
 
     render: =>
         deployUser = app.user.get 'deployUser'
 
         # Filter starred requests
-        starredRequests = @collections.requests.filter (request) =>
-            @collections.starredRequests.get(request.get 'id')?
-
+        starredRequests = @collection.getStarredOnly()
         starredRequests = _.pluck starredRequests, 'attributes'
 
         # Count up the Requests for the clicky boxes
-        userRequests = @collections.requests.where {deployUser}
+        userRequests = @collection.where {deployUser}
         userRequestTotals =
             all: userRequests.length
             daemon:    0
@@ -37,7 +35,7 @@ class DashboardView extends View
 
         context =
             deployUser: deployUser
-            collectionSynced: @collections.requests.synced
+            collectionSynced: @collection.synced
             userRequestTotals: userRequestTotals or { }
             starredRequests: starredRequests or []
 

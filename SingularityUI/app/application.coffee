@@ -75,7 +75,11 @@ class Application
                 console.error jqxhr
                 throw new Error "AJAX Error"
                 Messenger().post "<p>An error occurred when trying to access:</p><pre>#{ url }</pre><p>Check JS console for response.</p>"
-                
+              
+    # Usually called by Controllers when they're initialized. Loader is overwritten by views
+    showPageLoader: ->
+        @$page.html "<div class='page-loader centered cushy'></div>"
+
     # Called in Router. Shows the passed view's $el on the page
     show: (view) ->
         if @page.children.length
@@ -83,13 +87,10 @@ class Application
         else
             @page.appendChild view.el
 
-    bootstrapController: (controller) ->
-        controller.initialize()
-        controller.refresh()
-        
-        @currentController = controller
-        @showView controller.view
+    bootstrapController: (ControllerClass) ->
+        @currentController = new ControllerClass
 
+    # Called by Controllers when their views are ready to take over
     showView: (view) ->
         # Clean up events & stuff
         @views.current?.remove()

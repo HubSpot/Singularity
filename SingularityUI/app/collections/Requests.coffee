@@ -19,6 +19,28 @@ class Requests extends Collection
         propertyString = $.param property: @propertyFilters[@state] or [], true
         "#{ config.apiRoot }/requests/#{ @state }?#{ propertyString or '' }"
 
+    getStarredRequests: ->
+        jsonRequests = localStorage.getItem 'starredRequests'
+        return [] if not jsonRequests?
+
+        JSON.parse jsonRequests
+
+    getStarredOnly: ->
+        starredRequests = @getStarredRequests()
+        return [] if _.isEmpty starredRequests
+
+        @filter (request) =>
+            request.get('request').id in starredRequests
+
+    toggleStar: (requestId) ->
+        starredRequests = @getStarredRequests
+        if requestId in starredRequests
+            starredRequests = _.without starredRequests, requestId
+        else
+            starredRequests.push requestId
+
+        localStorage.setItem 'starredRequests', JSON.stringify starredRequests
+
     parse: (requests) ->
         for request in requests
             request.JSONString = utils.stringJSON request

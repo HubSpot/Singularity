@@ -1,6 +1,6 @@
 DashboardController = require 'controllers/Dashboard'
 
-StatusView = require 'views/status'
+StatusController = require 'controllers/Status'
 
 RequestsView = require 'views/requests'
 
@@ -71,11 +71,8 @@ class Router extends Backbone.Router
         'slaves(/)': 'slaves'
         '*anything': 'templateFromURLFragment'
 
-    dashboard: ->
-        app.bootstrapController new DashboardController
-
-    status: ->
-        app.showView new StatusView
+    dashboard: -> app.bootstrapController DashboardController
+    status: ->    app.bootstrapController StatusController
 
     requestsFiltered: (requestsFilter = 'all', requestsSubFilter = 'all', searchFilter = '') ->
         if requestsSubFilter is 'running'

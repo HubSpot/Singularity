@@ -6,8 +6,6 @@ Requests = require '../collections/Requests'
 RequestsPending = require '../collections/RequestsPending'
 RequestsCleaning = require '../collections/RequestsCleaning'
 
-RequestsStarred = require '../collections/RequestsStarred'
-
 class RequestsView extends View
 
     templateBase:   require '../templates/requestsTable/requestsBase'

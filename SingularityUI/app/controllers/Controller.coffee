@@ -15,7 +15,7 @@ class Controller
     initialize: ->
 
     # `refresh` can be called by `app` for the global refresh or by the
-    # view whenever it requires. It should trigger the necessary fetchhes
+    # view whenever it requires. It should trigger the necessary fetches
     refresh: ->
 
 
