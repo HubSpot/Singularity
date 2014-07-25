@@ -10,7 +10,7 @@ class TasksScheduled extends Tasks
 
     parse: (tasks) ->
         for task in tasks
-            task.JSONString = utils.stringJSON task
+            task.originalObject = _.clone task
             if not task.pendingTaskId?
                 task.pendingTaskId = task.pendingTask.pendingTaskId
             task.id = @parsePendingId task.pendingTaskId

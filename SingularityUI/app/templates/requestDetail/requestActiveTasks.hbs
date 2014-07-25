@@ -18,7 +18,7 @@
                 </thead>
                 <tbody>
                     {{#eachWithFn activeTasks}}
-                        <tr data-task-id="{{ id }}">
+                        <tr data-id="{{ id }}" data-collection="activeTasks">
                             <td><span title="{{ id }}"><a href="{{appRoot}}/task/{{ id }}">{{ name }}</a></span></td>
                             <td class="visible-md">{{ lastTaskStateHuman }}</td>
                             <td class="visible-md">{{ deployId }}</td>

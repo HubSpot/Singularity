@@ -16,51 +16,39 @@ class Utils
         else
             return "#{ fileSize }B"
 
-    @stringJSON: (object) ->
-        JSON.stringify object, null, '    '
+    @viewJSON: (model) ->
+        originalObject = model.get('originalObject')
+        return if not originalObject?
 
-    @viewJSON: (type, objectId) ->
-        lookupObject = {}
+        json = JSON.stringify originalObject, undefined, 4
 
-        if type is 'task'
-            lookupObject = app.allTasks
-        if type is 'request'
-            lookupObject = app.allRequests
-        if type is 'deploy'
-            lookupObject = app.allDeploys
-        if type is 'requestHistory'
-            lookupObject = app.allRequestHistories
-
+        closeButton = _.extend _.clone(vex.dialog.buttons.YES), text: 'Close'
         copyButton =
             text: "Copy"
             type: "button"
             className: "vex-dialog-button-secondary copy-button"
-                
-        vex.dialog.alert
-            buttons: [
-                $.extend({}, vex.dialog.buttons.YES, text: 'Done'),
-                copyButton
-            ]
-            className: 'vex-theme-default vex-theme-default-json-view'
-            message: "<pre>#{ utils.htmlEncode lookupObject[objectId].JSONString }</pre>"
+
+        vex.dialog.open
+            buttons:   [closeButton, copyButton]
+            message:   "<pre>#{ _.escape json }</pre>"
+            className: 'vex vex-theme-default json-modal'
+
             afterOpen: ($vexContent) ->
-                utils.scrollPreventDefaultAtBounds $vexContent.find('pre')
-                utils.scrollPreventAlways $vexContent.parent()
-                
+                $vexContent.parents('.vex').scrollTop 0
+
                 # Dity hack to make ZeroClipboard play along
                 # The Flash element doesn't work if it falls outside the
                 # bounds of the body, even if it's inside the dialog
-                overlayHeight = $(".vex-overlay").height()
+                overlayHeight = $vexContent.parents(".vex-overlay").height()
                 $("body").css "min-height", overlayHeight + "px"
                 
                 $button = $vexContent.find ".copy-button"
                 $button.attr "data-clipboard-text", $vexContent.find("pre").html()
                 
-                zeroClipboardClient = new ZeroClipboard $button[0],
-                    moviePath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
+                zeroClipboardClient = new ZeroClipboard $button[0]
                 
-                zeroClipboardClient.on "load", ->
-                    zeroClipboardClient.on "complete", ->
+                zeroClipboardClient.on "ready", =>
+                    zeroClipboardClient.on "aftercopy", =>
                         $button.val "Copied"
                         setTimeout (-> $button.val "Copy"), 800
 
@@ -96,8 +84,7 @@ class Utils
                 text = $item.find('p').html()
                 $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>Copy</a>"
                 $item.find("h4").append $copyLink
-                new ZeroClipboard $copyLink[0],
-                    moviePath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
+                new ZeroClipboard $copyLink[0]
 
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"

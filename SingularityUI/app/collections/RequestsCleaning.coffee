@@ -7,7 +7,7 @@ class RequestsCleaning extends Collection
     parse: (requests) ->
         for request in requests
             request.displayState = constants.requestStates.CLEANUP
-            request.JSONString = utils.stringJSON request
+            request.originalObject = _.clone request
             request.id = request.requestId
             request.cleanupType = constants.requestCleanupTypes[request.cleanupType]
             request.timestampHuman = utils.humanTimeAgo request.timestamp

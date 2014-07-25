@@ -4,13 +4,17 @@ class DeployHistory extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/deploys"
 
-    model: Backbone.Model
+    model: class Deploy extends Backbone.Model
+        idAttribute: "deployId"
+        
     comparator: undefined
+
 
     initialize: (models, { @requestId }) =>
 
     parse: (requestDeployHistoryObjects) ->
         for deploy in requestDeployHistoryObjects
+            deploy.originalObject = _.clone deploy
             if deploy.deployResult?
                 deploy.deployResult.deployStateHuman = constants.deployStates[deploy.deployResult.deployState]
             deploy.deployId = deploy.deployMarker.deployId

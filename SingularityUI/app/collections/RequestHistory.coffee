@@ -6,6 +6,9 @@ PaginableCollection = require './PaginableCollection'
 # Eg: Created by sbacanu
 class RequestHistory extends PaginableCollection
 
+    model: class RequestHistoryItem extends Backbone.Model
+        idAttribute: "createdAt"
+
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/requests"
 
     comparator: (r0, r1) => r1.get("createdAt") - r0.get("createdAt")
@@ -20,8 +23,8 @@ class RequestHistory extends PaginableCollection
 
     parse: (requestHistoryObjects) ->
         for requestUpdate in requestHistoryObjects
+            requestUpdate.originalObject = _.clone requestUpdate
             if requestUpdate.request?
-                requestUpdate.request.JSONString = utils.stringJSON requestUpdate.request
                 requestUpdate.request.daemon = if _.isNull(requestUpdate.request.daemon) then true else requestUpdate.request.daemon
 
             requestUpdate.userHuman = requestUpdate.user

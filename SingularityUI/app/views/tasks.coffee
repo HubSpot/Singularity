@@ -171,7 +171,8 @@ class TasksView extends View
         app.router.navigate "/tasks/#{ @tasksFilter }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        utils.viewJSON 'task', $(e.target).data('task-id')
+        id = $(e.target).parents('tr').data 'task-id'
+        utils.viewJSON @collection.get id
 
     removeTask: (e) ->
         $row = $(e.target).parents 'tr'

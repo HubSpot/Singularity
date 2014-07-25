@@ -28,7 +28,6 @@ class RequestView extends View
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
             'click [data-action="viewObjectJSON"]': 'viewObjectJson'
-            'click [data-action="viewRequestHistoryJSON"]': 'viewRequestHistoryJson'
 
             'click [data-action="remove"]': 'removeRequest'
             'click [data-action="run-request-now"]': 'runRequest'
@@ -124,13 +123,13 @@ class RequestView extends View
             @$el.html "<h1>Request not found.</h1>"
 
     viewJson: (e) =>
-        utils.viewJSON 'task', $(e.target).data('task-id')
+        $target = $(e.currentTarget).parents 'tr'
+        id = $target.data 'id'
+        collection = @collections[$target.data 'collection']
+        utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
-        utils.viewJSON 'request', $(e.target).data('request-id')
-
-    viewRequestHistoryJson: (e) =>
-        utils.viewJSON 'requestHistory', $(e.target).data('local-request-history-id')
+        utils.viewJSON @model
 
     removeRequest: (e) =>
         @model.promptRemove =>

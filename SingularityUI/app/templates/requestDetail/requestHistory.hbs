@@ -15,12 +15,12 @@
                 </thead>
                 <tbody>
                     {{#each data}}
-                        <tr>
+                        <tr data-id="{{ createdAt }}" data-collection="requestHistory">
                             <td>{{ stateHuman }}</td>
                             <td>{{ userHuman }}</td>
                             <td class="hidden-xs" data-value="{{ createdAt }}">{{ createdAtHuman }}</td>
-                            <td class="hidden-xs" class="actions-column">
-                                <a data-local-request-history-id="{{ request.localRequestHistoryId }}" data-action="viewRequestHistoryJSON">
+                            <td class="hidden-xs actions-column">
+                                <a data-action="viewJSON">
                                     <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                                 </a>
                             </td>

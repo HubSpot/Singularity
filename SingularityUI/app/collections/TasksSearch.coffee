@@ -8,7 +8,7 @@ class TasksSearch extends Tasks
 
     parse: (tasks) ->
         for task in tasks
-            task.JSONString = utils.stringJSON task
+            task.originalObject = _.clone task
             task.id = task.taskId.id
             task.requestId = task.taskId.requestId
             task.name = task.id

@@ -11,6 +11,7 @@ class Request extends Model
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
             
     parse: (data) ->
+        data.originalObject = _.clone data
         if data.request?
             # Gotta fecking figure out what kind of request this is
             data.scheduled = typeof data.request.schedule is 'string'

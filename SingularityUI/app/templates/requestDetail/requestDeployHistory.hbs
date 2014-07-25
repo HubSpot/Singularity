@@ -16,13 +16,13 @@
                 </thead>
                 <tbody>
                     {{#each data}}
-                        <tr>
+                        <tr data-id="{{ deployId }}" data-collection="deployHistory">
                             <td>{{ deployId }}</td>
                             <td>{{ deployResult.deployStateHuman }}</td>
                             <td class="hidden-xs">{{ user }}</td>
                             <td class="hidden-xs" data-value="{{ timestamp }}">{{ timestampHuman }}</td>
-                            <td class="hidden-xs" class="actions-column">
-                                <a data-deploy-id="{{ deployId }}" data-action="viewDeployJSON">
+                            <td class="hidden-xs actions-column">
+                                <a data-action="viewJSON">
                                     <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                                 </a>
                             </td>

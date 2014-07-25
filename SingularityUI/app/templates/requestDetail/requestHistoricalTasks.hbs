@@ -17,7 +17,7 @@
                 </thead>
                 <tbody>
                     {{#each data}}
-                        <tr>
+                        <tr data-id="{{ id }}" data-collection="historicalTasks">
                             <td class="">
                                 <span title="{{ id }}">
                                     <a href="{{appRoot}}/task/{{ id }}">
@@ -33,7 +33,7 @@
                                 <a href="{{appRoot}}/task/{{ id }}/files/">
                                     <span class="glyphicon glyphicon-file" title="Files"></span>
                                 </a>
-                                <a data-task-id="{{ id }}" data-action="viewJSON">
+                                <a data-action="viewJSON">
                                     <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                                 </a>
                             </td>

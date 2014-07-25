@@ -21,7 +21,7 @@ class Requests extends Collection
 
     parse: (requests) ->
         for request in requests
-            request.JSONString = utils.stringJSON request
+            request.originalObject = _.clone request
             request.id = request.request.id
             request.request.instances = if _.isNull(request.request.instances) then 1 else request.request.instances
             request.instances = request.request.instances

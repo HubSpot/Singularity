@@ -10,7 +10,7 @@ class RequestsSearch extends Requests
 
     parse: (requests) ->
         for request in requests
-            request.JSONString = utils.stringJSON request
+            request.originalObject = _.clone request
             request.id = request.request.id
             request.name = request.request.name ? request.request.id
             request.deployUser = (request.request.executorData?.env?.DEPLOY_USER ? '').split('@')[0]

@@ -9,8 +9,6 @@ class TaskHistory extends Model
     initialize: ({ @taskId }) ->
 
     parse: (taskHistory) ->
-        taskHistory.task.JSONString = utils.stringJSON taskHistory
-
         taskHistory.task.id = taskHistory.task.taskId.id
         taskHistory.task.name = taskHistory.task.mesosTask.name
         taskHistory.task.resources = @parseResources taskHistory.task

@@ -8,7 +8,7 @@ class RequestsPending extends Collection
         for request in requests
             request.displayState = constants.requestStates.PENDING
             request.id = request.requestId
-            request.JSONString = utils.stringJSON request
+            request.originalObject = _.clone request
             request.timestampHuman = utils.humanTimeAgo request.timestamp
 
         requests

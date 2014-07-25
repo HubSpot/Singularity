@@ -10,7 +10,7 @@ class RequestTasks extends Collection
 
     parse: (tasks) ->
         for task in tasks
-            task.JSONString = utils.stringJSON task
+            task.originalObject = _.clone task
             task.id = task.taskId.id
             task.name = task.id
             task.deployId = task.taskId.deployId

@@ -213,7 +213,8 @@ class RequestsView extends View
         app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        utils.viewJSON 'request', $(e.target).data('request-id')
+        id = $(e.target).parents('tr').data 'request-id'
+        utils.viewJSON @collection.get id
 
     removeRequest: (e) ->
         $row = $(e.target).parents 'tr'
