@@ -10,7 +10,7 @@ class Controller
     models:      {}
     collections: {}
 
-    constructor: -> @initialize?()
+    constructor: (params) -> @initialize?(params)
     # Initialize should bootstrap models/controllers and views
     initialize: ->
 

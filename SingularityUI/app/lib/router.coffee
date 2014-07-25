@@ -2,6 +2,8 @@ DashboardController = require 'controllers/Dashboard'
 
 StatusController = require 'controllers/Status'
 
+RequestsTableController = require 'controllers/RequestsTable'
+
 RequestsView = require 'views/requests'
 
 RequestView = require 'views/request'
@@ -55,10 +57,10 @@ class Router extends Backbone.Router
     routes:
         '(/)': 'dashboard'
         'status(/)': 'status'
-        'requests/:requestsFilter/:requestsSubFilter/:searchFilter(/)': 'requestsFiltered'
-        'requests/:requestsFilter/:requestsSubFilter(/)': 'requestsFiltered'
-        'requests/:requestsFilter(/)': 'requestsFiltered'
-        'requests(/)': 'requestsFiltered'
+        'requests/:state/:subFilter/:searchFilter(/)': 'requestsTable'
+        'requests/:state/:subFilter(/)': 'requestsTable'
+        'requests/:state(/)': 'requestsTable'
+        'requests(/)': 'requestsTable'
         'request/:requestId(/)': 'request'
         'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
         'tasks/:tasksFilter(/)': 'tasksFiltered'
@@ -71,16 +73,14 @@ class Router extends Backbone.Router
         'slaves(/)': 'slaves'
         '*anything': 'templateFromURLFragment'
 
-    dashboard: -> app.bootstrapController DashboardController
-    status: ->    app.bootstrapController StatusController
+    dashboard: ->
+        app.bootstrapController new DashboardController
 
-    requestsFiltered: (requestsFilter = 'all', requestsSubFilter = 'all', searchFilter = '') ->
-        if requestsSubFilter is 'running'
-            requestsSubFilter = 'daemon' # Front end URL migration :P
+    status: ->
+        app.bootstrapController new StatusController
 
-        app.views.current = new RequestsView {requestsFilter, requestsSubFilter, searchFilter}
-        app.views.current.render()
-        app.show app.views.current
+    requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
+        app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
 
     request: (requestId) ->
         app.showView new RequestView requestId: requestId

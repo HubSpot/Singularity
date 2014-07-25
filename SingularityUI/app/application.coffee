@@ -87,8 +87,8 @@ class Application
         else
             @page.appendChild view.el
 
-    bootstrapController: (ControllerClass) ->
-        @currentController = new ControllerClass
+    bootstrapController: (controller) ->
+        @currentController = controller
 
     # Called by Controllers when their views are ready to take over
     showView: (view) ->
