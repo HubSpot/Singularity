@@ -300,14 +300,15 @@ public class SingularityScheduler {
     return deployMarker.isPresent() && deployMarker.get().getDeployId().equals(deployId);
   }
   
-  private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, String requestId, String deployId) {
-    for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(requestId), SingularityPendingTask.matchingDeploy(deployId)))) {
+  private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
+    for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
+      LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
       taskManager.deletePendingTask(task.getPendingTaskId().getId());
     }
   }
   
   private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest) {
-    deleteScheduledTasks(stateCache.getScheduledTasks(), request.getId(), pendingRequest.getDeployId());
+    deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
     
     final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), pendingRequest.getDeployId(), stateCache.getCleaningTasks());
     

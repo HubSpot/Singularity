@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
@@ -128,14 +129,22 @@ public class SingularitySchedulerTest {
   private String requestId;
   private SingularityRequest request;
   
-  public void initRequest() {
+  public void initLoadBalancedRequest() {
+    privateInitRequest(true);
+  }
+  
+  private void privateInitRequest(boolean isLoadBalanced) {
     requestId = "test-request";
     
     request = new SingularityRequestBuilder(requestId)
-      .setLoadBalanced(Optional.of(Boolean.TRUE))
+      .setLoadBalanced(Optional.of(isLoadBalanced))
       .build();
   
     requestManager.saveRequest(request);
+  }
+  
+  public void initRequest() {
+    privateInitRequest(false);
   }
   
   private String firstDeployId;
@@ -222,7 +231,7 @@ public class SingularitySchedulerTest {
   
   @Test
   public void testDeployManagerHandlesFailedLBTask() {
-    initRequest();
+    initLoadBalancedRequest();
     initFirstDeploy();
     
     SingularityTask firstTask = startTask(firstDeploy);
@@ -249,6 +258,39 @@ public class SingularitySchedulerTest {
     
     Assert.assertTrue(pendingTasks.size() == 1);
     Assert.assertTrue(pendingTasks.get(0).getPendingTaskId().getDeployId().equals(firstDeployId));
+  }
+  
+  @Test
+  public void testDeployClearsObsoleteScheduledTasks() {
+    initRequest();
+    initFirstDeploy();
+    initSecondDeploy();
+    
+    SingularityPendingTaskId taskIdOne = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE);
+    SingularityPendingTask taskOne = new SingularityPendingTask(taskIdOne, Optional.<String> absent());
+
+    SingularityPendingTaskId taskIdTwo = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1), 2, PendingType.IMMEDIATE);
+    SingularityPendingTask taskTwo = new SingularityPendingTask(taskIdTwo, Optional.<String> absent());
+    
+    SingularityPendingTaskId taskIdThree = new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE);
+    SingularityPendingTask taskThree = new SingularityPendingTask(taskIdThree, Optional.<String> absent());
+
+    SingularityPendingTaskId taskIdFour = new SingularityPendingTaskId(requestId + "hi", firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 5, PendingType.IMMEDIATE);
+    SingularityPendingTask taskFour = new SingularityPendingTask(taskIdFour, Optional.<String> absent());
+
+    taskManager.createPendingTasks(Arrays.asList(taskOne, taskTwo, taskThree, taskFour));
+    
+    launchTask(request, secondDeploy, TaskState.TASK_RUNNING);
+   
+    deployChecker.checkDeploys();
+    
+    List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+
+    Assert.assertTrue(!pendingTaskIds.contains(taskIdOne));
+    Assert.assertTrue(!pendingTaskIds.contains(taskIdTwo));
+    
+    Assert.assertTrue(pendingTaskIds.contains(taskIdThree));
+    Assert.assertTrue(pendingTaskIds.contains(taskIdFour));
   }
   
   
