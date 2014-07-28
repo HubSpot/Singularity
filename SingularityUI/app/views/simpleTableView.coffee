@@ -2,7 +2,7 @@ View = require './view'
 
 class SimpleTableView extends View
 
-    initialize: ->
+    initialize: ({@template}) ->
         @listenTo @collection, 'sync',  @render
         @listenTo @collection, 'reset', =>
             @$el.empty()
@@ -14,4 +14,4 @@ class SimpleTableView extends View
             data:   @collection.toJSON()
             synced: @collection.synced
 
-module.exports = SimpleView
+module.exports = SimpleTableView

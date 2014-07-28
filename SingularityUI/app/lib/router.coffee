@@ -1,16 +1,16 @@
 DashboardController = require 'controllers/Dashboard'
 StatusController = require 'controllers/Status'
+
 RequestsTableController = require 'controllers/RequestsTable'
 TasksTableController = require 'controllers/TasksTable'
-TailController = require 'controllers/TailController'
+TailController = require 'controllers/Tail'
+
+RacksController = require 'controllers/Racks'
+SlavesController = require 'controllers/Slaves'
 
 RequestView = require 'views/request'
 
 TaskView = require 'views/task'
-TailView = require 'views/tail'
-
-RacksView = require 'views/racks'
-SlavesView = require 'views/slaves'
 
 PageNotFoundView = require 'views/pageNotFound'
 
@@ -57,22 +57,10 @@ class Router extends Backbone.Router
         app.bootstrapController new TailController {taskId, path}
 
     racks: ->
-        if not app.views.racks?
-            app.views.racks = new RacksView
-            app.views.current = app.views.racks
-            app.show app.views.racks.render().refresh()
-        else
-            app.views.current = app.views.racks
-            app.show app.views.racks.refresh()
+        app.bootstrapController new RacksController
 
     slaves: ->
-        if not app.views.slaves?
-            app.views.slaves = new SlavesView
-            app.views.current = app.views.slaves
-            app.show app.views.slaves.render().refresh()
-        else
-            app.views.current = app.views.slaves
-            app.show app.views.slaves.refresh()
+        app.bootstrapController new SlavesController
 
     templateFromURLFragment: ->
         app.views.current = undefined

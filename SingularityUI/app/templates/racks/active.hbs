@@ -1,0 +1,31 @@
+<div class="page-header">
+    <h1>Active racks</h1>
+</div>
+{{#if data.length}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Uptime</th>
+                <th data-sortable="false"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr>
+                    <td>{{ id }}</td>
+                    <td data-value="{{ uptime }}">
+                        {{ uptimeHuman }}
+                    </td>
+                    <td class="actions-column">
+                        <a data-rack-id="{{ id }}" data-action="decomission">
+                            <span class="glyphicon glyphicon-remove" title="Decommission"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message"><p>No active racks</p></div>
+{{/if}}

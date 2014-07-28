@@ -7,8 +7,8 @@ class View extends Backbone.View
     subviews:   {}
 
     constructor: (params = {}) ->
-        @models      = params.models      if params.models?
-        @collections = params.collections if params.collections?
+        @subviews   = params.subviews   if params.subviews?
+        @controller = params.controller if params.controller?
         super params
 
     events: ->

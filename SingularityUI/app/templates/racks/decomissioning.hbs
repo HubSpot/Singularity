@@ -1,0 +1,35 @@
+<div class="page-header">
+    <h1>Decommissioning racks</h1>
+</div>
+{{#if data.length}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>State</th>
+                <th>Triggered by</th>
+                <th>Started</th>
+                <th>Uptime</th>
+                <th data-sortable="false"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr>
+                    <td>{{ id }}</td>
+                    <td>{{ state }}</td>
+                    <td>{{ decomissioningBy }}</td>
+                    <td>{{ decomissioningAtHuman }}</td>
+                    <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                    <td class="actions-column">
+                        <a data-rack-id="{{ id }}" data-action="remove" data-state="{{ state }}">
+                             <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message"><p>No decomissioning racks</p></div>
+{{/if}}
