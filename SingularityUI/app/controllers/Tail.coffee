@@ -11,7 +11,6 @@ class TailController extends Controller
         @view = new TailView _.extend {@taskId, @path},
             collection: @collections.logLines
 
-        @view.render()
         app.showView @view
 
         @collections.logLines.fetchInitialData()

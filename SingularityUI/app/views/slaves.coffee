@@ -14,10 +14,6 @@ class SlavesView extends View
     render: ->
         @$el.html @template()
 
-        @subviews.activeSlaves.render()
-        @subviews.deadSlaves.render()
-        @subviews.decomissioningSlaves.render()
-
         @$('#active').html         @subviews.activeSlaves.$el
         @$('#dead').html           @subviews.deadSlaves.$el
         @$('#decomissioning').html @subviews.decomissioningSlaves.$el

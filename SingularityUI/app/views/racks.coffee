@@ -14,10 +14,6 @@ class RacksView extends View
     render: ->
         @$el.html @template()
 
-        @subviews.activeRacks.render()
-        @subviews.deadRacks.render()
-        @subviews.decomissioningRacks.render()
-
         @$('#active').html         @subviews.activeRacks.$el
         @$('#dead').html           @subviews.deadRacks.$el
         @$('#decomissioning').html @subviews.decomissioningRacks.$el
