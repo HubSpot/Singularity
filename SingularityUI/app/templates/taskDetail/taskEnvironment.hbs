@@ -1,4 +1,4 @@
-{{#if taskHistory.task.mesosTask.executor.command.environment.variables}}
+{{#if data.task.mesosTask.executor.command.environment.variables}}
     <div class="page-header">
         <h2>
             Environment variables
@@ -9,7 +9,7 @@
     </div>
     <div class="row hidden">
         <ul class="list-unstyled horizontal-description-list">
-            {{#each taskHistory.task.mesosTask.executor.command.environment.variables}}
+            {{#each data.task.mesosTask.executor.command.environment.variables}}
                 <li class="col-md-4">
                     <div>
                         <h4>{{ name }}</h4>

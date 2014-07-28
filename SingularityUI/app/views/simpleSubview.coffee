@@ -25,4 +25,6 @@ class SimpleSubview extends View
             data:   @data.toJSON()
             synced: @data.synced
 
+        utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
+
 module.exports = SimpleSubview

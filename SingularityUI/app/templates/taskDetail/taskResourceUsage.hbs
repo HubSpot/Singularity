@@ -8,83 +8,83 @@
 </div>
 <div class="row hidden">
     <ul class="list-unstyled horizontal-description-list">
-        {{#if taskResourceUsage.cpusNrPeriods }}
+        {{#if data.cpusNrPeriods }}
             <li class='col-md-4'>
                 <div>
                     <h4>CPUs number of periods</h4>
-                    <p>{{ taskResourceUsage.cpusNrPeriods }}</p>
+                    <p>{{ data.cpusNrPeriods }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.cpusNrThrottled }}
+        {{#if data.cpusNrThrottled }}
             <li class='col-md-4'>
                 <div>
                     <h4>CPUs number throttled</h4>
-                    <p>{{ taskResourceUsage.cpusNrThrottled }}</p>
+                    <p>{{ data.cpusNrThrottled }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.cpusSystemTimeSecs }}
+        {{#if data.cpusSystemTimeSecs }}
             <li class='col-md-4'>
                 <div>
                     <h4>System time (sec)</h4>
-                    <p>{{ taskResourceUsage.cpusSystemTimeSecs }}</p>
+                    <p>{{ data.cpusSystemTimeSecs }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.cpusThrottledTimeSecs }}
+        {{#if data.cpusThrottledTimeSecs }}
             <li class='col-md-4'>
                 <div>
                     <h4>Throttled time (sec)</h4>
-                    <p>{{ taskResourceUsage.cpusThrottledTimeSecs }}</p>
+                    <p>{{ data.cpusThrottledTimeSecs }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.cpusUserTimeSecs }}
+        {{#if data.cpusUserTimeSecs }}
             <li class='col-md-4'>
                 <div>
                     <h4>User time (sec)</h4>
-                    <p>{{ taskResourceUsage.cpusUserTimeSecs }}</p>
+                    <p>{{ data.cpusUserTimeSecs }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.memAnonBytes }}
+        {{#if data.memAnonBytes }}
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (anon)</h4>
-                    <p>{{ taskResourceUsage.memAnonHuman }}</p>
+                    <p>{{ data.memAnonHuman }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.memFileBytes }}
+        {{#if data.memFileBytes }}
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (file)</h4>
-                    <p>{{ taskResourceUsage.memFileHuman }}</p>
+                    <p>{{ data.memFileHuman }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.memMappedFileBytes }}
+        {{#if data.memMappedFileBytes }}
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (mapped file)</h4>
-                    <p>{{ taskResourceUsage.memMappedFileHuman }}</p>
+                    <p>{{ data.memMappedFileHuman }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.memRssBytes }}
+        {{#if data.memRssBytes }}
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (rss)</h4>
-                    <p>{{ taskResourceUsage.memRssHuman }}</p>
+                    <p>{{ data.memRssHuman }}</p>
                 </div>
             </li>
         {{/if}}
-        {{#if taskResourceUsage.memLimitBytes }}
+        {{#if data.memLimitBytes }}
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (limit)</h4>
-                    <p>{{ taskResourceUsage.memLimitHuman }}</p>
+                    <p>{{ data.memLimitHuman }}</p>
                 </div>
             </li>
         {{/if}}

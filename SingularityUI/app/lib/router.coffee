@@ -8,11 +8,11 @@ TailController = require 'controllers/Tail'
 RacksController = require 'controllers/Racks'
 SlavesController = require 'controllers/Slaves'
 
+TaskDetailController = require 'controllers/TaskDetail'
+
 RequestView = require 'views/request'
 
-TaskView = require 'views/task'
-
-PageNotFoundView = require 'views/pageNotFound'
+NotFoundController = require 'controllers/NotFound'
 
 class Router extends Backbone.Router
 
@@ -33,7 +33,7 @@ class Router extends Backbone.Router
         'task/:taskId/tail/*path': 'tail'
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
-        '*anything': 'templateFromURLFragment'
+        '*anything': 'notFound'
 
     dashboard: ->
         app.bootstrapController new DashboardController
@@ -50,8 +50,8 @@ class Router extends Backbone.Router
     tasksTable: (state = 'active', searchFilter = '') ->
         app.bootstrapController new TasksTableController {state, searchFilter}
 
-    task: (taskId, path) ->
-        app.showView new TaskView id: taskId, path: path
+    task: (taskId, filePath) ->
+        app.bootstrapController new TaskDetailController {taskId, filePath}
 
     tail: (taskId, path = '') ->
         app.bootstrapController new TailController {taskId, path}
@@ -62,27 +62,7 @@ class Router extends Backbone.Router
     slaves: ->
         app.bootstrapController new SlavesController
 
-    templateFromURLFragment: ->
-        app.views.current = undefined
-
-        template = undefined
-        try
-            template = require "../views/templates/#{ Backbone.history.fragment }"
-        catch error
-
-        if template
-            app.show el: $(template)[0]
-            return
-
-        @show404()
-
-    show404: ->
-        if not app.views.pageNotFound?
-            app.views.pageNotFound = new PageNotFoundView
-            app.views.current = app.views.pageNotFound
-            app.show app.views.pageNotFound.render()
-        else
-            app.views.current = app.views.pageNotFound
-            app.show app.views.pageNotFound
+    notFound: ->
+        app.bootstrapController new NotFoundController
 
 module.exports = Router
