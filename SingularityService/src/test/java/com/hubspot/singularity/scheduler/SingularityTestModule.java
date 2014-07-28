@@ -1,5 +1,9 @@
 package com.hubspot.singularity.scheduler;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import net.kencochrane.raven.Raven;
+
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.RetrySleeper;
 import org.apache.curator.framework.CuratorFramework;
@@ -7,6 +11,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
+import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -22,19 +27,16 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.smtp.SingularityMailer;
-
-import net.kencochrane.raven.Raven;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class SingularityTestModule extends AbstractModule {
 
@@ -63,6 +65,8 @@ public class SingularityTestModule extends AbstractModule {
     MesosConfiguration mc = new MesosConfiguration();
     mc.setDefaultCpus(1);
     mc.setDefaultMemory(128);
+
+    config.setMesosConfiguration(mc);
     
     bind(MesosConfiguration.class).toInstance(mc);
     
@@ -85,6 +89,11 @@ public class SingularityTestModule extends AbstractModule {
     
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
+    
+    HistoryManager hm = mock(HistoryManager.class);
+    when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.<SingularityDeployHistory> absent());
+    
+    bind(HistoryManager.class).toInstance(hm);
   }
   
   @Singleton

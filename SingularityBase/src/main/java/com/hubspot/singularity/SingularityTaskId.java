@@ -51,6 +51,10 @@ public class SingularityTaskId extends SingularityId {
     return Lists.newArrayList(Iterables.filter(taskIds, Predicates.and(matchingRequest(requestId), matchingDeploy(deployId), notIn(exclude))));
   }
   
+  public static List<SingularityTaskId> matchingAndNotIn(Collection<SingularityTaskId> taskIds, String requestId, Collection<SingularityTaskId> exclude) {
+    return Lists.newArrayList(Iterables.filter(taskIds, Predicates.and(matchingRequest(requestId), notIn(exclude))));
+  }
+  
   @JsonCreator
   public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId) {
     this.requestId = requestId;

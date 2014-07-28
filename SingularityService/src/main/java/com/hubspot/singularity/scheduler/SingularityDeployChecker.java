@@ -133,7 +133,7 @@ public class SingularityDeployChecker {
         }
         
         deleteObsoletePendingTasks(pendingDeploy);
-        finishDeploy(pendingDeploy, allOtherMatchingTasks, deployResult);
+        finishDeploy(request, pendingDeploy, allOtherMatchingTasks, deployResult);
         return;
       } else {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
@@ -141,11 +141,11 @@ public class SingularityDeployChecker {
       }
     } else if (!deployResult.getDeployState().isDeployFinished()) {
       return;
-    }    
+    }
     
     // success case is handled, handle failure cases:
     saveNewDeployState(pendingDeployMarker, Optional.<SingularityDeployMarker> absent());
-    finishDeploy(pendingDeploy, deployMatchingTasks, deployResult);
+    finishDeploy(request, pendingDeploy, deployMatchingTasks, deployResult);
   }
   
   private void deleteObsoletePendingTasks(SingularityPendingDeploy pendingDeploy) {
@@ -197,8 +197,10 @@ public class SingularityDeployChecker {
     return persistSuccess;
   }
   
-  private void finishDeploy(SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, SingularityDeployResult deployResult) {
-    cleanupTasks(tasksToKill, deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp());
+  private void finishDeploy(SingularityRequest request, SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, SingularityDeployResult deployResult) {
+    if (request.isDeployable()) {
+      cleanupTasks(tasksToKill, deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp());
+    }
   
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deployResult);
     

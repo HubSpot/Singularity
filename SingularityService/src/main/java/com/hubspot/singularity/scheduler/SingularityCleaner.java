@@ -62,7 +62,7 @@ public class SingularityCleaner {
     this.driverManager = driverManager;
     this.exceptionNotifier = exceptionNotifier;
     
-    this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillScheduledTasksWhichAreDecomissionedAfterSeconds());
+    this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksWhichAreDecomissionedAfterSeconds());
   }
   
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
@@ -86,11 +86,11 @@ public class SingularityCleaner {
     
     final SingularityRequest request = requestWithState.get().getRequest();
     
-    if (request.isScheduled()) {
+    if (!request.isLongRunning()) {
       final long taskDuration = System.currentTimeMillis() - taskCleanup.getTaskId().getStartedAt();
       final boolean tooOld = taskDuration > killScheduledTasksAfterDecomissionedMillis;
       
-      LOG.debug("{} a scheduled task {} immediately because the task is {} old (max wait time is {})", tooOld ? "Killing" : "Not killing", taskCleanup, taskDuration, killScheduledTasksAfterDecomissionedMillis);
+      LOG.debug("{} a non-longrunning task {} immediately because the task is {} old (max wait time is {})", tooOld ? "Killing" : "Not killing", taskCleanup, taskDuration, killScheduledTasksAfterDecomissionedMillis);
       
       return tooOld;
     }

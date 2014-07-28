@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.SingularityDeploy;
@@ -47,12 +48,13 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.resources.RequestResource;
 
 public class SingularitySchedulerTest {
 
   
   @Inject
-  private SingularitySchedulerStateCache stateCache;
+  private Provider<SingularitySchedulerStateCache> stateCacheProvider;
   @Inject
   private SingularityMesosScheduler sms;
   @Inject
@@ -73,6 +75,9 @@ public class SingularitySchedulerTest {
   private TestingLoadBalancerClient testingLoadBalancerClient;
   @Inject
   private SingularityDeployChecker deployChecker;
+  @Inject
+  private RequestResource requestResource;
+  
   
   @Before
   public void setup() {
@@ -130,21 +135,30 @@ public class SingularitySchedulerTest {
   private SingularityRequest request;
   
   public void initLoadBalancedRequest() {
-    privateInitRequest(true);
+    privateInitRequest(true, false);
   }
   
-  private void privateInitRequest(boolean isLoadBalanced) {
+  public void initScheduledRequest() {
+    privateInitRequest(false, true);
+  }
+
+  private void privateInitRequest(boolean isLoadBalanced, boolean isScheduled) {
     requestId = "test-request";
-    
-    request = new SingularityRequestBuilder(requestId)
-      .setLoadBalanced(Optional.of(isLoadBalanced))
-      .build();
-  
+
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId)
+      .setLoadBalanced(Optional.of(isLoadBalanced));
+
+    if (isScheduled) {
+      bldr.setSchedule(Optional.of("*/1 * * * * ?"));
+    }
+
+    request = bldr.build();
+
     requestManager.saveRequest(request);
   }
-  
+
   public void initRequest() {
-    privateInitRequest(false);
+    privateInitRequest(false, false);
   }
   
   private String firstDeployId;
@@ -206,7 +220,7 @@ public class SingularitySchedulerTest {
     
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, secondDeployId, PendingType.NEW_DEPLOY));
     
-    scheduler.drainPendingQueue(stateCache);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
     
     // we expect there to be 3 pending tasks :
     
@@ -291,6 +305,44 @@ public class SingularitySchedulerTest {
     
     Assert.assertTrue(pendingTaskIds.contains(taskIdThree));
     Assert.assertTrue(pendingTaskIds.contains(taskIdFour));
+  }
+  
+  @Test
+  public void testAfterDeployWaitsForScheduledTaskToFinish() {
+    initScheduledRequest();
+    initFirstDeploy();
+    
+    SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    
+    SingularityDeploy newDeploy = new SingularityDeployBuilder(requestId, "nextDeployId").setCommand(Optional.of("sleep 100")).build();
+    
+    Assert.assertTrue(taskManager.getPendingTasks().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+    
+    requestResource.deploy(requestId, newDeploy, Optional.<String> absent());
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    
+    // no second task should be scheduled
+    
+    Assert.assertTrue(taskManager.getPendingTasks().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+
+    statusUpdate(firstTask, TaskState.TASK_FINISHED);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    
+    Assert.assertTrue(!taskManager.getPendingTasks().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+
+    SingularityPendingTaskId pendingTaskId = taskManager.getPendingTaskIds().get(0);
+    
+    Assert.assertEquals("nextDeployId", pendingTaskId.getDeployId());
+    Assert.assertEquals(requestId, pendingTaskId.getRequestId());
   }
   
   

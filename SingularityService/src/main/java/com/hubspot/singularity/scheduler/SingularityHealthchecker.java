@@ -154,7 +154,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
   
   private boolean shouldHealthcheck(final SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
-    if (task.getTaskRequest().getRequest().isScheduled() || !task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
+    if (!task.getTaskRequest().getRequest().isLongRunning() || !task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
       return false;
     }
     

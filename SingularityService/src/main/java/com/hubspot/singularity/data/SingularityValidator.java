@@ -119,12 +119,15 @@ public class SingularityValidator {
       check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
     }
     
-    if (request.isLoadBalanced()) {
-      check(!request.isOneOff() && !request.isScheduled(), "Scheduled or one-off requests can not be load balanced");
+    if (!request.isLongRunning()) {
+      check(!request.isLoadBalanced(), "non-long-running (scheduled/oneoff) requests can not be load balanced");
+      check(!request.isRackSensitive(), "non-long-running (scheduled/oneoff) requests can not be rack sensitive");
     }
     
-    if (!request.isLongRunning()) {
-      check(request.getInstances().or(1) == 1, "Non-daemons can not be ran on more than one instance");
+    if (request.isScheduled()) {
+      check(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
+    } else if (request.isOneOff()) {
+      check(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
     
     return request.toBuilder().setSchedule(Optional.fromNullable(newSchedule)).build();
