@@ -74,7 +74,8 @@ class TaskDetailController extends Controller
         #
         # Getting stuff in gear
         #
-        @view = new TaskView {@subviews, @taskId}
+        @view = new TaskView _.extend {@subviews, @taskId},
+            controller: @
 
         @refresh()
         @collections.files.fetch().error @ignore404
@@ -97,8 +98,5 @@ class TaskDetailController extends Controller
             app.caughtError()
             @view.displayS3Error()
             delete @collections.s3Logs
-
-    ignore404: (response) ->
-        app.caughtError() if response.status is 404
 
 module.exports = TaskDetailController

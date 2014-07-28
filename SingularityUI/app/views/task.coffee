@@ -37,6 +37,6 @@ class TaskView extends View
     killTask: (event) ->
         taskModel = new Task id: @taskId
         taskModel.promptKill =>
-            setTimeout (=> @refresh()), 1000
+            setTimeout (=> @controller.refresh()), 1000
 
 module.exports = TaskView
