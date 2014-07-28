@@ -76,7 +76,7 @@ class LogLines extends Collection
         lines = result.data.split @delimiter
             
         # always omit last element (either it's blank or an incomplete line)
-        lines = _.initial(lines)
+        lines = _.initial(lines) unless not @moreToFetch
 
         # omit the first (incomplete) element unless we're at the beginning of the file
         if offset > 0 and lines.length > 0
