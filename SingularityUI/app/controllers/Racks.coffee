@@ -3,7 +3,7 @@ Controller = require './Controller'
 Racks = require '../collections/Racks'
 
 RacksView = require '../views/racks'
-SimpleView = require '../views/simpleView'
+SimpleSubview = require '../views/simpleSubview'
 
 class RacksController extends Controller
 
@@ -20,15 +20,15 @@ class RacksController extends Controller
         @collections.decomissioningRacks = new Racks [], rackType: 'decomissioning'
 
         # Subviews for the tables
-        @subviews.activeRacks         = new SimpleView
+        @subviews.activeRacks         = new SimpleSubview
             collection: @collections.activeRacks
             template:   @templates.activeRacks
 
-        @subviews.deadRacks           = new SimpleView
+        @subviews.deadRacks           = new SimpleSubview
             collection: @collections.deadRacks
             template:   @templates.deadRacks
 
-        @subviews.decomissioningRacks = new SimpleView
+        @subviews.decomissioningRacks = new SimpleSubview
             collection: @collections.decomissioningRacks
             template:   @templates.decomissioningRacks
 
