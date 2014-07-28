@@ -26,13 +26,14 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -131,7 +132,8 @@ public class SingularityDeployChecker {
           updateLoadBalancerStateForTasks(allOtherMatchingTasks, LoadBalancerRequestType.REMOVE, deployResult.getLbUpdate().get());
         }
         
-        finishDeploy(pendingDeploy, allOtherMatchingTasks, deployResult);
+        deleteObsoletePendingTasks(pendingDeploy);
+        finishDeploy(request, pendingDeploy, allOtherMatchingTasks, deployResult);
         return;
       } else {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
@@ -143,7 +145,14 @@ public class SingularityDeployChecker {
     
     // success case is handled, handle failure cases:
     saveNewDeployState(pendingDeployMarker, Optional.<SingularityDeployMarker> absent());
-    finishDeploy(pendingDeploy, deployMatchingTasks, deployResult);
+    finishDeploy(request, pendingDeploy, deployMatchingTasks, deployResult);
+  }
+  
+  private void deleteObsoletePendingTasks(SingularityPendingDeploy pendingDeploy) {
+    for (SingularityPendingTaskId pendingTaskId : Iterables.filter(taskManager.getPendingTaskIds(), Predicates.and(SingularityPendingTaskId.matchingRequestId(pendingDeploy.getDeployMarker().getRequestId()), Predicates.not(SingularityPendingTaskId.matchingDeployId(pendingDeploy.getDeployMarker().getDeployId()))))) {
+      LOG.debug("Deleting obsolete pending task {}", pendingTaskId.getId());
+      taskManager.deletePendingTask(pendingTaskId.getId());
+    }
   }
   
   private Optional<SingularityDeployMarker> findCancel(List<SingularityDeployMarker> cancelDeploys, SingularityDeployMarker activeDeploy) {
@@ -188,8 +197,10 @@ public class SingularityDeployChecker {
     return persistSuccess;
   }
   
-  private void finishDeploy(SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, SingularityDeployResult deployResult) {
-    cleanupTasks(tasksToKill, deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp());
+  private void finishDeploy(SingularityRequest request, SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill, SingularityDeployResult deployResult) {
+    if (request.isDeployable()) {
+      cleanupTasks(tasksToKill, deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp());
+    }
   
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deployResult);
     

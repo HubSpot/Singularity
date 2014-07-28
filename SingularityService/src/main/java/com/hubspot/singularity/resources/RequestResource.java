@@ -23,7 +23,6 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -182,12 +181,6 @@ public class RequestResource {
       throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getRequestDeployState(requestId).orNull(), deployManager.getPendingDeploy(requestId).orNull());
     }
     
-    if (!request.isDeployable()) {
-      deployManager.saveDeployResult(deployMarker, new SingularityDeployResult(DeployState.SUCCEEDED));
-      
-      deployManager.deletePendingDeploy(requestId);
-    }
-    
     if (shouldAddToPendingQueue(request)) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY)); 
     }
@@ -230,7 +223,7 @@ public class RequestResource {
   public SingularityRequestParent bounce(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
         
-    if (requestWithState.getRequest().isScheduled() || requestWithState.getRequest().isOneOff()) {
+    if (!requestWithState.getRequest().isLongRunning()) {
       throw WebExceptions.badRequest("Can not bounce a scheduled or one-off request (%s)", requestWithState);
     }
     

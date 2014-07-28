@@ -48,3 +48,17 @@ CREATE TABLE `deployHistory` (
   PRIMARY KEY (`requestId`,`deployId`),
   KEY `requestId` (`requestId`,`createdAt`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--changeset tpetr:3 dbms:mysql
+ALTER TABLE `taskHistory`
+  DROP COLUMN `status`,
+  DROP COLUMN `pendingType`,
+  DROP COLUMN `createdAt`,
+  DROP COLUMN `directory`,
+  MODIFY `lastTaskStatus` VARCHAR(25) DEFAULT NULL,
+  MODIFY `updatedAt` TIMESTAMP NOT NULL DEFAULT '1971-01-01 00:00:01',
+  CHANGE `task` `bytes` BLOB NOT NULL,
+  DROP KEY `requestId`,
+  DROP KEY `requestId_3`;
+
+DROP TABLE `taskUpdates`;

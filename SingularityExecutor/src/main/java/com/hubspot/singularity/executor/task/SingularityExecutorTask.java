@@ -24,6 +24,7 @@ public class SingularityExecutorTask {
   private final Logger log;
   private final ReentrantLock lock;
   private final AtomicBoolean killed;
+  private final AtomicBoolean destroyed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
   private final SingularityExecutorTaskCleanup taskCleanup;
@@ -37,7 +38,8 @@ public class SingularityExecutorTask {
     
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
-
+    this.destroyed = new AtomicBoolean(false);
+    
     this.taskDefinition = taskDefinition;
     
     this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, configuration, log, jsonObjectFileHelper);
@@ -73,12 +75,20 @@ public class SingularityExecutorTask {
     return processBuilder;
   }
   
+  public boolean wasDestroyed() {
+    return destroyed.get();
+  }
+  
   public boolean wasKilled() {
     return killed.get();
   }
   
   public void markKilled() {
     this.killed.set(true);
+  }
+  
+  public void markDestroyed() {
+    this.destroyed.set(true);
   }
   
   public ExecutorDriver getDriver() {

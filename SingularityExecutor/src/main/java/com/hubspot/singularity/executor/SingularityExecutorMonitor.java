@@ -391,7 +391,15 @@ public class SingularityExecutorMonitor {
       // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
       public void onSuccess(Integer exitCode) {
         if (task.wasKilled()) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, "Task killed. Process exited with code " + exitCode);
+          String message = "Task killed. Process exited gracefully with code " + exitCode;
+          
+          if (task.wasDestroyed()) {
+            final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis());
+    
+            message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
+          }
+          
+          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, message);
         } else if (task.isSuccessExitCode(exitCode)) {
           sendStatusUpdate(task, Protos.TaskState.TASK_FINISHED, "Process exited normally with code " + exitCode);
         } else {

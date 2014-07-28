@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -13,6 +14,29 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   private final long nextRunAt;
   private final int instanceNo;
   private final PendingType pendingType;
+  
+  public static Predicate<SingularityPendingTaskId> matchingRequestId(final String requestId) {
+    return new Predicate<SingularityPendingTaskId>() {
+
+      @Override
+      public boolean apply(SingularityPendingTaskId input) {
+        return input.getRequestId().equals(requestId);
+      }
+      
+    };
+  }
+  
+  public static Predicate<SingularityPendingTaskId> matchingDeployId(final String deployId) {
+    return new Predicate<SingularityPendingTaskId>() {
+
+      @Override
+      public boolean apply(SingularityPendingTaskId input) {
+        return input.getDeployId().equals(deployId);
+      }
+      
+    };
+  }
+
 
   @JsonCreator
   public SingularityPendingTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long nextRunAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("pendingType") PendingType pendingType) {

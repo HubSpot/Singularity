@@ -1,17 +1,24 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 # vagrant plugins required:
-# vagrant-berkshelf, vagrant-omnibus, vagrant-hosts, vagrant-hostsupdater
-Vagrant.require_plugin "vagrant-berkshelf"
-Vagrant.require_plugin "vagrant-omnibus"
-Vagrant.require_plugin "vagrant-hosts"
-Vagrant.require_plugin "vagrant-hostsupdater"
+# vagrant-berkshelf, vagrant-omnibus, vagrant-hostsupdater
 
 Vagrant.configure("2") do |config|
+  if !Vagrant.has_plugin?("vagrant-berkshelf")
+    raise "Please install vagrant-berkshelf 2.0.1 via `vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1`"
+  end
+
+  if !Vagrant.has_plugin?("vagrant-omnibus")
+    raise "Please install vagrant-omnibus via `vagrant plugin install vagrant-ominbus --plugin-version=1.4.1`"
+  end
+
+  if !Vagrant.has_plugin?("vagrant-hostsupdater")
+    raise "Please install vagrant-hostsupdater via `vagrant plugin install vagrant-hostsupdater`"
+  end
+
   config.vm.box = "opscode_ubuntu-12.04_provisionerless"
   config.vm.box_url = "https://opscode-vm-bento.s3.amazonaws.com/vagrant/opscode_ubuntu-12.04_provisionerless.box"
 
-  config.vm.hostname = 'vagrant-singularity'
   private_ip = '192.168.33.11'
   mysql_password = "mesos7mysql"
 
@@ -23,10 +30,8 @@ Vagrant.configure("2") do |config|
     config.cache.auto_detect = true
   end
   
+  config.vm.hostname = 'vagrant-singularity'
   config.vm.network :private_network, ip: private_ip
-  config.vm.provision :hosts do |provisioner|
-    provisioner.add_host private_ip, [config.vm.hostname]
-  end
 
   config.vm.provision :chef_solo do |chef|
     chef.log_level = :debug
@@ -42,7 +47,12 @@ Vagrant.configure("2") do |config|
         :allow_remote_root => true
       },
       :mesos => {
-        :version => "0.17.0"
+        :master => {
+          :hostname => config.vm.hostname
+        },
+        :slave => {
+          :hostname => config.vm.hostname
+        }
       }
     }
   end
