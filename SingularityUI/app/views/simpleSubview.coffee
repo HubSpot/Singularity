@@ -1,6 +1,6 @@
 View = require './view'
 
-# You feed it a collection & template and it listens to it and renders
+# You feed it a collection/model & template and it listens to it and renders
 # when appropriate
 #
 #   myView = new SimpleSubview {collection, template}
@@ -10,17 +10,19 @@ View = require './view'
 class SimpleSubview extends View
 
     initialize: ({@template}) ->
-        @listenTo @collection, 'sync',    @render
-        @listenTo @collection, 'add',     @render
-        @listenTo @collection, 'remove',  @render
-        @listenTo @collection, 'reset',   =>
+        @data = if @collection? then @collection else @model
+
+        for eventName in ['sync', 'add', 'remove', 'change']
+            @listenTo @data, eventName, @render
+            
+        @listenTo @data, 'reset', =>
             @$el.empty()
 
     render: ->
-        return if not @collection.synced and @collection.isEmpty()
+        return if not @data.synced and @data.isEmpty?()
         
         @$el.html @template
-            data:   @collection.toJSON()
-            synced: @collection.synced
+            data:   @data.toJSON()
+            synced: @data.synced
 
 module.exports = SimpleSubview
