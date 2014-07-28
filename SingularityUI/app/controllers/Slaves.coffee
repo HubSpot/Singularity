@@ -3,7 +3,7 @@ Controller = require './Controller'
 Slaves = require '../collections/Slaves'
 
 SlavesView = require '../views/slaves'
-SimpleTableView = require '../views/simpleTableView'
+SimpleView = require '../views/simpleView'
 
 class SlavesController extends Controller
 
@@ -20,15 +20,15 @@ class SlavesController extends Controller
         @collections.decomissioningSlaves = new Slaves [], slaveType: 'decomissioning'
 
         # Subviews for the tables
-        @subviews.activeSlaves         = new SimpleTableView
+        @subviews.activeSlaves         = new SimpleView
             collection: @collections.activeSlaves
             template:   @templates.activeSlaves
 
-        @subviews.deadSlaves           = new SimpleTableView
+        @subviews.deadSlaves           = new SimpleView
             collection: @collections.deadSlaves
             template:   @templates.deadSlaves
 
-        @subviews.decomissioningSlaves = new SimpleTableView
+        @subviews.decomissioningSlaves = new SimpleView
             collection: @collections.decomissioningSlaves
             template:   @templates.decomissioningSlaves
 
