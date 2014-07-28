@@ -2,7 +2,7 @@ DashboardController = require 'controllers/Dashboard'
 StatusController = require 'controllers/Status'
 RequestsTableController = require 'controllers/RequestsTable'
 TasksTableController = require 'controllers/TasksTable'
-
+TailController = require 'controllers/TailController'
 
 RequestView = require 'views/request'
 
@@ -54,7 +54,7 @@ class Router extends Backbone.Router
         app.showView new TaskView id: taskId, path: path
 
     tail: (taskId, path = '') ->
-        app.showView new TailView taskId: taskId, path: path
+        app.bootstrapController new TailController {taskId, path}
 
     racks: ->
         if not app.views.racks?
