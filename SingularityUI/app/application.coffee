@@ -7,10 +7,18 @@ GlobalSearchView = require 'views/globalSearch'
 
 class Application
 
+    # Holds `nav`, `globalSearch`, and `current`
     views: {}
 
+    # Every @globalRefreshTime we send a refresh() request to teh active controller
+    globalRefreshInterval: undefined
+    globalRefreshTime:     60000 # one minute
+
+    # Window becomes `blurred` if this page isn't active, e.g. the user
+    # is on a different tab
+    blurred: false
+
     initialize: ->
-        @isMobile = touchDevice = 'ontouchstart' of document.documentElement
         @setupGlobalErrorHandling()
 
         @setupUser()
@@ -18,8 +26,11 @@ class Application
         @$page = $('#page')
         @page = @$page[0]
 
-        @setupNav()
-        @setupGlobalSearchView()
+        @views.nav = new NavView
+        @views.nav.render()
+
+        @views.globalSearch = new GlobalSearchView
+        @views.globalSearch.render()
 
         $('.page-loader.fixed').hide()
 
@@ -32,6 +43,26 @@ class Application
         Backbone.history.start
             pushState: true
             root: el.pathname
+
+        # Global refresh
+        @setRefreshInterval()
+
+        # We don't want the refresh to trigger if the tab isn't active
+        $(window).on 'blur',  =>
+            @blurred = true
+            clearInterval @globalRefreshInterval
+
+        $(window).on 'focus', =>
+            @blurred = false
+            @globalRefresh()
+            @setRefreshInterval()
+
+    setRefreshInterval: ->
+        clearInterval @globalRefreshInterval
+        setInterval @globalRefresh, @globalRefreshTime
+
+    globalRefresh: =>
+        @currentController.refresh()
 
     caughtError: ->
         # Ghetto try-catch
@@ -48,10 +79,6 @@ class Application
             unloading = true
             return
 
-        blurred = false
-        $(window).on 'blur',  -> blurred = true
-        $(window).on 'focus', -> blurred = false
-
         # When an Ajax error occurs this is the default message that is displayed.
         # You can add your own custom error handling using app.caughtError() above.
         $(document).on 'ajaxError', (e, jqxhr, settings) =>
@@ -63,7 +90,7 @@ class Application
             return if settings.suppressErrors
             return if jqxhr.statusText is 'abort'
             return if unloading
-            return if blurred and jqxhr.statusText is 'timeout'
+            return if @blurred and jqxhr.statusText is 'timeout'
 
             url = settings.url.replace(config.appRoot, '')
 
@@ -79,13 +106,6 @@ class Application
     # Usually called by Controllers when they're initialized. Loader is overwritten by views
     showPageLoader: ->
         @$page.html "<div class='page-loader centered cushy'></div>"
-
-    # Called in Router. Shows the passed view's $el on the page
-    show: (view) ->
-        if @page.children.length
-            @page.replaceChild view.el, @page.children[0]
-        else
-            @page.appendChild view.el
 
     bootstrapController: (controller) ->
         @currentController = controller
@@ -125,13 +145,5 @@ class Application
                 if _.isString(user) and user isnt ''
                     @user.set('deployUser', @user.deployUser = user)
                     @user.save()
-
-    setupNav: ->
-        @views.nav = new NavView
-        @views.nav.render()
-
-    setupGlobalSearchView: ->
-        @views.globalSearch = new GlobalSearchView
-        @views.globalSearch.render()
 
 module.exports = new Application
