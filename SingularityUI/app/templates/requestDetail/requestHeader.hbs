@@ -4,54 +4,54 @@
         {{! Left side, info }}
         <div class="col-md-8">
             <h4>
-                <span class="request-state" data-state="{{ request.state }}">
-                    {{ request.displayState }}
+                <span class="request-state" data-state="{{ data.state }}">
+                    {{ data.displayState }}
                 </span>
 
                 <span class="request-type">
-                    {{#if request.daemon}}daemon{{/if}}
-                    {{#if request.onDemand}}on-demand{{/if}}
-                    {{#if request.scheduled}}scheduled{{/if}}
+                    {{#if data.daemon}}daemon{{/if}}
+                    {{#if data.onDemand}}on-demand{{/if}}
+                    {{#if data.scheduled}}scheduled{{/if}}
                 </span>
             </h4>
 
-            <h2>{{ request.id }}</h2>
+            <h2>{{ data.id }}</h2>
         </div>
 
         {{! Right side, buttons }}
         <div class="col-md-4 button-container">
-            <a class="btn btn-default" data-request-id="{{ request.id }}" data-action="viewObjectJSON">
+            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
                 JSON
             </a>
 
-            {{#if request.canBeRunNow}}
-                {{#unless request.deleted}}
-                    <a class="btn btn-primary" data-request-id="{{ request.id }}" data-request-type="{{#if request.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">
+            {{#if data.canBeRunNow}}
+                {{#unless data.deleted}}
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{#if data.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">
                         Run now
                     </a>
                 {{/unless}}
             {{/if}}
 
-            {{#unless request.deleted}}
-                {{#if request.paused}}
-                    <a class="btn btn-primary" data-request-id="{{ request.id }}" data-action="unpause">
+            {{#unless data.deleted}}
+                {{#if data.paused}}
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause">
                         Unpause
                     </a>
                 {{else}}
-                    <a class="btn btn-primary" data-request-id="{{ request.id }}" data-action="pause">
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause">
                         Pause
                     </a>
                 {{/if}}
             {{/unless}}
             
-            {{#if request.canBeBounced}}
-                <a class="btn btn-primary" data-request-id="{{ request.id }}" data-action="bounce">
+            {{#if data.canBeBounced}}
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce">
                     Bounce
                 </a>
             {{/if}}
             
-            {{#unless request.deleted}}
-                <a class="btn btn-danger" data-request-id="{{ request.id }}" data-action="remove">
+            {{#unless data.deleted}}
+                <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
                     Remove
                 </a>
             {{/unless}}
@@ -60,8 +60,8 @@
 
     {{! Active deploy well }}
     <div class="well">
-        {{#if request.activeDeploy}}
-            {{#with request.activeDeploy}}
+        {{#if data.activeDeploy}}
+            {{#with data.activeDeploy}}
                 Active deploy <code>{{ id }}</code>
                 {{#if metadata.deployedBy}}
                     by {{ metadata.deployedBy }}

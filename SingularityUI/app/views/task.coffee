@@ -32,7 +32,7 @@ class TaskView extends View
         $target.parent().remove()
 
     viewJson: (event) ->
-        utils.viewJSON 'task', @taskId
+        utils.viewJSON @model
 
     killTask: (event) ->
         taskModel = new Task id: @taskId

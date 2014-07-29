@@ -1,5 +1,4 @@
 Controller = require './Controller'
-NotFoundController = require './NotFound'
 
 TaskHistory = require '../models/TaskHistory'
 TaskResourceUsage = require '../models/TaskResourceUsage'
@@ -75,6 +74,7 @@ class TaskDetailController extends Controller
         # Getting stuff in gear
         #
         @view = new TaskView _.extend {@subviews, @taskId},
+            model:      @models.task
             controller: @
 
         @refresh()
@@ -86,7 +86,7 @@ class TaskDetailController extends Controller
         @models.task.fetch().error =>
             # If this 404s the task doesn't exist
             app.caughtError()
-            app.bootstrapController new NotFoundController
+            app.router.notFound()
 
         @models.resourceUsage?.fetch().error =>
             # If this 404s there's nothing to get so don't bother
