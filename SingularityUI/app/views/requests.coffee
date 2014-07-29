@@ -217,8 +217,8 @@ class RequestsView extends View
         $row = $target.parents 'tr'
 
         id = $row.data 'request-id'
-
-        @requestsStarred.toggle id
+        
+        @collection.toggleStar id
 
         starred = $target.attr('data-starred') is "true"
         if starred

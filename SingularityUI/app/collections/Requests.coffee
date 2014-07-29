@@ -41,7 +41,7 @@ class Requests extends Collection
             request.get('request').id in starredRequests
 
     toggleStar: (requestId) ->
-        starredRequests = @getStarredRequests
+        starredRequests = @getStarredRequests()
         if requestId in starredRequests
             starredRequests = _.without starredRequests, requestId
         else
