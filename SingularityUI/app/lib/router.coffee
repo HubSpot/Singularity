@@ -1,143 +1,72 @@
-DashboardView = require 'views/dashboard'
-StatusView = require 'views/status'
+DashboardController = require 'controllers/Dashboard'
+StatusController = require 'controllers/Status'
 
-RequestsView = require 'views/requests'
+RequestDetailController = require 'controllers/RequestDetail'
+RequestsTableController = require 'controllers/RequestsTable'
 
-RequestView = require 'views/request'
+TasksTableController = require 'controllers/TasksTable'
+TaskDetailController = require 'controllers/TaskDetail'
+TailController = require 'controllers/Tail'
 
-TasksView = require 'views/tasks'
+RacksController = require 'controllers/Racks'
+SlavesController = require 'controllers/Slaves'
 
-TaskView = require 'views/task'
-TailView = require 'views/tail'
-
-RacksView = require 'views/racks'
-SlavesView = require 'views/slaves'
-
-PageNotFoundView = require 'views/pageNotFound'
-
-currentViewIsTailView = ->
-    Backbone.history.fragment.match(/^task\/.+\/tail\//)?.length is 1
-
-htmlClasses = ->
-    if currentViewIsTailView()
-        $('html').addClass('tail-view')
-    else
-        $('html').removeClass('tail-view')
-
-Backbone.history.on 'route', ->
-    app.views.nav.render()
-    htmlClasses()
-
-windowBlurred = false
-
-$(window).on 'blur', ->
-    windowBlurred = true
-
-$(window).on 'focus', ->
-    windowBlurred = false
-    refresh()
-
-window.globalRefreshTimeout = undefined
-globalRefresh = ->
-    clearTimeout(window.globalRefreshTimeout) if window.globalRefreshTimeout
-    window.globalRefreshTimeout = setInterval ->
-        refresh()
-    , 20 * 1000
-
-refresh = ->
-    return if localStorage.getItem("preventGlobalRefresh") == "true"
-    if not $('body > .vex').length and not windowBlurred
-        app.views.current?.refresh?()
+NotFoundController = require 'controllers/NotFound'
 
 class Router extends Backbone.Router
 
     routes:
         '(/)': 'dashboard'
         'status(/)': 'status'
-        'requests/:requestsFilter/:requestsSubFilter/:searchFilter(/)': 'requestsFiltered'
-        'requests/:requestsFilter/:requestsSubFilter(/)': 'requestsFiltered'
-        'requests/:requestsFilter(/)': 'requestsFiltered'
-        'requests(/)': 'requestsFiltered'
-        'request/:requestId(/)': 'request'
-        'tasks/:tasksFilter/:searchFilter(/)': 'tasksFiltered'
-        'tasks/:tasksFilter(/)': 'tasksFiltered'
-        'tasks(/)': 'tasksFiltered'
-        'task/:taskId(/)': 'task'
-        # 'task/:taskId/files(/)': 'task'
-        'task/:taskId/files(/)*path': 'task'
+
+        'requests/:state/:subFilter/:searchFilter(/)': 'requestsTable'
+        'requests/:state/:subFilter(/)': 'requestsTable'
+        'requests/:state(/)': 'requestsTable'
+        'requests(/)': 'requestsTable'
+
+        'request/:requestId(/)': 'requestDetail'
+
+        'tasks/:state/:searchFilter(/)': 'tasksTable'
+        'tasks/:state(/)': 'tasksTable'
+        'tasks(/)': 'tasksTable'
+
+        'task/:taskId(/)': 'taskDetail'
+        'task/:taskId/files(/)*path': 'taskDetail'
         'task/:taskId/tail/*path': 'tail'
+
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
-        '*anything': 'templateFromURLFragment'
+        
+        '*anything': 'notFound'
 
     dashboard: ->
-        app.showView new DashboardView
+        app.bootstrapController new DashboardController
 
     status: ->
-        app.showView new StatusView
+        app.bootstrapController new StatusController
 
-    requestsFiltered: (requestsFilter = 'all', requestsSubFilter = 'all', searchFilter = '') ->
-        if requestsSubFilter is 'running'
-            requestsSubFilter = 'daemon' # Front end URL migration :P
+    requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
+        app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
 
-        app.views.current = new RequestsView {requestsFilter, requestsSubFilter, searchFilter}
-        app.views.current.render()
-        app.show app.views.current
+    requestDetail: (requestId) ->
+        app.bootstrapController new RequestDetailController {requestId}
 
-    request: (requestId) ->
-        app.showView new RequestView requestId: requestId
+    tasksTable: (state = 'active', searchFilter = '') ->
+        app.bootstrapController new TasksTableController {state, searchFilter}
 
-    tasksFiltered: (tasksFilter = 'active', searchFilter = '') ->
-        app.views.current = new TasksView {tasksFilter, searchFilter}
-
-        app.views.current.render()
-        app.show app.views.current
-
-    task: (taskId, path) ->
-        app.showView new TaskView id: taskId, path: path
+    taskDetail: (taskId, filePath) ->
+        app.bootstrapController new TaskDetailController {taskId, filePath}
 
     tail: (taskId, path = '') ->
-        app.showView new TailView taskId: taskId, path: path
+        app.bootstrapController new TailController {taskId, path}
 
     racks: ->
-        if not app.views.racks?
-            app.views.racks = new RacksView
-            app.views.current = app.views.racks
-            app.show app.views.racks.render().refresh()
-        else
-            app.views.current = app.views.racks
-            app.show app.views.racks.refresh()
+        app.bootstrapController new RacksController
 
     slaves: ->
-        if not app.views.slaves?
-            app.views.slaves = new SlavesView
-            app.views.current = app.views.slaves
-            app.show app.views.slaves.render().refresh()
-        else
-            app.views.current = app.views.slaves
-            app.show app.views.slaves.refresh()
+        app.bootstrapController new SlavesController
 
-    templateFromURLFragment: ->
-        app.views.current = undefined
-
-        template = undefined
-        try
-            template = require "../views/templates/#{ Backbone.history.fragment }"
-        catch error
-
-        if template
-            app.show el: $(template)[0]
-            return
-
-        @show404()
-
-    show404: ->
-        if not app.views.pageNotFound?
-            app.views.pageNotFound = new PageNotFoundView
-            app.views.current = app.views.pageNotFound
-            app.show app.views.pageNotFound.render()
-        else
-            app.views.current = app.views.pageNotFound
-            app.show app.views.pageNotFound
+    notFound: ->
+        app.bootstrapController new NotFoundController
 
 module.exports = Router

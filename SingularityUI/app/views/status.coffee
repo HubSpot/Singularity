@@ -1,23 +1,16 @@
 View = require './view'
 
-State = require '../models/State'
-
 class StatusView extends View
 
     template: require '../templates/status'
 
     initialize: ->
-        @model = new State
-        @model.fetch().done @render
+        @listenTo @model, 'sync', @render
 
     captureLastState: ->
         @lastState = _.clone @model.attributes
 
-    refresh: ->
-        @captureLastState()
-        @model.fetch().done @render
-
-    render: (fromRoute) =>
+    render: =>
         # When refreshing we want to display a nice pretty animation
         # showing which number boxes have changed.
         if not @lastState?
@@ -56,5 +49,7 @@ class StatusView extends View
                 $bigNumber.find('.well').attr('data-changed-difference', changes.difference)
                 $number.html @model.attributes[attributeName]
                 do ($bigNumber, changeClassName) -> setTimeout (-> $bigNumber.removeClass changeClassName), 2000
+
+        @captureLastState()
 
 module.exports = StatusView

@@ -14,10 +14,40 @@ class Requests extends Collection
 
     initialize: (models, { @state }) ->
         @state = if not @state? or @state is 'all' then '' else @state
+        @state = if @state is 'cleaning' then 'cleanup' else @state
 
     url: ->
+        # We might need to hit the queue endpoint instead
+        queueApi = if @state in ['cleanup', 'pending'] then 'queued/' else ''
+
         propertyString = $.param property: @propertyFilters[@state] or [], true
-        "#{ config.apiRoot }/requests/#{ @state }?#{ propertyString or '' }"
+        "#{ config.apiRoot }/requests/#{ queueApi }#{ @state }?#{ propertyString or '' }"
+
+    getStarredRequests: ->
+        jsonRequests = localStorage.getItem 'starredRequests'
+        return [] if not jsonRequests?
+
+        JSON.parse jsonRequests
+
+    isStarred: (id) ->
+        starredRequests = @getStarredRequests()
+        id in starredRequests
+
+    getStarredOnly: ->
+        starredRequests = @getStarredRequests()
+        return [] if _.isEmpty starredRequests
+
+        @filter (request) =>
+            request.get('request').id in starredRequests
+
+    toggleStar: (requestId) ->
+        starredRequests = @getStarredRequests
+        if requestId in starredRequests
+            starredRequests = _.without starredRequests, requestId
+        else
+            starredRequests.push requestId
+
+        localStorage.setItem 'starredRequests', JSON.stringify starredRequests
 
     parse: (requests) ->
         for request in requests

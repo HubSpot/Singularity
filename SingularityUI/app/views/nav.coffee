@@ -4,6 +4,10 @@ class NavView extends View
 
     template: require '../templates/nav'
 
+    initialize: ->
+        Backbone.history.on 'route', =>
+            @render()
+
     events: ->
         _.extend super,
             'click .global-search-button': 'showSearch'

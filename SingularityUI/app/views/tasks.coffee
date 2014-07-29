@@ -2,11 +2,9 @@ View = require './view'
 
 Request = require '../models/Request'
 
-TasksActive = require '../collections/TasksActive'
-TasksScheduled = require '../collections/TasksScheduled'
-TasksCleaning = require '../collections/TasksCleaning'
-
 class TasksView extends View
+
+    isSorted: false
 
     templateBase:  require '../templates/tasksTable/tasksBase'
 
@@ -34,27 +32,13 @@ class TasksView extends View
 
             'click th[data-sort-attribute]': 'sortTable'
 
-    initialize: ({@tasksFilter, @searchFilter}) ->
-        @bodyTemplate = @bodyTemplateMap[@tasksFilter]
+    initialize: ({@state, @searchFilter}) ->
+        @bodyTemplate = @bodyTemplateMap[@state]
 
-        collectionMap =
-            active:    TasksActive
-            scheduled: TasksScheduled
-            cleaning:  TasksCleaning
+        @listenTo @collection, 'sync',   @render
+        @listenTo @collection, 'remove', @render
 
-        @collectionSynced = false
-        @collection = new collectionMap[@tasksFilter]
-
-        @collection.fetch().done =>
-            @collectionSynced = true
-            @render()
-
-    refresh: ->
-        return @ if @$el.find('[data-sorted-direction]').length
-        # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
-        return @ if $(window).scrollTop() > 200
-        @collection.fetch().done =>
-            @renderTable()
+        @searchChange = _.debounce @searchChange, 200
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -80,10 +64,10 @@ class TasksView extends View
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
-            tasksFilter: @tasksFilter
+            tasksFilter: @state
             searchFilter: @searchFilter
-            collectionSynced: @collectionSynced
-            haveTasks: @collection.length and @collectionSynced
+            collectionSynced: @collection.synced
+            haveTasks: @collection.length and @collection.synced
 
         partials = 
             partials:
@@ -131,6 +115,8 @@ class TasksView extends View
             $tableBody.append $contents
 
     sortTable: (event) =>
+        @isSorted = true
+
         $target = $ event.currentTarget
         newSortAttribute = $target.attr "data-sort-attribute"
 
@@ -168,7 +154,7 @@ class TasksView extends View
                 @renderTableChunk()
 
     updateUrl: =>
-        app.router.navigate "/tasks/#{ @tasksFilter }/#{ @searchFilter }", { replace: true }
+        app.router.navigate "/tasks/#{ @state }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
         id = $(e.target).parents('tr').data 'task-id'
@@ -190,13 +176,6 @@ class TasksView extends View
             $row.remove()
 
     searchChange: (event) =>
-        # Add a little delay to the event so we don't run it for every keystroke
-        if @searchTimeout?
-            clearTimeout @searchTimeout
-
-        @searchTimeout = setTimeout @processSearchChange, 200
-
-    processSearchChange: =>
         return unless @ is app.views.current
 
         previousSearchFilter = @searchFilter

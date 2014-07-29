@@ -3,7 +3,7 @@
     <div class="row">
         {{! Left side }}
         <div class="col-md-8">
-            {{#with taskHistory.task.taskRequest}}
+            {{#with data.task.taskRequest}}
                 <h5>
                     Request
                     <a href="{{appRoot}}/request/{{ request.id }}">
@@ -12,7 +12,7 @@
                 </h5>
             {{/with}}
             <h2>
-                {{ taskHistory.task.id }}
+                {{ data.task.id }}
             </h2>
         </div>
 
@@ -28,8 +28,8 @@
     </div>
 </header>
 
-{{#if taskHistory.taskUpdates}}
-    {{#eachWithFn taskHistory.taskUpdates}}
+{{#if data.taskUpdates}}
+    {{#eachWithFn data.taskUpdates}}
         {{#if _last}}
             <div class="well text-muted">
                 {{ taskStateHuman }} as of

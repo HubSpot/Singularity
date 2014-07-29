@@ -27,7 +27,7 @@ class LogLines extends Collection
     getMaxOffset: =>
         if @length > 0 then @last().getEndOffset() else 0
 
-    fetchInitialData: (callback) =>
+    fetchInitialData: =>
         # When we request `read` without passing an offset, we get given
         # back just the end offset of the file
         $.ajax
@@ -40,7 +40,8 @@ class LogLines extends Collection
             request = @fetch data:
                 path: @path
                 offset: offset
-            request.done callback
+
+            @trigger 'initialdata'
 
     fetchPrevious: ->
         @fetch data:

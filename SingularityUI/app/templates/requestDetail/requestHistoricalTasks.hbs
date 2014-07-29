@@ -2,46 +2,46 @@
     <h2>Task history</h2>
 </div>
 {{#if data.length}}
-    <div class="row">
-        <div class="col-md-12">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th class="">Name</th>
-                        <th class="visible-md">Status</th>
-                        <th class="visible-md">Deploy</th>
-                        <th class="visible-md">Started</th>
-                        <th class="hidden-xs">Updated</th>
-                        <th class="hidden-xs"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each data}}
-                        <tr data-id="{{ id }}" data-collection="historicalTasks">
-                            <td class="">
-                                <span title="{{ id }}">
-                                    <a href="{{appRoot}}/task/{{ id }}">
-                                        {{ name }}
-                                    </a>
-                                </span>
-                            </td>
-                            <td class="visible-md">{{ lastTaskStateHuman }}</td>
-                            <td class="visible-md">{{ deployId }}</td>
-                            <td class="visible-md">{{ startedAtHuman }}</td>
-                            <td class="hidden-xs">{{ updatedAtHuman }}</td>
-                            <td class="hidden-xs actions-column">
-                                <a href="{{appRoot}}/task/{{ id }}/files/">
-                                    <span class="glyphicon glyphicon-file" title="Files"></span>
-                                </a>
-                                <a data-action="viewJSON">
-                                    <span class="glyphicon glyphicon-th-list" title="JSON"></span>
-                                </a>
-                            </td>
-                        </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="">Name</th>
+                <th class="visible-md">Status</th>
+                <th class="visible-md">Deploy</th>
+                <th class="visible-md">Started</th>
+                <th class="hidden-xs">Updated</th>
+                <th class="hidden-xs"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr>
+                    <td class="">
+                        <span title="{{ id }}">
+                            <a href="{{appRoot}}/task/{{ id }}">
+                                {{ name }}
+                            </a>
+                        </span>
+                    </td>
+                    <td class="visible-md">{{ lastTaskStateHuman }}</td>
+                    <td class="visible-md">{{ deployId }}</td>
+                    <td class="visible-md">{{ startedAtHuman }}</td>
+                    <td class="hidden-xs">{{ updatedAtHuman }}</td>
+                    <td class="hidden-xs actions-column">
+                        <a href="{{appRoot}}/task/{{ id }}/files/">
+                            <span class="glyphicon glyphicon-file" title="Files"></span>
+                        </a>
+                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                            <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message">
+        No tasks
     </div>
 {{else}}
     {{#if synced}}

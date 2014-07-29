@@ -1,7 +1,5 @@
 View = require './view'
 
-LogLines = require '../collections/LogLines'
-
 class TailView extends View
 
     pollingTimeout: 3000
@@ -15,21 +13,18 @@ class TailView extends View
             'click .tail-top-button': 'goToTop'
             'click .tail-bottom-button': 'goToBottom'
 
-    initialize: ({@taskId, @path}) ->
+    initialize: ({@taskId, @path, firstRequest}) ->
         @filename = _.last @path.split '/'
 
-        @collection = new LogLines [], {@taskId, @path}
-        @listenTo @collection, 'reset', @dumpContents
-        @listenTo @collection, 'sync', @renderLines
+        @listenTo @collection, 'reset',       @dumpContents
+        @listenTo @collection, 'sync',        @renderLines
+        @listenTo @collection, 'initialdata', @afterInitialData
+
         # For the visual loading indicator thing
         @listenTo @collection, 'request', =>
             @$el.addClass 'fetching-data'
         @listenTo @collection, 'sync', =>
             @$el.removeClass 'fetching-data'
-        
-        # Get the initial offset, or handle the error in case it doesn't exist
-        firstRequest = @collection.fetchInitialData @startTailing
-        firstRequest.done  @startTailing
 
     handleAjaxError: (response) =>
         # ATM we get 404s if we request dirs and 500s if the file doesn't exist
@@ -103,6 +98,13 @@ class TailView extends View
             if atTop and @collection.getMinOffset() isnt 0
                 @collection.fetchPrevious()
 
+    afterInitialData: =>
+        setTimeout =>
+            @scrollToBottom()
+        , 150
+
+        @startTailing()
+
     startTailing: =>
         @scrollToBottom()
 
@@ -129,6 +131,6 @@ class TailView extends View
     
     goToBottom: =>
         @collection.reset()
-        @collection.fetchInitialData @startTailing
+        @collection.fetchInitialData()
 
 module.exports = TailView

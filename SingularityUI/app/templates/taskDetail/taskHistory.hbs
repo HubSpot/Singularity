@@ -1,46 +1,35 @@
-{{! Part of taskBase }}
-{{#if synced}}
-    <div class="page-header">
-        <h2>History</h2>
-    </div>
-    {{#if taskHistory.taskUpdates}}
-        <table class="table table-striped">
-            <thead>
+<div class="page-header">
+    <h2>History</h2>
+</div>
+{{#if data.taskUpdates}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data.taskUpdates}}
                 <tr>
-                    <th>Status</th>
-                    <th>Message</th>
-                    <th>Time</th>
+                    <td>
+                        <span title="{{ statusUpdate }}">{{ taskStateHuman }}</span>
+                    </td>
+                    <td>
+                        {{#if statusMessage}}
+                            {{ statusMessage }}
+                        {{else}}
+                            &mdash;
+                        {{/if}}
+                    </td>
+                    <td data-value="{{ timestamp }}">
+                        <span title="{{ timestamp }}">{{ timestampHuman }}</span>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                {{#eachWithFn taskHistory.taskUpdates}}
-                    <tr>
-                        <td>
-                            <span title="{{ statusUpdate }}">{{ taskStateHuman }}</span>
-                        </td>
-                        <td>
-                            {{#if statusMessage}}
-                                {{ statusMessage }}
-                            {{else}}
-                                &mdash;
-                            {{/if}}
-                        </td>
-                        <td data-value="{{ timestamp }}">
-                            <span title="{{ timestamp }}">{{ timestampHuman }}</span>
-                        </td>
-                    </tr>
-                {{/eachWithFn}}
-            </tbody>
-        </table>
-    {{else}}
-        {{#if taskHistory.hasNoTaskUpdates}}
-            <div class="empty-table-message"><p>This task has no history yet.</p></div>
-            <div class="page-loader-with-message">
-                <div class="page-loader centered"></div>
-                <p>Refreshing history...</p>
-            </div>
-        {{else}}
-            <div class="page-loader centered"></div>
-        {{/if}}
-    {{/if}}
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message">This task has no history yet</div>
 {{/if}}
