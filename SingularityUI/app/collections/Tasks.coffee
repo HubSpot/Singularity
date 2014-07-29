@@ -23,7 +23,6 @@ class Tasks extends Collection
         if @state is 'active'
             for task in tasks
                 task.host = task.offer.hostname?.split('.')[0]
-                task.JSONString = utils.stringJSON task
                 task.id = task.taskId.id
                 task.requestId = task.taskId.requestId
                 task.name = task.requestId
@@ -36,7 +35,6 @@ class Tasks extends Collection
                 task.rack = task.taskId.rackId
         else if @state is 'scheduled'
             for task in tasks
-                task.JSONString = utils.stringJSON task
                 if not task.pendingTaskId?
                     task.pendingTaskId = task.pendingTask.pendingTaskId
                 task.id = @parsePendingId task.pendingTaskId
@@ -47,7 +45,6 @@ class Tasks extends Collection
                 task.schedule = task.request.schedule
         else if @state is 'cleaning'
             for task in tasks
-                task.JSONString = utils.stringJSON task
                 task.id = task.taskId.id
                 task.name = task.id
                 task.timestampHuman = moment(task.timestamp).fromNow()
