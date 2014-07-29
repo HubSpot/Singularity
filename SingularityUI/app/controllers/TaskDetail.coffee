@@ -73,9 +73,8 @@ class TaskDetailController extends Controller
         #
         # Getting stuff in gear
         #
-        @view = new TaskView _.extend {@subviews, @taskId},
-            model:      @models.task
-            controller: @
+        @setView new TaskView _.extend {@subviews, @taskId},
+            model: @models.task
 
         @refresh()
         @collections.files.fetch().error @ignore404

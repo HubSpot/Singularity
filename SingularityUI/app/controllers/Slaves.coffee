@@ -32,9 +32,8 @@ class SlavesController extends Controller
             collection: @collections.decomissioningSlaves
             template:   @templates.decomissioningSlaves
 
-        @view = new SlavesView
-            subviews:   @subviews
-            controller: @
+        @setView new SlavesView
+            subviews: @subviews
 
         app.showView @view
 

@@ -10,9 +10,8 @@ class RequestsTableController extends Controller
         # We want the view to handle the page loader for this one
         @collections.requests = new Requests [], {@state}
 
-        @view = new RequestsTableView _.extend {@state, @subFilter, @searchFilter},
-            collection:   @collections.requests
-            controller:   @
+        @setView new RequestsTableView _.extend {@state, @subFilter, @searchFilter},
+            collection: @collections.requests
 
         @collections.requests.fetch()
         

@@ -1,14 +1,10 @@
 class View extends Backbone.View
 
-    # Reference to our controller in case we cant to call @controller.refresh
-    controller: undefined
-
     # Keep track of any subviews we may have
     subviews:   {}
 
     constructor: (params = {}) ->
-        @subviews   = params.subviews   if params.subviews?
-        @controller = params.controller if params.controller?
+        @subviews = params.subviews if params.subviews?
         super params
 
     events: ->

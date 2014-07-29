@@ -12,7 +12,7 @@ class StatusController extends Controller
         @models.state = new State
 
         @models.state.fetch().done =>
-            @view = new StatusView
+            @setView new StatusView
                 model: @models.state
 
             app.showView @view

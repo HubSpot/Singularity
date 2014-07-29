@@ -22,7 +22,7 @@ class SlavesView extends View
         $target = $(event.currentTarget)
 
         slaveModel = new Slave id: $target.data 'slave-id'
-        slaveModel.promptDecommission => @controller.refresh()
+        slaveModel.promptDecommission => @trigger 'refreshrequest'
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)
@@ -30,7 +30,7 @@ class SlavesView extends View
         slaveModel = new Slave
             id: $target.data 'slave-id'
             state: $target.data 'state'
-        slaveModel.promptRemove => @controller.refresh()
+        slaveModel.promptRemove => @trigger 'refreshrequest'
             
 
 module.exports = SlavesView

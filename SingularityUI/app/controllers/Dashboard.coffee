@@ -12,7 +12,7 @@ class DashboardController extends Controller
         @collections.requests = new Requests [], state: 'all'
 
         @collections.requests.fetch().done =>
-            @view = new DashboardView
+            @setView new DashboardView
                 collection: @collections.requests
 
             app.showView @view

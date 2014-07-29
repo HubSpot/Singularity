@@ -10,9 +10,8 @@ class TasksTableController extends Controller
         # We want the view to handle the page loader for this one
         @collections.tasks = new Tasks [], {@state}
 
-        @view = new TasksTableView _.extend {@state, @searchFilter},
-            collection:   @collections.tasks
-            controller:   @
+        @setView new TasksTableView _.extend {@state, @searchFilter},
+            collection: @collections.tasks
 
         @collections.tasks.fetch()
         

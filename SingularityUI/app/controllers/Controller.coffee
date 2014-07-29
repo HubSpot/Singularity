@@ -18,6 +18,10 @@ class Controller
     # view whenever it requires. It should trigger the necessary fetches
     refresh: ->
 
+    # Set the primary view and listen to its events
+    setView: (@view) ->
+        @view.on 'refreshrequest', => @refresh()
+
     # e.g. `myModel.fetch().error @ignore404`
     ignore404: (response) -> app.caughtError() if response.status is 404
 

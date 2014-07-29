@@ -83,9 +83,8 @@ class RequestDetailController extends Controller
         #
         # Main view & stuff
         #
-        @view = new RequestDetailView _.extend {@requestId, @subviews},
-            controller: @
-            model:      @models.request
+        @setView new RequestDetailView _.extend {@requestId, @subviews},
+            model: @models.request
 
         @refresh()
 

@@ -32,9 +32,8 @@ class RacksController extends Controller
             collection: @collections.decomissioningRacks
             template:   @templates.decomissioningRacks
 
-        @view = new RacksView
+        @setView new RacksView
             subviews:   @subviews
-            controller: @
 
         app.showView @view
 

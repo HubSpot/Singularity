@@ -24,13 +24,13 @@ class RacksView extends View
         rackModel = new Rack
             id: $target.data 'rack-id'
             state: $target.data 'state'
-        rackModel.promptRemove => @controller.refresh()
+        rackModel.promptRemove => @trigger 'refreshrequest'
 
     decomissionRack: (event) ->
         $target = $(event.target)
 
         rackModel = new Rack
             id: $target.data 'rack-id'
-        rackModel.promptDecommission => @controller.refresh()
+        rackModel.promptDecommission => @trigger 'refreshrequest'
 
 module.exports = RacksView
