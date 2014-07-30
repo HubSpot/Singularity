@@ -62,6 +62,7 @@ class Application
         setInterval @globalRefresh, @globalRefreshTime
 
     globalRefresh: =>
+        return if localStorage.getItem 'suppressRefresh'
         @currentController.refresh()
 
     caughtError: ->
