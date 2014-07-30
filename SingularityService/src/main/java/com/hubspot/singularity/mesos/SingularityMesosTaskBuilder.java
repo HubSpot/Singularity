@@ -134,6 +134,7 @@ public class SingularityMesosTaskBuilder {
         ExecutorInfo.newBuilder()
           .setCommand(commandBuilder.build())
           .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
+          .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
     );
         
     if (task.getDeploy().getExecutorData().isPresent()) {
