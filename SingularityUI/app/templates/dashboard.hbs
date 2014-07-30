@@ -78,29 +78,39 @@
                             <th data-sortable="false"></th>
                             <th>Request</th>
                             <th class="hidden-xs">Requested</th>
-                            <th class="visible-md">Deploy user</th>
-                            <th class="visible-large-desktop">Instances</th>
+                            <th class="visible-lg visible-xl">Deploy user</th>
+                            <th class="visible-lg visible-xl">Instances</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#each starredRequests}}
-                            <tr data-request-id="{{ id }}">
+                            <tr data-request-id="{{ request.id }}">
                                 <td>
                                     <a class="star" data-action="unstar" data-starred="true">
                                         <span class="glyphicon glyphicon-star"></span>
                                     </a>
                                 </td>
                                 <td>
-                                    <span title="{{ id }}"><a href="{{appRoot}}/request/{{ id }}">{{ id }}</a></span>
+                                    <a href="{{appRoot}}/request/{{ request.id }}">
+                                        {{ request.id }}
+                                    </a>
                                 </td>
-                                <td class="hidden-xs" data-value="{{ timestamp }}">
-                                    <span title="{{ timestamp }}">
-                                        {{timestampFromNow timestamp}}
-                                        ({{timestampFormatted timestamp}})
+                                <td class="hidden-xs" data-value="{{ requestDeployState.activeDeploy.timestamp }}">
+                                    <span title="{{ requestDeployState.activeDeploy.timestamp }}">
+                                        {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
+                                        ({{timestampFormatted requestDeployState.activeDeploy.timestamp}})
                                     </span>
                                 </td>
-                                <td class="visible-md">{{ deployUser }}</td>
-                                <td class="visible-large-desktop">{{ instances }}</td>
+                                <td class="visible-lg visible-xl">
+                                    {{usernameFromEmail requestDeployState.activeDeploy.user}}
+                                </td>
+                                <td class="visible-lg visible-xl">
+                                    {{#if request.instances}}
+                                        {{ request.instances }}
+                                    {{else}}
+                                        1
+                                    {{/if}}
+                                </td>
                             </tr>
                         {{/each}}
                     </tbody>
