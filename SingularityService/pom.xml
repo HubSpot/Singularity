@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.3.7-SNAPSHOT</version>
+    <version>0.3.8-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -29,13 +29,13 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
-      <version>0.3.7-SNAPSHOT</version>
+      <version>${singularity.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>MesosClient</artifactId>
-      <version>0.3.7-SNAPSHOT</version>
+      <version>${singularity.version}</version>
     </dependency>
 
     <dependency>

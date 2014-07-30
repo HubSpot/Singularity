@@ -14,23 +14,24 @@
   </parent>
 
   <properties>
-    <mesos.version>0.18.0</mesos.version>
+    <mesos.version>0.19.1</mesos.version>
     <sentry.version>5.0</sentry.version>
     <java.abi>1.7</java.abi>
     <dropwizard.version>0.7.0-rc2</dropwizard.version>
     <sl4fj.version>1.7.6</sl4fj.version>
     <jackson.version>2.3.1</jackson.version>
-    <curator.version>2.4.1</curator.version>
-    <ning.async.version>1.7.24</ning.async.version>
+    <curator.version>2.4.2</curator.version>
+    <ning.async.version>1.8.12</ning.async.version>
     <guice.version>3.0</guice.version>
     <jets3t.version>0.9.0</jets3t.version>
-    <guava.version>15.0</guava.version>
+    <guava.version>17.0</guava.version>
     <baragon.version>0.1.0-SNAPSHOT</baragon.version> <!-- TODO: use release version of Baragon when complete -->
+    <singularity.version>0.3.8-SNAPSHOT</singularity.version>
   </properties>
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.3.7-SNAPSHOT</version>
+  <version>0.3.8-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
