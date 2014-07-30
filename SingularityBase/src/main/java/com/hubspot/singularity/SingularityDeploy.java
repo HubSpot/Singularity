@@ -25,6 +25,7 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   private final Optional<String> customExecutorCmd;
   private final Optional<String> customExecutorId;
+  private final Optional<String> customExecutorSource;
   private final Optional<Resources> resources;
  
   private final Optional<String> command;
@@ -59,7 +60,7 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   @JsonCreator
   public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,  @JsonProperty("customExecutorId") Optional<String> customExecutorId,
-      @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
+      @JsonProperty("customExecutorSource") Optional<String> customExecutorSource, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
       @JsonProperty("serviceBasePath") Optional<String> serviceBasePath, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
@@ -71,6 +72,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     
     this.customExecutorCmd = customExecutorCmd;
     this.customExecutorId = customExecutorId;
+    this.customExecutorSource = customExecutorSource;
     
     this.metadata = metadata;
     this.version = version;
@@ -100,6 +102,7 @@ public class SingularityDeploy extends SingularityJsonObject {
         .setResources(resources)
         .setCustomExecutorCmd(customExecutorCmd)
         .setCustomExecutorId(customExecutorId)
+        .setCustomExecutorSource(customExecutorSource)
 
         .setHealthcheckUri(healthcheckUri)
         .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
@@ -145,6 +148,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   public Optional<String> getCustomExecutorId() {
     return customExecutorId;
   }
+
+  public Optional<String> getCustomExecutorSource() { return customExecutorSource; }
 
   public Optional<Resources> getResources() {
     return resources;
@@ -208,15 +213,16 @@ public class SingularityDeploy extends SingularityJsonObject {
         ", metadata=" + metadata +
         ", customExecutorCmd=" + customExecutorCmd +
         ", customExecutorId=" + customExecutorId +
+        ", customExecutorSource=" + customExecutorSource +
         ", resources=" + resources +
         ", command=" + command +
         ", env=" + env +
         ", uris=" + uris +
-        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
         ", executorData=" + executorData +
         ", healthcheckUri=" + healthcheckUri +
         ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
         ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
         ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
         ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
         ", serviceBasePath=" + serviceBasePath +
