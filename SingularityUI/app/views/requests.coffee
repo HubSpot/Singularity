@@ -213,7 +213,8 @@ class RequestsView extends View
         id = $row.data('request-id')
 
         @collection.get(id).promptUnpause =>
-            @refresh()
+            $row.remove()
+            @trigger 'refreshrequest'
 
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'

@@ -47,19 +47,19 @@ class RequestView extends View
 
     runRequest: (e) =>
         @model.promptRun =>
-            @refresh()
+            @trigger 'refreshrequest'
 
     pauseRequest: (e) =>
         @model.promptPause =>
-            @refresh()
+            @trigger 'refreshrequest'
 
     unpauseRequest: (e) =>
         @model.promptUnpause =>
-            @refresh()
+            @trigger 'refreshrequest'
     
     bounceRequest: (e) =>
         @model.promptBounce =>
-            @refresh()
+            @trigger 'refreshrequest'
 
     runTask: (e) =>
         $row = $(e.target).parents('tr')
