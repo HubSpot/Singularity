@@ -46,8 +46,8 @@ class DashboardView extends View
         $row = $target.parents 'tr'
 
         id = $row.data 'request-id'
-
-        @collections.starredRequests.toggle id
+        
+        @collection.toggleStar id
 
         $row.remove()
 
