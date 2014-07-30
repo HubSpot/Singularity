@@ -29,7 +29,7 @@
             <tbody>
     {{/if}}
 {{/unless}}
-            {{#eachWithFn tasks}}
+            {{#each tasks}}
                 <tr data-task-id="{{ id }}" data-task-host="{{ host }}">
                     <td>
                         <a title="{{ id }}" href="{{appRoot}}/task/{{ id }}">
@@ -62,7 +62,7 @@
                         </a>
                     </td>
                 </tr>
-            {{/eachWithFn}}
+            {{/each}}
 {{#unless rowsOnly}}
     {{#if haveTasks}}
             </tbody>

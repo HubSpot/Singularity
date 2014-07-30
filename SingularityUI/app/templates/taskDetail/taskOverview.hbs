@@ -29,7 +29,7 @@
 </header>
 
 {{#if data.taskUpdates}}
-    {{#eachWithFn data.taskUpdates}}
+    {{#each data.taskUpdates}}
         {{#if _last}}
             <div class="well text-muted">
                 {{ taskStateHuman }} as of
@@ -39,5 +39,5 @@
                 {{/if}}
             </div>
         {{/if}}
-    {{/eachWithFn}}
+    {{/each}}
 {{/if}}

@@ -14,12 +14,12 @@
             <tbody>
     {{/if}}
 {{/unless}}
-                {{#eachWithFn requests}}
+                {{#each requests}}
                     <tr data-request-id="{{ id }}">
                         <td>{{ id }}</td>
                         <td>{{ pendingType }}</td>
                     </tr>
-                {{/eachWithFn}}
+                {{/each}}
 {{#unless rowsOnly}}
     {{#if haveRequests}}
             </tbody>

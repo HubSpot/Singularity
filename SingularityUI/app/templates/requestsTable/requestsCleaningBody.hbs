@@ -20,10 +20,10 @@
             <tbody>
     {{/if}}
 {{/unless}}
-            {{#eachWithFn requests}}
+            {{#each requests}}
                 <tr data-request-id="{{ id }}">
                     <td>
-                        {{#hardBreak id}}{{/hardBreak}}
+                        {{ id }}
                     </td>
                     <td class="visible-md">
                         {{ user }}
@@ -35,7 +35,7 @@
                         {{ cleanupType }}
                     </td>
                 </tr>
-            {{/eachWithFn}}
+            {{/each}}
 {{#unless rowsOnly}}
     {{#if haveRequests}}
             </tbody>

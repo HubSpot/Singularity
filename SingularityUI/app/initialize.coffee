@@ -8,7 +8,7 @@ apiRootPromptTemplate = require './templates/vex/apiRootPrompt'
 # Set up third party configurations
 require 'thirdPartyConfigurations'
 # Set up the Handlebars helpers
-require 'lib/viewHelper'
+require 'handlebarsHelpers'
 
 # Initialize the app on DOMContentReady
 $ ->

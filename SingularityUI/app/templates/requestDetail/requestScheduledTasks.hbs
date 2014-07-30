@@ -13,16 +13,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{#eachWithFn scheduledTasks}}
+                    {{#each scheduledTasks}}
                         <tr data-task-id="{{ id }}">
-                            <td><span title="{{ id }}">{{#hardBreak name}}{{/hardBreak}}</span></td>
+                            <td><span title="{{ id }}">{{ name }}</span></td>
                             <td data-value="{{ nextRunAt }}"><span title="{{ nextRunAt }}">{{ nextRunAtHuman }}</span></td>
                             <td class="actions-column">
                                 <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
                                 <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
                             </td>
                         </tr>
-                    {{/eachWithFn}}
+                    {{/each}}
                 </tbody>
             </table>
         </div>

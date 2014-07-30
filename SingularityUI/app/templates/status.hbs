@@ -14,14 +14,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{#eachWithFn state.hostStates}}
+                    {{#each state.hostStates}}
                         <tr>
-                            <td>{{#hardBreak hostname}}{{/hardBreak}}</td>
+                            <td>{{ hostname }}</td>
                             <td>{{ driverStatusHuman }}</td>
                             <td data-value="{{ uptime }}" class="hidden-xs">{{ uptimeHuman }}</td>
                             <td data-value="{{ millisSinceLastOffer }}" class="hidden-xs">{{ millisSinceLastOfferHuman }}</td>
                         </tr>
-                    {{/eachWithFn}}
+                    {{/each}}
                 </tbody>
             </table>
         </div>

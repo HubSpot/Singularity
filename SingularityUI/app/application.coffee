@@ -1,4 +1,4 @@
-Router = require 'lib/router'
+Router = require 'router'
 
 User = require 'models/User'
 

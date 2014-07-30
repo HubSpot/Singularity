@@ -17,7 +17,7 @@
             <tbody>
     {{/if}}
 {{/unless}}
-            {{#eachWithFn tasks}}
+            {{#each tasks}}
                 <tr data-task-id="{{ id }}">
                     <td>
                         <span title="{{ id }}">
@@ -38,7 +38,7 @@
                         </a>
                     </td>
                 </tr>
-            {{/eachWithFn}}
+            {{/each}}
 {{#unless rowsOnly}}
     {{#if haveTasks}}
         </tbody>

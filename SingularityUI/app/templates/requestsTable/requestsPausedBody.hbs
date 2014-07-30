@@ -30,7 +30,7 @@
             <tbody>
     {{/if}}
 {{/unless}}
-                {{#eachWithFn requests}}
+                {{#each requests}}
                     <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
                         <td>
                             <a href="{{appRoot}}/request/{{ id }}" title={{ id }}>
@@ -65,7 +65,7 @@
                             </a>
                         </td>
                     </tr>
-                {{/eachWithFn}}
+                {{/each}}
 {{#unless rowsOnly}}
     {{#if haveRequests}}
             </tbody>
