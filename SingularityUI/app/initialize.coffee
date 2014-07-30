@@ -1,6 +1,5 @@
 # Set up the only app globals
 window.utils = require 'utils'
-window.constants = require 'constants'
 window.app = require 'application'
 
 apiRootPromptTemplate = require './templates/vex/apiRootPrompt'
