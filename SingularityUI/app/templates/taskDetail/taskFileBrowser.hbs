@@ -15,9 +15,15 @@
                 <th>
                     Name
                 </th>
-                <th class="hidden-xs">Size</th>
-                <th class="hidden-xs">Last modified</th>
-                <th class="hidden-xs"></th>
+                <th class="hidden-xs">
+                    Size
+                </th>
+                <th class="hidden-xs">
+                    Last modified
+                </th>
+                <th class="hidden-xs">
+
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -35,9 +41,11 @@
                         {{/if}}
                     </td>
                     <td class="hidden-xs" data-value="{{ size }}">
-                        {{#unless isDirectory}}{{ sizeHuman }}{{/unless}}
+                        {{#unless isDirectory}}
+                            {{humanizeFileSize size}}
+                        {{/unless}}
                     </td>
-                    <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{ mtimeHuman }}</span></td>
+                    <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
                     <td class="actions-column hidden-xs">
                         {{#unless isDirectory}}
                             <a href="{{ downloadLink }}" target="_blank">

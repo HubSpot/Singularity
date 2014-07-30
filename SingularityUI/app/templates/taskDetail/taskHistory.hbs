@@ -5,16 +5,22 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Status</th>
-                <th>Message</th>
-                <th>Time</th>
+                <th>
+                    Status
+                </th>
+                <th>
+                    Message
+                </th>
+                <th>
+                    Time
+                </th>
             </tr>
         </thead>
         <tbody>
             {{#each data.taskUpdates}}
                 <tr>
                     <td>
-                        <span title="{{ statusUpdate }}">{{ taskStateHuman }}</span>
+                        {{humanizeText taskState}}
                     </td>
                     <td>
                         {{#if statusMessage}}
@@ -24,7 +30,8 @@
                         {{/if}}
                     </td>
                     <td data-value="{{ timestamp }}">
-                        <span title="{{ timestamp }}">{{ timestampHuman }}</span>
+                        {{timestampFromNow timestamp}}
+                        ({{timestampFormatted timestamp}})
                     </td>
                 </tr>
             {{/each}}

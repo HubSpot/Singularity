@@ -14,6 +14,11 @@ class FileBrowserSubview extends View
         @listenTo @collection, 'error', @catchAjaxError
 
     render: ->
+        # Ensure we have enough space to scroll
+        offset = @$el.offset().top
+        windowHeight = $(window).height()
+        @$el.parents().parent().css 'min-height', "#{ offset + windowHeight }px"
+
         breadcrumbs = utils.pathToBreadcrumbs @collection.path
 
         @$el.html @template

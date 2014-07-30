@@ -8,26 +8,30 @@ bounceTemplate = require '../templates/vex/requestBounce'
 
 class Request extends Model
 
+    # When we show the JSON dialog, we will ignore these attributes
+    ignoreAttributes: ['id', 'scheduled', 'onDemand', 'daemon', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow',' canBeBounced']
+
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
-            
+
     parse: (data) ->
-        data.originalObject = _.clone data
-        if data.request?
-            # Gotta fecking figure out what kind of request this is
-            data.scheduled = typeof data.request.schedule is 'string'
-            data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
-            data.daemon = not data.scheduled and not data.onDemand
+        if data.deployId?
+            # For pending tasks
+            data.id = data.deployId
+            return data
+        else
+            data.id = data.request.id
 
-            data.paused = data.state is 'PAUSED'
-            data.deleted = data.state is 'DELETED'
+        # Gotta fecking figure out what kind of request this is
+        data.scheduled = typeof data.request.schedule is 'string'
+        data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
+        data.daemon = not data.scheduled and not data.onDemand
 
-            data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
-            data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and data.hasActiveDeploy
-            data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
+        data.paused = data.state is 'PAUSED'
+        data.deleted = data.state is 'DELETED'
 
-            data.displayState = constants.requestStates[data.state]
-
-            data.activeDeploy?.timestampHuman = utils.humanTime data.activeDeploy.timestamp
+        data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
+        data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and data.hasActiveDeploy
+        data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
 
         data
 
@@ -52,7 +56,7 @@ class Request extends Model
             type: 'POST'
             contentType: 'application/json'
 
-        if _.isString confirmedOrPromptData
+        if typeof confirmedOrPromptData is 'string'
             options.data = confirmedOrPromptData
             options.processData = false
             options.contentType = 'text/plain'

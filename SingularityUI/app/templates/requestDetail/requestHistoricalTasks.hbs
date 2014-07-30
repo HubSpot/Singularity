@@ -5,33 +5,53 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th class="">Name</th>
-                <th class="visible-md">Status</th>
-                <th class="visible-md">Deploy</th>
-                <th class="visible-md">Started</th>
-                <th class="hidden-xs">Updated</th>
-                <th class="hidden-xs"></th>
+                <th>
+                    Name
+                </th>
+                <th class="hidden-sm hidden-xs">
+                    Last state
+                </th>
+                <th class="hidden-sm hidden-xs">
+                    Deploy
+                </th>
+                <th class="hidden-sm hidden-xs">
+                    Started
+                </th>
+                <th class="hidden-xs">
+                    Updated
+                </th>
+                <th class="hidden-xs">
+                    {{! Actions }}
+                </th>
             </tr>
         </thead>
         <tbody>
             {{#each data}}
                 <tr>
                     <td class="">
-                        <span title="{{ id }}">
-                            <a href="{{appRoot}}/task/{{ id }}">
-                                {{ name }}
+                        <span title="{{ taskId.id }}">
+                            <a href="{{appRoot}}/task/{{ taskId.id }}">
+                                {{ taskId.id }}
                             </a>
                         </span>
                     </td>
-                    <td class="visible-md">{{ lastTaskStateHuman }}</td>
-                    <td class="visible-md">{{ deployId }}</td>
-                    <td class="visible-md">{{ startedAtHuman }}</td>
-                    <td class="hidden-xs">{{ updatedAtHuman }}</td>
+                    <td class="hidden-sm hidden-xs">
+                        {{humanizeText lastTaskState}}
+                    </td>
+                    <td class="hidden-sm hidden-xs">
+                        {{ taskId.deployId }}
+                    </td>
+                    <td class="hidden-sm hidden-xs">
+                        {{timestampFormatted startedAt}}
+                    </td>
+                    <td class="hidden-xs">
+                        {{timestampFormatted updatedAt}}
+                    </td>
                     <td class="hidden-xs actions-column">
-                        <a href="{{appRoot}}/task/{{ id }}/files/">
+                        <a href="{{appRoot}}/task/{{ taskId.id }}/files/">
                             <span class="glyphicon glyphicon-file" title="Files"></span>
                         </a>
-                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                        <a data-task-id="{{ taskId.id }}" data-action="viewJSON">
                             <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                         </a>
                     </td>

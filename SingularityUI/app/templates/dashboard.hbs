@@ -94,7 +94,10 @@
                                     <span title="{{ id }}"><a href="{{appRoot}}/request/{{ id }}">{{ id }}</a></span>
                                 </td>
                                 <td class="hidden-xs" data-value="{{ timestamp }}">
-                                    <span title="{{ timestamp }}">{{ timestampHuman }}</span>
+                                    <span title="{{ timestamp }}">
+                                        {{timestampFromNow timestamp}}
+                                        ({{timestampFormatted timestamp}})
+                                    </span>
                                 </td>
                                 <td class="visible-md">{{ deployUser }}</td>
                                 <td class="visible-large-desktop">{{ instances }}</td>

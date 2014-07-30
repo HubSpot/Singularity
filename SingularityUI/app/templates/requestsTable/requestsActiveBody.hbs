@@ -6,24 +6,24 @@
                     <th>
                         {{! Star column }}
                     </th>
-                    <th data-sort-attribute="name">
+                    <th data-sort-attribute="request.id">
                         Name
                     </th>
-                    <th data-sort-attribute="instances" class="visible-lg visible-xl">
+                    <th data-sort-attribute="request.instances" class="visible-lg visible-xl">
                         Instances
                     </th>
-                    <th data-sort-attribute="deployId" class="visible-lg visible-xl">
+                    <th data-sort-attribute="requestDeployState.activeDeploy.deployId" class="visible-lg visible-xl">
                         Deploy ID
                     </th>
-                    <th data-sort-attribute="deployUser" class="visible-lg visible-xl">
+                    <th data-sort-attribute="requestDeployState.activeDeploy.user" class="visible-lg visible-xl">
                         Deploy user
                     </th>
-                    <th data-sort-attribute="timestamp" class="hidden-xs">
+                    <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
                         Deploy time
                     </th>
 
                     {{#ifInSubFilter 'scheduled' requestsSubFilter}}
-                        <th data-sort-attribute="schedule" class="visible-lg visible-xl">
+                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
                             Schedule
                         </th>
                     {{/ifInSubFilter}}
@@ -37,46 +37,50 @@
     {{/if}}
 {{/unless}}
                 {{#each requests}}
-                    <tr data-request-id="{{ id }}" data-request-deploy-user="{{ deployUser }}">
+                    <tr data-request-id="{{ request.id }}" data-request-deploy-user="{{ requestDeployState.activeDeploy.user }}">
                         <td>
                             <a class="star" data-action="starToggle" data-starred="{{ starred }}">
                                 <span class="glyphicon glyphicon-star"></span>
                             </a>
                         </td>
                         <td class="keep-in-check">
-                            <a href="{{appRoot}}/request/{{ id }}" title="{{ id }}">
-                                {{ name }}
+                            <a href="{{appRoot}}/request/{{ request.id }}" title="{{ request.id }}">
+                                {{ request.id }}
                             </a>
                         </td>
                         <td class="visible-lg visible-xl centered">
-                            {{ instances }}
+                            {{#if request.instances}}
+                                {{ request.instances }}
+                            {{else}}
+                                1
+                            {{/if}}
                         </td>
                         <td class="visible-lg visible-xl">
-                            {{ deployId }}
+                            {{ requestDeployState.activeDeploy.deployId }}
                         </td>
                         <td class="visible-lg visible-xl">
-                            {{ deployUser }}
+                            {{usernameFromEmail requestDeployState.activeDeploy.user}}
                         </td>
-                        <td class="hidden-xs" data-value="{{ timestamp }}">
-                            <span title="{{ timestampHuman }}">{{ timestampHumanShort }}</span>
+                        <td class="hidden-xs">
+                            {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
                         
                         {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
-                                {{ schedule }}
+                                {{ request.schedule }}
                             </td>
                         {{/ifInSubFilter}}
 
                         <td class="actions-column hidden-xs">
                             {{#if canBeRunNow}}
-                                <a data-request-id="{{ id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now">
+                                <a data-request-id="{{ request.id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now">
                                     <span class="glyphicon glyphicon-repeat" title="Run now"></span>
                                 </a>
                             {{/if}}
-                            <a data-request-id="{{ id }}" data-action="viewJSON">
+                            <a data-request-id="{{ request.id }}" data-action="viewJSON">
                                 <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                             </a>
-                            <a data-request-id="{{ id }}" data-action="remove">
+                            <a data-request-id="{{ request.id }}" data-action="remove">
                                 <span class="glyphicon glyphicon-trash" title="Remove"></span>
                             </a>
                         </td>

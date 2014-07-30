@@ -15,8 +15,12 @@
             {{#each data}}
                 <tr>
                     <td>{{ id }}</td>
-                    <td>{{ deadAtHuman }}</td>
-                    <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                    <td data-value="{{ deadAt }}">
+                        {{timestampFormatted deadAt}}
+                    </td>
+                    <td data-value="{{ uptime }}">
+                        {{timestampDuration uptime}}
+                    </td>
                     <td class="actions-column">
                         <a data-rack-id="{{ id }}" data-action="remove">
                              <span class="glyphicon glyphicon-trash" title="Remove"></span>

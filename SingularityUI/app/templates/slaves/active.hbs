@@ -20,7 +20,10 @@
                     </td>
                     <td>{{ rackId }}</td>
                     <td>{{ host }}</td>
-                    <td class="hidden-xs" data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                    <td class="hidden-xs" data-value="{{ uptime }}">
+                        {{timestampDuration uptime}}
+                        ({{timestampFormatted startedAt}})
+                    </td>
                     <td class="actions-column">
                         <a data-slave-id="{{ id }}" data-action="decommission">
                             <span class="glyphicon glyphicon-remove" title="Decommission"></span>

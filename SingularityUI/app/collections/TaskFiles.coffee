@@ -12,18 +12,17 @@ class TaskFiles extends Collection
             data: {@path}
 
     parse: (taskFiles) ->
-        _.map taskFiles, (taskLogFile) =>
+        for taskLogFile in taskFiles
             taskLogFile.requestPath = taskLogFile.path.replace new RegExp("^.*\/(#{ @taskId }.*?)$"), '$1'
             downloadParams = $.param {path: taskLogFile.requestPath}
 
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
-            taskLogFile.mtimeHuman = utils.humanTimeAgo(taskLogFile.mtime * 1000)
-            taskLogFile.sizeHuman = utils.humanizeFileSize taskLogFile.size
+            taskLogFile.mtime = taskLogFile.mtime * 1000
             taskLogFile.downloadLink = "#{ config.apiRoot }/sandbox/#{ @taskId }/download?#{ downloadParams }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.taskId = @taskId
 
-            taskLogFile
+        taskFiles
 
     comparator: (a, b) ->
         if a.get('isDirectory') and not b.get('isDirectory')

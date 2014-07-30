@@ -1,21 +1,5 @@
 class Utils
-
-    @humanizeFileSize: (fileSize) ->
-        kilo = 1024
-        mega = 1024 * 1024
-        giga = 1024 * 1024 * 1024
-
-        shorten = (which) -> Math.round fileSize / which
-
-        if fileSize > giga
-            return "#{ shorten giga }GB"
-        else if fileSize > mega
-            return "#{ shorten mega }MB"
-        else if fileSize > kilo
-            return "#{ shorten kilo }KB"
-        else
-            return "#{ fileSize }B"
-
+    
     @viewJSON: (model) ->
         originalObject = model.get('originalObject')
         return if not originalObject?

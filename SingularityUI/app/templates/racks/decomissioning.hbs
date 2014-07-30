@@ -19,8 +19,12 @@
                     <td>{{ id }}</td>
                     <td>{{ state }}</td>
                     <td>{{ decomissioningBy }}</td>
-                    <td>{{ decomissioningAtHuman }}</td>
-                    <td data-value="{{ uptime }}">{{ uptimeHuman }}</td>
+                    <td data-value="{{ decomissioningAt }}">
+                        {{timestampFormatted decomissioningAt}}
+                    </td>
+                    <td data-value="{{ uptime }}">
+                        {{timestampDuration uptime}}
+                    </td>
                     <td class="actions-column">
                         <a data-rack-id="{{ id }}" data-action="remove" data-state="{{ state }}">
                              <span class="glyphicon glyphicon-trash" title="Remove"></span>

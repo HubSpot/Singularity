@@ -3,16 +3,16 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th data-sort-attribute="name">
+                    <th data-sort-attribute="taskId.id">
                         Name
                     </th>
-                    <th data-sort-attribute="startedAt" class="hidden-xs">
+                    <th data-sort-attribute="taskId.startedAt" class="hidden-xs">
                         Started
                     </th>
                     <th data-sort-attribute="host" class="hidden-xs">
                         Host
                     </th>
-                    <th data-sort-attribute="rack" class="hidden-xs">
+                    <th data-sort-attribute="taskId.rackId" class="hidden-xs">
                         Rack
                     </th>
                     <th data-sort-attribute="cpus" class="visible-lg">
@@ -30,34 +30,32 @@
     {{/if}}
 {{/unless}}
             {{#each tasks}}
-                <tr data-task-id="{{ id }}" data-task-host="{{ host }}">
-                    <td>
-                        <a title="{{ id }}" href="{{appRoot}}/task/{{ id }}">
-                            {{ name }}
+                <tr data-task-id="{{ taskId.id }}" data-task-host="{{ host }}">
+                    <td class='keep-in-check'>
+                        <a title="{{ taskId.id }}" href="{{appRoot}}/task/{{ taskId.id }}">
+                            {{ taskId.id }}
                         </a>
                     </td>
-                    <td class="hidden-xs" data-value="{{ startedAt }}">
-                        <span title="{{ startedAt }}">
-                            {{ startedAtHuman }}
-                        </span>
+                    <td class="hidden-xs">
+                        {{timestampFromNow taskId.startedAt}}
                     </td>
                     <td class="hidden-xs">
                         {{ host }}
                     </td>
                     <td class="visible-lg">
-                        {{ rack }}
+                        {{ taskId.rackId }}
                     </td>
                     <td class="visible-lg">
-                        {{ resources.cpus }}
+                        {{ cpus }}
                     </td>
-                    <td class="hidden-xs" data-value="{{ resources.memoryMb }}">
-                        {{ memoryHuman }}
+                    <td class="hidden-xs">
+                        {{ memoryMb }} MB
                     </td>
                     <td class="actions-column hidden-xs">
-                        <a data-task-id="{{ id }}" data-action="remove">
+                        <a data-task-id="{{ taskId.id }}" data-action="remove">
                             <span class="glyphicon glyphicon-remove" title="Kill task"></span>
                         </a>
-                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                        <a data-task-id="{{ taskId.id }}" data-action="viewJSON">
                             <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                         </a>
                     </td>

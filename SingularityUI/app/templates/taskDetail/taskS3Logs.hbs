@@ -16,18 +16,18 @@
                 {{#each data}}
                     <tr>
                         <td>
-                            <a class="long-link" href="{{ url }}" target="_blank" title="{{ key }}">
+                            <a class="long-link" href="{{ getUrl }}" target="_blank" title="{{ key }}">
                                 {{ shortKey }}
                             </a>
                         </td>
                         <td>
-                            {{ sizeHuman }}
+                            {{humanFileSize size}}
                         </td>
                         <td data-value="{{ lastModified }}">
-                            {{ lastModifiedHuman }}
+                            {{timestampFormatted lastModified}}
                         </td>
                         <td class="actions-column">
-                            <a href="{{ url }}" target="_blank">
+                            <a href="{{ getUrl }}" target="_blank">
                                 <span class="glyphicon glyphicon-download-alt" title="Download"></span>
                             </a>
                         </td>

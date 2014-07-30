@@ -3,7 +3,7 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th data-sort-attribute="id">
+                    <th data-sort-attribute="requestId">
                         ID
                     </th>
                     <th data-sort-attribute="user" class="visible-md">
@@ -21,18 +21,18 @@
     {{/if}}
 {{/unless}}
             {{#each requests}}
-                <tr data-request-id="{{ id }}">
+                <tr data-request-id="{{ requestId }}">
                     <td>
-                        {{ id }}
+                        {{ requestId }}
                     </td>
                     <td class="visible-md">
                         {{ user }}
                     </td>
                     <td class="hidden-xs" data-value="{{ timestamp }}">
-                        {{ timestampHuman }}
+                        {{timestampFromNow timestamp}}
                     </td>
                     <td class="visible-md">
-                        {{ cleanupType }}
+                        {{humanizeText cleanupType}}
                     </td>
                 </tr>
             {{/each}}

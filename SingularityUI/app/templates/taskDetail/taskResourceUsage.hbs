@@ -52,7 +52,7 @@
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (anon)</h4>
-                    <p>{{ data.memAnonHuman }}</p>
+                    <p>{{humanizeFileSize data.memAnonBytes}}</p>
                 </div>
             </li>
         {{/if}}
@@ -60,7 +60,7 @@
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (file)</h4>
-                    <p>{{ data.memFileHuman }}</p>
+                    <p>{{humanizeFileSize data.memFileBytes}}</p>
                 </div>
             </li>
         {{/if}}
@@ -68,7 +68,7 @@
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (mapped file)</h4>
-                    <p>{{ data.memMappedFileHuman }}</p>
+                    <p>{{humanizeFileSize data.memMappedFileBytes}}</p>
                 </div>
             </li>
         {{/if}}
@@ -76,7 +76,7 @@
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (rss)</h4>
-                    <p>{{ data.memRssHuman }}</p>
+                    <p>{{humanizeFileSize data.memRssBytes}}</p>
                 </div>
             </li>
         {{/if}}
@@ -84,7 +84,7 @@
             <li class='col-md-4'>
                 <div>
                     <h4>Memory (limit)</h4>
-                    <p>{{ data.memLimitHuman }}</p>
+                    <p>{{humanizeFileSize data.memLimitBytes}}</p>
                 </div>
             </li>
         {{/if}}

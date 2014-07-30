@@ -5,7 +5,7 @@
         <div class="col-md-8">
             <h4>
                 <span class="request-state" data-state="{{ data.state }}">
-                    {{ data.displayState }}
+                    {{humanizeText data.state}}
                 </span>
 
                 <span class="request-type">
@@ -64,11 +64,12 @@
             {{#with data.activeDeploy}}
                 Active deploy <code>{{ id }}</code>
                 {{#if metadata.deployedBy}}
-                    by {{ metadata.deployedBy }}
+                    by <strong>{{usernameFromEmail metadata.deployedBy}}</strong>
                 {{/if}}
-                {{#if timestampHuman}}
+                {{#if timestamp}}
                     &mdash;
-                    {{ timestampHuman }}
+                    {{timestampFromNow timestamp}}
+                    ({{timestampFormatted timestamp}})
                 {{/if}}
             {{/with}}
         {{else}}

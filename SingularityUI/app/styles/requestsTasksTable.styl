@@ -14,7 +14,11 @@
         min-width 35px
 
         &.keep-in-check
-            max-width 350px
+            max-width 300px
+            white-space nowrap
+            max-height 1.5em
+            overflow hidden
+            text-overflow ellipsis
 
     th[data-sort-attribute]
         cursor pointer
@@ -25,14 +29,17 @@
         overflow visible
         position relative
         z-index 500
-        background #f0f0f0
+        background #f3f3f3
 
         span.glyphicon
             font-size 10px
-            line-height 19px
+            line-height 10px
             height 19px
             width 10px
-            margin-left 2px
+            position absolute
+            top -4px
+            left 50%
+            margin-left -6px
 
     td
         overflow hidden

@@ -12,7 +12,7 @@
                 </h5>
             {{/with}}
             <h2>
-                {{ data.task.id }}
+                {{ data.task.taskId.id }}
             </h2>
         </div>
 
@@ -29,15 +29,13 @@
 </header>
 
 {{#if data.taskUpdates}}
-    {{#each data.taskUpdates}}
-        {{#if _last}}
-            <div class="well text-muted">
-                {{ taskStateHuman }} as of
-                {{ timestampHuman }}
-                {{#if statusMessage}}
-                    &mdash; {{ statusMessage }}
-                {{/if}}
-            </div>
-        {{/if}}
-    {{/each}}
+    {{#withLast data.taskUpdates}}
+        <div class="well text-muted">
+            {{humanizeText taskState}} as of
+            {{timestampFromNow timestamp}} ({{timestampFormatted timestamp}})
+            {{#if statusMessage}}
+                &mdash; {{ statusMessage }}
+            {{/if}}
+        </div>
+    {{/withLast}}
 {{/if}}

@@ -18,17 +18,17 @@
     {{/if}}
 {{/unless}}
             {{#each tasks}}
-                <tr data-task-id="{{ id }}">
+                <tr data-task-id="{{ taskId.id }}">
                     <td>
-                        <a title="{{ id }}" href="{{appRoot}}/task/{{ id }}">
-                            {{ name }}
+                        <a title="{{ taskId.id }}" href="{{appRoot}}/task/{{ taskId.id }}">
+                            {{ taskId.id }}
                         </a>
                     </td>
                     <td>
-                        {{ cleanupTypeHuman }}
+                        {{humanizeText cleanupType}}
                     </td>
                     <td class="actions-column hidden-xs">
-                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                        <a data-task-id="{{ taskId.id }}" data-action="viewJSON">
                             <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                         </a>
                     </td>

@@ -3,10 +3,10 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th data-sort-attribute="name">
+                    <th data-sort-attribute="id">
                         Name
                     </th>
-                    <th data-sort-attribute="nextRunAt" class="hidden-xs">
+                    <th data-sort-attribute="pendingTask.pendingTaskId.nextRunAt" class="hidden-xs">
                         Next run
                     </th>
                     <th class="hidden-xs">
@@ -21,13 +21,12 @@
                 <tr data-task-id="{{ id }}">
                     <td>
                         <span title="{{ id }}">
-                            {{ name }}
+                            {{ id }}
                         </span>
                     </td>
-                    <td class="hidden-xs" data-value="{{ nextRunAt }}">
-                        <span title="{{ nextRunAt }}">
-                            {{ nextRunAtHuman }}
-                        </span>
+                    <td class="hidden-xs">
+                        {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
+                        ({{timestampFormatted pendingTask.pendingTaskId.nextRunAt}})
                     </td>
                     <td class="actions-column hidden-xs">
                         <a data-task-id="{{ id }}" data-action="run-now">

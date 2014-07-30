@@ -46,17 +46,26 @@ class TasksView extends View
 
         # Only show tasks that match the search query
         if @searchFilter
-            tasks = _.filter tasks, (request) =>
-                searchField = "#{ request.name }#{ request.host }"
+            tasks = _.filter tasks, (task) =>
+                searchField = "#{ task.taskId.id }#{ task.host }"
                 searchField.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
-            tasks = _.sortBy tasks, @sortAttribute
+            tasks = _.sortBy tasks, (task) =>
+                # Traverse through the properties to find what we're after
+                attributes = @sortAttribute.split '.'
+                value = task
+
+                for attribute in attributes
+                    value = value[attribute]
+                    return null if not value?
+
+                return value
             if not @sortAscending
                 tasks = tasks.reverse()
         else
-            tasks.reverse()
+            tasks.reverse() unless @state is 'scheduled'
             
         @currentTasks = tasks
 

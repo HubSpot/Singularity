@@ -3,7 +3,7 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th data-sort-attribute="id">
+                    <th data-sort-attribute="requestId">
                         ID
                     </th>
                     <th data-sort-attribute="pendingType">
@@ -15,9 +15,9 @@
     {{/if}}
 {{/unless}}
                 {{#each requests}}
-                    <tr data-request-id="{{ id }}">
-                        <td>{{ id }}</td>
-                        <td>{{ pendingType }}</td>
+                    <tr data-request-id="{{ requestId }}">
+                        <td>{{ requestId }}</td>
+                        <td>{{humanizeText pendingType}}</td>
                     </tr>
                 {{/each}}
 {{#unless rowsOnly}}

@@ -17,9 +17,17 @@
                     {{#each state.hostStates}}
                         <tr>
                             <td>{{ hostname }}</td>
-                            <td>{{ driverStatusHuman }}</td>
-                            <td data-value="{{ uptime }}" class="hidden-xs">{{ uptimeHuman }}</td>
-                            <td data-value="{{ millisSinceLastOffer }}" class="hidden-xs">{{ millisSinceLastOfferHuman }}</td>
+                            <td>{{humanizeText driverStatus }}</td>
+                            <td data-value="{{ uptime }}" class="hidden-xs">
+                                {{timestampDuration uptime}}
+                            </td>
+                            <td data-value="{{ millisSinceLastOffer }}" class="hidden-xs">
+                                {{#if millisSinceLastOffer}}
+                                    {{timestampDuration millisSinceLastOffer}}
+                                {{else}}
+                                    &mdash;
+                                {{/if}}
+                            </td>
                         </tr>
                     {{/each}}
                 </tbody>

@@ -14,9 +14,12 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-12">
+        <input type="search" class="big-search-box" placeholder="Filter tasks" value="{{ searchFilter }}" required>
+    </div>
+</div>
 
-
-<input type="search" class="big-search-box" placeholder="Filter tasks" value="{{ searchFilter }}" required />
 <div class="row">
     <div class="col-md-12 table-staged">
         {{> tasksBody}}

@@ -21,16 +21,4 @@ class RequestHistory extends PaginableCollection
                 orderDirection: 'DESC'
         super params
 
-    parse: (requestHistoryObjects) ->
-        for requestUpdate in requestHistoryObjects
-            requestUpdate.originalObject = _.clone requestUpdate
-            if requestUpdate.request?
-                requestUpdate.request.daemon = if _.isNull(requestUpdate.request.daemon) then true else requestUpdate.request.daemon
-
-            requestUpdate.userHuman = requestUpdate.user
-            requestUpdate.createdAtHuman = utils.humanTimeAgo requestUpdate.createdAt
-            requestUpdate.stateHuman = constants.requestHistoryStates[requestUpdate.state]
-
-        requestHistoryObjects
-
 module.exports = RequestHistory

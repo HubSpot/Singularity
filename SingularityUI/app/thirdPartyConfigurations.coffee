@@ -13,18 +13,14 @@ jQuery.ajax = (opts) ->
 
     _oldAjax.call jQuery, opts
 
-# Configure moment().calender() to be used as an alternative to moment().calendar()
-relative = -> "[#{ @from() }]"
-relativePlus = -> "[#{ @from() }] ([#{ @format('l h:mma') }])"
-
+# Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
 moment.lang 'en',
-    calendar:
-        nextWeek: relativePlus
-        nextDay: relativePlus
-        sameDay: relative
-        lastDay: relativePlus
-        lastWeek: relativePlus
-        sameElse: relativePlus
+    longDateFormat:
+        LT : "HH:mm"
+        L : "DD/MM/YYYY"
+        LL : "D MMMM YYYY"
+        LLL : "D MMMM YYYY LT"
+        LLLL : "dddd, D MMMM YYYY LT"
 
 # Messenger options
 Messenger.options =

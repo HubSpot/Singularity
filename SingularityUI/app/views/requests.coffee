@@ -55,7 +55,7 @@ class RequestsView extends View
         # Only show requests that match the search query
         if @searchFilter
             requests = _.filter requests, (request) =>
-                searchTarget = "#{ request.name }#{ request.deployUser}"
+                searchTarget = "#{ request.request.id }#{ request.requestDeployState?.activeDeploy?.user }"
                 searchTarget.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Only show requests that match the clicky filters
@@ -73,14 +73,25 @@ class RequestsView extends View
 
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
-            requests = _.sortBy requests, @sortAttribute
+            requests = _.sortBy requests, (request) =>
+                # Traverse through the properties to find what we're after
+                attributes = @sortAttribute.split '.'
+                value = request
+
+                for attribute in attributes
+                    value = value[attribute]
+                    return null if not value?
+
+                return value
+
             if not @sortAscending
                 requests = requests.reverse()
         else
             requests.reverse()
 
-        for request in requests
-            request.starred = @collection.isStarred request.id
+        if @state in ['all', 'active']
+            for request in requests
+                request.starred = @collection.isStarred request.id
             
         @currentRequests = requests
 
