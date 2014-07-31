@@ -28,7 +28,7 @@ cd ..
 maven clean package
 ```
 
-And open up Singularity in your browser, e.g. [http://localhost:7099/singularity](http://localhost:7099/singularity) with default config.
+And then run SingularityService and open up Singularity in your browser, e.g. [http://localhost:7099/singularity](http://localhost:7099/singularity) with default config.
 
 ### Using a remote API
 
