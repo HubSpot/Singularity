@@ -25,7 +25,7 @@ If you have SingularityService running locally, it will serve all the static fil
 ```shell
 brunch build
 cd ..
-maven up
+maven clean package
 ```
 
 And open up Singularity in your browser, e.g. [http://localhost:7099/singularity](http://localhost:7099/singularity) with default config.
