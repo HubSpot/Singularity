@@ -1,40 +1,44 @@
 # SingularityUI
 
-SingularityUI uses [Brunch](http://brunch.io/) to build its files and [Bower](http://bower.io/) to manage dependencies. First, install them both:
+## Quick-start
+
+SingularityUI uses [Brunch](http://brunch.io/) to build its files. First, you'll need to install it:
 
 ```shell
-sudo npm install -g brunch bower
+npm install -g brunch
 ```
 
-Then install the Brunch dependencies:
+Now that you have Bruch you'll need to install its dependencies:
 
 ```shell
 npm install
 ```
 
-Now that Brunch is all set up, install SingularityUI's dependencies:
+And you're set! You can now build SingularityUI by running `brunch build`. Doing so will place the compiled static files in [`../SingularityService/src/main/resources/static/`](../SingularityService/src/main/resources/static/).
+
+## Running SingularityUI
+
+### Using a local API
+
+If you have SingularityService running locally, it will serve all the static files itself. Build brunch and then build Singularity:
 
 ```shell
-bower install
-```
-
-## Using a local API
-
-If you have SingularityService running locally, it will serve all the static files itself. Tell Brunch to watch for changes and auto-compile:
-
-```shell
-brunch watch
+brunch build
+cd ..
+maven up
 ```
 
 And open up Singularity in your browser, e.g. [http://localhost:7099/singularity](http://localhost:7099/singularity) with default config.
 
-## Using a remote API
+### Using a remote API
 
 If you're using a remote API for your data, run SingularityUI through Brunch on your preferred port. Example with port `4000`:
 
 ```shell
 brunch watch --server -p 4000
 ```
+
+Brunch will serve all the static files as well as watch for changes and compile what needs complation. This is the optimal way of testing your SingularityUI modifications.
 
 Open up SingularityUI in your browser by going to [http://localhost:4000/singularity](http://localhost:4000/singularity). It will prompt you for an API root. Give it the base URL of the API you want to use, e.g. `http://example/singularity/api`.
 
@@ -48,7 +52,7 @@ localStorage.set("apiRootOverride", "http://example/singularity/api")
 
 Your browser will not allow cross-domain requests. You have 2 options to get around this:
 
-### Run Chrome with security disabled
+#### Run Chrome with security disabled
 
 ```shell
 open -a Google\ Chrome\ Canary --args --disable-web-security
@@ -56,7 +60,7 @@ open -a Google\ Chrome\ Canary --args --disable-web-security
 
 And you're set! SingularityUI is now available at [http://localhost:4000/singularity](http://localhost:4000/singularity) and it will use whatever API you specified.
 
-### Use a proxy
+#### Use a proxy
 
 Or, instead of running Chrome with web security disabled, you can run a local proxy that forwards requests and makes the browser think that the API and static assets are being served from the same domain.
 
