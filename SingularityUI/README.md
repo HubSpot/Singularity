@@ -14,7 +14,7 @@ Now that you have Bruch you'll need to install its dependencies:
 npm install
 ```
 
-And you're set! You can now build SingularityUI by running `brunch build`. Doing so will place the compiled static files in [`../SingularityService/src/main/resources/static/`](../SingularityService/src/main/resources/static/).
+And you're set! You can now build SingularityUI by running `brunch build`. Doing so will place the compiled static files in [`../SingularityService/src/main/resources/`](../SingularityService/src/main/resources/).
 
 ## Running SingularityUI
 
