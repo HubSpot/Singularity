@@ -230,7 +230,7 @@ public class SingularityCleaner {
     }
     
     int obsolete = 0;
-    int ignored = 0;
+    int waiting = 0;
     int rekilled = 0;
     
     for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecords) {
@@ -258,11 +258,11 @@ public class SingularityCleaner {
       } else {
         LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
       
-        ignored++;
+        waiting++;
       }
     }
     
-    LOG.info("{} obsolete, {} ignored, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, ignored, rekilled, killedTaskIdRecords.size());
+    LOG.info("{} obsolete, {} waiting, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, waiting, rekilled, killedTaskIdRecords.size());
   }
   
   private void drainTaskCleanupQueue() {
