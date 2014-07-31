@@ -187,6 +187,7 @@ public class SingularityScheduler {
     LOG.info("Pending queue had {} requests", pendingRequests.size());
     
     int totalNewScheduledTasks = 0;
+    int heldForScheduledActiveTask = 0;
     int obsoleteRequests = 0;
     
     for (SingularityPendingRequest pendingRequest : pendingRequests) {
@@ -198,7 +199,8 @@ public class SingularityScheduler {
         int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), maybeRequest.get().getState(), getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId()), pendingRequest);
         
         if (numScheduledTasks == 0 && maybeRequest.get().getRequest().isScheduled()) {
-          LOG.debug("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
+          LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
+          heldForScheduledActiveTask++;
           continue;
         }
         
@@ -214,7 +216,7 @@ public class SingularityScheduler {
       requestManager.deletePendingRequest(pendingRequest);
     }
     
-    LOG.info("Scheduled {} new tasks ({} obsolete requests) in {}", totalNewScheduledTasks, obsoleteRequests, JavaUtils.duration(start));
+    LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
   }
   
   private boolean shouldScheduleTasks(SingularityPendingRequest pendingRequest, Optional<SingularityRequestWithState> maybeRequest) {
