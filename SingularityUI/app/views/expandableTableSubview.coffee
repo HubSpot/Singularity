@@ -20,7 +20,7 @@ class ExpandableTableSubview extends View
             'click [data-action="expand"]': 'expand'
             'click [data-action="shrink"]': 'shrink'
 
-    initialize: ({ @collection, @template }) ->
+    initialize: ({@collection, @template}) ->
         @listenTo @collection, 'sync', @render
 
     render: ->

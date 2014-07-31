@@ -35,7 +35,10 @@ class RequestView extends View
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
-        collection = @collections[$target.data 'collection']
+        console.log $target.data 'collection'
+        console.log @subviews[$target.data 'collection']
+        # Need to reach into subviews to get the necessary data
+        collection = @subviews[$target.data 'collection'].collection
         utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>

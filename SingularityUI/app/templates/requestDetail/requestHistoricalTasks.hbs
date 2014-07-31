@@ -27,8 +27,8 @@
         </thead>
         <tbody>
             {{#each data}}
-                <tr>
-                    <td class="">
+                <tr data-id="{{ taskId.id }}" data-collection="taskHistory">
+                    <td>
                         <span title="{{ taskId.id }}">
                             <a href="{{appRoot}}/task/{{ taskId.id }}">
                                 {{ taskId.id }}
@@ -42,16 +42,16 @@
                         {{ taskId.deployId }}
                     </td>
                     <td class="hidden-sm hidden-xs">
-                        {{timestampFormatted startedAt}}
+                        {{timestampFromNow taskId.startedAt}}
                     </td>
                     <td class="hidden-xs">
-                        {{timestampFormatted updatedAt}}
+                        {{timestampFromNow updatedAt}}
                     </td>
                     <td class="hidden-xs actions-column">
                         <a href="{{appRoot}}/task/{{ taskId.id }}/files/">
                             <span class="glyphicon glyphicon-file" title="Files"></span>
                         </a>
-                        <a data-task-id="{{ taskId.id }}" data-action="viewJSON">
+                        <a data-action="viewJSON">
                             <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                         </a>
                     </td>

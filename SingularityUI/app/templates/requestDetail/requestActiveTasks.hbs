@@ -1,6 +1,6 @@
 {{! Part of requestBase }}
 <div class="page-header">
-    <h2>Active tasks</h2>
+    <h2>Running instances</h2>
 </div>
 {{#if data}}
     <table class="table table-striped">
@@ -16,7 +16,7 @@
         </thead>
         <tbody>
             {{#each data}}
-                <tr data-task-id="{{ taskId.id }}">
+                <tr data-id="{{ taskId.id }}" data-collection="activeTasks">
                     <td>
                         <span title="{{ taskId.id }}">
                             <a href="{{appRoot}}/task/{{ taskId.id }}">
@@ -31,16 +31,16 @@
                         {{ taskId.deployId }}
                     </td>
                     <td class="hidden-sm hidden-xs" data-value="{{ taskId.startedAt }}">
-                        {{timestampFormatted taskId.startedAt}}
+                        {{timestampFromNow taskId.startedAt}}
                     </td>
                     <td class="hidden-xs" data-value="{{ taskId.updatedAt }}">
-                        {{timestampFormatted taskId.updatedAt}}
+                        {{timestampFromNow updatedAt}}
                     </td>
                     <td class="actions-column hidden-xs">
                         <a href="{{appRoot}}/task/{{ taskId.id }}/files/">
                             <span class="glyphicon glyphicon-file" title="Files"></span>
                         </a>
-                        <a data-task-id="{{ taskId.id }}" data-action="viewJSON">
+                        <a data-action="viewJSON">
                             <span class="glyphicon glyphicon-th-list" title="JSON"></span>
                         </a>
                     </td>

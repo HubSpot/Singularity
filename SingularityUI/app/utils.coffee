@@ -1,10 +1,23 @@
 class Utils
     
     @viewJSON: (model) ->
-        originalObject = model.get('originalObject')
-        return if not originalObject?
+        if not model?
+            console.error 'Invalid model given'
+            return
+        
+        # We'll want to take any ignored attributes out of the object first
+        if not model.ignoreAttributes?
+            # Always ignore `id`
+            model.ignoreAttributes = ['id']
 
-        json = JSON.stringify originalObject, undefined, 4
+        objectToSerialise = {}
+        modelJSON = model.toJSON()
+
+        for key in _.keys modelJSON
+            if key not in model.ignoreAttributes
+                objectToSerialise[key] = modelJSON[key]
+
+        json = JSON.stringify objectToSerialise, undefined, 4
 
         closeButton = _.extend _.clone(vex.dialog.buttons.YES), text: 'Close'
         copyButton =

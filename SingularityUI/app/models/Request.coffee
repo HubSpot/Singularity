@@ -9,7 +9,7 @@ bounceTemplate = require '../templates/vex/requestBounce'
 class Request extends Model
 
     # When we show the JSON dialog, we will ignore these attributes
-    ignoreAttributes: ['id', 'scheduled', 'onDemand', 'daemon', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow',' canBeBounced']
+    ignoreAttributes: ['id', 'scheduled', 'onDemand', 'daemon', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow', 'canBeBounced', 'starred']
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
 

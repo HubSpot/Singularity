@@ -4,8 +4,11 @@ class RequestTasks extends Collection
 
     url: => "#{ config.apiRoot }/history/request/#{ @requestId }/tasks/#{ @state }"
 
-    comparator: -> - @get('createdAt')
+    initialize: (models, {@requestId, @state}) =>
 
-    initialize: (models, { @requestId, @state, @sortColumn, @sortDirection }) => super
+    parse: (data) ->
+        for task in data
+            task.id = task.taskId.id
+        data
 
 module.exports = RequestTasks
