@@ -133,8 +133,30 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
   
+  @NotNull
+  private boolean defaultValueForKillTasksOfPausedRequests = true;
+  
+  @NotNull
+  private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
+  
+  public long getAskDriverToKillTasksAgainAfterMillis() {
+    return askDriverToKillTasksAgainAfterMillis;
+  }
+
+  public void setAskDriverToKillTasksAgainAfterMillis(long askDriverToKillTasksAgainAfterMillis) {
+    this.askDriverToKillTasksAgainAfterMillis = askDriverToKillTasksAgainAfterMillis;
+  }
+
   public long getCacheStateForMillis() {
     return cacheStateForMillis;
+  }
+  
+  public boolean isDefaultValueForKillTasksOfPausedRequests() {
+    return defaultValueForKillTasksOfPausedRequests;
+  }
+
+  public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
+    this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
   }
 
   public void setCacheStateForMillis(long cacheStateForMillis) {

@@ -8,7 +8,6 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -21,7 +20,6 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityPendingRequestTranscoder;
@@ -32,7 +30,6 @@ public class RequestManager extends CuratorAsyncManager {
   
   private final static Logger LOG = LoggerFactory.getLogger(RequestManager.class);
   
-  private final ObjectMapper objectMapper;
   private final SingularityRequestWithStateTranscoder requestTranscoder;
   private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
   private final SingularityRequestCleanupTranscoder requestCleanupTranscoder;
@@ -44,13 +41,12 @@ public class RequestManager extends CuratorAsyncManager {
   private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
   
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, ObjectMapper objectMapper, SingularityRequestCleanupTranscoder requestCleanupTranscoder, SingularityRequestWithStateTranscoder requestTranscoder, SingularityPendingRequestTranscoder pendingRequestTranscoder) {
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityRequestCleanupTranscoder requestCleanupTranscoder, SingularityRequestWithStateTranscoder requestTranscoder, SingularityPendingRequestTranscoder pendingRequestTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
   
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
     this.pendingRequestTranscoder = pendingRequestTranscoder;
-    this.objectMapper = objectMapper;
   }
  
   private String getRequestPath(String requestId) {
@@ -86,16 +82,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
  
   public SingularityCreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
-    return create(getCleanupPath(cleanupRequest.getRequestId()), Optional.of(cleanupRequest.getAsBytes(objectMapper)));
-  }
-  
-  private Optional<byte[]> getData(SingularityRequest request, RequestState state) {
-    SingularityRequestParent requestParent = new SingularityRequestParent(request, state);
-    return Optional.of(requestParent.getAsBytes(objectMapper));
+    return create(getCleanupPath(cleanupRequest.getRequestId()), cleanupRequest, requestCleanupTranscoder);
   }
   
   private SingularityCreateResult save(SingularityRequest request, RequestState state) {
-    return save(getRequestPath(request.getId()), getData(request, state));
+    return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state), requestTranscoder);
   }
   
   public SingularityCreateResult pause(SingularityRequest request) {
@@ -107,8 +98,8 @@ public class RequestManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
-    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()), Optional.of(pendingRequest.getAsBytes(objectMapper)));
-  
+    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()), pendingRequest, pendingRequestTranscoder);
+    
     LOG.info("{} added to pending queue with result: {}", pendingRequest, result);
 
     return result;
@@ -183,7 +174,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
   
   public void deleteRequest(Optional<String> user, String requestId) {
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, System.currentTimeMillis(), requestId));
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, System.currentTimeMillis(), Optional.of(Boolean.TRUE), requestId));
     delete(getRequestPath(requestId));
   }
 

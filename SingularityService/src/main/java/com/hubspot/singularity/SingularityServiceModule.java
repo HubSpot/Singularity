@@ -8,6 +8,9 @@ import io.dropwizard.setup.Environment;
 
 import java.io.IOException;
 
+import net.kencochrane.raven.Raven;
+import net.kencochrane.raven.RavenFactory;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.curator.framework.CuratorFramework;
@@ -58,8 +61,6 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
-import net.kencochrane.raven.Raven;
-import net.kencochrane.raven.RavenFactory;
 
 public class SingularityServiceModule extends AbstractModule {
   
@@ -67,8 +68,6 @@ public class SingularityServiceModule extends AbstractModule {
   
   private static final String LEADER_PATH = "/leader";
   
-  public static final String MASTER_PROPERTY = "singularity.master";
-  public static final String ZK_NAMESPACE_PROPERTY = "singularity.namespace";
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
   public static final String UNDERLYING_CURATOR = "curator.base.instance";
@@ -135,12 +134,6 @@ public class SingularityServiceModule extends AbstractModule {
   }
   
   @Provides
-  @Named(MASTER_PROPERTY)
-  public String providesMaster(SingularityConfiguration config) {
-    return config.getMesosConfiguration().getMaster();
-  }
-  
-  @Provides
   @Singleton
   public ZooKeeperConfiguration zooKeeperConfiguration(SingularityConfiguration config) {
     return config.getZooKeeperConfiguration();
@@ -168,12 +161,7 @@ public class SingularityServiceModule extends AbstractModule {
   }
   
   @Provides
-  @Named(ZK_NAMESPACE_PROPERTY)
-  public String providesZkNamespace(ZooKeeperConfiguration config) {
-    return config.getZkNamespace();
-  }
-
-  @Provides
+  @Singleton
   @Named(HOSTNAME_PROPERTY)
   public String providesHostnameProperty(SingularityConfiguration config) throws Exception {
     return !Strings.isNullOrEmpty(config.getHostname()) ? config.getHostname() : JavaUtils.getHostAddress();
@@ -192,7 +180,6 @@ public class SingularityServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public LeaderLatch provideLeaderLatch(CuratorFramework curator,
-                                        @Named(SingularityServiceModule.ZK_NAMESPACE_PROPERTY) String zkNamespace,
                                         @Named(SingularityServiceModule.HOSTNAME_PROPERTY) String hostname,
                                         @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
     return new LeaderLatch(curator, LEADER_PATH, String.format("%s:%d", hostname, httpPort));
@@ -216,8 +203,8 @@ public class SingularityServiceModule extends AbstractModule {
     return config.getS3Configuration();
   }
   
-  @Singleton
   @Provides
+  @Singleton
   @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
     LOG.info("Creating curator/ZK client and blocking on connection to ZK quorum {} (timeout: {})", config.getQuorum(), config.getConnectTimeoutMillis());
@@ -244,7 +231,7 @@ public class SingularityServiceModule extends AbstractModule {
   @Singleton
   @Provides
   public CuratorFramework provideNamespaceCurator(@Named(UNDERLYING_CURATOR) CuratorFramework curator, ZooKeeperConfiguration config) {
-    return curator.usingNamespace(config.getZkNamespace());  
+    return curator.usingNamespace(config.getZkNamespace());
   }
   
   @Provides

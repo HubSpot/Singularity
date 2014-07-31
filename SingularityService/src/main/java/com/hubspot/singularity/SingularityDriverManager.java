@@ -12,19 +12,24 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
 
 public class SingularityDriverManager {
 
   private final Provider<SingularityDriver> driverProvider;
+  private final TaskManager taskManager;
   private final Lock driverLock;
 
   private Optional<SingularityDriver> driver;
   private Protos.Status currentStatus;
-
+  
   @Inject
-  public SingularityDriverManager(Provider<SingularityDriver> driverProvider) {
+  public SingularityDriverManager(Provider<SingularityDriver> driverProvider, TaskManager taskManager) {
     this.driverProvider = driverProvider;
+    this.taskManager = taskManager;
     
     this.driverLock = new ReentrantLock();
     
@@ -69,13 +74,23 @@ public class SingularityDriverManager {
     } 
   }
   
-  public Protos.Status kill(String taskId) {
+  public Protos.Status killAndRecord(SingularityTaskId taskId, RequestCleanupType requestCleanupType) {
+    return killAndRecord(taskId, Optional.of(requestCleanupType), Optional.<TaskCleanupType> absent(), Optional.<Long> absent(), Optional.<Integer> absent());
+  }
+  
+  public Protos.Status killAndRecord(SingularityTaskId taskId, TaskCleanupType taskCleanupType) {
+    return killAndRecord(taskId, Optional.<RequestCleanupType> absent(), Optional.of(taskCleanupType), Optional.<Long> absent(), Optional.<Integer> absent());
+  }
+  
+  public Protos.Status killAndRecord(SingularityTaskId taskId, Optional<RequestCleanupType> requestCleanupType, Optional<TaskCleanupType> taskCleanupType, Optional<Long> originalTimestamp, Optional<Integer> retries) {
     driverLock.lock();
     
     try {
       Preconditions.checkState(canKillTask());
       
       currentStatus = driver.get().kill(taskId);
+    
+      taskManager.saveKilledRecord(new SingularityKilledTaskIdRecord(taskId, System.currentTimeMillis(), originalTimestamp.or(System.currentTimeMillis()), requestCleanupType, taskCleanupType, retries.or(-1) + 1));
       
       Preconditions.checkState(currentStatus == Status.DRIVER_RUNNING);
     } finally {

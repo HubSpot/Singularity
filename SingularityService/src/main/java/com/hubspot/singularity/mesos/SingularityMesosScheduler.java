@@ -230,6 +230,8 @@ public class SingularityMesosScheduler implements Scheduler {
       healthchecker.cancelHealthcheck(taskId);
       newTaskChecker.cancelNewTaskCheck(taskId);
       
+      taskManager.deleteKilledRecord(taskIdObj);
+      
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     } else if (maybeActiveTask.isPresent()) {
       if (pendingDeploy == null) {

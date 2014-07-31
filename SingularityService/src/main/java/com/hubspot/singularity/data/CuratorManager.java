@@ -86,6 +86,10 @@ public abstract class CuratorManager {
     return create(path, Optional.<byte[]> absent());
   }
   
+  protected <T> SingularityCreateResult create(String path, T object, Transcoder<T> transcoder) {
+    return create(path, Optional.of(transcoder.toBytes(object)));
+  }
+  
   protected SingularityCreateResult create(String path, Optional<byte[]> data) {
     try {
       privateCreate(path, data);
@@ -107,6 +111,10 @@ public abstract class CuratorManager {
       createBuilder.forPath(path);
     }
     
+  }
+  
+  protected <T> SingularityCreateResult save(String path, T object, Transcoder<T> transcoder) {
+    return save(path, Optional.of(transcoder.toBytes(object)));
   }
   
   protected SingularityCreateResult save(String path, Optional<byte[]> data) {

@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -36,14 +37,17 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -77,7 +81,8 @@ public class SingularitySchedulerTest {
   private SingularityDeployChecker deployChecker;
   @Inject
   private RequestResource requestResource;
-  
+  @Inject
+  private SingularityCleaner cleaner;
   
   @Before
   public void setup() {
@@ -345,5 +350,64 @@ public class SingularitySchedulerTest {
     Assert.assertEquals(requestId, pendingTaskId.getRequestId());
   }
   
+  private SingularityPendingTask createAndSchedulePendingTask(String deployId) {
+    Random random = new Random();
+    
+    SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId, 
+        System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE);
+    
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
+
+    taskManager.createPendingTasks(Arrays.asList(pendingTask));
+    
+    return pendingTask;
+  }
+  
+  @Test
+  public void testCleanerLeavesPausedRequestTasksByDemand() {
+    initScheduledRequest();
+    initFirstDeploy();
+    
+    SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    SingularityPendingTask pendingTask = createAndSchedulePendingTask(firstDeployId);
+    
+    requestResource.pause(requestId, Optional.<String> absent(), Optional.of(new SingularityPauseRequest(Optional.of("testuser"), Optional.of(false))));
+    
+    cleaner.drainCleanupQueue();
+    
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(requestManager.getCleanupRequests().isEmpty());
+   
+    statusUpdate(firstTask, TaskState.TASK_FINISHED);
+    
+    // make sure something new isn't scheduled!
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+  }
+  
+  @Test
+  public void testKilledTaskIdRecords() {
+    initScheduledRequest();
+    initFirstDeploy();
+    
+    SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    
+    requestResource.deleteRequest(requestId, Optional.<String> absent());
+    
+    Assert.assertTrue(requestManager.getCleanupRequests().size() == 1);
+    
+    cleaner.drainCleanupQueue();
+    
+    Assert.assertTrue(requestManager.getCleanupRequests().isEmpty());
+    Assert.assertTrue(!taskManager.getKilledTaskIdRecords().isEmpty());
+    
+    cleaner.drainCleanupQueue();
+    
+    Assert.assertTrue(!taskManager.getKilledTaskIdRecords().isEmpty());
+    
+    statusUpdate(firstTask, TaskState.TASK_KILLED);
+    
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
+  }
   
 }

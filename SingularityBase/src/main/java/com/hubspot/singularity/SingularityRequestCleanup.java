@@ -15,6 +15,7 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   
   private final Optional<String> user;
   private final RequestCleanupType cleanupType;
+  private final Optional<Boolean> killTasks;
   private final long timestamp;
   private final String requestId;
   
@@ -27,11 +28,17 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   }
   
   @JsonCreator
-  public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp, @JsonProperty("requestId") String requestId) {
+  public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
+      @JsonProperty("killTasks") Optional<Boolean> killTasks, @JsonProperty("requestId") String requestId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.requestId = requestId;
+    this.killTasks = killTasks;
+  }
+
+  public Optional<Boolean> getKillTasks() {
+    return killTasks;
   }
 
   public String getRequestId() {
@@ -49,10 +56,10 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   public long getTimestamp() {
     return timestamp;
   }
-  
+
   @Override
   public String toString() {
-    return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", requestId=" + requestId + "]";
+    return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", killTasks=" + killTasks + ", timestamp=" + timestamp + ", requestId=" + requestId + "]";
   }
   
 }

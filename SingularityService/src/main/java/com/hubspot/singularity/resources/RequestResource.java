@@ -36,6 +36,7 @@ import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DeployManager.ConditionalSaveResult;
 import com.hubspot.singularity.data.RequestManager;
@@ -264,14 +265,20 @@ public class RequestResource {
   
   @POST
   @Path("/request/{requestId}/pause")
-  public SingularityRequestParent pause(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
+  public SingularityRequestParent pause(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user, Optional<SingularityPauseRequest> pauseRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     
     checkRequestStateNotPaused(requestWithState, "pause");
     
     requestManager.pause(requestWithState.getRequest());
     
-    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), requestId));
+    Optional<Boolean> killTasks = Optional.absent();
+    if (pauseRequest.isPresent()) {
+      user = pauseRequest.get().getUser();
+      killTasks = pauseRequest.get().getKillTasks();
+    }
+    
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), killTasks, requestId));
     
     if (result == SingularityCreateResult.CREATED) {
       historyManager.saveRequestHistoryUpdate(requestWithState.getRequest(), RequestHistoryType.PAUSED, user);

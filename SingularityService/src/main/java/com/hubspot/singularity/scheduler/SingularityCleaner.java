@@ -19,6 +19,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDriverManager;
+import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
@@ -49,6 +50,7 @@ public class SingularityCleaner {
   private final LoadBalancerClient lbClient;
   private final SingularityExceptionNotifier exceptionNotifier;
   
+  private final SingularityConfiguration configuration;
   private final long killScheduledTasksAfterDecomissionedMillis;
   
   @Inject
@@ -61,6 +63,8 @@ public class SingularityCleaner {
     this.requestManager = requestManager;
     this.driverManager = driverManager;
     this.exceptionNotifier = exceptionNotifier;
+    
+    this.configuration = configuration;
     
     this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksWhichAreDecomissionedAfterSeconds());
   }
@@ -156,29 +160,36 @@ public class SingularityCleaner {
       final String requestId = requestCleanup.getRequestId();
       final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
       
-      boolean killTasks = true;
+      boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
+      boolean killScheduledTasks = true;
       
       if (requestCleanup.getCleanupType() == RequestCleanupType.PAUSING) {
         if (SingularityRequestWithState.isActive(requestWithState)) {
-          killTasks = false;
-          LOG.info("Not pausing {}, because it was {}", requestId, requestWithState.get().getState());
+          killScheduledTasks = false;
+          killActiveTasks = false;
+          LOG.info("Ignoring {}, because {} is {}", requestCleanup, requestCleanup.getRequestId(), requestWithState.get().getState());
         }
       } else if (requestCleanup.getCleanupType() == RequestCleanupType.DELETING) {
         if (requestWithState.isPresent()) {        
-          killTasks = false;
-          LOG.info("Not cleaning {}, because it existed", requestId);
+          killActiveTasks = false;
+          killScheduledTasks = false;
+          LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
         } else {
           cleanupDeployState(requestCleanup);
         }
       }
       
-      if (killTasks) {
+      if (killActiveTasks) {
         for (SingularityTaskId matchingTaskId : Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(requestId))) {
           LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
-          driverManager.kill(matchingTaskId.toString());
+          driverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType());
           numTasksKilled++;
         }
-     
+      } else {
+        LOG.info("Active tasks for {} not killed", requestCleanup);
+      }
+      
+      if (killScheduledTasks) {
         for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matchingRequest(requestId))) {
           LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
           taskManager.deletePendingTask(matchingTask.getPendingTaskId().getId());
@@ -202,10 +213,56 @@ public class SingularityCleaner {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
     drainLBCleanupQueue();
+    checkKilledTaskIdRecords();
   }
   
   private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
     return taskManager.isActiveTask(cleanupTask.getTaskId().getId());
+  }
+  
+  private void checkKilledTaskIdRecords() {
+    final long start = System.currentTimeMillis();
+    final List<SingularityKilledTaskIdRecord> killedTaskIdRecords = taskManager.getKilledTaskIdRecords();
+    
+    if (killedTaskIdRecords.isEmpty()) {
+      LOG.trace("No killed taskId records");
+      return;
+    }
+    
+    int obsolete = 0;
+    int ignored = 0;
+    int rekilled = 0;
+    
+    for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecords) {
+      // TODO should we check mesos HTTP state? does that make sense?
+      if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId().getId())) {
+        SingularityDeleteResult deleteResult = taskManager.deleteKilledRecord(killedTaskIdRecord.getTaskId());
+        
+        LOG.debug("Deleting obsolete {} - {}", killedTaskIdRecord, deleteResult);
+        
+        obsolete++;
+        
+        continue;
+      }
+      
+      long duration = start - killedTaskIdRecord.getTimestamp();
+      
+      if (duration > configuration.getAskDriverToKillTasksAgainAfterMillis()) {
+        LOG.info("{} is still active, and time since last kill {} is greater than configured (askDriverToKillTasksAgainAfterMillis) {} - asking driver to kill again", 
+            killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
+        
+        driverManager.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(), 
+            killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()));
+     
+        rekilled++;
+      } else {
+        LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
+      
+        ignored++;
+      }
+    }
+    
+    LOG.info("{} obsolete, {} ignored, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, ignored, rekilled, killedTaskIdRecords.size());
   }
   
   private void drainTaskCleanupQueue() {
@@ -234,7 +291,7 @@ public class SingularityCleaner {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
-        driverManager.kill(cleanupTask.getTaskId().getId());
+        driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
         
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
       

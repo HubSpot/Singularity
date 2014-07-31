@@ -22,19 +22,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityServiceModule;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -74,7 +79,7 @@ public class SingularityTestModule extends AbstractModule {
     SingularityMailer mailer = mock(SingularityMailer.class);
     SchedulerDriver driver = mock(SchedulerDriver.class);
     SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
-    
+   
     when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
     
     bind(SingularityLogSupport.class).toInstance(logSupport);
@@ -94,6 +99,29 @@ public class SingularityTestModule extends AbstractModule {
     when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.<SingularityDeployHistory> absent());
     
     bind(HistoryManager.class).toInstance(hm);
+  }
+  
+  @Provides
+  @Singleton
+  public SingularityDriverManager getDriverManager(TaskManager taskManager) {
+    SingularityDriverManager driverManager = new SingularityDriverManager(new Provider<SingularityDriver>() {
+
+      @Override
+      public SingularityDriver get() {
+        SingularityDriver mock = mock(SingularityDriver.class);
+        
+        when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
+        when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
+        
+        return mock;
+      }
+      
+      
+    }, taskManager);
+    
+    driverManager.start();
+    
+    return driverManager;
   }
   
   @Singleton

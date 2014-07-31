@@ -185,13 +185,13 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   public ConditionalSaveResult saveDeploy(SingularityRequest request, SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
-    final SingularityCreateResult deploySaveResult = create(getDeployDataPath(deploy.getRequestId(), deploy.getId()), Optional.of(deployTranscoder.toBytes(deploy)));
+    final SingularityCreateResult deploySaveResult = create(getDeployDataPath(deploy.getRequestId(), deploy.getId()), deploy, deployTranscoder);
     
     if (deploySaveResult == SingularityCreateResult.EXISTED) {
       LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));
     }
     
-    create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), Optional.of(deployMarkerTranscoder.toBytes(deployMarker)));
+    create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
     
     final Optional<SingularityRequestDeployStateHelper> currentState = getDeployStateHelper(deploy.getRequestId());
     
@@ -342,7 +342,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult saveDeployStatistics(SingularityDeployStatistics newDeployStatistics) {
-    return save(getDeployStatisticsPath(newDeployStatistics.getRequestId(), newDeployStatistics.getDeployId()), Optional.of(newDeployStatistics.getAsBytes(objectMapper))); 
+    return save(getDeployStatisticsPath(newDeployStatistics.getRequestId(), newDeployStatistics.getDeployId()), newDeployStatistics, deployStatisticsTranscoder);
   }
   
   private String getPendingDeployPath(String requestId) {
@@ -354,7 +354,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult createCancelDeployRequest(SingularityDeployMarker deployMarker) {
-    return create(getCancelDeployPath(deployMarker), Optional.of(deployMarker.getAsBytes(objectMapper)));
+    return create(getCancelDeployPath(deployMarker), deployMarker, deployMarkerTranscoder);
   }
 
   public SingularityDeleteResult deleteRequestDeployState(String requestId) {
@@ -374,11 +374,11 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult createPendingDeploy(SingularityPendingDeploy pendingDeploy) {
-    return create(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), Optional.of(pendingDeploy.getAsBytes(objectMapper)));
+    return create(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), pendingDeploy, pendingDeployTranscoder);
   }
   
   public SingularityCreateResult savePendingDeploy(SingularityPendingDeploy pendingDeploy) {
-    return save(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), Optional.of(pendingDeploy.getAsBytes(objectMapper)));
+    return save(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), pendingDeploy, pendingDeployTranscoder);
   }
 
   public Optional<SingularityPendingDeploy> getPendingDeploy(String requestId) {
@@ -386,7 +386,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
   
   public SingularityCreateResult saveDeployResult(SingularityDeployMarker deploy, SingularityDeployResult result) {
-    return save(getDeployResultPath(deploy.getRequestId(), deploy.getDeployId()), Optional.of(deployStateTranscoder.toBytes(result)));
+    return save(getDeployResultPath(deploy.getRequestId(), deploy.getDeployId()), result, deployStateTranscoder);
   }
   
   public Optional<SingularityDeployResult> getDeployResult(String requestId, String deployId) {

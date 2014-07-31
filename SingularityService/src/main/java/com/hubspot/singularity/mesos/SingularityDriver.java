@@ -12,8 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityServiceModule;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 
 public class SingularityDriver {
@@ -25,7 +24,7 @@ public class SingularityDriver {
   private final MesosSchedulerDriver driver;
 
   @Inject
-  public SingularityDriver(@Named(SingularityServiceModule.MASTER_PROPERTY) String master, SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
+  public SingularityDriver(SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
     this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
@@ -35,8 +34,7 @@ public class SingularityDriver {
         .build();
   
     this.scheduler = scheduler;
-    
-    this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, master);
+    this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
   }
   
   @VisibleForTesting
@@ -62,8 +60,8 @@ public class SingularityDriver {
     return status;
   }
   
-  public Protos.Status kill(String taskId) {
-    Protos.Status status = driver.killTask(TaskID.newBuilder().setValue(taskId).build());
+  public Protos.Status kill(SingularityTaskId taskId) {
+    Protos.Status status = driver.killTask(TaskID.newBuilder().setValue(taskId.toString()).build());
   
     LOG.info("Killed task {} with driver status: {}", taskId, status);
     

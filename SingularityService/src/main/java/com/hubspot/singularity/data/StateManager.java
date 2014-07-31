@@ -132,7 +132,7 @@ public class StateManager extends CuratorManager {
     
     if (!skipCache) {
       final byte[] bytes = stateTranscoder.toBytes(newState);
-      save(STATE_PATH, Optional.of(bytes));
+      save(STATE_PATH, newState, stateTranscoder);
 
       LOG.info("Generated new state and saved {} bytes in {}", bytes.length, JavaUtils.duration(start));
     }
