@@ -13,6 +13,10 @@
             {{/with}}
             <h2>
                 {{ data.task.taskId.id }}
+                
+                <button data-clipboard-text="{{ data.task.taskId.id }}" class='btn btn-link copy-link'>
+                    Copy
+                </button>
             </h2>
         </div>
 

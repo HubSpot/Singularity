@@ -1,5 +1,7 @@
 Model = require './model'
 
+Request = require './Request'
+
 killTemplate = require '../templates/vex/taskKill'
 
 class Task extends Model
@@ -28,7 +30,7 @@ class Task extends Model
     ###
     promptRun: (callback) =>
         # We tell the Request to run
-        requestModel = new Request id: @get 'requestId'
+        requestModel = new Request id: @get('request').id
         requestModel.promptRun => callback()
 
     promptKill: (callback) =>

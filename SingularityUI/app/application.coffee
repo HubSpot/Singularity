@@ -63,6 +63,9 @@ class Application
 
     globalRefresh: =>
         return if localStorage.getItem 'suppressRefresh'
+        if @blurred
+            clearInterval @globalRefreshInterval
+            return
         @currentController.refresh()
 
     caughtError: ->

@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h1>Active slaves</h1>
+    <h1>Active</h1>
 </div>
 {{#if data.length}}
     <table class="table table-striped">
@@ -22,7 +22,7 @@
                     <td>{{ host }}</td>
                     <td class="hidden-xs" data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
-                        ({{timestampFormatted startedAt}})
+                        ({{timestampFormatted firstSeenAt}})
                     </td>
                     <td class="actions-column">
                         <a data-slave-id="{{ id }}" data-action="decommission">

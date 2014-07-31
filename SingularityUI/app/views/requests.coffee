@@ -119,9 +119,19 @@ class RequestsView extends View
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
+        return if not @$('table').length
+
+        @$('table').show()
+        @$('.empty-table-message').remove()
+
         $(window).scrollTop 0
         @filterCollection()
         @renderProgress = 0
+
+        if not @currentRequests.length
+            @$('table').hide()
+            @$el.append '<div class="empty-table-message">No requests that match your query</div>'
+            return
 
         @renderTableChunk()
 

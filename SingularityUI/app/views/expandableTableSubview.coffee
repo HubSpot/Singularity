@@ -39,17 +39,19 @@ class ExpandableTableSubview extends View
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
 
-        # Stop right here if we don't need to append the expand links and the buttons
-        return if @collection.length isnt @collection.atATime and not haveButtons
+        haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
 
         # Append expand / shrink link
         $header = @$('.page-header h1, .page-header h2, .page-header h3')
         if $header.length
             $header.find('small').remove()
-            if not @expanded
+            if not @expanded and haveMore
                 $header.append '<small class="hidden-xs"><a data-action="expand">more at once</a></small>'
             else if @expanded
                 $header.append '<small class="hidden-xs"><a data-action="shrink">fewer at once</a></small>'
+
+        # Stop right here if we don't need to append the buttons
+        return if not haveMore
 
         # Append next / previous page buttons
         hasPrevButton = @collection.currentPage isnt 1
@@ -98,13 +100,13 @@ class ExpandableTableSubview extends View
         @collection.currentPage = 1
 
         @collection.fetch().done =>
-            @$('table').parent().css 'min-height', "#{ availableSpace }px"
+            @$el.css 'min-height', "#{ availableSpace }px"
             $(window).scrollTop @$el.offset().top - arbitrarySpace
 
     shrink: ->
         @expanded = false
 
-        @$('table').parent().css 'min-height', 'auto'
+        @$el.css 'min-height', '0'
 
         @collection.atATime = 5
         @collection.currentPage = 1

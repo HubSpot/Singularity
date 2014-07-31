@@ -47,7 +47,7 @@ class TasksView extends View
         # Only show tasks that match the search query
         if @searchFilter
             tasks = _.filter tasks, (task) =>
-                searchField = "#{ task.taskId.id }#{ task.host }"
+                searchField = "#{ task.id }#{ task.host }"
                 searchField.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Sort the table if the user clicked on the table heading things
@@ -88,9 +88,19 @@ class TasksView extends View
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
+        return if not @$('table').length
+
+        @$('table').show()
+        @$('.empty-table-message').remove()
+
         $(window).scrollTop 0
         @filterCollection()
         @renderProgress = 0
+
+        if not @currentTasks.length
+            @$('table').hide()
+            @$el.append '<div class="empty-table-message">No tasks that match your query</div>'
+            return
 
         @renderTableChunk()
 
@@ -180,8 +190,9 @@ class TasksView extends View
         $row = $(e.target).parents 'tr'
         id = $row.data 'task-id' 
 
-        @collection.get(id).promptRun =>
-            @collection.remove(taskModel)
+        model = @collection.get(id)
+        model.promptRun =>
+            @collection.remove model
             $row.remove()
 
     searchChange: (event) =>
