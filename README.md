@@ -5,7 +5,7 @@
 
 Singularity can be an essential part of a continuous deployment infrastructure and is ideal for deploying micro-services. It is optimized to manage thousands of concurrently running processes in hundreds of servers and provides out of the box: 
 - a rich REST API for deploying as well as getting information on active and historical deploys and their underlying processes 
-- a [web app client](Docs/SingularityUI.md) (Singularity UI) that uses the API to display user friendly views to all available information
+- a [web app client](Docs/SingularityUIForDevelopers.md) (Singularity UI) that uses the API to display user friendly views to all available information
 - automatic rollback of failing deploys
 - automatic fail over of services when the service itself or the server fails 
 - automatic cool-down of repeatedly failing services
