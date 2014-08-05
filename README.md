@@ -18,7 +18,7 @@ Singularity can be an essential part of a continuous deployment infrastructure a
 Singularity is a core component of HubSpot PaaS infrastructure allowing us to run thousands of concurrent services and has already executed many millions of tasks in our production and QA clusters.
 
 ## How it works
-Singularity is an **Apache Mesos framework**. It runs as a *task scheduler* on top of **Mesos Clusters** taking advantage of Apache Mesos scalability, fault-tolerance, and resource isolation. [Apache Mesos]{http://mesos.apache.org/documentation/latest/mesos-architecture/} is a cluster manager that simplifies the complexity of running different types of applications on a shared pool of servers. In Mesos terminology, *Mesos applications* that are using Mesos APIs to schedule tasks in a cluster are called *frameworks*.
+Singularity is an **Apache Mesos framework**. It runs as a *task scheduler* on top of **Mesos Clusters** taking advantage of Apache Mesos scalability, fault-tolerance, and resource isolation. [Apache Mesos](http://mesos.apache.org/documentation/latest/mesos-architecture/) is a cluster manager that simplifies the complexity of running different types of applications on a shared pool of servers. In Mesos terminology, *Mesos applications* that are using Mesos APIs to schedule tasks in a cluster are called *frameworks*.
 
 ![Mesos Frameworks](Docs/images/Mesos_Frameworks.png)
 
