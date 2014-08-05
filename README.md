@@ -1,6 +1,8 @@
 ## What is Singularity
 **Singularity** is a platform that enables deploying and running services and scheduled jobs in cloud infrastructures, providing efficient management of the underlying processes life cycle and effective use of the cluster resources.
 
+![HubSpot PaaS](Docs/images/HubSpot_PaaS.png)
+
 Singularity can be an essential part of a continuous deployment infrastructure and is ideal for deploying micro-services. It is optimized to manage thousands of concurrently running processes in hundreds of servers and provides out of the box: 
 - a rich REST API for deploying as well as getting information on active and historical deploys and their underlying processes 
 - a [web app client]{Docs/SingularityUI.md} (Singularity UI) that uses the API to display user friendly views to all available information
