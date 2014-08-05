@@ -55,9 +55,6 @@ The executor component main role is to receive the task configuration settings t
 
 Besides the above basic functionality, Singularity executor offers some advanced features:
 - Download and extract **External Artifacts**. Given the URL of an executable artifact it downloads and extracts the artifacts in the tasks sandbox.
--
-
-
 ### Log Watcher
 ### S3 uploader
 ### Executor Cleanup
