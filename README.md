@@ -3,7 +3,7 @@
 
 Singularity can be an essential part of a continuous deployment infrastructure and is ideal for deploying micro-services. It is optimized to manage thousands of concurrently running processes in hundreds of servers and provides out of the box: 
 - a rich REST API for deploying as well as getting information on active and historical deploys and their underlying processes 
-- a web app client that uses the API to display user friendly views to all available information
+- a [web app client]{Docs/SingularityUI.md} (Singularity UI) that uses the API to display user friendly views to all available information
 - automatic rollback of failing deploys
 - automatic fail over of services when the service itself or the server fails 
 - automatic cool-down of repeatedly failing services
@@ -25,7 +25,7 @@ As the drawing depicts there are different types of frameworks and most framewor
 Singularity tries to be more generic supporting in one framework many of the common process types that developers need to deploy every day:
 - **Web Services**. These are long running processes which expose an API and may run with multiple load balanced instances. Singularity supports automatic configurable health checking of the instances at the process and API endpoint level as well as load balancing. Singularity will automatically restart these type of tasks when they fail or exit or cool down them for a while when they repeatedly fail. 
 - **Workers**. Long running processes similar to web services but do not expose an API. Queue consumers is common type of worker processes. Singularity with do automatic health checking, cool-down and restart of worker instances.
-- **Scheduled (CRON-type) Jobs**. These are tasks that periodically run according to a provided CRON schedule. Scheduled jobs will not be restarted when they fail. Singularity will run them again on the next scheduling cycle. There is provision for retries when starting a job. Check [this discussion]{Docs/scheduledJobs} on current limitations and future directions in handling scheduled jobs.
+- **Scheduled (CRON-type) Jobs**. These are tasks that periodically run according to a provided CRON schedule. Scheduled jobs will not be restarted when they fail. Singularity will run them again on the next scheduling cycle. There is provision for retries when starting a job. Check [this discussion]{Docs/ScheduledJobs} on current limitations and future directions in handling scheduled jobs.
 - **On-Demand Processes**. These are manually run processes that will be deployed and be ready to run but singularity will not automatically run them. Users can start them through an API call or using the Singularity Web app.
 
 ## Singularity Architecture & Components
