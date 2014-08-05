@@ -7,4 +7,4 @@ Singularity UI is a single page web app that uses Singularity API to:
 - Register / update the information of Deployable Items (i.e. post Singularity Requests)
 - Execute Deploys (Post Deploy requests)  
 
-To find out how to deploy Singularity UI for development check [Singularity UI for Developers]{Docs/SingularityUIForDevelopers.md} 
+To find out how to deploy Singularity UI for development check [Singularity UI for Developers](Docs/SingularityUIForDevelopers.md)
