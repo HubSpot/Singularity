@@ -1,4 +1,4 @@
-Singularity UI is single page web app that uses Singularity API to: 
+Singularity UI is a single page web app that uses Singularity API to: 
 - Display information active and historical requests and deploys and their underlying tasks
 - Display and download task logs and their relevant application artifacts 
 - Display slave hosts that are part of the Mesos Cluster and decommission them
