@@ -3,7 +3,7 @@
 
 ![HubSpot PaaS](Docs/images/HubSpot_PaaS.png)
 
-Singularity can be an essential part of a continuous deployment infrastructure and is ideal for deploying micro-services. It is optimized to manage thousands of concurrently running processes in hundreds of servers and provides out of the box: 
+Singularity can be an essential part of a **continuous deployment** infrastructure and is ideal for deploying micro-services. It is optimized to manage thousands of concurrently running processes in hundreds of servers and provides out of the box: 
 - a rich REST API for deploying as well as getting information on active and historical deploys and their underlying processes 
 - a [web app client](Docs/SingularityUIForDevelopers.md) (Singularity UI) that uses the API to display user friendly views to all available information
 - automatic rollback of failing deploys
@@ -39,20 +39,33 @@ The *mesos master* determines how many resources are offered to each framework a
 
 As depicted in the figure, Singularity implements the two basic framework components as well as a few more to solve common complex / tedious problems such as log rotation and archiving without requiring developers to implement it for each task they want to run:
 
-**Singularity Scheduler** 
-The scheduler component implements the required functionality for registering with a mesos master and accepting resource offers and at the same time is a web service offering a rich REST API for accepting requests for different deployable items (web service, worker, etc,) and executing deploys for them by allocating resources and creating / managing the required tasks in the mesos cluster. Failed deploy rollback, health checking and load balancing of service instances are part of the Singularity Scheduler functionality.
+### Singularity Scheduler
+The scheduler component implements the required functionality for registering with a mesos master and accepting resource offers and at the same time is a web service offering a rich REST API for accepting requests for different deployable items (web service, worker, etc,) and executing deploys for them by allocating resources and creating / managing the required tasks in the mesos cluster. 
 
-In production singularity is run in high-availability mode by running multiple instances of the Singularity Scheduler component.
+Failed deploy rollback, health checking, load balancing and log rotation configuration setup of service instances are all part of the Singularity Scheduler functionality.
 
-- **Singularity Executor** 
-- **Log Watcher**
-- **S3 uploader**
-- **Executor Cleanup**
-- **OOM Killer**
+Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same Zookeeper quorum utilized by mesos masters and slaves is reused for singularity.  
+
+Since Zoopkeeper is not meant to handle large quantities of data, Singularity utilizes MySQL database to periodically offload metadata from Zookeeper and keep historical records of deployable item changes, deploy request history as well as the history of all launched tasks. 
+
+In production environments singularity is run in high-availability mode by running multiple instances of the Singularity Scheduler component. As depicted only one instance is always active with all the other instances waiting in stand-by mode. While only one instance is registered for receiving resource offers, all instances can process API requests. Singularity uses Zookeeper to perform leader election and maintain a single leader. Because of the ability for all instances to change state, Singularity uses queues which are consumed by the Singularity leader to effect changes in Mesos. 
+
+### Singularity Executor
+The executor component main role is to receive the task configuration settings through the mesos slave process (command to execute, environment variables, executable artifact URLs, application configuration files, etc.), setup the execution environment and run the commands that correspond to a mesos task which in turn corresponds to an instance of a deployable item managed by Singularity.
+
+Besides the above basic functionality, Singularity executor offers some advanced features:
+- Download and extract **External Artifacts**. Given the URL of an executable artifact it downloads and extracts the artifacts in the tasks sandbox.
+-
+
+
+### Log Watcher
+### S3 uploader
+### Executor Cleanup
+### OOM Killer
  
 
 ## Singularity Abstractions & API
-Singularity provides a layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. An Singularity Request consists of 
+Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. An Singularity Request consists of 
 
 
 
