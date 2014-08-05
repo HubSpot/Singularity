@@ -30,10 +30,28 @@ Singularity tries to be more generic supporting in one framework many of the com
 - **Scheduled (CRON-type) Jobs**. These are tasks that periodically run according to a provided CRON schedule. Scheduled jobs will not be restarted when they fail. Singularity will run them again on the next scheduling cycle. There is provision for retries when starting a scheduled job. Check [this discussion document](Docs/ScheduledJobs) on current limitations and future directions in handling scheduled jobs.
 - **On-Demand Processes**. These are manually run processes that will be deployed and be ready to run but singularity will not automatically run them. Users can start them through an API call or using the Singularity Web app.
 
-## Singularity Architecture & Components
+## Singularity Components
+Mesos frameworks have two major components. A **scheduler component** that registers with the **mesos master** to be offered resources and an **executor** component that is launched on cluster slave nodes to run the framework tasks. 
+
+The *mesos master* determines how many resources are offered to each framework and the framework scheduler select which of the offered resources to use to run the required tasks. Mesos slaves do not directly run the tasks but delegate the running to the appropriate executor that has knowledge about the nature of the allocated task and the special handling that might be required.
+
+![Singularity Components](docs/images/Singularity_Framework_Components.png)
+
+As depicted in the figure, Singularity implements the two basic framework components as well as a few more to solve common complex / tedious problems such as log rotation and archiving without requiring developers to implement it for each task they want to run:
+
+**Singularity Scheduler** 
+The scheduler component implements the required functionality for registering with a mesos master and accepting resource offers and at the same time is a web service offering a rich REST API for accepting requests for different deployable items (web service, worker, etc,) and executing deploys for them by allocating resources and creating / managing the required tasks in the mesos cluster. Failed deploy rollback, health checking and load balancing of service instances are part of the Singularity Scheduler functionality.
+
 In production singularity is run in high-availability mode by running multiple instances of the Singularity Scheduler component.
 
-Singularity Abstractions
+- **Singularity Executor** 
+- **Log Watcher**
+- **S3 uploader**
+- **Executor Cleanup**
+- **OOM Killer**
+ 
+
+## Singularity Abstractions & API
 Singularity provides a layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. An Singularity Request consists of 
 
 
