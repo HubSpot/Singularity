@@ -66,24 +66,43 @@ Besides the above basic functionality, *Singularity Executor* offers some advanc
 - **Environment Setup**. The executor accepts a map of environment variables and automatically creates an *environment setup* shell script that sets the defined variables.
 - **Runner Script**. A *task runner* shell script is auto-generated for each task. The script runs system-wide scripts in *profile.d* as well as local *profile.d* scripts inside the extracted artifact, initializes the environment vars (using the environment setup script) and finally runs the requested task command as the requested user.
 
+### SingularityUI
+
+### Singularity Java Client
+
+
 ### Log Watcher
-Log watcher is a service that provides logs tailing and streaming / forwarding of tailed log lines to third party services like *fluentd* or *logstash* to support real time log viewing and searching. This is an optional add-on not required for Singularity to provide its basic functionality.
+Log watcher is a service that run in each slave and provides logs tailing and streaming / forwarding of tailed log lines to third party services like *fluentd* or *logstash* to support real time log viewing and searching. This is an optional add-on not required for Singularity to provide its basic functionality.
 
 ### S3 uploader
-S3 uploader moves the rotated task log files to Amazon S3 Service for archiving.  
+S3 uploader runs in each slave and moves the rotated task log files to Amazon S3 Service for archiving. This is an optional add-on not required for Singularity to provide its basic functionality.
 
 ### Executor Cleanup
-While the executor itself will cleanup application files and logs upon task termination, there are cases that the executor may fail or crash. In heavy loaded slaves, this could quickly result in unexpected full disk space and slave failures. The **Executor Cleanup** is a utility program that is meant to run through the Unix CRON program (e.g once per hour) to find out and clean up the sandbox of finished / failed tasks that the executor has failed to clean.
+While the executor itself will cleanup application files and logs upon task termination, there are cases that the executor may fail or crash. In heavy loaded slaves, this could quickly result in unexpected full disk space and slave failures. The **Executor Cleanup** is a utility program that is meant to run in each slave through the Unix CRON program (e.g once per hour) to find out and clean up the sandbox of finished / failed tasks that the executor has failed to clean.
 
 ### OOM Killer
-The **Out of Memory process Killer** is an optional service that Singularity users may wish to run in heavy loaded mesos slaves to replace the default  memory limit checking supported by **Linux Kernel CGROUPs". 
+The **Out of Memory process Killer** is an optional service that Singularity users may wish to run in heavy loaded mesos slaves to replace the default  memory limit checking supported by **Linux Kernel CGROUPS**. 
 
-We have found out that in certain Linux Kernel versions (e.g. 2.6 and 3.10) a buck causes a deadlock to happens when OOM events occur which then requires a system reboot. In addition to this, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs which in combination with the deadlock create often slave failures.
+We have found out that in certain Linux Kernel versions (e.g. 2.6 and 3.10) a bug causes a deadlock to happens when OOM events occur which then requires a system reboot. In addition to this, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs which in combination with the deadlock create often slave failures.
 
 The latest info is that Linux Kernel version 3.4 does not seem to have the bug and version 3.16 will fix it. In any case, if users wish to run the *OOM Killer* service they should disable the CGROUPS memory limit checking in their mesos slaves.        
 
 ## Singularity Abstractions & API
-Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. An Singularity Request consists of 
+Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. 
 
+A **Singularity Request Object** defines a *deployable item*. Before a deployable item can be deployed, users should register the type and other relevant properties of the item by posting a *Singularity Request Object* to **/requests** endpoint. The following are the supported properties:
+- **owners** (List of strings): A list of emails for the people (developers probably) which are responsible for this deployable item. This is a very important piece of information because Singularity will use the emails to send notifications when the relevant mesos tasks fail are get lost with possible directions of what should be done.
+- **daemon** (boolean): This is by default *true* which means that the *deployable item* is either a *web service* or a *worker process*. In practice *daemon* set to *true* means that Singularity will try to restart you service / worker whenever it terminates (either gracefully or because of failure). So there is no need to specify this if a *web service* or *worker* item is registered. It needs to be set to **false** when a *Scheduled CRON Job* or an *On-Demand* process is registered.
+- **instances** (integer): If item is a a *web service* or a *worker process* then the number of identical instances to run can be specified. Each instance corresponds a *mesos task* which in turn will result in a *Unix Process* to be spawned by *Singularity Executor* in one of the slaves.
+- *rackSensitive*
+- **schedule** (string). The schedule of a *Scheduled CRON Job* specified in CRON format
+numRetriesOnFailure;
+
+  
+  
+  private final Optional<Integer> instances;
+  private final Optional<Boolean> rackSensitive;
+  
+  private final Optional<Boolean> loadBalanced;
 
 
