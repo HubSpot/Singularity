@@ -35,7 +35,7 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>MesosClient</artifactId>
-      <version>0.3.7-SNAPSHOT</version>
+      <version>${singularity.version}</version>
     </dependency>
  
   </dependencies>
