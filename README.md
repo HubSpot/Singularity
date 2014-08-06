@@ -18,7 +18,7 @@ Singularity can be an essential part of a **continuous deployment** infrastructu
 Singularity is a core component of HubSpot PaaS infrastructure allowing us to run thousands of concurrent services and has already executed many millions of tasks in our production and QA clusters.
 
 ## How it works
-Singularity is an [**Apache Mesos framework**](http://mesos.apache.org/documentation/latest/mesos-frameworks/). It runs as a *task scheduler* on top of **Mesos Clusters** taking advantage of Apache Mesos scalability, fault-tolerance, and resource isolation. [Apache Mesos](http://mesos.apache.org/documentation/latest/mesos-architecture/) is a cluster manager that simplifies the complexity of running different types of applications on a shared pool of servers. In Mesos terminology, *Mesos applications* that are using Mesos APIs to schedule tasks in a cluster are called [*frameworks*](http://mesos.apache.org/documentation/latest/app-framework-development-guide/).
+Singularity is an [**Apache Mesos framework**](http://mesos.apache.org/documentation/latest/mesos-frameworks/). It runs as a *task scheduler* on top of **Mesos Clusters** taking advantage of Apache Mesos scalability, fault-tolerance, and resource isolation. [Apache Mesos](http://mesos.apache.org/documentation/latest/mesos-architecture/) is a cluster manager that simplifies the complexity of running different types of applications on a shared pool of servers. In Mesos terminology, *Mesos applications* that use the Mesos APIs to schedule tasks in a cluster are called [*frameworks*](http://mesos.apache.org/documentation/latest/app-framework-development-guide/).
 
 ![Mesos Frameworks](Docs/images/Mesos_Frameworks.png)
 
@@ -26,38 +26,45 @@ As the drawing depicts there are different types of frameworks and most framewor
 
 Singularity tries to be more generic combining **long-running tasks** and **batch job scheduling** functionality in one framework to support many of the common process types that developers need to deploy every day. While mesos allows multiple frameworks to run in parallel, it is important and greatly simplifies the PaaS architecture having a consistent and uniform set of abstractions and APIs for handling deployments across the organization. This was one of the main reasons for HubSpot engineers to initiate the development of a new framework. As of this moment, Singularity supports the following process types:  
 - **Web Services**. These are long running processes which expose an API and may run with multiple load balanced instances. Singularity supports automatic configurable health checking of the instances at the process and API endpoint level as well as load balancing. Singularity will automatically restart this type of tasks when they fail or exit and cool down them for a while when they repeatedly fail. 
-- **Workers**. These are long running processes, similar to web services, but do not expose an API. *Queue consumers* is common type of worker processes. Singularity dows automatic health checking, cool-down and restart of worker instances.
+- **Workers**. These are long running processes, similar to web services, but do not expose an API. *Queue consumers* is a common type of worker processes. Singularity does automatic health checking, cool-down and restart of worker instances.
 - **Scheduled (CRON-type) Jobs**. These are tasks that periodically run according to a provided CRON schedule. Scheduled jobs will not be restarted when they fail. Singularity will run them again on the next scheduling cycle. There is provision for retries when starting a scheduled job. Check [this discussion document](Docs/ScheduledJobs) on current limitations and future directions in handling scheduled jobs.
 - **On-Demand Processes**. These are manually run processes that will be deployed and be ready to run but singularity will not automatically run them. Users can start them through an API call or using the Singularity Web app.
 
 ## Singularity Components
 Mesos frameworks have two major components. A **scheduler component** that registers with the **mesos master** to be offered resources and an **executor** component that is launched on cluster slave nodes to run the framework tasks. 
 
-The *mesos master* determines how many resources are offered to each framework and the framework scheduler select which of the offered resources to use to run the required tasks. Mesos slaves do not directly run the tasks but delegate the running to the appropriate executor that has knowledge about the nature of the allocated task and the special handling that might be required.
+The *mesos master* determines how many resources are offered to each framework and the framework scheduler selects which of the offered resources to use to run the required tasks. Mesos slaves do not directly run the tasks but delegate the running to the appropriate executor that has knowledge about the nature of the allocated task and the special handling that might be required.
 
 ![Singularity Components](Docs/images/Singularity_Framework_Components.png)
 
 As depicted in the figure, Singularity implements the two basic framework components as well as a few more to solve common complex / tedious problems such as log rotation and archiving without requiring developers to implement it for each task they want to run:
 
 ### Singularity Scheduler
-The scheduler component implements the required functionality for registering with a mesos master and accepting resource offers and at the same time is a web service offering a rich REST API for accepting requests for different deployable items (web service, worker, etc,) and executing deploys for them by allocating resources and creating / managing the required tasks in the mesos cluster. 
+The scheduler component matches client deploy requests to mesos resource offers. It implements the basic functionality of registering with a mesos master to accept resource offers and at the same time it acts as a web service offering a rich REST API for accepting deploy requests.
 
-Failed deploy rollback, health checking, load balancing and log rotation configuration setup of service instances are all part of the Singularity Scheduler functionality.
+Clients use the Singularity API to register the type of deployable item that they want to run (web service, worker, cron job) and the corresponding runtime settings (cron schedule, # of instances, whether instances are load balanced, rack awareness, etc.). 
+
+After a deployable item has been registered, clients can post to the API Deploy requests for that item. Deploy requests contain information about the command to run, the executor to use, executor specific data, required cpu, memory and port resources, health check URLs and a variety of other runtime configuration options. Singularity scheduler will then attempt to match mesos offers (which in turn include resources as well as rack information and what else is running on slave hosts) with its list of Deploy requests that have yet to be fulfilled.
+
+Rollback of failed deploys, health checking and load balancing are also part of the functionality Singularity Scheduler offers. When a service or worker instance fails in a new deploy, Singularity scheduler will rollback all instances to the version running before the deploy keeping the deploys always consistent. After the scheduler makes sure that a process (corresponding to service instance) has entered the TASK_RUNNING state it will use the provided health check URL and specified health check timeout settings  to perform health checks. If health checks go well the next step is to perform the Loab Balancing of service instances, if the corresponding deployable item has been defined to be *loadBalanced*. To do so Singularity supports integration with a Load Balancer API. Singularity will post requests to the Load Balancer API to add the newly deployed service instances and to remove those that was previously running. Check [Integration with Load Balancers](Docs/Integration_With_Load_Balancers.md) to learn more.
 
 Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same Zookeeper quorum utilized by mesos masters and slaves is reused for singularity.  
 
 Since Zoopkeeper is not meant to handle large quantities of data, Singularity utilizes MySQL database to periodically offload metadata from Zookeeper and keep historical records of deployable item changes, deploy request history as well as the history of all launched tasks. 
 
-In production environments singularity is run in high-availability mode by running multiple instances of the Singularity Scheduler component. As depicted only one instance is always active with all the other instances waiting in stand-by mode. While only one instance is registered for receiving resource offers, all instances can process API requests. Singularity uses Zookeeper to perform leader election and maintain a single leader. Because of the ability for all instances to change state, Singularity uses queues which are consumed by the Singularity leader to effect changes in Mesos. 
-
+In production environments Singularity is run in high-availability mode by running multiple instances of the Singularity Scheduler component. As depicted in the drawing, only one instance is always active with all the other instances waiting in stand-by mode. While only one instance is registered for receiving resource offers, all instances can process API requests. Singularity uses Zookeeper to perform leader election and maintain a single leader. Because of the ability for all instances to change state, Singularity uses queues which are consumed by the Singularity leader to effect changes in Mesos. 
 ### Singularity Executor
-The executor component main role is to receive the task configuration settings through the mesos slave process (command to execute, environment variables, executable artifact URLs, application configuration files, etc.), setup the execution environment and run the commands that correspond to a mesos task which in turn corresponds to an instance of a deployable item managed by Singularity.
+The executor component runs on all mesos slave hosts. It registers with the mesos slave process running in the slave host and receives requests to run the commands that correspond to mesos tasks which in turn correspond to instances of the deployable items managed by Singularity. The requests sent to the executor contain all the required data for setting up the running environment like the command to execute, environment variables, executable artifact URLs, application configuration files, etc.
 
 Besides the above basic functionality, Singularity executor offers some advanced features:
 - Download and extract **External Artifacts**. Given the URL of an executable artifact it downloads and extracts the artifacts in the tasks sandbox.
+- **Log Rotation**. For each process initiated by the executor a log rotation configuration file is created and installed.
 ### Log Watcher
+
 ### S3 uploader
+
 ### Executor Cleanup
+So it does the same cleanup as the executor itself but when the executor for any reason has failed to cleanup. Run by Cron
 ### OOM Killer
  
 
