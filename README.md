@@ -90,19 +90,25 @@ The latest info is that Linux Kernel version 3.4 does not seem to have the bug a
 ## Singularity Abstractions & API
 Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. 
 
+### Singularity Request Object
 A **Singularity Request Object** defines a *deployable item*. Before a deployable item can be deployed, users should register the type and other relevant properties of the item by posting a *Singularity Request Object* to **/requests** endpoint. The following are the supported properties:
 - **owners** (List of strings): A list of emails for the people (developers probably) which are responsible for this deployable item. This is a very important piece of information because Singularity will use the emails to send notifications when the relevant mesos tasks fail are get lost with possible directions of what should be done.
 - **daemon** (boolean): This is by default *true* which means that the *deployable item* is either a *web service* or a *worker process*. In practice *daemon* set to *true* means that Singularity will try to restart you service / worker whenever it terminates (either gracefully or because of failure). So there is no need to specify this if a *web service* or *worker* item is registered. It needs to be set to **false** when a *Scheduled CRON Job* or an *On-Demand* process is registered.
-- **instances** (integer): If item is a a *web service* or a *worker process* then the number of identical instances to run can be specified. Each instance corresponds a *mesos task* which in turn will result in a *Unix Process* to be spawned by *Singularity Executor* in one of the slaves.
-- *rackSensitive*
-- **schedule** (string). The schedule of a *Scheduled CRON Job* specified in CRON format
-numRetriesOnFailure;
+- **instances** (integer): If item is a a *web service* or a *worker process* then the number of identical instances to run can be specified. Each instance corresponds a *mesos task* which in turn will result in a *Unix Process* to be spawned by *Singularity Executor* in one of the slaves. Default is 1 instance.
+- **rackSensitive** (boolean): This is possibly a setting with a misleading name that should probably be renamed to *failIfNoSeparateRackPerInstance*. If the deployable item is a a *web service* or a *worker process* and the number of specified *instances* to run is more than one then setting *rackSensitive* to *true* will instruct Singularity to **FAIL** the deploy if it does not succeed to split the load in different *logical racks*. When running in AWS, each *logical rack* corresponds to different *availability zone*. So for example if 3 instances have been specified and *rackSensitive* is *true* but slaves exist in only two availability zones or slaves are full in capacity in the third availability zone, then then deploy will fail. As of now *racksensitive* is set to *true* by default and users with slaves in only one AWS zone should explicitly set it to false if multiple instances are required per deployable item.
+- **loadBalanced** (boolean): If the deployable item is a a *web service* and multiple *instances* have been set then setting *loadBalanced* to *true* instructs Singularity to use the *Load Balancer API* to load balance the instances after they run. The *Loab Balancer API* URL / base path is set inside Singularity Configuration file. The default is *false*.
+- **schedule** (string). The schedule if the deployable item is a *Scheduled CRON Job*, specified in CRON format
+- **numRetriesOnFailure** (integer): This setting is only used for items that their type is *Scheduled CRON Job* and specifies how many times should Singularity try to run the Job if the job fails to start. This is useful for jobs with a daily or even more rare schedule and prevents long delays before the job is tried again if it happens for the job to occasionally fail to start.
+
+When a deployable item is already registered, users may re-post a *Singularity Request Object* to update the item settings. Item types cannot be changed, though. The user should first completely remove the registered item and then re-register it with a different type, e.g. change daemon from false to true, or remove the schedule and change the daemon from false to true.
+
+In the next version of Singularity We plan to deprecate the *daemon* property and introduce an enumerated value for the item type that gets the values: *web service*, *worker*, *scheduled job*, *on-demand*.
+
+The following are example *Singularity Request Objects* for registering different deployable item types. They are provided in JSON format and can be directly used as payloads in API calls.
+
+
 
   
-  
-  private final Optional<Integer> instances;
-  private final Optional<Boolean> rackSensitive;
-  
-  private final Optional<Boolean> loadBalanced;
+
 
 
