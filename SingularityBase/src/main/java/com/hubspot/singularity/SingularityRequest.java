@@ -25,22 +25,22 @@ public class SingularityRequest extends SingularityJsonObject {
   
   private final Optional<Boolean> loadBalanced;
   
-  public static SingularityRequestBuilder newBuilder(String id) {
+  public static SingularityRequestBuilder newBuilder(final String id) {
     return new SingularityRequestBuilder(id);
   }
 
-  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
+  public static SingularityRequest fromBytes(final byte[] bytes, final ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityRequest.class);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new SingularityJsonException(e);
     }
   }
   
   @JsonCreator
-  public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
-      @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon,  @JsonProperty("instances") Optional<Integer> instances, 
-      @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced) {
+  public SingularityRequest(@JsonProperty("id") final String id, @JsonProperty("owners") final Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") final Optional<Integer> numRetriesOnFailure,
+      @JsonProperty("schedule") final Optional<String> schedule, @JsonProperty("daemon") final Optional<Boolean> daemon,  @JsonProperty("instances") final Optional<Integer> instances, 
+      @JsonProperty("rackSensitive") final Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") final Optional<Boolean> loadBalanced) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;

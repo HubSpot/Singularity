@@ -36,7 +36,7 @@ public class SingularityValidator {
   private final Resources DEFAULT_RESOURCES;
   
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityValidator(final SingularityConfiguration configuration, final DeployManager deployManager, final HistoryManager historyManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -55,22 +55,22 @@ public class SingularityValidator {
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
   
-  private void check(boolean expression, String message) {
+  private void check(final boolean expression, final String message) {
     if (!expression) {
       throw WebExceptions.badRequest(message);
     }
   }
   
-  private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
+  private void checkForIllegalChanges(final SingularityRequest request, final SingularityRequest existingRequest) {
     check(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
     check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
     check(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
 
-  private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
-    int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
+  private void checkForIllegalResources(final SingularityRequest request, final SingularityDeploy deploy) {
+    final int instances = request.getInstancesSafe();
+    final double cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
+    final double memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
     
     check(cpusPerInstance > 0, "Request must have more than 0 cpus");
     check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
@@ -82,7 +82,7 @@ public class SingularityValidator {
     check(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, String.format("Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(), memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest));
   }
   
-  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
+  public SingularityRequest checkSingularityRequest(final SingularityRequest request, final Optional<SingularityRequest> existingRequest, final Optional<SingularityDeploy> activeDeploy, final Optional<SingularityDeploy> pendingDeploy) {
     check(request.getId() != null, "Id must not be null");
     
     if (!allowRequestsWithoutOwners) {
@@ -112,7 +112,7 @@ public class SingularityValidator {
       check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
       check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
-      newSchedule = adjustSchedule(request.getSchedule().get());
+      newSchedule = request.getSchedule().get();
 
       check(isValidCronSchedule(newSchedule), String.format("Cron schedule %s (adjusted: %s) was not parseable", request.getSchedule(), newSchedule));
     } else {
@@ -133,7 +133,7 @@ public class SingularityValidator {
     return request.toBuilder().setSchedule(Optional.fromNullable(newSchedule)).build();
   }
   
-  public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
+  public void checkDeploy(final SingularityRequest request, final SingularityDeploy deploy) {
     check(deploy.getId() != null && !deploy.getId().contains("-"), "Id must not be null and can not contain - characters");
     check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
@@ -150,103 +150,23 @@ public class SingularityValidator {
     check(!deployManager.getDeploy(request.getId(), deploy.getId()).isPresent() && !historyManager.getDeployHistory(request.getId(), deploy.getId()).isPresent(), "Can not deploy a deploy that has already been deployed");
   }
   
-  private boolean isValidCronSchedule(String schedule) {
+  private boolean isValidCronSchedule(final String schedule) {
     if (!CronExpression.isValidExpression(schedule)) {
       return false;
     }
     
     try {
-      CronExpression ce = new CronExpression(schedule);
+      final CronExpression ce = new CronExpression(schedule);
       
       if (ce.getNextValidTimeAfter(new Date()) == null) {
         return false;
       }
       
-    } catch (ParseException pe) {
+    } catch (final ParseException pe) {
       return false;
     }
      
     return true;
-  }
-  
-  /**
-   * 
-   * Transforms unix cron into fucking quartz cron; adding seconds if not passed
-   * in and switching either day of month or day of week to ?
-   * 
-   * Field Name Allowed Values Allowed Special Characters Seconds 0-59 , - * /
-   * Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L W
-   * Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year
-   * (Optional) empty, 1970-2199 , - * /
-   */
-  private String adjustSchedule(String schedule) {
-    if (schedule == null) {
-      return null;
-    }
-
-    String[] split = schedule.split(" ");
-
-    if (split.length < 4) {
-      throw WebExceptions.badRequest("Schedule %s is invalid because it contained only %s splits (looking for at least 4)", schedule, split.length);
-    }
-
-    List<String> newSchedule = Lists.newArrayListWithCapacity(6);
-
-    boolean hasSeconds = split.length > 5;
-
-    if (!hasSeconds) {
-      newSchedule.add("0");
-    } else {
-      newSchedule.add(split[0]);
-    }
-
-    int indexMod = hasSeconds ? 1 : 0;
-
-    newSchedule.add(split[indexMod + 0]);
-    newSchedule.add(split[indexMod + 1]);
-
-    String dayOfMonth = split[indexMod + 2];
-    String dayOfWeek = split[indexMod + 4];
-
-    if (dayOfWeek.equals("*")) {
-      dayOfWeek = "?";
-    } else if (!dayOfWeek.equals("?")) {
-      dayOfMonth = "?";
-    }
-    
-    // standard cron is 0-6, quartz is 1-7
-    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday, 
-    // which is sat in quartz. so if we get a value of 7, we should change it to 1.
-    if (isValidInteger(dayOfWeek)) {
-      int dayOfWeekValue = Integer.parseInt(dayOfWeek);
-      
-      if (dayOfWeekValue < 0 || dayOfWeekValue > 7) {
-        throw WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
-      }
-      
-      if (dayOfWeekValue == 7) {
-        dayOfWeekValue = 1;
-      } else {
-        dayOfWeekValue++;
-      }
-      
-      dayOfWeek = Integer.toString(dayOfWeekValue);
-    }
-
-    newSchedule.add(dayOfMonth);
-    newSchedule.add(split[indexMod + 3]);
-    newSchedule.add(dayOfWeek);
-
-    return JOINER.join(newSchedule);
-  }
-  
-  private boolean isValidInteger(String strValue) {
-    try {
-      Integer.parseInt(strValue);
-      return true;
-    } catch (NumberFormatException nfe) {
-      return false;
-    }
   }
   
 }
