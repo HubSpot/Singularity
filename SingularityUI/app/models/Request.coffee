@@ -37,18 +37,20 @@ class Request extends Model
 
     deletePaused: =>
         $.ajax
-            url: "#{ @url() }/paused"
+            url:  "#{ @url() }/paused"
             type: 'DELETE'
 
     unpause: =>
         $.ajax
-            url: "#{ @url() }/unpause?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ @url() }/pause?user=#{ app.getUsername() }"
-            type: 'POST'
+            url:         "#{ @url() }/pause"
+            type:        'POST'
+            contentType: 'application/json'
+            data:         JSON.stringify user: app.getUsername()
 
     run: (confirmedOrPromptData) ->
         options =
@@ -65,12 +67,12 @@ class Request extends Model
         
     bounce: =>
         $.ajax
-            url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
             type: "POST"
 
     destroy: =>
         $.ajax
-            url: "#{ @url() }?user=#{ app.getUsername() }"
+            url:  "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
 
     ###
