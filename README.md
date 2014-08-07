@@ -97,18 +97,19 @@ It allows to search and display information about active, paused, cooled down, c
 
 ![SingularityUI Deployed items Screen](Docs/images/SingularityUI_Requests.png)
 
-Selecting a specific deployed item will display information about its running tasks and provide access to application files and task logs.
+Selecting a specific deployed item will display information about its active running tasks as well as historical tasks, all executed deploys and all updates to items settings (owners, instances, etc.) 
 
 ![SingularityUI Single Deployed Item Screen](Docs/images/SingularityUI_Request.png)
 
+Selecting one of the active taks displays information about the tasks and provides access to application files and task logs.
 
 ![SingularityUI Active Task Screen](Docs/images/SingularityUI_Active_Task.png)
 
-It also gives access to historical information about past task executions and allows to retrieve the archived log files.
+Historical information about past task executions are also available and SingularityUI allows to directly retrieve the archived log files.
 
 ![SingularityUI Historical Task Screen](Docs/images/SingularityUI_Historical_Task.png)
 
-A dashboard with the user's deployed items is available.
+A dashboard with the user's deployed and favored items is available.
 
 ![SingularityUI Dashboard](Docs/images/SingularityUI_Dashboard.png)
 
