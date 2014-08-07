@@ -10,7 +10,7 @@ class FileBrowserSubview extends View
         'click [data-directory-path]': 'navigate'
 
     initialize: ({ @scrollWhenReady }) ->
-        @listenTo @collection, 'sync', @render
+        @listenTo @collection, 'sync',  @render
         @listenTo @collection, 'error', @catchAjaxError
 
     render: ->
@@ -32,7 +32,8 @@ class FileBrowserSubview extends View
             @scrollWhenReady = false
 
     catchAjaxError: ->
-        @$('.span-12').html '<h3>Could not get files :(</h3>'
+        app.caughtError()
+        @render()
 
     scrollToTop: ->
         utils.animatedExpansion @$el
