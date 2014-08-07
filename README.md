@@ -66,26 +66,6 @@ Besides the above basic functionality, *Singularity Executor* offers some advanc
 - **Environment Setup**. The executor accepts a map of environment variables and automatically creates an *environment setup* shell script that sets the defined variables.
 - **Runner Script**. A *task runner* shell script is auto-generated for each task. The script runs system-wide scripts in *profile.d* as well as local *profile.d* scripts inside the extracted artifact, initializes the environment vars (using the environment setup script) and finally runs the requested task command as the requested user.
 
-### SingularityUI
-*SingularityUI* is a single page web app that uses Singularity API to present information about deployed items. 
-
-![SingularityUI status screen](Docs/images/SingularityUI_Status.png)
-
-It displays information about active, paused, cooled down and pending items as well information about their running tasks, providing access to application files and task logs. A dashboard with the user's deployed items is available.
-
-It also gives access to historical information about past task executions and allows to retrieve the archived log files.
-
-While Singularity UI is mostly a viewing app it has some limited functionality for performing certain actions on registered deployable items and their tasks:
-
-- Remove a deployed item. All running tasks (e.g. the service instances if it is a web service) are terminated and the item is unregistered from Singularity. Historical logs are not removed and will be connected with the item if it is re-registered to Singularity at a later stage.
-- Pause a deployed item. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
-- Decommission a slave 
-
-For all displayed information, access is provided to the API payloads from which views are created which can greatly help debugging of deploys and can be used by developers that create tools on top of Singularity API. 
-
-### Singularity Java Client
-The *java client* provides instant access to most of the Singularity API functionality and can be used to create deploy services upon Singularity platform. The *Mesos Deploy Service* that manages deploys in HubSpot uses the java client to register the deployable items in Singularity, perform deploys for them, rollback deploys and poll the status of deployed or currently running items.  
-
 ### Log Watcher
 Log watcher is a service that run in each slave and provides logs tailing and streaming / forwarding of tailed log lines to third party services like *fluentd* or *logstash* to support real time log viewing and searching. This is an optional add-on not required for Singularity to provide its basic functionality.
 
@@ -101,6 +81,32 @@ The **Out of Memory process Killer** is an optional service that Singularity use
 We have found out that in certain Linux Kernel versions (e.g. 2.6 and 3.10) a bug causes a deadlock to happens when OOM events occur which then requires a system reboot. In addition to this, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs which in combination with the deadlock create often slave failures.
 
 The latest info is that Linux Kernel version 3.4 does not seem to have the bug and version 3.16 will fix it. In any case, if users wish to run the *OOM Killer* service they should disable the CGROUPS memory limit checking in their mesos slaves.        
+
+### SingularityUI
+*SingularityUI* is a single page web app that uses Singularity API to present information about deployed items. 
+
+![SingularityUI status screen](Docs/images/SingularityUI_Status.png)
+
+It displays information about active, paused, cooled down and pending items as well information about their running tasks, providing access to application files and task logs. A dashboard with the user's deployed items is available.
+
+It also gives access to historical information about past task executions and allows to retrieve the archived log files.
+
+While Singularity UI is mostly a viewing app it has some limited functionality for performing certain actions on registered deployable items and their tasks:
+
+- Remove a deployed item. All running tasks (e.g. the service instances if it is a web service) are terminated and the item is unregistered from Singularity. Historical logs are not removed and will be connected with the item if it is re-registered to Singularity at a later stage.
+- Pause a deployed item. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
+- Manually run a *Scheduled Job* or *On-Demand* item
+- Decommission a slave which means that all tasks running in the specific slave will be migrated to other slaves
+- Decommission a *logical rack*, meaning that all slave hosts in the rack will be decommissioned. When running in AWS a rack corresponds to an availability zone.
+
+![SingularityUI Slaves screen](Docs/images/SingularityUI_Slaves.png)
+![SingularityUI Racks screen](Docs/images/SingularityUI_Racks.png)
+
+For all displayed information, access is provided to the API payloads from which views are created which can greatly help debugging of deploys and can be used by developers that create tools on top of Singularity API. 
+
+### Singularity Java Client
+The *java client* provides instant access to most of the Singularity API functionality and can be used to create deploy services upon Singularity platform. The *Mesos Deploy Service* that manages deploys in HubSpot uses the java client to register the deployable items in Singularity, perform deploys for them, rollback deploys and poll the status of deployed or currently running items.
+
 
 ## Singularity Abstractions & API
 Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. 
