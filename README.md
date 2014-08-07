@@ -10,15 +10,18 @@
   * [Executor Cleanup](#executor-cleanup)
   * [Out Of Memory Killer](#oom-killer)
   * [Singularity UI](#singularity-ui)
-* [Singularity Abstractions & API](#singularity-abstractions-api)
+* [Singularity Abstractions & API](#singularity-abstractions-&-api)
   * [Singularity Request Object](#singularity-request-object)
   * [Singularity Deploy Object](#singularity-deploy-object)
 
 ## About Singularity Documentation
-*Singularity* is a new and very active project in HubSpot and while we make a considerable effort to keep the documentation current, there is a possibility that you will find inconsistencies or obsolete information.
-Another note is that *Singularity* offers a quite extensive functionality that is not currently documented. We understand that documentation is very important for open source projects to be useful and we are committed to consistently enhance and maintain the documentation as Singularity matures and becomes a key component in HubSpot PaaS. We appreciate any contribution towards making Singularity code and its documentation better.
+*Singularity* is a new and very active project and while we make a considerable effort to keep the documentation current, there is a possibility that you will find some inconsistencies or obsolete information.
 
-The extended README that follows tries to give a brief yet complete overview of Singularity and its context which resolves around Cluster Management, PaaS and Continuous Deployment tools / platforms. The Mesos ecosystem, which Singularity belongs to, is highly evolving. This is exciting but at the moment documentation is lacking and when we started we found it quite difficult to synthesize the whole picture. So the purpose of this document is to quickly give a good idea of the whole picture and let you decide if Singularity is for you. Inside the document there are references to more detailed documents that expand on the relevant subjects and give detailed instructions on how to install, deploy and use Singularity components. All Singularity documentation except this README (and some brief REAME files in sub projects) resides in the Docs folder. We suggest to try to read this introductory material first and visit the detailed docs through the provided references.
+Another note is that *Singularity* offers a quite extensive functionality and some of it is not currently documented. We understand that documentation is very important for open source projects to be useful and we are committed to consistently enhance and maintain the documentation as Singularity matures and its features become more stable. We appreciate any contribution towards making Singularity code and its documentation better.
+
+The documentation that follows tries to give a brief yet complete overview of Singularity and its quite extensive context which resolves around Cluster Management, PaaS and Continuous Deployment tools / platforms. The apache Mesos ecosystem, which Singularity belongs to, is highly evolving and expanding every day. This is exciting but at the moment documentation is lacking and when we started we found it quite difficult to synthesize the whole picture. So the purpose of this document is to give you a good idea of the whole picture and let you quickly decide if Singularity is for you. Inside the document there are references to more detailed documents that expand on the relevant subjects and give detailed instructions on how to install, deploy and use Singularity components. 
+
+All Singularity documentation except this README file (and some brief REAME files in sub projects) resides in the Docs folder. We suggest to start by reading this introductory material first and visit the detailed docs through the provided references.
 
 ## What is Singularity
 **Singularity** is a platform that enables deploying and running services and scheduled jobs in cloud infrastructures, providing efficient management of the underlying processes life cycle and effective use of the cluster resources.
@@ -140,6 +143,7 @@ While Singularity UI is mostly a viewing app it has some limited functionality f
 - Remove a deployed item. All running tasks (e.g. the service instances if it is a web service) are terminated and the item is unregistered from Singularity. Historical logs are not removed and will be connected with the item if it is re-registered to Singularity at a later stage.
 - Pause a deployed item. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
 - Manually run a *Scheduled Job* or *On-Demand* item
+- Kill a running task. Tasks corresponding to instances of *web service* or *worker* items will be re-started instantly (possibly) in another slave. Scheduled tasks will behave as if the task failed and may be rescheduled to run in the future depending on whether or not the job item has *numRetriesOnFailure* set.
 - Decommission a slave which means that all tasks running in the specific slave will be migrated to other slaves
 - Decommission a *logical rack*, meaning that all slave hosts in the rack will be decommissioned. The *rackid* attribute can be used when running the mesos slave process to specify which rack the slave belongs to. For example when running in AWS a rack could corresponds to the availability zone ( /usr/local/sbin/mesos-slave --attributes=rackid:us-east-1e).
 
