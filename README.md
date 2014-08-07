@@ -87,9 +87,21 @@ The latest info is that Linux Kernel version 3.4 does not seem to have the bug a
 
 ![SingularityUI status screen](Docs/images/SingularityUI_Status.png)
 
-It displays information about active, paused, cooled down and pending items as well information about their running tasks, providing access to application files and task logs. A dashboard with the user's deployed items is available.
+It displays information about active, paused, cooled down and pending items as well information about their running tasks, providing access to application files and task logs.
+
+![SingularityUI Deployed items Screen](Docs/images/SingularityUI_Requests.png)
+
+![SingularityUI Single Deployed Item Screen](Docs/images/SingularityUI_Request.png)
+
+![SingularityUI Active Task Screen](Docs/images/SingularityUI_Active_Task.png)
 
 It also gives access to historical information about past task executions and allows to retrieve the archived log files.
+
+![SingularityUI Historical Task Screen](Docs/images/SingularityUI_Historical_Task.png)
+
+A dashboard with the user's deployed items is available.
+
+![SingularityUI Dashboard](Docs/images/SingularityUI_Dashboard.png)
 
 While Singularity UI is mostly a viewing app it has some limited functionality for performing certain actions on registered deployable items and their tasks:
 
@@ -100,9 +112,12 @@ While Singularity UI is mostly a viewing app it has some limited functionality f
 - Decommission a *logical rack*, meaning that all slave hosts in the rack will be decommissioned. When running in AWS a rack corresponds to an availability zone.
 
 ![SingularityUI Slaves screen](Docs/images/SingularityUI_Slaves.png)
+
 ![SingularityUI Racks screen](Docs/images/SingularityUI_Racks.png)
 
-For all displayed information, access is provided to the API payloads from which views are created which can greatly help debugging of deploys and can be used by developers that create tools on top of Singularity API. 
+For all displayed information, access is provided to the API payloads from which views are created. This can greatly help debugging of deploys and can be used by developers that create tools on top of Singularity API.
+
+![SingularityUI Task Status JSON output](Docs/images/SingularityUI_JSON_Output.png)
 
 ### Singularity Java Client
 The *java client* provides instant access to most of the Singularity API functionality and can be used to create deploy services upon Singularity platform. The *Mesos Deploy Service* that manages deploys in HubSpot uses the java client to register the deployable items in Singularity, perform deploys for them, rollback deploys and poll the status of deployed or currently running items.
