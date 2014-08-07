@@ -1,0 +1,100 @@
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>
+                        {{! Star column }}
+                    </th>
+                    <th data-sort-attribute="request.id">
+                        Name
+                    </th>
+                    <th data-sort-attribute="request.instances" class="visible-lg visible-xl">
+                        Instances
+                    </th>
+                    <th data-sort-attribute="requestDeployState.activeDeploy.deployId" class="visible-lg visible-xl">
+                        Deploy ID
+                    </th>
+                    <th data-sort-attribute="requestDeployState.activeDeploy.user" class="visible-lg visible-xl">
+                        Deploy user
+                    </th>
+                    <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
+                        Deploy time
+                    </th>
+
+                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
+                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
+                            Schedule
+                        </th>
+                    {{/ifInSubFilter}}
+
+                    <th class="hidden-xs">
+                        {{! Actions column }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+                {{#each requests}}
+                    <tr data-request-id="{{ request.id }}" data-request-deploy-user="{{ requestDeployState.activeDeploy.user }}">
+                        <td>
+                            <a class="star" data-action="starToggle" data-starred="{{ starred }}">
+                                <span class="glyphicon glyphicon-star"></span>
+                            </a>
+                        </td>
+                        <td class="keep-in-check">
+                            <a href="{{appRoot}}/request/{{ request.id }}" title="{{ request.id }}">
+                                {{ request.id }}
+                            </a>
+                        </td>
+                        <td class="visible-lg visible-xl centered">
+                            {{#if request.instances}}
+                                {{ request.instances }}
+                            {{else}}
+                                1
+                            {{/if}}
+                        </td>
+                        <td class="visible-lg visible-xl">
+                            {{ requestDeployState.activeDeploy.deployId }}
+                        </td>
+                        <td class="visible-lg visible-xl">
+                            {{usernameFromEmail requestDeployState.activeDeploy.user}}
+                        </td>
+                        <td class="hidden-xs">
+                            {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
+                        </td>
+                        
+                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                            <td class="visible-lg visible-xl">
+                                {{ request.schedule }}
+                            </td>
+                        {{/ifInSubFilter}}
+
+                        <td class="actions-column hidden-xs">
+                            {{#if canBeRunNow}}
+                                <a data-request-id="{{ request.id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now">
+                                    <span class="glyphicon glyphicon-repeat" title="Run now"></span>
+                                </a>
+                            {{/if}}
+                            <a data-request-id="{{ request.id }}" data-action="remove">
+                                <span class="glyphicon glyphicon-trash" title="Remove"></span>
+                            </a>
+                            <a data-request-id="{{ request.id }}" data-action="viewJSON">
+                                <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                            </a>
+                        </td>
+                    </tr>
+                {{/each}}
+{{#unless rowsOnly}}
+    {{#if haveRequests}}
+            </tbody>
+        </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No requests</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

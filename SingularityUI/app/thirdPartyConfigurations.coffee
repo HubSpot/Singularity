@@ -1,12 +1,5 @@
-# Make all string methods available on _
-_.mixin _.string.exports()
-
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
-
-# Set Vex dialog default afterOpen to include scroll prevention
-vex.dialog.defaultOptions.afterOpen = ($vexContent) ->
-    utils.scrollPreventDefaultAtBounds $vexContent.parent()
 
 # Time out requests within 10 seconds
 $.ajaxSetup
@@ -20,18 +13,14 @@ jQuery.ajax = (opts) ->
 
     _oldAjax.call jQuery, opts
 
-# Configure moment().calender() to be used as an alternative to moment().calendar()
-relative = -> "[#{ @from() }]"
-relativePlus = -> "[#{ @from() }] ([#{ @format('l h:mma') }])"
-
+# Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
 moment.lang 'en',
-    calendar:
-        nextWeek: relativePlus
-        nextDay: relativePlus
-        sameDay: relative
-        lastDay: relativePlus
-        lastWeek: relativePlus
-        sameElse: relativePlus
+    longDateFormat:
+        LT : "HH:mm"
+        L : "DD/MM/YYYY"
+        LL : "D MMMM YYYY"
+        LLL : "D MMMM YYYY LT"
+        LLLL : "dddd, D MMMM YYYY LT"
 
 # Messenger options
 Messenger.options =
@@ -47,3 +36,9 @@ Messenger.options =
 # ZeroClipboard options
 ZeroClipboard.config
     debug: false
+    swfPath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
+
+# Overwrite Handlebars logging
+Handlebars.logger.log = (stuff...) =>
+    for thing in stuff[1..]
+        console.log thing

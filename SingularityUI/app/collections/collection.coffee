@@ -1,5 +1,12 @@
-module.exports = class Collection extends Backbone.Collection
+# Base collection extended by the others
+class Collection extends Backbone.Collection
 
-    initialize: ->
-        @on 'reset', => @sort() if @comparator?
-        @on 'sync', => @synced = true
+    # Tracks if the collection has synced
+    synced: false
+
+    constructor: ->
+        super
+        @on 'sync',  => @synced = true
+        @on 'reset', => @synced = false
+
+module.exports = Collection

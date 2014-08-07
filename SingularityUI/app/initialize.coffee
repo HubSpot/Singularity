@@ -1,12 +1,13 @@
 # Set up the only app globals
 window.utils = require 'utils'
-window.constants = require 'constants'
 window.app = require 'application'
 
-apiRootPromptTemplate = require './views/templates/vex/apiRootPrompt'
+apiRootPromptTemplate = require './templates/vex/apiRootPrompt'
 
 # Set up third party configurations
 require 'thirdPartyConfigurations'
+# Set up the Handlebars helpers
+require 'handlebarsHelpers'
 
 # Initialize the app on DOMContentReady
 $ ->

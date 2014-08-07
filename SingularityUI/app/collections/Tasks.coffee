@@ -1,12 +1,26 @@
 Collection = require './collection'
 
+Task = require '../models/Task'
+
 class Tasks extends Collection
 
-    comparator: (a, b) ->
-        a = a.get('name').toLowerCase()
-        b = b.get('name').toLowerCase()
-        return 0 if a is b
-        return -1 if a < b
-        1
+    model: Task
+
+    comparatorMap:
+        active:    (one, two) ->
+            one.get('taskId').startedAt - two.get('taskId').startedAt
+        scheduled: (one, two) ->
+            one.get('pendingTask').pendingTaskId.nextRunAt - two.get('pendingTask').pendingTaskId.nextRunAt
+        cleaning:  undefined
+
+    propertyFilterMap:
+        active: ['offer.hostname', 'taskId', 'mesosTask.resources']
+
+    url: ->
+        propertyString = $.param 'property': @propertyFilterMap[@state] or [], true
+        "#{ config.apiRoot }/tasks/#{ @state }?#{ propertyString }"
+
+    initialize: (models = [], {@state}) ->
+        @comparator = @comparatorMap[@state]
 
 module.exports = Tasks

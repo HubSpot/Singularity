@@ -1,0 +1,44 @@
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-pills table-nav-pills">
+            <li class="{{#ifEqual requestsFilter "all"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests">All</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "active"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests/active">Active</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "cooldown"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests/cooldown">Cooldown</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "paused"}}active{{/ifEqual}} separator-pill">
+                <a href="{{appRoot}}/requests/paused">Paused</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "pending"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests/pending">Pending</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "cleaning"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests/cleaning">Cleaning</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <input type="search" class="big-search-box" placeholder="Filter requests" value="{{ searchFilter }}" required />
+    </div>
+
+    <div class="col-md-12">
+        {{#if hasSubFilter}}
+            <div class="requests-filter-container">
+                {{> requestsFilter}}
+            </div>
+        {{/if}}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 table-staged">
+        {{> requestsBody}}
+    </div>
+</div>

@@ -1,0 +1,70 @@
+<div class="page-header">
+    <h2>Files</h2>
+</div>
+<ul class="breadcrumb">
+    {{#each breadcrumbs}}
+        <li>
+            <a data-directory-path="{{ path }}">{{ name }}</a>
+        </li>
+    {{/each}}
+</ul>
+{{#if files}}
+    <table class="table table-striped files-table">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th class="hidden-xs">
+                    Size
+                </th>
+                <th class="hidden-xs">
+                    Last modified
+                </th>
+                <th class="hidden-xs">
+
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each files}}
+                <tr>
+                    <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ shortPath }}">
+                        {{#if isDirectory}}
+                            <a data-directory-path="{{ requestPath }}" href="{{appRoot}}/task/{{ taskId }}/files/{{ shortPath }}">
+                                <span class="glyphicon glyphicon-folder-close"></span>{{ shortPath }}/
+                            </a>
+                        {{else}}
+                            <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
+                                <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
+                            </a>
+                        {{/if}}
+                    </td>
+                    <td class="hidden-xs" data-value="{{ size }}">
+                        {{#unless isDirectory}}
+                            {{humanizeFileSize size}}
+                        {{/unless}}
+                    </td>
+                    <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
+                    <td class="actions-column hidden-xs">
+                        {{#unless isDirectory}}
+                            <a href="{{ downloadLink }}" target="_blank">
+                                <span class="glyphicon glyphicon-download-alt" title="Download"></span>
+                            </a>
+                        {{/unless}}
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    {{#if synced}}
+        <div class="empty-table-message">
+            This directory is empty
+        </div>
+    {{else}}
+        <div class="page-loader-container">
+            <div class="page-loader centered"></div>
+        </div>
+    {{/if}}
+{{/if}}

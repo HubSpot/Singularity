@@ -1,7 +1,9 @@
-Model = require './model'
+class User extends Backbone.Model
 
-class User extends Model
+    fetch: ->
+        @set JSON.parse localStorage.getItem 'singularityUser'
 
-    localStorage: new Backbone.LocalStorage('SingularityUser')
+    save: ->
+        localStorage.setItem 'singularityUser', JSON.stringify @attributes
 
 module.exports = User

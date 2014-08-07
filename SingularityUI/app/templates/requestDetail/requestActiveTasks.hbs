@@ -1,0 +1,53 @@
+{{! Part of requestBase }}
+<div class="page-header">
+    <h2>Running instances</h2>
+</div>
+{{#if data}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th class="hidden-sm hidden-xs">Status</th>
+                <th class="hidden-sm hidden-xs">Deploy ID</th>
+                <th class="hidden-sm hidden-xs">Started</th>
+                <th class="hidden-xs">Updated</th>
+                <th class="hidden-xs"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr data-id="{{ taskId.id }}" data-collection="activeTasks">
+                    <td>
+                        <span title="{{ taskId.id }}">
+                            <a href="{{appRoot}}/task/{{ taskId.id }}">
+                                {{ taskId.id }}
+                            </a>
+                        </span>
+                    </td>
+                    <td class="hidden-sm hidden-xs">
+                        {{humanizeText lastTaskState}}
+                    </td>
+                    <td class="hidden-sm hidden-xs">
+                        {{ taskId.deployId }}
+                    </td>
+                    <td class="hidden-sm hidden-xs" data-value="{{ taskId.startedAt }}">
+                        {{timestampFromNow taskId.startedAt}}
+                    </td>
+                    <td class="hidden-xs" data-value="{{ taskId.updatedAt }}">
+                        {{timestampFromNow updatedAt}}
+                    </td>
+                    <td class="actions-column hidden-xs">
+                        <a href="{{appRoot}}/task/{{ taskId.id }}/files/">
+                            <span class="glyphicon glyphicon-file" title="Files"></span>
+                        </a>
+                        <a data-action="viewJSON">
+                            <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message"><p>No active tasks</p></div>
+{{/if}}

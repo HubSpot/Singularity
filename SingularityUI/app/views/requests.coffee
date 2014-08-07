@@ -1,26 +1,23 @@
 View = require './view'
 
-Request = require '../models/Request'
-RequestsStarred = require '../collections/RequestsStarred'
-
 class RequestsView extends View
 
-    templateBase:   require './templates/requestsBase'
-    templateFilter: require './templates/requestsFilter'
+    isSorted: false
+
+    templateBase:   require '../templates/requestsTable/requestsBase'
+    templateFilter: require '../templates/requestsTable/requestsFilter'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
-        all:      require './templates/requestsAllBody'
-        active:   require './templates/requestsActiveBody'
-        cooldown: require './templates/requestsCooldownBody'
-        paused:   require './templates/requestsPausedBody'
-        pending:  require './templates/requestsPendingBody'
-        cleaning: require './templates/requestsCleaningBody'
+        all:      require '../templates/requestsTable/requestsAllBody'
+        active:   require '../templates/requestsTable/requestsActiveBody'
+        cooldown: require '../templates/requestsTable/requestsCooldownBody'
+        paused:   require '../templates/requestsTable/requestsPausedBody'
+        pending:  require '../templates/requestsTable/requestsPendingBody'
+        cleaning: require '../templates/requestsTable/requestsCleaningBody'
 
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
-    # Which views you can star requests in
-    haveStars: ['all', 'active']
 
     # For staged rendering
     renderProgress: 0
@@ -35,7 +32,7 @@ class RequestsView extends View
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="starToggle"]': 'toggleStar'
             'click [data-action="run-now"]': 'runRequest'
-            'click [data-requests-active-filter]': 'changeFilters'
+            'click [data-filter]': 'changeFilters'
 
             'change input[type="search"]': 'searchChange'
             'keyup input[type="search"]': 'searchChange'
@@ -43,41 +40,13 @@ class RequestsView extends View
 
             'click th[data-sort-attribute]': 'sortTable'
 
-    initialize: ({@requestsFilter, @requestsSubFilter, @searchFilter}) ->
-        @bodyTemplate = @bodyTemplateMap[@requestsFilter]
+    initialize: ({@state, @subFilter, @searchFilter}) ->
+        @bodyTemplate = @bodyTemplateMap[@state]
+        @listenTo @collection, 'sync',   @render
+        @listenTo @collection, 'remove', @render
 
-        # Set up collection
-        collectionMap =
-            all:      app.collections.requestsAll
-            active:   app.collections.requestsActive
-            cooldown: app.collections.requestsCooldown
-            paused:   app.collections.requestsPaused
-            pending:  app.collections.requestsPending
-            cleaning: app.collections.requestsCleaning
-
-        @collectionSynced = false
-        @collection = collectionMap[@requestsFilter]
-        # Initial fetch
-        @collection.fetch().done =>
-            @collectionSynced = true
-            @render()
-
-        # Gonna need to know which requests are starred
-        if @requestsFilter in @haveStars
-            @starredRequests = new RequestsStarred
-            @starredRequests.fetch() # synchronous
-            
-            @collection.on 'sync', =>
-                @collection.each (request) =>
-                    request.set 'starred', @starredRequests.get(request.id)?
-
-    # Called by app on active view
-    refresh: ->
-        return @ if @$el.find('[data-sorted-direction]').length
-        # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
-        return @ if $(window).scrollTop() > 200
-        @collection.fetch().done =>
-            @renderTable()
+        # So we don't spam it with every keystroke
+        @searchChange = _.debounce @searchChange, 200
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
@@ -86,29 +55,43 @@ class RequestsView extends View
         # Only show requests that match the search query
         if @searchFilter
             requests = _.filter requests, (request) =>
-                searchTarget = request.name + request.deployUser
+                searchTarget = "#{ request.request.id }#{ request.requestDeployState?.activeDeploy?.user }"
                 searchTarget.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Only show requests that match the clicky filters
-        if @requestsFilter in @haveSubfilter and @requestsSubFilter isnt 'all'
+        if @state in @haveSubfilter and @subFilter isnt 'all'
             requests = _.filter requests, (request) =>
                 filter = false
 
-                if @requestsSubFilter.indexOf('daemon') isnt -1
+                if @subFilter.indexOf('daemon') isnt -1
                     filter = filter or request.daemon
-                if @requestsSubFilter.indexOf('scheduled') isnt -1
+                if @subFilter.indexOf('scheduled') isnt -1
                     filter = filter or request.scheduled
-                if @requestsSubFilter.indexOf('on-demand') isnt -1
+                if @subFilter.indexOf('ondemand') isnt -1
                     filter = filter or request.onDemand
                 filter
 
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
-            requests = _.sortBy requests, @sortAttribute
+            requests = _.sortBy requests, (request) =>
+                # Traverse through the properties to find what we're after
+                attributes = @sortAttribute.split '.'
+                value = request
+
+                for attribute in attributes
+                    value = value[attribute]
+                    return null if not value?
+
+                return value
+
             if not @sortAscending
                 requests = requests.reverse()
         else
             requests.reverse()
+
+        if @state in ['all', 'active']
+            for request in requests
+                request.starred = @collection.isStarred request.id
             
         @currentRequests = requests
 
@@ -116,18 +99,18 @@ class RequestsView extends View
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
-            requestsFilter: @requestsFilter
-            requestsSubFilter: @requestsSubFilter
+            requestsFilter: @state
+            requestsSubFilter: @subFilter
             searchFilter: @searchFilter
-            hasSubFilter: @requestsFilter in @haveSubfilter
-            collectionSynced: @collectionSynced
-            haveRequests: @collection.length and @collectionSynced
+            hasSubFilter: @state in @haveSubfilter
+            collectionSynced: @collection.synced
+            haveRequests: @collection.length and @collection.synced
 
         partials = 
             partials:
                 requestsBody: @bodyTemplate
 
-        if @requestsFilter in @haveSubfilter
+        if @state in @haveSubfilter
             partials.partials.requestsFilter = @templateFilter
 
         @$el.html @templateBase context, partials
@@ -136,9 +119,19 @@ class RequestsView extends View
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
+        return if not @$('table').length
+
+        @$('table').show()
+        @$('.empty-table-message').remove()
+
         $(window).scrollTop 0
         @filterCollection()
         @renderProgress = 0
+
+        if not @currentRequests.length
+            @$('table').hide()
+            @$el.append '<div class="empty-table-message">No requests that match your query</div>'
+            return
 
         @renderTableChunk()
 
@@ -155,8 +148,9 @@ class RequestsView extends View
         @renderProgress = newProgress
 
         $contents = @bodyTemplate
-            requests: requests
-            rowsOnly: true
+            requests:          requests
+            rowsOnly:          true
+            requestsSubFilter: @subFilter
         
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
@@ -172,12 +166,14 @@ class RequestsView extends View
             $tableBody.append $contents
 
     sortTable: (event) =>
+        @isSorted = true
+
         $target = $ event.currentTarget
         newSortAttribute = $target.attr "data-sort-attribute"
 
         $currentlySortedHeading = @$ "[data-sorted=true]"
         $currentlySortedHeading.removeAttr "data-sorted"
-        $currentlySortedHeading.removeAttr "data-sorted-direction"
+        $currentlySortedHeading.find('span').remove()
 
         if newSortAttribute is @sortAttribute and @sortAscending?
             @sortAscending = not @sortAscending
@@ -188,7 +184,7 @@ class RequestsView extends View
         @sortAttribute = newSortAttribute
 
         $target.attr "data-sorted", "true"
-        $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
+        $target.append "<span class='glyphicon glyphicon-chevron-#{ if @sortAscending then 'up' else 'down' }'></span>"
 
         @renderTable()
 
@@ -209,67 +205,80 @@ class RequestsView extends View
                 @renderTableChunk()
 
     updateUrl: =>
-        app.router.navigate "/requests/#{ @requestsFilter }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
+        app.router.navigate "/requests/#{ @state }/#{ @subFilter }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        utils.viewJSON 'request', $(e.target).data('request-id')
+        id = $(e.target).parents('tr').data 'request-id'
+        utils.viewJSON @collection.get id
 
     removeRequest: (e) ->
-        $row = $(e.target).parents('tr')
-        requestModel = @collection.get($(e.target).data('request-id'))
-        requestModel.promptRemove =>
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        @collection.get(id).promptRemove =>
             $row.remove()
 
     unpauseRequest: (e) ->
-        $row = $(e.target).parents('tr')
-        requestModel = @collection.get($(e.target).data('request-id'))
-        requestModel.promptUnpause =>
-            @refresh()
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        @collection.get(id).promptUnpause =>
+            $row.remove()
+            @trigger 'refreshrequest'
 
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
 
-        requestModel = new Request id: $(e.target).data('request-id')
-        requestModel.promptRun =>
-            utils.flashRow $row
+        @collection.get(id).promptRun =>
+            $row.addClass 'flash'
+            setTimeout (=> $row.removeClass 'flash'), 500
                         
     toggleStar: (e) ->
-        $target = $(e.target)
-        $table = $target.parents 'table'
+        $target = $(e.currentTarget)
+        $row = $target.parents 'tr'
 
-        requestName = $target.data 'request-name'
-        starred = $target.attr('data-starred') is 'true'
+        id = $row.data 'request-id'
+        
+        @collection.toggleStar id
 
-        app.collections.requestsStarred.toggle(requestName)
-        $requests = $table.find("""[data-request-name="#{ requestName }"]""")
-
+        starred = $target.attr('data-starred') is "true"
         if starred
-            $requests.each -> $(@).attr('data-starred', 'false')
+            $target.attr 'data-starred', 'false'
         else
-            $requests.each -> $(@).attr('data-starred', 'true')
+            $target.attr 'data-starred', 'true'
 
-    changeFilters: (e) ->
-        e.preventDefault()
-        @requestsSubFilter = $(e.target).data('requests-active-filter')
-        if e.metaKey or e.ctrlKey or e.shiftKey
-            @requestsSubFilter = $(e.target).data('requests-active-filter-shift')
+    changeFilters: (event) ->
+        event.preventDefault()
+
+        filter = $(event.currentTarget).data 'filter'
+
+        if not event.metaKey
+            # Select individual filters
+            @subFilter = filter
+        else
+            # Select multiple filters
+            currentFilter = if @subFilter is 'all' then 'daemon-ondemand-scheduled' else  @subFilter
+
+            currentFilter = currentFilter.split '-'
+            needToAdd = not _.contains currentFilter, filter
+
+            if needToAdd
+                currentFilter.push filter
+            else
+                currentFilter = _.without currentFilter, filter
+
+            @subFilter = currentFilter.join '-'
 
         @updateUrl()
         @render()
 
     searchChange: (event) =>
-        # Add a little delay to the event so we don't run it for every keystroke
-        if @searchTimeout?
-            clearTimeout @searchTimeout
-
-        @searchTimeout = setTimeout @processSearchChange, 200
-
-    processSearchChange: =>
         return unless @ is app.views.current
 
         previousSearchFilter = @searchFilter
         $search = @$ "input[type='search']"
-        @searchFilter = _.trim $search.val()
+        @searchFilter = $search.val()
 
         if @searchFilter isnt previousSearchFilter
             @updateUrl()

@@ -1,52 +1,136 @@
 View = require './view'
 
-TaskHistory = require '../models/TaskHistory'
-
-TailerView = require './tailer'
-
 class TailView extends View
 
-    template: require './templates/tail'
+    pollingTimeout: 3000
 
-    className: 'tail-wrapper'
+    template: require '../templates/tail'
 
-    events:
-        'click .tail-top-button': 'tailerToTop'
-        'click .tail-bottom-button': 'tailerToBottom'
+    linesTemplate: require '../templates/tailLogLines'
 
-    initialize: ({@taskId, @path}) ->
-        @subfolders = []
+    events: ->
+        _.extend super,
+            'click .tail-top-button': 'goToTop'
+            'click .tail-bottom-button': 'goToBottom'
 
-        pieces = @path.split /\//
-        fullPath = ''
+    initialize: ({@taskId, @path, firstRequest}) ->
+        @filename = _.last @path.split '/'
 
-        for name in _.initial(pieces)
-            fullPath += "#{name}/"
-            @subfolders.push {name, fullPath}
+        @listenTo @collection, 'reset',       @dumpContents
+        @listenTo @collection, 'sync',        @renderLines
+        @listenTo @collection, 'initialdata', @afterInitialData
 
-        @filename = _.last(pieces)
+        # For the visual loading indicator thing
+        @listenTo @collection, 'request', =>
+            @$el.addClass 'fetching-data'
+        @listenTo @collection, 'sync', =>
+            @$el.removeClass 'fetching-data'
 
-    remove: =>
-        @tailer?.remove()
-        super
+    handleAjaxError: (response) =>
+        # ATM we get 404s if we request dirs and 500s if the file doesn't exist
+        if response.status in [404, 500]
+            app.caughtError()
+            @$el.html "<h1>Could not get request file.</h1>"
 
     render: =>
-        @$el.html @template {@taskId, @path, @subfolders, @filename}
+        breadcrumbs = utils.pathToBreadcrumbs @path
 
-        @tailer = new TailerView
-            el: @$('.tail-outer')
-            taskId: @taskId
-            path: @path
-            parent: @
+        @$el.html @template {@taskId, @filename, breadcrumbs}
 
-        @tailer.render()
+        @$contents = @$ '.tail-contents'
 
-        @
+        # Attach scroll event manually because Backbone is poopy about it
+        @$contents.on 'scroll', @handleScroll
 
-    tailerToTop: =>
-        @tailer.goToTop()
+    renderLines: ->
+        # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
+        # Well, or just render them if we're starting fresh
+        $firstLine = @$contents.find '.line:first-child'
+        $lastLine  = @$contents.find '.line:last-child'
+
+        # If starting fresh
+        if $firstLine.length is 0
+            @$contents.html @linesTemplate lines: _.pluck @collection.models, 'attributes'
+        else
+            firstLineOffset = parseInt $firstLine.data 'offset'
+            lastLineOffset  = parseInt $lastLine.data 'offset'
+            # Prepending
+            if @collection.getMinOffset() < firstLineOffset
+                # Get only the new lines
+                lines = @collection.filter (line) => line.get('offset') < firstLineOffset
+                @$contents.prepend @linesTemplate lines: _.pluck lines, 'attributes'
+                # Gonna need to scroll back to the previous `firstLine` after otherwise
+                # we end up at the top again
+                @$contents.scrollTop $firstLine.offset().top
+            # Appending
+            else if @collection.getMaxOffset() > lastLineOffset
+                # Get only the new lines
+                lines = @collection.filter (line) => line.get('offset') > lastLineOffset
+                @$contents.append @linesTemplate lines: _.pluck lines, 'attributes'
+
+    scrollToTop:    => @$contents.scrollTop 0
+    scrollToBottom: => @$contents.scrollTop @$contents[0].scrollHeight
+
+    # Get rid of all lines. Used when collection is reset
+    dumpContents: -> @$contents.empty()
+
+    handleScroll: (event) =>
+        # `Debounce` on animation requests so we only do this when the
+        # browser is ready for it
+        if @frameRequest?
+            cancelAnimationFrame @frameRequest
+        @frameRequest = requestAnimationFrame =>
+            scrollTop = @$contents.scrollTop()
+            scrollHeight = @$contents[0].scrollHeight
+            contentsHeight = @$contents.height()
+
+            atBottom = scrollTop >= scrollHeight - contentsHeight
+            atTop = scrollTop is 0
+
+            if atBottom and not atTop
+                if @collection.moreToFetch
+                    @collection.fetchNext()
+                else
+                    @startTailing()
+            else
+                @stopTailing()
+
+            if atTop and @collection.getMinOffset() isnt 0
+                @collection.fetchPrevious()
+
+    afterInitialData: =>
+        setTimeout =>
+            @scrollToBottom()
+        , 150
+
+        @startTailing()
+
+    startTailing: =>
+        @scrollToBottom()
+
+        clearInterval @tailInterval
+        @tailInterval = setInterval =>
+            @collection.fetchNext().done @scrollToBottom
+        , @pollingTimeout
+
+        # The class is for CSS stylin' of certain stuff
+        @$el.addClass 'tailing'
+
+    stopTailing: ->
+        clearInterval @tailInterval
+        @$el.removeClass 'tailing'
+
+    remove: ->
+        clearInterval @tailInterval
+        @$contents.off 'scroll'
+        super
+
+    goToTop: =>
+        @collection.reset()
+        @collection.fetchFromStart().done @scrollToTop
     
-    tailerToBottom: =>
-        @tailer.goToBottom()
+    goToBottom: =>
+        @collection.reset()
+        @collection.fetchInitialData()
 
 module.exports = TailView

@@ -1,0 +1,45 @@
+{{! Part of taskBase }}
+<header class='detail-header'>
+    <div class="row">
+        {{! Left side }}
+        <div class="col-md-8">
+            {{#with data.task.taskRequest}}
+                <h5>
+                    Request
+                    <a href="{{appRoot}}/request/{{ request.id }}">
+                        {{ request.id }}
+                    </a>
+                </h5>
+            {{/with}}
+            <h2>
+                {{ data.task.taskId.id }}
+                
+                <button data-clipboard-text="{{ data.task.taskId.id }}" class='btn btn-link copy-link'>
+                    Copy
+                </button>
+            </h2>
+        </div>
+
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-action="viewObjectJSON">
+                JSON
+            </a>
+            <a class="btn btn-danger" data-action="remove">
+                Kill task
+            </a>
+        </div>
+    </div>
+</header>
+
+{{#if data.taskUpdates}}
+    {{#withLast data.taskUpdates}}
+        <div class="well text-muted">
+            {{humanizeText taskState}} as of
+            {{timestampFromNow timestamp}} ({{timestampFormatted timestamp}})
+            {{#if statusMessage}}
+                &mdash; {{ statusMessage }}
+            {{/if}}
+        </div>
+    {{/withLast}}
+{{/if}}

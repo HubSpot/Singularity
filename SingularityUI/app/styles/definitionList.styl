@@ -1,61 +1,54 @@
 @import nib
 
-dl
-    clearfix()
-    margin 0 0 1.5em
-
-    dt
-        display inline-block
-        font-size 1.2em
-        line-height 2em
-        margin-bottom .5em
-        font-weight 500
+// Okay so it's not REALLY a definition list, but hey
+ul.horizontal-description-list
+    
+    li
         position relative
+        overflow hidden
+        height 69px
+        margin-bottom 20px
 
-    dd
-        margin-left 2em
+        &, div
+            border-radius 4px
 
-    @media (min-width: 769px)
+        div
+            position relative
+            width 100%
+            height 69px
 
-        dt, dd
-            float left
+            h4
+                margin-top 0
 
-        dt
-            width 30%
-            padding-right 5%
-            clear left
+        &:hover
+            overflow visible
+            z-index 500
+            
+            div
+                height auto
+                box-shadow 0 0 0 5px rgba(255, 255, 255, .9)
 
-        dd
-            width 70%
-            margin 0 0 1.5em
+                p
+                    height auto
+                    overflow visible
+                    word-break break-all
+                    white-space pre-wrap
+        
+        div
+            background #f3f3f3
+            padding 10px
 
-    @media (min-width: 1000px)
+        h4 a
+            float right
+            font-weight 400
+            font-size 12px
 
-        dt
-            width 20%
+            &:hover
+                text-decoration none
 
-        dd
-            width 80%
-
-dl.wider
-    @media (min-width: 769px)
-
-        dt, dd
-            float left
-
-        dt
-            width 40%
-            padding-right 5%
-            clear left
-
-        dd
-            width 60%
-            margin 0 0 1.5em
-
-    @media (min-width: 1000px)
-
-        dt
-            width 30%
-
-        dd
-            width 70%
+        p
+            margin-bottom 0
+            height 1.3em
+            white-space nowrap
+            text-overflow ellipsis
+            overflow hidden

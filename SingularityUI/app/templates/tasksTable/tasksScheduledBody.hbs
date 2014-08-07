@@ -1,0 +1,52 @@
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th data-sort-attribute="id">
+                        Name
+                    </th>
+                    <th data-sort-attribute="pendingTask.pendingTaskId.nextRunAt" class="hidden-xs">
+                        Next run
+                    </th>
+                    <th class="hidden-xs">
+                        {{! Actions column }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+    {{/if}}
+{{/unless}}
+            {{#each tasks}}
+                <tr data-task-id="{{ id }}">
+                    <td>
+                        <span title="{{ id }}">
+                            {{ id }}
+                        </span>
+                    </td>
+                    <td class="hidden-xs">
+                        {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
+                        ({{timestampFormatted pendingTask.pendingTaskId.nextRunAt}})
+                    </td>
+                    <td class="actions-column hidden-xs">
+                        <a data-task-id="{{ id }}" data-action="run-now">
+                            <span class="glyphicon glyphicon-repeat" title="Run now"></span>
+                        </a>
+                        <a data-task-id="{{ id }}" data-action="viewJSON">
+                            <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+{{#unless rowsOnly}}
+    {{#if haveTasks}}
+        </tbody>
+    </table>
+    {{else}}
+        {{#if collectionSynced}}
+            <div class="empty-table-message"><p>No scheduled tasks</p></div>
+        {{else}}
+            <div class="page-loader centered cushy"></div>
+        {{/if}}
+    {{/if}}
+{{/unless}}

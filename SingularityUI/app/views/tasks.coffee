@@ -4,15 +4,15 @@ Request = require '../models/Request'
 
 class TasksView extends View
 
-    templateBase: require './templates/tasksBase'
+    isSorted: false
+
+    templateBase:  require '../templates/tasksTable/tasksBase'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
-        active:    require './templates/tasksActiveBody'
-        scheduled: require './templates/tasksScheduledBody'
-        cleaning:  require './templates/tasksCleaningBody'
-
-    killTaskTemplate: require './templates/vex/killTask'
+        active:    require '../templates/tasksTable/tasksActiveBody'
+        scheduled: require '../templates/tasksTable/tasksScheduledBody'
+        cleaning:  require '../templates/tasksTable/tasksCleaningBody'
 
     # For staged rendering
     renderProgress: 0
@@ -32,27 +32,13 @@ class TasksView extends View
 
             'click th[data-sort-attribute]': 'sortTable'
 
-    initialize: ({@tasksFilter, @searchFilter}) ->
-        @bodyTemplate = @bodyTemplateMap[@tasksFilter]
+    initialize: ({@state, @searchFilter}) ->
+        @bodyTemplate = @bodyTemplateMap[@state]
 
-        collectionMap =
-            active: app.collections.tasksActive
-            scheduled: app.collections.tasksScheduled
-            cleaning: app.collections.tasksCleaning
+        @listenTo @collection, 'sync',   @render
+        @listenTo @collection, 'remove', @render
 
-        @collectionSynced = false
-        @collection = collectionMap[@tasksFilter]
-
-        @collection.fetch().done =>
-            @collectionSynced = true
-            @render()
-
-    refresh: ->
-        return @ if @$el.find('[data-sorted-direction]').length
-        # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
-        return @ if $(window).scrollTop() > 200
-        @collection.fetch().done =>
-            @renderTable()
+        @searchChange = _.debounce @searchChange, 200
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -60,17 +46,26 @@ class TasksView extends View
 
         # Only show tasks that match the search query
         if @searchFilter
-            tasks = _.filter tasks, (request) =>
-                searchField = "#{ request.name }#{ request.host }"
+            tasks = _.filter tasks, (task) =>
+                searchField = "#{ task.id }#{ task.host }"
                 searchField.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
         
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
-            tasks = _.sortBy tasks, @sortAttribute
+            tasks = _.sortBy tasks, (task) =>
+                # Traverse through the properties to find what we're after
+                attributes = @sortAttribute.split '.'
+                value = task
+
+                for attribute in attributes
+                    value = value[attribute]
+                    return null if not value?
+
+                return value
             if not @sortAscending
                 tasks = tasks.reverse()
-        else unless @tasksFilter is 'scheduled'
-            tasks.reverse()
+        else
+            tasks.reverse() unless @state is 'scheduled'
             
         @currentTasks = tasks
 
@@ -78,10 +73,10 @@ class TasksView extends View
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
-            tasksFilter: @tasksFilter
+            tasksFilter: @state
             searchFilter: @searchFilter
-            collectionSynced: @collectionSynced
-            haveTasks: @collection.length and @collectionSynced
+            collectionSynced: @collection.synced
+            haveTasks: @collection.length and @collection.synced
 
         partials = 
             partials:
@@ -93,9 +88,19 @@ class TasksView extends View
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
+        return if not @$('table').length
+
+        @$('table').show()
+        @$('.empty-table-message').remove()
+
         $(window).scrollTop 0
         @filterCollection()
         @renderProgress = 0
+
+        if not @currentTasks.length
+            @$('table').hide()
+            @$el.append '<div class="empty-table-message">No tasks that match your query</div>'
+            return
 
         @renderTableChunk()
 
@@ -129,12 +134,14 @@ class TasksView extends View
             $tableBody.append $contents
 
     sortTable: (event) =>
+        @isSorted = true
+
         $target = $ event.currentTarget
         newSortAttribute = $target.attr "data-sort-attribute"
 
         $currentlySortedHeading = @$ "[data-sorted=true]"
         $currentlySortedHeading.removeAttr "data-sorted"
-        $currentlySortedHeading.removeAttr "data-sorted-direction"
+        $currentlySortedHeading.find('span').remove()
 
         if newSortAttribute is @sortAttribute and @sortAscending?
             @sortAscending = not @sortAscending
@@ -145,7 +152,7 @@ class TasksView extends View
         @sortAttribute = newSortAttribute
 
         $target.attr "data-sorted", "true"
-        $target.attr "data-sorted-direction", if @sortAscending then "ascending" else "descending"
+        $target.append "<span class='glyphicon glyphicon-chevron-#{ if @sortAscending then 'up' else 'down' }'></span>"
 
         @renderTable()
 
@@ -166,51 +173,34 @@ class TasksView extends View
                 @renderTableChunk()
 
     updateUrl: =>
-        app.router.navigate "/tasks/#{ @tasksFilter }/#{ @searchFilter }", { replace: true }
+        app.router.navigate "/tasks/#{ @state }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        utils.viewJSON 'task', $(e.target).data('task-id')
+        id = $(e.target).parents('tr').data 'task-id'
+        utils.viewJSON @collection.get id
 
     removeTask: (e) ->
-        $row = $(e.target).parents('tr')
-        taskModel = @collection.get($(e.target).data('task-id'))
+        $row = $(e.target).parents 'tr'
+        id = $row.data 'task-id' 
 
-        vex.dialog.confirm
-            buttons: [
-                $.extend({}, vex.dialog.buttons.YES, (text: 'Kill task', className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'))
-                vex.dialog.buttons.NO
-            ]
-            message: @killTaskTemplate(taskId: taskModel.get('id'))
-            callback: (confirmed) =>
-                return unless confirmed
-                taskModel.destroy()
-                delete app.allTasks[taskModel.get('id')] # TODO - move to model on destroy?
-                @collection.remove(taskModel)
-                $row.remove()
+        @collection.get(id).promptKill =>
+            $row.remove()
 
     runTask: (e) =>
-        taskModel = @collection.get($(e.target).data('task-id'))
-        $row = $(e.target).parents('tr')
+        $row = $(e.target).parents 'tr'
+        id = $row.data 'task-id' 
 
-        requestModel = new Request id: taskModel.get "requestId"
-        requestModel.promptRun =>
-            @collection.remove(taskModel)
-            app.collections.tasksActive.fetch()
+        model = @collection.get(id)
+        model.promptRun =>
+            @collection.remove model
             $row.remove()
 
     searchChange: (event) =>
-        # Add a little delay to the event so we don't run it for every keystroke
-        if @searchTimeout?
-            clearTimeout @searchTimeout
-
-        @searchTimeout = setTimeout @processSearchChange, 200
-
-    processSearchChange: =>
         return unless @ is app.views.current
 
         previousSearchFilter = @searchFilter
         $search = @$ "input[type='search']"
-        @searchFilter = _.trim $search.val()
+        @searchFilter = $search.val()
 
         if @searchFilter isnt previousSearchFilter
             @updateUrl()

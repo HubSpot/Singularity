@@ -1,4 +1,5 @@
 Collection = require './collection'
+
 Rack = require '../models/Rack'
 
 class Racks extends Collection
@@ -12,6 +13,6 @@ class Racks extends Collection
     parse: (racks) ->
         _.map racks, (rack) =>
             rack.rackType = @rackType
-            return rack
+            rack
 
 module.exports = Racks

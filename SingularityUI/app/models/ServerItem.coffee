@@ -4,33 +4,19 @@ Model = require './model'
 class ServerItem extends Model
 
     removeTemplates:
-        DEAD: require '../views/templates/vex/serverRemoveDead'
-        DECOMISSIONING: require '../views/templates/vex/serverRemoveDecomissioned'
-        DECOMISSIONED: require '../views/templates/vex/serverRemoveDecomissioned'
-    decomissionTemplate: require '../views/templates/vex/serverDecomission'
+        DEAD: require '../templates/vex/serverRemoveDead'
+        DECOMISSIONING: require '../templates/vex/serverRemoveDecomissioned'
+        DECOMISSIONED: require '../templates/vex/serverRemoveDecomissioned'
+    decomissionTemplate: require '../templates/vex/serverDecomission'
 
     parse: (item) =>
         if item.firstSeenAt?
             if item.decomissioningAt?
                 item.uptime = item.decomissioningAt - item.firstSeenAt
-                item.uptimeHuman = utils.humanTime(item.firstSeenAt, item.decomissioningAt)
             else if item.deadAt?
                 item.uptime = item.deadAt - item.firstSeenAt
-                item.uptimeHuman = utils.humanTime(item.firstSeenAt, item.deadAt)
             else
                 item.uptime = moment() - item.firstSeenAt
-                item.uptimeHuman = utils.humanTime(item.firstSeenAt)
-
-            item.uptimeHuman = item.uptimeHuman?.replace(' ago', '')
-
-        if item.decomissioningAt?
-            item.decomissioningAtHuman = utils.humanTime item.decomissioningAt
-
-        if item.decomissionedAt?
-            item.decomissionedAtHuman = utils.humanTime item.decomissionedAt
-
-        if item.deadAt?
-            item.deadAtHuman = utils.humanTime item.deadAt
 
         item
 

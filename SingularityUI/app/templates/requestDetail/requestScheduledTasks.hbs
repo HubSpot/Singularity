@@ -1,0 +1,38 @@
+<div class="page-header">
+    <h2>Scheduled tasks</h2>
+</div>
+{{#if data}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Next run
+                </th>
+                <th class="hidden-xs">
+                    {{! Actions }}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr data-task-id="{{ taskId.id }}">
+                    <td>
+                        <span title="{{ taskId.id }}">{{ taskId.id }}</span>
+                    </td>
+                    <td data-value="{{ nextRunAt }}">
+                        {{timestampFromNow nextRunAt}}
+                    </td>
+                    <td class="hidden-xs actions-column">
+                        <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
+                        <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message">No scheduled tasks</div>
+{{/if}}

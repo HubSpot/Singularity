@@ -1,6 +1,7 @@
 Model = require './model'
 
 class LogLine extends Model
+    
     idAttribute: 'offset'
 
     getStartOffset: =>

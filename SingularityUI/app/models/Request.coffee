@@ -1,26 +1,39 @@
 Model = require './model'
 
-pauseTemplate = require '../views/templates/vex/requestPause'
-unpauseTemplate = require '../views/templates/vex/requestUnpause'
-runTemplate = require '../views/templates/vex/requestRun'
-removeTemplate = require '../views/templates/vex/requestRemove'
-bounceTemplate = require '../views/templates/vex/requestBounce'
+pauseTemplate = require '../templates/vex/requestPause'
+unpauseTemplate = require '../templates/vex/requestUnpause'
+runTemplate = require '../templates/vex/requestRun'
+removeTemplate = require '../templates/vex/requestRemove'
+bounceTemplate = require '../templates/vex/requestBounce'
 
 class Request extends Model
-            
-    parse: (data) ->
-        if data.request?
-            data.request.daemon = if _.isNull(data.request.daemon) then true else data.request.daemon
-            data.daemon = data.request.daemon
-            
-            data.scheduled = utils.isScheduledRequest data.request
-            data.onDemand = utils.isOnDemandRequest data.request
 
-            data.displayState = constants.requestStates[data.state]
-
-        data
+    # When we show the JSON dialog, we will ignore these attributes
+    ignoreAttributes: ['id', 'scheduled', 'onDemand', 'daemon', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow', 'canBeBounced', 'starred']
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
+
+    parse: (data) ->
+        if data.deployId?
+            # For pending tasks
+            data.id = data.deployId
+            return data
+        else
+            data.id = data.request.id
+
+        # Gotta fecking figure out what kind of request this is
+        data.scheduled = typeof data.request.schedule is 'string'
+        data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
+        data.daemon = not data.scheduled and not data.onDemand
+
+        data.paused = data.state is 'PAUSED'
+        data.deleted = data.state is 'DELETED'
+
+        data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
+        data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and data.hasActiveDeploy
+        data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
+
+        data
 
     deletePaused: =>
         $.ajax
@@ -29,21 +42,21 @@ class Request extends Model
 
     unpause: =>
         $.ajax
-            url: "#{ @url() }/unpause?user=#{app.getUsername()}"
+            url: "#{ @url() }/unpause?user=#{ app.getUsername() }"
             type: 'POST'
 
     pause: =>
         $.ajax
-            url: "#{ @url() }/pause?user=#{app.getUsername()}"
+            url: "#{ @url() }/pause?user=#{ app.getUsername() }"
             type: 'POST'
 
     run: (confirmedOrPromptData) ->
         options =
-            url: "#{ @url() }/run?user=#{app.getUsername()}"
+            url: "#{ @url() }/run?user=#{ app.getUsername() }"
             type: 'POST'
             contentType: 'application/json'
 
-        if _.isString confirmedOrPromptData
+        if typeof confirmedOrPromptData is 'string'
             options.data = confirmedOrPromptData
             options.processData = false
             options.contentType = 'text/plain'
@@ -52,12 +65,12 @@ class Request extends Model
         
     bounce: =>
         $.ajax
-            url: "#{ @url() }/bounce?user=#{app.getUsername()}"
+            url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
             type: "POST"
 
     destroy: =>
         $.ajax
-            url: "#{ @url() }?user=#{app.getUsername()}"
+            url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
 
     ###
@@ -81,7 +94,7 @@ class Request extends Model
         vex.dialog.prompt
             message: runTemplate id: @get "id"
             buttons: [
-                $.extend vex.dialog.buttons.YES, text: 'Run now'
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
             ]
             callback: (data) =>

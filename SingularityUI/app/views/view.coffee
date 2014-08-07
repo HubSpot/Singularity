@@ -1,8 +1,18 @@
-require 'lib/view_helper'
-
 class View extends Backbone.View
+
+    # Keep track of any subviews we may have
+    subviews:   {}
+
+    constructor: (params = {}) ->
+        @subviews = params.subviews if params.subviews?
+        super params
+
     events: ->
         'click a': 'routeLink'
+
+    remove: ->
+        super
+        subview.remove() for subview in @subviews
 
     routeLink: (e) =>
         $link = $(e.target)

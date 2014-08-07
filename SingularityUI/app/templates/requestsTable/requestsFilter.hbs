@@ -1,0 +1,24 @@
+<ul class="nav nav-pills nav-pills-multi-select">
+    <li {{#unlessInSubFilter 'daemon' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+        <a data-filter="daemon">
+            <span class="glyphicon glyphicon-ok"></span>
+            Daemon
+        </a>
+    </li>
+    <li {{#unlessInSubFilter 'ondemand' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+        <a data-filter="ondemand">
+            <span class="glyphicon glyphicon-ok"></span>
+            On-demand
+        </a>
+    </li>
+    <li {{#unlessInSubFilter 'scheduled' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+        <a data-filter="scheduled">
+            <span class="glyphicon glyphicon-ok"></span>
+            Scheduled
+        </a>
+    </li>
+</ul>
+
+<span class="text-muted filter-tip hidden-xs">
+    Protip: press <kbd>cmd</kbd> to select multiple
+</span>
