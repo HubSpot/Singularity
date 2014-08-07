@@ -8,7 +8,8 @@
     "url": "git@git.hubteam.com:HubSpot/singularity.git"
   },
   "engines": {
-    "node": "~0.10.28"
+    "node": "~0.10.28",
+    "npm": "~1.4.8"
   },
   "bin": {
     "bower": "./node_modules/bower/bin/bower",
@@ -30,9 +31,5 @@
     "sass-brunch": "^1.8.1",
     "stylus-brunch": ">= 1.0 < 1.8",
     "uglify-js-brunch": ">= 1.0 < 1.8"
-  },
-  "devDependencies": {
-    "mocha": "0.14.0",
-    "expect.js": "0.1.2"
   }
 }
