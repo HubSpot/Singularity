@@ -148,6 +148,22 @@ In the next version of Singularity we plan to deprecate the *daemon* property an
 
 The following are example *Singularity Request Objects* for registering different deployable item types. They are provided in JSON format and can be directly used as payloads in API calls.
 
+**Singularity Request Object** for a load balanced Service with 3 instances each one running in a different logical rack
+```javascript
+{
+    "id": "TestService",
+    "owners": [
+        "feature_x_team@mycompany.com",
+        "developer@mycompany.com"
+    ],
+    "daemon": true,
+    "instances": 3,
+    "rackSensitive": true,
+    "loadBalanced": true
+}
+```
+
+
 **Singularity Request Object** for a scheduled job
 ```javascript
 {
