@@ -1,3 +1,4 @@
+* [About Singularity Documentation](#about-singularity-documentation)
 * [What is Singularity](#what-is-singularity)
 * [How it Works](#how-it-works)
 * [Singularity Components](#singularity-components)
@@ -9,9 +10,15 @@
   * [Executor Cleanup](#executor-cleanup)
   * [Out Of Memory Killer](#oom-killer)
   * [Singularity UI](#singularity-ui)
-* [Singularity Abstractions](#singularity-abstractions)
+* [Singularity Abstractions & API](#singularity-abstractions-api)
   * [Singularity Request Object](#singularity-request-object)
   * [Singularity Deploy Object](#singularity-deploy-object)
+
+## About Singularity Documentation
+*Singularity* is a new and very active project in HubSpot and while we make a considerable effort to keep the documentation current, there is a possibility that you will find inconsistencies or obsolete information.
+Another note is that *Singularity* offers a quite extensive functionality that is not currently documented. We understand that documentation is very important for open source projects to be useful and we are committed to consistently enhance and maintain the documentation as Singularity matures and becomes a key component in HubSpot PaaS. We appreciate any contribution towards making Singularity code and its documentation better.
+
+The extended README that follows tries to give a brief yet complete overview of Singularity and its context which resolves around Cluster Management, PaaS and Continuous Deployment tools / platforms. The Mesos ecosystem, which Singularity belongs to, is highly evolving. This is exciting but at the moment documentation is lacking and when we started we found it quite difficult to synthesize the whole picture. So the purpose of this document is to quickly give a good idea of the whole picture and let you decide if Singularity is for you. Inside the document there are references to more detailed documents that expand on the relevant subjects and give detailed instructions on how to install, deploy and use Singularity components. All Singularity documentation except this README (and some brief REAME files in sub projects) resides in the Docs folder. We suggest to try to read this introductory material first and visit the detailed docs through the provided references.
 
 ## What is Singularity
 **Singularity** is a platform that enables deploying and running services and scheduled jobs in cloud infrastructures, providing efficient management of the underlying processes life cycle and effective use of the cluster resources.
@@ -149,8 +156,8 @@ For all displayed information, access is provided to the API payloads from which
 The *java client* provides instant access to most of the Singularity API functionality and can be used to create deploy services upon Singularity platform. The *Mesos Deploy Service* that manages deploys in HubSpot uses the java client to register the deployable items in Singularity, perform deploys for them, rollback deploys and poll the status of deployed or currently running items.
 
 
-## Singularity Abstractions
-Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. 
+## Singularity Abstractions & API
+Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. This section provides an introduction to these two central concepts. Check the [Singularity API Reference] for a complete description to all Singularity Endpoints and their respective request and response objects.  
 
 ### Singularity Request Object
 A **Singularity Request Object** defines a *deployable item*. Before a deployable item can be deployed, users should register the type and other relevant properties of the item by posting a *Singularity Request Object* to **/requests** endpoint. The following are the supported properties:
@@ -222,8 +229,8 @@ The following are example *Singularity Request Objects* for registering differen
 }
 ```
 
-Having registered a deployable item does not result in having the item deployed. After registration Singularity will accept deploy requests for the registered item. Information of deploy requests is captured in the *Singularity Deploy Object* 
+Having registered a deployable item does not result in having the item deployed. After registration Singularity will accept deploy requests for the registered item. Information on how to deploy a registered item deploy is captured in the *Singularity Deploy Object* 
 
 ### Singularity Deploy Object
-A **Singularity Deploy Object**
+A **Singularity Deploy Object** 
 
