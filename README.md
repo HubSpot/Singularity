@@ -149,13 +149,12 @@ In the next version of Singularity we plan to deprecate the *daemon* property an
 The following are example *Singularity Request Objects* for registering different deployable item types. They are provided in JSON format and can be directly used as payloads in API calls.
 
 **Singularity Request Object** for a load balanced Service with 3 instances each one running in a different logical rack
-
 ```javascript
 {
     "id": "TestService",
     "owners": [
         "feature_x_team@mycompany.com",
-        "developer@hmycompany.com"
+        "developer@mycompany.com"
     ],
     "daemon": true,
     "instances": 3,
@@ -171,7 +170,7 @@ The following are example *Singularity Request Objects* for registering differen
     "id": "TestJob",
     "owners": [
         "feature_x_team@mycompany.com",
-        "developer@hmycompany.com"
+        "developer@mycompany.com"
     ],
     "daemon": false,
     "schedule": "0 */3 * * * ?",
@@ -186,7 +185,7 @@ The following are example *Singularity Request Objects* for registering differen
     "id": "TestWorker",
     "owners": [
         "feature_x_team@mycompany.com",
-        "developer@hmycompany.com"
+        "developer@mycompany.com"
     ],
     "daemon": true
 }
@@ -209,6 +208,5 @@ Having registered a deployable item does not result in having the item deployed.
 
 ### Singularity Deploy Object
 A **Singularity Deploy Object**
-
 
 
