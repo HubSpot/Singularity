@@ -78,9 +78,15 @@ While the executor itself will cleanup application files and logs upon task term
 ### OOM Killer
 The **Out of Memory process Killer** is an optional service that Singularity users may wish to run in heavy loaded mesos slaves to replace the default  memory limit checking supported by **Linux Kernel CGROUPS**. 
 
-HubSpot engineers have found out that a bug related to OOM handling was introduced in Linux Kernel after version 3.12. The bug causes a deadlock when OOM events are handled by CGROUPS which then requires a system reboot. In addition to this, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs which in combination with the deadlock create often slave failures.
+HubSpot engineers have found out that a bug related to OOM handling was introduced in Linux Kernel after version 3.12. The bug causes a deadlock when OOM events are handled by CGROUPS which then requires a system reboot. 
 
-A [bug](https://bugzilla.kernel.org/show_bug.cgi?id=80881) has been filled and it is expected to be fixed in version 3.16. At the moment Linux Kernel version 3.4 is used in HubSpot slaves that seems to give a stable behavior. In any case, if users wish to run the *OOM Killer* service they should disable the CGROUPS memory limit checking in their mesos slaves.        
+A [bug](https://bugzilla.kernel.org/show_bug.cgi?id=80881) has been filled and it is expected to be fixed in version 3.16.
+
+In addition to the above bug, in version 2.6.x kernels, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs.
+
+ At the moment Linux Kernel version 3.4 is used in HubSpot slaves that seems to give a stable behavior; it does not have the bug and it also does not appear to trigger CGROUPS OOMs because of cache usage. 
+
+ In any case, if users wish to run the *OOM Killer* service they should disable the CGROUPS memory limit checking in their mesos slaves.        
 
 ### SingularityUI
 *SingularityUI* is a single page web app that uses Singularity API to present information about deployed items. 
@@ -150,13 +156,55 @@ The following are example *Singularity Request Objects* for registering differen
         "feature_x_team@mycompany.com",
         "developer@hmycompany.com"
     ],
+    "daemon": true,
     "instances": 3,
     "rackSensitive": true,
     "loadBalanced": true
 }
 ```
 
-  
+**Singularity Request Object** for a scheduled job
+```javascript
+{
+    "id": "TestJob",
+    "owners": [
+        "feature_x_team@mycompany.com",
+        "developer@hmycompany.com"
+    ],
+    "daemon": false,
+    "schedule": "0 */3 * * * ?",
+    "numRetriesOnFailure": 5
+}
+```
+
+**Singularity Request Object** for a worker
+```javascript
+{
+    "id": "TestWorker",
+    "owners": [
+        "feature_x_team@mycompany.com",
+        "developer@hmycompany.com"
+    ],
+    "daemon": true
+}
+```
+
+**Singularity Request Object** for an on-demand process
+```javascript
+{
+    "id": "TestJob",
+    "owners": [
+        "feature_x_team@mycompany.com",
+        "developer@hmycompany.com"
+    ],
+    "daemon": false
+}
+```
+
+Having registered a deployable item does not result in having the item deployed. After registration Singularity will accept deploy requests for the registered item. Information of deploy requests is captured in the *Singularity Deploy Object* 
+
+### Singularity Deploy Object
+A **Singularity Deploy Object**
 
 
 
