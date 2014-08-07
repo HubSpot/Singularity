@@ -1,3 +1,6 @@
+[What is Singularity](#what_is_singularity)
+[How it Works](#how_it_works)
+
 ## What is Singularity
 **Singularity** is a platform that enables deploying and running services and scheduled jobs in cloud infrastructures, providing efficient management of the underlying processes life cycle and effective use of the cluster resources.
 
@@ -97,11 +100,11 @@ It allows to search and display information about active, paused, cooled down, c
 
 ![SingularityUI Deployed items Screen](Docs/images/SingularityUI_Requests.png)
 
-Selecting a specific deployed item will display information about its active running tasks as well as historical tasks, all executed deploys and all updates to items settings (owners, instances, etc.) 
+Selecting a specific deployed item will display information about its active running tasks, all historical tasks from past deploys, a list of all executed deploys and a list of all updates to item settings (owners, instances, etc.) 
 
 ![SingularityUI Single Deployed Item Screen](Docs/images/SingularityUI_Request.png)
 
-Selecting one of the active taks displays information about the tasks and provides access to application files and task logs.
+Selecting an active task will display information about the task and provide access to application files and task logs.
 
 ![SingularityUI Active Task Screen](Docs/images/SingularityUI_Active_Task.png)
 
