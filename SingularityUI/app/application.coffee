@@ -107,7 +107,7 @@ class Application
                     message:   "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
                     hideAFter: 20
             else
-                serverMessage = jqxhr.responseJSON.message or jqxhr.responseText
+                serverMessage = JSON.parse(jqxhr.responseText)?.message or jqxhr.responseText
                 Messenger().error
                     message:   "<p>An uncaught error occurred with your request. The server said:</p><pre>#{ serverMessage }</pre><p>The error has been saved to your JS console.</p>"
                     hideAfter: 20
