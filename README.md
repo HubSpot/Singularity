@@ -3,7 +3,7 @@
 * [How it Works](#how-it-works)
 * [Singularity Components](#singularity-components)
   * [Singularity Scheduler](#singularity-scheduler)
-    * [Singularity Scheduler Deploy](#singularity-scheduler-deploy) 
+    * [Singularity Scheduler Dependencies](#singularity-scheduler-dependencies) 
   * [Singularity Executor](#singularity-executor)
   * [Log Watcher](#log-watcher)
   * [S3 Uploader](#s3-uploader)
@@ -73,7 +73,7 @@ After a deployable item has been registered, clients can post *Deploy requests* 
 
 Rollback of failed deploys, health checking and load balancing are also part of the advanced functionality Singularity Scheduler offers. When a service or worker instance fails in a new deploy, Singularity scheduler will rollback all instances to the version running before the deploy keeping the deploys always consistent. After the scheduler makes sure that a mesos task (corresponding to a service instance) has entered the TASK_RUNNING state it will use the provided health check URL and the specified health check timeout settings to perform health checks. If health checks go well, the next step is to perform the Load Balancing of service instances. Load balancing is attempted only if the corresponding deployable item has been defined to be *loadBalanced*. To perform the load balancing between service instances, Singularity supports integration with a Load Balancer API. Singularity will post requests to the Load Balancer API to add the newly deployed service instances and to remove those that were previously running. Check [Integration with Load Balancers](Docs/Integration_With_Load_Balancers.md) to learn more.
 
-#### Singularity Scheduler Deploy
+#### Singularity Scheduler Dependencies
 Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same Zookeeper quorum utilized by mesos masters and slaves is reused for singularity.  
 
 Since Zoopkeeper is not meant to handle large quantities of data, Singularity utilizes MySQL database to periodically offload metadata from Zookeeper and keep historical records of deployable item changes, deploy request history as well as the history of all launched tasks. 
