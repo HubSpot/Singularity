@@ -36,7 +36,6 @@ class TasksView extends View
         @bodyTemplate = @bodyTemplateMap[@state]
 
         @listenTo @collection, 'sync',   @render
-        @listenTo @collection, 'remove', @render
 
         @searchChange = _.debounce @searchChange, 200
 
@@ -192,7 +191,6 @@ class TasksView extends View
 
         model = @collection.get(id)
         model.promptRun =>
-            @collection.remove model
             $row.remove()
 
     searchChange: (event) =>

@@ -43,7 +43,6 @@ class RequestsView extends View
     initialize: ({@state, @subFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@state]
         @listenTo @collection, 'sync',   @render
-        @listenTo @collection, 'remove', @render
 
         # So we don't spam it with every keystroke
         @searchChange = _.debounce @searchChange, 200
