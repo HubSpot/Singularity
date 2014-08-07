@@ -10,7 +10,7 @@
   * [Executor Cleanup](#executor-cleanup)
   * [Out Of Memory Killer](#oom-killer)
   * [Singularity UI](#singularity-ui)
-* [Singularity Abstractions & API](#singularity-abstractionsapi)
+* [Singularity API Abstractions](#singularity-api-abstractions)
   * [Singularity Request Object](#singularity-request-object)
   * [Singularity Deploy Object](#singularity-deploy-object)
 
@@ -160,7 +160,7 @@ For all displayed information, access is provided to the API payloads from which
 The *java client* provides instant access to most of the Singularity API functionality and can be used to create deploy services upon Singularity platform. The *Mesos Deploy Service* that manages deploys in HubSpot uses the java client to register the deployable items in Singularity, perform deploys for them, rollback deploys and poll the status of deployed or currently running items.
 
 
-## Singularity Abstractions & API
+## Singularity API Abstractions
 Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. This section provides an introduction to these two central concepts. Check the [Singularity API Reference] for a complete description to all Singularity Endpoints and their respective request and response objects.  
 
 ### Singularity Request Object
