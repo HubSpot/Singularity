@@ -112,4 +112,9 @@ class ExpandableTableSubview extends View
         @collection.currentPage = 1
         @collection.fetch()
 
+    flash: ->
+        $(window).scrollTop @$el.offset().top
+        @$el.addClass 'flash-background'
+        setTimeout (=> @$el.removeClass 'flash-background'), 500
+
 module.exports = ExpandableTableSubview

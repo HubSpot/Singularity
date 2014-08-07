@@ -17,7 +17,7 @@ class RequestView extends View
 
             'click [data-action="run-now"]': 'runTask'
 
-            'click [data-action="expand-deploy-history"]': 'expandDeployHistory'
+            'click [data-action="expand-deploy-history"]': 'flashDeployHistory'
 
     initialize: ({@requestId}) ->
 
@@ -74,7 +74,7 @@ class RequestView extends View
             $row.remove()
             utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
 
-    expandDeployHistory: ->
-        @subviews.deployHistory.expand()
+    flashDeployHistory: ->
+        @subviews.deployHistory.flash()
 
 module.exports = RequestView
