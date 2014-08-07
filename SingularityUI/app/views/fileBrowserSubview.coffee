@@ -16,8 +16,6 @@ class FileBrowserSubview extends View
     render: ->
         # Ensure we have enough space to scroll
         offset = @$el.offset().top
-        windowHeight = $(window).height()
-        @$el.parents().parent().css 'min-height', "#{ offset + windowHeight }px"
 
         breadcrumbs = utils.pathToBreadcrumbs @collection.path
 
@@ -37,8 +35,7 @@ class FileBrowserSubview extends View
         @$('.span-12').html '<h3>Could not get files :(</h3>'
 
     scrollToTop: ->
-        offset = @$el.offset().top
-        $(window).scrollTop offset - 20
+        utils.animatedExpansion @$el
 
     navigate: (event) ->
         event.preventDefault()

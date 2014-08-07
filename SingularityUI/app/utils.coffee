@@ -87,4 +87,64 @@ class Utils
             path.push crumb
             return { name: crumb, path: path.join '/' }
 
+    # Will make $el as tall as the page and will attach a scroll event
+    # that shrinks it
+    @animatedExpansion: ($el) ->
+        newHeight = $(window).height()
+
+        $el.css 'min-height', "#{ $el.height() }px"
+        $el.animate
+            duration:  1500
+            minHeight: "#{ newHeight }px"
+
+        offset = $el.offset().top
+
+        # Resize body so we can scroll
+        $('body').css 'min-height', "#{ offset + newHeight }px"
+        
+        $(window).scrollTop offset - 20
+
+        shrinkTime = 2000
+
+        removeEvent = =>
+            $(window).off 'scroll', checkForShrink
+
+        shrink = =>
+            $('html').css 'min-height', '0'
+            $('body').animate
+                minHeight: '0px'
+            , shrinkTime
+
+            $el.animate
+                duration:  shrinkTime
+                minHeight: '0px'
+
+            removeEvent()
+
+        checkForShrink = =>
+            cancelAnimationFrame frameRequest if frameRequest?
+            frameRequest = requestAnimationFrame =>
+                removeEvent() if not $el
+
+                $window = $(window)
+
+                lastChild = $ _.last $el.children()
+                shrink() if not lastChild
+
+                elOffset           = $el.offset().top
+                childScrollBottom  = lastChild.height() + lastChild.offset().top
+                windowScrollTop    = $window.scrollTop()
+                windowScrollBottom = $window.height() + windowScrollTop
+
+                scrolledEnoughTop    = windowScrollTop < elOffset - 50
+                scrolledEnoughBottom = windowScrollTop > elOffset + 20
+                scrolledEnough = scrolledEnoughTop or scrolledEnoughBottom
+                shouldShrink = scrolledEnough and windowScrollBottom > childScrollBottom
+
+                shrink() if shouldShrink
+
+        setTimeout =>
+            $(window).on 'scroll', checkForShrink
+        , 100
+
 module.exports = Utils

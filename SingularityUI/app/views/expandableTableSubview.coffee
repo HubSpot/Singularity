@@ -99,9 +99,9 @@ class ExpandableTableSubview extends View
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
 
-        @collection.fetch().done =>
-            @$el.css 'min-height', "#{ availableSpace }px"
-            $(window).scrollTop @$el.offset().top - arbitrarySpace
+        utils.animatedExpansion @$el
+        
+        @collection.fetch()
 
     shrink: ->
         @expanded = false
