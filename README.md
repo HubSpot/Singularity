@@ -10,7 +10,7 @@
   * [Executor Cleanup](#executor-cleanup)
   * [Out Of Memory Killer](#oom-killer)
   * [Singularity UI](#singularity-ui)
-* [Singularity Abstractions & API](#singularity-abstractions-&-api)
+* [Singularity Abstractions & API](#singularity-abstractionsapi)
   * [Singularity Request Object](#singularity-request-object)
   * [Singularity Deploy Object](#singularity-deploy-object)
 
