@@ -93,11 +93,14 @@ In addition to the above bug, in version 2.6.x kernels, under heavy file IO that
 
 ![SingularityUI status screen](Docs/images/SingularityUI_Status.png)
 
-It displays information about active, paused, cooled down and pending items as well information about their running tasks, providing access to application files and task logs.
+It allows to search and display information about active, paused, cooled down, cleaning and pending items.
 
 ![SingularityUI Deployed items Screen](Docs/images/SingularityUI_Requests.png)
 
+Selecting a specific deployed item will display information about its running tasks and provide access to application files and task logs.
+
 ![SingularityUI Single Deployed Item Screen](Docs/images/SingularityUI_Request.png)
+
 
 ![SingularityUI Active Task Screen](Docs/images/SingularityUI_Active_Task.png)
 
@@ -119,6 +122,7 @@ While Singularity UI is mostly a viewing app it has some limited functionality f
 
 ![SingularityUI Slaves screen](Docs/images/SingularityUI_Slaves.png)
 
+
 ![SingularityUI Racks screen](Docs/images/SingularityUI_Racks.png)
 
 For all displayed information, access is provided to the API payloads from which views are created. This can greatly help debugging of deploys and can be used by developers that create tools on top of Singularity API.
@@ -129,7 +133,7 @@ For all displayed information, access is provided to the API payloads from which
 The *java client* provides instant access to most of the Singularity API functionality and can be used to create deploy services upon Singularity platform. The *Mesos Deploy Service* that manages deploys in HubSpot uses the java client to register the deployable items in Singularity, perform deploys for them, rollback deploys and poll the status of deployed or currently running items.
 
 
-## Singularity Abstractions & API
+## Singularity Abstractions
 Singularity provides a *deploy oriented* layer on top of Mesos tasks with its **Singularity Request** and **Singularity Deploy** abstractions. 
 
 ### Singularity Request Object
@@ -148,7 +152,7 @@ In the next version of Singularity we plan to deprecate the *daemon* property an
 
 The following are example *Singularity Request Objects* for registering different deployable item types. They are provided in JSON format and can be directly used as payloads in API calls.
 
-**Singularity Request Object** for a load balanced Service with 3 instances each one running in a different logical rack
+*Singularity Request Object* for a **load balanced Service with 3 instances** each one running in a different logical rack
 ```javascript
 {
     "id": "TestService",
@@ -164,7 +168,7 @@ The following are example *Singularity Request Objects* for registering differen
 ```
 
 
-**Singularity Request Object** for a scheduled job
+*Singularity Request Object* for a **scheduled job**
 ```javascript
 {
     "id": "TestJob",
@@ -178,8 +182,7 @@ The following are example *Singularity Request Objects* for registering differen
 }
 ```
 
-
-**Singularity Request Object** for a worker
+*Singularity Request Object* for a **worker**
 ```javascript
 {
     "id": "TestWorker",
@@ -191,8 +194,7 @@ The following are example *Singularity Request Objects* for registering differen
 }
 ```
 
-
-**Singularity Request Object** for an on-demand process
+*Singularity Request Object* for an **on-demand** process
 ```javascript
 {
     "id": "TestJob",
