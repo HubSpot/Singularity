@@ -42,6 +42,10 @@ class TailView extends View
         # Attach scroll event manually because Backbone is poopy about it
         @$contents.on 'scroll', @handleScroll
 
+        # Some stuff in the app can change this stuff. We wanna reset it
+        $('body').css 'min-height', '0px'
+        $('html').css 'min-height', '0px'
+
     renderLines: ->
         # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
         # Well, or just render them if we're starting fresh
