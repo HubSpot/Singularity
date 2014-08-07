@@ -78,9 +78,9 @@ While the executor itself will cleanup application files and logs upon task term
 ### OOM Killer
 The **Out of Memory process Killer** is an optional service that Singularity users may wish to run in heavy loaded mesos slaves to replace the default  memory limit checking supported by **Linux Kernel CGROUPS**. 
 
-We have found out that in certain Linux Kernel versions (e.g. 2.6 and 3.10) a bug causes a deadlock to happens when OOM events occur which then requires a system reboot. In addition to this, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs which in combination with the deadlock create often slave failures.
+HubSpot engineers have found out that a bug related to OOM handling was introduced in Linux Kernel after version 3.12. The bug causes a deadlock when OOM events are handled by CGROUPS which then requires a system reboot. In addition to this, under heavy file IO that consumes the page cache, CGROUPS includes the consumed page cache in its accounting and causes OOMs which in combination with the deadlock create often slave failures.
 
-The latest info is that Linux Kernel version 3.4 does not seem to have the bug and version 3.16 will fix it. In any case, if users wish to run the *OOM Killer* service they should disable the CGROUPS memory limit checking in their mesos slaves.        
+A [bug](https://bugzilla.kernel.org/show_bug.cgi?id=80881) has been filled and it is expected to be fixed in version 3.16. At the moment Linux Kernel version 3.4 is used in HubSpot slaves that seems to give a stable behavior. In any case, if users wish to run the *OOM Killer* service they should disable the CGROUPS memory limit checking in their mesos slaves.        
 
 ### SingularityUI
 *SingularityUI* is a single page web app that uses Singularity API to present information about deployed items. 
@@ -109,7 +109,7 @@ While Singularity UI is mostly a viewing app it has some limited functionality f
 - Pause a deployed item. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
 - Manually run a *Scheduled Job* or *On-Demand* item
 - Decommission a slave which means that all tasks running in the specific slave will be migrated to other slaves
-- Decommission a *logical rack*, meaning that all slave hosts in the rack will be decommissioned. When running in AWS a rack corresponds to an availability zone.
+- Decommission a *logical rack*, meaning that all slave hosts in the rack will be decommissioned. The *rackid* attribute can be used when running the mesos slave process to specify which rack the slave belongs to. For example when running in AWS a rack could corresponds to the availability zone ( /usr/local/sbin/mesos-slave --attributes=rackid:us-east-1e).
 
 ![SingularityUI Slaves screen](Docs/images/SingularityUI_Slaves.png)
 
@@ -131,26 +131,26 @@ A **Singularity Request Object** defines a *deployable item*. Before a deployabl
 - **owners** (List of strings): A list of emails for the people (developers probably) which are responsible for this deployable item. This is a very important piece of information because Singularity will use the emails to send notifications when the relevant mesos tasks fail are get lost with possible directions of what should be done.
 - **daemon** (boolean): This is by default *true* which means that the *deployable item* is either a *web service* or a *worker process*. In practice *daemon* set to *true* means that Singularity will try to restart you service / worker whenever it terminates (either gracefully or because of failure). So there is no need to specify this if a *web service* or *worker* item is registered. It needs to be set to **false** when a *Scheduled CRON Job* or an *On-Demand* process is registered.
 - **instances** (integer): If item is a a *web service* or a *worker process* then the number of identical instances to run can be specified. Each instance corresponds a *mesos task* which in turn will result in a *Unix Process* to be spawned by *Singularity Executor* in one of the slaves. Default is 1 instance.
-- **rackSensitive** (boolean): This is possibly a setting with a misleading name that should probably be renamed to *failIfNoSeparateRackPerInstance*. If the deployable item is a a *web service* or a *worker process* and the number of specified *instances* to run is more than one then setting *rackSensitive* to *true* will instruct Singularity to **FAIL** the deploy if it does not succeed to split the load in different *logical racks*. When running in AWS, each *logical rack* corresponds to different *availability zone*. So for example if 3 instances have been specified and *rackSensitive* is *true* but slaves exist in only two availability zones or slaves are full in capacity in the third availability zone, then then deploy will fail. As of now *racksensitive* is set to *true* by default and users with slaves in only one AWS zone should explicitly set it to false if multiple instances are required per deployable item.
+- **rackSensitive** (boolean): This is a setting with a misleading name that should probably be renamed to *failIfNoSeparateRackPerInstance*. If the deployable item is a a *web service* or a *worker process* and the number of specified *instances* to run is more than one then setting *rackSensitive* to *true* will instruct Singularity to **FAIL** the deploy if it does not succeed to split the load in different *logical racks*. When running in AWS, each *logical rack* could correspond to different *availability zone* (The *rackid* attribute can be used when running the mesos slave process to specify which rack the slave belongs to). So for example if 3 instances have been specified and *rackSensitive* is *true* but slaves exist in only two availability zones or slaves are full in capacity in the third availability zone, then the deploy will fail. As of now *racksensitive* is set to *true* by default and users with slaves in only one AWS zone should explicitly set it to false if multiple instances are required per deployable item.
 - **loadBalanced** (boolean): If the deployable item is a a *web service* and multiple *instances* have been set then setting *loadBalanced* to *true* instructs Singularity to use the *Load Balancer API* to load balance the instances after they run. The *Loab Balancer API* URL / base path is set inside Singularity Configuration file. The default is *false*.
 - **schedule** (string). The schedule if the deployable item is a *Scheduled CRON Job*, specified in CRON format
 - **numRetriesOnFailure** (integer): This setting is only used for items that their type is *Scheduled CRON Job* and specifies how many times should Singularity try to run the Job if the job fails to start. This is useful for jobs with a daily or even more rare schedule and prevents long delays before the job is tried again if it happens for the job to occasionally fail to start.
 
 When a deployable item is already registered, users may re-post a *Singularity Request Object* to update the item settings. Item types cannot be changed, though. The user should first completely remove the registered item and then re-register it with a different type, e.g. change daemon from false to true, or remove the schedule and change the daemon from false to true.
 
-In the next version of Singularity we plan to deprecate the *daemon* property and introduce an enumerated value for the item type that gets the values: *web service*, *worker*, *scheduled job*, *on-demand*.
+In the next version of Singularity we plan to deprecate the *daemon* property and introduce an enumerated value for the item type that gets the values: *webService*, *worker*, *scheduledJob*, *onDemand*.
 
 The following are example *Singularity Request Objects* for registering different deployable item types. They are provided in JSON format and can be directly used as payloads in API calls.
 
-Deploy 
+**Singularity Request Object** for a load balanced Service with 3 instances each one running in a different logical rack
 ```javascript
 {
-    "id": "MDS_TestService_Traveview_Enabled-web",
+    "id": "TestService",
     "owners": [
-        "platform-infrastructure-groups@hubspot.com",
-        "gchomatas@hubspot.com"
+        "feature_x_team@mycompany.com",
+        "developer@hmycompany.com"
     ],
-    "instances": 2,
+    "instances": 3,
     "rackSensitive": true,
     "loadBalanced": true
 }
