@@ -2,7 +2,7 @@
 * [How it Works](#how-it-works)
 * [Singularity Components](#singularity-components)
   * [Singularity Scheduler](#singularity-scheduler)
-    * [Singularity Executor Deploy](#singularity-scheduler-deploy) 
+    * [Singularity Scheduler Deploy](#singularity-scheduler-deploy) 
   * [Singularity Executor](#singularity-executor)
   * [Log Watcher](#log-watcher)
   * [S3 Uploader](#s3-uploader)
