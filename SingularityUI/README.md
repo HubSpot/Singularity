@@ -1,12 +1,12 @@
 # Quick-start
 
-To build SingularityUI you'll need node. Just run
+To build SingularityUI you'll need [nodejs](http://nodejs.org/). Make sure you have it and then just run
 
 ```bash
 npm install
 ```
 
-and everything will be downloaded and the project will be built in production mode.
+and all the dependencies will be installed and the project will be built in production mode.
 
 The compiled static files are placed in in [`../SingularityService/src/main/resources/`](../SingularityService/src/main/resources/). If you're building Singularity as a whole, you'll need to build the UI first so that the static files can be packaged by Maven.
 
