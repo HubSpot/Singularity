@@ -14,7 +14,7 @@ class ExpandableTableSubview extends View
     expanded: false
 
     # For having consistently sized tabled while chaging pages
-    tableMinHeight: 0
+    containerMinHeight: 0
 
     events: ->
         _.extend super,
@@ -52,7 +52,7 @@ class ExpandableTableSubview extends View
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
 
-        @$('table').css 'min-height', "#{ @tableMinHeight }px"
+        @$('.table-container').css 'min-height', "#{ @containerMinHeight }px"
 
         haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
 
@@ -79,7 +79,7 @@ class ExpandableTableSubview extends View
         @collection.fetch()
 
         # So the table doesn't shrink afterwards
-        @tableMinHeight = @$('table').height()
+        @containerMinHeight = @$('.table-container').height()
 
     previousPage: ->
         @collection.currentPage -= 1 unless @collection.currentPage is 1
@@ -127,6 +127,10 @@ class ExpandableTableSubview extends View
 
     shrink: =>
         @expanded = false
+        
+        @$('.table-container').css 'min-height', '0px'
+        @containerMinHeight = 0
+
         @collection.atATime = 5
         @collection.currentPage = 1
         @collection.fetch()

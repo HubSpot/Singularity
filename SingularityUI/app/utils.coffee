@@ -91,33 +91,32 @@ class Utils
     # that shrinks it
     @animatedExpansion: ($el, shrinkCallback) ->
         newHeight = $(window).height()
+        offset = $el.offset().top
+
+        # Resize body so we can scroll
+        $('body').css 'min-height', "#{ offset + newHeight }px"
 
         $el.css 'min-height', "#{ $el.height() }px"
         $el.animate
             duration:  1000
             minHeight: "#{ newHeight }px"
 
-        offset = $el.offset().top
-
-        # Resize body so we can scroll
-        $('body').css 'min-height', "#{ offset + newHeight }px"
-        
         $(window).scrollTop offset - 20
 
-        shrinkTime = 2000
+        shrinkTime = 1000
 
         removeEvent = =>
             $(window).off 'scroll', checkForShrink
 
         shrink = =>
-            $('html').css 'min-height', '0'
-            $('body').animate
+            # $('html').css 'min-height', '0'
+            $('html, body').animate
                 minHeight: '0px'
             , shrinkTime
 
             $el.animate
-                duration:  shrinkTime
                 minHeight: '0px'
+            , shrinkTime
 
             shrinkCallback()
 
@@ -139,9 +138,9 @@ class Utils
                 windowScrollBottom = $window.height() + windowScrollTop
 
                 scrolledEnoughTop    = windowScrollTop < elOffset - 50
-                scrolledEnoughBottom = windowScrollTop > elOffset + 20
-                scrolledEnough = scrolledEnoughTop or scrolledEnoughBottom
-                shouldShrink = scrolledEnough and windowScrollBottom > childScrollBottom
+                scrolledEnoughBottom = windowScrollTop > elOffset + 50
+                scrolledEnoughBottom = scrolledEnoughBottom and windowScrollBottom > childScrollBottom
+                shouldShrink = scrolledEnoughTop or scrolledEnoughBottom
 
                 shrink() if shouldShrink
 

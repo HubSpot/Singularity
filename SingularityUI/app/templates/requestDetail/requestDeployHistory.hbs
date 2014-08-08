@@ -2,44 +2,42 @@
     <h2>Deploy history</h2>
 </div>
 {{#if data.length}}
-    <div class="row">
-        <div class="col-md-12">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Deploy ID</th>
-                        <th>Status</th>
-                        <th class="hidden-xs">User</th>
-                        <th class="hidden-xs">Timestamp</th>
-                        <th class="hidden-xs"></th>
+    <div class="table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Deploy ID</th>
+                    <th>Status</th>
+                    <th class="hidden-xs">User</th>
+                    <th class="hidden-xs">Timestamp</th>
+                    <th class="hidden-xs"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each data}}
+                    <tr data-id="{{ deployMarker.deployId }}" data-collection="deployHistory">
+                        <td>
+                            {{ deployMarker.deployId }}
+                        </td>
+                        <td>
+                            {{humanizeText deployResult.deployState}}
+                        </td>
+                        <td class="hidden-xs">
+                            {{usernameFromEmail deployMarker.user}}
+                        </td>
+                        <td class="hidden-xs" data-value="{{ deployMarker.timestamp }}">
+                            {{timestampFromNow deployMarker.timestamp}}
+                            ({{timestampFormatted deployMarker.timestamp}})
+                        </td>
+                        <td class="hidden-xs actions-column">
+                            <a data-action="viewJSON">
+                                <span class="glyphicon glyphicon-th-list" title="JSON"></span>
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {{#each data}}
-                        <tr data-id="{{ deployMarker.deployId }}" data-collection="deployHistory">
-                            <td>
-                                {{ deployMarker.deployId }}
-                            </td>
-                            <td>
-                                {{humanizeText deployResult.deployState}}
-                            </td>
-                            <td class="hidden-xs">
-                                {{usernameFromEmail deployMarker.user}}
-                            </td>
-                            <td class="hidden-xs" data-value="{{ deployMarker.timestamp }}">
-                                {{timestampFromNow deployMarker.timestamp}}
-                                ({{timestampFormatted deployMarker.timestamp}})
-                            </td>
-                            <td class="hidden-xs actions-column">
-                                <a data-action="viewJSON">
-                                    <span class="glyphicon glyphicon-th-list" title="JSON"></span>
-                                </a>
-                            </td>
-                        </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
+                {{/each}}
+            </tbody>
+        </table>
     </div>
 {{else}}
     <div class="empty-table-message">
