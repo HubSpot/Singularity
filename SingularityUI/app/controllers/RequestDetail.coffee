@@ -100,8 +100,12 @@ class RequestDetailController extends Controller
             @models.activeDeployStats.fetch().error @ignore404
 
         @collections.activeTasks.fetch().error    @ignore404
-        @collections.requestHistory.fetch().error @ignore404
-        @collections.taskHistory.fetch().error    @ignore404
-        @collections.deployHistory.fetch().error  @ignore404
+        
+        if @collections.requestHistory.currentPage is 1
+            @collections.requestHistory.fetch().error @ignore404
+        if @collections.taskHistory.currentPage is 1
+            @collections.taskHistory.fetch().error    @ignore404
+        if @collections.deployHistory.currentPage is 1
+            @collections.deployHistory.fetch().error  @ignore404
 
 module.exports = RequestDetailController

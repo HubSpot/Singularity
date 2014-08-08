@@ -92,10 +92,11 @@ class TaskDetailController extends Controller
             app.caughtError()
             delete @models.resourceUsage
 
-        @collections.s3Logs?.fetch().error =>
-            # It probably means S3 logs haven't been configured
-            app.caughtError()
-            @view.displayS3Error()
-            delete @collections.s3Logs
+        if @collections.s3Logs?.currentPage is 1
+            @collections.s3Logs.fetch().error =>
+                # It probably means S3 logs haven't been configured
+                app.caughtError()
+                @view.displayS3Error()
+                delete @collections.s3Logs
 
 module.exports = TaskDetailController
