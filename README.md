@@ -262,32 +262,32 @@ The following are the properties of the *Singularity Deploy Object*:
 - **deployHealthTimeoutSeconds** (long - optional). Applicable only for *web service* items. Specifies how long should *Singularity Scheduler* wait for ALL service instances to become healthy. Default is 120 seconds.
 - **considerHealthyAfterRunningForSeconds** (long - optional). Applicable for *web service* and *worker* items. Specifies for how long the process should be running before it is considered healthy. Concerning *Web Services* this setting will be used ONLY if no *healthcheckUri* can be found or you have set *skipHealthchecksOnDeploy* to true. Otherwise the normal health check will be executed using the health check URL. Default is 5 seconds.
 - **loadBalancerGroups** (List of strings - mandatory if item is a *loadBalanced* *Web Service*): The names of the load balancer groups that will serve the Web Service. It will be transmitted to the Load Balancer (through the LB API) by *Singularity Scheduler*.
-- **loadBalancerOptions** (Map of string key / string value - optional): A Map of strings that could be used by *Singularity Scheduler* to send extra information to the Load Balancer.
-- **command** (string - mandatory if default executor is used): The command to pass to the default mesos executor.
-- **env** (Map of string key / string value - optional): A map of all required environment variables. Should be provided only when the default mesos executor is used. When the *Singularity Executor* is used, the environment variables map is provided as part of the executor data (see *executorData* below). If ports have been requested in *resources.numPorts*, *Singularity Scheduler* will add extra keys *PORT1*, *PORT2*,...*PORTN* into the map with value for each key the number of the allocated port.
-- **uris** (List of strings): A list of objects to download for the default executor.
-- executor (String - optional). This is the name of a custom executor to be used instead of the default mesos executor. To use the *Singularity Executor*, install the executor in a folder and then set this property to the absolute path to the *Singularity Executor* command. 
-- executorData (A single string or a Map of strings  - optional). If provided it will be passed to the custom executor instead of the command. If ports have been requested in *resources.numPorts* and *executorData* is a map then *Singularity Scheduler* will automatically add the allocated ports into the map under the key *ports* with value a number array. If *Singularity Executor* is used then the following is the set of supported map keys:
-    - **cmd**
-    - **embeddedArtifacts**
-        - **name**
-        - **filename**
-        - **md5sum**
-        - **content**
-    - **externalArtifacts**
-        - **name**
-        - **filename**
-        - **md5sum** 
-        - **filesize**
-        -  **url**
-    - **s3Artifacts**
-        - **name**
-        - **filename**
-        - **md5sum** 
-        - **filesize**
-        - **s3Bucket**
-        - **s3ObjectKey**
-    - **successfulExitCodes**
+- **loadBalancerOptions** (Map of strings - optional): A Map of strings that could be used by *Singularity Scheduler* to send extra information to the Load Balancer.
+- **command** (string - mandatory if default executor is used): The command to pass to the default mesos executor. This should be a proper Linux shell command that can reference any of the provided environment variables (see *env* below) as well as any path in the extracted artifact (see *uris* below)
+- **env** (Map of strings - optional): A map of all required environment variables that will be installed in the shell that will run the provided command. If ports have been requested in *resources.numPorts* and the default mesos executor is used, *Singularity Scheduler* will add extra keys *PORT1*, *PORT2*,...*PORTN* into the map with value for each key the number of the allocated port.
+- **uris** (List of strings): A list of artifacts to download for the default executor. These usually contain the executable that is run by the provided command. 
+- **executor** (String - optional). This is the name of a custom executor to be used instead of the default mesos executor. To use the *Singularity Executor*, install the executor in a folder inside each slave and then set this property to the executor absolute path. 
+- **executorData** (A single string or a Map of strings  - mandatory if *Singularity Executor* is used). If provided it will be passed to the custom executor instead of the command. If ports have been requested in *resources.numPorts* and *executorData* is a map then *Singularity Scheduler* will automatically add the allocated ports into the map under the key *ports* with value an array of integers. If *Singularity Executor* is used then the following is the set of supported map keys for executor data:
+    - **cmd** (string - mandatory): The command to pass to the custom executor. This should be a proper Linux shell command that can reference any of the provided environment variables (see *env* above) as well as any path in the extracted artifacts (see *externalArtifacts* and *s3Artifacts* below)
+    - **embeddedArtifacts** (List of Map of strings, each map containing metadata about an embedded artifact as well as the artifact binary data - optional)
+        - **name** (string - mandatory): The name of the artifact
+        - **filename** (string - mandatory): The path under which will be extracted. The path is relative to the sandboxed folder allocated to the running task 
+        - **md5sum** (string - optional): The md5 checksum of the embedded artifact
+        - **content** (byte array): The actual data of the artifact
+    - **externalArtifacts** (List of Map of strings, each map containing metadata about an external artifact as well as the url for downloading it)
+        - **name** (string - mandatory): The name of the artifact
+        - **filename** (string - mandatory): The path under which will be extracted. The path is relative to the sandboxed folder allocated to the running task
+        - **md5sum** (string - optional): The md5 checksum of the embedded artifact
+        - **filesize** (long - optional): The file size of the artifact in bytes 
+        -  **url** (string - mandatory): The URL to use for downloading the artifact
+    - **s3Artifacts** (List of Map of strings, each map containing metadata about an S3 artifact as well as the bucket name and object key for downloading it)
+        - **name** (string - mandatory): The name of the artifact
+        - **filename** (string - mandatory): The path under which will be extracted. The path is relative to the sandboxed folder allocated to the running task
+        - **md5sum** (string - optional): The md5 checksum of the embedded artifact
+        - **filesize** (long - optional): The file size of the artifact in bytes 
+        - **s3Bucket** (string - mandatory): The name of the bucket that contains the artifact
+        - **s3ObjectKey** (string - mandatory): The object key (i.e. the name) of the s3 artifact
+    - **successfulExitCodes** (List of integers - optional): The exit codes other than 0 that the running command may return when exiting and should be considered to denote that the process has successfully run. 
     - **runningSentinel**
     - **user**
     - **extraCmdLineArgs**
