@@ -140,12 +140,12 @@ A dashboard with the user's deployed and favored items is available.
 
 While Singularity UI is mostly a viewing app it has some limited functionality for performing certain actions on registered deployable items and their tasks:
 
-- Remove a deployed item. All running tasks (e.g. the service instances if it is a web service) are terminated and the item is unregistered from Singularity. Historical logs are not removed and will be connected with the item if it is re-registered to Singularity at a later stage.
-- Pause a deployed item. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
-- Manually run a *Scheduled Job* or *On-Demand* item
-- Kill a running task. Tasks corresponding to instances of *web service* or *worker* items will be re-started instantly (possibly) in another slave. Scheduled tasks will behave as if the task failed and may be rescheduled to run in the future depending on whether or not the job item has *numRetriesOnFailure* set.
-- Decommission a slave which means that all tasks running in the specific slave will be migrated to other slaves
-- Decommission a *logical rack*, meaning that all slave hosts in the rack will be decommissioned. The *rackid* attribute can be used when running the mesos slave process to specify which rack the slave belongs to. For example when running in AWS a rack could corresponds to the availability zone ( /usr/local/sbin/mesos-slave --attributes=rackid:us-east-1e).
+- **Remove a deployed item**. All running tasks (e.g. the service instances if it is a web service) are terminated and the item is unregistered from Singularity. Historical logs are not removed and will be connected with the item if it is re-registered to Singularity at a later stage.
+- **Pause a deployed item**. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
+- **Manually run** a *Scheduled Job* or *On-Demand* item
+- **Kill a running task**. Tasks corresponding to instances of *web service* or *worker* items will be re-started instantly (possibly) in another slave. Scheduled tasks will behave as if the task failed and may be rescheduled to run in the future depending on whether or not the job item has *numRetriesOnFailure* set.
+- **Decommission a slave** which means that all tasks running in the specific slave will be migrated to other slaves
+- **Decommission a *logical rack***, meaning that all slave hosts in the rack will be decommissioned. The *rackid* attribute can be used when running the mesos slave process to specify which rack the slave belongs to. For example when running in AWS a rack could corresponds to the availability zone ( /usr/local/sbin/mesos-slave --attributes=rackid:us-east-1e).
 
 ![Singularity UI Slaves screen](Docs/images/SingularityUI_Slaves.png)
 
@@ -262,9 +262,49 @@ The following are the properties of the *Singularity Deploy Object*:
 - **deployHealthTimeoutSeconds** (long - optional). Applicable only for *web service* items. Specifies how long should *Singularity Scheduler* wait for ALL service instances to become healthy. Default is 120 seconds.
 - **considerHealthyAfterRunningForSeconds** (long - optional). Applicable for *web service* and *worker* items. Specifies for how long the process should be running before it is considered healthy. Concerning *Web Services* this setting will be used ONLY if no *healthcheckUri* can be found or you have set *skipHealthchecksOnDeploy* to true. Otherwise the normal health check will be executed using the health check URL. Default is 5 seconds.
 - **loadBalancerGroups** (List of strings - mandatory if item is a *loadBalanced* *Web Service*): The names of the load balancer groups that will serve the Web Service. It will be transmitted to the Load Balancer (through the LB API) by *Singularity Scheduler*.
-- **loadBalancerOptions** (Map of strings - optional): A Map of strings that could be used by *Singularity Scheduler* to send extra information to the Load Balancer.
+- **loadBalancerOptions** (Map of string key / string value - optional): A Map of strings that could be used by *Singularity Scheduler* to send extra information to the Load Balancer.
 - **command** (string - mandatory if default executor is used): The command to pass to the default mesos executor.
-- env: (String Object/Map) An object with pairs which will be passed into ENV. Ports will be added to this is requested.
-- uris: (String List) A list of objects to download for the default executor.
-- executor: (String) This the executor command sent to the custom executor. Generally it is the name of the custom executor.
-- executorData: (Object) Can be a map or string.  This is what is passed to the executor instead of the command. If it is a map and the request requires ports, the ports will be passed into the map as a number array.
+- **env** (Map of string key / string value - optional): A map of all required environment variables. Should be provided only when the default mesos executor is used. When the *Singularity Executor* is used, the environment variables map is provided as part of the executor data (see *executorData* below). If ports have been requested in *resources.numPorts*, *Singularity Scheduler* will add extra keys *PORT1*, *PORT2*,...*PORTN* into the map with value for each key the number of the allocated port.
+- **uris** (List of strings): A list of objects to download for the default executor.
+- executor (String - optional). This is the name of a custom executor to be used instead of the default mesos executor. To use the *Singularity Executor*, install the executor in a folder and then set this property to the absolute path to the *Singularity Executor* command. 
+- executorData (A single string or a Map of strings  - optional). If provided it will be passed to the custom executor instead of the command. If ports have been requested in *resources.numPorts* and *executorData* is a map then *Singularity Scheduler* will automatically add the allocated ports into the map under the key *ports* with value a number array. If *Singularity Executor* is used then the following is the set of supported map keys:
+    - **cmd**
+    - **embeddedArtifacts**
+        - **name**
+        - **filename**
+        - **md5sum**
+        - **content**
+    - **externalArtifacts**
+        - **name**
+        - **filename**
+        - **md5sum** 
+        - **filesize**
+        -  **url**
+    - **s3Artifacts**
+        - **name**
+        - **filename**
+        - **md5sum** 
+        - **filesize**
+        - **s3Bucket**
+        - **s3ObjectKey**
+    - **successfulExitCodes**
+    - **runningSentinel**
+    - **user**
+    - **extraCmdLineArgs**
+    - **loggingTag**
+    - **loggingExtraFields**
+    - **sigKillProcessesAfterMillis**
+
+
+## Getting Started
+Follow the provided links to learn how to install, setup and start using Singularity in different environments: for just a quick look, for setting a test cluster and for production use.
+
+- [Singularity Local Setup for Testing, using Vagrant & VirtualBox](Docs/Singularity_Local_Setup_For_Testing.md). Use this if you want to get a quick taste of Singularity and Mesos without the need to setup a real Mesos Cluster.
+- [Singularity Local Setup for Development, using Vagrant, VirtualBox & Eclipse]((Docs/Singularity_Local_Setup_For_Developmnet.md)
+- [Setup Singularity in Mesosphere Cluster]
+- [Setup a Singularity / Mesos Cluster with Amazon EC2]
+- [Singularity UI Developer's Guide](Docs/Singularity_UI_Developer_Guide)
+
+## 2014 Roadmap
+
+
