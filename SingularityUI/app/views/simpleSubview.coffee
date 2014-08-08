@@ -9,6 +9,12 @@ View = require './view'
 # And it does everything for you, just do stuff with the collection
 class SimpleSubview extends View
 
+    expanded: false
+
+    events: ->
+        _.extend super,
+            'click [data-action="expandList"]': 'setExpanded'
+
     initialize: ({@template}) ->
         @data = if @collection? then @collection else @model
 
@@ -25,6 +31,15 @@ class SimpleSubview extends View
             data:   @data.toJSON()
             synced: @data.synced
 
+        # Some things are collapsed by default and have a 'view'
+        # button to expand them. This is to prevent them from
+        # being rendered as collapsed
+        if @expanded
+            @$('.row.hidden').removeClass 'hidden'
+            @$('[data-action="expandList"]').remove()
+
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
+
+    setExpanded: -> @expanded = true
 
 module.exports = SimpleSubview
