@@ -40,7 +40,7 @@ brunch watch [--server [-p 3333]]
 
 So to start off, `npm install` to install the dependencies, then `brunch watch --server` to get it running. You can now acceess SingularityUI at [localhost:3333/singularity](http://localhost:3333/singularity) by default.
 
-From here you'll need to hook to to an API. You can either use SingularityService running locally, or a remote version like your development cluster. Open up [SingularityUI](http://localhost:3333/singularity) and you'll be prompted for an API root. This is something like `http://example/singularity/api`. To change this in the future, you can use your JS console:
+From here you'll need to hook up to an API. You can either use SingularityService running locally, or a remote version like your development cluster. Open up [SingularityUI](http://localhost:3333/singularity) and you'll be prompted for an API root. This is something like `http://example/singularity/api`. To change this in the future, you can use your JS console:
 
 ```javascript
 localStorage.set('apiRootOverride', 'http://example/singularity/api')
@@ -54,7 +54,7 @@ localStorage.setItem('suppressRefresh', true)
 
 ## XSS restrictions
 
-Your browser will not allow cross-domain requests if you're using a remote server. You have 3 options to get around this:
+Your browser will not allow cross-domain requests if you're using a remote server. You have 2 options to get around this:
 
 ### Cheat using hosts
 
