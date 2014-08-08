@@ -89,12 +89,12 @@ class Utils
 
     # Will make $el as tall as the page and will attach a scroll event
     # that shrinks it
-    @animatedExpansion: ($el) ->
+    @animatedExpansion: ($el, shrinkCallback) ->
         newHeight = $(window).height()
 
         $el.css 'min-height', "#{ $el.height() }px"
         $el.animate
-            duration:  1500
+            duration:  1000
             minHeight: "#{ newHeight }px"
 
         offset = $el.offset().top
@@ -118,6 +118,8 @@ class Utils
             $el.animate
                 duration:  shrinkTime
                 minHeight: '0px'
+
+            shrinkCallback()
 
             removeEvent()
 
@@ -145,6 +147,7 @@ class Utils
 
         setTimeout =>
             $(window).on 'scroll', checkForShrink
+            $el.on       'shrink', shrink
         , 100
 
 module.exports = Utils

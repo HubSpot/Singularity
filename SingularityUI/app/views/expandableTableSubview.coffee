@@ -13,12 +13,15 @@ class ExpandableTableSubview extends View
 
     expanded: false
 
+    # For having consistently sized tabled while chaging pages
+    tableMinHeight: 0
+
     events: ->
         _.extend super,
             'click [data-action="next-page"]': 'nextPage'
             'click [data-action="previous-page"]': 'previousPage'
             'click [data-action="expand"]': 'expand'
-            'click [data-action="shrink"]': 'shrink'
+            'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({@collection, @template}) ->
         @listenTo @collection, 'sync', @render
@@ -26,18 +29,30 @@ class ExpandableTableSubview extends View
     render: ->
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
-        if @collection.length is 0 and not @$el.is(':empty') and not @collection.currentPage is 1
+        if not @collection.length and @collection.currentPage isnt 1
             # Disable the next button and don't render anything
-            @$('[data-action="next-page"]').attr 'disabled', true
-            @collection.currentPage -= 1
-            return
+            $nextButton = @$('[data-action="next-page"]')
+            $nextButton.attr 'disabled', true
+            $nextButton.tooltip
+                title:     'Nothing more!'
+                placement: 'right'
+                delay:
+                    show: 100
+                    hide: 2000
+            $nextButton.tooltip 'show'
+            setTimeout (=> $nextButton.tooltip 'hide'), 2000
 
+            @collection.currentPage -= 1
+            return undefined
+        
         # For after the render
         haveButtons = @$('.table-subview-buttons').length
 
         @$el.html @template
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
+
+        @$('table').css 'min-height', "#{ @tableMinHeight }px"
 
         haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
 
@@ -63,12 +78,17 @@ class ExpandableTableSubview extends View
         @collection.currentPage += 1 unless @collection.length isnt @collection.atATime
         @collection.fetch()
 
+        # So the table doesn't shrink afterwards
+        @tableMinHeight = @$('table').height()
+
     previousPage: ->
         @collection.currentPage -= 1 unless @collection.currentPage is 1
         @collection.fetch()
 
     expand: ->
         @expanded = true
+
+        utils.animatedExpansion @$el, @shrink
 
         # Container dimensions
         containerOffset = @$el.offset().top
@@ -98,16 +118,15 @@ class ExpandableTableSubview extends View
         # - 1 just in case
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
-
-        utils.animatedExpansion @$el
         
         @collection.fetch()
 
-    shrink: ->
+    startShrink: =>
+        @$el.trigger 'shrink'
+        @shrink()
+
+    shrink: =>
         @expanded = false
-
-        @$el.css 'min-height', '0'
-
         @collection.atATime = 5
         @collection.currentPage = 1
         @collection.fetch()
