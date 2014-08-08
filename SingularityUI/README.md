@@ -74,8 +74,13 @@ So if you have SingularityUI running on localhost:3333, just point your browser 
 
 ### Run Chrome with security disabled
 
+Running Google Chome with `--args --disable-web-security` will stop it from preventing your API calls. Be careful not to use your browser normally in this mode as it can cause securiy issues.
+
 ```bash
+# OS X example
 open -a Google\ Chrome\ Canary --args --disable-web-security
+
+# Windows example
 ```
 
-And you're set! SingularityUI is now available at [http://localhost:4000/singularity](http://localhost:4000/singularity) and it will use whatever API you specified.
+And you're set! Just open up singularity and your browser won't prevent your API calls.
