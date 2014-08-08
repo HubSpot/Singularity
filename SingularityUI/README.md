@@ -2,7 +2,7 @@
 
 To build SingularityUI you'll need node. Just run
 
-```shell
+```bash
 npm install
 ```
 
@@ -16,11 +16,15 @@ If you want to develop SingularityUI independently of the other Singularity modu
 
 ## Set-up
 
-SingularityUI uses [Brunch](http://brunch.io) to build itself (compile CoffeeScript, etc) and [Bower](http://bower.io) to manage project dependencies.
+SingularityUI uses [Brunch](http://brunch.io) to build itself (compile CoffeeScript, etc) and [Bower](http://bower.io) to manage project dependencies. You will want to install these globally for easier access:
+
+```bash
+sudo npm install -g brunch bower
+```
 
 Some commands you should be aware of:
 
-```shell
+```bash
 # Download dependencies for Brunch & Bower, then compile everything
 npm install
 
@@ -70,7 +74,7 @@ So if you have SingularityUI running on localhost:3333, just point your browser 
 
 ### Run Chrome with security disabled
 
-```shell
+```bash
 open -a Google\ Chrome\ Canary --args --disable-web-security
 ```
 
