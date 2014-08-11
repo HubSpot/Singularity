@@ -1,0 +1,74 @@
+<h3>
+    New Request
+</h3>
+
+<div class="row new-form">
+    <form class="col-md-5">
+        <div class="form-group">
+            <label for="id">ID</label>
+            <input type="text" id="id" class="form-control" placeholder="my-awesome-request">
+        </div>
+
+        <div class="form-group">
+            <label for="owner-0">Owners</label>
+
+            <input type="text" id="owner-0" class="owner form-control" placeholder="user@example.com">
+        </div>
+
+        <div class="form-group">
+            <label for="service-type">Type</label>
+
+            <div id="type" class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default active">
+                    <input id="service-type" type="radio" name="type" value="service">
+                    Service
+                </label>
+                <label class="btn btn-default">
+                    <input id="worker-type" type="radio" name="type" value="worker">
+                    Worker
+                </label>
+                <label class="btn btn-default">
+                    <input id="scheduled-type" type="radio" name="type" value="scheduled">
+                    Scheduled
+                </label>
+                <label class="btn btn-default">
+                    <input id="on-demand-type" type="radio" name="type" value="on-demand">
+                    On-demand
+                </label>
+            </div>
+        </div>
+
+        <div class="row inline-form">
+            <div class="col-sm-4 form-inline">
+                <div class="form-group">
+                    <label for="instances">Instances</label>
+                    <input type="text" id="instances" class="form-control" placeholder="1">
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="rack-sensitive">
+                        <input type="checkbox" id="rack-sensitive">    
+                        Rack sensitive
+                    </label>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="load-balanced">
+                        <input type="checkbox" id="load-balabced">
+                        Load balanced
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success" disabled>
+            Save
+        </button>
+    </form>
+
+    <div id="help-column" class="col-md-6 col-md-offset-1 hidden-xs hidden-sm">
+        
+    </div>
+</div>
