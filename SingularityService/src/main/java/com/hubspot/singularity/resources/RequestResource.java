@@ -117,7 +117,7 @@ public class RequestResource extends AbstractRequestResource {
       return true;
     }
     if (newRequest.isScheduled() && oldRequest.isScheduled()) {
-      if (!newRequest.getQuartzSchedule().get().equals(oldRequest.getQuartzSchedule().get())) {
+      if (!newRequest.getQuartzScheduleSafe().equals(oldRequest.getQuartzScheduleSafe())) {
         return true;
       }
     }

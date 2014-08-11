@@ -136,6 +136,11 @@ public class SingularityRequest extends SingularityJsonObject {
   }
 
   @JsonIgnore
+  public String getQuartzScheduleSafe() {
+    return quartzSchedule.or(schedule.get());
+  }
+
+  @JsonIgnore
   public boolean isDaemon() {
     return daemon.or(Boolean.TRUE).booleanValue();
   }
