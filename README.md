@@ -295,6 +295,48 @@ The following are the properties of the *Singularity Deploy Object*:
     - **loggingExtraFields**
     - **sigKillProcessesAfterMillis**
 
+The following is an example *Deploy Service Object*
+```javascript
+{
+    "requestId": "MDS_TestService",
+    "id": "71_7",
+    "customExecutorCmd": "/usr/local/bin/singularity-executor",
+    "resources": {
+        "cpus": 1,
+        "memoryMb": 896,
+        "numPorts": 3
+    },
+    "env": {
+        "DEPLOY_MEM": "768",
+        "JVM_MAX_HEAP": "384m",
+    },
+    "executorData": {
+        "cmd": "java $TRACEVIEW $JVM_DEFAULT_OPTS -jar MesosDeployIntegrationTestsService/target/MesosDeployIntegrationTestsService-1.0-SNAPSHOT.jar server $CONFIG_YAML",
+        "embeddedArtifacts": [
+            {
+                "name": "rawDeployConfig",
+                "filename": "MDS_TestService_Traveview_Enabled.yaml",
+                "content": "bmFtZT..."
+            }
+        ],
+        "externalArtifacts": [],
+        "s3Artifacts": [
+            {
+                "name": "executableSlug",
+                "filename": "MesosDeployIntegrationTestsProject-71-...tar.gz",
+                "md5sum": "313be85c5979a1c652ec93e305eb25e9",
+                "filesize": 81055833,
+                "s3Bucket": "hubspot.com",
+                "s3ObjectKey": "build_artifacts/.../MesosDeployIntegrationTestsProject-71-...tar.gz"
+            }
+        ],
+        "successfulExitCodes": [
+            0
+        ],
+        "extraCmdLineArgs": [],
+        "loggingExtraFields": {}
+}
+```
 
 ## Getting Started
 Follow the provided links to learn how to install, setup and start using Singularity in different environments: for just a quick look, for setting a test cluster and for production use.
