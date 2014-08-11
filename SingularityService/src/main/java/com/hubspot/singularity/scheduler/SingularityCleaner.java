@@ -39,9 +39,9 @@ import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHea
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCleaner {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityCleaner.class);
-  
+
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final RequestManager requestManager;
@@ -49,12 +49,12 @@ public class SingularityCleaner {
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final LoadBalancerClient lbClient;
   private final SingularityExceptionNotifier exceptionNotifier;
-  
+
   private final SingularityConfiguration configuration;
-  private final long killScheduledTasksAfterDecomissionedMillis;
-  
+  private final long killNonLongRunningTasksInCleanupAfterMillis;
+
   @Inject
-  public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager, 
+  public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager,
       SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
@@ -63,106 +63,111 @@ public class SingularityCleaner {
     this.requestManager = requestManager;
     this.driverManager = driverManager;
     this.exceptionNotifier = exceptionNotifier;
-    
+
     this.configuration = configuration;
-    
-    this.killScheduledTasksAfterDecomissionedMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksWhichAreDecomissionedAfterSeconds());
+
+    this.killNonLongRunningTasksInCleanupAfterMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksInCleanupAfterSeconds());
   }
-  
+
   private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
-    if (taskCleanup.getCleanupType().shouldKillInstantly()) {
-      LOG.debug("Killing a task {} immediately because of its cleanup type", taskCleanup);
-      return true;
-    }
-         
-    // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
     final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskCleanup.getTaskId().getRequestId());
-    
+
     if (!requestWithState.isPresent()) {
       LOG.debug("Killing a task {} immediately because the request was missing", taskCleanup);
       return true;
     }
-    
+
+    final SingularityRequest request = requestWithState.get().getRequest();
+
+    if (taskCleanup.getCleanupType().shouldKillTaskInstantly(request)) {
+      LOG.debug("Killing a task {} immediately because of its cleanup type", taskCleanup);
+      return true;
+    }
+
     if (requestWithState.get().getState() == RequestState.PAUSED) {
       LOG.debug("Killing a task {} immediately because the request was paused", taskCleanup);
       return true;
     }
-    
-    final SingularityRequest request = requestWithState.get().getRequest();
-    
+
     if (!request.isLongRunning()) {
-      final long taskDuration = System.currentTimeMillis() - taskCleanup.getTaskId().getStartedAt();
-      final boolean tooOld = taskDuration > killScheduledTasksAfterDecomissionedMillis;
-      
-      LOG.debug("{} a non-longrunning task {} immediately because the task is {} old (max wait time is {})", tooOld ? "Killing" : "Not killing", taskCleanup, taskDuration, killScheduledTasksAfterDecomissionedMillis);
-      
+      final long timeSinceCleanup = System.currentTimeMillis() - taskCleanup.getTimestamp();
+      final long maxWaitTime = request.getKillOldNonLongRunningTasksAfterMillis().or(killNonLongRunningTasksInCleanupAfterMillis);
+      final boolean tooOld = maxWaitTime < 1 || (timeSinceCleanup > maxWaitTime);
+
+      if (!tooOld) {
+        LOG.trace("Not killing a non-longRunning task {}, running time since cleanup {} (max wait time is {})", taskCleanup, timeSinceCleanup, maxWaitTime);
+      } else {
+        LOG.debug("Killing a non-longRunning task {} - running time since cleanup {} exceeded max wait time {}", taskCleanup, timeSinceCleanup, maxWaitTime);
+      }
+
       return tooOld;
     }
-    
+
     final String requestId = request.getId();
-    
+
     final Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
-    
+
     if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
       LOG.debug("Killing a task {} immediately because there is no active deploy state {}", taskCleanup, deployState);
       return true;
     }
-    
+
     final String activeDeployId = deployState.get().getActiveDeploy().get().getDeployId();
-    
+
     if (!taskCleanup.getTaskId().getDeployId().equals(activeDeployId)) {
       LOG.debug("Killing a task {} immediately because it is not part of the active deploy {}", taskCleanup, deployState.get().getActiveDeploy().get());
       return true;
     }
-    
+
+    // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
     final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
-    
+
     if (matchingTasks.size() < request.getInstancesSafe()) {
-      LOG.debug("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
+      LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
       return false;
     }
-    
+
     final Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
-    
+
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, matchingTasks, false);
-    
+
     switch (deployHealth) {
     case HEALTHY:
-      LOG.debug("Killing a task {}, all tasks are healthy", taskCleanup);
+      LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
       return true;
     case WAITING:
     case UNHEALTHY:
     default:
-      LOG.debug("Not killing a task {}, waiting for new tasks to be healthy (current state: {})", taskCleanup, deployState);
+      LOG.trace("Not killing a task {}, waiting for new replacement tasks to be healthy (current state: {})", taskCleanup, deployState);
       return false;
     }
   }
-  
+
   private void drainRequestCleanupQueue() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityRequestCleanup> cleanupRequests = requestManager.getCleanupRequests();
-    
+
     if (cleanupRequests.isEmpty()) {
       LOG.trace("Request cleanup queue is empty");
       return;
     }
 
     LOG.info("Cleaning up {} requests", cleanupRequests.size());
-    
+
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final List<SingularityPendingTask> pendingTasks = taskManager.getPendingTasks();
-    
+
     int numTasksKilled = 0;
     int numScheduledTasksRemoved = 0;
-    
+
     for (SingularityRequestCleanup requestCleanup : cleanupRequests) {
       final String requestId = requestCleanup.getRequestId();
       final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
-      
+
       boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
       boolean killScheduledTasks = true;
-      
+
       if (requestCleanup.getCleanupType() == RequestCleanupType.PAUSING) {
         if (SingularityRequestWithState.isActive(requestWithState)) {
           killScheduledTasks = false;
@@ -170,7 +175,7 @@ public class SingularityCleaner {
           LOG.info("Ignoring {}, because {} is {}", requestCleanup, requestCleanup.getRequestId(), requestWithState.get().getState());
         }
       } else if (requestCleanup.getCleanupType() == RequestCleanupType.DELETING) {
-        if (requestWithState.isPresent()) {        
+        if (requestWithState.isPresent()) {
           killActiveTasks = false;
           killScheduledTasks = false;
           LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
@@ -178,7 +183,7 @@ public class SingularityCleaner {
           cleanupDeployState(requestCleanup);
         }
       }
-      
+
       if (killActiveTasks) {
         for (SingularityTaskId matchingTaskId : Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(requestId))) {
           LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
@@ -188,7 +193,7 @@ public class SingularityCleaner {
       } else {
         LOG.info("Active tasks for {} not killed", requestCleanup);
       }
-      
+
       if (killScheduledTasks) {
         for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matchingRequest(requestId))) {
           LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
@@ -196,119 +201,119 @@ public class SingularityCleaner {
           numScheduledTasksRemoved++;
         }
       }
-     
+
       requestManager.deleteCleanRequest(requestId);
     }
-    
+
     LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled, numScheduledTasksRemoved, JavaUtils.duration(start));
   }
-  
+
   private void cleanupDeployState(SingularityRequestCleanup requestCleanup) {
     SingularityDeleteResult deletePendingDeployResult = deployManager.deletePendingDeploy(requestCleanup.getRequestId());
     SingularityDeleteResult deleteRequestDeployStateResult = deployManager.deleteRequestDeployState(requestCleanup.getRequestId());
     LOG.trace("Deleted pendingDeploy ({}) and requestDeployState ({}) due to {}", deletePendingDeployResult, deleteRequestDeployStateResult, requestCleanup);
   }
-  
+
   public void drainCleanupQueue() {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
     drainLBCleanupQueue();
     checkKilledTaskIdRecords();
   }
-  
+
   private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
     return taskManager.isActiveTask(cleanupTask.getTaskId().getId());
   }
-  
+
   private void checkKilledTaskIdRecords() {
     final long start = System.currentTimeMillis();
     final List<SingularityKilledTaskIdRecord> killedTaskIdRecords = taskManager.getKilledTaskIdRecords();
-    
+
     if (killedTaskIdRecords.isEmpty()) {
       LOG.trace("No killed taskId records");
       return;
     }
-    
+
     int obsolete = 0;
     int waiting = 0;
     int rekilled = 0;
-    
+
     for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecords) {
       // TODO should we check mesos HTTP state? does that make sense?
       if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId().getId())) {
         SingularityDeleteResult deleteResult = taskManager.deleteKilledRecord(killedTaskIdRecord.getTaskId());
-        
+
         LOG.debug("Deleting obsolete {} - {}", killedTaskIdRecord, deleteResult);
-        
+
         obsolete++;
-        
+
         continue;
       }
-      
+
       long duration = start - killedTaskIdRecord.getTimestamp();
-      
+
       if (duration > configuration.getAskDriverToKillTasksAgainAfterMillis()) {
-        LOG.info("{} is still active, and time since last kill {} is greater than configured (askDriverToKillTasksAgainAfterMillis) {} - asking driver to kill again", 
+        LOG.info("{} is still active, and time since last kill {} is greater than configured (askDriverToKillTasksAgainAfterMillis) {} - asking driver to kill again",
             killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
-        
-        driverManager.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(), 
+
+        driverManager.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
             killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()));
-     
+
         rekilled++;
       } else {
         LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
-      
+
         waiting++;
       }
     }
-    
+
     LOG.info("{} obsolete, {} waiting, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, waiting, rekilled, killedTaskIdRecords.size());
   }
-  
+
   private void drainTaskCleanupQueue() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskCleanup> cleanupTasks = taskManager.getCleanupTasks();
-    
+
     if (cleanupTasks.isEmpty()) {
       LOG.trace("Task cleanup queue is empty");
       return;
     }
-    
+
     final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
     }
-    
+
     LOG.info("Cleaning up {} tasks", cleanupTasks.size());
-   
-    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds(); 
-    
+
+    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+
     int killedTasks = 0;
-    
+
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
-        
+
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
-      
+
         killedTasks++;
       }
     }
-    
+
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
   }
 
   private boolean checkLBStateAndShouldKillTask(SingularityTaskCleanup cleanupTask) {
     final long start = System.currentTimeMillis();
-    
+
     CheckLBState checkLbState = checkLbState(cleanupTask.getTaskId());
-    
+
     LOG.debug("TaskCleanup {} had LB state {} after {}", cleanupTask, checkLbState, JavaUtils.duration(start));
-    
+
     switch (checkLbState) {
     case DONE:
     case NOT_LOAD_BALANCED:
@@ -317,10 +322,10 @@ public class SingularityCleaner {
       return true;
     case WAITING:
     }
-    
+
     return false;
   }
-  
+
   private enum CheckLBState {
     NOT_LOAD_BALANCED, LOAD_BALANCE_FAILED, MISSING_TASK, WAITING, DONE;
   }
@@ -336,33 +341,33 @@ public class SingularityCleaner {
       return false;
     }
   }
-  
+
   private CheckLBState checkLbState(SingularityTaskId taskId) {
     Optional<SingularityLoadBalancerUpdate> lbAddUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
-    
+
     if (!lbAddUpdate.isPresent()) {
       return CheckLBState.NOT_LOAD_BALANCED;
     }
-    
+
     if (!shouldRemoveLbState(taskId, lbAddUpdate.get())) {
       return CheckLBState.LOAD_BALANCE_FAILED;
     }
-    
+
     Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
     SingularityLoadBalancerUpdate lbRemoveUpdate = null;
-    
+
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE);
-      
+
     if (!maybeLbRemoveUpdate.isPresent() || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
       final Optional<SingularityTask> task = taskManager.getTask(taskId);
-      
+
       if (!task.isPresent()) {
         LOG.error("Missing task {}", taskId);
         return CheckLBState.MISSING_TASK;
       }
-      
+
       lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
-      
+
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
     } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING) {
       lbRemoveUpdate = lbClient.getState(loadBalancerRequestId);
@@ -371,7 +376,7 @@ public class SingularityCleaner {
     } else {
       lbRemoveUpdate = maybeLbRemoveUpdate.get();
     }
-    
+
     switch (lbRemoveUpdate.getLoadBalancerState()) {
     case FAILED:
     case CANCELED:
@@ -385,32 +390,32 @@ public class SingularityCleaner {
     case WAITING:
       LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
     }
-    
+
     return CheckLBState.WAITING;
   }
-  
+
   private void drainLBCleanupQueue() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
-    
+
     if (lbCleanupTasks.isEmpty()) {
       LOG.trace("LB task cleanup queue is empty");
       return;
     }
 
     LOG.info("LB task cleanup queue had {} tasks", lbCleanupTasks.size());
-    
+
     int cleanedTasks = 0;
     int ignoredTasks = 0;
-    
+
     for (SingularityTaskId taskId : lbCleanupTasks) {
       final long checkStart = System.currentTimeMillis();
-      
+
       final CheckLBState checkLbState = checkLbState(taskId);
-      
+
       LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, JavaUtils.duration(checkStart));
-      
+
       switch (checkLbState) {
       case WAITING:
         continue;
@@ -422,11 +427,11 @@ public class SingularityCleaner {
       case LOAD_BALANCE_FAILED:
         ignoredTasks++;
       }
-      
+
       taskManager.deleteLBCleanupTask(taskId);
     }
-    
+
     LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, JavaUtils.duration(start));
   }
-  
+
 }

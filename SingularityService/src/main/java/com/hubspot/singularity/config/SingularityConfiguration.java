@@ -17,128 +17,128 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("mesos")
   private MesosConfiguration mesosConfiguration;
-  
+
   @JsonProperty("zookeeper")
   private ZooKeeperConfiguration zooKeeperConfiguration;
-  
+
   @JsonProperty("smtp")
   private SMTPConfiguration smtpConfiguration;
 
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
-  
+
   @JsonProperty("hostname")
   private String hostname;
-  
+
   @JsonProperty("singularityUIHostnameAndPath")
   private String singularityUIHostnameAndPath;
 
   @JsonProperty("loadBalancerUri")
   private String loadBalancerUri;
-  
+
   @JsonProperty("sentry")
   private SentryConfiguration sentryConfiguration;
-  
+
   @Valid
   @NotNull
   private DataSourceFactory database;
 
   @NotNull
   private long closeWaitSeconds = 5;
-  
+
   @NotNull
   private long cleanupEverySeconds = 5;
-  
+
   @NotNull
   private long checkDeploysEverySeconds = 5;
-  
+
   @NotNull
   private long saveStateEverySeconds = 60;
-  
+
   @NotNull
   private long healthcheckTimeoutSeconds = 5;
-  
+
   @NotNull
   private long checkNewTasksEverySeconds = 5;
-  
+
   @NotNull
   private int checkNewTasksScheduledThreads = 3;
-  
+
   @NotNull
   private long healthcheckIntervalSeconds = 5;
-  
+
   @NotNull
   private int newTaskCheckerBaseDelaySeconds = 1;
 
   @NotNull
-  private long killNonLongRunningTasksWhichAreDecomissionedAfterSeconds = TimeUnit.HOURS.toSeconds(1);
-  
+  private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(24);
+
   @NotNull
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
-  
+
   @NotNull
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
-  
+
   @NotNull
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
-  
+
   @NotNull
   private int logFetchCoreThreads = 3;
-  
+
   @NotNull
   private int healthcheckStartThreads = 3;
-  
+
   @NotNull
   private int logFetchMaxThreads = 25;
-  
+
   @NotNull
   private long zookeeperAsyncTimeout = 5000;
-  
+
   @NotNull
   private long deployHealthyBySeconds = 120;
-  
+
   @NotNull
   private int maxRequestIdSize = 100;
-  
+
   @NotNull
   private int maxDeployIdSize = 50;
-  
+
   @NotNull
   private long loadBalancerRequestTimeoutMillis = 2000;
-  
+
   @NotNull
   private boolean compressLargeDataObjects = true;
-  
+
   @NotNull
   private long considerTaskHealthyAfterRunningForSeconds = 5;
-  
+
   @NotNull
   private int maxHealthcheckResponseBodyBytes = 8192;
-  
+
   @NotNull
   private boolean sandboxDefaultsToTaskId = true;
 
   @NotNull
   private int cooldownAfterFailures = 5;
-  
+
   @NotNull
   private long cooldownExpiresAfterMinutes = 30;
-  
+
   @NotNull
   private long cooldownMinScheduleSeconds = 120;
-  
+
   @NotNull
   private boolean allowRequestsWithoutOwners = true;
-  
+
   @NotNull
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
-  
+
   @NotNull
   private boolean defaultValueForKillTasksOfPausedRequests = true;
-  
+
   @NotNull
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
-  
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -150,7 +150,7 @@ public class SingularityConfiguration extends Configuration {
   public long getCacheStateForMillis() {
     return cacheStateForMillis;
   }
-  
+
   public boolean isDefaultValueForKillTasksOfPausedRequests() {
     return defaultValueForKillTasksOfPausedRequests;
   }
@@ -282,19 +282,19 @@ public class SingularityConfiguration extends Configuration {
   public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
   }
-  
-  public long getKillNonLongRunningTasksWhichAreDecomissionedAfterSeconds() {
-    return killNonLongRunningTasksWhichAreDecomissionedAfterSeconds;
+
+  public long getKillNonLongRunningTasksInCleanupAfterSeconds() {
+    return killNonLongRunningTasksInCleanupAfterSeconds;
   }
 
-  public void setKillNonLongRunningTasksWhichAreDecomissionedAfterSeconds(long killNonLongRunningTasksWhichAreDecomissionedAfterSeconds) {
-    this.killNonLongRunningTasksWhichAreDecomissionedAfterSeconds = killNonLongRunningTasksWhichAreDecomissionedAfterSeconds;
+  public void setKillNonLongRunningTasksInCleanupAfterSeconds(long killNonLongRunningTasksInCleanupAfterSeconds) {
+    this.killNonLongRunningTasksInCleanupAfterSeconds = killNonLongRunningTasksInCleanupAfterSeconds;
   }
 
   public long getDeployHealthyBySeconds() {
     return deployHealthyBySeconds;
   }
-  
+
   public int getHealthcheckStartThreads() {
     return healthcheckStartThreads;
   }
@@ -306,7 +306,7 @@ public class SingularityConfiguration extends Configuration {
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
   }
-  
+
   public long getPersistHistoryEverySeconds() {
     return persistHistoryEverySeconds;
   }
@@ -351,7 +351,7 @@ public class SingularityConfiguration extends Configuration {
   public long getKillAfterTasksDoNotRunDefaultSeconds() {
     return killAfterTasksDoNotRunDefaultSeconds;
   }
-  
+
   public int getLogFetchCoreThreads() {
     return logFetchCoreThreads;
   }
@@ -375,7 +375,7 @@ public class SingularityConfiguration extends Configuration {
   public Optional<S3Configuration> getS3Configuration() {
     return Optional.fromNullable(s3Configuration);
   }
-  
+
   public Optional<SMTPConfiguration> getSmtpConfiguration() {
     return Optional.fromNullable(smtpConfiguration);
   }
@@ -391,7 +391,7 @@ public class SingularityConfiguration extends Configuration {
   public void setCheckDeploysEverySeconds(long checkDeploysEverySeconds) {
     this.checkDeploysEverySeconds = checkDeploysEverySeconds;
   }
-    
+
   public int getNewTaskCheckerBaseDelaySeconds() {
     return newTaskCheckerBaseDelaySeconds;
   }
@@ -436,7 +436,7 @@ public class SingularityConfiguration extends Configuration {
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
     this.mesosConfiguration = mesosConfiguration;
   }
-  
+
   public void setSaveStateEverySeconds(long saveStateEverySeconds) {
     this.saveStateEverySeconds = saveStateEverySeconds;
   }
@@ -444,11 +444,11 @@ public class SingularityConfiguration extends Configuration {
   public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
     this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
   }
-  
+
   public Optional<SentryConfiguration> getSentryConfiguration(){
     return Optional.fromNullable(sentryConfiguration);
   }
-  
+
   public void setSentryConfiguration(SentryConfiguration sentryConfiguration){
     this.sentryConfiguration = sentryConfiguration;
   }

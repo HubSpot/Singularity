@@ -13,18 +13,20 @@ import com.google.common.collect.Lists;
 public class SingularityRequest extends SingularityJsonObject {
 
   private final String id;
-  
+
   private final Optional<List<String>> owners;
   private final Optional<Integer> numRetriesOnFailure;
 
   private final Optional<String> schedule;
   private final Optional<Boolean> daemon;
-  
+
   private final Optional<Integer> instances;
   private final Optional<Boolean> rackSensitive;
-  
+
   private final Optional<Boolean> loadBalanced;
-  
+
+  private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
+
   public static SingularityRequestBuilder newBuilder(String id) {
     return new SingularityRequestBuilder(id);
   }
@@ -36,11 +38,11 @@ public class SingularityRequest extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
-      @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon,  @JsonProperty("instances") Optional<Integer> instances, 
-      @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced) {
+      @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
+      @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced, @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -49,17 +51,19 @@ public class SingularityRequest extends SingularityJsonObject {
     this.rackSensitive = rackSensitive;
     this.instances = instances;
     this.loadBalanced = loadBalanced;
+    this.killOldNonLongRunningTasksAfterMillis = killOldNonLongRunningTasksAfterMillis;
   }
-  
+
   public SingularityRequestBuilder toBuilder() {
     return new SingularityRequestBuilder(id)
-        .setDaemon(daemon)
-        .setLoadBalanced(loadBalanced)
-        .setInstances(instances)
-        .setNumRetriesOnFailure(numRetriesOnFailure)
-        .setOwners(owners.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(owners.get())) : owners)
-        .setRackSensitive(rackSensitive)
-        .setSchedule(schedule);
+    .setDaemon(daemon)
+    .setLoadBalanced(loadBalanced)
+    .setInstances(instances)
+    .setNumRetriesOnFailure(numRetriesOnFailure)
+    .setOwners(owners.isPresent() ? Optional.<List<String>> of(Lists.newArrayList(owners.get())) : owners)
+    .setRackSensitive(rackSensitive)
+    .setSchedule(schedule)
+    .setKillOldNonLongRunningTasksAfterMillis(killOldNonLongRunningTasksAfterMillis);
   }
 
   public String getId() {
@@ -89,46 +93,50 @@ public class SingularityRequest extends SingularityJsonObject {
   public Optional<Boolean> getRackSensitive() {
     return rackSensitive;
   }
-  
+
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
+  }
+
+  public Optional<Long> getKillOldNonLongRunningTasksAfterMillis() {
+    return killOldNonLongRunningTasksAfterMillis;
   }
 
   @JsonIgnore
   public int getInstancesSafe() {
     return getInstances().or(1);
   }
-  
+
   @JsonIgnore
   public boolean isScheduled() {
     return schedule.isPresent();
   }
-  
+
   @JsonIgnore
   public boolean isDaemon() {
     return daemon.or(Boolean.TRUE).booleanValue();
   }
-  
+
   @JsonIgnore
   public boolean isLongRunning() {
     return !isScheduled() && isDaemon();
   }
-  
+
   @JsonIgnore
   public boolean isOneOff() {
     return !isScheduled() && !isDaemon();
   }
-  
+
   @JsonIgnore
   public boolean isDeployable() {
     return !isScheduled() && !isOneOff();
   }
-  
+
   @JsonIgnore
   public boolean isRackSensitive() {
     return rackSensitive.or(Boolean.FALSE).booleanValue();
   }
-  
+
   @JsonIgnore
   public boolean isLoadBalanced() {
     return loadBalanced.or(Boolean.FALSE).booleanValue();
@@ -137,7 +145,7 @@ public class SingularityRequest extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
-        + ", loadBalanced=" + loadBalanced + "]";
-  }  
-  
+        + ", loadBalanced=" + loadBalanced + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + "]";
+  }
+
 }

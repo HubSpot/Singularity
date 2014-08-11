@@ -7,23 +7,26 @@ import com.google.common.base.Optional;
 public class SingularityRequestBuilder {
 
   private final String id;
-  
+
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
 
   private Optional<String> schedule;
   private Optional<Boolean> daemon;
-  
+
   private Optional<Integer> instances;
   private Optional<Boolean> rackSensitive;
-  
+
   private Optional<Boolean> loadBalanced;
-  
+
+  private Optional<Long> killOldNonLongRunningTasksAfterMillis;
+
   public SingularityRequestBuilder(String id) {
     this.id = id;
     this.owners = Optional.absent();
     this.numRetriesOnFailure = Optional.absent();
     this.schedule = Optional.absent();
+    this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
     this.daemon = Optional.absent();
     this.instances = Optional.absent();
     this.rackSensitive = Optional.absent();
@@ -31,9 +34,9 @@ public class SingularityRequestBuilder {
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis);
   }
-  
+
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
   }
@@ -101,10 +104,19 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Long> getKillOldNonLongRunningTasksAfterMillis() {
+    return killOldNonLongRunningTasksAfterMillis;
+  }
+
+  public SingularityRequestBuilder setKillOldNonLongRunningTasksAfterMillis(Optional<Long> killOldNonLongRunningTasksAfterMillis) {
+    this.killOldNonLongRunningTasksAfterMillis = killOldNonLongRunningTasksAfterMillis;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", daemon=" + daemon
-        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", loadBalanced=" + loadBalanced + "]";
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
+        + ", loadBalanced=" + loadBalanced + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + "]";
   }
-  
+
 }
