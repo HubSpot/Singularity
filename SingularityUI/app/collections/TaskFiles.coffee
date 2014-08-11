@@ -28,8 +28,6 @@ class TaskFiles extends Collection
                 isExe = taskLogFile.mode.indexOf('x') isnt -1
 
                 taskLogFile.isTailable = not isZip and not isExe
-                
-            console.log taskLogFile.shortPath
 
         taskFiles
 
