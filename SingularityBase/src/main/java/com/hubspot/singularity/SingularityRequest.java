@@ -121,6 +121,10 @@ public class SingularityRequest extends SingularityJsonObject {
     return scheduleType;
   }
 
+  public Optional<List<String>> getRackAffinity() {
+    return rackAffinity;
+  }
+
   @JsonIgnore
   public int getInstancesSafe() {
     return getInstances().or(1);
