@@ -152,7 +152,7 @@ public class SingularitySchedulerTest {
     .setLoadBalanced(Optional.of(isLoadBalanced));
 
     if (isScheduled) {
-      bldr.setSchedule(Optional.of("*/1 * * * * ?"));
+      bldr.setQuartzSchedule(Optional.of("*/1 * * * * ?"));
     }
 
     request = bldr.build();
