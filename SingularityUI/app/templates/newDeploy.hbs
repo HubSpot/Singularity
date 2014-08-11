@@ -1,0 +1,90 @@
+<h3>
+    New deploy for <a href="{{appRoot}}/request/{{ requestId }}">{{ requestId }}</a>
+</h3>
+
+<div class="row new-form">
+    <form class="col-md-5">
+        <div class="form-group">
+            <label for="build-id">Deploy ID</label>
+            <input type="text" id="build-id" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="command">Command</label>
+            <input type="text" id="command" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="executor-default">Executor type</label>
+
+            <div id="type" class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default active">
+                    <input id="executor-default" type="radio" name="executor-type" value="default">
+                    Default
+                </label>
+                <label class="btn btn-default">
+                    <input id="executor-custom" type="radio" name="executor-type" value="custom">
+                    Custom
+                </label>
+            </div>
+        </div>
+        
+        <div class="well well-sm">
+            <h4>Resources</h4>
+
+            <div class="row">
+                <div class="col-sm-4 form-group">
+                    <label for="cpus">CPUs</label>
+                    <input type="text" id="cpus" placeholder="1" class="form-control">
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label for="memory-mb">Memory (MB)</label>
+                    <input type="text" id="memory-mb" placeholder="" class="form-control">
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label for="num-ports">Number of ports</label>
+                    <input type="text" id="num-ports" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <div class="well well-sm">
+            <h4>Environment variables</h4>
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" placeholder="key">
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" placeholder="value">
+                </div>
+            </div>
+
+            <button class="btn btn-default btn-block">
+                <span class="glyphicon glyphicon-plus"></span>
+                Add env variable
+            </button>
+        </div>
+
+        <div class="well well-sm">
+            <h4>Artifacts</h4>
+
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="http://s3.example/my-artifact">
+            </div>
+
+            <button class="btn btn-default btn-block">
+                <span class="glyphicon glyphicon-plus"></span>
+                Add artifact
+            </button>
+        </div>
+
+        <button type="submit" class="btn btn-success" disabled>
+            Deploy
+        </button>
+    </form>
+
+    <div id="help-column" class="col-md-6 col-md-offset-1">
+        
+    </div>
+</div>

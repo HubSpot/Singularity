@@ -6,12 +6,25 @@
     #type
         display inline-block
         width 100%
-    
-    #instances
-        width 30%
 
     .row.inline-form
         line-height 34px
 
-        input[type="text"]
+        input[type=text]
             margin-left 4%
+            float right
+
+            &, &.small
+                width 30%
+
+            &.medium
+                width 50%
+
+    .well .row:last-child, .well .form-group:last-child
+        margin-bottom 0
+
+    .well h4
+        color rgba(0, 0, 0, .33)
+        text-shadow 0 1px 0px #fff
+        margin-top 0
+        margin-bottom 20px
