@@ -110,6 +110,8 @@ public class SingularityValidator {
     String quartzSchedule = null;
 
     if (request.isScheduled()) {
+      final String originalSchedule = request.getQuartzScheduleSafe();
+
       check(!request.getQuartzSchedule().isPresent() || !request.getSchedule().isPresent(), "Specify one of schedule or quartzSchedule");
 
       check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
@@ -120,15 +122,15 @@ public class SingularityValidator {
       }
 
       if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
-        quartzSchedule = request.getQuartzSchedule().or(request.getSchedule().get());
+        quartzSchedule = originalSchedule;
       } else {
         check(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
         check(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
 
-        quartzSchedule = getQuartzScheduleFromCronSchedule(request.getSchedule().get());
+        quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
       }
 
-      check(isValidCronSchedule(quartzSchedule), String.format("Schedule %s (from: %s) was not parseable", quartzSchedule, request.getSchedule().or(request.getQuartzSchedule().get())));
+      check(isValidCronSchedule(quartzSchedule), String.format("Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule));
     } else {
       check(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
       check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
