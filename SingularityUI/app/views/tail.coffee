@@ -43,8 +43,8 @@ class TailView extends View
         @$contents.on 'scroll', @handleScroll
 
         # Some stuff in the app can change this stuff. We wanna reset it
-        $('body').css 'min-height', '0px'
-        $('html').css 'min-height', '0px'
+        $('html, body').css 'min-height', '0px'
+        $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
     renderLines: ->
         # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines

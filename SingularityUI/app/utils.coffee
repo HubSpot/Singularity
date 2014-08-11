@@ -101,7 +101,9 @@ class Utils
             duration:  1000
             minHeight: "#{ newHeight }px"
 
-        $(window).scrollTop offset - 20
+        scroll = => $(window).scrollTop $el.offset().top - 20
+        scroll()
+        setTimeout scroll, 200
 
         shrinkTime = 1000
 

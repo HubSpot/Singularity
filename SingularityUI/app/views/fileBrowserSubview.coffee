@@ -7,7 +7,8 @@ class FileBrowserSubview extends View
     template: require '../templates/taskDetail/taskFileBrowser'
 
     events: ->
-        'click [data-directory-path]': 'navigate'
+        'click [data-directory-path]':  'navigate'
+        'click [data-action="shrink"]': 'shrink'
 
     initialize: ({ @scrollWhenReady }) ->
         @listenTo @collection, 'sync',  @render
@@ -36,6 +37,7 @@ class FileBrowserSubview extends View
         @render()
 
     scrollToTop: ->
+        @$el.addClass 'expanded'
         utils.animatedExpansion @$el
 
     navigate: (event) ->
@@ -62,5 +64,9 @@ class FileBrowserSubview extends View
         $loaderContainer = @$ '.page-loader-container'
         if tableHeight?
             $loaderContainer.css 'height', "#{ tableHeight }px"
+
+    shrink: ->
+        @$el.removeClass 'expanded'
+        @$el.trigger 'shrink'
 
 module.exports = FileBrowserSubview
