@@ -605,7 +605,7 @@ public class SingularityScheduler {
         try {
           Date scheduleFrom = new Date(now);
 
-          CronExpression cronExpression = new CronExpression(request.getSchedule().get());
+          CronExpression cronExpression = new CronExpression(request.getQuartzSchedule().get());
 
           final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
 

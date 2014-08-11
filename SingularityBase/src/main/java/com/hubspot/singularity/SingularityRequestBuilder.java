@@ -12,29 +12,37 @@ public class SingularityRequestBuilder {
   private Optional<Integer> numRetriesOnFailure;
 
   private Optional<String> schedule;
+  private Optional<String> quartzSchedule;
+  private Optional<ScheduleType> scheduleType;
+
+  private Optional<Long> killOldNonLongRunningTasksAfterMillis;
+
   private Optional<Boolean> daemon;
 
   private Optional<Integer> instances;
+
   private Optional<Boolean> rackSensitive;
+  private Optional<List<String>> rackAffinity;
 
   private Optional<Boolean> loadBalanced;
-
-  private Optional<Long> killOldNonLongRunningTasksAfterMillis;
 
   public SingularityRequestBuilder(String id) {
     this.id = id;
     this.owners = Optional.absent();
     this.numRetriesOnFailure = Optional.absent();
     this.schedule = Optional.absent();
+    this.scheduleType = Optional.absent();
     this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
     this.daemon = Optional.absent();
     this.instances = Optional.absent();
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
+    this.quartzSchedule = Optional.absent();
+    this.rackAffinity = Optional.absent();
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -113,10 +121,38 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<ScheduleType> getScheduleType() {
+    return scheduleType;
+  }
+
+  public SingularityRequestBuilder setScheduleType(Optional<ScheduleType> scheduleType) {
+    this.scheduleType = scheduleType;
+    return this;
+  }
+
+  public Optional<String> getQuartzSchedule() {
+    return quartzSchedule;
+  }
+
+  public SingularityRequestBuilder setQuartzSchedule(Optional<String> quartzSchedule) {
+    this.quartzSchedule = quartzSchedule;
+    return this;
+  }
+
+  public Optional<List<String>> getRackAffinity() {
+    return rackAffinity;
+  }
+
+  public SingularityRequestBuilder setRackAffinity(Optional<List<String>> rackAffinity) {
+    this.rackAffinity = rackAffinity;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
-        + ", loadBalanced=" + loadBalanced + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + "]";
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType
+        + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", loadBalanced="
+        + loadBalanced + "]";
   }
 
 }

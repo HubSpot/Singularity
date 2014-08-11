@@ -11,6 +11,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
@@ -20,7 +21,7 @@ import com.hubspot.singularity.data.history.HistoryManager;
 public class SingularityValidator {
 
   private static final Joiner JOINER = Joiner.on(" ");
-  
+
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
   private final int maxCpusPerRequest;
@@ -34,7 +35,7 @@ public class SingularityValidator {
   private final HistoryManager historyManager;
   private final DeployManager deployManager;
   private final Resources DEFAULT_RESOURCES;
-  
+
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
@@ -45,22 +46,22 @@ public class SingularityValidator {
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
-    
+
     DEFAULT_RESOURCES = new Resources(defaultCpus, defaultMemoryMb, 0);
-    
+
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
-  
+
   private void check(boolean expression, String message) {
     if (!expression) {
       throw WebExceptions.badRequest(message);
     }
   }
-  
+
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     check(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
     check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
@@ -71,104 +72,120 @@ public class SingularityValidator {
     int instances = request.getInstancesSafe();
     double cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
     double memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
-    
+
     check(cpusPerInstance > 0, "Request must have more than 0 cpus");
     check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
-    
+
     check(cpusPerInstance <= maxCpusPerInstance, String.format("Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance));
     check(cpusPerInstance * instances <= maxCpusPerRequest, String.format("Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest));
-    
+
     check(memoryMbPerInstance <= maxMemoryMbPerInstance, String.format("Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance));
     check(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, String.format("Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(), memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest));
   }
-  
+
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
     check(request.getId() != null, "Id must not be null");
-    
+
     if (!allowRequestsWithoutOwners) {
       check(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
     }
-    
+
     check(request.getId().length() < maxRequestIdSize, String.format("Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId()));
     check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
 
     check(request.getInstancesSafe() <= maxInstancesPerRequest, String.format("Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest));
-    
+
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
     }
-    
+
     if (activeDeploy.isPresent()) {
       checkForIllegalResources(request, activeDeploy.get());
     }
-    
+
     if (pendingDeploy.isPresent()) {
       checkForIllegalResources(request, pendingDeploy.get());
     }
-    
-    String newSchedule = null;
-    
+
+    String quartzSchedule = null;
+
     if (request.isScheduled()) {
+      check(!request.getQuartzSchedule().isPresent() || !request.getSchedule().isPresent(), "Specify one of schedule or quartzSchedule");
+
       check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
       check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
-      newSchedule = adjustSchedule(request.getSchedule().get());
+      if (request.getQuartzSchedule().isPresent()) {
+        check(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+      }
 
-      check(isValidCronSchedule(newSchedule), String.format("Cron schedule %s (adjusted: %s) was not parseable", request.getSchedule(), newSchedule));
+      if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
+        quartzSchedule = request.getQuartzSchedule().or(request.getSchedule().get());
+      } else {
+        check(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+        check(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
+
+        quartzSchedule = getQuartzScheduleFromCronSchedule(request.getSchedule().get());
+      }
+
+      check(isValidCronSchedule(quartzSchedule), String.format("Schedule %s (from: %s) was not parseable", quartzSchedule, request.getSchedule().or(request.getQuartzSchedule().get())));
     } else {
+      check(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
       check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
     }
-    
+
     if (!request.isLongRunning()) {
-      check(!request.isLoadBalanced(), "non-long-running (scheduled/oneoff) requests can not be load balanced");
-      check(!request.isRackSensitive(), "non-long-running (scheduled/oneoff) requests can not be rack sensitive");
+      check(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
+      check(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
+    } else {
+      check(!request.getKillOldNonLongRunningTasksAfterMillis().isPresent(), "longRunning requests can not define a killOldNonLongRunningTasksAfterMillis value");
     }
-    
+
     if (request.isScheduled()) {
       check(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
     } else if (request.isOneOff()) {
       check(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
-    
-    return request.toBuilder().setSchedule(Optional.fromNullable(newSchedule)).build();
+
+    return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
-  
+
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
     check(deploy.getId() != null && !deploy.getId().contains("-"), "Id must not be null and can not contain - characters");
     check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
-    
+
     if (request.isLoadBalanced()) {
       check(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
     }
-    
+
     checkForIllegalResources(request, deploy);
-    
-    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()), 
+
+    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()),
         "If not using custom executor, specify a command. If using custom executor, specify executorData and customExecutorCmd and no command.");
 
     check(!deployManager.getDeploy(request.getId(), deploy.getId()).isPresent() && !historyManager.getDeployHistory(request.getId(), deploy.getId()).isPresent(), "Can not deploy a deploy that has already been deployed");
   }
-  
+
   private boolean isValidCronSchedule(String schedule) {
     if (!CronExpression.isValidExpression(schedule)) {
       return false;
     }
-    
+
     try {
       CronExpression ce = new CronExpression(schedule);
-      
+
       if (ce.getNextValidTimeAfter(new Date()) == null) {
         return false;
       }
-      
+
     } catch (ParseException pe) {
       return false;
     }
-     
+
     return true;
   }
-  
+
   /**
    * 
    * Transforms unix cron into fucking quartz cron; adding seconds if not passed
@@ -179,7 +196,7 @@ public class SingularityValidator {
    * Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year
    * (Optional) empty, 1970-2199 , - * /
    */
-  private String adjustSchedule(String schedule) {
+  private String getQuartzScheduleFromCronSchedule(String schedule) {
     if (schedule == null) {
       return null;
     }
@@ -213,23 +230,23 @@ public class SingularityValidator {
     } else if (!dayOfWeek.equals("?")) {
       dayOfMonth = "?";
     }
-    
+
     // standard cron is 0-6, quartz is 1-7
-    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday, 
+    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday,
     // which is sat in quartz. so if we get a value of 7, we should change it to 1.
     if (isValidInteger(dayOfWeek)) {
       int dayOfWeekValue = Integer.parseInt(dayOfWeek);
-      
+
       if (dayOfWeekValue < 0 || dayOfWeekValue > 7) {
         throw WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
       }
-      
+
       if (dayOfWeekValue == 7) {
         dayOfWeekValue = 1;
       } else {
         dayOfWeekValue++;
       }
-      
+
       dayOfWeek = Integer.toString(dayOfWeekValue);
     }
 
@@ -239,7 +256,7 @@ public class SingularityValidator {
 
     return JOINER.join(newSchedule);
   }
-  
+
   private boolean isValidInteger(String strValue) {
     try {
       Integer.parseInt(strValue);
@@ -248,5 +265,5 @@ public class SingularityValidator {
       return false;
     }
   }
-  
+
 }
