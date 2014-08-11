@@ -3,6 +3,7 @@ Controller = require './Controller'
 Request                = require '../models/Request'
 RequestActiveDeploy    = require '../models/RequestActiveDeploy'
 
+Tasks                  = require '../collections/Tasks'
 RequestTasks           = require '../collections/RequestTasks'
 RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
 RequestDeployHistory   = require '../collections/RequestDeployHistory'
@@ -38,7 +39,11 @@ class RequestDetailController extends Controller
 
         @collections.activeTasks = new RequestTasks [],
             requestId: @requestId
-            state: 'active'
+            state:     'active'
+
+        @collections.scheduledTasks = new Tasks [],
+            requestId: @requestId
+            state:     'scheduled'
 
         @collections.requestHistory  = new RequestHistory         [], {@requestId}
         @collections.taskHistory     = new RequestHistoricalTasks [], {@requestId}
@@ -58,6 +63,10 @@ class RequestDetailController extends Controller
         @subviews.activeTasks = new SimpleSubview
             collection: @collections.activeTasks
             template:   @templates.activeTasks
+
+        @subviews.scheduledTasks = new SimpleSubview
+            collection: @collections.scheduledTasks
+            template:   @templates.scheduledTasks
 
         @subviews.taskHistory = new ExpandableTableSubview
             collection: @collections.taskHistory
@@ -100,6 +109,7 @@ class RequestDetailController extends Controller
             @models.activeDeployStats.fetch().error @ignore404
 
         @collections.activeTasks.fetch().error    @ignore404
+        @collections.scheduledTasks.fetch().error @ignore404
         
         if @collections.requestHistory.currentPage is 1
             @collections.requestHistory.fetch().error @ignore404
