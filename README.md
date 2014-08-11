@@ -288,12 +288,12 @@ The following are the properties of the *Singularity Deploy Object*:
         - **s3Bucket** (string - mandatory): The name of the bucket that contains the artifact
         - **s3ObjectKey** (string - mandatory): The object key (i.e. the name) of the s3 artifact
     - **successfulExitCodes** (List of integers - optional): The exit codes other than 0 that the running command may return when exiting and should be considered to denote that the process has successfully run. 
-    - **runningSentinel**
-    - **user**
-    - **extraCmdLineArgs**
-    - **loggingTag**
-    - **loggingExtraFields**
-    - **sigKillProcessesAfterMillis**
+    - **runningSentinel** (string - optional)
+    - **user** (sting - optional): the UNIX user under which the command is to be executed. Default is *root*
+    - **extraCmdLineArgs** (List of strings - optional): Extra arguments to append to the executed command
+    - **loggingTag** (string optional)
+    - **loggingExtraFields** (Map of strings - optional)
+    - **sigKillProcessesAfterMillis** (long - optional): Executor tries to gracefully kill tasks by initially sending a SIGTERM signal and then waits for *sigKillProcessesAfterMillis* milliseconds for the task to terminate before it tries to kill the task with a SIGKILL signal. Default is 120000 milliseconds (2 minutes).
 
 The following is an example *Deploy Service Object*
 ```javascript
