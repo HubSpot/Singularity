@@ -37,6 +37,8 @@ class FileBrowserSubview extends View
         @render()
 
     scrollToTop: ->
+        return if @suppressExpansion
+        
         @$el.addClass 'expanded'
         utils.animatedExpansion @$el
 
@@ -68,5 +70,6 @@ class FileBrowserSubview extends View
     shrink: ->
         @$el.removeClass 'expanded'
         @$el.trigger 'shrink'
+        @suppressExpansion = true
 
 module.exports = FileBrowserSubview
