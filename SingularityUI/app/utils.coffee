@@ -118,7 +118,7 @@ class Utils
                 minHeight: '0px'
             , shrinkTime
 
-            shrinkCallback()
+            shrinkCallback?()
 
             removeEvent()
 

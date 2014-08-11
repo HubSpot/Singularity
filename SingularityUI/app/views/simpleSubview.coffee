@@ -13,7 +13,7 @@ class SimpleSubview extends View
 
     events: ->
         _.extend super,
-            'click [data-action="expandList"]': 'setExpanded'
+            'click [data-action="expandToggle"]': 'expandToggle'
 
     initialize: ({@template}) ->
         @data = if @collection? then @collection else @model
@@ -28,18 +28,14 @@ class SimpleSubview extends View
         return if not @data.synced and @data.isEmpty?()
         
         @$el.html @template
-            data:   @data.toJSON()
-            synced: @data.synced
-
-        # Some things are collapsed by default and have a 'view'
-        # button to expand them. This is to prevent them from
-        # being rendered as collapsed
-        if @expanded
-            @$('.row.hidden').removeClass 'hidden'
-            @$('[data-action="expandList"]').remove()
+            data:     @data.toJSON()
+            synced:   @data.synced
+            expanded: @expanded
 
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
 
-    setExpanded: -> @expanded = true
+    expandToggle: (event) ->
+        @expanded = not @expanded
+        @render()
 
 module.exports = SimpleSubview

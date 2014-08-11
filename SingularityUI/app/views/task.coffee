@@ -10,7 +10,6 @@ class TaskView extends View
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="remove"]': 'killTask'
-            'click [data-action="expandList"]': 'expandList'
 
     initialize: ({@taskId}) ->
             
@@ -25,11 +24,6 @@ class TaskView extends View
         @$('#info').html         @subviews.info.$el
         @$('#resources').html    @subviews.resourceUsage.$el
         @$('#environment').html  @subviews.environment.$el
-
-    expandList: (event) ->
-        $target = $(event.currentTarget)
-        $target.parent().parent().parent().parent().find('.row.hidden').removeClass 'hidden'
-        $target.parent().remove()
 
     viewJson: (event) ->
         utils.viewJSON @model
