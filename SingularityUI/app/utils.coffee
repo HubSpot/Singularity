@@ -85,7 +85,8 @@ class Utils
         _.map pathComponents, (crumb, index) =>
             path = _.first pathComponents, index
             path.push crumb
-            return { name: crumb, path: path.join '/' }
+            name = if index is 0 then 'root' else crumb
+            return { name: name, path: path.join '/' }
 
     # Will make $el as tall as the page and will attach a scroll event
     # that shrinks it

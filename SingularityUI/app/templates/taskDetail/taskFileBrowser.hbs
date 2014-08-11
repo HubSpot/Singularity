@@ -41,9 +41,13 @@
                                 <span class="glyphicon glyphicon-folder-open"></span>{{ shortPath }}/
                             </a>
                         {{else}}
-                            <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
+                            {{#if isTailable}}
+                                <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
+                                    <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
+                                </a>
+                            {{else}}
                                 <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
-                            </a>
+                            {{/if}}
                         {{/if}}
                     </td>
                     <td class="hidden-xs" data-value="{{ size }}">
