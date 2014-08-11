@@ -8,7 +8,7 @@ class FileBrowserSubview extends View
 
     events: ->
         'click [data-directory-path]':  'navigate'
-        'click [data-action="shrink"]': 'shrink'
+        'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({ @scrollWhenReady }) ->
         @listenTo @collection, 'sync',  @render
@@ -38,9 +38,9 @@ class FileBrowserSubview extends View
 
     scrollToTop: ->
         return if @suppressExpansion
-        
+
         @$el.addClass 'expanded'
-        utils.animatedExpansion @$el
+        utils.animatedExpansion @$el, @shrink
 
     navigate: (event) ->
         event.preventDefault()
@@ -67,9 +67,12 @@ class FileBrowserSubview extends View
         if tableHeight?
             $loaderContainer.css 'height', "#{ tableHeight }px"
 
-    shrink: ->
-        @$el.removeClass 'expanded'
+    startShrink: ->
         @$el.trigger 'shrink'
+        @shrink()        
+
+    shrink: =>
+        @$el.removeClass 'expanded'
         @suppressExpansion = true
 
 module.exports = FileBrowserSubview
