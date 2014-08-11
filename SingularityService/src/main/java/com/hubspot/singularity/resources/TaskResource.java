@@ -11,6 +11,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.client.MesosClient;
@@ -22,9 +24,9 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -34,12 +36,12 @@ import com.sun.jersey.api.NotFoundException;
 @Path(SingularityService.API_BASE_PATH + "/tasks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class TaskResource {
-  
+
   private final TaskManager taskManager;
-  private final SlaveManager slaveManager;  
+  private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
-  
+
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
     this.taskManager = taskManager;
@@ -47,66 +49,75 @@ public class TaskResource {
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
   }
-  
+
   @GET
   @PropertyFiltering
   @Path("/scheduled")
   public List<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
-    
+
     return taskRequestManager.getTaskRequests(tasks);
   }
-  
+
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled/request/{requestId}")
+  public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
+    final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
+
+    return taskRequestManager.getTaskRequests(tasks);
+  }
+
   @GET
   @Path("active/slave/{slaveId}")
   public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
-    
+
     if (!maybeSlave.isPresent()) {
       maybeSlave = slaveManager.getDecomissioning(slaveId);
     }
-    
+
     if (!maybeSlave.isPresent()) {
       maybeSlave = slaveManager.getDeadObject(slaveId);
     }
-    
+
     if (!maybeSlave.isPresent()) {
       throw new NotFoundException(String.format("Couldn't find a slave in any state with id %s", slaveId));
     }
-    
+
     return taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get());
   }
-  
+
   @GET
   @PropertyFiltering
   @Path("/active")
   public List<SingularityTask> getActiveTasks() {
     return taskManager.getActiveTasks();
   }
-  
+
   @GET
   @PropertyFiltering
   @Path("/cleaning")
   public List<SingularityTaskCleanup> getCleaningTasks() {
     return taskManager.getCleanupTasks();
   }
-  
+
   @GET
   @PropertyFiltering
   @Path("/lbcleanup")
   public List<SingularityTaskId> getLbCleanupTasks() {
     return taskManager.getLBCleanupTasks();
   }
-  
+
   @GET
   @Path("/task/{taskId}")
   public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
-  
+
     if (!task.isPresent()) {
       throw new NotFoundException(String.format("No active task with id %s", taskId));
     }
-    
+
     return task.get();
   }
 
@@ -120,13 +131,13 @@ public class TaskResource {
     }
 
     String executorIdToMatch = null;
-    
+
     if (task.get().getMesosTask().getExecutor().hasExecutorId()) {
       executorIdToMatch = task.get().getMesosTask().getExecutor().getExecutorId().getValue();
     } else {
       executorIdToMatch = taskId;
     }
-    
+
     for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.get().getOffer().getHostname())) {
       if (taskMonitor.getExecutorId().equals(executorIdToMatch)) {
         return taskMonitor.getStatistics();
@@ -135,21 +146,21 @@ public class TaskResource {
 
     throw new NotFoundException(String.format("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.get().getOffer().getHostname()));
   }
-  
+
   @DELETE
   @Path("/task/{taskId}")
   public SingularityTaskCleanupResult killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
-    
+
     if (!task.isPresent()) {
       throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
     }
 
     final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.get().getTaskId());
-    
+
     final SingularityCreateResult result = taskManager.createCleanupTask(taskCleanup);
 
     return new SingularityTaskCleanupResult(result, task.get());
   }
-  
+
 }

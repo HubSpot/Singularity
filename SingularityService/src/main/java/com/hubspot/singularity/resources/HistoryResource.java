@@ -32,66 +32,66 @@ import com.hubspot.singularity.data.history.TaskHistoryHelper;
 @Path(SingularityService.API_BASE_PATH + "/history")
 @Produces({ MediaType.APPLICATION_JSON })
 public class HistoryResource extends AbstractHistoryResource {
-  
+
   private final HistoryManager historyManager;
   private final DeployManager deployManager;
   private final TaskManager taskManager;
-  
+
   @Inject
   public HistoryResource(HistoryManager historyManager, DeployManager deployManager, TaskManager taskManager) {
     super(historyManager, taskManager, deployManager);
-    
+
     this.deployManager = deployManager;
     this.historyManager = historyManager;
     this.taskManager = taskManager;
   }
- 
+
   @GET
   @Path("/task/{taskId}")
   public SingularityTaskHistory getHistoryForTask(@PathParam("taskId") String taskId) {
     SingularityTaskId taskIdObj = getTaskIdObject(taskId);
-    
+
     return getTaskHistory(taskIdObj);
   }
-  
+
   private Integer getLimitCount(Integer countParam) {
     if (countParam == null) {
       return 100;
     }
-    
+
     if (countParam < 1) {
       throw new WebApplicationException(Status.BAD_REQUEST);
     }
-    
+
     if (countParam > 1000) {
       return 1000;
     }
-    
+
     return countParam;
   }
-  
+
   private Integer getLimitStart(Integer limitCount, Integer pageParam) {
     if (pageParam == null) {
       return 0;
     }
-    
+
     if (pageParam < 1) {
       throw new WebApplicationException(Status.BAD_REQUEST);
     }
-    
+
     return limitCount * (pageParam - 1);
   }
-  
+
   private Optional<OrderDirection> getOrderDirection(String orderDirection) {
     if (orderDirection == null) {
       return Optional.absent();
     }
-    
+
     checkExists(orderDirection, OrderDirection.values());
-    
+
     return Optional.of(OrderDirection.valueOf(orderDirection));
   }
-  
+
   private void checkExists(String name, Enum<?>[] choices) {
     boolean found = false;
     for (Enum<?> choice : choices) {
@@ -100,56 +100,56 @@ public class HistoryResource extends AbstractHistoryResource {
         break;
       }
     }
-    
+
     if (!found) {
       throw WebExceptions.badRequest("%s was not found in choices:%s", name, Arrays.toString(choices));
     }
   }
-  
+
   private Optional<RequestHistoryOrderBy> getRequestHistoryOrderBy(String orderBy) {
     if (orderBy == null) {
       return Optional.absent();
     }
-    
+
     checkExists(orderBy, RequestHistoryOrderBy.values());
-    
+
     return Optional.of(RequestHistoryOrderBy.valueOf(orderBy));
   }
-  
+
   // TODO should this return id history or full history?
-  
+
   @GET
   @Path("/request/{requestId}/tasks/active")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {    
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
-    
+
     return new TaskHistoryHelper(requestId, taskManager, historyManager).getHistoriesFor(activeTaskIds);
   }
-  
+
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   public SingularityDeployHistory getDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
     return getDeployHistory(requestId, deployId);
   }
-  
+
   @GET
   @Path("/request/{requestId}/tasks")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
-  
+
     return new TaskHistoryHelper(requestId, taskManager, historyManager).getBlendedHistory(limitCount, limitStart);
   }
-  
+
   @GET
   @Path("/request/{requestId}/deploys")
   public List<SingularityDeployHistory> getDeploys(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
-  
+
     return new DeployHistoryHelper(requestId, deployManager, historyManager).getBlendedHistory(limitCount, limitStart);
   }
-  
+
   @GET
   @Path("/request/{requestId}/requests")
   public List<SingularityRequestHistory> getRequestHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("orderBy") String orderBy, @QueryParam("orderDirection") String orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
@@ -157,17 +157,17 @@ public class HistoryResource extends AbstractHistoryResource {
     Integer limitStart = getLimitStart(limitCount, page);
     Optional<RequestHistoryOrderBy> requestOrderBy = getRequestHistoryOrderBy(orderBy);
     Optional<OrderDirection> maybeOrderDirection = getOrderDirection(orderDirection);
-    
+
     return historyManager.getRequestHistory(requestId, requestOrderBy, maybeOrderDirection, limitStart, limitCount);
   }
-  
+
   @GET
   @Path("/requests/search")
   public List<String> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
     Integer limitCount = getLimitCount(count);
     Integer limitStart = getLimitStart(limitCount, page);
-    
+
     return historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
-  
+
 }
