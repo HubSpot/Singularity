@@ -89,7 +89,7 @@ class Request extends Model
                 scheduled: @get 'scheduled'
             callback: (confirmed) =>
                 return unless confirmed
-                killTasks = $('.vex #kill-tasks').is ':checked'
+                killTasks = not $('.vex #kill-tasks').is ':checked'
                 @pause(killTasks).done callback
 
     promptUnpause: (callback) =>
