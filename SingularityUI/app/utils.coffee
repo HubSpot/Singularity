@@ -5,6 +5,17 @@ class Utils
             console.error 'Invalid model given'
             return
         
+        # We want to fetch the model before we display it if it
+        # hasn't been fetched yet
+        if model.synced? and not model.synced
+            ajaxRequest = model.fetch()
+            ajaxRequest.done  => @viewJSON model
+            ajaxRequest.error =>
+                app.caughtError()
+                @viewJSON new Backbone.Model
+                    message: "There was an error with the server"
+            return
+
         # We'll want to take any ignored attributes out of the object first
         if not model.ignoreAttributes?
             # Always ignore `id`
