@@ -40,7 +40,6 @@ class RequestView extends View
         id = $target.data 'id'
         collectionName = $target.data 'collection'
 
-        console.log collectionName
         if collectionName is 'deployHistory'
             deploy = new Deploy {},
                 requestId: @model.id
