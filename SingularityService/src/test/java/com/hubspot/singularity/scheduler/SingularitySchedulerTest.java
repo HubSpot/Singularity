@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -10,11 +11,14 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.Protos.Value.Scalar;
+import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.zookeeper.data.Stat;
 import org.junit.After;
@@ -23,10 +27,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.SingularityDeploy;
@@ -95,24 +101,33 @@ public class SingularitySchedulerTest {
     ts.close();
   }
 
+  private Offer createOffer(double cpus, double memory) {
+    SlaveID slaveId = SlaveID.newBuilder().setValue("slave1").build();
+    FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
+
+    Random r = new Random();
+
+    return Offer.newBuilder()
+        .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
+        .setFrameworkId(frameworkId)
+        .setSlaveId(slaveId)
+        .setHostname("host1")
+        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
+        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
+        .build();
+  }
+
   public SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, TaskState initialTaskState) {
     SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), 1, "host", "rack");
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), 1, PendingType.IMMEDIATE);
     SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
-    SlaveID slaveId = SlaveID.newBuilder().setValue("slave1").build();
-    FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
-    Offer offer = Offer.newBuilder()
-        .setId(OfferID.newBuilder().setValue("offer1").build())
-        .setFrameworkId(frameworkId)
-        .setSlaveId(slaveId)
-        .setHostname("host1")
-        .build();
+    Offer offer = createOffer(125, 1024);
     TaskInfo taskInfo = TaskInfo.newBuilder()
-        .setSlaveId(slaveId)
+        .setSlaveId(offer.getSlaveId())
         .setTaskId(taskIdProto)
         .setName("name")
         .build();
@@ -432,6 +447,57 @@ public class SingularitySchedulerTest {
 
     Assert.assertTrue(!taskManager.getKilledTaskIdRecords().isEmpty());
     Assert.assertTrue(taskManager.getCleanupTasks().isEmpty());
+  }
+
+  @Test
+  public void testSchedulerCanBatchOnOffers() {
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(3)).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    List<Offer> oneOffer = Arrays.asList(createOffer(12, 1024));
+    sms.resourceOffers(driver, oneOffer);
+
+    Assert.assertTrue(taskManager.getActiveTasks().size() == 3);
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+  }
+
+  @Test
+  public void testSchedulerExhaustsOffers() {
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(10)).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 7);
+  }
+
+  @Test
+  public void testSchedulerRandomizesOffers() {
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(15)).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 1024), createOffer(20, 1024)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 15);
+
+    Set<String> offerIds = Sets.newHashSet();
+
+    for (SingularityTask activeTask : taskManager.getActiveTasks()) {
+      offerIds.add(activeTask.getOffer().getId().getValue());
+    }
+
+    Assert.assertTrue(offerIds.size() == 2);
   }
 
 }
