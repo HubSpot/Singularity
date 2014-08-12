@@ -1,2 +1,10 @@
-<p>Are you sure you want to pause the request?</p>
+<p>Are you sure you want to pause this request?</p>
 <pre>{{ id }}</pre>
+{{#if scheduled}}
+    <div>
+        <label for="kill-tasks">
+            <input type="checkbox" id="kill-tasks">
+            Kill tasks
+        </label>
+    </div>
+{{/if}}
