@@ -22,6 +22,13 @@ class TaskFiles extends Collection
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.taskId = @taskId
 
+            if not taskLogFile.isDirectory
+                extension = _.clone(taskLogFile.shortPath).replace /^.*?\.(.*?)$/g, '$1'
+                isZip = extension.indexOf('zip') isnt -1 or extension.indexOf('gz') isnt -1
+                isExe = taskLogFile.mode.indexOf('x') isnt -1
+
+                taskLogFile.isTailable = not isZip and not isExe
+
         taskFiles
 
     comparator: (a, b) ->

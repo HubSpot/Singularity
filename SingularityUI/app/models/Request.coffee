@@ -45,12 +45,16 @@ class Request extends Model
             url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
             type: 'POST'
 
-    pause: =>
+    pause: (killTasks) =>
+        killTasks = if not killTasks then undefined else killTasks
+
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'
             contentType: 'application/json'
-            data:         JSON.stringify user: app.getUsername()
+            data:         JSON.stringify
+                user:      app.getUsername()
+                killTasks: killTasks
 
     run: (confirmedOrPromptData) ->
         options =
@@ -80,10 +84,13 @@ class Request extends Model
     ###
     promptPause: (callback) =>
         vex.dialog.confirm
-            message: pauseTemplate id: @get "id"
+            message: pauseTemplate
+                id:        @get 'id'
+                scheduled: @get 'scheduled'
             callback: (confirmed) =>
                 return unless confirmed
-                @pause().done callback
+                killTasks = not $('.vex #kill-tasks').is ':checked'
+                @pause(killTasks).done callback
 
     promptUnpause: (callback) =>
         vex.dialog.confirm

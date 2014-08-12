@@ -1,2 +1,11 @@
-<p>Are you sure you want to pause the request?</p>
+<p>Are you sure you want to pause this request?</p>
 <pre>{{ id }}</pre>
+{{#if scheduled}}
+    <p id="kill-tasks-warning">
+        By default, tasks that are running for a request will be killed on pause.
+    </p>
+    <label for="kill-tasks" id="kill-tasks-label">
+        <input type="checkbox" id="kill-tasks">
+        Allow currently executing tasks to finish
+    </label>
+{{/if}}

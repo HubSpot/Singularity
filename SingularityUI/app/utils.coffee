@@ -5,6 +5,20 @@ class Utils
             console.error 'Invalid model given'
             return
         
+        # We want to fetch the model before we display it if it
+        # hasn't been fetched yet
+        if model.synced? and not model.synced
+            vex.showLoading()
+            
+            ajaxRequest = model.fetch()
+            ajaxRequest.done  => @viewJSON model
+            ajaxRequest.error =>
+                app.caughtError()
+                @viewJSON new Backbone.Model
+                    message: "There was an error with the server"
+            return
+
+        vex.hideLoading()
         # We'll want to take any ignored attributes out of the object first
         if not model.ignoreAttributes?
             # Always ignore `id`
@@ -85,7 +99,8 @@ class Utils
         _.map pathComponents, (crumb, index) =>
             path = _.first pathComponents, index
             path.push crumb
-            return { name: crumb, path: path.join '/' }
+            name = if index is 0 then 'root' else crumb
+            return { name: name, path: path.join '/' }
 
     # Will make $el as tall as the page and will attach a scroll event
     # that shrinks it
@@ -101,7 +116,9 @@ class Utils
             duration:  1000
             minHeight: "#{ newHeight }px"
 
-        $(window).scrollTop offset - 20
+        scroll = => $(window).scrollTop $el.offset().top - 20
+        scroll()
+        setTimeout scroll, 200
 
         shrinkTime = 1000
 
@@ -118,7 +135,7 @@ class Utils
                 minHeight: '0px'
             , shrinkTime
 
-            shrinkCallback()
+            shrinkCallback?()
 
             removeEvent()
 

@@ -45,6 +45,13 @@ class Task extends Model
             message: killTemplate id: @get('id')
             callback: (confirmed) =>
                 return unless confirmed
-                @destroy().done callback
+                deleteRequest = @destroy()
+                deleteRequest.done callback
+
+                # ignore errors (probably means you tried
+                # to kill an already dead task)
+                deleteRequest.error =>
+                    app.caughtError()
+                    callback()
 
 module.exports = Task

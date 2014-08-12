@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h2>Scheduled tasks</h2>
+    <h2>Scheduled &amp; pending tasks</h2>
 </div>
 {{#if data}}
     <table class="table table-striped">
@@ -18,16 +18,20 @@
         </thead>
         <tbody>
             {{#each data}}
-                <tr data-task-id="{{ taskId.id }}">
+                <tr data-id="{{ id }}" data-collection="scheduledTasks">
                     <td>
-                        <span title="{{ taskId.id }}">{{ taskId.id }}</span>
+                        <span title="{{ id }}">{{ id }}</span>
                     </td>
-                    <td data-value="{{ nextRunAt }}">
-                        {{timestampFromNow nextRunAt}}
+                    <td data-value="{{ pendingTask.pendingTaskId.nextRunAt }}">
+                        {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
                     </td>
                     <td class="hidden-xs actions-column">
-                        <a data-task-id="{{ id }}" data-action="viewJSON">JSON</a>
-                        <a data-task-id="{{ id }}" data-action="run-now">Run now</a>
+                        <a data-action="run-now" title="Run now">
+                            <span class="glyphicon glyphicon-repeat"></span>
+                        </a>
+                        <a data-action="viewJSON" title="JSON">
+                            <span class="glyphicon glyphicon-th-list"></span>
+                        </a>
                     </td>
                 </tr>
             {{/each}}

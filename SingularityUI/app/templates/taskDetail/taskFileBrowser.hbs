@@ -1,5 +1,11 @@
-<div class="page-header">
-    <h2>Files</h2>
+<div class="page-header file-browser-header">
+    <h2>
+        Files
+
+        <small><a data-action="shrink">
+            shrink
+        </a></small>
+    </h2>
 </div>
 <ul class="breadcrumb">
     {{#each breadcrumbs}}
@@ -32,12 +38,16 @@
                     <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ shortPath }}">
                         {{#if isDirectory}}
                             <a data-directory-path="{{ requestPath }}" href="{{appRoot}}/task/{{ taskId }}/files/{{ shortPath }}">
-                                <span class="glyphicon glyphicon-folder-close"></span>{{ shortPath }}/
+                                <span class="glyphicon glyphicon-folder-open"></span>{{ shortPath }}/
                             </a>
                         {{else}}
-                            <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
+                            {{#if isTailable}}
+                                <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
+                                    <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
+                                </a>
+                            {{else}}
                                 <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
-                            </a>
+                            {{/if}}
                         {{/if}}
                     </td>
                     <td class="hidden-xs" data-value="{{ size }}">

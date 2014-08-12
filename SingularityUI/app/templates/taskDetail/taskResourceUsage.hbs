@@ -1,12 +1,16 @@
 <div class="page-header">
     <h2>
         Resource Usage
-        <small><a data-action="expandList">
-            view
+        <small><a data-action="expandToggle">
+            {{#if expanded}}
+                collapse
+            {{else}}
+                view
+            {{/if}}
         </a></small>
     </h2>
 </div>
-<div class="row hidden">
+<div class="row {{#unless expanded}}hide{{/unless}}">
     <ul class="list-unstyled horizontal-description-list">
         {{#if data.cpusNrPeriods }}
             <li class='col-md-4'>

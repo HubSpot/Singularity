@@ -13,10 +13,6 @@
             {{/with}}
             <h2>
                 {{ data.task.taskId.id }}
-                
-                <button data-clipboard-text="{{ data.task.taskId.id }}" class='btn btn-link copy-link'>
-                    Copy
-                </button>
             </h2>
         </div>
 
@@ -25,9 +21,16 @@
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
             </a>
-            <a class="btn btn-danger" data-action="remove">
-                Kill task
-            </a>
+
+            {{#if data.taskUpdates}}
+                {{#withLast data.taskUpdates}}
+                    {{#ifEqual taskState 'TASK_RUNNING'}}
+                        <a class="btn btn-danger" data-action="remove">
+                            Kill task
+                        </a>
+                    {{/ifEqual}}
+                {{/withLast}}
+            {{/if}}
         </div>
     </div>
 </header>

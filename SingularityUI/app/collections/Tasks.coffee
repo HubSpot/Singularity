@@ -17,10 +17,11 @@ class Tasks extends Collection
         active: ['offer.hostname', 'taskId', 'mesosTask.resources']
 
     url: ->
+        requestFilter = if @requestId? then "/request/#{ @requestId }" else ''
         propertyString = $.param 'property': @propertyFilterMap[@state] or [], true
-        "#{ config.apiRoot }/tasks/#{ @state }?#{ propertyString }"
+        "#{ config.apiRoot }/tasks/#{ @state }#{ requestFilter }?#{ propertyString }"
 
-    initialize: (models = [], {@state}) ->
+    initialize: (models = [], {@state, @requestId}) ->
         @comparator = @comparatorMap[@state]
 
 module.exports = Tasks

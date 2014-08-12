@@ -1,5 +1,7 @@
 View = require './view'
 
+Deploy = require '../models/Deploy'
+
 class RequestView extends View
 
     template: require '../templates/requestDetail/requestBase'
@@ -28,6 +30,7 @@ class RequestView extends View
         @$('#header').html           @subviews.header.$el
         @$('#stats').html            @subviews.stats.$el
         @$('#active-tasks').html     @subviews.activeTasks.$el
+        @$('#scheduled-tasks').html  @subviews.scheduledTasks.$el
         @$('#task-history').html     @subviews.taskHistory.$el
         @$('#deploy-history').html   @subviews.deployHistory.$el
         @$('#request-history').html  @subviews.requestHistory.$el
@@ -35,11 +38,18 @@ class RequestView extends View
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
-        console.log $target.data 'collection'
-        console.log @subviews[$target.data 'collection']
-        # Need to reach into subviews to get the necessary data
-        collection = @subviews[$target.data 'collection'].collection
-        utils.viewJSON collection.get id
+        collectionName = $target.data 'collection'
+
+        if collectionName is 'deployHistory'
+            deploy = new Deploy {},
+                requestId: @model.id
+                deployId:  id
+
+            utils.viewJSON deploy
+        else
+            # Need to reach into subviews to get the necessary data
+            collection = @subviews[collectionName].collection
+            utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
         utils.viewJSON @model
@@ -65,14 +75,15 @@ class RequestView extends View
             @trigger 'refreshrequest'
 
     runTask: (e) =>
-        $row = $(e.target).parents('tr')
-        $containingTable = $row.parents('table')
-        taskModel = app.collections.tasksScheduled.get($(e.target).data('task-id'))
-        
+        id = $(e.target).parents('tr').data 'id'
+
         @model.promptRun =>
-            app.collections.tasksScheduled.remove(taskModel)
-            $row.remove()
-            utils.handlePotentiallyEmptyFilteredTable $containingTable, 'task'
+            @subviews.scheduledTasks.collection.remove id
+            @subviews.scheduledTasks.render()
+
+            setTimeout =>
+                @trigger 'refreshrequest'
+            , 3000
 
     flashDeployHistory: ->
         @subviews.deployHistory.flash()
