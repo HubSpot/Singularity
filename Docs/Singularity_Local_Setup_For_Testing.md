@@ -29,7 +29,7 @@ $ ls
 Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. To start building the VM run the following command: 
 
 ```
-vagrant up
+$ vagrant up
 ```
 
 This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then install all the required software packages as well as build and install Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up.
