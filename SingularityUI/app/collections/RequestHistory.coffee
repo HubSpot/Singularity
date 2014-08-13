@@ -1,12 +1,14 @@
 PaginableCollection = require './PaginableCollection'
 
+Model = require '../models/model'
+
 # I didn't name it! This is a collection that returns a bunch
 # of logs detailing what's been going on with the request.
 #
 # Eg: Created by sbacanu
 class RequestHistory extends PaginableCollection
 
-    model: class RequestHistoryItem extends Backbone.Model
+    model: class RequestHistoryItem extends Model
         idAttribute: "createdAt"
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/requests"

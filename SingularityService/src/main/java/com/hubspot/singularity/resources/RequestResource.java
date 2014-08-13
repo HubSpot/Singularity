@@ -285,6 +285,13 @@ public class RequestResource extends AbstractRequestResource {
 
   @GET
   @PropertyFiltering
+  @Path("/finished")
+  public Iterable<SingularityRequestParent> getFinishedRequests() {
+    return getRequestsWithDeployState(requestManager.getFinishedRequests());
+  }
+
+  @GET
+  @PropertyFiltering
   @Path("/")
   public Iterable<SingularityRequestParent> getRequests() {
     return getRequestsWithDeployState(requestManager.getRequests());

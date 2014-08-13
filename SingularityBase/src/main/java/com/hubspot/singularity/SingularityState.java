@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SingularityState extends SingularityJsonObject {
-  
+
   private final int activeTasks;
   private final int pausedRequests;
   private final int activeRequests;
@@ -18,33 +18,34 @@ public class SingularityState extends SingularityJsonObject {
   private final int futureTasks;
   private final int cleaningTasks;
   private final int lbCleanupTasks;
-  
+
   private final long maxTaskLag;
-  
+
   private final int pendingRequests;
   private final int cleaningRequests;
-  
+  private final int finishedRequests;
+
   private final int activeSlaves;
   private final int deadSlaves;
   private final int decomissioningSlaves;
-  
+
   private final int activeRacks;
   private final int deadRacks;
   private final int decomissioningRacks;
-    
+
   private final long oldestDeploy;
   private final int numDeploys;
-  
+
   private final long generatedAt;
-  
+
   private final List<SingularityHostState> hostStates;
 
   private final List<String> overProvisionedRequestIds;
   private final List<String> underProvisionedRequestIds;
-  
+
   private final int overProvisionedRequests;
   private final int underProvisionedRequests;
-  
+
   public static SingularityState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityState.class);
@@ -52,16 +53,16 @@ public class SingularityState extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
-  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests, 
+  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
-      @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves, 
-      @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks, 
+      @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
+      @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks,
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
-      @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt, 
+      @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
-      @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests
+      @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests
       ) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
@@ -80,6 +81,7 @@ public class SingularityState extends SingularityJsonObject {
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
+    this.finishedRequests = finishedRequests;
     this.futureTasks = futureTasks;
     this.maxTaskLag = maxTaskLag;
     this.oldestDeploy = oldestDeploy;
@@ -90,7 +92,11 @@ public class SingularityState extends SingularityJsonObject {
     this.overProvisionedRequestIds = overProvisionedRequestIds;
     this.underProvisionedRequestIds = underProvisionedRequestIds;
   }
-  
+
+  public int getFinishedRequests() {
+    return finishedRequests;
+  }
+
   public long getGeneratedAt() {
     return generatedAt;
   }
@@ -114,7 +120,7 @@ public class SingularityState extends SingularityJsonObject {
   public int getCleaningTasks() {
     return cleaningTasks;
   }
-  
+
   public int getActiveSlaves() {
     return activeSlaves;
   }
@@ -138,11 +144,11 @@ public class SingularityState extends SingularityJsonObject {
   public int getDecomissioningRacks() {
     return decomissioningRacks;
   }
-  
+
   public int getActiveTasks() {
     return activeTasks;
   }
-  
+
   public int getAllRequests() {
     return getActiveRequests() + getCooldownRequests() + getPausedRequests();
   }
@@ -178,7 +184,7 @@ public class SingularityState extends SingularityJsonObject {
   public long getMaxTaskLag() {
     return maxTaskLag;
   }
-  
+
   public int getLbCleanupTasks() {
     return lbCleanupTasks;
   }
@@ -198,5 +204,15 @@ public class SingularityState extends SingularityJsonObject {
   public int getUnderProvisionedRequests() {
     return underProvisionedRequests;
   }
-  
+
+  @Override
+  public String toString() {
+    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks + ", lateTasks="
+        + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests="
+        + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
+        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt=" + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds="
+        + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + "]";
+  }
+
+
 }

@@ -1,5 +1,7 @@
 View = require './view'
 
+Deploy = require '../models/Deploy'
+
 class RequestView extends View
 
     template: require '../templates/requestDetail/requestBase'
@@ -36,9 +38,18 @@ class RequestView extends View
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
-        # Need to reach into subviews to get the necessary data
-        collection = @subviews[$target.data 'collection'].collection
-        utils.viewJSON collection.get id
+        collectionName = $target.data 'collection'
+
+        if collectionName is 'deployHistory'
+            deploy = new Deploy {},
+                requestId: @model.id
+                deployId:  id
+
+            utils.viewJSON deploy
+        else
+            # Need to reach into subviews to get the necessary data
+            collection = @subviews[collectionName].collection
+            utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
         utils.viewJSON @model

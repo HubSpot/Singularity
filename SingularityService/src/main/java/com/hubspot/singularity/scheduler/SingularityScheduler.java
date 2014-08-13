@@ -196,9 +196,11 @@ public class SingularityScheduler {
       if (shouldScheduleTasks(pendingRequest, maybeRequest)) {
         checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
 
-        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), maybeRequest.get().getState(), getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId()), pendingRequest);
+        final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
 
-        if (numScheduledTasks == 0 && maybeRequest.get().getRequest().isScheduled()) {
+        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), maybeRequest.get().getState(), getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId()), pendingRequest, matchingTaskIds);
+
+        if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled()) {
           LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
           heldForScheduledActiveTask++;
           continue;
@@ -328,10 +330,8 @@ public class SingularityScheduler {
     }
   }
 
-  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest) {
+  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds) {
     deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
-
-    final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, request, pendingRequest);
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest);
 
@@ -340,9 +340,15 @@ public class SingularityScheduler {
 
       final List<SingularityPendingTask> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest);
 
-      LOG.trace("Scheduling tasks: {}", scheduledTasks);
+      if (!scheduledTasks.isEmpty()) {
+        LOG.trace("Scheduling tasks: {}", scheduledTasks);
 
-      taskManager.createPendingTasks(scheduledTasks);
+        taskManager.createPendingTasks(scheduledTasks);
+      } else {
+        LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
+        requestManager.finish(request);
+      }
+
     } else if (numMissingInstances < 0) {
       LOG.debug("Missing instances is negative: {}, request {}, matching tasks: {}", numMissingInstances, request, matchingTaskIds);
 
@@ -392,7 +398,7 @@ public class SingularityScheduler {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
 
     if (!isRequestActive(maybeRequestWithState)) {
-      LOG.warn("Not scheduling a new task, due to {} request for {}", SingularityRequestWithState.getRequestState(maybeRequestWithState), taskId.getRequestId());
+      LOG.warn("Not scheduling a new task, {} is {}", taskId.getRequestId(), SingularityRequestWithState.getRequestState(maybeRequestWithState));
       return Optional.absent();
     }
 
@@ -453,7 +459,10 @@ public class SingularityScheduler {
       }
     }
 
-    scheduleTasks(stateCache, request, requestState, deployStatistics, new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), pendingType));
+    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), pendingType);
+
+    scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
+
     return Optional.of(pendingType);
   }
 
@@ -568,7 +577,11 @@ public class SingularityScheduler {
   }
 
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest) {
-    final long nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest.getPendingType());
+    final Optional<Long> nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest.getPendingType());
+
+    if (!nextRunAt.isPresent()) {
+      return Collections.emptyList();
+    }
 
     final Set<Integer> inuseInstanceNumbers = Sets.newHashSetWithExpectedSize(matchingTaskIds.size());
 
@@ -585,7 +598,7 @@ public class SingularityScheduler {
         nextInstanceNumber++;
       }
 
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt, nextInstanceNumber, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
 
       nextInstanceNumber++;
     }
@@ -593,7 +606,7 @@ public class SingularityScheduler {
     return newTasks;
   }
 
-  private long getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, PendingType pendingType) {
+  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, PendingType pendingType) {
     final long now = System.currentTimeMillis();
 
     long nextRunAt = now;
@@ -608,6 +621,10 @@ public class SingularityScheduler {
           CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
 
           final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
+
+          if (nextRunAtDate == null) {
+            return Optional.absent();
+          }
 
           LOG.trace("Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
 
@@ -630,7 +647,7 @@ public class SingularityScheduler {
       }
     }
 
-    return nextRunAt;
+    return Optional.of(nextRunAt);
   }
 
 }

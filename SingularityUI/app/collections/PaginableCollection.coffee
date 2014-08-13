@@ -9,7 +9,9 @@ class PaginableCollection extends Backbone.Collection
 
     constructor: ->
         super
-        @on 'sync',  => @synced = true
+        @on 'sync',  =>
+            @synced = true
+            @each (model) => model.synced = true
         @on 'reset', => @synced = false
 
     # End of stuff from Collection
