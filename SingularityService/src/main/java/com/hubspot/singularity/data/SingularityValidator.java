@@ -190,13 +190,19 @@ public class SingularityValidator {
 
   /**
    * 
-   * Transforms unix cron into fucking quartz cron; adding seconds if not passed
-   * in and switching either day of month or day of week to ?
+   * Transforms unix cron into quartz compatible cron;
    * 
-   * Field Name Allowed Values Allowed Special Characters Seconds 0-59 , - * /
-   * Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L W
-   * Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year
-   * (Optional) empty, 1970-2199 , - * /
+   * - adds seconds if not included
+   * - swtiches either day of month or day of week to ?
+   * 
+   * Field Name   Allowed Values          Allowed Special Characters
+   * Seconds      0-59                    - * /
+   * Minutes      0-59                    - * /
+   * Hours        0-23                    - * /
+   * Day-of-month 1-31                    - * ? / L W
+   * Month        1-12 or JAN-DEC         - * /
+   * Day-of-Week  1-7 or SUN-SAT          - * ? / L #
+   * Year         (Optional), 1970-2199   - * /
    */
   private String getQuartzScheduleFromCronSchedule(String schedule) {
     if (schedule == null) {
