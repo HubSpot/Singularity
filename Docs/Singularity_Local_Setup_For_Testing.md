@@ -83,6 +83,6 @@ Verify that Singularity is running:
 [http://vagrant-singularity:7099/](http://vagrant-singularity:7099/)
 
 If everything went well you will see the following screen:
-![Singularity UI first run](Docs/images/SingularityUI_First_Run.png)
+![Singularity UI first run](images/SingularityUI_First_Run.png)
 
 Enter your username to let Singularity populate a personalized dashboard and go to [Singularity UI User Guide](Docs/Singularity_UI_User_Guide) to find out how to deploy some test projects.
