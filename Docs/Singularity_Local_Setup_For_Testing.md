@@ -26,7 +26,7 @@ $ cd Singularity/vagrant
 $ ls
 ```
 
-Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. To start building the VM run the following command: 
+Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command: 
 
 ```
 $ vagrant up
@@ -86,3 +86,8 @@ If everything went well you will see the following screen:
 ![Singularity UI first run](images/SingularityUI_First_Run.png)
 
 Enter your username to let Singularity populate a personalized dashboard and go to [Singularity UI User Guide](Docs/Singularity_UI_User_Guide) to find out how to deploy some test projects.
+
+At a later time you can update the VM installed packages using the latest *singularity* chef recipe by running:
+```
+$ vagrant provision 
+```
