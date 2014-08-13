@@ -7,7 +7,7 @@ The setup steps have been tested on mac computers running MAC OS X 10.9.x but th
 
 Install [Vagrant](http://www.vagrantup.com/downloads.html)
 
-Install[Virtualbox](https://www.virtualbox.org/wiki/Downloads)
+Install [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 
 Open a command shell and run the following commands to install the required vagrant plugins with the specified order (If vagrant version 1.5 or later is used *vagrant-omnibus* should be installed before *vagrant-berkshelf* because omnibus causes a downgrade of berkshelf version back to 1.3.7 which in turn will cause 'vagrant up' to fail).
 
