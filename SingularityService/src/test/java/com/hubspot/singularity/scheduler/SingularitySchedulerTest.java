@@ -35,6 +35,7 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -151,6 +152,7 @@ public class SingularitySchedulerTest {
 
   private String requestId;
   private SingularityRequest request;
+  private String schedule = "*/1 * * * * ?";
 
   public void initLoadBalancedRequest() {
     privateInitRequest(true, false);
@@ -167,7 +169,7 @@ public class SingularitySchedulerTest {
     .setLoadBalanced(Optional.of(isLoadBalanced));
 
     if (isScheduled) {
-      bldr.setQuartzSchedule(Optional.of("*/1 * * * * ?"));
+      bldr.setQuartzSchedule(Optional.of(schedule));
     }
 
     request = bldr.build();
@@ -498,6 +500,31 @@ public class SingularitySchedulerTest {
     }
 
     Assert.assertTrue(offerIds.size() == 2);
+  }
+
+  @Test
+  public void testSchedulerHandlesFinishedTasks() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    schedule = "*/1 * * * * ? 1995";
+
+    // cause it to be pending
+    requestResource.submit(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertTrue(requestResource.getActiveRequests().isEmpty());
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.FINISHED);
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    schedule = "*/1 * * * * ?";
+    requestResource.submit(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertTrue(!requestResource.getActiveRequests().isEmpty());
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
 
 }

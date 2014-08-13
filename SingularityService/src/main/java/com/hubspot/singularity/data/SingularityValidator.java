@@ -1,7 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 
 import org.quartz.CronExpression;
@@ -170,22 +168,7 @@ public class SingularityValidator {
   }
 
   private boolean isValidCronSchedule(String schedule) {
-    if (!CronExpression.isValidExpression(schedule)) {
-      return false;
-    }
-
-    try {
-      CronExpression ce = new CronExpression(schedule);
-
-      if (ce.getNextValidTimeAfter(new Date()) == null) {
-        return false;
-      }
-
-    } catch (ParseException pe) {
-      return false;
-    }
-
-    return true;
+    return CronExpression.isValidExpression(schedule);
   }
 
   /**
