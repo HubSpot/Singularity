@@ -47,7 +47,7 @@ ls /
 You should see the following listing:
 [singularity, mesos, zookeeper]
 
-type *quit* to exit zookeper console
+type 'quit' to exit zookeper console
 ```
  
 Then verify that the mesos cluster is running and the Mesos UI is accessible at:
@@ -75,7 +75,7 @@ You should something like the following:
 | singularity        |
 +--------------------+
 
-enter *exit* to exit mysql client console
+type 'exit' to exit mysql client console
 ```
 
 Verify that Singularity is running:
