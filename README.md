@@ -342,8 +342,8 @@ The following is an example *Deploy Object*
 Follow the provided links to learn how to install, setup and start using Singularity in different environments: for just a quick look, for setting a test cluster and for production use.
 
 - [Singularity Local Setup for Testing, using Vagrant & VirtualBox](Docs/Singularity_Local_Setup_For_Testing.md). Use this if you want to get a quick taste of Singularity and Mesos without the need to setup a real Mesos Cluster.
-- [Singularity Local Setup for Development, using Vagrant, VirtualBox & Eclipse]((Docs/Singularity_Local_Setup_For_Developmnet.md)
-- [Singularity UI Developer's Guide](Docs/Singularity_UI_Developer_Guide)
+- [Singularity Local Setup for Development, using Vagrant, VirtualBox & Eclipse](Docs/Singularity_Local_Setup_For_Development.md)
+- [Singularity Deploy Examples](Docs/Singularity_Deploy_Examples.md)
 
 ## Roadmap
 - Enhance Job Scheduler
