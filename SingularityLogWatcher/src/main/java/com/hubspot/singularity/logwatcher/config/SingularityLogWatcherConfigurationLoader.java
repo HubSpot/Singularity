@@ -12,11 +12,11 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityConfigu
 
   public static final String STORE_DIRECTORY = "logwatcher.store.directory";
   public static final String STORE_SUFFIX = "logwatcher.store.suffix";
-  
+
   public static final String RETRY_DELAY_SECONDS = "logwatcher.retry.delay.seconds";
-  
+
   public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
-  
+
   public SingularityLogWatcherConfigurationLoader() {
     super("/etc/singularity.logwatcher.properties");
   }
@@ -27,9 +27,9 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityConfigu
     properties.put(FLUENTD_HOSTS, "localhost:24224");
 
     properties.put(RETRY_DELAY_SECONDS, "60");
-    
+
     properties.put(STORE_SUFFIX, ".store");
     properties.put(FLUENTD_TAG_PREFIX, "forward");
   }
-  
+
 }
