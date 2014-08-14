@@ -295,7 +295,7 @@ The following are the properties of the *Singularity Deploy Object*:
     - **loggingExtraFields** (Map of strings - optional)
     - **sigKillProcessesAfterMillis** (long - optional): Executor tries to gracefully kill tasks by initially sending a SIGTERM signal and then waits for *sigKillProcessesAfterMillis* milliseconds for the task to terminate before it tries to kill the task with a SIGKILL signal. Default is 120000 milliseconds (2 minutes).
 
-The following is an example *Deploy Service Object*
+The following is an example *Deploy Object*
 ```javascript
 {
     "requestId": "MDS_TestService",
