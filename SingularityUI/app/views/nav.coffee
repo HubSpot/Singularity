@@ -21,13 +21,7 @@ class NavView extends View
         else if fragment is 'task'
             fragment = 'tasks'
 
-        # If we haven't attached it to the body yet
-        if @$el?.parent().length is 0
-            @setElement @template {fragment}
-
-            $('body').prepend @$el
-        else
-            @$el.html $(@template {fragment}).html()
+        @$el.html @template {fragment}
 
     showSearch: ->
         app.views.globalSearch.show()
