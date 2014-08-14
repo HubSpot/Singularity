@@ -35,6 +35,11 @@ Vagrant.configure("2") do |config|
   config.vm.hostname = 'vagrant-singularity'
   config.vm.network :private_network, ip: private_ip
 
+  config.vm.provision :shell do |shell|
+    shell.inline = 'test -f $1 || (sudo apt-get update -y && touch $1)'
+    shell.args = '/var/run/apt-get-update'
+  end
+
   config.vm.provision :chef_solo do |chef|
     chef.log_level = :debug
     chef.add_recipe "singularity"
@@ -59,5 +64,12 @@ Vagrant.configure("2") do |config|
     }
   end
 
-  config.vm.provision "shell", path: "provision-singularity.sh"
+  config.vm.define "test", primary: true do |test|
+    test.vm.provision "shell", path: "provision-singularity.sh"
+  end
+
+  config.vm.define "develop", autostart: false
+  
 end
+
+

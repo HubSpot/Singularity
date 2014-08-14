@@ -13,9 +13,6 @@
 # limitations under the License.
 #
 
-# Ensure java 7 is the default java.
-update-alternatives --set java /usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java
-
 function install_singularity_config {
   mkdir -p /etc/singularity
   cat > /etc/singularity/singularity.yaml <<EOF
@@ -81,17 +78,59 @@ s3:
 EOF
 }
 
-function build_singularity {
-  cd /singularity
-  mv clean package
+function compile_singularity_ui_static_files {
+  cd /singularity/SingularityUI
+  sudo npm install -g brunch bower
+  npm install
 }
 
-function run_singularity {
+function build_singularity {
   cd /singularity
-  MESOS_HOME=/usr/local MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so PORT=7092 java -Xmx512m -Djava.net.preferIPv4Stack=true -jar ./SingularityService/target/SingularityService-0.3.8-SNAPSHOT.jar server /etc/singularity/singularity.yaml &
+  mvn clean package
+}
+
+function install_singularity {
+  mkdir -p /usr/local/singularity/bin
+  cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT.jar /usr/local/singularity/bin/singularity.jar
+  cat > /usr/local/singularity/bin/migrate_singularity_db.sh <<EOF
+#!/bin/bash -x
+# Uses dropwizard liquibase integration to update singularity mysql db tables
+java -jar /usr/local/singularity/bin/singularity.jar db migrate /etc/singularity/singularity.yaml --migrations mysql/migrations.sql
+EOF
+
+  chmod +x /usr/local/singularity/bin/migrate_singularity_db.sh
+
+  cat > /etc/init/singularity.conf <<EOF
+#!upstart
+description "Singularity Service"
+
+env PATH=/usr/local/singularity/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin
+env MESOS_HOME=/usr/local 
+env MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so 
+env PORT=7092
+
+start on startup
+stop on shutdown
+
+respawn
+
+exec start-stop-daemon --start --make-pidfile --pidfile $PID_FILE --exec java -Xmx512m -Djava.net.preferIPv4Stack=true -jar /usr/local/singularity/bin/singularity.jar server /etc/singularity/singularity.yaml >> /var/log/singularity/singularity.log 2>&1
+EOF
+}
+
+function migrate_db {
+  /usr/local/singularity/bin/migrate_singularity_db.sh
+}
+
+
+function run_singularity {
+  service singularity start
 }
 
 install_singularity_config
+compile_singularity_ui_static_files
 build_singularity
+install_singularity
+migrate_db
 run_singularity
 
