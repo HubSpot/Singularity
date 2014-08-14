@@ -13,6 +13,7 @@
 * [Singularity API Abstractions](#singularity-api-abstractions)
   * [Singularity Request Object](#singularity-request-object)
   * [Singularity Deploy Object](#singularity-deploy-object)
+* [Getting Started](#getting-started)
 
 ## About Singularity Documentation
 *Singularity* is a new and very active project and while we make a considerable effort to keep the documentation current, there is a possibility that you will find some inconsistencies or obsolete information.
