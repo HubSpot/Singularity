@@ -1,7 +1,7 @@
 ## Install Singularity with Vagrant
-Follow the instructions to create a virtual machine that runs Singularity on top of a Mesos cluster. All Mesos components (Mesos master and slave), all Singularity components (Singularity master, Singularity Executor, Singularity UI, S3Archiver, etc.) as well as their dependencies (Zookeper, MySQL) will run in the same virtual machine.
+Follow the instructions to create a virtual machine that runs all Singularity dependencies to ease development and prevent littering your local environment with executables and configuration files. All Mesos components (Mesos master and slave) and all Singularity dependencies (zookeeper and mysql) will be automatically installed and started inside the VM.
 
-This setup is only meant for testing purposes; to give you the possibility to quickly take a look and experiment with the available tools, UIs and APIs.
+This setup is only meant for developing purposes. In a production environment you will need to run each component in a different host and run multiple instances for certain components for high availability.
 
 The setup steps have been tested on mac computers running MAC OS X 10.9.x but they should as well work on any recent Linux distribution.
 
@@ -29,8 +29,10 @@ $ ls
 Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command: 
 
 ```
-$ vagrant up
+$ vagrant up develop
 ```
+
+**if you just run `vagrant up` it will bring up a VM with singularity installed inside the VM which is not what you want when you develop singularity***
 
 This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then install all the required software packages as well as build and install Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up. 
 
@@ -80,16 +82,36 @@ You should something like the following:
 type 'exit' to exit mysql client console
 ```
 
+Build static files of Singularity UI:
+```
+$ npm install
+```
+
+The compiled static files are placed in [`../SingularityService/src/main/resources/`](../SingularityService/src/main/resources/) and can be packaged with maven.
+
+Build singularity with maven:
+
+```
+$ mvn clean package
+```
+
+The mysql database Singularity will use to keep historical data has been already created in the VM but you also need to create the mysql tables required by singularity using the singularity service jar that maven has just built (it uses the liquibase library to perform table migrations): 
+
+```
+$ java -jar SingularityService/target/SingularityService-*-SNAPSHOT.jar db migrate ./vagrant_singularity.yaml --migrations ./migrations.sql
+```
+
+Now you are ready to start Singularity using the provided `vagrant_singularity.yaml` config: 
+
+```
+$ java -jar SingularityService/target/SingularityService-*-SNAPSHOT.jar server ./vagrant_singularity.yaml
+```
+
 Verify that Singularity is running:
 
-[http://vagrant-singularity:7099/](http://vagrant-singularity:7099/)
+[http://localhost:7099/](http://localhost:7099/)
 
 If everything went well you will see the following screen:
 ![Singularity UI first run](images/SingularityUI_First_Run.png)
 
 Enter your username to let Singularity populate a personalized dashboard and go to [Singularity UI User Guide](Docs/Singularity_UI_User_Guide) to find out how to deploy some test projects.
-
-At a later time you can update the VM installed packages using the latest *singularity* chef recipe by running:
-```
-$ vagrant provision 
-```

@@ -343,10 +343,11 @@ Follow the provided links to learn how to install, setup and start using Singula
 
 - [Singularity Local Setup for Testing, using Vagrant & VirtualBox](Docs/Singularity_Local_Setup_For_Testing.md). Use this if you want to get a quick taste of Singularity and Mesos without the need to setup a real Mesos Cluster.
 - [Singularity Local Setup for Development, using Vagrant, VirtualBox & Eclipse]((Docs/Singularity_Local_Setup_For_Developmnet.md)
-- [Setup Singularity in Mesosphere Cluster]
-- [Setup a Singularity / Mesos Cluster with Amazon EC2]
 - [Singularity UI Developer's Guide](Docs/Singularity_UI_Developer_Guide)
 
-## 2014 Roadmap
+## Roadmap
+- Enhance Job Scheduler
+- Support deploy of Docker containers
+- Add advanced slave affinity algorithms to support data locality for Big Data Analysis tasks
 
 

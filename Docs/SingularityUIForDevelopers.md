@@ -1,4 +1,4 @@
-# SingularityUI
+# Build and Run SingularityUI
 
 To build SingularityUI you'll need [nodejs](http://nodejs.org/). Make sure you have it and then just run
 
