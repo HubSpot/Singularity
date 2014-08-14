@@ -1,7 +1,7 @@
 DEPENDENCIES
   singularity
     git: git://github.com/HubSpot/cookbook-singularity.git
-    revision: ece4a000e725932c0e5b09078e643cd85de4f36d
+    revision: 496f35a0c7199d89adddffeeb95fb99c20e01473
     ref: install
 
 GRAPH

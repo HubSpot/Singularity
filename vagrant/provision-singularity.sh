@@ -80,7 +80,6 @@ EOF
 
 function compile_singularity_ui_static_files {
   cd /singularity/SingularityUI
-  sudo npm install -g brunch bower
   npm install
 }
 
@@ -90,6 +89,7 @@ function build_singularity {
 }
 
 function install_singularity {
+  mkdir -p /var/log/singularity
   mkdir -p /usr/local/singularity/bin
   cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT.jar /usr/local/singularity/bin/singularity.jar
   cat > /usr/local/singularity/bin/migrate_singularity_db.sh <<EOF
@@ -105,16 +105,15 @@ EOF
 description "Singularity Service"
 
 env PATH=/usr/local/singularity/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin
-env MESOS_HOME=/usr/local 
-env MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so 
+env MESOS_HOME=/usr/local
+env MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so
 env PORT=7092
 
-start on startup
-stop on shutdown
+start on stopped rc RUNLEVEL=[2345]
 
 respawn
 
-exec start-stop-daemon --start --make-pidfile --pidfile $PID_FILE --exec java -Xmx512m -Djava.net.preferIPv4Stack=true -jar /usr/local/singularity/bin/singularity.jar server /etc/singularity/singularity.yaml >> /var/log/singularity/singularity.log 2>&1
+exec java -Xmx512m -Djava.net.preferIPv4Stack=true -jar /usr/local/singularity/bin/singularity.jar server /etc/singularity/singularity.yaml >> /var/log/singularity/singularity.log 2>&1
 EOF
 }
 
