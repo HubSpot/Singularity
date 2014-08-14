@@ -41,6 +41,7 @@ exports.config =
             appRoot: @config.server.base
             apiRoot: ''
             mesosLogsPort: 5051
+            title: 'Singularity (local dev)'
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

@@ -14,6 +14,7 @@ import com.google.common.base.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
+  public static final UIConfiguration DEFAULT_UI_CONFIGURATION = new UIConfiguration();
 
   @JsonProperty("mesos")
   private MesosConfiguration mesosConfiguration;
@@ -31,6 +32,7 @@ public class SingularityConfiguration extends Configuration {
   private String hostname;
 
   @JsonProperty("singularityUIHostnameAndPath")
+  @Deprecated
   private String singularityUIHostnameAndPath;
 
   @JsonProperty("loadBalancerUri")
@@ -38,6 +40,17 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("sentry")
   private SentryConfiguration sentryConfiguration;
+
+  @JsonProperty("ui")
+  public UIConfiguration uiConfiguration = DEFAULT_UI_CONFIGURATION;
+
+  public UIConfiguration getUiConfiguration() {
+    return uiConfiguration;
+  }
+
+  public void setUiConfiguration(UIConfiguration uiConfiguration) {
+    this.uiConfiguration = uiConfiguration;
+  }
 
   @Valid
   @NotNull
@@ -368,6 +381,7 @@ public class SingularityConfiguration extends Configuration {
     return saveStateEverySeconds;
   }
 
+  @Deprecated
   public Optional<String> getSingularityUIHostnameAndPath() {
     return Optional.fromNullable(singularityUIHostnameAndPath);
   }

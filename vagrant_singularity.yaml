@@ -37,4 +37,6 @@ logging:
   loggers:
     "com.hubspot.singularity" : TRACE
 
-singularityUIHostnameAndPath: http://localhost:7099/singularity
+ui:
+  title: Singularity (local)
+  baseUrl: http://localhost:7099/singularity

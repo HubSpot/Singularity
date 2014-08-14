@@ -21,7 +21,7 @@ class NavView extends View
         else if fragment is 'task'
             fragment = 'tasks'
 
-        @$el.html @template {fragment}
+        @$el.html @template {fragment, title: config.title}
 
     showSearch: ->
         app.views.globalSearch.show()
