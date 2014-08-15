@@ -2,6 +2,7 @@ package com.hubspot.singularity.oomkiller.config;
 
 import java.util.Properties;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityOOMKillerConfigurationLoader extends SingularityConfigurationLoader {
@@ -13,11 +14,11 @@ public class SingularityOOMKillerConfigurationLoader extends SingularityConfigur
   public static final String CGROUP_PROCS_PATH_FORMAT = "oomkiller.cgroups.procs.path.format";
 
   public SingularityOOMKillerConfigurationLoader() {
-    super("/etc/singularity.oomkiller.properties");
+    super("/etc/singularity.oomkiller.properties", Optional.of("singularity-oomkiller.log"));
   }
 
   @Override
-  public void bindDefaults(Properties properties) {
+  protected void bindDefaults(Properties properties) {
     properties.put(REQUEST_KILL_THRESHOLD_RATIO, "1.0");
     properties.put(KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO, "1.2");
 

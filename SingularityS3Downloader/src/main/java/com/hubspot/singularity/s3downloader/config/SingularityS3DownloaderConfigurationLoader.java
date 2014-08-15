@@ -3,6 +3,7 @@ package com.hubspot.singularity.s3downloader.config;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityS3DownloaderConfigurationLoader extends SingularityConfigurationLoader {
@@ -13,11 +14,11 @@ public class SingularityS3DownloaderConfigurationLoader extends SingularityConfi
 
 
   public SingularityS3DownloaderConfigurationLoader() {
-    super("/etc/singularity.s3downloader.properties");
+    super("/etc/singularity.s3downloader.properties", Optional.of("singularity-s3downloader.log"));
   }
 
   @Override
-  public void bindDefaults(Properties properties) {
+  protected void bindDefaults(Properties properties) {
     properties.put(HTTP_SERVER_TIMEOUT, Long.toString(TimeUnit.MINUTES.toMillis(30)));
     properties.put(NUM_DOWNLOADER_THREADS, "25");
   }

@@ -2,6 +2,7 @@ package com.hubspot.singularity.logwatcher.config;
 
 import java.util.Properties;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityLogWatcherConfigurationLoader extends SingularityConfigurationLoader {
@@ -18,10 +19,10 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityConfigu
   public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
 
   public SingularityLogWatcherConfigurationLoader() {
-    super("/etc/singularity.logwatcher.properties");
+    super("/etc/singularity.logwatcher.properties", Optional.of("singularity-logwatcher.log"));
   }
 
-  public void bindDefaults(Properties properties) {
+  protected void bindDefaults(Properties properties) {
     properties.put(BYTE_BUFFER_CAPACITY, "8192");
     properties.put(POLL_MILLIS, "1000");
     properties.put(FLUENTD_HOSTS, "localhost:24224");

@@ -9,7 +9,6 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -39,8 +38,6 @@ public class DeployManager extends CuratorAsyncManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(DeployManager.class);
 
-  private final ObjectMapper objectMapper;
-
   private final SingularityDeployTranscoder deployTranscoder;
   private final SingularityPendingDeployTranscoder pendingDeployTranscoder;
   private final SingularityDeployMarkerTranscoder deployMarkerTranscoder;
@@ -67,10 +64,8 @@ public class DeployManager extends CuratorAsyncManager {
   @Inject
   public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityDeployTranscoder deployTranscoder, SingularityRequestDeployStateTranscoder requestDeployStateTranscoder,
       SingularityPendingDeployTranscoder pendingDeployTranscoder, SingularityDeployMarkerTranscoder deployMarkerTranscoder, SingularityDeployStatisticsTranscoder deployStatisticsTranscoder, SingularityDeployStateTranscoder deployStateTranscoder,
-      SingularityDeployKeyTranscoder deployKeyTranscoder, ObjectMapper objectMapper) {
+      SingularityDeployKeyTranscoder deployKeyTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
-
-    this.objectMapper = objectMapper;
 
     this.pendingDeployTranscoder = pendingDeployTranscoder;
     this.deployTranscoder = deployTranscoder;

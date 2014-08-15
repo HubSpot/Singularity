@@ -2,6 +2,7 @@ package com.hubspot.singularity.s3uploader.config;
 
 import java.util.Properties;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityS3UploaderConfigurationLoader extends SingularityConfigurationLoader {
@@ -14,11 +15,11 @@ public class SingularityS3UploaderConfigurationLoader extends SingularityConfigu
   public static final String EXECUTOR_CORE_THREADS = "s3uploader.core.threads";
 
   public SingularityS3UploaderConfigurationLoader() {
-    super("/etc/singularity.s3uploader.properties");
+    super("/etc/singularity.s3uploader.properties", Optional.of("singularity-s3uploader.log"));
   }
 
   @Override
-  public void bindDefaults(Properties properties) {
+  protected void bindDefaults(Properties properties) {
     properties.put(POLL_MILLIS, "1000");
     properties.put(EXECUTOR_CORE_THREADS, "3");
 

@@ -3,6 +3,7 @@ package com.hubspot.singularity.s3.base.config;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityS3ConfigurationLoader extends SingularityConfigurationLoader {
@@ -19,10 +20,10 @@ public class SingularityS3ConfigurationLoader extends SingularityConfigurationLo
   public static final String LOCAL_DOWNLOAD_HTTP_DOWNLOAD_PATH = "s3.downloader.http.download.path";
 
   public SingularityS3ConfigurationLoader() {
-    super("/etc/singularity.s3base.properties");
+    super("/etc/singularity.s3base.properties", Optional.<String> absent());
   }
 
-  public void bindDefaults(Properties properties) {
+  protected void bindDefaults(Properties properties) {
     properties.put(S3_ACCESS_KEY, "");
     properties.put(S3_SECRET_KEY, "");
 
