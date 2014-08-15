@@ -20,7 +20,6 @@ import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Protos.Value.Scalar;
 import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.zookeeper.data.Stat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -216,7 +215,7 @@ public class SingularitySchedulerTest {
   public void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
     deployManager.saveDeployResult(marker, new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()), Optional.<Stat> absent(), false);
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
   }
 
   public SingularityTask startTask(SingularityDeploy deploy) {
@@ -523,6 +522,25 @@ public class SingularitySchedulerTest {
 
     Assert.assertTrue(!requestResource.getActiveRequests().isEmpty());
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testScheduledJobLivesThroughDeploy() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    createAndSchedulePendingTask(firstDeployId);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+
+    requestResource.deploy(requestId, new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }

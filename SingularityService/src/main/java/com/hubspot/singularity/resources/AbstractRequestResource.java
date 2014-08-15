@@ -19,7 +19,6 @@ import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.DeployManager.ConditionalSaveResult;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.sun.jersey.api.NotFoundException;
@@ -54,10 +53,6 @@ public class AbstractRequestResource {
     if (requestWithState.getState() == RequestState.PAUSED) {
       throw WebExceptions.conflict("Request %s is paused. Unable to %s (it must be manually unpaused first)", requestWithState.getRequest().getId(), action);
     }
-  }
-
-  protected boolean shouldAddToPendingQueue(SingularityRequest request) {
-    return !request.isOneOff();
   }
 
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {
@@ -101,13 +96,9 @@ public class AbstractRequestResource {
       throw WebExceptions.conflict("Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
     }
 
-    ConditionalSaveResult persistResult = deployManager.saveDeploy(request, deployMarker, pendingDeploy);
+    deployManager.saveDeploy(request, deployMarker, pendingDeploy);
 
-    if (persistResult == ConditionalSaveResult.STATE_CHANGED) {
-      throw WebExceptions.conflict("State changed while persisting deploy - try again or contact an administrator. deploy state: %s (marker: %s)", deployManager.getRequestDeployState(requestId).orNull(), deployManager.getPendingDeploy(requestId).orNull());
-    }
-
-    if (shouldAddToPendingQueue(request)) {
+    if (request.isDeployable()) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY));
     }
 

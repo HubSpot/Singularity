@@ -17,7 +17,7 @@ public class SingularityS3DownloaderRunner {
   private SingularityS3DownloaderRunner() {}
 
   public void run(String[] args) {
-    new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(new SingularityS3DownloaderConfigurationLoader(), new SingularityS3ConfigurationLoader()), new SingularityS3DownloaderModule()));
+    new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityS3DownloaderConfigurationLoader()), new SingularityS3DownloaderModule()));
   }
 
 }
