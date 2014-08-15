@@ -35,7 +35,7 @@ class TasksView extends View
     initialize: ({@state, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@state]
 
-        @listenTo @collection, 'sync',   @render
+        @listenTo @collection, 'sync', @render
 
         @searchChange = _.debounce @searchChange, 200
 
@@ -68,7 +68,22 @@ class TasksView extends View
             
         @currentTasks = tasks
 
-    render: ->
+    preventSearchOverwrite: ->
+        # If you've got a lot of tasks like we do at HubSpot, the collection
+        # behind this view will take a while to download & parse. If you type stuff
+        # in the search field before this happens, it'll all be wiped.
+        $searchBox = @$ 'input[type="search"]'
+        searchVal = $searchBox.val()
+
+        if searchVal isnt @searchFilter
+            @searchFilter = searchVal
+
+        if $searchBox.is ':focus'
+            @focusSearchAfterRender = true
+
+    render: =>
+        @preventSearchOverwrite()
+
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -82,6 +97,10 @@ class TasksView extends View
                 tasksBody: @bodyTemplate
 
         @$el.html @templateBase context, partials
+
+        if @focusSearchAfterRender
+            @$('input[type="search"]').focus()
+            @focusSearchAfterRender = false
 
         @renderTable()
 
