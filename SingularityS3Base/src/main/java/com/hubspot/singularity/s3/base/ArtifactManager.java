@@ -88,6 +88,12 @@ public class ArtifactManager extends SimpleProcessManager {
   }
 
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
+    try {
+      Files.createDirectories(directory);
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Couldn't extract %s, unable to create directory %s", embeddedArtifact.getName(), directory), e);
+    }
+
     final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
 
     log.info("Extracting {} bytes of {} to {}", embeddedArtifact.getContent().length, embeddedArtifact.getName(), extractTo);
