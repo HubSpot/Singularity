@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
     raise "Please install vagrant-hostsupdater via `vagrant plugin install vagrant-hostsupdater`"
   end
 
-  config.vm.synced_folder "../", "/singularity"
+  config.vm.synced_folder "../", "/singularity", type: "nfs"
 
   config.vm.box = "opscode_ubuntu-14.04_provisionerless"
   config.vm.box_url = "http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box"
