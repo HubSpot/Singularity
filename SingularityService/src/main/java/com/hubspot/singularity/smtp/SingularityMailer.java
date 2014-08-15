@@ -88,7 +88,7 @@ public class SingularityMailer implements SingularityCloseable {
     this.closer = closer;
     this.jadeHelper = jadeHelper;
     this.configuration = configuration;
-    this.uiHostnameAndPath = configuration.getSingularityUIHostnameAndPath();
+    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl().or(configuration.getSingularityUIHostnameAndPath());
     this.taskManager = taskManager;
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;

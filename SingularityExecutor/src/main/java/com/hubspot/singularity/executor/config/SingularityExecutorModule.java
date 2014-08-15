@@ -11,20 +11,33 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClientConfig;
 
 public class SingularityExecutorModule extends AbstractModule {
 
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
+  public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
 
   @Override
-  protected void configure() {    
+  protected void configure() {
     bind(SingularityExecutorLogging.class).in(Scopes.SINGLETON);
     bind(SingularityExecutorTaskBuilder.class).in(Scopes.SINGLETON);
     bind(SingularityExecutorProcessKiller.class).in(Scopes.SINGLETON);
   }
-  
+
+  @Provides
+  @Singleton
+  @Named(LOCAL_DOWNLOAD_HTTP_CLIENT)
+  public AsyncHttpClient providesHttpClient(SingularityExecutorConfiguration configuration) {
+    AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
+    configBldr.setRequestTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
+
+    return new AsyncHttpClient(configBldr.build());
+  }
+
   @Provides
   @Singleton
   @Named(RUNNER_TEMPLATE)
@@ -38,7 +51,7 @@ public class SingularityExecutorModule extends AbstractModule {
   public Template providesEnvironmentTemplate(Handlebars handlebars) throws IOException {
     return handlebars.compile(ENVIRONMENT_TEMPLATE);
   }
-  
+
   @Provides
   @Singleton
   @Named(LOGROTATE_TEMPLATE)
@@ -55,5 +68,5 @@ public class SingularityExecutorModule extends AbstractModule {
 
     return handlebars;
   }
-  
+
 }

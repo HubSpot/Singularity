@@ -1,4 +1,4 @@
-package com.hubspot.singularity.executor;
+package com.hubspot.singularity.s3.base;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

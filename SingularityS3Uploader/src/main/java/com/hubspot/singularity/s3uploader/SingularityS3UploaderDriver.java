@@ -42,6 +42,7 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
+import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 
 public class SingularityS3UploaderDriver extends WatchServiceHelper implements SingularityDriver {
@@ -59,18 +60,18 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final Set<SingularityS3Uploader> expiring;
   private final SingularityS3UploaderMetrics metrics;
   private final JsonObjectFileHelper jsonObjectFileHelper;
-  
+
   private ScheduledFuture<?> future;
-  
+
   @Inject
-  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper) {
+  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration, SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper) {
     super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.metrics = metrics;
-    
+
     this.fileSystem = FileSystems.getDefault();
     try {
-      this.s3Service = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()));
+      this.s3Service = new RestS3Service(new AWSCredentials(s3Configuration.getS3AccessKey(), s3Configuration.getS3SecretKey()));
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
@@ -81,31 +82,31 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.metadataToUploader = Maps.newHashMap();
     this.uploaderLastHadFilesAt = Maps.newHashMap();
     this.expiring = Sets.newHashSet();
-    
+
     this.metrics.setExpiringCollection(expiring);
-    
+
     this.runLock = new ReentrantLock();
 
     this.executorService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityS3Uploader-%d").build());
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityS3Driver-%d").build());
   }
-  
+
   private void readInitialFiles() throws IOException {
     final long start = System.currentTimeMillis();
     LOG.info("Scanning for metadata files (*{}) in {}", configuration.getS3MetadataSuffix(), configuration.getS3MetadataDirectory());
-    
+
     int foundFiles = 0;
-    
+
     for (Path file : JavaUtils.iterable(configuration.getS3MetadataDirectory())) {
       if (!isS3MetadataFile(file)) {
         continue;
       }
-      
+
       if (handleNewOrModifiedS3Metadata(file)) {
         foundFiles++;
       }
     }
-    
+
     LOG.info("Found {} file(s) in {}", foundFiles, JavaUtils.duration(start));
   }
 
@@ -116,7 +117,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
-    
+
     future = this.scheduler.scheduleAtFixedRate(new Runnable() {
 
       @Override
@@ -124,7 +125,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         final long start = System.currentTimeMillis();
 
         runLock.lock();
-        
+
         if (isStopped()) {
           LOG.warn("Driver is stopped, not checking uploads");
           return;
@@ -133,7 +134,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         int uploads = 0;
         final int uploaders = metadataToUploader.size();
         metrics.startUploads();
-        
+
         try {
           uploads = checkUploads();
         } catch (Throwable t) {
@@ -145,7 +146,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         }
       }
     }, configuration.getCheckUploadsEverySeconds(), configuration.getCheckUploadsEverySeconds(), TimeUnit.SECONDS);
-    
+
     try {
       super.watch();
     } catch (Throwable t) {
@@ -157,7 +158,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   public void shutdown() {
     final long start = System.currentTimeMillis();
     LOG.info("Gracefully shutting down S3Uploader, this may take a few moments...");
-    
+
     runLock.lock();
     try {
       if (!super.stop()) {
@@ -167,12 +168,12 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     } finally {
       runLock.unlock();
     }
-    
+
     future.cancel(false);
-    
+
     scheduler.shutdown();
     executorService.shutdown();
-   
+
     LOG.info("Shut down in {}", JavaUtils.duration(start));
   }
 
@@ -189,7 +190,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         @Override
         public Integer call() {
-          
+
           Integer returnValue = 0;
           try {
             returnValue = uploader.upload(filesToUpload);
@@ -206,18 +207,18 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     final long now = System.currentTimeMillis();
     final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(metadataToUploader.size());
-    
+
     // TODO cancel/timeouts?
     for (Entry<SingularityS3Uploader, Future<Integer>> uploaderToFuture : futures.entrySet()) {
       final SingularityS3Uploader uploader = uploaderToFuture.getKey();
       try {
         final int foundFiles = uploaderToFuture.getValue().get();
-        
+
         if (foundFiles == 0) {
           final long durationSinceLastFile = now - uploaderLastHadFilesAt.get(uploader);
           final boolean isFinished = isFinished(uploader);
-          
-          if (durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile() || isFinished) {
+
+          if ((durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile()) || isFinished) {
             LOG.info("Expiring uploader {}", uploader);
             expiredUploaders.add(uploader);
           } else {
@@ -227,20 +228,20 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           LOG.trace("Updating uploader {} last expire time");
           uploaderLastHadFilesAt.put(uploader, now);
         }
-        
+
         totesUploads += foundFiles;
       } catch (Throwable t) {
         LOG.error("Waiting on future", t);
       }
     }
-    
+
     for (SingularityS3Uploader expiredUploader : expiredUploaders) {
       metrics.getUploaderCounter().dec();
-      
+
       metadataToUploader.remove(expiredUploader.getUploadMetadata());
       uploaderLastHadFilesAt.remove(expiredUploader);
       expiring.remove(expiredUploader);
-      
+
       try {
         Files.delete(expiredUploader.getMetadataPath());
       } catch (IOException e) {
@@ -250,7 +251,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     return totesUploads;
   }
-  
+
   private boolean isFinished(SingularityS3Uploader uploader) {
     return expiring.contains(uploader);
   }
@@ -259,41 +260,41 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     Optional<S3UploadMetadata> maybeMetadata = readS3UploadMetadata(filename);
 
     if (!maybeMetadata.isPresent()) {
-      return false;    
+      return false;
     }
-    
+
     final S3UploadMetadata metadata = maybeMetadata.get();
-    
+
     SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
-    
+
     if (existingUploader != null) {
       if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
         LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
         return false;
       } else {
         LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
-        
+
         if (metadata.isFinished()) {
           expiring.add(existingUploader);
         } else {
           expiring.remove(existingUploader);
         }
-        
+
         return true;
       }
     }
-    
+
     try {
       metrics.getUploaderCounter().inc();
-      
+
       SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata, fileSystem, metrics, filename);
 
       if (metadata.isFinished()) {
         expiring.add(uploader);
       }
-      
+
       LOG.info("Created new uploader {}", uploader);
-      
+
       metadataToUploader.put(metadata, uploader);
       uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
       return true;
@@ -302,17 +303,17 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       return false;
     }
   }
-  
+
   @Override
   protected boolean processEvent(Kind<?> kind, final Path filename) throws IOException {
     metrics.getFilesystemEventsMeter().mark();
-    
+
     if (!isS3MetadataFile(filename)) {
       return false;
     }
 
     runLock.lock();
-    
+
     if (isStopped()) {
       LOG.warn("Driver is stopped, ignoring file watch event for {}", filename);
       return false;
@@ -320,7 +321,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     try {
       final Path fullPath = configuration.getS3MetadataDirectory().resolve(filename);
-      
+
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
         Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
           @Override
@@ -347,7 +348,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private Optional<S3UploadMetadata> readS3UploadMetadata(Path filename) throws IOException {
     return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
   }
-  
+
   private boolean isS3MetadataFile(Path filename) {
     if (!filename.toString().endsWith(configuration.getS3MetadataSuffix())) {
       LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getS3MetadataSuffix());

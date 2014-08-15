@@ -1,20 +1,22 @@
 DEPENDENCIES
   singularity
     git: git://github.com/HubSpot/cookbook-singularity.git
-    revision: 0fea08bb4c9a07077d2e3fcc411f4f773dd62428
+    revision: 496f35a0c7199d89adddffeeb95fb99c20e01473
+    ref: install
 
 GRAPH
-  apt (2.4.0)
-  aws (2.3.0)
-  build-essential (2.0.4)
+  apt (2.5.1)
+  aws (2.4.0)
+  build-essential (2.0.6)
   chef-sugar (2.0.0)
-  database (2.2.0)
+  database (2.3.0)
     aws (>= 0.0.0)
     mysql (>= 5.0.0)
     mysql-chef_gem (>= 0.0.0)
     postgresql (>= 1.0.0)
     xfs (>= 0.0.0)
   hostsfile (2.4.5)
+  java (1.25.0)
   mysql (5.3.6)
     yum-mysql-community (>= 0.0.0)
   mysql-chef_gem (0.0.2)
@@ -26,10 +28,11 @@ GRAPH
     apt (>= 1.9.0)
     build-essential (>= 0.0.0)
     openssl (>= 0.0.0)
-  singularity (0.2.1)
+  singularity (0.3.8)
     apt (>= 0.0.0)
     database (>= 0.0.0)
     hostsfile (>= 0.0.0)
+    java (>= 0.0.0)
     mysql (>= 0.0.0)
   xfs (1.1.0)
   yum (3.2.2)

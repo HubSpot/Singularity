@@ -26,11 +26,15 @@ class Application
         @$page = $('#page')
         @page = @$page[0]
 
+        $body = $ 'body'
+
         @views.nav = new NavView
         @views.nav.render()
+        $body.prepend @views.nav.$el
 
         @views.globalSearch = new GlobalSearchView
         @views.globalSearch.render()
+        $body.append @views.globalSearch.$el
 
         $('.page-loader.fixed').hide()
 
@@ -137,6 +141,7 @@ class Application
         @views.current = view
         # Render & display the view
         view.render()
+
         if @page.children.length
             @page.replaceChild view.el, @page.children[0]
         else

@@ -61,6 +61,9 @@ class RequestView extends View
     runRequest: (e) =>
         @model.promptRun =>
             @trigger 'refreshrequest'
+            setTimeout =>
+                @trigger 'refreshrequest'
+            , 2500
 
     pauseRequest: (e) =>
         @model.promptPause =>

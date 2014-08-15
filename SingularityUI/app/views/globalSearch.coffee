@@ -27,8 +27,7 @@ class GlobalSearchView extends View
                 event.preventDefault()
 
     render: ->
-        @setElement @template()
-        $('body').append @$el
+        @$el.html @template()
 
         @setUpTypeahead()
 

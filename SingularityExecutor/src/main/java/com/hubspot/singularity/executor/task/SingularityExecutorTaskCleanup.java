@@ -8,8 +8,8 @@ import java.util.List;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
-import com.hubspot.singularity.executor.SimpleProcessManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.s3.base.SimpleProcessManager;
 
 public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
 
