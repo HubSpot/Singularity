@@ -116,6 +116,8 @@ class Application
                     serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
                     serverMessage = jqxhr.responseText
+
+                serverMessage = _.escape serverMessage
                     
                 Messenger().error
                     message:   "<p>An uncaught error occurred with your request. The server said:</p><pre>#{ serverMessage }</pre><p>The error has been saved to your JS console.</p>"
