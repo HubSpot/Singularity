@@ -101,8 +101,7 @@ class RequestsView extends View
         $searchBox = @$ 'input[type="search"]'
         searchVal = $searchBox.val()
 
-        if searchVal isnt @searchFilter
-            @searchFilter = searchVal
+        @searchFilter = searchVal
 
         if $searchBox.is ':focus'
             @focusSearchAfterRender = true
@@ -130,7 +129,9 @@ class RequestsView extends View
         @$el.html @templateBase context, partials
 
         if @focusSearchAfterRender
-            @$('input[type="search"]').focus()
+            $searchBox = @$ 'input[type="search"]'
+            $searchBox.focus()
+            $searchBox[0].setSelectionRange @searchFilter.length, @searchFilter.length
             @focusSearchAfterRender = false
 
         @renderTable()
