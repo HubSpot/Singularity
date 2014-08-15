@@ -23,4 +23,5 @@ SingularityUI/app/env.coffee
 SingularityService/src/main/resources/static
 
 .vagrant
+vagrant/Berksfile.lock
 SingularityUI/.vee
