@@ -72,21 +72,33 @@ public class SingularityExecutorArtifactFetcher {
     public void fetchFiles() {
       extractFiles(task, artifactManager, executorData);
 
-      if (executorConfiguration.isUseLocalDownloadService()) {
-        task.getLog().info("Fetching {} s3 artifacts from local downlaod service", executorData.getS3Artifacts().size());
+      boolean fetchS3ArtifactsLocally = true;
+
+      if (executorConfiguration.isUseLocalDownloadService() && !executorData.getS3Artifacts().isEmpty()) {
         final long start = System.currentTimeMillis();
+
+        task.getLog().info("Fetching {} s3 artifacts from local downlaod service", executorData.getS3Artifacts().size());
+
         try {
           downloadFilesFromLocalDownloadService(executorData.getS3Artifacts(), task);
+
+          fetchS3ArtifactsLocally = false;
 
           task.getLog().info("Fetched {} artifacts from local download service in {}", executorData.getS3Artifacts().size(), JavaUtils.duration(start));
         } catch (Throwable t) {
           task.getLog().error("Failed downloading from local download service - falling back to in-task fetch", t);
         }
-
-        return;
       }
 
-      downloadFiles(executorData, artifactManager, task);
+      if (fetchS3ArtifactsLocally) {
+        for (RemoteArtifact s3Artifact : executorData.getS3Artifacts()) {
+          downloadRemoteArtifact(s3Artifact, artifactManager, task);
+        }
+      }
+
+      for (RemoteArtifact externalArtifact : executorData.getExternalArtifacts()) {
+        downloadRemoteArtifact(externalArtifact, artifactManager, task);
+      }
     }
 
     private void extractFiles(SingularityExecutorTask task, ArtifactManager artifactManager, ExecutorData executorData) {
@@ -133,15 +145,6 @@ public class SingularityExecutorArtifactFetcher {
         if (response.getStatusCode() != 200) {
           throw new IllegalStateException("Got status code:" + response.getStatusCode());
         }
-      }
-    }
-
-    private void downloadFiles(ExecutorData executorData, ArtifactManager artifactManager, SingularityExecutorTask task) {
-      for (RemoteArtifact externalArtifact : executorData.getExternalArtifacts()) {
-        downloadRemoteArtifact(externalArtifact, artifactManager, task);
-      }
-      for (RemoteArtifact s3Artifact : executorData.getS3Artifacts()) {
-        downloadRemoteArtifact(s3Artifact, artifactManager, task);
       }
     }
 
