@@ -14,6 +14,7 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
@@ -72,8 +73,12 @@ public class SingularityExecutorArtifactFetcher {
       extractFiles(task, artifactManager, executorData);
 
       if (executorConfiguration.isUseLocalDownloadService()) {
+        task.getLog().info("Fetching {} s3 artifacts from local downlaod service", executorData.getS3Artifacts().size());
+        final long start = System.currentTimeMillis();
         try {
           downloadFilesFromLocalDownloadService(executorData.getS3Artifacts(), task);
+
+          task.getLog().info("Fetched {} artifacts from local download service in {}", executorData.getS3Artifacts().size(), JavaUtils.duration(start));
         } catch (Throwable t) {
           task.getLog().error("Failed downloading from local download service - falling back to in-task fetch", t);
         }
@@ -95,7 +100,11 @@ public class SingularityExecutorArtifactFetcher {
 
       for (S3Artifact s3Artifact : s3Artifacts) {
         ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(task.getTaskDefinition().getTaskDirectory(), s3Artifact);
+
+        task.getLog().debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
+
         BoundRequestBuilder postRequestBldr = localDownloadHttpClient.preparePost(localDownloadUri);
+
         try {
           postRequestBldr.setBody(objectMapper.writeValueAsBytes(artifactDownloadRequest));
         } catch (JsonProcessingException e) {
@@ -118,6 +127,8 @@ public class SingularityExecutorArtifactFetcher {
         } catch (Exception e) {
           throw Throwables.propagate(e);
         }
+
+        task.getLog().debug("Future got status code {}", response.getStatusCode());
 
         if (response.getStatusCode() != 200) {
           throw new IllegalStateException("Got status code:" + response.getStatusCode());
