@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
@@ -30,13 +31,13 @@ public class SingularityS3DownloaderHandler extends AbstractHandler {
 
   private final SingularityS3Configuration s3Configuration;
   private final ObjectMapper objectMapper;
-  private final ArtifactManager artifactManager;
+  private final Provider<ArtifactManager> artifactManagerProvider;
   private final ThreadPoolExecutor asyncDownloadService;
 
   @Inject
-  public SingularityS3DownloaderHandler(ArtifactManager artifactManager, SingularityS3Configuration s3Configuration, ObjectMapper objectMapper,
+  public SingularityS3DownloaderHandler(Provider<ArtifactManager> artifactManagerProvider, SingularityS3Configuration s3Configuration, ObjectMapper objectMapper,
       @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) ThreadPoolExecutor asyncDownloadService) {
-    this.artifactManager = artifactManager;
+    this.artifactManagerProvider = artifactManagerProvider;
     this.s3Configuration = s3Configuration;
     this.objectMapper = objectMapper;
     this.asyncDownloadService = asyncDownloadService;
@@ -66,7 +67,7 @@ public class SingularityS3DownloaderHandler extends AbstractHandler {
 
     LOG.info("Queing handler for {} ({} active threads, {} queue size)", artifactOptional.get(), asyncDownloadService.getActiveCount(), asyncDownloadService.getQueue().size());
 
-    SingularityS3DownloaderAsyncHandler asyncHandler = new SingularityS3DownloaderAsyncHandler(artifactManager, artifactOptional.get(), continuation);
+    SingularityS3DownloaderAsyncHandler asyncHandler = new SingularityS3DownloaderAsyncHandler(artifactManagerProvider.get(), artifactOptional.get(), continuation);
 
     asyncDownloadService.submit(asyncHandler);
   }
