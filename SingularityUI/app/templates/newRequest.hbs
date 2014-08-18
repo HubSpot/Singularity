@@ -5,50 +5,50 @@
 <div class="row new-form">
     <form class="col-md-5">
         <div class="form-group">
-            <label for="id">ID</label>
-            <input type="text" id="id" class="form-control" placeholder="my-awesome-request">
+            <label for="id">ID <em>required</em></label>
+            <input type="text" id="id" class="form-control required" placeholder="my-awesome-request">
         </div>
 
         <div class="form-group">
             <label for="owner-0">Owners</label>
-
-            <input type="text" id="owner-0" class="owner form-control" placeholder="user@example.com">
-        </div>
-
-        <div class="form-group">
-            <label for="service-type">Type</label>
-
-            <div id="type" class="btn-group" data-toggle="buttons">
-                <label class="btn btn-default active">
-                    <input id="service-type" type="radio" name="type" value="service">
-                    Service
-                </label>
-                <label class="btn btn-default">
-                    <input id="worker-type" type="radio" name="type" value="worker">
-                    Worker
-                </label>
-                <label class="btn btn-default">
-                    <input id="scheduled-type" type="radio" name="type" value="scheduled">
-                    Scheduled
-                </label>
-                <label class="btn btn-default">
-                    <input id="on-demand-type" type="radio" name="type" value="on-demand">
-                    On-demand
-                </label>
+            
+            <div class="multi-input">
+                <input type="text" id="owner-0" class="owner form-control" placeholder="user@example.com">
             </div>
         </div>
 
-        <div class="row inline-form">
-            <div class="col-sm-4 form-inline">
+        <div class="form-group">
+            <label>Type</label>
+
+            <div id="type" class="btn-group">
+                <button data-type="service" class="btn btn-default">
+                    Service
+                </button>
+                <button data-type="worker" class="btn btn-default">
+                    Worker
+                </button>
+                <button data-type="scheduled" class="btn btn-default">
+                    Scheduled
+                </button>
+                <button data-type="on-demand" class="btn btn-default">
+                    On-demand
+                </button>
+            </div>
+        </div>
+
+        <div id="service-expandable" class="row expandable hide">
+            <div class="col-sm-4">
                 <div class="form-group">
-                    <label for="instances">Instances</label>
-                    <input type="text" id="instances" class="form-control" placeholder="1">
+                    <label for="instances" class="col-sm-6">Instances</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="instances" class="form-control" placeholder="1">
+                    </div>
                 </div>
             </div>
             <div class="col-sm-4">
                 <div class="form-group">
                     <label for="rack-sensitive">
-                        <input type="checkbox" id="rack-sensitive">    
+                        <input type="checkbox" id="rack-sensitive" checked>    
                         Rack sensitive
                     </label>
                 </div>
@@ -56,15 +56,30 @@
             <div class="col-sm-4">
                 <div class="form-group">
                     <label for="load-balanced">
-                        <input type="checkbox" id="load-balabced">
+                        <input type="checkbox" id="load-balanced" checked>
                         Load balanced
                     </label>
                 </div>
             </div>
         </div>
 
+        <div id="scheduled-expandable" class="expandable hide">
+            <div class="form-group">
+                <label for="schedule">Schedule <em>required</em></label>
+                <input type="text" id="schedule" class="form-control required">
+            </div>
+
+            <div class="form-group">
+                <label for="retries-on-failure">Number of retries on failure</label>
+                <input type="text" id="retries-on-failure" class="form-control">
+            </div>
+        </div>
+
         <button type="submit" class="btn btn-success" disabled>
             Save
+        </button>
+        <button id="reset-button" class="btn btn-default hide">
+            Reset
         </button>
     </form>
 

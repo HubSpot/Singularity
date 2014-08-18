@@ -1,3 +1,5 @@
+@import colors
+
 .new-form
     
     #help-column
@@ -7,18 +9,9 @@
         display inline-block
         width 100%
 
-    .row.inline-form
-        line-height 34px
-
-        input[type=text]
-            margin-left 4%
-            float right
-
-            &, &.small
-                width 30%
-
-            &.medium
-                width 50%
+    .row
+        label
+            padding-top 7px
 
     .well .row:last-child, .well .form-group:last-child
         margin-bottom 0
@@ -28,3 +21,37 @@
         text-shadow 0 1px 0px #fff
         margin-top 0
         margin-bottom 20px
+
+    em
+        font-weight 200
+        color #999
+        margin-left .5em
+
+    .alert
+        margin-top 15px
+
+.multi-input
+    
+    input
+        position relative
+        top 0
+        z-index 50
+        border-radius 0
+        border-top-width 0
+
+    input:nth-child(n+2):focus
+        top -1px
+        border-top-width 1px
+        z-index 100
+        padding-top 7px
+
+    input:first-child
+        top 0
+        border-top-width 1px !important
+        border-top-left-radius 4px !important
+        border-top-right-radius 4px !important
+
+    input:last-child
+        border-bottom-left-radius 4px !important
+        border-bottom-right-radius 4px !important
+
