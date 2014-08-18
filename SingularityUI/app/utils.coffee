@@ -149,25 +149,4 @@ class Utils
             $el.on       'shrink', shrink
         , 100
 
-    @checkMultiInputs: ($elements) ->
-        $firstElement = $(_.first($elements))
-        $lastElement  = $(_.last($elements))
-
-        for $element in $elements
-            $element = $ $element
-
-            isntLast   = $element[0] isnt $lastElement[0]
-            isntFirst  = $element[0] isnt $firstElement[0]
-            notFocused = not $element.is ':focus'
-
-            if not $element.val() and isntLast and notFocused
-                $element.remove()
-
-        if $lastElement.val()
-            $newElement = $ '<input type="text">'
-            $newElement.attr 'class', $lastElement.attr 'class'
-            $newElement.attr 'placeholder', $lastElement.attr 'placeholder'
-
-            $elements.parent().append $newElement
-
 module.exports = Utils

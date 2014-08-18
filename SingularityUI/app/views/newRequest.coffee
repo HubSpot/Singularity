@@ -1,29 +1,14 @@
-View = require './view'
+FormBaseView = require './formBaseView'
 
 Request = require '../models/Request'
 
-class NewRequest extends View
+class NewRequest extends FormBaseView
 
     template: require '../templates/newRequest'
 
-    events:
-        'change input':             'checkForm'
-        'keyup input[type="text"]': 'checkForm'
-        'click #type .btn':         'changeType'
-
-        'submit form':              'submit'
-
-        'click #reset-button':      'render'
-
-    initialize: ->
-        @checkForm = _.debounce @checkForm, 100
-
-        @checkForm()
-
-    render: ->
-        @$el.html @template()
-
-        @$('#help-column').css 'height', "#{ @$('form').height() }px"
+    events: ->
+        _.extend super,
+            'click #type .btn':         'changeType'
 
     changeType: (event) ->
         event.preventDefault()
@@ -37,26 +22,6 @@ class NewRequest extends View
         @$("\##{ $target.data 'type' }-expandable").removeClass 'hide'
 
         @checkForm()
-
-    checkForm: ->
-        return if @lockdown
-
-        utils.checkMultiInputs @$ '.owner'
-
-        id   = @$('#id').val()
-        type = @$('#type .active').data 'type'
-
-        # Make sure all the visible required fields are filled in
-        requiredFieldsOkay = true
-        for $field in @$ '.required'
-            $field = $ $field
-            if $field.is(':visible') and not $field.val()
-                requiredFieldsOkay = false
-
-        if type and requiredFieldsOkay
-            @$('button[type="submit"]').removeAttr 'disabled'
-        else
-            @$('button[type="submit"]').attr 'disabled', 'disabled'
 
     submit: (event) ->
         event.preventDefault()
@@ -122,10 +87,5 @@ class NewRequest extends View
             @alert "There was a problem saving your request. The server response has been logged to your JS console.", false
             @$('#reset-button').removeClass 'hide'
             console.error response
-
-    alert: (message, success = true) ->
-        @$('.alert').remove()
-        alertClass = if success then 'alert-success' else 'alert-danger'
-        @$('form').append "<p class='alert #{ alertClass }'>#{ message }<p>"
 
 module.exports = NewRequest
