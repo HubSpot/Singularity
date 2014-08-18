@@ -196,7 +196,7 @@ public class SingularityDeployChecker {
       cleanupTasks(tasksToKill, deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp());
     }
 
-    if (!request.isDeployable()) {
+    if (!request.isDeployable() && !request.isOneOff()) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), PendingType.NEW_DEPLOY));
     }
 
