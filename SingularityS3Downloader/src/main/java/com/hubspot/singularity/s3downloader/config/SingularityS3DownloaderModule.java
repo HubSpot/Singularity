@@ -6,10 +6,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.s3.base.ArtifactManager;
+import com.hubspot.singularity.s3downloader.SingularityS3DownloaderMetrics;
 import com.hubspot.singularity.s3downloader.server.SingularityS3DownloaderServer;
 
 public class SingularityS3DownloaderModule extends AbstractModule {
@@ -19,7 +21,7 @@ public class SingularityS3DownloaderModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SingularityDriver.class).to(SingularityS3DownloaderServer.class);
-    //    bind(SingularityS3UploaderMetrics.class).in(Scopes.SINGLETON);
+    bind(SingularityS3DownloaderMetrics.class).in(Scopes.SINGLETON);
     bind(ArtifactManager.class).toProvider(ArtifactManagerProvider.class);
   }
 
