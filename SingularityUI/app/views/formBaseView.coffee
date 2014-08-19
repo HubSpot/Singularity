@@ -6,6 +6,7 @@ class FormBaseView extends View
         _.extend super,
             'change input':             'checkForm'
             'keyup input[type="text"]': 'checkForm'
+            'blur input[type="text"]':  'checkForm'
 
             'submit form':              'submit'
 
@@ -15,7 +16,9 @@ class FormBaseView extends View
         @checkForm = _.debounce @checkForm, 100
 
     render: ->
-        @$el.html @template()
+        @$el.html @template
+            model: @model?.toJSON()
+        
         @checkForm()
 
         # @$('#help-column').css 'height', "#{ @$('form').height() }px"
@@ -68,5 +71,57 @@ class FormBaseView extends View
                 $newElement.attr 'placeholder', $lastElement.attr 'placeholder'
 
                 $elements.parent().append $newElement
+
+    valOrNothing: (selector) ->
+        # Returns value if element is visible and, if it's a string-based
+        # input, not blank
+        $element = @$ selector
+
+        return undefined unless $element.is ':visible'
+
+        if $element.attr('type') is 'checkbox'
+            return $element.is ':checked'
+        else
+            val = $element.val()
+            return val if val
+            return if $element.parents('.required').length then "" else undefined
+
+    multiMap: (selector) ->
+        $elements = @$ selector
+        return undefined unless $elements.is ':visible'
+
+        output = {}
+
+        for $element in $elements
+            $element = $ $element
+
+            pair = $element.val().split '='
+            # Not a valid pair
+            continue if pair.length < 2
+            # In case there were multiple `=`s
+            pair[1] = pair.slice(1, pair.length) if pair.length > 2
+            # Slap it onto our map
+            output[pair[0]] = pair[1]
+
+        return if _.isEmpty output then undefined else output
+
+    multiList: (selector) ->
+        $elements = @$ selector
+        return undefined unless $elements.is ':visible'
+
+        output = []
+
+        for $element in $elements
+            $element = $ $element
+
+            val = $element.val()
+            output.push val if val
+
+        return if _.isEmpty output then undefined else output
+
+    postSave: ->
+        @lockdown = false
+        @checkForm()
+        @$('#reset-button').removeClass 'hide'
 
 module.exports = FormBaseView

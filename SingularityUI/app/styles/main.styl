@@ -65,3 +65,9 @@ code
 
     .page-header
         background: rgba(0, 123, 255, .1)
+
+
+// Fix for FF
+@-moz-document url-prefix()
+    fieldset
+        display table-cell

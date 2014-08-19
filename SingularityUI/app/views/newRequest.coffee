@@ -33,10 +33,7 @@ class NewRequest extends FormBaseView
         requestObject.id = @$('#id').val()
         type             = @$('#type .active').data 'type'
 
-        requestObject.owners = []
-        for $owner in @$ '.owner'
-            owner = $($owner).val() 
-            requestObject.owners.push owner if owner
+        requestObject.owners = @multiList '.owner'
 
         if type is 'service'
             requestObject.daemon = true
@@ -69,23 +66,17 @@ class NewRequest extends FormBaseView
         request.isNew = -> true
 
         @lockdown = true
-        @$('button[type="submit"]').addClass 'disabled'
+        @$('button[type="submit"]').attr 'disabled', 'disabled'
 
         serverRequest = request.save()
         serverRequest.done  (response) =>
-            @lockdown = false
-            @checkForm()
-
             @alert "Your Request <a href='#{ config.appRoot }/request/#{ response.id }'>#{ response.id }</a> has been created"
-            @$('#reset-button').removeClass 'hide'
         
         serverRequest.error (response) =>
-            @lockdown = false
-            @checkForm()
+            @postSave()
 
             app.caughtError()
             @alert "There was a problem saving your request. The server response has been logged to your JS console.", false
-            @$('#reset-button').removeClass 'hide'
             console.error response
 
 module.exports = NewRequest

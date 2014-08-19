@@ -2,10 +2,19 @@ Controller = require './Controller'
 
 NewDeployView = require 'views/newDeploy'
 
+Request = require 'models/Request'
+
 class NewDeployController extends Controller
 
     initialize: ({requestId}) ->
-        @setView new NewDeployView {requestId}
-        app.showView @view
+        app.showPageLoader()
+
+        @models.request = new Request id: requestId
+
+        @models.request.fetch().done =>
+            @setView new NewDeployView
+                model: @models.request
+            
+            app.showView @view
 
 module.exports = NewDeployController

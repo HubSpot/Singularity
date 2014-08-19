@@ -16,12 +16,6 @@
     .well .row:last-child, .well .form-group:last-child
         margin-bottom 0
 
-    .well h4
-        color rgba(0, 0, 0, .33)
-        text-shadow 0 1px 0px #fff
-        margin-top 0
-        margin-bottom 20px
-
     .alert
         margin-top 15px
 
@@ -32,6 +26,20 @@
         color #999
         margin-left .5em
         font-style italic
+
+    fieldset
+        margin-bottom 15px
+        padding-top 15px
+        border-top 1px solid #eee
+
+        h1, h2, h3, h4, h5, h6
+            margin 0 0 10px
+            color #888
+
+    #button-row
+        margin-top 30px
+        padding-top 15px
+        border-top 1px solid #eee
 
 .multi-input
     
@@ -58,3 +66,12 @@
         border-bottom-left-radius 4px !important
         border-bottom-right-radius 4px !important
 
+#custom-artifacts:empty
+    padding 25px 0
+    text-align center
+    border 2px dashed #eee
+    margin-bottom 15px
+    color #888
+
+    &::after
+        content "No artifacts. Add one!"
