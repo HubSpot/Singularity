@@ -225,7 +225,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
             LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, durationSinceLastFile, configuration.getStopCheckingAfterMillisWithoutNewFile(), isFinished);
           }
         } else {
-          LOG.trace("Updating uploader {} last expire time");
+          LOG.trace("Updating uploader {} last expire time", uploader);
           uploaderLastHadFilesAt.put(uploader, now);
         }
 
