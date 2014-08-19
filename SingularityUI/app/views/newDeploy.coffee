@@ -50,7 +50,7 @@ class NewDeployView extends FormBaseView
         deployObject.deployHealthTimeoutSeconds            = @valOrNothing '#deploy-healthcheck-timeout'
         deployObject.considerHealthyAfterRunningForSeconds = @valOrNothing '#consider-healthy-after'
 
-        deployObject.loadBalancerGroups  = @multiMap '.lb-group'
+        deployObject.loadBalancerGroups  = @multiList '.lb-group'
         deployObject.loadBalancerOptions = @multiMap '.lb-option'
 
         deployObject.env = @multiMap '.env'
