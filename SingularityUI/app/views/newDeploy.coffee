@@ -53,13 +53,9 @@ class NewDeployView extends FormBaseView
         deployObject.id        = @$('#id').val()
 
         deployObject.resources =
-            cpus:     parseInt(@valOrNothing '#cpus') or undefined
-            memoryMb: @valOrNothing '#memory-mb'
-            numPorts: @valOrNothing '#num-ports'
-
-        # Remove resources map if it's empty
-        resourceValues = _.values deployObject.resources
-        deployObject.resources = undefined if _.isEmpty _.without resourceValues, undefined
+            cpus:     parseInt(@valOrNothing '#cpus') or 1
+            memoryMb: parseInt(@valOrNothing '#memory-mb') or 128
+            numPorts: parseInt(@valOrNothing '#num-ports') or 3
 
         deployObject.serviceBasePath = @valOrNothing '#service-base-path'
 

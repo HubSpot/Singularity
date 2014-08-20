@@ -31,15 +31,12 @@
                 </div>
                 <div class="col-sm-4 form-group">
                     <label for="memory-mb">Memory (MB)</label>
-                    <input type="text" id="memory-mb" placeholder="" class="form-control">
+                    <input type="text" id="memory-mb" placeholder="default: 128" class="form-control">
                 </div>
-                <div class="col-sm-4 form-group {{#if model.daemon}}required{{/if}}">
+                <div class="col-sm-4 form-group">
                     <label for="num-ports">Num. ports</label>
-                    <input type="text" id="num-ports" class="form-control">
+                    <input type="text" id="num-ports" class="form-control" placeholder="default: 3">
                 </div>
-                <p class="col-sm-12 help-block text-muted">
-                    If you enter one of the three above in, you'll need to fill them all in
-                </p>
             </div>
         </fieldset>
 
