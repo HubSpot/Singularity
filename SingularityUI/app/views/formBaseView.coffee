@@ -38,11 +38,17 @@ class FormBaseView extends View
         if $type.length and not $type.find('.active').length
             requiredFieldsOkay = false
 
+        $button = @$ 'button[type="submit"]'
         if requiredFieldsOkay
-            @$('button[type="submit"]').removeAttr 'disabled'
+            $button.removeAttr 'disabled'
+            $button.parent().attr 'title', undefined
+            $button.parent().tooltip 'destroy'
         else
-            @$('button[type="submit"]').attr 'disabled', 'disabled'
-
+            $button.attr 'disabled', 'disabled'
+            $button.parent().attr 'title', 'Please fill in all the required fields'
+            $button.parent().tooltip
+                placement: 'right'
+            
     alert: (message, success = true) ->
         @$('.alert').remove()
         alertClass = if success then 'alert-success' else 'alert-danger'
