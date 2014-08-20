@@ -39,16 +39,16 @@
         <div id="service-expandable" class="row expandable hide">
             <div class="col-sm-4">
                 <div class="form-group">
-                    <label for="instances" class="col-sm-6">Instances</label>
+                    <label for="instances-service" class="col-sm-6">Instances</label>
                     <div class="col-sm-6">
-                        <input type="text" id="instances" class="form-control" placeholder="1">
+                        <input type="text" id="instances-service" class="form-control" placeholder="1">
                     </div>
                 </div>
             </div>
             <div class="col-sm-4">
                 <div class="form-group">
-                    <label for="rack-sensitive">
-                        <input type="checkbox" id="rack-sensitive" checked>    
+                    <label for="rack-sensitive-service">
+                        <input type="checkbox" id="rack-sensitive-service" checked>    
                         Rack sensitive
                     </label>
                 </div>
@@ -58,6 +58,25 @@
                     <label for="load-balanced">
                         <input type="checkbox" id="load-balanced" checked>
                         Load balanced
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="worker-expandable" class="row expandable hide">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="instances-worker" class="col-sm-6">Instances</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="instances-worker" class="form-control" placeholder="1">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="rack-sensitive-worker">
+                        <input type="checkbox" id="rack-sensitive-worker" checked>    
+                        Rack sensitive
                     </label>
                 </div>
             </div>

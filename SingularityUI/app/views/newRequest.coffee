@@ -35,16 +35,15 @@ class NewRequest extends FormBaseView
 
         requestObject.owners = @multiList '.owner'
 
-        if type is 'service'
+        if type in ['service', 'worker']
             requestObject.daemon = true
 
-            instances                   = parseInt @$('#instances').val()
-            requestObject.rackSensitive = @$('#rack-sensitive').is ':checked'
-            requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
+            instances                   = parseInt @$("#instances-#{ type }").val()
+            requestObject.instances     = instances if instances
+            requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
 
-            requestObject.instances = instances if instances
-        else if type is 'worker'
-            requestObject.daemon = true
+            if type is 'service'
+                requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
         else if type is 'scheduled'
             schedule = @$('#schedule').val()
             retries  = parseInt @$('#retries-on-failure').val()
