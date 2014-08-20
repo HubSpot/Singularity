@@ -1,9 +1,12 @@
 Model = require './model'
 
+# Used to POST new delays by the deploy form
 class Deploy extends Model
 
-    url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/deploy/#{ @deployId }"
+    url: -> "#{ config.apiRoot }/requests/request/#{ @requestId }/deploy"
 
-    initialize: (attributes, {@requestId, @deployId}) ->
+    isNew: -> true
+
+    initialize: (attrs, {@requestId}) ->
 
 module.exports = Deploy

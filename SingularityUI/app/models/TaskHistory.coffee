@@ -10,7 +10,7 @@ class TaskHistory extends Model
 
     parse: (taskHistory) ->
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
-        taskHistory.task.mesosTask.executor.command.environment.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
+        taskHistory.task?.mesosTask?.executor?.command?.environment?.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
 
         taskHistory
 

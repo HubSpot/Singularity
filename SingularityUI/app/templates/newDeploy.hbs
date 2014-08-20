@@ -1,0 +1,236 @@
+<h3>
+    New deploy for <a href="{{appRoot}}/request/{{ model.id }}">{{ model.id }}</a>
+</h3>
+
+<div class="row new-form">
+    <form class="col-md-5">
+        <div class="form-group required">
+            <label for="id">Deploy ID</label>
+            <input type="text" id="id" class="form-control">
+        </div>
+
+        <div class="form-group required">
+            <label for="command">Command to execute</label>
+            <input type="text" id="command" class="form-control" placeholder="eg: rm -rf /">
+        </div>
+
+        {{#if model.request.loadBalanced}}
+            <div class="form-group required">
+                <label for="service-base-path">Service base path</label>
+                <input type="text" id="service-base-path" class="form-control" placeholder="eg: /singularity/api/v2">
+            </div>
+        {{/if}}
+
+        <fieldset>
+            <h4>Resources</h4>
+
+            <div class="row">
+                <div class="col-sm-4 form-group">
+                    <label for="cpus">CPUs</label>
+                    <input type="text" id="cpus" placeholder="default: 1" class="form-control">
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label for="memory-mb">Memory (MB)</label>
+                    <input type="text" id="memory-mb" placeholder="" class="form-control">
+                </div>
+                <div class="col-sm-4 form-group {{#if model.daemon}}required{{/if}}">
+                    <label for="num-ports">Num. ports</label>
+                    <input type="text" id="num-ports" class="form-control">
+                </div>
+                <p class="col-sm-12 help-block text-muted">
+                    If you enter one of the three above in, you'll need to fill them all in
+                </p>
+            </div>
+        </fieldset>
+
+        {{#if model.daemon}}
+            <fieldset>
+                <h4>Healthcheck</h4>
+                <div class="form-group">
+                    <label for="healthcheck-uri">Healthcheck URI</label>
+                    <input type="text" id="healthcheck-uri" class="form-control">
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="healthcheck-interval">HC interval (sec)</label>
+                            <input type="text" id="healthcheck-interval" class="form-control" placeholder="default: 5">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="healthcheck-timeout">HC timeout (sec)</label>
+                            <input type="text" id="healthcheck-timeout" class="form-control" placeholder="default: 5">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="consider-healthy-after">Healthy after (sec)</label>
+                            <input type="text" id="consider-healthy-after" class="form-control" placeholder="default: 5">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="skip-healthcheck">
+                                <input type="checkbox" id="skip-healthcheck">
+                                Skip healthcheck on deploy
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="deploy-healthcheck-timeout">Deploy healthcheck timeout (sec)</label>
+                            <input type="text" id="deploy-healthcheck-timeout" class="form-control" placeholder="default: 120">
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <h4>Load balancer</h4>
+
+                <div class="form-group {{#if model.request.loadBalanced}}required{{/if}}">
+                    <label>Load balancer groups</label>
+                    <div class="multi-input">
+                        <input type="text" class="form-control lb-group">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Load balancer options</label>
+                    <div class="multi-input">
+                        <input type="text" class="form-control lb-option" placeholder="format: key=value">
+                    </div>
+                </div>
+            </fieldset>
+        {{/if}}
+
+        <fieldset>
+            <label>Environment variables</label>
+
+            <div class="multi-input">
+                <input type="text" class="form-control env" placeholder="format: key=value">
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <div class="form-group">
+                <label>Executor type</label>
+
+                <div>
+                    <div id="executor-type" class="btn-group">
+                        <button class="btn btn-default active" data-executor="default">
+                            Default
+                        </button>
+                        <button class="btn btn-default" data-executor="custom">
+                            Custom
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset id="default-expandable" class='expandable'>
+            <label>Artifacts</label>
+
+            <div class="multi-input">
+                <input type="text" class="form-control artifact-uri" placeholder="eg: http://s3.example/my-artifact">
+            </div>
+        </fieldset>
+
+        <div id="custom-expandable" class="expandable hide">
+            <fieldset>
+                <h4>Custom executor details</h4>
+
+                <div class="form-group required">
+                    <label for="custom-executor-command">Custom executor command</label>
+                    <input type="text" id="custom-executor-command" class="form-control" placeholder="eg: /usr/local/bin/singularity-executor">
+                </div>
+
+                <div class="form-group">
+                    <label for="extra-args">Extra command args</label>
+                    <div class="multi-input">
+                        <input type="text" class="form-control extra-arg" placeholder="eg: -jar MyThing.jar">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="user">User</label>
+                    <input type="text" class="form-control" id="user" placeholder="default: root">
+                </div>
+
+                <div class="form-group">
+                    <label for="kill-after-millis">Kill processes after (milisec)</label>
+                    <input type="text" class="form-control" id="kill-after-millis" placeholder="default: 120000">
+                </div>
+
+                <div class="form-group">
+                    <label for="logging-extra-fields">Successful exit codes</label>
+                    <div class="multi-input">
+                        <input type="text" class="form-control successful-exit-code">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="logging-tag">Logging tag</label>
+                    <input type="text" class="form-control" id="logging-tag">
+                </div>
+
+                <div class="form-group">
+                    <label for="logging-extra-fields">Logging extra fields</label>
+                    <div class="multi-input">
+                        <input type="text" class="form-control extra-field" placeholder="format: key=value">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="running-sentinel">Running Sentinel</label>
+                    <input type="text" class="form-control" id="running-sentinel">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <h4>Custom executor artifacts</h4>
+
+                <div id="custom-artifacts"></div>
+
+                <div id="artifact-button-row" class="row">
+                    <div class="col-sm-4">
+                        <button class="btn btn-success btn-block" data-artifact-type="embedded">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Embedded
+                        </button>
+                    </div>
+                    <div class="col-sm-4">
+                        <button class="btn btn-success btn-block" data-artifact-type="external">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            External
+                        </button>
+                    </div>
+                    <div class="col-sm-4">
+                        <button class="btn btn-success btn-block" data-artifact-type="s3">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            S3
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div id="button-row">
+            <span>
+                <button type="submit" class="btn btn-success btn-lg" disabled>
+                    Deploy
+                </button>
+            </span>
+            <button id="reset-button" class="btn btn-default btn-lg hide">
+                Reset
+            </button>
+        </div>
+    </form>
+
+    <div id="help-column" class="col-md-6 col-md-offset-1">
+        
+    </div>
+</div>
