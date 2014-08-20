@@ -8,7 +8,8 @@ class NewDeployView extends FormBaseView
 
     events: ->
         _.extend super,
-            'click #executor-type button': 'changeExecutor'
+            'click #executor-type button':       'changeExecutor'
+            'click #artifact-button-row button': 'addArtifact'
 
     changeExecutor: (event) ->
         event.preventDefault()
@@ -21,6 +22,10 @@ class NewDeployView extends FormBaseView
 
         @$("\##{ executorType }-expandable").removeClass 'hide'
         $target.addClass 'active'
+
+    addArtifact: (event) ->
+        event.preventDefault()
+        type = $(event.currentTarget).data 'artifact-type'
 
     submit: ->
         event.preventDefault()
@@ -67,6 +72,7 @@ class NewDeployView extends FormBaseView
             deployObject.executorData.cmd = command
 
             parseIntList = (list) ->
+                return undefined if not list
                 _.map list, (string) -> parseInt string
 
             deployObject.executorData.successfulExitCodes = parseIntList @multiList '.successful-exit-code'
@@ -75,7 +81,7 @@ class NewDeployView extends FormBaseView
             deployObject.executorData.extraCmdLineArgs    = @multiList '.extra-arg'
             deployObject.executorData.loggingTag          = @valOrNothing '#logging-tag'
             deployObject.executorData.loggingExtraFields  = @multiMap '.extra-field'
-            deployObject.executorData.sigKillProcessesAfterMillis = parseInt(@valOrNothing '#kill-after-millis') or 0
+            deployObject.executorData.sigKillProcessesAfterMillis = parseInt(@valOrNothing '#kill-after-millis') or undefined
 
         deployModel = new Deploy deployObject, requestId: @model.id
         apiRequest = deployModel.save()
