@@ -78,11 +78,13 @@ class FormBaseView extends View
 
                 $elements.parent().append $newElement
 
-    valOrNothing: (selector) ->
+    valOrNothing: (selector, $parentElement) =>
         # Returns value if element is visible and, if it's a string-based
         # input, not blank
-        $element = @$ selector
-
+        if $parentElement?
+            $element = $parentElement.find selector
+        else
+            $element = @$ selector
         return undefined unless $element.is ':visible'
 
         if $element.attr('type') is 'checkbox'
@@ -92,7 +94,7 @@ class FormBaseView extends View
             return val if val
             return if $element.parents('.required').length then "" else undefined
 
-    multiMap: (selector) ->
+    multiMap: (selector) =>
         $elements = @$ selector
         return undefined unless $elements.is ':visible'
 
@@ -111,7 +113,7 @@ class FormBaseView extends View
 
         return if _.isEmpty output then undefined else output
 
-    multiList: (selector) ->
+    multiList: (selector) =>
         $elements = @$ selector
         return undefined unless $elements.is ':visible'
 

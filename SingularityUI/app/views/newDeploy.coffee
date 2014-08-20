@@ -6,10 +6,16 @@ class NewDeployView extends FormBaseView
 
     template: require '../templates/newDeploy'
 
+    artifactTemplates:
+        embedded: require '../templates/artifactForms/embedded'
+        external: require '../templates/artifactForms/external'
+        s3:       require '../templates/artifactForms/s3'
+
     events: ->
         _.extend super,
             'click #executor-type button':       'changeExecutor'
             'click #artifact-button-row button': 'addArtifact'
+            'click .remove-button':              'removeArtifact'
 
     changeExecutor: (event) ->
         event.preventDefault()
@@ -26,6 +32,15 @@ class NewDeployView extends FormBaseView
     addArtifact: (event) ->
         event.preventDefault()
         type = $(event.currentTarget).data 'artifact-type'
+
+        $container = @$ '#custom-artifacts'
+
+        $container.append @artifactTemplates[type]
+            timestamp: +moment()
+
+    removeArtifact: (event) ->
+        event.preventDefault()
+        $(event.currentTarget).parent().remove()
 
     submit: ->
         event.preventDefault()
@@ -82,6 +97,37 @@ class NewDeployView extends FormBaseView
             deployObject.executorData.loggingTag          = @valOrNothing '#logging-tag'
             deployObject.executorData.loggingExtraFields  = @multiMap '.extra-field'
             deployObject.executorData.sigKillProcessesAfterMillis = parseInt(@valOrNothing '#kill-after-millis') or undefined
+
+            $artifacts = $('.artifact')
+            if $artifacts.length
+                for $artifact in $artifacts
+                    $artifact = $ $artifact
+
+                    type = $artifact.data 'type'
+                    if type is 'embedded'
+                        deployObject.executorData.embeddedArtifacts = [] unless deployObject.executorData.embeddedArtifacts
+                        deployObject.executorData.embeddedArtifacts.push
+                            name:     @valOrNothing '.name', $artifact
+                            filename: @valOrNothing '.filename', $artifact
+                            md5sum:   @valOrNothing '.md5', $artifact
+                            content:  @valOrNothing '.content', $artifact
+                    else if type is 'external'
+                        deployObject.executorData.externalArtifacts = [] unless deployObject.executorData.externalArtifacts
+                        deployObject.executorData.externalArtifacts.push
+                            name:     @valOrNothing '.name', $artifact
+                            filename: @valOrNothing '.filename', $artifact
+                            md5sum:   @valOrNothing '.md5', $artifact
+                            url:      @valOrNothing '.url', $artifact
+                            filesize: parseInt(@valOrNothing '.file-size', $artifact) or undefined
+                    else if type is 's3'
+                        deployObject.executorData.s3Artifacts = [] unless deployObject.executorData.s3Artifacts
+                        deployObject.executorData.s3Artifacts.push
+                            name:        @valOrNothing '.name', $artifact
+                            filename:    @valOrNothing '.filename', $artifact
+                            md5sum:      @valOrNothing '.md5', $artifact
+                            s3Bucket:    @valOrNothing '.bucket', $artifact
+                            s3ObjectKey: @valOrNothing '.object-key', $artifact
+                            filesize:    parseInt(@valOrNothing '.file-size', $artifact) or undefined
 
         deployModel = new Deploy deployObject, requestId: @model.id
         apiRequest = deployModel.save()
