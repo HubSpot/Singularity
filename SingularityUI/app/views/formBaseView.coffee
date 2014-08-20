@@ -15,7 +15,9 @@ class FormBaseView extends View
     initialize: ->
         @checkForm = _.debounce @checkForm, 100
 
-    render: ->
+    render: (event) ->
+        event.preventDefault() if event
+        
         @$el.html @template
             model: @model?.toJSON()
         
