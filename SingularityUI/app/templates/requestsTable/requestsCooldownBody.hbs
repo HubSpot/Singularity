@@ -56,14 +56,14 @@
                         <td class="actions-column hidden-xs">
                             {{#if canBeRunNow}}
                                 <a data-request-id="{{ request.id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now" title="Run now">
-                                    <span class="glyphicon glyphicon-repeat"></span>
+                                    <span class="glyphicon glyphicon-flash"></span>
                                 </a>
                             {{/if}}
                             <a data-request-id="{{ request.id }}" data-action="remove" title="Remove">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>
                             <a data-request-id="{{ request.id }}" data-action="viewJSON" title="JSON">
-                                <span class="glyphicon glyphicon-th-list"></span>
+                                { }
                             </a>
                         </td>
                     </tr>
