@@ -184,6 +184,8 @@ class RequestsView extends View
         else
             $tableBody.append $contents
 
+        @$('a[title]').tooltip()
+
     sortTable: (event) =>
         @isSorted = true
 

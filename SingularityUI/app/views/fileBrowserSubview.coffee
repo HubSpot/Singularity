@@ -26,6 +26,8 @@ class FileBrowserSubview extends View
             path:        @collection.path
             breadcrumbs: breadcrumbs
 
+        @$('a[title]').tooltip()
+
         if @scrollWhenReady
             @scrollToTop()
 
