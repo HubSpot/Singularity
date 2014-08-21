@@ -75,7 +75,7 @@ class TasksView extends View
         $searchBox = @$ 'input[type="search"]'
         searchVal = $searchBox.val()
 
-        @searchFilter = searchVal
+        @searchFilter = searchVal if not @searchFilter
 
         if $searchBox.is ':focus'
             @focusSearchAfterRender = true
