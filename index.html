@@ -16,40 +16,18 @@
         <div id="container">
             <h1>Singularity</h1>
             <h2>
-                Singularity makes continuous deployment a breeze! It takes care of deploying and running services and scheduled jobs in cloud infrastructures, providing efficient management of the underlying processes life cycle and effective use of the cluster resources, thanks to 
-                <a href="http://mesos.apache.org" target="_blank">Mesos</a>.
-                <div id="what-is-singularity">
-                    <a href="https://github.com/HubSpot/Singularity#what-is-singularity">
-                        What is Singularity?
-                    </a>
-                </div>
+                Singularity is a <a href="https://mesos.apache.org" target="_blank">Mesos</a> framework that makes deployment easy. It supports web services, background workers, scheduled jobs, and one-off tasks.
             </h2>
 
-            <div id="clone-container">
-                <span id="dollar-sign">$</span>
-
-                <input type="text" id="clone-box" value="git clone https://github.com/HubSpot/Singularity.git">
-            </div>
-
-            <script>
-                var input = document.getElementById('clone-box');
-                input.addEventListener('focus', function() {
-                    setTimeout(function() {
-                        input.setSelectionRange(0, input.value.length);
-                    }, 10)
-                });
-            </script>
-
             <div id="button-container">
+                <a href="https://github.com/HubSpot/Singularity/blob/master/Docs/Singularity_Local_Setup_For_Testing.md">Try now</a>
                 <a href="https://github.com/HubSpot/Singularity/blob/master/README.md">Docs</a>
-                <a href="https://github.com/HubSpot/Singularity/blob/master/Docs/Singularity_Local_Setup_For_Testing.md">Try it</a>
                 <a href="https://github.com/HubSpot/Singularity">GitHub</a>
             </div>
         </div>
 
         <div id="hubspot-container">
             <a href="http://github.hubspot.com/" target="_blank" id="hubspot-logo">
-                Created by
                 <img src="images/hubspot-logo.png" alt="HubSpot">
             </a>
         </div>
