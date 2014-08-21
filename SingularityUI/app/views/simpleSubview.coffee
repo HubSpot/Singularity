@@ -32,7 +32,7 @@ class SimpleSubview extends View
             synced:   @data.synced
             expanded: @expanded
 
-        @$('a[title]').tooltip()
+        @$('.actions-column a[title]').tooltip()
 
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
 

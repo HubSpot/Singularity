@@ -52,7 +52,7 @@ class ExpandableTableSubview extends View
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
 
-        @$('a[title]').tooltip()
+        @$('.actions-column a[title]').tooltip()
 
         @$('.table-container').css 'min-height', "#{ @containerMinHeight }px"
 
