@@ -32,6 +32,7 @@ h1 {
     color: blue;
     font-size: 70px;
     margin-top: 100px;
+    margin-bottom: 60px;
     text-align: center;
     font-weight: 300 !important;
     color: #fff;
@@ -56,7 +57,7 @@ h2 a:hover {
 
 #what-is-singularity {
     display: block;
-    margin-top: .5em;
+    margin-top: 1em;
 }
 
 #clone-container {
@@ -89,7 +90,7 @@ input {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    margin-bottom: 3.4em;
+    margin-bottom: 0;
 }
 
 input:focus, input:active {
@@ -105,6 +106,7 @@ input::selection {
     display: inline-block;
     width: 100%;
     margin-bottom: 7em;
+    margin-top: 100px;
 }
 
 #button-container a {
@@ -140,20 +142,29 @@ input::selection {
 }
 
 #hubspot-container {
-    color: #fff;
-    color: rgba(255, 255, 255, .75);
-    line-height: 50px;
     text-align: center;
-    vertical-align: top;
 }
 
 #hubspot-logo {
-    opacity: .75;
-    margin-left: .5em;
-    position: relative;
-    top: -10px;
+    color: #fff;
+    color: rgba(255, 255, 255, .75);
+    text-decoration: none;
+    opacity: .6;
+    transition: opacity .2s ease-out;
 }
 
 #hubspot-logo:hover {
     opacity: 1;
+}
+
+#hubspot-logo img {
+    height: 33px;
+    margin-left: .1em;
+    vertical-align: baseline;
+    position: relative;
+    top: 10px;
+
+    opacity: .9;
+}
+#hubspot-logo:hover img {
 }
