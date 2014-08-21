@@ -40,7 +40,6 @@ class FileBrowserSubview extends View
         return if @suppressExpansion
 
         @$el.addClass 'expanded'
-        utils.animatedExpansion @$el, @shrink
 
     navigate: (event) ->
         event.preventDefault()
@@ -66,13 +65,5 @@ class FileBrowserSubview extends View
         $loaderContainer = @$ '.page-loader-container'
         if tableHeight?
             $loaderContainer.css 'height', "#{ tableHeight }px"
-
-    startShrink: ->
-        @$el.trigger 'shrink'
-        @shrink()        
-
-    shrink: =>
-        @$el.removeClass 'expanded'
-        @suppressExpansion = true
 
 module.exports = FileBrowserSubview
