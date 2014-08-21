@@ -1,0 +1,159 @@
+html {
+    height: 100%;
+}
+
+body {
+    background: #3069A4;
+    background: linear-gradient(to bottom right, #3068A4, #6B52BC) fixed no-repeat;
+
+    font-family: Lato, Helvetica, arial, sans-serif;
+    padding-bottom: 50px;
+    overflow: scroll;
+    font-weight: 300;
+}
+
+::selection {
+    background: #0D2E75;
+    background: rgba(13, 46, 117, .5);
+}
+
+#container {
+    width: 90%;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 0 5%;
+}
+
+h1, h2 {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
+
+h1 {
+    color: blue;
+    font-size: 70px;
+    margin-top: 100px;
+    text-align: center;
+    font-weight: 300 !important;
+    color: #fff;
+}
+
+h2 {
+    color: #fff;
+    color: rgba(255, 255, 255, .75);
+    font-weight: 300 !important;
+    margin-bottom: 3em;
+    line-height: 1.6em;
+}
+
+h2 a, h2 a:hover, h2 a:active {
+    text-decoration: none;
+    color: #fff;
+}
+
+h2 a:hover {
+    text-decoration: underline;
+}
+
+#what-is-singularity {
+    display: block;
+    margin-top: .5em;
+}
+
+#clone-container {
+    max-width: 600px;
+    width: 100%;
+    display: block;
+    position: relative;
+    margin: 0 auto;
+}
+
+#dollar-sign {
+    color: #3069A4;
+    opacity: .75;
+    position: absolute;
+    left: 15px;
+    top: 14px;
+}
+
+input {
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    background: #fff;
+    background: rgba(255, 255, 255, .85);
+    color: #3069A4;
+    font-size: 16px;
+    border: none;
+    display: block;
+    padding: 1em 8%;
+    width: 84%;
+    border-radius: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-bottom: 3.4em;
+}
+
+input:focus, input:active {
+    background: rgba(255, 255, 255, .75);
+    outline: none;
+}
+
+input::selection {
+    color: #fff;
+}
+
+#button-container {
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 7em;
+}
+
+#button-container a {
+    width: 32%;
+    margin-left: 2%;
+    float: left;
+    padding: 1.2em 0;
+    background: #fff;
+    color: #3069A4;
+    text-decoration: none;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 20px;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, .2);
+}
+
+#button-container a:first-child {
+    margin-left: 0;
+}
+
+#button-container a:hover, #button-container a:active {
+    background: rgba(255, 255, 255, .9);
+}
+
+@media(max-width: 768px) {
+    #button-container a {
+        float: none;
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        margin-left: 0;
+    }
+}
+
+#hubspot-container {
+    color: #fff;
+    color: rgba(255, 255, 255, .75);
+    line-height: 50px;
+    text-align: center;
+    vertical-align: top;
+}
+
+#hubspot-logo {
+    opacity: .75;
+    margin-left: .5em;
+    position: relative;
+    top: -10px;
+}
+
+#hubspot-logo:hover {
+    opacity: 1;
+}
