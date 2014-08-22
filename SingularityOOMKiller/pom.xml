@@ -29,19 +29,19 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityRunnerBase</artifactId>
-      <version>${singularity.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>MesosClient</artifactId>
-      <version>${singularity.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityClient</artifactId>
-      <version>${singularity.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
   </dependencies>
