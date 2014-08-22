@@ -81,8 +81,6 @@ public class SingularitySchedulerTest {
   @Inject
   private SingularityScheduler scheduler;
   @Inject
-  private TestingLoadBalancerClient testingLoadBalancerClient;
-  @Inject
   private SingularityDeployChecker deployChecker;
   @Inject
   private RequestResource requestResource;
