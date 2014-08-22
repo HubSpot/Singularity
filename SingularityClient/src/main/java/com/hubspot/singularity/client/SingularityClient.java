@@ -212,8 +212,8 @@ public class SingularityClient {
   /**
    * Delete a singularity request that is active.
    * If the deletion is successful the deleted singularity request is returned.
-   * If the request to be deleted is not found {@link Absent} is returned
-   * If the singularity request to be deleted is paused the deletion will fail ({@link Absent} will be returned)
+   * If the request to be deleted is not found {code Optional.absent()} is returned
+   * If the singularity request to be deleted is paused the deletion will fail ({code Optional.absent()} will be returned)
    * If you want to delete a paused singularity request use the provided {@link SingularityClient#deletePausedSingularityRequest}
    *  
    * @param requestId
