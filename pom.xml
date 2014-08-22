@@ -26,7 +26,6 @@
     <jets3t.version>0.9.0</jets3t.version>
     <guava.version>17.0</guava.version>
     <baragon.version>0.1.0-SNAPSHOT</baragon.version> <!-- TODO: use release version of Baragon when complete -->
-    <singularity.version>0.3.8-SNAPSHOT</singularity.version>
   </properties>
 
   <groupId>com.hubspot</groupId>

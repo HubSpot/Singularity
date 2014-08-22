@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityS3Base</artifactId>
-      <version>${singularity.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
