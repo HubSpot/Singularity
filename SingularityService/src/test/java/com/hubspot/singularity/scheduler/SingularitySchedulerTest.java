@@ -56,6 +56,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
 
 public class SingularitySchedulerTest {
@@ -80,11 +81,11 @@ public class SingularitySchedulerTest {
   @Inject
   private SingularityScheduler scheduler;
   @Inject
-  private TestingLoadBalancerClient testingLoadBalancerClient;
-  @Inject
   private SingularityDeployChecker deployChecker;
   @Inject
   private RequestResource requestResource;
+  @Inject
+  private DeployResource deployResource;
   @Inject
   private SingularityCleaner cleaner;
 
@@ -339,7 +340,7 @@ public class SingularitySchedulerTest {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
-    requestResource.deploy(requestId, newDeploy, Optional.<String> absent());
+    deployResource.deploy(newDeploy, Optional.<String> absent());
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -535,7 +536,7 @@ public class SingularitySchedulerTest {
 
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
 
-    requestResource.deploy(requestId, new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    deployResource.deploy(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     deployChecker.checkDeploys();
@@ -553,7 +554,7 @@ public class SingularitySchedulerTest {
     requestResource.submit(bldr.build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.deploy(requestId, new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    deployResource.deploy(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
     deployChecker.checkDeploys();
