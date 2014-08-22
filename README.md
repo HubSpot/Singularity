@@ -1,3 +1,5 @@
+# Singularity [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
+
 * [About Singularity Documentation](#about-singularity-documentation)
 * [What is Singularity](#what-is-singularity)
 * [How it Works](#how-it-works)
