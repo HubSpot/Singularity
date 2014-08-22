@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 public class SingularityKilledTaskIdRecordTranscoder implements Transcoder<SingularityKilledTaskIdRecord> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityKilledTaskIdRecordTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -22,5 +22,5 @@ public class SingularityKilledTaskIdRecordTranscoder implements Transcoder<Singu
   public SingularityKilledTaskIdRecord transcode(byte[] data) {
     return SingularityKilledTaskIdRecord.fromBytes(data, objectMapper);
   }
-  
+
 }

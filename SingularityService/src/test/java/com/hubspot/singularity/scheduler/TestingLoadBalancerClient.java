@@ -15,19 +15,19 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 public class TestingLoadBalancerClient implements LoadBalancerClient {
 
   private BaragonRequestState requestState;
-  
+
   public TestingLoadBalancerClient() {
     requestState = BaragonRequestState.WAITING;
   }
-  
+
   public void setNextBaragonRequestState(BaragonRequestState nextState) {
     this.requestState = nextState;
   }
-  
+
   private SingularityLoadBalancerUpdate getReturnValue(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method) {
     return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.<String> absent(), System.currentTimeMillis(), method, Optional.<String> absent());
   }
-  
+
   @Override
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
     return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE);

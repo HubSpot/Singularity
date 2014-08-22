@@ -14,7 +14,7 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
   private final String requestId;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
-  
+
   public DeployHistoryHelper(String requestId, DeployManager deployManager, HistoryManager historyManager) {
     this.requestId = requestId;
     this.deployManager = deployManager;
@@ -25,16 +25,16 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
   protected List<SingularityDeployHistory> getFromZk() {
     final List<SingularityDeployKey> deployKeys = deployManager.getDeployIdsFor(requestId);
     final List<SingularityDeployHistory> histories = Lists.newArrayListWithCapacity(deployKeys.size());
-    
+
     for (SingularityDeployKey key : deployKeys) {
       Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(key.getRequestId(), key.getDeployId(), false);
       if (deployHistory.isPresent()) {
         histories.add(deployHistory.get());
       }
     }
-    
+
     Collections.sort(histories);
-    
+
     return histories;
   }
 

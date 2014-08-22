@@ -172,12 +172,12 @@ public class SingularityValidator {
   }
 
   /**
-   * 
+   *
    * Transforms unix cron into quartz compatible cron;
-   * 
+   *
    * - adds seconds if not included
    * - switches either day of month or day of week to ?
-   * 
+   *
    * Field Name   Allowed Values          Allowed Special Characters
    * Seconds      0-59                    - * /
    * Minutes      0-59                    - * /

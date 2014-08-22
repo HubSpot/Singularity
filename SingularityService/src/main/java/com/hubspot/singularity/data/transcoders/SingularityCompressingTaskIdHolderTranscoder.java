@@ -6,7 +6,7 @@ import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 public abstract class SingularityCompressingTaskIdHolderTranscoder<K extends SingularityTaskIdHolder> extends CompressingTranscoder<K> implements Function<K, SingularityTaskId> {
-  
+
   public SingularityCompressingTaskIdHolderTranscoder(SingularityConfiguration configuration) {
     super(configuration);
   }

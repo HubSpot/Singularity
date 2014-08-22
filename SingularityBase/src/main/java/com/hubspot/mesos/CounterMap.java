@@ -19,11 +19,11 @@ public class CounterMap<K> {
   public CounterMap() {
     this.map = new HashMap<K, Counter>();
   }
-  
+
   public CounterMap(int initialCapacity) {
     this.map = new HashMap<K, Counter>(initialCapacity);
   }
-  
+
   public Map<K, Long> toCountMap() {
     Map<K, Long> result = Maps.newHashMapWithExpectedSize(map.size());
 

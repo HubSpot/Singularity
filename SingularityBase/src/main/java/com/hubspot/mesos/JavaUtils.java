@@ -27,10 +27,10 @@ import com.google.common.collect.Lists;
 public class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
-  
+
   public static final String CHARSET_UTF8_STRING = "UTF-8";
   public static final Charset CHARSET_UTF8 = Charset.forName(CHARSET_UTF8_STRING);
-  
+
   public static byte[] toBytes(String string) {
     try {
       return string.getBytes(CHARSET_UTF8_STRING);
@@ -67,9 +67,9 @@ public class JavaUtils {
     final String[] splits = string.split("\\" + separator);
 
     Preconditions.checkState(splits.length >= numItems, "There must be at least %s instances of %s (there were %s)", numItems - 1, separator, splits.length - 1);
-    
+
     final String[] reverseSplit = new String[numItems];
-    
+
     for (int i = 1; i < numItems; i++) {
       reverseSplit[numItems - i] = splits[splits.length - i];
     }
@@ -132,7 +132,7 @@ public class JavaUtils {
   public static String durationFromMillis(final long millis) {
     return DurationFormatUtils.formatDuration(millis, DURATION_FORMAT);
   }
-  
+
   public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {
     Thread t = new Thread("ExecutorServiceTerminationWaiter-" + threadNameSuffix) {
       public void run() {
@@ -144,12 +144,12 @@ public class JavaUtils {
         }
       }
     };
-    
+
     t.start();
-    
+
     return t;
   }
-  
+
   public static Iterable<Path> iterable(final Path directory) {
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory);) {
       Iterator<Path> iterator = dirStream.iterator();
@@ -161,12 +161,12 @@ public class JavaUtils {
 
   public static Path getValidDirectory(String directoryPath, String name) {
     Preconditions.checkState(!directoryPath.isEmpty(), "Path for %s can't be empty", name);
-    
+
     Path path = Paths.get(directoryPath);
-    
+
     Preconditions.checkState(Files.isDirectory(path), "Path %s for %s wasn't a directory", path, name);
-    
+
     return path;
   }
-  
+
 }

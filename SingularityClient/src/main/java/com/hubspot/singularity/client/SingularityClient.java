@@ -30,7 +30,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
 public class SingularityClient {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
@@ -43,14 +43,14 @@ public class SingularityClient {
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
-  
+
   private static final String REQUESTS_FORMAT = "http://%s/%s/requests";
   private static final String REQUESTS_GET_ACTIVE_FORMAT = REQUESTS_FORMAT + "/active";
   private static final String REQUESTS_GET_PAUSED_FORMAT = REQUESTS_FORMAT + "/paused";
   private static final String REQUESTS_GET_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/cooldown";
   private static final String REQUESTS_GET_PENDING_FORMAT = REQUESTS_FORMAT + "/queued/pending";
   private static final String REQUESTS_GET_CLEANUP_FORMAT = REQUESTS_FORMAT + "/queued/cleanup";
-  
+
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
@@ -59,9 +59,9 @@ public class SingularityClient {
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
   private static final String REQUEST_CREATE_DEPLOY_FORMAT = REQUESTS_FORMAT + "/request/%s/deploy";
   private static final String REQUEST_DELETE_DEPLOY_FORMAT = REQUESTS_FORMAT + "/request/%s/deploy/%s";
-  
+
   private static final String QUERY_PARAM_USER_FORMAT = "%s?user=%s";
-  
+
   private static final String CONTENT_TYPE_JSON = "application/json";
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
@@ -70,20 +70,20 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
-  
+
   private final Random random;
   private final String[] hosts;
   private final String contextPath;
 
   private final ObjectMapper objectMapper;
   private final AsyncHttpClient httpClient;
-  
+
   @Inject
   public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.contextPath = contextPath;
-    
+
     this.hosts = hosts.split(",");
     this.random = new Random();
   }
@@ -91,37 +91,37 @@ public class SingularityClient {
   private String getHost() {
     return hosts[random.nextInt(hosts.length)];
   }
-  
+
   private void checkResponse(String type, Response response) {
     if (!isSuccess(response)) {
       throw fail(type, response);
     }
   }
-  
+
   private SingularityClientException fail(String type, Response response) {
     String body = "";
-    
+
     try {
       body = response.getResponseBody();
     } catch (IOException ioe) {
       LOG.warn("Unable to read body", ioe);
     }
-    
+
     String uri = "";
-    
+
     try {
       uri = response.getUri().toString();
     } catch (MalformedURLException wtf) {
       LOG.warn("Unable to read uri", wtf);
     }
-    
+
     throw new SingularityClientException(String.format("Failed '%s' action on Singularity (%s) - code: %s, %s", type, uri, response.getStatusCode(), body), response.getStatusCode());
   }
-  
+
   private boolean isSuccess(Response response) {
     return response.getStatusCode() >= 200 && response.getStatusCode() < 300;
   }
-  
+
   private Response deleteUri(String requestUri) {
     try {
       return httpClient.prepareDelete(requestUri).execute().get();
@@ -156,12 +156,12 @@ public class SingularityClient {
       throw new SingularityClientException("POST request to Singularity failed due to exception", e);
     }
   }
-  
+
   private String finishUri(String uri, Optional<String> user) {
     if (!user.isPresent()) {
       return uri;
     }
-    
+
     return String.format(QUERY_PARAM_USER_FORMAT, uri, user.get());
   }
 
@@ -178,7 +178,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     Response getResponse = getUri(singularityApiRequestUri);
-    
+
     if (isSuccess(getResponse)) {
       LOG.info(String.format("Successfully got Singularity Request with id: '%s', in %sms", requestId, System.currentTimeMillis() - start));
       try {
@@ -193,51 +193,51 @@ public class SingularityClient {
     }
 
   }
-  
+
   public void createOrUpdateSingularityRequest(SingularityRequest request, Optional<String> user) {
     checkNotNull(request.getId(), "A posted Singularity Request should have an id");
     final String singularityApiRequestsUri = finishUri(String.format(REQUEST_CREATE_OR_UPDATE_FORMAT, getHost(), contextPath), user);
-    
+
     LOG.info(String.format("Posting new or updating request with id: %s", request.getId()));
-    
+
     final long start = System.currentTimeMillis();
-    
+
     Response postResponse = postUri(singularityApiRequestsUri, request);
 
     checkResponse("create or update a SingularityRequest instance", postResponse);
-    
+
     LOG.info(String.format("Successfully posted Singularity Request with id: '%s', in %sms", request.getId(), System.currentTimeMillis() - start));
   }
-  
+
   /**
    * Delete a singularity request that is active.
    * If the deletion is successful the deleted singularity request is returned.
    * If the request to be deleted is not found {@link Absent} is returned
    * If the singularity request to be deleted is paused the deletion will fail ({@link Absent} will be returned)
    * If you want to delete a paused singularity request use the provided {@link SingularityClient#deletePausedSingularityRequest}
-   *  
+   *
    * @param requestId
    *      the id of the singularity request to delete
    * @param user
    *      the ...
    * @return
-   *      the singularity request that was deleted 
+   *      the singularity request that was deleted
    */
   public Optional<SingularityRequest> deleteActiveSingularityRequest(String requestId, Optional<String> user) {
     final String requestUri = finishUri(String.format(REQUEST_DELETE_ACTIVE_FORMAT, getHost(), contextPath, requestId), user);
 
     LOG.info(String.format("Deleting active singularity request with id: '%s' - (DELETE %s)", requestId, requestUri));
-  
+
     final long start = System.currentTimeMillis();
-    
+
     Response deleteResponse = deleteUri(requestUri);
 
     if (deleteResponse.getStatusCode() == 404) {
       return Optional.absent();
     }
-    
+
     checkResponse("delete active singularity request", deleteResponse);
-    
+
     LOG.info(String.format("Successfully deleted active singularity request with id: '%s' from Singularity in %sms", requestId, System.currentTimeMillis() - start));
 
     try {
@@ -246,7 +246,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * use instead {@link SingularityClient#deleteActiveSingularityRequest(String, Optional)}
    */
@@ -254,7 +254,7 @@ public class SingularityClient {
   public Optional<SingularityRequest> removeActiveRequest(String id, Optional<String> user) {
     return deleteActiveSingularityRequest(id, user);
   }
-  
+
   public Optional<SingularityRequest> deletePausedSingularityRequest(String requestId, Optional<String> user) {
     final String requestUri = finishUri(String.format(REQUEST_DELETE_PAUSED_FORMAT, getHost(), contextPath, requestId), user);
 
@@ -278,7 +278,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * use instead {@link SingularityClient#deletePausedSingularityRequest(String, Optional)}
    */
@@ -286,7 +286,7 @@ public class SingularityClient {
   public Optional<SingularityRequest> removePausedRequest(String id, Optional<String> user) {
     return deletePausedSingularityRequest(id, user);
   }
-  
+
   public void pauseSingularityRequest(String requestId, Optional<String> user) {
     final String requestUri = finishUri(String.format(REQUEST_PAUSE_FORMAT, getHost(), contextPath, requestId), user);
 
@@ -300,7 +300,7 @@ public class SingularityClient {
 
     LOG.info(String.format("Successfully paused singularity request with id: '%s' in %sms", requestId, System.currentTimeMillis() - start));
   }
-  
+
   /**
    * use instead {@link SingularityClient#pauseSingularityRequest(String, Optional)}
    */
@@ -308,7 +308,7 @@ public class SingularityClient {
   public void pauseRequest(String id, Optional<String> user) {
     pauseSingularityRequest(id, user);
   }
-  
+
   public void bounceSingularityRequest(String requestId) {
     final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
 
@@ -322,7 +322,7 @@ public class SingularityClient {
 
     LOG.info(String.format("Successfully bounced singularity request with id: '%s' in %sms", requestId, System.currentTimeMillis() - start));
   }
-  
+
   /**
    * use instead {@link SingularityClient#bounceSingularityRequest(String)}
    */
@@ -330,11 +330,11 @@ public class SingularityClient {
   public void bounce(String requestId) {
     bounceSingularityRequest(requestId);
   }
-  
+
   //
   // ACTIONS ON A DEPLOY FOR A SINGULARITY REQUEST
   //
-  
+
   public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<String> user) {
     final String requestUri = finishUri(String.format(REQUEST_CREATE_DEPLOY_FORMAT, getHost(), contextPath, requestId), user);
 
@@ -347,21 +347,21 @@ public class SingularityClient {
     checkResponse("create deploy for singularity request", response);
 
     LOG.info(String.format("Successfully created new deploy for singularity request with id: '%s', in %sms", requestId, System.currentTimeMillis() - start));
-    
+
     try {
       SingularityRequestParent singularityRequestParent = objectMapper.readValue(response.getResponseBodyAsStream(), SingularityRequestParent.class);
-      
+
       String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent())? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy yet";
       String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent())? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy (deploys for Scheduled requests become instantly active)";
-      LOG.info(String.format("The status for the new deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'", 
+      LOG.info(String.format("The status for the new deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'",
           requestId, pendingDeployId, activeDeployId));
-      
+
       return singularityRequestParent;
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public SingularityRequestParent cancelPendingDeployForSingularityRequest(String requestId, String deployId, Optional<String> user) {
     final String requestUri = finishUri(String.format(REQUEST_DELETE_DEPLOY_FORMAT, getHost(), contextPath, requestId, deployId), user);
 
@@ -374,37 +374,37 @@ public class SingularityClient {
     checkResponse("cancel pending deploy", response);
 
     LOG.info(String.format("Successfully canceled pending deploy with id: '%s' for singularity request with id: '%s', in %sms", deployId, requestId, System.currentTimeMillis() - start));
-    
+
     try {
       SingularityRequestParent singularityRequestParent = objectMapper.readValue(response.getResponseBodyAsStream(), SingularityRequestParent.class);
-      
+
       String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent())? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy";
       String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent())? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy";
-      LOG.info(String.format("The status for the canceled deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'", 
+      LOG.info(String.format("The status for the canceled deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'",
           requestId, pendingDeployId, activeDeployId));
-      
+
       return singularityRequestParent;
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * Get all singularity requests that their state is either ACTIVE, PAUSED or COOLDOWN
-   * 
+   *
    * For the requests that are pending to become ACTIVE use:
    *    {@link SingularityClient#getPendingSingularityRequests()}
-   * 
+   *
    * For the requests that are cleaning up use:
    *    {@link SingularityClient#getCleanupSingularityRequests()}
-   *     
-   * 
-   * Use {@link SingularityClient#getActiveSingularityRequests()}, {@link SingularityClient#getPausedSingularityRequests()}, 
-   * {@link SingularityClient#getCoolDownSingularityRequests()} respectively to get only the ACTIVE, PAUSED or COOLDOWN requests. 
-   * 
+   *
+   *
+   * Use {@link SingularityClient#getActiveSingularityRequests()}, {@link SingularityClient#getPausedSingularityRequests()},
+   * {@link SingularityClient#getCoolDownSingularityRequests()} respectively to get only the ACTIVE, PAUSED or COOLDOWN requests.
+   *
    * @return
    *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequest} instances.
-   *    
+   *
    */
   public Collection<SingularityRequest> getSingularityRequests() {
     final String requestUri = String.format(REQUESTS_FORMAT, getHost(), contextPath);
@@ -425,10 +425,10 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * Get all requests that their state is ACTIVE
-   * 
+   *
    * @return
    *    All ACTIVE {@link SingularityRequest} instances
    */
@@ -451,7 +451,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * use instead {@link SingularityClient#getActiveSingularityRequests()}
    */
@@ -461,11 +461,11 @@ public class SingularityClient {
   }
 
   /**
-   * Get all requests that their state is PAUSED 
+   * Get all requests that their state is PAUSED
    * ACTIVE requests are paused by users, which is equivalent to stop their tasks from running without undeploying them
-   * 
+   *
    * @return
-   *    All PAUSED {@link SingularityRequest} instances 
+   *    All PAUSED {@link SingularityRequest} instances
    */
   public Collection<SingularityRequest> getPausedSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getHost(), contextPath);
@@ -486,7 +486,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * use instead {@link SingularityClient#getPausedSingularityRequests()}
    */
@@ -494,10 +494,10 @@ public class SingularityClient {
   public Collection<SingularityRequest> getPausedRequests() {
     return getPausedSingularityRequests();
   }
-  
+
   /**
    * Get all requests that has been set to a COOLDOWN state by singularity
-   *  
+   *
    * @return
    *    All {@link SingularityRequest} instances that their state is COOLDOWN
    */
@@ -520,10 +520,10 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * Get all requests that are pending to become ACTIVE
-   *  
+   *
    * @return
    *    A collection of {@link SingularityPendingRequest} instances that hold information about the singularity requests that are pending to become ACTIVE
    */
@@ -546,14 +546,14 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /**
    * Get all requests that are cleaning up
-   * Requests that are cleaning up are those that have been marked for removal and their tasks are being stopped/removed 
-   * before they are being removed. So after their have been cleaned up, these request cease to exist in Singularity. 
-   *  
+   * Requests that are cleaning up are those that have been marked for removal and their tasks are being stopped/removed
+   * before they are being removed. So after their have been cleaned up, these request cease to exist in Singularity.
+   *
    * @return
-   *    A collection of {@link SingularityRequestCleanup} instances that hold information about all singularity requests 
+   *    A collection of {@link SingularityRequestCleanup} instances that hold information about all singularity requests
    *    that are marked for deletion and are currently cleaning up.
    */
   public Collection<SingularityRequestCleanup> getCleanupSingularityRequests() {
@@ -575,11 +575,11 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   //
   // SINGULARITY TASK COLLECTIONS
   //
-  
+
   //
   // ACTIVE TASKS
   //
@@ -606,15 +606,15 @@ public class SingularityClient {
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId) {
     final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getHost(), contextPath, taskId);
-    
+
     LOG.info(String.format("Killing task %s - (%s)", taskId, requestUri));
 
     final long start = System.currentTimeMillis();
-    
+
     Response response = deleteUri(requestUri);
 
     LOG.info(String.format("Killed task (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
-    
+
     if (!isSuccess(response)) {
       try {
         LOG.warn(String.format("Failed to kill task - (%s)", response.getResponseBody()));
@@ -623,14 +623,14 @@ public class SingularityClient {
       }
       return Optional.absent();
     }
-    
+
     try {
       return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), SingularityTaskCleanupResult.class));
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
-  
+
   //
   // SCHEDULED TASKS
   //
@@ -700,7 +700,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId) {
     final String requestUri = String.format(REQUEST_INACTIVE_TASKS_HISTORY_FORMAT, getHost(), contextPath, requestId);
 
@@ -720,7 +720,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public Optional<SingularityDeployHistory> getHistoryForRequestDeploy(String requestId, String deployId) {
     final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getHost(), contextPath, requestId, deployId);
 
@@ -729,7 +729,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     Response getResponse = getUri(requestUri);
-    
+
     if (isSuccess(getResponse)) {
       LOG.info(String.format("Got deploy history from Singularity in %sms", System.currentTimeMillis() - start));
 

@@ -15,7 +15,7 @@ public class SingularityOOMKillerMetrics {
   private final Meter singularityFailuresMeter;
   private final Meter unknownExecutorsMeter;
   private final Meter singularityAlreadyKillingMeter;
-  
+
   @Inject
   public SingularityOOMKillerMetrics(MetricRegistry registry) {
     this.registry = registry;
@@ -26,19 +26,19 @@ public class SingularityOOMKillerMetrics {
     this.singularityFailuresMeter = registry.meter(name("oomKiller", "singularityFailures"));
     this.singularityAlreadyKillingMeter = registry.meter(name("oomKiller", "singularityAlreadyKilling"));
     this.unknownExecutorsMeter = registry.meter(name("oomKiller", "unknownExecutors"));
-  
+
     startJmxReporter();
   }
-  
+
   private String name(String... names) {
     return MetricRegistry.name(SingularityOOMKillerMetrics.class, names);
   }
-  
+
   private void startJmxReporter() {
     JmxReporter reporter = JmxReporter.forRegistry(registry).build();
     reporter.start();
   }
-  
+
   public Meter getEligibleForKillMeter() {
     return eligibleForKillMeter;
   }
@@ -62,5 +62,5 @@ public class SingularityOOMKillerMetrics {
   public Meter getUnknownExecutorsMeter() {
     return unknownExecutorsMeter;
   }
-  
+
 }

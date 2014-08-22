@@ -60,7 +60,7 @@ public class SMTPLoggingConfiguration {
   public Optional<String> getLocalhost() {
     return Optional.fromNullable(localhost);
   }
-  
+
   public String getSubject() {
     return subject;
   }

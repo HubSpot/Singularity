@@ -18,17 +18,17 @@ import com.hubspot.singularity.data.StateManager;
 public class StateResource {
 
   private final StateManager stateManager;
-  
+
   @Inject
   public StateResource(StateManager stateManager) {
     this.stateManager = stateManager;
   }
-  
+
   @GET
   public SingularityState getState(@QueryParam("skipCache") boolean skipCache, @QueryParam("includeRequestIds") boolean includeRequestIds) {
     return stateManager.getState(skipCache, includeRequestIds);
   }
-  
+
   @GET
   @Path("/requests/under-provisioned")
   public List<String> getUnderProvisionedTaskIds(@QueryParam("skipCache") boolean skipCache) {
@@ -40,5 +40,5 @@ public class StateResource {
   public List<String> getOverProvisionedTaskIds(@QueryParam("skipCache") boolean skipCache) {
     return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
   }
-  
+
 }

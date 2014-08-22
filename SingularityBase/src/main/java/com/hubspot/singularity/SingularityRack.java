@@ -20,10 +20,10 @@ public class SingularityRack extends SingularityMachineAbstraction {
   public SingularityRack(String rackId) {
     super(rackId);
   }
-  
+
   @JsonCreator
   public SingularityRack(@JsonProperty("rackId") String rackId, @JsonProperty("state") SingularityMachineState state,
-      @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("decomissioningBy") Optional<String> decomissioningBy, @JsonProperty("decomissioningAt") Optional<Long> decomissioningAt, 
+      @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("decomissioningBy") Optional<String> decomissioningBy, @JsonProperty("decomissioningAt") Optional<Long> decomissioningAt,
       @JsonProperty("decomissionedAt") Optional<Long> decomissionedAt, @JsonProperty("deadAt") Optional<Long> deadAt) {
     super(rackId, state, firstSeenAt, decomissioningBy, decomissioningAt, decomissionedAt, deadAt);
   }
@@ -33,5 +33,5 @@ public class SingularityRack extends SingularityMachineAbstraction {
     return "SingularityRack [getDecomissioningBy()=" + getDecomissioningBy() + ", getDecomissioningAt()=" + getDecomissioningAt() + ", getId()=" + getId() + ", getDeadAt()=" + getDeadAt() + ", getDecomissionedAt()=" + getDecomissionedAt()
         + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getState()=" + getState() + "]";
   }
-  
+
 }

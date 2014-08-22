@@ -15,10 +15,10 @@ public class SingularityHostState extends SingularityJsonObject {
   private final String driverStatus;
 
   private final Optional<Long> millisSinceLastOffer;
-  
+
   private final String hostAddress;
   private final String hostname;
-  
+
   private final String mesosMaster;
 
   public static SingularityHostState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
@@ -28,7 +28,7 @@ public class SingularityHostState extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityHostState(@JsonProperty("master") boolean master, @JsonProperty("uptime") long uptime, @JsonProperty("driverStatus") String driverStatus, @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer, @JsonProperty("hostAddress") String hostAddress, @JsonProperty("hostname") String hostname, @JsonProperty("mesosMaster") String mesosMaster) {
     this.master = master;
@@ -63,7 +63,7 @@ public class SingularityHostState extends SingularityJsonObject {
   public String getHostname() {
     return hostname;
   }
-  
+
   public String getMesosMaster() {
     return mesosMaster;
   }

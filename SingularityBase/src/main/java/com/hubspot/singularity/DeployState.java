@@ -12,7 +12,7 @@ public enum DeployState {
     this.cleanupType = cleanupType;
     this.isDeployFinished = cleanupType != null;
   }
-  
+
   public boolean isDeployFinished() {
     return isDeployFinished;
   }
@@ -20,5 +20,5 @@ public enum DeployState {
   public TaskCleanupType getCleanupType() {
     return cleanupType;
   }
-  
+
 }

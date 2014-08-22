@@ -17,7 +17,7 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
   private final Optional<String> uri;
   private final LoadBalancerMethod method;
   private final LoadBalancerRequestId loadBalancerRequestId;
-  
+
   public static SingularityLoadBalancerUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityLoadBalancerUpdate.class);
@@ -25,11 +25,11 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
-  public enum LoadBalancerMethod { 
+
+  public enum LoadBalancerMethod {
     PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL;
   }
-  
+
   @JsonCreator
   public SingularityLoadBalancerUpdate(@JsonProperty("state") BaragonRequestState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId, @JsonProperty("message") Optional<String> message,
       @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") Optional<String> uri) {
@@ -69,5 +69,5 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
   public String toString() {
     return "SingularityLoadBalancerUpdate [loadBalancerState=" + loadBalancerState + ", message=" + message + ", timestamp=" + timestamp + ", uri=" + uri + ", method=" + method + ", loadBalancerRequestId=" + loadBalancerRequestId + "]";
   }
-  
+
 }

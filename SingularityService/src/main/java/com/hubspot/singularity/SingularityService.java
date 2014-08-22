@@ -40,7 +40,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         return configuration.getDataSourceFactory();
       }
     });
-    
+
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
     bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_NULL);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

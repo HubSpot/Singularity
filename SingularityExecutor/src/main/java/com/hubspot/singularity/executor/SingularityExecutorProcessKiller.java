@@ -18,17 +18,17 @@ public class SingularityExecutorProcessKiller {
   @Inject
   public SingularityExecutorProcessKiller(SingularityExecutorConfiguration configuration) {
     this.configuration = configuration;
-    
+
     this.scheduledExecutorService = Executors.newScheduledThreadPool(configuration.getKillThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorKillThread-%d").build());
   }
-  
+
   public void submitKillRequest(final SingularityExecutorTaskProcessCallable processCallable) {
     // make it so that the task can not make progress
     processCallable.markKilled();
     processCallable.signalProcessIfActive();
-    
+
     scheduledExecutorService.schedule(new Runnable() {
-      
+
       @Override
       public void run() {
         processCallable.getTask().markDestroyed();
@@ -36,9 +36,9 @@ public class SingularityExecutorProcessKiller {
       }
     }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS);
   }
-  
+
   public ExecutorService getExecutorService() {
     return scheduledExecutorService;
   }
-  
+
 }

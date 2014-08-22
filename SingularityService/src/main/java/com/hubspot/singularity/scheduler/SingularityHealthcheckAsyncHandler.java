@@ -25,7 +25,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final TaskManager taskManager;
   private final SingularityAbort abort;
   private final int maxHealthcheckResponseBodyBytes;
-  
+
   public SingularityHealthcheckAsyncHandler(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
     this.exceptionNotifier = exceptionNotifier;
     this.taskManager = taskManager;
@@ -34,39 +34,39 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     this.abort = abort;
     this.task = task;
     this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
-    
+
     startTime = System.currentTimeMillis();
   }
-  
+
   @Override
   public Response onCompleted(Response response) throws Exception {
     Optional<String> responseBody = Optional.absent();
-    
+
     if (response.hasResponseBody()) {
       responseBody = Optional.of(response.getResponseBodyExcerpt(maxHealthcheckResponseBodyBytes));
     }
-    
+
     saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent());
-    
+
     return response;
   }
 
   @Override
   public void onThrowable(Throwable t) {
     LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
-  
+
     saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())));
   }
-  
+
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage) {
-    SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody, 
+    SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,
         errorMessage, task.getTaskId());
-  
+
     LOG.trace("Saving healthcheck result {}", result);
- 
+
     try {
       taskManager.saveHealthcheckResult(result);
-      
+
       if (result.isFailed()) {
         healthchecker.reEnqueueHealthcheck(task);
       } else {

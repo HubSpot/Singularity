@@ -6,11 +6,11 @@ public enum ExtendedTaskState {
 
   TASK_STAGING("staging", false, false), TASK_STARTING("starting", false, false), TASK_RUNNING("running", false, false), TASK_CLEANING("cleaning", false, false),
   TASK_FINISHED("finished", true, false), TASK_FAILED("failed", true, true), TASK_KILLED("killed", true, false), TASK_LOST("lost", true, false), TASK_LOST_WHILE_DOWN("lost while down", true, false);
-  
+
   private final String displayName;
   private final boolean isDone;
   private final boolean isFailed;
-  
+
   private ExtendedTaskState(String displayName, boolean isDone, boolean isFailed) {
     this.displayName = displayName;
     this.isDone = isDone;
@@ -20,19 +20,19 @@ public enum ExtendedTaskState {
   public String getDisplayName() {
     return displayName;
   }
-  
+
   public boolean isDone() {
     return isDone;
   }
-  
+
   public boolean isFailed() {
     return isFailed;
   }
-  
+
   public boolean isSuccess() {
     return this == TASK_FINISHED;
   }
-  
+
   public static ExtendedTaskState fromTaskState(TaskState taskState) {
     switch (taskState) {
     case TASK_FAILED:
@@ -53,5 +53,5 @@ public enum ExtendedTaskState {
       throw new IllegalStateException(String.format("TaskState: %s not found", taskState));
     }
   }
-  
+
 }

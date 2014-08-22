@@ -28,7 +28,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("mesosTask") TaskInfo task) {
     super(taskId);
@@ -49,7 +49,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
   public TaskInfo getMesosTask() {
     return mesosTask;
   }
-  
+
   @JsonIgnore
   public Optional<Long> getFirstPort() {
     for (Resource resource : mesosTask.getResourcesList()) {
@@ -59,13 +59,13 @@ public class SingularityTask extends SingularityTaskIdHolder {
         }
       }
     }
-    
+
     return Optional.absent();
   }
-  
+
   @Override
   public String toString() {
     return "SingularityTask [taskRequest=" + taskRequest + ", taskId=" + taskId + ", offer=" + offer + ", task=" + mesosTask + "]";
   }
-  
+
 }

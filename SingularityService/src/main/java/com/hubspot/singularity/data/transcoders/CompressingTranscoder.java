@@ -14,7 +14,7 @@ public abstract class CompressingTranscoder<T> implements Transcoder<T> {
   public CompressingTranscoder(SingularityConfiguration configuration) {
     this.configuration = configuration;
   }
-  
+
   private byte[] getMaybeCompressedBytes(byte[] bytes) {
     if (configuration.isCompressLargeDataObjects()) {
       return Snappy.compress(bytes);
@@ -24,7 +24,7 @@ public abstract class CompressingTranscoder<T> implements Transcoder<T> {
 
   protected abstract T actualTranscode(byte[] data);
   protected abstract byte[] actualToBytes(T object);
-  
+
   @Override
   public T transcode(byte[] data) throws SingularityJsonException {
     return actualTranscode(getMaybeUncompressedBytes(data));
@@ -41,5 +41,5 @@ public abstract class CompressingTranscoder<T> implements Transcoder<T> {
     }
     return bytes;
   }
-  
+
 }

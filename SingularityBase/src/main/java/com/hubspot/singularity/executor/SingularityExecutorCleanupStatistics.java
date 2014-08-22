@@ -12,16 +12,16 @@ public class SingularityExecutorCleanupStatistics {
   private final int mesosRunningTasks;
   private final int successfullyCleanedTasks;
   private final int errorTasks;
-  private final int invalidTasks; 
-  
+  private final int invalidTasks;
+
   @JsonCreator
   public SingularityExecutorCleanupStatistics(
-      @JsonProperty("totalTaskFiles") int totalTaskFiles, 
-      @JsonProperty("mesosRunningTasks") int mesosRunningTasks, 
-      @JsonProperty("runningTasksIgnored") int runningTasksIgnored, 
-      @JsonProperty("successfullyCleanedTasks") int successfullyCleanedTasks, 
-      @JsonProperty("ioErrorTasks") int ioErrorTasks, 
-      @JsonProperty("errorTasks") int errorTasks, 
+      @JsonProperty("totalTaskFiles") int totalTaskFiles,
+      @JsonProperty("mesosRunningTasks") int mesosRunningTasks,
+      @JsonProperty("runningTasksIgnored") int runningTasksIgnored,
+      @JsonProperty("successfullyCleanedTasks") int successfullyCleanedTasks,
+      @JsonProperty("ioErrorTasks") int ioErrorTasks,
+      @JsonProperty("errorTasks") int errorTasks,
       @JsonProperty("invalidTasks") int invalidTasks
     ) {
     this.totalTaskFiles = totalTaskFiles;
@@ -32,7 +32,7 @@ public class SingularityExecutorCleanupStatistics {
     this.errorTasks = errorTasks;
     this.invalidTasks = invalidTasks;
   }
-  
+
   public int getRunningTasksIgnored() {
     return runningTasksIgnored;
   }
@@ -69,47 +69,47 @@ public class SingularityExecutorCleanupStatistics {
   }
 
   public static class SingularityExecutorCleanupStatisticsBuilder {
-    
+
     private int totalTaskFiles;
     private int runningTasksIgnored;
     private int mesosRunningTasks;
     private int successfullyCleanedTasks;
     private int ioErrorTasks;
     private int errorTasks;
-    private int invalidTasks; 
-    
+    private int invalidTasks;
+
     public void incrTotalTaskFiles() {
       totalTaskFiles++;
     }
-    
+
     public void incrRunningTasksIgnored() {
       runningTasksIgnored++;
     }
-    
+
     public void incrIoErrorTasks() {
       ioErrorTasks++;
     }
-    
+
     public void setMesosRunningTasks(int mesosRunningTasks) {
       this.mesosRunningTasks = mesosRunningTasks;
     }
-    
+
     public void incrErrorTasks() {
       errorTasks++;
     }
-    
+
     public void incrSuccessfullyCleanedTasks() {
       successfullyCleanedTasks++;
     }
-    
+
     public void incrInvalidTasks() {
       invalidTasks++;
     }
-      
+
     public SingularityExecutorCleanupStatistics build() {
       return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, runningTasksIgnored, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks);
     }
-    
+
   }
-  
+
 }

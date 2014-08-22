@@ -10,10 +10,10 @@ import com.google.common.base.Optional;
 public class SingularityRequestDeployState extends SingularityJsonObject {
 
   private final String requestId;
-  
+
   private final Optional<SingularityDeployMarker> activeDeploy;
   private final Optional<SingularityDeployMarker> pendingDeploy;
-  
+
   public static SingularityRequestDeployState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityRequestDeployState.class);
@@ -21,7 +21,7 @@ public class SingularityRequestDeployState extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityRequestDeployState(@JsonProperty("requestId") String requestId, @JsonProperty("activeDeploy") Optional<SingularityDeployMarker> activeDeploy, @JsonProperty("pendingDeploy") Optional<SingularityDeployMarker> pendingDeploy) {
     this.requestId = requestId;
@@ -36,7 +36,7 @@ public class SingularityRequestDeployState extends SingularityJsonObject {
   public Optional<SingularityDeployMarker> getActiveDeploy() {
     return activeDeploy;
   }
-  
+
   public Optional<SingularityDeployMarker> getPendingDeploy() {
     return pendingDeploy;
   }
@@ -45,5 +45,5 @@ public class SingularityRequestDeployState extends SingularityJsonObject {
   public String toString() {
     return "SingularityRequestDeployState [requestId=" + requestId + ", activeDeploy=" + activeDeploy + ", pendingDeploy=" + pendingDeploy + "]";
   }
-  
+
 }

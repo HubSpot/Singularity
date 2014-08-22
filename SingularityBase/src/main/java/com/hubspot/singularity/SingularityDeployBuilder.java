@@ -21,19 +21,19 @@ public class SingularityDeployBuilder {
   private Optional<String> customExecutorId;
   private Optional<String> customExecutorSource;
   private Optional<Resources> resources;
- 
+
   private Optional<String> command;
   private Optional<Map<String, String>> env;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
- 
+
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
   private Optional<Long> healthcheckTimeoutSeconds;
   private Optional<Boolean> skipHealthchecksOnDeploy;
-  
+
   private Optional<Long> deployHealthTimeoutSeconds;
-  
+
   private Optional<Long> considerHealthyAfterRunningForSeconds;
 
   private Optional<String> serviceBasePath;
@@ -64,7 +64,7 @@ public class SingularityDeployBuilder {
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
   }
-  
+
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, customExecutorCmd, customExecutorId, customExecutorSource, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
         healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
@@ -77,7 +77,7 @@ public class SingularityDeployBuilder {
   public String getId() {
     return id;
   }
-  
+
   public SingularityDeployBuilder setId(String id) {
     this.id = id;
     return this;
@@ -118,7 +118,7 @@ public class SingularityDeployBuilder {
     this.metadata = metadata;
     return this;
   }
-    
+
   public Optional<String> getCustomExecutorCmd() {
     return customExecutorCmd;
   }

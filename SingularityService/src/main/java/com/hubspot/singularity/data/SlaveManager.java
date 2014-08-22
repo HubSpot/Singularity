@@ -11,15 +11,15 @@ import com.hubspot.singularity.data.transcoders.SingularitySlaveTranscoder;
 public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
 
   private static final String SLAVE_ROOT = "slaves";
-  
+
   @Inject
   public SlaveManager(CuratorFramework curator, ObjectMapper objectMapper, SingularityConfiguration configuration, SingularitySlaveTranscoder slaveTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout(), objectMapper, slaveTranscoder);
   }
-  
+
   @Override
   public String getRoot() {
     return SLAVE_ROOT;
   }
-  
+
 }

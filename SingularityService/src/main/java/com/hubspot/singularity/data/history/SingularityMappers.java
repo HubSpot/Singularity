@@ -39,7 +39,7 @@ public class SingularityMappers {
     }
 
   }
-  
+
   public static class SingularityRequestHistoryMapper implements ResultSetMapper<SingularityRequestHistory> {
 
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {

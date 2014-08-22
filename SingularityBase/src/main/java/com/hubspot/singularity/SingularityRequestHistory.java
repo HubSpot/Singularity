@@ -38,7 +38,7 @@ public class SingularityRequestHistory {
   public SingularityRequest getRequest() {
     return request;
   }
-  
+
   @Override
   public String toString() {
     return "SingularityRequestHistory [createdAt=" + createdAt + ", user=" + user + ", state=" + state + ", request=" + request + "]";

@@ -32,7 +32,7 @@ public class SandboxManager {
       super(e);
     }
   }
-  
+
   public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) throws SlaveNotFoundException {
     try {
       Response response = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/browse.json", slaveHostname))

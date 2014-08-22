@@ -11,7 +11,7 @@ public class SingularityExecutorCleanupConfiguration {
   private final boolean safeModeWontRunWithNoTasks;
   private final Path executorCleanupResultsDirectory;
   private final String executorCleanupResultsSuffix;
-  
+
   @Inject
   public SingularityExecutorCleanupConfiguration(
       @Named(SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS) String safeModeWontRunWithNoTasks,

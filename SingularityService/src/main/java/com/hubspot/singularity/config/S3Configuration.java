@@ -5,31 +5,31 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 public class S3Configuration {
-  
+
   @NotNull
   private int maxS3Threads = 3;
- 
+
   @NotNull
   private int waitForS3ListSeconds = 5;
-  
+
   @NotNull
   private int waitForS3LinksSeconds = 1;
-  
+
   @NotNull
   private long expireS3LinksAfterMillis = TimeUnit.DAYS.toMillis(1);
-  
+
   @NotNull
   private String s3Bucket;
-  
+
   @NotNull
   private String s3KeyFormat;
-  
+
   @NotNull
   private String s3AccessKey;
-  
+
   @NotNull
   private String s3SecretKey;
-  
+
   public int getMaxS3Threads() {
     return maxS3Threads;
   }
@@ -93,6 +93,6 @@ public class S3Configuration {
   public void setS3SecretKey(String s3SecretKey) {
     this.s3SecretKey = s3SecretKey;
   }
- 
-  
+
+
 }

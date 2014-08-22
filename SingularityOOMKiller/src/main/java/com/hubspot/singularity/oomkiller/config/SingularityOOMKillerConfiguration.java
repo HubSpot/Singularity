@@ -10,13 +10,13 @@ public class SingularityOOMKillerConfiguration {
 
   private final long checkForOOMEveryMillis;
   private final String slaveHostname;
-  
+
   private final String cgroupProcsPathFormat;
-  
+
   @Inject
   public SingularityOOMKillerConfiguration(
-      @Named(SingularityOOMKillerConfigurationLoader.CHECK_FOR_OOM_EVERY_MILLIS) String checkForOOMEveryMillis, 
-      @Named(SingularityOOMKillerConfigurationLoader.REQUEST_KILL_THRESHOLD_RATIO) String requestKillThresholdRatio, 
+      @Named(SingularityOOMKillerConfigurationLoader.CHECK_FOR_OOM_EVERY_MILLIS) String checkForOOMEveryMillis,
+      @Named(SingularityOOMKillerConfigurationLoader.REQUEST_KILL_THRESHOLD_RATIO) String requestKillThresholdRatio,
       @Named(SingularityOOMKillerConfigurationLoader.KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO) String killProcessDirectlyThresholdRatio,
       @Named(SingularityOOMKillerConfigurationLoader.SLAVE_HOSTNAME) String slaveHostname,
       @Named(SingularityOOMKillerConfigurationLoader.CGROUP_PROCS_PATH_FORMAT) String cgroupsProcPathFormat
@@ -27,7 +27,7 @@ public class SingularityOOMKillerConfiguration {
     this.slaveHostname = slaveHostname;
     this.cgroupProcsPathFormat = cgroupsProcPathFormat;
   }
-  
+
   public String getCgroupProcsPathFormat() {
     return cgroupProcsPathFormat;
   }
@@ -35,7 +35,7 @@ public class SingularityOOMKillerConfiguration {
   public double getRequestKillThresholdRatio() {
     return requestKillThresholdRatio;
   }
-  
+
   public String getSlaveHostname() {
     return slaveHostname;
   }
@@ -53,5 +53,5 @@ public class SingularityOOMKillerConfiguration {
     return "SingularityOOMKillerConfiguration [requestKillThresholdRatio=" + requestKillThresholdRatio + ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio + ", checkForOOMEveryMillis=" + checkForOOMEveryMillis
         + ", slaveHostname=" + slaveHostname + ", cgroupProcsPathFormat=" + cgroupProcsPathFormat + "]";
   }
- 
+
 }

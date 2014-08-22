@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 public class SingularityLoadBalancerUpdateTranscoder implements Transcoder<SingularityLoadBalancerUpdate> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityLoadBalancerUpdateTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -22,5 +22,5 @@ public class SingularityLoadBalancerUpdateTranscoder implements Transcoder<Singu
   public SingularityLoadBalancerUpdate transcode(byte[] data) {
     return SingularityLoadBalancerUpdate.fromBytes(data, objectMapper);
   }
-  
+
 }

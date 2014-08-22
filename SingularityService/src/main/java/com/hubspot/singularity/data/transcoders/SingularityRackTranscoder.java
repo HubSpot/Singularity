@@ -8,7 +8,7 @@ import com.hubspot.singularity.SingularityRack;
 public class SingularityRackTranscoder implements Transcoder<SingularityRack> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityRackTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -23,5 +23,5 @@ public class SingularityRackTranscoder implements Transcoder<SingularityRack> {
   public byte[] toBytes(SingularityRack object) throws SingularityJsonException {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

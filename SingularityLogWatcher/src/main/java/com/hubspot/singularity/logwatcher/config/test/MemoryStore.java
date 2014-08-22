@@ -19,12 +19,12 @@ public class MemoryStore implements SimpleStore {
 
   private final Map<TailMetadata, Long> map;
   private final List<TailMetadata> list;
-  
+
   public MemoryStore(List<TailMetadata> list) {
     this.map = Maps.newHashMap();
     this.list = list;
   }
-  
+
   @Override
   public void close() throws IOException {}
 

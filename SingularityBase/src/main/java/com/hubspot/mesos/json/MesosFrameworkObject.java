@@ -7,16 +7,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosFrameworkObject {
-  
+
   private final String name;
   private final String id;
   private final long registeredTime;
   private final Object active;
   private final MesosResourcesObject resources;
   private final List<MesosTaskObject> tasks;
-  
+
   @JsonCreator
-  public MesosFrameworkObject(@JsonProperty("name") String name, @JsonProperty("id") String id, @JsonProperty("registered_time") long registeredTime, @JsonProperty("active") Object active, 
+  public MesosFrameworkObject(@JsonProperty("name") String name, @JsonProperty("id") String id, @JsonProperty("registered_time") long registeredTime, @JsonProperty("active") Object active,
       @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("tasks") List<MesosTaskObject> tasks) {
     this.name = name;
     this.id = id;
@@ -25,7 +25,7 @@ public class MesosFrameworkObject {
     this.tasks = tasks;
     this.active = active;
   }
-  
+
   public String getId() {
     return id;
   }
@@ -33,19 +33,19 @@ public class MesosFrameworkObject {
   public List<MesosTaskObject> getTasks() {
     return tasks;
   }
-  
+
   public MesosResourcesObject getResources() {
     return resources;
   }
-  
+
   public String getName() {
     return name;
   }
-  
+
   public long getRegisteredTime() {
     return registeredTime;
   }
-  
+
   public Object getActive() {
     return active;
   }
@@ -58,7 +58,7 @@ public class MesosFrameworkObject {
     } else {
       return Boolean.parseBoolean(active.toString());
     }
-    
+
   }
-  
+
 }

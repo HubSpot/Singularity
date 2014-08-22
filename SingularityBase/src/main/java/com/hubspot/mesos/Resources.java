@@ -19,7 +19,7 @@ public class Resources {
   public int getNumPorts() {
     return numPorts;
   }
-  
+
   public double getCpus() {
     return cpus;
   }
@@ -32,5 +32,5 @@ public class Resources {
   public String toString() {
     return "Resources [cpus=" + cpus + ", memoryMb=" + memoryMb + ", numPorts=" + numPorts + "]";
   }
-  
+
 }
