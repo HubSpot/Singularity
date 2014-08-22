@@ -13,20 +13,20 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   private final SingularityTaskId taskId;
   private final long updatedAt;
   private final Optional<ExtendedTaskState> lastTaskState;
-  
+
   public static SingularityTaskIdHistory fromTaskIdAndUpdates(SingularityTaskId taskId, List<SingularityTaskHistoryUpdate> updates) {
     ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
-    
+
     if (updates != null && !updates.isEmpty()) {
       SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }
-    
+
     return new SingularityTaskIdHistory(taskId, updatedAt, Optional.fromNullable(lastTaskState));
   }
-  
+
   @JsonCreator
   public SingularityTaskIdHistory(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("updatedAt") long updatedAt, @JsonProperty("lastStatus") Optional<ExtendedTaskState> lastTaskState) {
     this.taskId = taskId;
@@ -45,7 +45,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   public SingularityTaskId getTaskId() {
     return taskId;
   }
-  
+
   public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
@@ -58,5 +58,5 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   public String toString() {
     return "SingularityTaskIdHistory [taskId=" + taskId + ", updatedAt=" + updatedAt + ", lastTaskState=" + lastTaskState + "]";
   }
-  
+
 }

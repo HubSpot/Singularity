@@ -20,14 +20,14 @@ import com.ning.http.client.Response;
 public class MesosClient {
 
   private final static Logger LOG = LoggerFactory.getLogger(MesosClient.class);
-  
+
   private final static String MASTER_STATE_FORMAT = "http://%s/master/state.json";
   private final static String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state.json";
   private final static String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics.json";
-  
+
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public MesosClient(AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper) {
     this.asyncHttpClient = asyncHttpClient;
@@ -37,7 +37,7 @@ public class MesosClient {
   public String getMasterUri(MasterInfo masterInfo) {
     return String.format(MASTER_STATE_FORMAT, MesosUtils.getMasterHostAndPort(masterInfo));
   }
-  
+
   @SuppressWarnings("serial")
   public static class MesosClientException extends RuntimeException {
 
@@ -48,48 +48,48 @@ public class MesosClient {
     public MesosClientException(String message, Throwable cause) {
       super(message, cause);
     }
-    
+
   }
-  
+
   private Response getResponse(String uri) {
     Response response = null;
-    
+
     final long start = System.currentTimeMillis();
-    
+
     LOG.debug("Fetching {} from mesos", uri);
-    
+
     try {
       response = asyncHttpClient.prepareGet(uri).execute().get();
-    
+
       LOG.debug("Response {} - {} after {}", response.getStatusCode(), uri, JavaUtils.duration(start));
     } catch (Exception e) {
       throw new MesosClientException(String.format("Exception fetching %s after %s", uri, JavaUtils.duration(start)), e);
     }
-    
+
     if (response.getStatusCode() < 200 || response.getStatusCode() > 299) {
       throw new MesosClientException(String.format("Invalid response code from %s : %s", uri, response.getStatusCode()));
     }
-    
+
     return response;
   }
-  
+
   public MesosMasterStateObject getMasterState(String uri) {
     Response response = getResponse(uri);
-    
+
     try {
       return objectMapper.readValue(response.getResponseBodyAsStream(), MesosMasterStateObject.class);
     } catch (Exception e) {
       throw new MesosClientException("Invalid response from uri: " + uri, e);
     }
   }
-  
+
   public String getSlaveUri(String hostname) {
     return String.format(MESOS_SLAVE_JSON_URL, hostname);
   }
-  
+
   public MesosSlaveStateObject getSlaveState(String uri) {
     Response response = getResponse(uri);
-    
+
     try {
       return objectMapper.readValue(response.getResponseBodyAsStream(), MesosSlaveStateObject.class);
     } catch (Exception e) {
@@ -108,5 +108,5 @@ public class MesosClient {
       throw new MesosClientException("Invalid response from uri: " + uri, e);
     }
   }
-  
+
 }

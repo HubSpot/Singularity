@@ -36,14 +36,14 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
       }
     });
   }
-  
+
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {
     SimplifiedTaskState state = SimplifiedTaskState.UNKNOWN;
-    
+
     if (updates == null) {
       return state;
     }
-    
+
     for (SingularityTaskHistoryUpdate update : updates) {
       if (update.getTaskState().isDone()) {
         return SimplifiedTaskState.DONE;
@@ -53,10 +53,10 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
         state = SimplifiedTaskState.WAITING;
       }
     }
-    
+
     return state;
   }
-  
+
   @JsonCreator
   public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage) {
     super(taskId);
@@ -89,5 +89,5 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   public String toString() {
     return "SingularityTaskHistoryUpdate [timestamp=" + timestamp + ", taskState=" + taskState + ", statusMessage=" + statusMessage + "]";
   }
-  
+
 }

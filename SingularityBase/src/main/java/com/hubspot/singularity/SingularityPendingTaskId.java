@@ -14,7 +14,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   private final long nextRunAt;
   private final int instanceNo;
   private final PendingType pendingType;
-  
+
   public static Predicate<SingularityPendingTaskId> matchingRequestId(final String requestId) {
     return new Predicate<SingularityPendingTaskId>() {
 
@@ -22,10 +22,10 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
       public boolean apply(SingularityPendingTaskId input) {
         return input.getRequestId().equals(requestId);
       }
-      
+
     };
   }
-  
+
   public static Predicate<SingularityPendingTaskId> matchingDeployId(final String deployId) {
     return new Predicate<SingularityPendingTaskId>() {
 
@@ -33,7 +33,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
       public boolean apply(SingularityPendingTaskId input) {
         return input.getDeployId().equals(deployId);
       }
-      
+
     };
   }
 
@@ -46,7 +46,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     this.instanceNo = instanceNo;
     this.pendingType = pendingType;
   }
-  
+
   public String getDeployId() {
     return deployId;
   }
@@ -62,27 +62,27 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   public int getInstanceNo() {
     return instanceNo;
   }
-  
+
   public PendingType getPendingType() {
     return pendingType;
   }
-    
+
   public static SingularityPendingTaskId fromString(String string) {
     final String[] splits = JavaUtils.reverseSplit(string, 5, "-");
-    
+
     final String requestId = splits[0];
     final String deployId = splits[1];
     final long nextRunAt = Long.parseLong(splits[2]);
     final int instanceNo = Integer.parseInt(splits[3]);
     final PendingType pendingType = PendingType.valueOf(splits[4]);
-    
+
     return new SingularityPendingTaskId(requestId, deployId, nextRunAt, instanceNo, pendingType);
   }
- 
+
   public String toString() {
     return String.format("%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getNextRunAt(), getInstanceNo(), getPendingType());
   }
-  
+
   @Override
   public int compareTo(SingularityPendingTaskId o) {
     return ComparisonChain.start()

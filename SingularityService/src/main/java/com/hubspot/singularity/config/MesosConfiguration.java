@@ -40,7 +40,7 @@ public class MesosConfiguration {
   private int maxMemoryMbPerInstance = 24000;
   @NotNull
   private int maxMemoryMbPerRequest = 450000;
-  
+
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
   }
@@ -80,8 +80,8 @@ public class MesosConfiguration {
   public void setMaxMemoryMbPerRequest(int maxMemoryMbPerRequest) {
     this.maxMemoryMbPerRequest = maxMemoryMbPerRequest;
   }
-  
-    
+
+
   public Boolean getAllowMissingAllExistingTasksOnStartup() {
     return allowMissingAllExistingTasksOnStartup;
   }

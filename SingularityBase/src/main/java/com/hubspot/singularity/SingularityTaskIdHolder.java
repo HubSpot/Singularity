@@ -12,5 +12,5 @@ public class SingularityTaskIdHolder extends SingularityJsonObject {
   public SingularityTaskId getTaskId() {
     return taskId;
   }
-  
+
 }

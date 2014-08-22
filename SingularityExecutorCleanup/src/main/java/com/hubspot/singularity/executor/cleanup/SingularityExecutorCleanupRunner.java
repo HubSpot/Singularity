@@ -18,29 +18,29 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 
 
 public class SingularityExecutorCleanupRunner {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanupRunner.class);
 
   public static void main(String... args) {
     final long start = System.currentTimeMillis();
-    
+
     try {
       final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityExecutorConfigurationLoader(), new SingularityExecutorCleanupConfigurationLoader()), new SingularityExecutorModule());
       final SingularityExecutorCleanupRunner runner = injector.getInstance(SingularityExecutorCleanupRunner.class);
-      
+
       LOG.info("Starting cleanup");
-      
+
       final Optional<SingularityExecutorCleanupStatistics> statistics = runner.cleanup();
 
       LOG.info("Finished with {} after {}", statistics, JavaUtils.duration(start));
-      
+
       System.exit(0);
     } catch (Throwable t) {
       LOG.error("Finished after {} with error", JavaUtils.duration(start), t);
       System.exit(1);
     }
   }
-  
+
   private final SingularityExecutorCleanup cleanup;
   private final JsonObjectFileHelper fileHelper;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
@@ -51,15 +51,15 @@ public class SingularityExecutorCleanupRunner {
     this.fileHelper = fileHelper;
     this.cleanupConfiguration = cleanupConfiguration;
   }
-  
+
   public Optional<SingularityExecutorCleanupStatistics> cleanup() {
     Optional<SingularityExecutorCleanupStatistics> cleanupStatistics = cleanup.clean();
-   
+
     if (cleanupStatistics.isPresent()) {
       fileHelper.writeObject(cleanupStatistics.get(), cleanupConfiguration.getExecutorCleanupResultsDirectory().resolve(String.format("%s%s", System.currentTimeMillis(), cleanupConfiguration.getExecutorCleanupResultsSuffix())), LOG);
     }
-    
+
     return cleanupStatistics;
   }
-  
+
 }

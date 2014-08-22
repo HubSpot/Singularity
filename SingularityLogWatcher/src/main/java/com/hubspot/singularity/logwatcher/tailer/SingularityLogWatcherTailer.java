@@ -37,10 +37,10 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   private final ByteBuffer byteBuffer;
   private final LogForwarder logForwarder;
   private final SimpleStore store;
-  
+
   public SingularityLogWatcherTailer(TailMetadata tailMetadata, SingularityLogWatcherConfiguration configuration, SimpleStore simpleStore, LogForwarder logForwarder) {
     super(configuration.getPollMillis(), Paths.get(tailMetadata.getFilename()).getParent(), Collections.singletonList(StandardWatchEventKinds.ENTRY_MODIFY));
-    
+
     this.tailMetadata = tailMetadata;
     this.logfile = Paths.get(tailMetadata.getFilename());
     this.store = simpleStore;
@@ -69,7 +69,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       Optional<Long> previousPosition = store.getPosition(tailMetadata);
       if (previousPosition.isPresent()) {
         long storePosition = previousPosition.get();
-        
+
         if (storePosition < channel.size()) {
           LOG.warn("Found {} with size {} and position {}, resetting to 0", logfile, channel.size(), storePosition);
           savePosition(0);
@@ -87,7 +87,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     LOG.info("Watching file {} at position {} with a {} byte buffer", logfile, byteChannel.position(), byteBuffer.capacity());
 
     checkRead(tailMetadata.isFinished());
-    
+
     if (!tailMetadata.isFinished()) {
       super.watch();
     }
@@ -101,14 +101,14 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     }
 
     checkRead(false);
-  
+
     return true;
   }
 
   // TODO TEST hadnling resize
   private void checkRead(boolean readAllBytes) throws IOException {
     checkPosition();
-    
+
     int bytesRead = 0;
     int bytesLeft = 0;
 
@@ -121,13 +121,13 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
         updatePosition(bytesLeft);
       }
     }
-    
+
     if (readAllBytes && bytesLeft > 0) {
       String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
       logForwarder.forwardMessage(tailMetadata, string);
     }
   }
-  
+
   private void checkPosition() throws IOException {
     if (byteChannel.position() > byteChannel.size()) {
       resetPosition();
@@ -138,12 +138,12 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     byteChannel.position(0);
     savePosition(0);
   }
-  
+
   private int read() throws IOException {
     byteBuffer.clear();
     return byteChannel.read(byteBuffer);
   }
-  
+
   private void savePosition(long newPosition) {
     store.savePosition(tailMetadata, newPosition);
   }

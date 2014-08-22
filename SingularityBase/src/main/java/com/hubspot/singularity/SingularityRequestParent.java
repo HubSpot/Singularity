@@ -15,11 +15,11 @@ public class SingularityRequestParent extends SingularityJsonObject {
   private final Optional<SingularityDeploy> activeDeploy;
   private final Optional<SingularityDeploy> pendingDeploy;
   private final Optional<SingularityPendingDeploy> pendingDeployState;
-  
+
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
     this(request, state, Optional.<SingularityRequestDeployState>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityPendingDeploy>absent());
   }
-  
+
   public static SingularityRequestParent fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityRequestParent.class);
@@ -27,9 +27,9 @@ public class SingularityRequestParent extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
-  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state, @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState, 
+  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state, @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState,
       @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy, @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy, @JsonProperty("pendingDeployState") Optional<SingularityPendingDeploy> pendingDeployState) {
     this.request = request;
     this.state = state;
@@ -38,7 +38,7 @@ public class SingularityRequestParent extends SingularityJsonObject {
     this.pendingDeploy = pendingDeploy;
     this.pendingDeployState = pendingDeployState;
   }
-  
+
   public RequestState getState() {
     return state;
   }
@@ -58,7 +58,7 @@ public class SingularityRequestParent extends SingularityJsonObject {
   public Optional<SingularityDeploy> getPendingDeploy() {
     return pendingDeploy;
   }
-  
+
   public Optional<SingularityPendingDeploy> getPendingDeployState() {
     return pendingDeployState;
   }
@@ -68,5 +68,5 @@ public class SingularityRequestParent extends SingularityJsonObject {
     return "SingularityRequestParent [request=" + request + ", state=" + state + ", requestDeployState=" + requestDeployState + ", activeDeploy=" + activeDeploy + ", pendingDeploy=" + pendingDeploy + ", pendingDeployState="
         + pendingDeployState + "]";
   }
-  
+
 }

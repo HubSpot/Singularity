@@ -8,13 +8,13 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityStateTranscoder extends CompressingTranscoder<SingularityState> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityStateTranscoder(ObjectMapper objectMapper, SingularityConfiguration configuration) {
     super(configuration);
     this.objectMapper = objectMapper;
   }
-  
+
   @Override
   protected SingularityState actualTranscode(byte[] data) {
     return SingularityState.fromBytes(data, objectMapper);
@@ -25,5 +25,5 @@ public class SingularityStateTranscoder extends CompressingTranscoder<Singularit
   protected byte[] actualToBytes(SingularityState object) {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

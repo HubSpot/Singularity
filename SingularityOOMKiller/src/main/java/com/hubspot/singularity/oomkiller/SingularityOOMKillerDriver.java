@@ -24,7 +24,7 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
   private final SingularityOOMKiller oomKiller;
 
   private ScheduledFuture<?> future;
-  
+
   @Inject
   public SingularityOOMKillerDriver(SingularityOOMKillerConfiguration configuration, SingularityOOMKiller oomKiller) {
     this.configuration = configuration;
@@ -36,22 +36,22 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
   @Override
   public void startAndWait() {
     LOG.info("Starting an OOMKiller that will run every {}", JavaUtils.durationFromMillis(configuration.getCheckForOOMEveryMillis()));
-    
+
     future = this.scheduler.scheduleAtFixedRate(new Runnable() {
 
       @Override
       public void run() {
         final long start = System.currentTimeMillis();
-        
+
         try {
           oomKiller.checkForOOMS();
-          
+
         } catch (Throwable t) {
           LOG.error("Uncaught exception while checking for OOMS", t);
         } finally {
           LOG.info("Finished checking OOMS after {}", JavaUtils.duration(start));
         }
-        
+
       }
     }, configuration.getCheckForOOMEveryMillis(), configuration.getCheckForOOMEveryMillis(), TimeUnit.MILLISECONDS);
 
@@ -60,13 +60,13 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
     } catch (InterruptedException | ExecutionException e) {
       LOG.warn("Unexpected exception while waiting on future", e);
     }
-    
+
   }
-  
+
   @Override
   public void shutdown() {
     future.cancel(true);
     scheduler.shutdown();
   }
-  
+
 }

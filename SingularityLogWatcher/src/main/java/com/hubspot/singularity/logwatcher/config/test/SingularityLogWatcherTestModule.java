@@ -8,10 +8,10 @@ import com.hubspot.singularity.logwatcher.impl.FileBasedSimpleStore;
 public class SingularityLogWatcherTestModule extends AbstractModule {
 
   @Override
-  protected void configure() {    
+  protected void configure() {
     bind(SimpleStore.class).to(FileBasedSimpleStore.class);
     bind(LogForwarder.class).toInstance(new LogLogForwarder());
   }
-  
-  
+
+
 }

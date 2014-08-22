@@ -10,7 +10,7 @@ public class SingularityCGroupProcLocator {
 
   private final String procsFormat;
   private final SimpleProcessExecutor simpleProcessExecutor;
-  
+
   @Inject
   public SingularityCGroupProcLocator(SingularityOOMKillerConfiguration oomKillerConfiguration, SimpleProcessExecutor simpleProcessExecutor) {
     this.procsFormat = oomKillerConfiguration.getCgroupProcsPathFormat();
@@ -19,8 +19,8 @@ public class SingularityCGroupProcLocator {
 
   public List<String> getPids(String container) {
     String path = String.format(procsFormat, container);
-    
+
     return simpleProcessExecutor.getProcessOutput("cat", path);
   }
-  
+
 }

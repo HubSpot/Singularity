@@ -18,18 +18,18 @@ public class SingularityLogWatcherConfiguration {
   private final String storeSuffix;
   private final String fluentdTagPrefix;
   private final long retryDelaySeconds;
-  
+
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
-  
+
   @Inject
   public SingularityLogWatcherConfiguration(
-      @Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity, 
+      @Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity,
       @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
-      @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis, 
-      @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts, 
-      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory, 
-      @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix, 
+      @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis,
+      @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts,
+      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory,
+      @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix,
       @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
       @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
       @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
@@ -52,21 +52,21 @@ public class SingularityLogWatcherConfiguration {
   public String getLogMetadataSuffix() {
     return logMetadataSuffix;
   }
-  
+
   public static class FluentdHost {
-    
+
     private final String host;
     private final int port;
-    
+
     public FluentdHost(String host, int port) {
       this.host = host;
       this.port = port;
     }
-    
+
     public String getHost() {
       return host;
     }
-    
+
     public int getPort() {
       return port;
     }
@@ -75,7 +75,7 @@ public class SingularityLogWatcherConfiguration {
     public String toString() {
       return "FluentdHost [host=" + host + ", port=" + port + "]";
     }
-    
+
   }
 
   public Path getStoreDirectory() {
@@ -85,7 +85,7 @@ public class SingularityLogWatcherConfiguration {
   public String getStoreSuffix() {
     return storeSuffix;
   }
-  
+
   public long getRetryDelaySeconds() {
     return retryDelaySeconds;
   }

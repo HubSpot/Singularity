@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityLeaderController implements Managed, LeaderLatchListener {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
 
   private final LeaderLatch leaderLatch;
@@ -22,9 +22,9 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final SingularityAbort abort;
   private final SingularityStatePoller statePoller;
   private final SingularityExceptionNotifier exceptionNotifier;
-  
+
   private boolean isMaster;
-  
+
   @Inject
   public SingularityLeaderController(SingularityDriverManager driverManager, LeaderLatch leaderLatch, SingularityAbort abort, SingularityStatePoller statePoller, SingularityExceptionNotifier exceptionNotifier) {
     this.driverManager = driverManager;
@@ -32,36 +32,36 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     this.abort = abort;
     this.statePoller = statePoller;
     this.exceptionNotifier = exceptionNotifier;
-    
+
     this.isMaster = false;
-    
+
     leaderLatch.addListener(this);
   }
-  
+
   @Override
   public void start() throws Exception {
     LOG.info("Starting leader latch...");
-    
+
     statePoller.start(this, abort);
 
     leaderLatch.start();
   }
-  
+
   @Override
   public void stop() throws Exception {
     LOG.info("Graceful STOP initiating...");
-  
+
     abort.stop();
-  
+
     LOG.info("STOP finished");
   }
-  
+
   @Override
   public void isLeader() {
     LOG.info("We are now the leader! Current status {}", driverManager.getCurrentStatus());
-    
+
     isMaster = true;
-    
+
     if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
       try {
         driverManager.start();
@@ -71,13 +71,13 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         exceptionNotifier.notify(t);
         abort.abort();
       }
-      
+
       if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
         abort.abort();
       }
     }
   }
-  
+
   public boolean isMaster() {
     return isMaster;
   }
@@ -85,11 +85,11 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   public Optional<MasterInfo> getMaster() {
     return driverManager.getMaster();
   }
-  
+
   public Optional<Long> getLastOfferTimestamp() {
     return driverManager.getLastOfferTimestamp();
   }
-  
+
   public Protos.Status getCurrentStatus() {
     return driverManager.getCurrentStatus();
   }
@@ -99,7 +99,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     LOG.info("We are not the leader! Current status {}", driverManager.getCurrentStatus());
 
     isMaster = false;
-    
+
     if (driverManager.getCurrentStatus() == Protos.Status.DRIVER_RUNNING) {
       try {
         driverManager.stop();

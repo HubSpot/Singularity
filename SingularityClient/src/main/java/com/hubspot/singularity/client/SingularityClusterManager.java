@@ -17,7 +17,7 @@ public class SingularityClusterManager {
 
   private final CuratorFramework curator;
   private final String contextPath;
-  
+
   private final SingularityClientProvider clientProvider;
 
   private static final String LEADER_PATH = "/leader";

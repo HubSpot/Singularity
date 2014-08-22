@@ -16,7 +16,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   private final String requestId;
   private final TaskManager taskManager;
   private final HistoryManager historyManager;
-  
+
   public TaskHistoryHelper(String requestId, TaskManager taskManager, HistoryManager historyManager) {
     this.requestId = requestId;
     this.taskManager = taskManager;
@@ -25,24 +25,24 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
   public List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
     Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
-    
+
     List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
-    
+
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
-      
+
       histories.add(SingularityTaskIdHistory.fromTaskIdAndUpdates(taskId, historyUpdates));
     }
-    
+
     Collections.sort(histories);
-    
+
     return histories;
   }
-  
+
   @Override
   protected List<SingularityTaskIdHistory> getFromZk() {
     final List<SingularityTaskId> inactiveTasksInZk = taskManager.getInactiveTaskIdsForRequest(requestId);
-    
+
     return getHistoriesFor(inactiveTasksInZk);
   }
 
@@ -50,5 +50,5 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   protected List<SingularityTaskIdHistory> getFromHistory(int historyStart, int numFromHistory) {
     return historyManager.getTaskHistoryForRequest(requestId, historyStart, numFromHistory);
   }
-  
+
 }

@@ -24,7 +24,7 @@ public class MesosMasterSlaveObject {
     this.resources = resources;
     this.attributes = attributes;
   }
-  
+
   public Map<String, String> getAttributes() {
     return attributes;
   }

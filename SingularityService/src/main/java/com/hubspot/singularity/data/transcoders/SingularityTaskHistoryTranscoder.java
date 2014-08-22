@@ -8,7 +8,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityTaskHistoryTranscoder extends CompressingTranscoder<SingularityTaskHistory> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityTaskHistoryTranscoder(SingularityConfiguration configuration, ObjectMapper objectMapper) {
     super(configuration);
@@ -24,5 +24,5 @@ public class SingularityTaskHistoryTranscoder extends CompressingTranscoder<Sing
   protected byte[] actualToBytes(SingularityTaskHistory object) {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

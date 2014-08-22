@@ -26,21 +26,21 @@ public interface SimpleStore extends Closeable {
     public StoreException() {
       super();
     }
-    
+
   }
-  
-  public void start(); 
-  
+
+  public void start();
+
   public void markConsumed(TailMetadata tail) throws StoreException;
-  
+
   public void savePosition(TailMetadata tail, long position) throws StoreException;
- 
+
   public Optional<Long> getPosition(TailMetadata tail) throws StoreException;
 
   public List<TailMetadata> getTails();
-  
+
   public void registerListener(TailMetadataListener listener);
-  
+
   public void removeListener(TailMetadataListener listener);
-  
+
 }

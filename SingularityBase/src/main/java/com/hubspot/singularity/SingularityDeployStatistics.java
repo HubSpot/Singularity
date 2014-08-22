@@ -11,14 +11,14 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
 
   private final String requestId;
   private final String deployId;
-  
+
   private final int numSuccess;
   private final int numFailures;
 
   private final int numSequentialRetries;
   private final int numSequentialSuccess;
   private final int numSequentialFailures;
-  
+
   private final Optional<Long> lastFinishAt;
   private final Optional<ExtendedTaskState> lastTaskState;
 
@@ -29,9 +29,9 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
-  public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures, 
+  public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures,
       @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
       @JsonProperty("numSequentialSuccess") int numSequentialSuccess, @JsonProperty("numSequentialFailures") int numSequentialFailures) {
     this.requestId = requestId;
@@ -55,7 +55,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
       .setNumFailures(numFailures)
       .setNumSuccess(numSuccess);
   }
-  
+
   public String getRequestId() {
     return requestId;
   }
@@ -97,5 +97,5 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries + ", numSequentialSuccess="
         + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
-  
+
 }

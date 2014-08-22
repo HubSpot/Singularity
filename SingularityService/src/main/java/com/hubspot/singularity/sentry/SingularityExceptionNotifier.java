@@ -37,34 +37,34 @@ public class SingularityExceptionNotifier {
     if (!raven.isPresent()) {
       return;
     }
-    
+
     try {
       notify(raven.get(), t);
     } catch (Throwable e) {
       LOG.error("Caught exception while trying to report {} to Sentry", t.getMessage(), e);
     }
   }
-  
+
   public void notify(String message) {
     if (!raven.isPresent()) {
       return;
     }
-    
+
     try {
       notify(raven.get(), message);
     } catch (Throwable e) {
       LOG.error("Caught exception while trying to report {} to Sentry", message, e);
     }
   }
-  
+
   private void notify(Raven raven, String message) {
     final EventBuilder eventBuilder = new EventBuilder()
       .setMessage(getPrefix() + message)
       .setLevel(Event.Level.ERROR);
-    
-    sendEvent(raven, eventBuilder);    
+
+    sendEvent(raven, eventBuilder);
   }
-  
+
   private void notify(Raven raven, Throwable t) {
     final EventBuilder eventBuilder = new EventBuilder()
       .setMessage(getPrefix() + t.getMessage())
@@ -73,11 +73,11 @@ public class SingularityExceptionNotifier {
 
     sendEvent(raven, eventBuilder);
   }
-  
+
   private void sendEvent(Raven raven, final EventBuilder eventBuilder) {
     raven.runBuilderHelpers(eventBuilder);
 
-    raven.sendEvent(eventBuilder.build());    
+    raven.sendEvent(eventBuilder.build());
   }
-  
+
 }

@@ -15,7 +15,7 @@ public class SingularityTaskHistory extends SingularityJsonObject {
   private final SingularityTask task;
   private final List<SingularityTaskHealthcheckResult> healthcheckResults;
   private final List<SingularityLoadBalancerUpdate> loadBalancerUpdates;
-  
+
   public static SingularityTaskHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityTaskHistory.class);
@@ -23,9 +23,9 @@ public class SingularityTaskHistory extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
-  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("healthcheckResults") List<SingularityTaskHealthcheckResult> healthcheckResults, 
+  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("healthcheckResults") List<SingularityTaskHealthcheckResult> healthcheckResults,
       @JsonProperty("task") SingularityTask task, @JsonProperty("loadBalancerUpdates") List<SingularityLoadBalancerUpdate> loadBalancerUpdates) {
     this.taskUpdates = taskUpdates;
     this.healthcheckResults = healthcheckResults;
@@ -37,7 +37,7 @@ public class SingularityTaskHistory extends SingularityJsonObject {
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
     return taskUpdates;
   }
-  
+
   public Optional<String> getDirectory() {
     return directory;
   }

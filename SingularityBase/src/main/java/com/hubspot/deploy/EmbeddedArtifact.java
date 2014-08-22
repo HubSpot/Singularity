@@ -10,17 +10,17 @@ import com.google.common.base.Optional;
 public class EmbeddedArtifact extends Artifact {
 
   private final byte[] content;
-  
+
   @JsonCreator
   public EmbeddedArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum, @JsonProperty("content") byte[] content) {
     super(name, filename, md5sum);
     this.content = content;
   }
-  
+
   public byte[] getContent() {
     return content;
   }
-  
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
