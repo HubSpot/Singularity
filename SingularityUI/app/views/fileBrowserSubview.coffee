@@ -8,7 +8,6 @@ class FileBrowserSubview extends View
 
     events: ->
         'click [data-directory-path]':  'navigate'
-        'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({ @scrollWhenReady }) ->
         @listenTo @collection, 'sync',  @render
@@ -28,20 +27,9 @@ class FileBrowserSubview extends View
 
         @$('.actions-column a[title]').tooltip()
 
-        if @scrollWhenReady
-            @scrollToTop()
-
-            # Only do it once
-            @scrollWhenReady = false
-
     catchAjaxError: ->
         app.caughtError()
         @render()
-
-    scrollToTop: ->
-        return if @suppressExpansion
-
-        @$el.addClass 'expanded'
 
     navigate: (event) ->
         event.preventDefault()
