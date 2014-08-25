@@ -33,7 +33,7 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>MesosClient</artifactId>
+      <artifactId>SingularityMesosClient</artifactId>
       <version>${project.version}</version>
     </dependency>
 
