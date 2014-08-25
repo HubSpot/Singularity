@@ -55,13 +55,11 @@ public class SingularityWebhookSender implements SingularityCloseable {
 
     }
 
-    LOG.info("Sent {} updates for {} webhooks in {}",  numUpdates, webhooks.size(), JavaUtils.duration(start));
+    LOG.info("Sent {} updates for {} webhooks in {}", numUpdates, webhooks.size(), JavaUtils.duration(start));
   }
 
-
-  //  @Override
-  //  public void close() {
-  //    closer.shutdown(getClass().getName(), executorService, 1);
-  //  }
+  public void close() {
+    // closer.shutdown(getClass().getName(), executorService, 1);
+  }
 
 }
