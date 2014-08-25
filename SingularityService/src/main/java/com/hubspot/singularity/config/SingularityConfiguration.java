@@ -31,10 +31,6 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("hostname")
   private String hostname;
 
-  @JsonProperty("singularityUIHostnameAndPath")
-  @Deprecated
-  private String singularityUIHostnameAndPath;
-
   @JsonProperty("loadBalancerUri")
   private String loadBalancerUri;
 
@@ -102,6 +98,12 @@ public class SingularityConfiguration extends Configuration {
   private int healthcheckStartThreads = 3;
 
   @NotNull
+  private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
+
+  @NotNull
+  private int maxQueuedUpdatesPerWebhook = 50;
+
+  @NotNull
   private int logFetchMaxThreads = 25;
 
   @NotNull
@@ -118,6 +120,9 @@ public class SingularityConfiguration extends Configuration {
 
   @NotNull
   private long loadBalancerRequestTimeoutMillis = 2000;
+
+  @NotNull
+  private boolean allowTestResourceCalls = false;
 
   @NotNull
   private boolean compressLargeDataObjects = true;
@@ -160,6 +165,22 @@ public class SingularityConfiguration extends Configuration {
     this.askDriverToKillTasksAgainAfterMillis = askDriverToKillTasksAgainAfterMillis;
   }
 
+  public long getCheckWebhooksEveryMillis() {
+    return checkWebhooksEveryMillis;
+  }
+
+  public void setCheckWebhooksEveryMillis(long checkWebhooksEveryMillis) {
+    this.checkWebhooksEveryMillis = checkWebhooksEveryMillis;
+  }
+
+  public int getMaxQueuedUpdatesPerWebhook() {
+    return maxQueuedUpdatesPerWebhook;
+  }
+
+  public void setMaxQueuedUpdatesPerWebhook(int maxQueuedUpdatesPerWebhook) {
+    this.maxQueuedUpdatesPerWebhook = maxQueuedUpdatesPerWebhook;
+  }
+
   public long getCacheStateForMillis() {
     return cacheStateForMillis;
   }
@@ -174,6 +195,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCacheStateForMillis(long cacheStateForMillis) {
     this.cacheStateForMillis = cacheStateForMillis;
+  }
+
+  public boolean allowTestResourceCalls() {
+    return allowTestResourceCalls;
+  }
+
+  public void setAllowTestResourceCalls(boolean allowTestResourceCalls) {
+    this.allowTestResourceCalls = allowTestResourceCalls;
   }
 
   public boolean isAllowRequestsWithoutOwners() {
@@ -381,11 +410,6 @@ public class SingularityConfiguration extends Configuration {
     return saveStateEverySeconds;
   }
 
-  @Deprecated
-  public Optional<String> getSingularityUIHostnameAndPath() {
-    return Optional.fromNullable(singularityUIHostnameAndPath);
-  }
-
   public Optional<S3Configuration> getS3Configuration() {
     return Optional.fromNullable(s3Configuration);
   }
@@ -453,10 +477,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSaveStateEverySeconds(long saveStateEverySeconds) {
     this.saveStateEverySeconds = saveStateEverySeconds;
-  }
-
-  public void setSingularityUIHostnameAndPath(String singularityUIHostnameAndPath) {
-    this.singularityUIHostnameAndPath = singularityUIHostnameAndPath;
   }
 
   public Optional<SentryConfiguration> getSentryConfiguration(){

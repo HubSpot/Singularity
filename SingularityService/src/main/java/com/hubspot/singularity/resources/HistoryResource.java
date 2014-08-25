@@ -116,8 +116,6 @@ public class HistoryResource extends AbstractHistoryResource {
     return Optional.of(RequestHistoryOrderBy.valueOf(orderBy));
   }
 
-  // TODO should this return id history or full history?
-
   @GET
   @Path("/request/{requestId}/tasks/active")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {

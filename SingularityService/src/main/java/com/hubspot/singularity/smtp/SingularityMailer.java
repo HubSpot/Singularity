@@ -88,7 +88,7 @@ public class SingularityMailer implements SingularityCloseable {
     this.closer = closer;
     this.jadeHelper = jadeHelper;
     this.configuration = configuration;
-    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl().or(configuration.getSingularityUIHostnameAndPath());
+    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
@@ -98,7 +98,7 @@ public class SingularityMailer implements SingularityCloseable {
           new ThreadPoolExecutor(maybeSmtpConfiguration.get().getMailThreads(), maybeSmtpConfiguration.get().getMailMaxThreads(), 0L, TimeUnit.MILLISECONDS,
               new LinkedBlockingQueue<Runnable>(),
               new ThreadFactoryBuilder().setNameFormat("SingularityMailer-%d")
-          .build()));
+              .build()));
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }
@@ -206,7 +206,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().getDisplayName());
-      templateSubs.put("taskStateLost", (taskState.get() == ExtendedTaskState.TASK_LOST || taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN));
+      templateSubs.put("taskStateLost", ((taskState.get() == ExtendedTaskState.TASK_LOST) || (taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN)));
       templateSubs.put("taskStateFailed", (taskState.get() == ExtendedTaskState.TASK_FAILED));
     }
 
@@ -280,7 +280,7 @@ public class SingularityMailer implements SingularityCloseable {
   private boolean taskEverRan(Collection<SingularityTaskHistoryUpdate> history) {
     SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
+    return (simplifiedTaskState == SimplifiedTaskState.DONE) || (simplifiedTaskState == SimplifiedTaskState.RUNNING);
   }
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {

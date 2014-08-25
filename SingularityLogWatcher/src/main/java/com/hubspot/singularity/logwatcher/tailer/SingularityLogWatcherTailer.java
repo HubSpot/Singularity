@@ -105,7 +105,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     return true;
   }
 
-  // TODO TEST hadnling resize
+  // TODO TEST handling resize
   private void checkRead(boolean readAllBytes) throws IOException {
     checkPosition();
 
@@ -122,7 +122,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       }
     }
 
-    if (readAllBytes && bytesLeft > 0) {
+    if (readAllBytes && (bytesLeft > 0)) {
       String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
       logForwarder.forwardMessage(tailMetadata, string);
     }
