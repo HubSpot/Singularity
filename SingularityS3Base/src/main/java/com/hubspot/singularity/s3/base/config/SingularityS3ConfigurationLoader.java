@@ -23,6 +23,7 @@ public class SingularityS3ConfigurationLoader extends SingularityConfigurationLo
     super("/etc/singularity.s3base.properties", Optional.<String> absent());
   }
 
+  @Override
   protected void bindDefaults(Properties properties) {
     properties.put(S3_ACCESS_KEY, "");
     properties.put(S3_SECRET_KEY, "");

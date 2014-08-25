@@ -60,6 +60,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return String.format(OPERATION_URI, loadBalancerUri, loadBalancerRequestId);
   }
 
+  @Override
   public SingularityLoadBalancerUpdate getState(LoadBalancerRequestId loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
 
@@ -127,6 +128,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     }
   }
 
+  @Override
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String>emptyList());
     final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
@@ -167,6 +169,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return upstreams;
   }
 
+  @Override
   public SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
 

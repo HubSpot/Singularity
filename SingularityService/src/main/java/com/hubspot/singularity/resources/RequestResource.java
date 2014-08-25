@@ -135,6 +135,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   // Use DeployResource.cancelDeploy() instead
+  @Override
   @DELETE
   @Path("/request/{requestId}/deploy/{deployId}")
   @Deprecated

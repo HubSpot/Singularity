@@ -42,6 +42,7 @@ public class DeployResource extends AbstractRequestResource {
     return deployManager.getPendingDeploys();
   }
 
+  @Override
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   @Path("/")
@@ -49,6 +50,7 @@ public class DeployResource extends AbstractRequestResource {
     return super.deploy(pendingDeploy, user);
   }
 
+  @Override
   @DELETE
   @Path("/deploy/{deployId}/request/{requestId}")
   public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {

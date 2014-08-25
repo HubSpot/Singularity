@@ -57,6 +57,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
     super("/etc/singularity.executor.properties", Optional.of("singularity-executor.log"));
   }
 
+  @Override
   protected void bindDefaults(Properties properties) {
     properties.put(TASK_APP_DIRECTORY, "app");
     properties.put(TASK_EXECUTOR_BASH_LOG_PATH, "executor.bash.log");

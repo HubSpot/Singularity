@@ -135,6 +135,7 @@ public class JavaUtils {
 
   public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {
     Thread t = new Thread("ExecutorServiceTerminationWaiter-" + threadNameSuffix) {
+      @Override
       public void run() {
         try {
           service.awaitTermination(millis, TimeUnit.MILLISECONDS);

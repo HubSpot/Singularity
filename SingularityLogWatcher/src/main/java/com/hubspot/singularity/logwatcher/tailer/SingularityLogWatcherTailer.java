@@ -53,6 +53,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     checkRead(true);
   }
 
+  @Override
   public void close() {
     try {
       Closeables.close(byteChannel, true);
@@ -83,6 +84,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     }
   }
 
+  @Override
   public void watch() throws IOException, InterruptedException {
     LOG.info("Watching file {} at position {} with a {} byte buffer", logfile, byteChannel.position(), byteBuffer.capacity());
 
