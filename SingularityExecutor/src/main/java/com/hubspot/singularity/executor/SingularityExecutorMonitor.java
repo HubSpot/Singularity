@@ -266,6 +266,7 @@ public class SingularityExecutorMonitor {
       }
 
       // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
+      @Override
       public void onSuccess(ProcessBuilder processBuilder) {
         try {
           onSuccessThrows(processBuilder);
@@ -274,6 +275,7 @@ public class SingularityExecutorMonitor {
         }
       }
 
+      @Override
       public void onFailure(Throwable t) {
         TaskState state = TaskState.TASK_LOST;
         String message = String.format("%s while initializing task: %s", t.getClass().getSimpleName(), t.getMessage());
@@ -388,6 +390,7 @@ public class SingularityExecutorMonitor {
     Futures.addCallback(processExitFuture, new FutureCallback<Integer>() {
 
       // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
+      @Override
       public void onSuccess(Integer exitCode) {
         if (task.wasKilled()) {
           String message = "Task killed. Process exited gracefully with code " + exitCode;
@@ -408,6 +411,7 @@ public class SingularityExecutorMonitor {
         onFinish(task);
       }
 
+      @Override
       public void onFailure(Throwable t) {
         task.getLog().error("Task {} failed while running process", task, t);
 

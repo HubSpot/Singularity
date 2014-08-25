@@ -19,6 +19,7 @@ public enum LoadBalancerRequestType {
       this.requestType = requestType;
     }
 
+    @Override
     public String toString() {
       return String.format("%s-%s", id, requestType);
     }
