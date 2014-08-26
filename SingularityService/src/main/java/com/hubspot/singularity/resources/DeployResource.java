@@ -45,7 +45,6 @@ public class DeployResource extends AbstractRequestResource {
   @Override
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
-  @Path("/")
   public SingularityRequestParent deploy(SingularityDeploy pendingDeploy, @QueryParam("user") Optional<String> user) {
     return super.deploy(pendingDeploy, user);
   }
