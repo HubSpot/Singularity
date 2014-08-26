@@ -190,7 +190,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private void checkS3() {
     if (!s3.isPresent()) {
-      throw WebExceptions.webException(501, "S3 configuration was absent");
+      throw WebExceptions.notFound("S3 configuration was absent");
     }
   }
 
