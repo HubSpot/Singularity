@@ -293,7 +293,6 @@ public class RequestResource extends AbstractRequestResource {
 
   @GET
   @PropertyFiltering
-  @Path("/")
   public Iterable<SingularityRequestParent> getRequests() {
     return getRequestsWithDeployState(requestManager.getRequests());
   }
