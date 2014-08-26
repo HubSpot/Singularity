@@ -109,6 +109,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     }, configuration.getRetryDelaySeconds(), TimeUnit.SECONDS);
   }
 
+  @Override
   public void startAndWait() {
     final long start = System.currentTimeMillis();
 
@@ -150,6 +151,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     return true;
   }
 
+  @Override
   public void shutdown() {
     final long start = System.currentTimeMillis();
 

@@ -138,6 +138,7 @@ class NewDeployView extends FormBaseView
             @alert "There was a problem: #{ response.responseText }", false
         
         apiRequest.done =>
+            @lockdown = false
             @postSave()
 
             @alert "Deploy successful!"

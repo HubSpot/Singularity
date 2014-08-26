@@ -54,6 +54,7 @@ public abstract class WatchServiceHelper implements Closeable {
     this.stopped = stopped;
   }
 
+  @Override
   public void close() {
     try {
       Closeables.close(watchService, true);

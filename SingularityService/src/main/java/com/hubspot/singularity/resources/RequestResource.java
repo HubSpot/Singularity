@@ -135,6 +135,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   // Use DeployResource.cancelDeploy() instead
+  @Override
   @DELETE
   @Path("/request/{requestId}/deploy/{deployId}")
   @Deprecated
@@ -292,7 +293,6 @@ public class RequestResource extends AbstractRequestResource {
 
   @GET
   @PropertyFiltering
-  @Path("/")
   public Iterable<SingularityRequestParent> getRequests() {
     return getRequestsWithDeployState(requestManager.getRequests());
   }

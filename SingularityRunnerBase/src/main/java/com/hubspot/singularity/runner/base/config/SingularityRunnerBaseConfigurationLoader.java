@@ -24,6 +24,7 @@ public class SingularityRunnerBaseConfigurationLoader extends SingularityConfigu
     super("/etc/singularity.base.properties", Optional.<String> absent());
   }
 
+  @Override
   protected void bindDefaults(Properties properties) {
     properties.put(LOGGING_PATTERN, JavaUtils.LOGBACK_LOGGING_PATTERN);
     properties.put(LOG_METADATA_SUFFIX, ".tail.json");

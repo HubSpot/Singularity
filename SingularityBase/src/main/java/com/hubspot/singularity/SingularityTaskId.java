@@ -112,6 +112,7 @@ public class SingularityTaskId extends SingularityId {
     }
   }
 
+  @Override
   public String toString() {
     return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getStartedAt(), getInstanceNo(), getHost(), getRackId());
   }
