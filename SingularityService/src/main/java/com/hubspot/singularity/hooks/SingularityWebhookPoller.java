@@ -1,4 +1,4 @@
-package com.hubspot.singularity.scheduler;
+package com.hubspot.singularity.hooks;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
