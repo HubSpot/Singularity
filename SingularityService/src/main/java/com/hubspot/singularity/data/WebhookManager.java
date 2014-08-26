@@ -22,7 +22,7 @@ public class WebhookManager extends CuratorAsyncManager {
 
   private final SingularityWebhookTranscoder webhookTranscoder;
   private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
-
+  
   @Inject
   public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityWebhookTranscoder webhookTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
@@ -56,23 +56,29 @@ public class WebhookManager extends CuratorAsyncManager {
     return create(path, webhook, webhookTranscoder);
   }
 
-  public SingularityDeleteResult deleteWebhook(String webhookId) {
+  public SingularityDeleteResult deleteTaskWebhook(String webhookId) {
     final String path = getWebhookPath(webhookId);
 
     return delete(path);
   }
 
-  public List<SingularityTaskHistoryUpdate> getQueuedUpdatesForHook(String webhookId) {
+  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesForHook(String webhookId) {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId), taskHistoryUpdateTranscoder);
   }
 
-  public void enqueue(SingularityTaskHistoryUpdate taskUpdate) {
+  public void enqueueTaskUpdate(SingularityTaskHistoryUpdate taskUpdate) {
     // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not immediately make some webhooks)
     for (SingularityWebhook webhook : getActiveWebhooks()) {
       final String enqueuePath = getEnqueuePathForTaskUpdate(webhook.getId(), taskUpdate);
 
       save(enqueuePath, taskUpdate, taskHistoryUpdateTranscoder);
     }
+  }
+  
+  public SingularityDeleteResult deleteTaskUpdate(SingularityWebhook webhook, SingularityTaskHistoryUpdate taskUpdate) {
+    final String path = getEnqueuePathForTaskUpdate(webhook.getId(), taskUpdate);
+    
+    return delete(path);
   }
 
 }

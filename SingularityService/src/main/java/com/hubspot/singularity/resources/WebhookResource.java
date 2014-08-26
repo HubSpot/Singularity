@@ -37,15 +37,15 @@ public class WebhookResource {
   }
 
   @DELETE
-  @Path("/{webhookId}")
+  @Path("/task/{webhookId}")
   public SingularityDeleteResult deleteWebhook(@PathParam("webhookId") String webhookId) {
-    return webhookManager.deleteWebhook(webhookId);
+    return webhookManager.deleteTaskWebhook(webhookId);
   }
 
   @GET
-  @Path("/{webhookId}")
-  public List<SingularityTaskHistoryUpdate> getQueuedUpdates(@PathParam("webhookId") String webhookId) {
-    return webhookManager.getQueuedUpdatesForHook(webhookId);
+  @Path("/task/{webhookId}")
+  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@PathParam("webhookId") String webhookId) {
+    return webhookManager.getQueuedTaskUpdatesForHook(webhookId);
   }
 
 }

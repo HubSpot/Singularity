@@ -12,44 +12,32 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
-import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class SingularityWebhookSender implements SingularityCloseable {
+public class SingularityWebhookSender {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityWebhookSender.class);
 
   private final AsyncHttpClient http;
   private final WebhookManager webhookManager;
-  private final SingularityExceptionNotifier exceptionNotifier;
-  private final SingularityConfiguration configuration;
-  private final SingularityCloser closer;
   private final TaskManager taskManager;
   private final HistoryManager historyManager;
   private final ObjectMapper objectMapper;
   
   @Inject
-  public SingularityWebhookSender(AsyncHttpClient http, SingularityCloser closer, HistoryManager historyManager, ObjectMapper objectMapper, TaskManager taskManager, 
-      SingularityExceptionNotifier exceptionNotifier, WebhookManager webhookManager, SingularityConfiguration configuration) {
+  public SingularityWebhookSender(AsyncHttpClient http, HistoryManager historyManager, ObjectMapper objectMapper, TaskManager taskManager, WebhookManager webhookManager) {
     this.http = http;
-    this.closer = closer;
     this.webhookManager = webhookManager;
-    this.configuration = configuration;
-    this.exceptionNotifier = exceptionNotifier;
     this.taskManager = taskManager;
     this.objectMapper = objectMapper;
     this.historyManager = historyManager;
@@ -63,37 +51,58 @@ public class SingularityWebhookSender implements SingularityCloseable {
       return;
     }
 
-    int numUpdates = 0;
-
+    int taskUpdates = 0;
+    int requestUpdates = 0;
+    
     for (SingularityWebhook webhook : webhooks) {
-      List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedUpdatesForHook(webhook.getId());
-
-      for (SingularityTaskHistoryUpdate taskUpdate : taskUpdates) {
-        Optional<SingularityTask> task = getTask(taskUpdate.getTaskId());
-        
-        // TODO compress 
-        if (task.isPresent()) {
-          BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
-          
-          try {
-            postRequest.setBody(objectMapper.writeValueAsBytes(new SingularityTaskWebhook(task.get(), taskUpdate)));
-          } catch (JsonProcessingException e) {
-            throw Throwables.propagate(e);
-          }
-          
-          try {
-            postRequest.execute(new SingularityWebhookAsyncHandler());
-          } catch (IOException e) {
-            // this is probably a retry
-          }
-          
-        }
-      }
       
-
+      switch (webhook.getType()) {
+      case TASK:
+        taskUpdates += checkTaskUpdates(webhook);
+      case REQUEST:
+        requestUpdates += checkRequestUpdates(webhook);
+      }
     }
 
-    LOG.info("Sent {} updates for {} webhooks in {}", numUpdates, webhooks.size(), JavaUtils.duration(start));
+    LOG.info("Sent {} task updates, {} request updates for {} webhooks in {}", taskUpdates, requestUpdates, webhooks.size(), JavaUtils.duration(start));
+  }
+  
+  private int checkRequestUpdates(SingularityWebhook webhook) {
+    return 0;
+  }
+  
+  private int checkTaskUpdates(SingularityWebhook webhook) {
+    List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedTaskUpdatesForHook(webhook.getId());
+
+    for (SingularityTaskHistoryUpdate taskUpdate : taskUpdates) {
+      Optional<SingularityTask> task = getTask(taskUpdate.getTaskId());
+      
+      // TODO compress 
+      if (!task.isPresent()) {
+        LOG.warn("Couldn't find task for taskUpdate {}", taskUpdate);
+        webhookManager.deleteTaskUpdate(webhook, taskUpdate);
+      }
+      
+      LOG.trace("Sending {} to {}", taskUpdate, webhook.getUri());
+      
+      BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
+
+      try {
+        postRequest.setBody(objectMapper.writeValueAsBytes(new SingularityTaskWebhook(task.get(), taskUpdate)));
+      } catch (JsonProcessingException e) {
+        throw Throwables.propagate(e);
+      }
+
+      // TODO handle retries, errors.
+      try {
+        postRequest.execute(new SingularityTaskWebhookAsyncHandler(webhookManager, webhook, taskUpdate));
+      } catch (IOException e) {
+        // this is probably a retry
+        LOG.warn("Couldn't execute webhook to {}", webhook.getUri(), e);
+      }
+    }
+
+    return taskUpdates.size();
   }
   
   // TODO cache this?
@@ -111,10 +120,6 @@ public class SingularityWebhookSender implements SingularityCloseable {
     }
 
     return Optional.absent();
-  }
-  
-  public void close() {
-    // closer.shutdown(getClass().getName(), executorService, 1);
   }
 
 }

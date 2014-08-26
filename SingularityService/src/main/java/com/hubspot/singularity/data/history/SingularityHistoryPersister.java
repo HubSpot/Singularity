@@ -12,9 +12,10 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class SingularityHistoryPersister implements SingularityCloseable {
+public class SingularityHistoryPersister implements SingularityCloseable, SingularityStartable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
 
@@ -39,6 +40,7 @@ public class SingularityHistoryPersister implements SingularityCloseable {
     closer.shutdown(getClass().getName(), executorService, 1);
   }
 
+  @Override
   public void start() {
     LOG.info("Starting a history persister with a {} delay", JavaUtils.durationFromMillis(TimeUnit.SECONDS.toMillis(configuration.getPersistHistoryEverySeconds())));
 

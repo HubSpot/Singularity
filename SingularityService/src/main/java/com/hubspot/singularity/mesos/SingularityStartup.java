@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
@@ -55,9 +56,11 @@ public class SingularityStartup {
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final MesosConfiguration mesosConfiguration;
+  
+  private final List<SingularityStartable> startables;
 
   @Inject
-  public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder,
+  public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, List<SingularityStartable> startables, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder,
       SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
     this.mesosConfiguration = mesosConfiguration;
     this.mesosClient = mesosClient;
@@ -70,6 +73,7 @@ public class SingularityStartup {
     this.healthchecker = healthchecker;
     this.taskTranscoder = taskTranscoder;
     this.logSupport = logSupport;
+    this.startables = startables;
   }
 
   public void startup(MasterInfo masterInfo, boolean registered) {
@@ -95,7 +99,15 @@ public class SingularityStartup {
       throw Throwables.propagate(e);
     }
 
+    startStartables();
+
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
+  }
+  
+  private void startStartables() {
+    for (SingularityStartable startable : startables) {
+      startable.start();
+    }
   }
 
   private void enqueueHealthAndNewTaskchecks() {

@@ -7,6 +7,8 @@ import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.setup.Environment;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
@@ -31,7 +33,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
@@ -48,8 +54,10 @@ import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
+import com.hubspot.singularity.data.history.SingularityHistoryPersister;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
+import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
@@ -90,6 +98,8 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
+    bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
+    bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
   }
 
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
@@ -110,6 +120,26 @@ public class SingularityServiceModule extends AbstractModule {
         }
       }
     });
+  }
+  
+  @Provides
+  public List<SingularityStartable> getStartableSingletons(Injector injector) {
+    final List<SingularityStartable> startables = Lists.newArrayList();
+
+    for (Map.Entry<Key<?>, Binding<?>> bindingEntry : injector.getAllBindings().entrySet()) {
+      final Key<?> key = bindingEntry.getKey();
+      if (SingularityStartable.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+        @SuppressWarnings("unchecked")
+        final Binding<SingularityStartable> binding = (Binding<SingularityStartable>) bindingEntry.getValue();
+
+        if (Scopes.isSingleton(binding)) {
+          SingularityStartable startable = binding.getProvider().get();
+          startables.add(startable);
+        }
+      }
+    }
+
+    return startables;
   }
 
   private static ObjectMapper createObjectMapper() {

@@ -9,12 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityWebhookPoller implements SingularityCloseable {
+public class SingularityWebhookPoller implements SingularityCloseable, SingularityStartable {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityWebhookPoller.class);
 
@@ -32,11 +34,12 @@ public class SingularityWebhookPoller implements SingularityCloseable {
     this.exceptionNotifier = exceptionNotifier;
 
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityWebhookSender-%d").build());
-
-    start();
   }
 
+  @Override
   public void start() {
+    LOG.info("Starting a webhookPoller that executes webhooks every {}", JavaUtils.durationFromMillis(configuration.getCheckWebhooksEveryMillis()));
+    
     executorService.scheduleAtFixedRate(new Runnable() {
 
       @Override

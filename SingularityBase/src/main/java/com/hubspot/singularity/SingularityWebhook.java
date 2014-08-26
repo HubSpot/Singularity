@@ -14,7 +14,8 @@ public class SingularityWebhook extends SingularityJsonObject {
   private final long timestamp;
   private final String id;
   private final Optional<String> user;
-
+  private final WebhookType type;
+  
   public static SingularityWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityWebhook.class);
@@ -24,11 +25,12 @@ public class SingularityWebhook extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user) {
+  public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user, @JsonProperty("type") WebhookType type) {
     this.uri = uri;
     this.timestamp = timestamp;
     this.user = user;
     this.id = JavaUtils.urlEncode(uri);
+    this.type = type;
   }
 
   public String getId() {
@@ -47,9 +49,13 @@ public class SingularityWebhook extends SingularityJsonObject {
     return user;
   }
 
+  public WebhookType getType() {
+    return type;
+  }
+
   @Override
   public String toString() {
-    return "SingularityWebhook [uri=" + uri + ", timestamp=" + timestamp + ", user=" + user + "]";
+    return "SingularityWebhook [uri=" + uri + ", timestamp=" + timestamp + ", id=" + id + ", user=" + user + ", type=" + type + "]";
   }
 
 }

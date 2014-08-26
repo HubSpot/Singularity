@@ -226,7 +226,7 @@ public class SingularityMesosScheduler implements Scheduler {
     final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, now, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
-    webhookManager.enqueue(taskUpdate);
+    webhookManager.enqueueTaskUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);
 
