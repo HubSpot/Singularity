@@ -47,8 +47,9 @@
 
   <scm>
     <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
-    <developerConnection>scm:git:git@github.com:HubSpot/Singularity.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
     <url>git@github.com:HubSpot/Singularity.git</url>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
