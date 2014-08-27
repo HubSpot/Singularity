@@ -1,5 +1,6 @@
 # Singularity [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
 
+* [Contact](#contact)
 * [About Singularity Documentation](#about-singularity-documentation)
 * [What is Singularity](#what-is-singularity)
 * [How it Works](#how-it-works)
@@ -17,7 +18,10 @@
   * [Singularity Deploy Object](#singularity-deploy-object)
 * [Getting Started](#getting-started)
 * [Roadmap](#roadmap)
-* [Contact](#contact)
+
+## Contact
+
+singularity-users@googlegroups.com // [Google Groups](https://groups.google.com/forum/#!topic/singularity-users/)
 
 ## About Singularity Documentation
 *Singularity* is a new and very active project and while we make a considerable effort to keep the documentation current, there is a possibility that you will find some inconsistencies or obsolete information.
@@ -354,7 +358,3 @@ Follow the provided links to learn how to install, setup and start using Singula
 - Enhance Job Scheduler
 - Support deploy of Docker containers
 - Add advanced slave affinity algorithms to support data locality for Big Data Analysis tasks
-
-## Contact
-
-singularity-users@googlegroups.com // [Google Groups](https://groups.google.com/forum/#!topic/singularity-users/)
