@@ -16,7 +16,7 @@ import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCleanupPoller {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityCleanupPoller.class);
 
   private final SingularityExceptionNotifier exceptionNotifier;
@@ -25,7 +25,7 @@ public class SingularityCleanupPoller {
   private final ScheduledExecutorService executorService;
   private final SingularityAbort abort;
   private final SingularityCloser closer;
-  
+
   @Inject
   public SingularityCleanupPoller(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort, SingularityCloser closer) {
     this.exceptionNotifier = exceptionNotifier;
@@ -33,22 +33,22 @@ public class SingularityCleanupPoller {
     this.abort = abort;
     this.configuration = configuration;
     this.closer = closer;
-    
+
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityCleanupPoller-%d").build());
   }
-  
+
   public void start(final SingularityMesosSchedulerDelegator mesosScheduler) {
     LOG.info(String.format("Starting a cleanup poller with a %s second delay", configuration.getCleanupEverySeconds()));
-    
+
     executorService.scheduleWithFixedDelay(new Runnable() {
-      
+
       @Override
       public void run() {
         mesosScheduler.lock();
-        
+
         try {
           cleaner.drainCleanupQueue();
-        
+
         } catch (Throwable t) {
           LOG.error("Caught an exception while draining cleanup queue -- aborting", t);
           exceptionNotifier.notify(t);
@@ -57,12 +57,12 @@ public class SingularityCleanupPoller {
           mesosScheduler.release();
         }
       }
-    }, 
+    },
     configuration.getCleanupEverySeconds(), configuration.getCleanupEverySeconds(), TimeUnit.SECONDS);
   }
-  
+
   public void stop() {
     closer.shutdown(getClass().getName(), executorService, 1);
   }
-  
+
 }

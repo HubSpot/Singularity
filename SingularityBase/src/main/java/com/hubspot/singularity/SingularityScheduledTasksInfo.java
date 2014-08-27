@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 import java.util.List;
 
 public class SingularityScheduledTasksInfo {
-  
+
   private final int numLateTasks;
   private final int numFutureTasks;
   private final long maxTaskLag;
@@ -34,14 +34,14 @@ public class SingularityScheduledTasksInfo {
 
   public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTask> pendingTasks, long millisDeltaForLateTasks) {
     final long now = System.currentTimeMillis();
-    
+
     int numLateTasks = 0;
     int numFutureTasks = 0;
     long maxTaskLag = 0;
-    
+
     for (SingularityPendingTask pendingTask : pendingTasks) {
       long delta = now - pendingTask.getPendingTaskId().getNextRunAt();
-      
+
       if (delta > millisDeltaForLateTasks) {
         numLateTasks++;
       } else {

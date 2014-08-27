@@ -12,12 +12,12 @@ import com.google.common.collect.ComparisonChain;
 public class SingularityDeployMarker extends SingularityJsonObject implements Comparable<SingularityDeployMarker> {
 
   private final String requestId;
-  
+
   private final String deployId;
 
   private final long timestamp;
   private final Optional<String> user;
-  
+
   public static SingularityDeployMarker fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityDeployMarker.class);
@@ -25,7 +25,7 @@ public class SingularityDeployMarker extends SingularityJsonObject implements Co
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityDeployMarker(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user) {
     this.requestId = requestId;
@@ -41,7 +41,7 @@ public class SingularityDeployMarker extends SingularityJsonObject implements Co
         .compare(deployId, o.getDeployId())
         .result();
   }
-  
+
   @Override
   public int hashCode() {
     return Objects.hash(requestId, deployId);
@@ -84,7 +84,7 @@ public class SingularityDeployMarker extends SingularityJsonObject implements Co
   public Optional<String> getUser() {
     return user;
   }
-  
+
   @Override
   public String toString() {
     return "SingularityDeployMarker [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + "]";

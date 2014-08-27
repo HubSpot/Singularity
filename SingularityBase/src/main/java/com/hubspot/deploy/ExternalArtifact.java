@@ -6,7 +6,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class ExternalArtifact extends RemoteArtifact {
-  
+
   private final String url;
 
   @JsonCreator
@@ -29,5 +29,5 @@ public class ExternalArtifact extends RemoteArtifact {
         .add("filesize", getFilesize())
         .toString();
   }
-  
+
 }

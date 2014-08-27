@@ -17,7 +17,7 @@ import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityDeployPoller {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployPoller.class);
 
   private final SingularityExceptionNotifier exceptionNotifier;
@@ -26,7 +26,7 @@ public class SingularityDeployPoller {
   private final SingularityAbort abort;
   private final SingularityCloser closer;
   private final SingularityDeployChecker deployChecker;
-  
+
   @Inject
   public SingularityDeployPoller(SingularityExceptionNotifier exceptionNotifier, SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer) {
     this.exceptionNotifier = exceptionNotifier;
@@ -34,24 +34,24 @@ public class SingularityDeployPoller {
     this.deployChecker = deployChecker;
     this.configuration = configuration;
     this.closer = closer;
-    
+
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityDeployPoller-%d").build());
   }
-  
+
   public void start(final SingularityMesosSchedulerDelegator mesosScheduler) {
     LOG.info("Starting a deploy poller with a {} second delay", configuration.getCheckDeploysEverySeconds());
-    
+
     executorService.scheduleWithFixedDelay(new Runnable() {
-      
+
       @Override
       public void run() {
         mesosScheduler.lock();
-        
+
         try {
           final long start = System.currentTimeMillis();
-          
+
           final int numDeploys = deployChecker.checkDeploys();
-       
+
           if (numDeploys == 0) {
             LOG.trace("No pending deploys");
           } else {
@@ -66,12 +66,12 @@ public class SingularityDeployPoller {
         }
       }
     },
-    
+
     configuration.getCheckDeploysEverySeconds(), configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
   }
-  
+
   public void stop() {
     closer.shutdown(getClass().getName(), executorService, 1);
   }
-  
+
 }

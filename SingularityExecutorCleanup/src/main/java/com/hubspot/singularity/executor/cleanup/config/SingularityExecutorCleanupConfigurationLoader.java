@@ -15,6 +15,7 @@ public class SingularityExecutorCleanupConfigurationLoader extends SingularityCo
     super("/etc/singularity.executor.cleanup.properties", Optional.of("singularity-executor-cleanup.log"));
   }
 
+  @Override
   protected void bindDefaults(Properties properties) {
     properties.put(SAFE_MODE_WONT_RUN_WITH_NO_TASKS, Boolean.toString(true));
 

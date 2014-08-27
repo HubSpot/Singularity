@@ -55,8 +55,6 @@ class NewRequest extends FormBaseView
 
             requestObject.numRetriesOnFailure = retries if retries
 
-        requestObject.daemon = false unless requestObject.daemon
-
         return if @invalid
 
         request = new Request requestObject
@@ -69,6 +67,7 @@ class NewRequest extends FormBaseView
 
         serverRequest = request.save()
         serverRequest.done  (response) =>
+            @lockdown = false
             @alert "Your Request <a href='#{ config.appRoot }/request/#{ response.id }'>#{ response.id }</a> has been created"
         
         serverRequest.error (response) =>

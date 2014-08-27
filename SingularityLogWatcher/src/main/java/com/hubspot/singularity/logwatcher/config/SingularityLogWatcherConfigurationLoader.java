@@ -22,6 +22,7 @@ public class SingularityLogWatcherConfigurationLoader extends SingularityConfigu
     super("/etc/singularity.logwatcher.properties", Optional.of("singularity-logwatcher.log"));
   }
 
+  @Override
   protected void bindDefaults(Properties properties) {
     properties.put(BYTE_BUFFER_CAPACITY, "8192");
     properties.put(POLL_MILLIS, "1000");

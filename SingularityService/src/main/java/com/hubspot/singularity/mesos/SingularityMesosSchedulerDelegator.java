@@ -37,7 +37,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final SingularityMesosScheduler scheduler;
   private final SingularityStartup startup;
   private final SingularityAbort abort;
-  
+
   private final Lock stateLock;
   private final Lock lock;
 
@@ -46,16 +46,16 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   }
 
   private volatile SchedulerState state;
-  
+
   private final List<Protos.TaskStatus> queuedUpdates;
   private final SingularityCleanupPoller cleanupPoller;
   private final SingularityDeployPoller deployPoller;
   private final SingularityCooldownPoller cooldownPoller;
   private final SingularityHistoryPersister historyPersister;
-  
+
   private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
-  
+
   @Inject
   public SingularityMesosSchedulerDelegator(SingularityExceptionNotifier exceptionNotifier, SingularityMesosScheduler scheduler, SingularityHistoryPersister historyPersister, SingularityStartup startup, SingularityAbort abort,
       SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller, SingularityCooldownPoller cooldownPoller) {
@@ -68,7 +68,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.deployPoller = deployPoller;
     this.cooldownPoller = cooldownPoller;
     this.historyPersister = historyPersister;
-    
+
     this.queuedUpdates = Lists.newArrayList();
 
     this.lock = new ReentrantLock();
@@ -77,17 +77,17 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.state = SchedulerState.STARTUP;
     this.lastOfferTimestamp = Optional.absent();
   }
-  
+
   public Optional<Long> getLastOfferTimestamp() {
     return lastOfferTimestamp;
   }
-  
+
   public MasterInfo getMaster() {
     return master;
   }
-  
+
   // TODO should the lock wait on a timeout and then notify that it's taking a while?
-  
+
   public void lock() {
     lock.lock();
   }
@@ -95,19 +95,19 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   public void release() {
     lock.unlock();
   }
-  
+
   public void notifyStopping() {
     LOG.info("Scheduler is moving to stopped, current state: {}", state);
-    
+
     cleanupPoller.stop();
     deployPoller.stop();
     cooldownPoller.stop();
-    
+
     state = SchedulerState.STOPPED;
-  
+
     LOG.info("Scheduler now in state: {}", state);
   }
-  
+
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
 
@@ -118,16 +118,16 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo, boolean registered) {
     Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
-    
+
     master = masterInfo;
-    
+
     startup.startup(masterInfo, registered);
 
     historyPersister.start();
     cleanupPoller.start(this);
     deployPoller.start(this);
     cooldownPoller.start(this);
-    
+
     stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
 
     try {
@@ -136,7 +136,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       for (Protos.TaskStatus status : queuedUpdates) {
         scheduler.statusUpdate(driver, status);
       }
-      
+
     } finally {
       stateLock.unlock();
     }
@@ -175,11 +175,11 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private boolean isRunning() {
     return state == SchedulerState.RUNNING;
   }
-  
+
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
     lastOfferTimestamp = Optional.of(System.currentTimeMillis());
-    
+
     if (!isRunning()) {
       LOG.info(String.format("Scheduler is in state %s, declining %s offer(s)", state.name(), offers.size()));
 
@@ -207,7 +207,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       LOG.info("Ignoring offer rescind message {} because scheduler isn't running ({})", offerId, state);
       return;
     }
-    
+
     lock();
 
     try {
@@ -236,7 +236,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     }
 
     lock();
-    
+
     try {
       scheduler.statusUpdate(driver, status);
     } catch (Throwable t) {
@@ -252,7 +252,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       LOG.info("Ignoring framework message because scheduler isn't running ({})", state);
       return;
     }
-    
+
     lock();
 
     try {
@@ -270,9 +270,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       LOG.info("Ignoring disconnect because scheduler isn't running ({})", state);
       return;
     }
-    
+
     lock();
-    
+
     try {
       scheduler.disconnected(driver);
     } catch (Throwable t) {
@@ -288,9 +288,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       LOG.info("Ignoring slave lost {} because scheduler isn't running ({})", slaveId, state);
       return;
     }
-    
+
     lock();
-    
+
     try {
       scheduler.slaveLost(driver, slaveId);
     } catch (Throwable t) {
@@ -306,9 +306,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       LOG.info("Ignoring executor lost {} because scheduler isn't running ({})", executorId, state);
       return;
     }
-    
+
     lock();
-    
+
     try {
       scheduler.executorLost(driver, executorId, slaveId, status);
     } catch (Throwable t) {
@@ -324,14 +324,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       LOG.info("Ignoring error {} because scheduler isn't running ({})", message, state);
       return;
     }
-    
+
     lock();
-    
+
     try {
       scheduler.error(driver, message);
-      
+
       LOG.error("Aborting due to error: {}", message);
-      
+
       abort.abort();
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);

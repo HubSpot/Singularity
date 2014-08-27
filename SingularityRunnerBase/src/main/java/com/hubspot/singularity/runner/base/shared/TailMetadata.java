@@ -17,11 +17,11 @@ public class TailMetadata {
   private final Map<String, String> extraFields;
   private final boolean finished;
   private final String filenameKey;
-  
+
   public static Path getTailMetadataPath(Path logMetadataDirectory, String logMetadataSuffix, TailMetadata tail) {
     return logMetadataDirectory.resolve(Paths.get(tail.getFilenameKey() + logMetadataSuffix));
   }
-  
+
   @JsonCreator
   public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields, @JsonProperty("finished") boolean finished) {
     this.filename = filename;
@@ -30,11 +30,11 @@ public class TailMetadata {
     this.finished = finished;
     this.filenameKey = generateFilenameKey(filename);
   }
-  
+
   private String generateFilenameKey(String filename) {
     return Hashing.sha256().hashString(filename, JavaUtils.CHARSET_UTF8).toString();
   }
-  
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -42,7 +42,7 @@ public class TailMetadata {
     result = prime * result + ((filename == null) ? 0 : filename.hashCode());
     return result;
   }
-  
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -64,7 +64,7 @@ public class TailMetadata {
   public String getFilenameKey() {
     return filenameKey;
   }
-  
+
   public String getFilename() {
     return filename;
   }

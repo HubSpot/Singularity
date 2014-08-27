@@ -26,10 +26,10 @@ public class SingularityAbort {
   private final SingularityCloser closer;
   private final SingularityMailer mailer;
   private final SingularityExceptionNotifier exceptionNotifier;
-  
+
   private volatile boolean aborting;
   private volatile boolean stopping;
-  
+
   @Inject
   public SingularityAbort(@Named(SingularityServiceModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer, SingularityExceptionNotifier exceptionNotifier) {
     this.curator = curator;
@@ -37,14 +37,14 @@ public class SingularityAbort {
     this.driverManager = driverManager;
     this.closer = closer;
     this.mailer = mailer;
-  
+
     this.aborting = false;
     this.stopping = false;
 
     this.exceptionNotifier = exceptionNotifier;
-    
+
     this.curator.getConnectionStateListenable().addListener(new ConnectionStateListener() {
-      
+
       @Override
       public void stateChanged(CuratorFramework client, ConnectionState newState) {
         if (newState == ConnectionState.LOST) {
@@ -64,7 +64,7 @@ public class SingularityAbort {
       return true;
     }
   }
-  
+
   private synchronized boolean checkAlreadyStopping() {
     if (!stopping) {
       stopping = true;
@@ -74,21 +74,21 @@ public class SingularityAbort {
       return true;
     }
   }
-  
+
   public void abort() {
     if (checkAlreadyAborting()) {
       return;
     }
-    
+
     mailer.sendAbortMail();
-    
+
     stop();
-    
+
     flushLogs();
-    
+
     exit();
   }
-  
+
   private void exit() {
     System.exit(1);
   }
@@ -97,20 +97,20 @@ public class SingularityAbort {
     if (checkAlreadyStopping()) {
       return;
     }
-    
+
     closeDriver();
-    
+
     closeCloseables();
-    
+
     closeLeader();
-  
+
     closeCurator();
   }
-  
+
   private void closeCloseables() {
     closer.closeAllCloseables();
   }
-  
+
   private void closeDriver() {
     try {
       driverManager.stop();
@@ -119,7 +119,7 @@ public class SingularityAbort {
       exceptionNotifier.notify(t);
     }
   }
-  
+
   private void closeCurator() {
     try {
       Closeables.close(curator, false);
@@ -137,7 +137,7 @@ public class SingularityAbort {
       exceptionNotifier.notify(t);
     }
   }
-  
+
   private void flushLogs() {
     LOG.info("Attempting to flush logs and wait for 5 seconds...");
 

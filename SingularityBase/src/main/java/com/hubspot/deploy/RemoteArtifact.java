@@ -10,9 +10,9 @@ public abstract class RemoteArtifact extends Artifact {
     super(name, filename, md5sum);
     this.filesize = filesize;
   }
-  
+
   public Optional<Long> getFilesize() {
     return filesize;
   }
-  
+
 }

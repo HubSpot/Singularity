@@ -23,14 +23,14 @@ public class SingularityExecutor implements Executor {
   private final SingularityExecutorTaskBuilder taskBuilder;
   private final SingularityExecutorMonitor monitor;
   private final ExecutorUtils executorUtils;
-  
+
   @Inject
   public SingularityExecutor(SingularityExecutorMonitor monitor, ExecutorUtils executorUtils, SingularityExecutorTaskBuilder taskBuilder) {
     this.taskBuilder = taskBuilder;
     this.monitor = monitor;
     this.executorUtils = executorUtils;
   }
-  
+
   /**
    * Invoked once the executor driver has been able to successfully
    * connect with Mesos. In particular, a scheduler can pass some
@@ -69,15 +69,15 @@ public class SingularityExecutor implements Executor {
   @Override
   public void launchTask(final ExecutorDriver executorDriver, final Protos.TaskInfo taskInfo) {
     final String taskId = taskInfo.getTaskId().getValue();
-    
+
     LOG.info("Asked to launch task {}", taskId);
 
     try {
       final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
       final SingularityExecutorTask task = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
-      
+
       SubmitState submitState = monitor.submit(task);
-  
+
       switch (submitState) {
       case REJECTED:
         LOG.warn("Can't launch task {}, it was rejected (probably due to shutdown)", taskInfo);
@@ -90,11 +90,11 @@ public class SingularityExecutor implements Executor {
       }
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
-      
+
       executorUtils.sendStatusUpdate(executorDriver, taskInfo, TaskState.TASK_LOST, String.format("Unexpected exception while launching task %s - %s", taskId, t.getMessage()), LOG);
     }
   }
-  
+
   /**
    * Invoked when a task running within this executor has been killed
    * (via SchedulerDriver::killTask). Note that no status update will
@@ -105,15 +105,15 @@ public class SingularityExecutor implements Executor {
   @Override
   public void killTask(ExecutorDriver executorDriver, Protos.TaskID taskID) {
     final String taskId = taskID.getValue();
-    
+
     LOG.info("Asked to kill task {}", taskId);
 
     KillState killState = monitor.requestKill(taskId);
-    
+
     switch (killState) {
     case ALREADY_REQUESTED:
     case DIDNT_EXIST:
-    case INCONSISTENT_STATE: 
+    case INCONSISTENT_STATE:
       LOG.warn("Couldn't kill task {} due to killState {}", taskId, killState);
       break;
     case INTERRUPTING_PRE_PROCESS:
@@ -122,7 +122,7 @@ public class SingularityExecutor implements Executor {
       break;
     }
   }
-  
+
   @Override
   public void frameworkMessage(ExecutorDriver executorDriver, byte[] bytes) {
     LOG.info("Received framework message: {}", JavaUtils.toString(bytes));

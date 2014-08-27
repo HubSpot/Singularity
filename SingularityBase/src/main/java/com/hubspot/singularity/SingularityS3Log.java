@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityS3Log {
-  
+
   private final String getUrl;
   private final String key;
   private final long lastModified;
   private final long size;
-  
+
   @JsonCreator
   public SingularityS3Log(@JsonProperty("getUrl") String getUrl, @JsonProperty("key") String key, @JsonProperty("lastModified") long lastModified, @JsonProperty("size") long size) {
     this.getUrl = getUrl;
@@ -38,5 +38,5 @@ public class SingularityS3Log {
   public String toString() {
     return "SingularityS3Log [getUrl=" + getUrl + ", key=" + key + ", lastModified=" + lastModified + ", size=" + size + "]";
   }
-  
+
 }

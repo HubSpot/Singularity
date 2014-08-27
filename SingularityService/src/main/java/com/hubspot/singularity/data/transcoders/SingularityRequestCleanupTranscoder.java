@@ -8,7 +8,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 public class SingularityRequestCleanupTranscoder implements Transcoder<SingularityRequestCleanup> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityRequestCleanupTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -23,7 +23,7 @@ public class SingularityRequestCleanupTranscoder implements Transcoder<Singulari
   public byte[] toBytes(SingularityRequestCleanup object) throws SingularityJsonException {
     return object.getAsBytes(objectMapper);
   }
-  
-  
-  
+
+
+
 }

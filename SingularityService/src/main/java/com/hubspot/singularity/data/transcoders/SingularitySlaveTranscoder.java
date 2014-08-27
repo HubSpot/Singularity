@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularitySlave;
 public class SingularitySlaveTranscoder implements Transcoder<SingularitySlave> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularitySlaveTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -22,5 +22,5 @@ public class SingularitySlaveTranscoder implements Transcoder<SingularitySlave> 
   public byte[] toBytes(SingularitySlave object) {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

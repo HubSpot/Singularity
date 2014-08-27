@@ -12,7 +12,7 @@ public class SingularityPendingDeploy extends SingularityJsonObject {
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate;
   private final DeployState currentDeployState;
-  
+
   public static SingularityPendingDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityPendingDeploy.class);
@@ -45,5 +45,5 @@ public class SingularityPendingDeploy extends SingularityJsonObject {
   public String toString() {
     return "SingularityPendingDeploy [deployMarker=" + deployMarker + ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate + ", currentDeployState=" + currentDeployState + "]";
   }
- 
+
 }

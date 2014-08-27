@@ -9,15 +9,15 @@ public class SingularityClientProvider {
 
   private final ObjectMapper objectMapper;
   private final AsyncHttpClient httpClient;
-  
+
   @Inject
   public SingularityClientProvider(@Named(SingularityClientModule.HTTP_CLIENT_NAME) AsyncHttpClient httpClient, @Named(SingularityClientModule.OBJECT_MAPPER_NAME) ObjectMapper objectMapper) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
   }
-    
+
   public SingularityClient buildClient(String contextPath, String hosts) {
     return new SingularityClient(contextPath, httpClient, objectMapper, hosts);
   }
-  
+
 }

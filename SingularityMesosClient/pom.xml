@@ -9,7 +9,7 @@
     <version>0.3.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>MesosClient</artifactId>
+  <artifactId>SingularityMesosClient</artifactId>
 
   <repositories>
     <repository>

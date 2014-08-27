@@ -30,19 +30,19 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   private final static Logger LOG = LoggerFactory.getLogger(FileBasedSimpleStore.class);
 
   private final SingularityLogWatcherConfiguration configuration;
-  
+
   private final List<TailMetadataListener> listeners;
   private final JsonObjectFileHelper jsonObjectFileHelper;
-  
+
   @Inject
   public FileBasedSimpleStore(SingularityLogWatcherConfiguration configuration, JsonObjectFileHelper jsonObjectFileHelper) {
     super(configuration.getPollMillis(), configuration.getLogMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
     this.configuration = configuration;
     this.jsonObjectFileHelper = jsonObjectFileHelper;
-    
+
     this.listeners = Lists.newArrayList();
   }
-  
+
   @Override
   public void start() {
     try {
@@ -57,24 +57,24 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
       LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getLogMetadataSuffix());
       return false;
     }
-    
+
     return true;
   }
-  
+
   @Override
   protected boolean processEvent(Kind<?> kind, Path filename) throws IOException {
     if (!isMetadataFile(filename)) {
       return false;
     }
-    
+
     LOG.trace("Handling {} event on {}", kind, filename);
-    
+
     Optional<TailMetadata> tail = read(configuration.getLogMetadataDirectory().resolve(filename));
-      
+
     if (!tail.isPresent()) {
       return false;
     }
-    
+
     synchronized (listeners) {
       for (TailMetadataListener listener : listeners) {
         listener.tailChanged(tail.get());
@@ -85,19 +85,19 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
 
   private void delete(Path path) throws IOException {
     boolean deleted = false;
-    
+
     try {
       deleted = Files.deleteIfExists(path);
     } finally {
       LOG.trace("Deleted {} : {}", path, deleted);
     }
   }
-  
+
   @Override
   public void markConsumed(TailMetadata tail) throws StoreException {
     Path tailMetadataPath = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tail);
     Path storePath = getStorePath(tail);
-    
+
     try {
       delete(tailMetadataPath);
       delete(storePath);
@@ -109,53 +109,53 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   @Override
   public void savePosition(TailMetadata tail, long position) throws StoreException {
     Path storePath = getStorePath(tail);
-    
+
     try {
       Files.write(storePath, JavaUtils.toBytes(Long.toString(position)), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
     } catch (IOException e) {
       throw new StoreException("Couldn't write to " + storePath, e);
     }
   }
-  
+
   private Path getStorePath(TailMetadata tail) {
     return configuration.getStoreDirectory().resolve(Paths.get(tail.getFilenameKey() + configuration.getStoreSuffix()));
   }
-  
+
   @Override
   public Optional<Long> getPosition(TailMetadata tail) throws StoreException {
     Path storePath = getStorePath(tail);
-    
+
     if (!Files.exists(storePath)) {
       return Optional.absent();
     }
-    
+
     try {
       return Optional.of(Long.parseLong(JavaUtils.toString(Files.readAllBytes(storePath))));
     } catch (IOException e) {
       throw new StoreException("Couldn't read " + storePath, e);
     }
   }
-  
+
   private Optional<TailMetadata> read(Path file) throws IOException {
     return jsonObjectFileHelper.read(file, LOG, TailMetadata.class);
   }
-  
+
   @Override
   public List<TailMetadata> getTails() {
     try {
       final List<TailMetadata> tails = Lists.newArrayList();
-      
+
       for (Path file : JavaUtils.iterable(configuration.getLogMetadataDirectory())) {
         if (!isMetadataFile(file)) {
           continue;
         }
-        
+
         Optional<TailMetadata> maybeTail = read(file);
         if (!maybeTail.isPresent()) {
           LOG.warn("File {} didn't contain TailMetadata", file);
           continue;
         }
-        
+
         final TailMetadata tail = maybeTail.get();
         if (tails.contains(tail)) {
           LOG.warn("File {} contains a duplicate tail {}", file,tail);
@@ -163,7 +163,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
         }
         tails.add(tail);
       }
-   
+
       return tails;
     } catch (IOException e) {
       throw new StoreException(e);

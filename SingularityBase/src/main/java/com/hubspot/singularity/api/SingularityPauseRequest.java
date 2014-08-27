@@ -8,7 +8,7 @@ public class SingularityPauseRequest {
 
   private final Optional<String> user;
   private final Optional<Boolean> killTasks;
-  
+
   @JsonCreator
   public SingularityPauseRequest(@JsonProperty("user") Optional<String> user, @JsonProperty("killTasks") Optional<Boolean> killTasks) {
     this.user = user;
@@ -27,5 +27,5 @@ public class SingularityPauseRequest {
   public String toString() {
     return "SingularityPauseRequest [user=" + user + ", killTasks=" + killTasks + "]";
   }
-  
+
 }

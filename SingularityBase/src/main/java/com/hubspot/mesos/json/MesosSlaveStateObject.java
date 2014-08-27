@@ -10,9 +10,9 @@ public class MesosSlaveStateObject {
   private final String id;
   private final String pid;
   private final String hostname;
-  
+
   private final long startTime;
-  
+
   private final MesosResourcesObject resources;
 
   private final List<MesosSlaveFrameworkObject> frameworks;
@@ -61,7 +61,7 @@ public class MesosSlaveStateObject {
   public String getHostname() {
     return hostname;
   }
-  
+
   public List<MesosSlaveFrameworkObject> getFrameworks() {
     return frameworks;
   }

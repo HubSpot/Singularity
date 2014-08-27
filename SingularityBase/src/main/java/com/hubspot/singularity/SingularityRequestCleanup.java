@@ -12,13 +12,13 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   public enum RequestCleanupType {
     DELETING, PAUSING
   }
-  
+
   private final Optional<String> user;
   private final RequestCleanupType cleanupType;
   private final Optional<Boolean> killTasks;
   private final long timestamp;
   private final String requestId;
-  
+
   public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
@@ -26,7 +26,7 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("killTasks") Optional<Boolean> killTasks, @JsonProperty("requestId") String requestId) {
@@ -61,5 +61,5 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   public String toString() {
     return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", killTasks=" + killTasks + ", timestamp=" + timestamp + ", requestId=" + requestId + "]";
   }
-  
+
 }

@@ -19,22 +19,22 @@ public class SingularitySlave extends SingularityMachineAbstraction {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   public SingularitySlave(String slaveId, String host, String rackId) {
     super(slaveId);
     this.host = host;
     this.rackId = rackId;
   }
- 
+
   @JsonCreator
-  public SingularitySlave(@JsonProperty("slaveId") String slaveId, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId, @JsonProperty("state") SingularityMachineState state, 
-      @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("decomissioningBy") Optional<String> decomissioningBy, @JsonProperty("decomissioningAt") Optional<Long> decomissioningAt, 
+  public SingularitySlave(@JsonProperty("slaveId") String slaveId, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId, @JsonProperty("state") SingularityMachineState state,
+      @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("decomissioningBy") Optional<String> decomissioningBy, @JsonProperty("decomissioningAt") Optional<Long> decomissioningAt,
       @JsonProperty("decomissionedAt") Optional<Long> decomissionedAt, @JsonProperty("deadAt") Optional<Long> deadAt) {
     super(slaveId, state, firstSeenAt, decomissioningBy, decomissioningAt, decomissionedAt, deadAt);
     this.host = host;
     this.rackId = rackId;
   }
-  
+
   public String getHost() {
     return host;
   }
@@ -48,5 +48,5 @@ public class SingularitySlave extends SingularityMachineAbstraction {
     return "SingularitySlave [host=" + host + ", rackId=" + rackId + ", getDecomissioningBy()=" + getDecomissioningBy() + ", getDecomissioningAt()=" + getDecomissioningAt() + ", getId()=" + getId() + ", getDeadAt()=" + getDeadAt()
         + ", getDecomissionedAt()=" + getDecomissionedAt() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getState()=" + getState() + "]";
   }
-  
+
 }

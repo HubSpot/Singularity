@@ -33,7 +33,7 @@ public class SingularityS3Uploader {
   private final Path metadataPath;
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
-  
+
   public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
     this.s3Service = s3Service;
     this.metrics = metrics;
@@ -48,50 +48,50 @@ public class SingularityS3Uploader {
   public Path getMetadataPath() {
     return metadataPath;
   }
-    
+
   public S3UploadMetadata getUploadMetadata() {
     return uploadMetadata;
   }
-  
+
   @Override
   public String toString() {
     return "SingularityS3Uploader [uploadMetadata=" + uploadMetadata + ", metadataPath=" + metadataPath + "]";
   }
-  
+
   public int upload(Set<Path> synchronizedToUpload) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
-    
+
     for (Path file : JavaUtils.iterable(Paths.get(fileDirectory))) {
       if (!pathMatcher.matches(file.getFileName())) {
         LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
         continue;
       }
-      
+
       found++;
-      
+
       if (synchronizedToUpload.add(file)) {
         toUpload.add(file);
       } else {
         LOG.debug("{} Another uploader already added {}", logIdentifier, file);
       }
     }
-    
+
     if (toUpload.isEmpty()) {
       return found;
     }
-    
+
     uploadBatch(toUpload);
-    
+
     return found;
   }
-  
+
   private void uploadBatch(List<Path> toUpload) {
     final long start = System.currentTimeMillis();
     LOG.info("{} Uploading {} item(s)", logIdentifier, toUpload.size());
-    
+
     int success = 0;
-    
+
     for (int i = 0; i < toUpload.size(); i++) {
       final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
@@ -107,23 +107,23 @@ public class SingularityS3Uploader {
         context.stop();
       }
     }
-    
+
     LOG.info("{} Uploaded {} out of {} item(s) in {}", logIdentifier, success, toUpload.size(), JavaUtils.duration(start));
   }
-  
+
   private void uploadSingle(int sequence, Path file) throws Exception {
     final long start = System.currentTimeMillis();
-    
+
     final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString());
-    
-    LOG.info("{} Uploading {} to {}-{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
-    
+
+    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
+
     S3Object object = new S3Object(s3Bucket, file.toFile());
     object.setKey(key);
-    
+
     s3Service.putObject(s3Bucket, object);
     
     LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
   }
-  
+
 }

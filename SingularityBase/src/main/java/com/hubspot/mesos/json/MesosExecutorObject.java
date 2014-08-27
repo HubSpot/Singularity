@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosExecutorObject {
-  
+
   private final String directory;
   private final String id;
   private final String container;
@@ -14,7 +14,7 @@ public class MesosExecutorObject {
   private final MesosResourcesObject resources;
   private final List<MesosTaskObject> tasks;
   private final List<MesosTaskObject> completedTasks;
-  
+
   @JsonCreator
   public MesosExecutorObject(@JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("container") String container, @JsonProperty("directory") String directory, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("tasks") List<MesosTaskObject> tasks,  @JsonProperty("completed_tasks") List<MesosTaskObject> completedTasks) {
     this.name = name;
@@ -25,7 +25,7 @@ public class MesosExecutorObject {
     this.tasks = tasks;
     this.completedTasks = completedTasks;
   }
-  
+
   public String getContainer() {
     return container;
   }
@@ -33,15 +33,15 @@ public class MesosExecutorObject {
   public List<MesosTaskObject> getCompletedTasks() {
     return completedTasks;
   }
-  
+
   public List<MesosTaskObject> getTasks() {
     return tasks;
   }
-  
+
   public MesosResourcesObject getResources() {
     return resources;
   }
-  
+
   public String getName() {
     return name;
   }
@@ -53,5 +53,5 @@ public class MesosExecutorObject {
   public String getId() {
     return id;
   }
-  
+
 }

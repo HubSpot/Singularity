@@ -12,7 +12,7 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
   private final SingularityRequest request;
   private final SingularityDeploy deploy;
   private final SingularityPendingTask pendingTask;
-  
+
   public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityTaskRequest.class);
@@ -20,26 +20,26 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
   public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("deploy") SingularityDeploy deploy, @JsonProperty("pendingTask") SingularityPendingTask pendingTask) {
     this.request = request;
     this.deploy = deploy;
     this.pendingTask = pendingTask;
   }
-  
+
   public SingularityRequest getRequest() {
     return request;
   }
-  
+
   public SingularityDeploy getDeploy() {
     return deploy;
   }
-  
+
   public SingularityPendingTask getPendingTask() {
     return pendingTask;
   }
-  
+
   @Override
   public int hashCode() {
     return Objects.hash(pendingTask.getPendingTaskId());
@@ -70,6 +70,6 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
   @Override
   public String toString() {
     return "SingularityTaskRequest [request=" + request + ", deploy=" + deploy + ", pendingTask=" + pendingTask + "]";
-  }  
+  }
 
 }

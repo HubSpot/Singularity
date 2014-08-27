@@ -8,7 +8,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityTaskHealthcheckResultTranscoder extends SingularityCompressingTaskIdHolderTranscoder<SingularityTaskHealthcheckResult> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityTaskHealthcheckResultTranscoder(SingularityConfiguration configuration, ObjectMapper objectMapper) {
     super(configuration);

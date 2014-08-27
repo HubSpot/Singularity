@@ -34,10 +34,10 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
   private final ExecutorService tailService;
   private final ScheduledExecutorService retryService;
   private final Map<TailMetadata, SingularityLogWatcherTailer> tailers;
-  
+
   private volatile boolean shutdown;
   private final Lock tailersLock;
-  
+
   @Inject
   public SingularityLogWatcherDriver(SimpleStore store, SingularityLogWatcherConfiguration configuration, LogForwarder logForwarder) {
     this.store = store;
@@ -48,29 +48,29 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     this.retryService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityLogWatcherRetry-%d").build());
     this.shutdown = false;
     this.tailersLock = new ReentrantLock();
-    
+
     this.store.registerListener(this);
   }
-  
+
   private boolean tail(final TailMetadata tail) {
     final Optional<SingularityLogWatcherTailer> maybeTailer = buildTailer(tail);
 
     if (!maybeTailer.isPresent()) {
       return false;
     }
-    
+
     final SingularityLogWatcherTailer tailer = maybeTailer.get();
-    
+
     tailService.submit(new Runnable() {
-      
+
       @Override
       public void run() {
         try {
           tailer.watch();
-          
+
           if (!shutdown) {
             LOG.info("Consuming tail: {}", tail);
-          
+
             tailer.consumeStream();
             store.markConsumed(tail);
           }
@@ -79,7 +79,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
             LOG.error("Exception tailing {} while shutting down", tail, t);
           } else {
             LOG.error("Exception tailing {}, will retry in {}", tail, JavaUtils.durationFromMillis(TimeUnit.SECONDS.toMillis(configuration.getRetryDelaySeconds())), t);
-            
+
             tailLater(tail);
           }
         } finally {
@@ -89,14 +89,14 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
         }
       }
     });
-    
+
     tailers.put(tail, tailer);
     return true;
   }
-  
+
   private void tailLater(final TailMetadata tail) {
     retryService.schedule(new Runnable() {
-      
+
       @Override
       public void run() {
         LOG.debug("Retrying {}", tail);
@@ -108,21 +108,22 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       }
     }, configuration.getRetryDelaySeconds(), TimeUnit.SECONDS);
   }
-  
+
+  @Override
   public void startAndWait() {
     final long start = System.currentTimeMillis();
-    
+
     int success = 0;
     int total = 0;
-    
+
     tailersLock.lock();
-    
+
     try {
       if (shutdown) {
         LOG.info("Not starting, was already shutdown");
         return;
       }
-      
+
       for (TailMetadata tail : store.getTails()) {
         if (tail(tail)) {
           success++;
@@ -134,9 +135,9 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     } finally {
       tailersLock.unlock();
     }
-        
+
     LOG.info("Started {} tail(s) out of {} in {}", success, total, JavaUtils.duration(start));
-  
+
     store.start();
   }
 
@@ -149,40 +150,41 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
     tailersLock.unlock();
     return true;
   }
-  
+
+  @Override
   public void shutdown() {
     final long start = System.currentTimeMillis();
-    
+
     LOG.info("Shutting down with {} tailer(s)", tailers.size());
-    
+
     if (!markShutdown()) {
       LOG.info("Already shutdown, canceling redundant call");
       return;
     }
-    
+
     retryService.shutdownNow();
-    
+
     for (SingularityLogWatcherTailer tailer : tailers.values()) {
       tailer.stop();
     }
-    
+
     tailService.shutdown();
-    
+
     try {
       tailService.awaitTermination(1L, TimeUnit.DAYS);
     } catch (Throwable t) {
       LOG.error("While awaiting tail service", t);
     }
-    
+
     try {
       store.close();
     } catch (Throwable t) {
       LOG.error("While closing store", t);
     }
-    
+
     LOG.info("Shutdown after {}", JavaUtils.duration(start));
   }
-  
+
   private Optional<SingularityLogWatcherTailer> buildTailer(TailMetadata tail) {
     try {
       SingularityLogWatcherTailer tailer = new SingularityLogWatcherTailer(tail, configuration, store, logForwarder);
@@ -192,19 +194,19 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       return Optional.absent();
     }
   }
-  
+
   @Override
   public void tailChanged(TailMetadata tailMetadata) {
     tailersLock.lock();
-    
+
     try {
       if (shutdown) {
         LOG.info("Not handling notification {}, shutting down...", tailMetadata);
         return;
       }
-      
+
       final SingularityLogWatcherTailer tailer = tailers.get(tailMetadata);
-      
+
       if (tailer != null) {
         if (tailMetadata.isFinished()) {
           tailer.stop();

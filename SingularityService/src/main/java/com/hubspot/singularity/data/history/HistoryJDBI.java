@@ -27,10 +27,10 @@ public interface HistoryJDBI {
 
   @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, deployStateAt, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :deployStateAt, :deployState, :bytes)")
   void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("deployStateAt") Date deployStateAt, @Bind("deployState") String deployState, @Bind("bytes") byte[] bytes);
-  
+
   @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus)")
   void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("bytes") byte[] bytes, @Bind("updatedAt") Date updatedAt, @Bind("lastTaskStatus") String lastTaskStatus);
-  
+
   @Mapper(SingularityBytesMapper.class)
   @SqlQuery("SELECT bytes FROM taskHistory WHERE taskId = :taskId")
   byte[] getTaskHistoryForTask(@Bind("taskId") String taskId);
@@ -38,23 +38,23 @@ public interface HistoryJDBI {
   @Mapper(SingularityBytesMapper.class)
   @SqlQuery("SELECT bytes FROM deployHistory WHERE requestId = :requestId AND deployId = :deployId")
   byte[] getDeployHistoryForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
-  
+
   @Mapper(SingularityDeployHistoryLiteMapper.class)
   @SqlQuery("SELECT requestId, deployId, createdAt, user, deployStateAt, deployState FROM deployHistory WHERE requestId = :requestId ORDER BY createdAt DESC LIMIT :limitStart, :limitCount")
   List<SingularityDeployHistory> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
-  
+
   @Mapper(SingularityTaskIdHistoryMapper.class)
   @SqlQuery("SELECT taskId, requestId, updatedAt, lastTaskStatus FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limitStart, :limitCount")
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
-  
+
   @Mapper(SingularityRequestHistoryMapper.class)
   @SqlQuery("SELECT request, createdAt, requestState, user FROM requestHistory WHERE requestId = :requestId ORDER BY <orderBy> <orderDirection> LIMIT :limitStart, :limitCount")
   List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId, @Define("orderBy") String orderBy, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
-  
+
   @Mapper(SingularityRequestIdMapper.class)
   @SqlQuery("SELECT DISTINCT requestId FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') LIMIT :limitStart, :limitCount")
   List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
-  
+
   void close();
-  
+
 }

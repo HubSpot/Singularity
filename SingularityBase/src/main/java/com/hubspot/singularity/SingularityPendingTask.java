@@ -9,7 +9,7 @@ public class SingularityPendingTask extends SingularityJsonObject {
 
   private final SingularityPendingTaskId taskId;
   private final Optional<String> maybeCmdLineArgs;
-  
+
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
 
@@ -17,10 +17,10 @@ public class SingularityPendingTask extends SingularityJsonObject {
       public boolean apply(SingularityPendingTask input) {
         return input.getPendingTaskId().getRequestId().equals(requestId);
       }
-      
+
     };
   }
-  
+
   public static Predicate<SingularityPendingTask> matchingDeploy(final String deployId) {
     return new Predicate<SingularityPendingTask>() {
 
@@ -28,16 +28,16 @@ public class SingularityPendingTask extends SingularityJsonObject {
       public boolean apply(SingularityPendingTask input) {
         return input.getPendingTaskId().getDeployId().equals(deployId);
       }
-      
+
     };
   }
-  
+
   @JsonCreator
   public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId taskId, @JsonProperty("cmdLineArgs") Optional<String> maybeCmdLineArgs) {
     this.taskId = taskId;
     this.maybeCmdLineArgs = maybeCmdLineArgs;
   }
-  
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -75,5 +75,5 @@ public class SingularityPendingTask extends SingularityJsonObject {
   public String toString() {
     return "SingularityPendingTask [taskId=" + taskId + ", maybeCmdLineArgs=" + maybeCmdLineArgs + "]";
   }
-  
+
 }

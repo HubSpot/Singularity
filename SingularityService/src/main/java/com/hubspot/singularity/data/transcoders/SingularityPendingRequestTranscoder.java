@@ -8,7 +8,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 public class SingularityPendingRequestTranscoder implements Transcoder<SingularityPendingRequest> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityPendingRequestTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -23,5 +23,5 @@ public class SingularityPendingRequestTranscoder implements Transcoder<Singulari
   public byte[] toBytes(SingularityPendingRequest object) throws SingularityJsonException {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

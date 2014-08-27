@@ -54,12 +54,12 @@ import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy
 public class S3LogResource extends AbstractHistoryResource {
 
   private final static Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
-  
+
   private final Optional<S3Service> s3;
   private final Optional<S3Configuration> configuration;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
-  
+
   @Inject
   public S3LogResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3, Optional<S3Configuration> configuration) {
     super(historyManager, taskManager, deployManager);
@@ -71,81 +71,81 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId) {
     SingularityTaskHistory history = getTaskHistory(taskId);
-    
+
     SimplifiedTaskState taskState = SingularityTaskHistoryUpdate.getCurrentState(history.getTaskUpdates());
-    
+
     final long start = taskId.getStartedAt();
     final long end = taskState == SimplifiedTaskState.DONE ? Iterables.getLast(history.getTaskUpdates()).getTimestamp() : System.currentTimeMillis();
-    
+
     Optional<String> tag = Optional.absent();
     if (history.getTask().getTaskRequest().getDeploy().getExecutorData().isPresent()) {
       tag = history.getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
     }
-    
+
     Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), taskId, tag, start, end);
-  
+
     LOG.trace("Task {} got S3 prefixes {} for start {}, end {}, tag {}", taskId, prefixes, start, end, tag);
-  
+
     return prefixes;
   }
-  
+
   private boolean isCurrentDeploy(String requestId, String deployId) {
     return deployId.equals(deployManager.getInUseDeployId(requestId).orNull());
   }
-  
+
   private Collection<String> getS3PrefixesForRequest(String requestId) {
     SingularityRequestHistory history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.ASC), 0, 1), null);
-    
+
     if (history == null) {
       throw WebExceptions.notFound("No request history found for %s", requestId);
     }
-    
+
     final long start = history.getCreatedAt();
-    
+
     history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1), null);
-    
+
     long end = System.currentTimeMillis();
-    
+
     if (history != null && history.getState() == RequestHistoryType.DELETED || history.getState() == RequestHistoryType.PAUSED) {
       end = history.getCreatedAt() + TimeUnit.DAYS.toMillis(1);
     }
-    
+
     Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), requestId, start, end);
-        
+
     LOG.trace("Request {} got S3 prefixes {} for start {}, end {}", requestId, prefixes, start, end);
-  
+
     return prefixes;
   }
-  
+
   private Collection<String> getS3PrefixesForDeploy(String requestId, String deployId) {
     SingularityDeployHistory deployHistory = getDeployHistory(requestId, deployId);
-    
+
     final long start = deployHistory.getDeployMarker().getTimestamp();
-    
+
     long end = System.currentTimeMillis();
-    
+
     if (!isCurrentDeploy(requestId, deployId) && deployHistory.getDeployStatistics().isPresent() && deployHistory.getDeployStatistics().get().getLastFinishAt().isPresent()) {
       end = deployHistory.getDeployStatistics().get().getLastFinishAt().get() + TimeUnit.DAYS.toMillis(1);
     }
-    
+
     Optional<String> tag = Optional.absent();
-    
+
     if (deployHistory.getDeploy().isPresent() && deployHistory.getDeploy().get().getExecutorData().isPresent()) {
       tag = deployHistory.getDeploy().get().getExecutorData().get().getLoggingTag();
     }
-    
+
     Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), requestId, deployId, tag, start, end);
-        
+
     LOG.trace("Request {}, deploy {} got S3 prefixes {} for start {}, end {}, tag {}", requestId, deployId, prefixes, start, end, tag);
-  
+
     return prefixes;
   }
-  
+
   private Collection<SingularityS3Log> getS3Logs(Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
     ListeningExecutorService es = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.min(prefixes.size(), configuration.get().getMaxS3Threads()), new ThreadFactoryBuilder().setNameFormat("S3LogFetcher-%d").build()));
-    
+
     List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
-    
+
     for (final String s3Prefix : prefixes) {
       futures.add(es.submit(new Callable<S3Object[]>() {
 
@@ -155,12 +155,12 @@ public class S3LogResource extends AbstractHistoryResource {
         }
       }));
     }
-    
+
     final long start = System.currentTimeMillis();
     List<S3Object[]> results = Futures.allAsList(futures).get(configuration.get().getWaitForS3ListSeconds(), TimeUnit.SECONDS);
-    
+
     List<S3Object> objects = Lists.newArrayListWithExpectedSize(results.size() * 2);
-    
+
     for (S3Object[] s3Objects : results) {
       for (final S3Object s3Object : s3Objects) {
         objects.add(s3Object);
@@ -168,7 +168,7 @@ public class S3LogResource extends AbstractHistoryResource {
     }
 
     LOG.trace("Got {} objects from S3 after {}", objects.size(), JavaUtils.duration(start));
-    
+
     List<ListenableFuture<SingularityS3Log>> logFutures = Lists.newArrayListWithCapacity(objects.size());
     final Date expireAt = new Date(System.currentTimeMillis() + configuration.get().getExpireS3LinksAfterMillis());
 
@@ -181,26 +181,26 @@ public class S3LogResource extends AbstractHistoryResource {
 
           return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
         }
-        
+
       }));
     }
-    
+
     return Futures.allAsList(logFutures).get(configuration.get().getWaitForS3LinksSeconds(), TimeUnit.SECONDS);
   }
-  
+
   private void checkS3() {
     if (!s3.isPresent()) {
-      throw WebExceptions.webException(501, "S3 configuration was absent");
+      throw WebExceptions.notFound("S3 configuration was absent");
     }
   }
-  
+
   @GET
   @Path("task/{taskId}")
   public Collection<SingularityS3Log> getS3LogsForTask(@PathParam("taskId") String taskId) throws Exception {
     checkS3();
-    
+
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
-    
+
     try {
       return getS3Logs(getS3PrefixesForTask(taskIdObject));
     } catch (TimeoutException te) {
@@ -209,12 +209,12 @@ public class S3LogResource extends AbstractHistoryResource {
       throw Throwables.propagate(t);
     }
   }
-  
+
   @GET
   @Path("request/{requestId}")
   public Collection<SingularityS3Log> getS3LogsForRequest(@PathParam("requestId") String requestId) throws Exception {
     checkS3();
-  
+
     try {
       return getS3Logs(getS3PrefixesForRequest(requestId));
     } catch (TimeoutException te) {
@@ -223,12 +223,12 @@ public class S3LogResource extends AbstractHistoryResource {
       throw Throwables.propagate(t);
     }
   }
-  
+
   @GET
   @Path("request/{requestId}/deploy/{deployId}")
   public Collection<SingularityS3Log> getS3LogsForDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) throws Exception {
     checkS3();
-  
+
     try {
       return getS3Logs(getS3PrefixesForDeploy(requestId, deployId));
     } catch (TimeoutException te) {
@@ -237,5 +237,5 @@ public class S3LogResource extends AbstractHistoryResource {
       throw Throwables.propagate(t);
     }
   }
-  
+
 }

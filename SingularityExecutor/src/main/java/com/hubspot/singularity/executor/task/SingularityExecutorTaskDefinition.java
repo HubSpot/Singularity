@@ -17,9 +17,9 @@ public class SingularityExecutorTaskDefinition {
   private final String serviceLogOut;
   private final String taskAppDirectory;
   private final String logrotateStateFile;
-  
+
   @JsonCreator
-  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, 
+  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory,
       @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile) {
     this.executorData = executorData;
     this.taskId = taskId;
@@ -45,21 +45,21 @@ public class SingularityExecutorTaskDefinition {
   public Path getServiceLogOutPath() {
     return taskDirectoryPath.resolve(serviceLogOut);
   }
-  
+
   @JsonIgnore
   public Path getTaskAppDirectoryPath() {
     return taskDirectoryPath.resolve(taskAppDirectory);
   }
-  
+
   @JsonIgnore
   public Path getLogrotateStateFilePath() {
     return taskDirectoryPath.resolve(logrotateStateFile);
   }
-  
+
   public String getTaskDirectory() {
     return taskDirectoryPath.toString();
   }
-  
+
   public String getExecutorBashOut() {
     return getExecutorBashOutPath().toString();
   }
@@ -88,6 +88,6 @@ public class SingularityExecutorTaskDefinition {
   public String toString() {
     return "SingularityExecutorTaskDefinition [taskId=" + taskId + "]";
   }
-  
-  
+
+
 }

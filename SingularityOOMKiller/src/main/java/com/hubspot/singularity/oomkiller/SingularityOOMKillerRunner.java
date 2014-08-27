@@ -13,9 +13,9 @@ public class SingularityOOMKillerRunner {
   public static void main(String... args) {
     new SingularityOOMKillerRunner().run(args);
   }
-  
+
   private SingularityOOMKillerRunner() {}
-  
+
   public void run(String[] args) {
     new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(new SingularityOOMKillerConfigurationLoader()), new SingularityOOMKillerModule(), new SingularityClientModule()));
   }

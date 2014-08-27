@@ -41,6 +41,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
     }
   }
 
+  @Override
   public void startAndWait() {
     Preconditions.checkState(!server.isPresent());
 

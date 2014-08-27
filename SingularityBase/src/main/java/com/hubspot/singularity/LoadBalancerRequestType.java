@@ -9,7 +9,7 @@ public enum LoadBalancerRequestType {
   ADD, REMOVE, DEPLOY;
 
   public static class LoadBalancerRequestId {
-    
+
     private final String id;
     private final LoadBalancerRequestType requestType;
 
@@ -18,7 +18,8 @@ public enum LoadBalancerRequestType {
       this.id = id;
       this.requestType = requestType;
     }
-    
+
+    @Override
     public String toString() {
       return String.format("%s-%s", id, requestType);
     }
@@ -27,7 +28,7 @@ public enum LoadBalancerRequestType {
       String[] items = JavaUtils.reverseSplit(string, 2, "-");
       return new LoadBalancerRequestId(items[0], LoadBalancerRequestType.valueOf(items[1]));
     }
-    
+
     public String getId() {
       return id;
     }
@@ -35,7 +36,7 @@ public enum LoadBalancerRequestType {
     public LoadBalancerRequestType getRequestType() {
       return requestType;
     }
-    
+
   }
-  
+
 }

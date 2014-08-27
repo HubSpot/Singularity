@@ -27,10 +27,10 @@ public class SingularityTaskId extends SingularityId {
       public boolean apply(SingularityTaskId input) {
         return input.getRequestId().equals(requestId);
       }
-      
+
     };
   }
-  
+
   public static Predicate<SingularityTaskId> matchingDeploy(final String deployId) {
     return new Predicate<SingularityTaskId>() {
 
@@ -38,23 +38,23 @@ public class SingularityTaskId extends SingularityId {
       public boolean apply(SingularityTaskId input) {
         return input.getDeployId().equals(deployId);
       }
-      
+
     };
   }
-  
+
   public static Predicate<SingularityTaskId> notIn(Collection<SingularityTaskId> exclude) {
     return Predicates.not(Predicates.in(exclude));
   }
-    
+
   @SuppressWarnings("unchecked")
   public static List<SingularityTaskId> matchingAndNotIn(Collection<SingularityTaskId> taskIds, String requestId, String deployId, Collection<SingularityTaskId> exclude) {
     return Lists.newArrayList(Iterables.filter(taskIds, Predicates.and(matchingRequest(requestId), matchingDeploy(deployId), notIn(exclude))));
   }
-  
+
   public static List<SingularityTaskId> matchingAndNotIn(Collection<SingularityTaskId> taskIds, String requestId, Collection<SingularityTaskId> exclude) {
     return Lists.newArrayList(Iterables.filter(taskIds, Predicates.and(matchingRequest(requestId), notIn(exclude))));
   }
-  
+
   @JsonCreator
   public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId) {
     this.requestId = requestId;
@@ -64,11 +64,11 @@ public class SingularityTaskId extends SingularityId {
     this.rackId = rackId;
     this.host = host;
   }
-  
+
   public String getRackId() {
     return rackId;
   }
-  
+
   public String getDeployId() {
     return deployId;
   }
@@ -76,7 +76,7 @@ public class SingularityTaskId extends SingularityId {
   public String getHost() {
     return host;
   }
-  
+
   public String getRequestId() {
     return requestId;
   }
@@ -88,16 +88,16 @@ public class SingularityTaskId extends SingularityId {
   public int getInstanceNo() {
     return instanceNo;
   }
-    
+
   public static SingularityTaskId fromString(String string) throws InvalidSingularityTaskIdException {
     String[] splits = null;
-    
+
     try {
       splits = JavaUtils.reverseSplit(string, 6, "-");
     } catch (IllegalStateException ise) {
       throw new InvalidSingularityTaskIdException(String.format("TaskId %s was invalid (%s)", string, ise.getMessage()));
     }
-    
+
     try {
       final String requestId = splits[0];
       final String deployId = splits[1];
@@ -105,15 +105,16 @@ public class SingularityTaskId extends SingularityId {
       final int instanceNo = Integer.parseInt(splits[3]);
       final String host = splits[4];
       final String rackId = splits[5];
-      
+
       return new SingularityTaskId(requestId, deployId, startedAt, instanceNo, host, rackId);
     } catch (NumberFormatException nfe) {
       throw new InvalidSingularityTaskIdException(String.format("TaskId %s had an invalid number parameter (%s)", string, nfe.getMessage()));
     }
   }
 
+  @Override
   public String toString() {
     return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getStartedAt(), getInstanceNo(), getHost(), getRackId());
   }
-  
+
 }

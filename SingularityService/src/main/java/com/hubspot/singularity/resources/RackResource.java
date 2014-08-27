@@ -20,15 +20,15 @@ import com.hubspot.singularity.data.RackManager;
 @Path(SingularityService.API_BASE_PATH + "/racks")
 @Produces({ MediaType.APPLICATION_JSON })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
-  
+
   private final RackManager rackManager;
-  
+
   @Inject
   public RackResource(RackManager rackManager) {
     super(rackManager);
     this.rackManager = rackManager;
   }
-  
+
   @Override
   protected String getObjectTypeString() {
     return "Rack";
@@ -39,13 +39,13 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   public List<SingularityRack> getRacks() {
     return rackManager.getActiveObjects();
   }
-  
+
   @GET
   @Path("/dead")
   public List<SingularityRack> getDead() {
     return rackManager.getDeadObjects();
   }
-  
+
   @GET
   @Path("/decomissioning")
   public List<SingularityRack> getDecomissioning() {
@@ -57,17 +57,17 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   public void removeDeadRack(@PathParam("rackId") String rackId) {
     super.removeDead(rackId);
   }
-  
+
   @DELETE
   @Path("/rack/{rackId}/decomissioning")
   public void removeDecomissioningRack(@PathParam("rackId") String rackId) {
     super.removeDecomissioning(rackId);
   }
-  
+
   @POST
   @Path("/rack/{rackId}/decomission")
   public void decomissionRack(@PathParam("rackId") String rackId, @QueryParam("user") Optional<String> user) {
     super.decomission(rackId, user);
   }
-   
+
 }
