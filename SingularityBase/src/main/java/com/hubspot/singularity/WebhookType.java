@@ -2,6 +2,6 @@ package com.hubspot.singularity;
 
 public enum WebhookType {
 
-  TASK, REQUEST;
+  TASK, REQUEST, DEPLOY;
   
 }

@@ -29,7 +29,7 @@ public class SingularityWebhook extends SingularityJsonObject {
     this.uri = uri;
     this.timestamp = timestamp;
     this.user = user;
-    this.id = JavaUtils.urlEncode(uri);
+    this.id = type.name() + "-" + JavaUtils.urlEncode(uri);
     this.type = type;
   }
 

@@ -10,6 +10,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityWebhookTranscoder;
@@ -42,12 +43,12 @@ public class WebhookManager extends CuratorAsyncManager {
     return ZKPaths.makePath(ACTIVE_PATH, webhookId);
   }
 
-  private String getEnqueuePathForWebhook(String webhookId) {
-    return ZKPaths.makePath(QUEUES_PATH, webhookId);
+  private String getEnqueuePathForWebhook(String webhookId, WebhookType type) {
+    return ZKPaths.makePath(ZKPaths.makePath(QUEUES_PATH, type.name()), webhookId);
   }
 
   private String getEnqueuePathForTaskUpdate(String webhookId, SingularityTaskHistoryUpdate taskUpdate) {
-    return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId), getTaskHistoryUpdateId(taskUpdate));
+    return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.TASK), getTaskHistoryUpdateId(taskUpdate));
   }
 
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
@@ -56,14 +57,14 @@ public class WebhookManager extends CuratorAsyncManager {
     return create(path, webhook, webhookTranscoder);
   }
 
-  public SingularityDeleteResult deleteTaskWebhook(String webhookId) {
+  public SingularityDeleteResult deleteWebhook(String webhookId) {
     final String path = getWebhookPath(webhookId);
 
     return delete(path);
   }
 
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesForHook(String webhookId) {
-    return getAsyncChildren(getEnqueuePathForWebhook(webhookId), taskHistoryUpdateTranscoder);
+    return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.TASK), taskHistoryUpdateTranscoder);
   }
 
   public void enqueueTaskUpdate(SingularityTaskHistoryUpdate taskUpdate) {

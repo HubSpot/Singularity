@@ -18,16 +18,22 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.Response;
+
+import edu.umd.cs.findbugs.annotations.Confidence;
 
 public class SingularityWebhookSender {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityWebhookSender.class);
 
+  private final SingularityConfiguration configuration;
   private final AsyncHttpClient http;
   private final WebhookManager webhookManager;
   private final TaskManager taskManager;
@@ -35,7 +41,8 @@ public class SingularityWebhookSender {
   private final ObjectMapper objectMapper;
   
   @Inject
-  public SingularityWebhookSender(AsyncHttpClient http, HistoryManager historyManager, ObjectMapper objectMapper, TaskManager taskManager, WebhookManager webhookManager) {
+  public SingularityWebhookSender(SingularityConfiguration configuration, AsyncHttpClient http, HistoryManager historyManager, ObjectMapper objectMapper, TaskManager taskManager, WebhookManager webhookManager) {
+    this.configuration = configuration;
     this.http = http;
     this.webhookManager = webhookManager;
     this.taskManager = taskManager;
@@ -53,6 +60,7 @@ public class SingularityWebhookSender {
 
     int taskUpdates = 0;
     int requestUpdates = 0;
+    int deployUpdates = 0;
     
     for (SingularityWebhook webhook : webhooks) {
       
@@ -61,19 +69,27 @@ public class SingularityWebhookSender {
         taskUpdates += checkTaskUpdates(webhook);
       case REQUEST:
         requestUpdates += checkRequestUpdates(webhook);
+      case DEPLOY:
+        deployUpdates += checkDeployUpdates(webhook);
       }
     }
 
-    LOG.info("Sent {} task updates, {} request updates for {} webhooks in {}", taskUpdates, requestUpdates, webhooks.size(), JavaUtils.duration(start));
+    LOG.info("Sent {} task, {} request, and {} deploy updates for {} webhooks in {}", taskUpdates, requestUpdates, deployUpdates, webhooks.size(), JavaUtils.duration(start));
   }
   
   private int checkRequestUpdates(SingularityWebhook webhook) {
     return 0;
   }
   
+  private int checkDeployUpdates(SingularityWebhook webhook) {
+    return 0;
+  }
+  
   private int checkTaskUpdates(SingularityWebhook webhook) {
     List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedTaskUpdatesForHook(webhook.getId());
 
+    int numTaskUpdates = 0;
+    
     for (SingularityTaskHistoryUpdate taskUpdate : taskUpdates) {
       Optional<SingularityTask> task = getTask(taskUpdate.getTaskId());
       
@@ -83,26 +99,33 @@ public class SingularityWebhookSender {
         webhookManager.deleteTaskUpdate(webhook, taskUpdate);
       }
       
-      LOG.trace("Sending {} to {}", taskUpdate, webhook.getUri());
-      
-      BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
-
-      try {
-        postRequest.setBody(objectMapper.writeValueAsBytes(new SingularityTaskWebhook(task.get(), taskUpdate)));
-      } catch (JsonProcessingException e) {
-        throw Throwables.propagate(e);
-      }
-
-      // TODO handle retries, errors.
-      try {
-        postRequest.execute(new SingularityTaskWebhookAsyncHandler(webhookManager, webhook, taskUpdate));
-      } catch (IOException e) {
-        // this is probably a retry
-        LOG.warn("Couldn't execute webhook to {}", webhook.getUri(), e);
-      }
+      executeWebhook(webhook, new SingularityTaskWebhook(task.get(), taskUpdate), new SingularityTaskWebhookAsyncHandler(webhookManager, webhook, taskUpdate, numTaskUpdates++ > configuration.getMaxQueuedUpdatesPerWebhook()));
     }
 
     return taskUpdates.size();
+  }
+  
+  // TODO handle retries, errors.
+  private <T> void executeWebhook(SingularityWebhook webhook, Object payload, AbstractSingularityWebhookAsyncHandler<T> handler) {
+    LOG.trace("Sending {} to {}", payload, webhook.getUri());
+    
+    BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
+
+    try {
+      postRequest.setBody(objectMapper.writeValueAsBytes(payload));
+    } catch (JsonProcessingException e) {
+      throw Throwables.propagate(e);
+    }
+    
+    try {
+      postRequest.execute(handler);
+    } catch (IOException e) {
+      LOG.warn("Couldn't execute webhook to {}", webhook.getUri(), e);
+      
+      if (handler.shouldDeleteUpdateDueToQueueAboveCapacity()) {
+        handler.deleteWebhookUpdate();
+      }
+    }
   }
   
   // TODO cache this?
