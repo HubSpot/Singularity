@@ -122,7 +122,7 @@ public class SingularityS3Uploader {
     object.setKey(key);
 
     s3Service.putObject(s3Bucket, object);
-
+    
     LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
   }
 
