@@ -197,7 +197,7 @@ public class SingularityCleaner {
       if (killScheduledTasks) {
         for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matchingRequest(requestId))) {
           LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
-          taskManager.deletePendingTask(matchingTask.getPendingTaskId().getId());
+          taskManager.deletePendingTask(matchingTask.getPendingTaskId());
           numScheduledTasksRemoved++;
         }
       }

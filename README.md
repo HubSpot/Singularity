@@ -21,7 +21,8 @@
 
 ## Contact
 
-singularity-users@googlegroups.com // [Google Groups](https://groups.google.com/forum/#!topic/singularity-users/)
+- Mailing List: singularity-users@googlegroups.com // [Google Groups](https://groups.google.com/forum/#!topic/singularity-users/)
+- IRC: #singularity-framework on freenode
 
 ## About Singularity Documentation
 *Singularity* is a new and very active project and while we make a considerable effort to keep the documentation current, there is a possibility that you will find some inconsistencies or obsolete information.

@@ -281,7 +281,7 @@ public class SingularityScheduler {
     for (SingularityPendingTask pendingTask : pendingTasks) {
       if (!foundPendingTaskId.contains(pendingTask.getPendingTaskId().getId())) {
         LOG.info("Removing stale pending task {}", pendingTask.getPendingTaskId());
-        taskManager.deletePendingTask(pendingTask.getPendingTaskId().getId());
+        taskManager.deletePendingTask(pendingTask.getPendingTaskId());
       }
     }
 
@@ -294,7 +294,7 @@ public class SingularityScheduler {
 
       if (!matchesDeploy(requestDeployState, taskRequest)) {
         LOG.info("Removing stale pending task {} because the deployId did not match active/pending deploys {}", taskRequest.getPendingTask().getPendingTaskId(), requestDeployState);
-        taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId().getId());
+        taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId());
       } else {
         taskRequestsWithValidDeploys.add(taskRequest);
       }
@@ -318,7 +318,7 @@ public class SingularityScheduler {
   private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
     for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
       LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
-      taskManager.deletePendingTask(task.getPendingTaskId().getId());
+      taskManager.deletePendingTask(task.getPendingTaskId());
     }
   }
 

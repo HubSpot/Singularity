@@ -149,8 +149,8 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(ACTIVE_PATH_ROOT, taskId);
   }
 
-  private String getPendingPath(String taskId) {
-    return ZKPaths.makePath(PENDING_PATH_ROOT, taskId);
+  private String getPendingPath(SingularityPendingTaskId pendingTaskId) {
+    return ZKPaths.makePath(PENDING_PATH_ROOT, pendingTaskId.getId());
   }
 
   private String getCleanupPath(String taskId) {
@@ -205,7 +205,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private void createPendingTask(SingularityPendingTask task) throws Exception {
-    final String pendingPath = getPendingPath(task.getPendingTaskId().getId());
+    final String pendingPath = getPendingPath(task.getPendingTaskId());
 
     Optional<byte[]> data = Optional.absent();
 
@@ -380,7 +380,11 @@ public class TaskManager extends CuratorAsyncManager {
   public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
     return getData(getLoadBalancerStatePath(taskId, requestType), taskLoadBalancerUpdateTranscoder);
   }
-
+  
+  public SingularityPendingTask getPendingTask(SingularityPendingTaskId pendingTaskId) {
+    return pendingTaskIdToPendingTaskFunction.apply(pendingTaskId);
+  }
+  
   public Optional<SingularityTask> getActiveTask(String taskId) {
     final String path = getActivePath(taskId);
 
@@ -420,7 +424,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
-    final String scheduledPath = getPendingPath(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
+    final String scheduledPath = getPendingPath(task.getTaskRequest().getPendingTask().getPendingTaskId());
     final String activePath = getActivePath(task.getTaskId().getId());
 
     curator.delete().forPath(scheduledPath);
@@ -482,8 +486,8 @@ public class TaskManager extends CuratorAsyncManager {
     delete(getActivePath(taskId));
   }
 
-  public void deletePendingTask(String taskId) {
-    delete(getPendingPath(taskId));
+  public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
+    delete(getPendingPath(pendingTaskId));
   }
 
   public void deleteCleanupTask(String taskId) {

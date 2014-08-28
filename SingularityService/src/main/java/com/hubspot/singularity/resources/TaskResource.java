@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -18,12 +19,15 @@ import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
+import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskId;
@@ -59,6 +63,36 @@ public class TaskResource {
     return taskRequestManager.getTaskRequests(tasks);
   }
 
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled/ids")
+  public List<SingularityPendingTaskId> getScheduledTaskIds() {
+    return taskManager.getPendingTaskIds();
+  }
+
+  private SingularityPendingTaskId getTaskIdFromStr(String pendingTaskIdStr) {
+    try {
+      return SingularityPendingTaskId.fromString(pendingTaskIdStr);
+    } catch (InvalidSingularityTaskIdException e) {
+      throw WebExceptions.badRequest("%s is not a valid pending task id: %s", pendingTaskIdStr, e.getMessage());
+    }
+  }
+  
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled/task/{pendingTaskId}")
+  public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
+    SingularityPendingTask pendingTask = taskManager.getPendingTask(getTaskIdFromStr(pendingTaskIdStr));
+    
+    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask));
+    
+    if (taskRequestList.isEmpty()) {
+      throw new NotFoundException("Couldn't find: " + pendingTaskIdStr);
+    }
+    
+    return Iterables.getFirst(taskRequestList, null);
+  }
+  
   @GET
   @PropertyFiltering
   @Path("/scheduled/request/{requestId}")
