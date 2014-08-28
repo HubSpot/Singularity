@@ -8,10 +8,12 @@ import org.apache.curator.utils.ZKPaths;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularityRequestHistoryTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityWebhookTranscoder;
 
@@ -22,13 +24,15 @@ public class WebhookManager extends CuratorAsyncManager {
   private static final String ACTIVE_PATH = ROOT_PATH + "/active";
 
   private final SingularityWebhookTranscoder webhookTranscoder;
+  private final SingularityRequestHistoryTranscoder requestHistoryTranscoder;
   private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
   
   @Inject
-  public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityWebhookTranscoder webhookTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
+  public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityWebhookTranscoder webhookTranscoder, SingularityRequestHistoryTranscoder requestHistoryTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
     this.webhookTranscoder = webhookTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
+    this.requestHistoryTranscoder = requestHistoryTranscoder;
   }
 
   public List<SingularityWebhook> getActiveWebhooks() {
@@ -38,6 +42,10 @@ public class WebhookManager extends CuratorAsyncManager {
   private String getTaskHistoryUpdateId(SingularityTaskHistoryUpdate taskUpdate) {
     return taskUpdate.getTaskId() + "-" + taskUpdate.getTaskState().name();
   }
+  
+  private String getRequestHistoryUpdateId(SingularityRequestHistory requestUpdate) {
+    return requestUpdate.getRequest().getId() + "-" + requestUpdate.getEventType().name() + "-" + requestUpdate.getCreatedAt();
+  }
 
   private String getWebhookPath(String webhookId) {
     return ZKPaths.makePath(ACTIVE_PATH, webhookId);
@@ -46,7 +54,11 @@ public class WebhookManager extends CuratorAsyncManager {
   private String getEnqueuePathForWebhook(String webhookId, WebhookType type) {
     return ZKPaths.makePath(ZKPaths.makePath(QUEUES_PATH, type.name()), webhookId);
   }
-
+  
+  private String getEnqueuePathForRequestUpdate(String webhookId, SingularityRequestHistory requestUpdate) {
+    return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.REQUEST), getRequestHistoryUpdateId(requestUpdate));
+  }
+  
   private String getEnqueuePathForTaskUpdate(String webhookId, SingularityTaskHistoryUpdate taskUpdate) {
     return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.TASK), getTaskHistoryUpdateId(taskUpdate));
   }
@@ -66,7 +78,20 @@ public class WebhookManager extends CuratorAsyncManager {
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesForHook(String webhookId) {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.TASK), taskHistoryUpdateTranscoder);
   }
+  
+  public List<SingularityRequestHistory> getQueuedRequestHistoryForHook(String webhookId) {
+    return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.REQUEST), requestHistoryTranscoder);
+  }
 
+  public void enqueueRequestUpdate(SingularityRequestHistory requestUpdate) {
+    for (SingularityWebhook webhook : getActiveWebhooks()) {
+      final String enqueuePath = getEnqueuePathForRequestUpdate(webhook.getId(), requestUpdate);
+
+      save(enqueuePath, requestUpdate, requestHistoryTranscoder);
+    }
+    
+  }
+  
   public void enqueueTaskUpdate(SingularityTaskHistoryUpdate taskUpdate) {
     // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not immediately make some webhooks)
     for (SingularityWebhook webhook : getActiveWebhooks()) {

@@ -43,6 +43,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
@@ -174,7 +175,7 @@ public class SingularitySchedulerTest {
 
     request = bldr.build();
 
-    requestManager.saveRequest(request);
+    requestManager.activate(request, RequestHistoryType.CREATED, Optional.<String> absent());
   }
 
   public void initRequest() {
@@ -443,7 +444,7 @@ public class SingularitySchedulerTest {
     Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
     Assert.assertTrue(!taskManager.getCleanupTasks().isEmpty());
 
-    requestManager.saveRequest(request.toBuilder().setKillOldNonLongRunningTasksAfterMillis(Optional.<Long> of(0L)).build());
+    requestManager.activate(request.toBuilder().setKillOldNonLongRunningTasksAfterMillis(Optional.<Long> of(0L)).build(), RequestHistoryType.CREATED, Optional.<String> absent());
 
     cleaner.drainCleanupQueue();
 

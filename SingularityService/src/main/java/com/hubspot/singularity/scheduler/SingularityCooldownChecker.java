@@ -55,7 +55,7 @@ public class SingularityCooldownChecker {
 
   private boolean checkCooldown(SingularityRequestWithState cooldownRequest) {
     if (shouldExitCooldown(cooldownRequest)) {
-      requestManager.saveRequest(cooldownRequest.getRequest());
+      requestManager.exitCooldown(cooldownRequest.getRequest());
       return true;
     }
 

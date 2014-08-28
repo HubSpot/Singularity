@@ -176,7 +176,7 @@ public class SingularityStartup {
       final String msg = String.format("Framework %s (new: %s) had no active tasks, expected ~ %s", mesosConfiguration.getFrameworkId(), frameworkIsNew, activeTaskIds.size());
 
       if (mesosConfiguration.getAllowMissingAllExistingTasksOnStartup().booleanValue()) {
-        LOG.info("Ignoring task mismatch because allowMissingAllExistingTasksOnStartup is true");
+        LOG.info(String.format("%s - %s", msg, "Ignoring task mismatch because allowMissingAllExistingTasksOnStartup is true"));
       } else {
         throw new IllegalStateException(String.format("%s - %s", msg, "set allowMissingAllExistingTasksOnStartup in mesos configuration to true or remove active tasks manually / check framework / zookeeper ids"));
       }
