@@ -68,15 +68,26 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   }
 
   public static SingularityPendingTaskId fromString(String string) {
-    final String[] splits = JavaUtils.reverseSplit(string, 5, "-");
+    String[] splits = null;
+    
+    try {
+      splits = JavaUtils.reverseSplit(string, 5, "-");
+    } catch (IllegalStateException ise) {
+      throw new InvalidSingularityTaskIdException(String.format("PendingTaskId %s was invalid (%s)", string, ise.getMessage()));
+    }
 
-    final String requestId = splits[0];
-    final String deployId = splits[1];
-    final long nextRunAt = Long.parseLong(splits[2]);
-    final int instanceNo = Integer.parseInt(splits[3]);
-    final PendingType pendingType = PendingType.valueOf(splits[4]);
+    try {
+      final String requestId = splits[0];
+      final String deployId = splits[1];
+      final long nextRunAt = Long.parseLong(splits[2]);
+      final int instanceNo = Integer.parseInt(splits[3]);
+      final PendingType pendingType = PendingType.valueOf(splits[4]);
 
-    return new SingularityPendingTaskId(requestId, deployId, nextRunAt, instanceNo, pendingType);
+      return new SingularityPendingTaskId(requestId, deployId, nextRunAt, instanceNo, pendingType);
+    } catch (IllegalArgumentException e) {
+      throw new InvalidSingularityTaskIdException(String.format("PendingTaskId %s had an invalid parameter (%s)", string, e.getMessage()));
+    }
+    
   }
 
   @Override

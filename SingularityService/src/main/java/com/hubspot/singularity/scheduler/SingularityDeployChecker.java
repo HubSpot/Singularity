@@ -151,7 +151,7 @@ public class SingularityDeployChecker {
   private void deleteObsoletePendingTasks(SingularityPendingDeploy pendingDeploy) {
     for (SingularityPendingTaskId pendingTaskId : Iterables.filter(taskManager.getPendingTaskIds(), Predicates.and(SingularityPendingTaskId.matchingRequestId(pendingDeploy.getDeployMarker().getRequestId()), Predicates.not(SingularityPendingTaskId.matchingDeployId(pendingDeploy.getDeployMarker().getDeployId()))))) {
       LOG.debug("Deleting obsolete pending task {}", pendingTaskId.getId());
-      taskManager.deletePendingTask(pendingTaskId.getId());
+      taskManager.deletePendingTask(pendingTaskId);
     }
   }
 

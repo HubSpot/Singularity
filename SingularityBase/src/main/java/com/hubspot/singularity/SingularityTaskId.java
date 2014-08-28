@@ -107,8 +107,8 @@ public class SingularityTaskId extends SingularityId {
       final String rackId = splits[5];
 
       return new SingularityTaskId(requestId, deployId, startedAt, instanceNo, host, rackId);
-    } catch (NumberFormatException nfe) {
-      throw new InvalidSingularityTaskIdException(String.format("TaskId %s had an invalid number parameter (%s)", string, nfe.getMessage()));
+    } catch (IllegalArgumentException e) {
+      throw new InvalidSingularityTaskIdException(String.format("TaskId %s had an invalid parameter (%s)", string, e.getMessage()));
     }
   }
 
