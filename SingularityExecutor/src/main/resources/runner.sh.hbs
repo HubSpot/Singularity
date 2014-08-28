@@ -22,6 +22,8 @@ else
   echo "No deploy-specific environment variables"
 fi
 
+export PATH=$(dirname "$0")/bin/:$PATH
+
 cd {{{ taskAppDirectory }}}/
 
 # load artifact's profile.d
