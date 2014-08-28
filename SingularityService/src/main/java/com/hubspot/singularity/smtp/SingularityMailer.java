@@ -228,7 +228,7 @@ public class SingularityMailer implements SingularityCloseable {
     Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
     final List<String> to = getOwners(request);
-    final String subject = String.format("Task %s has not started yet — Singularity", taskId.getId());
+    final String subject = String.format("Task has not started yet - %s", taskId.getId());
 
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
         .put("duration_running", DurationFormatUtils.formatDurationHMS(duration))
@@ -285,10 +285,10 @@ public class SingularityMailer implements SingularityCloseable {
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
     if (!taskEverRan(history)) {
-      return String.format("Task %s (%s) never started — Singularity", state.getDisplayName(), taskId.toString());
+      return String.format("Task %s, never started: (%s)", state.getDisplayName(), taskId.toString());
     }
 
-    return String.format("Task %s (%s) after running — Singularity", state.getDisplayName(), taskId.toString());
+    return String.format("Task %s after running: (%s)", state.getDisplayName(), taskId.toString());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {
