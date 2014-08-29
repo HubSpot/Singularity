@@ -12,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -22,12 +23,8 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.Response;
-
-import edu.umd.cs.findbugs.annotations.Confidence;
 
 public class SingularityWebhookSender {
 
@@ -78,7 +75,15 @@ public class SingularityWebhookSender {
   }
   
   private int checkRequestUpdates(SingularityWebhook webhook) {
-    return 0;
+    final List<SingularityRequestHistory> requestUpdates = webhookManager.getQueuedRequestHistoryForHook(webhook.getId());
+    
+    int numRequestUpdates = 0;
+    
+    for (SingularityRequestHistory requestUpdate : requestUpdates) {
+      executeWebhook(webhook, requestUpdate, new SingularityRequestWebhookAsyncHandler(webhookManager, webhook, requestUpdate, numRequestUpdates++ > configuration.getMaxQueuedUpdatesPerWebhook()));
+    }
+    
+    return requestUpdates.size();
   }
   
   private int checkDeployUpdates(SingularityWebhook webhook) {
@@ -86,7 +91,7 @@ public class SingularityWebhookSender {
   }
   
   private int checkTaskUpdates(SingularityWebhook webhook) {
-    List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedTaskUpdatesForHook(webhook.getId());
+    final List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedTaskUpdatesForHook(webhook.getId());
 
     int numTaskUpdates = 0;
     

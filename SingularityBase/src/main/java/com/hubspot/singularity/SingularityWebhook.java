@@ -11,10 +11,12 @@ import com.hubspot.mesos.JavaUtils;
 public class SingularityWebhook extends SingularityJsonObject {
 
   private final String uri;
-  private final long timestamp;
-  private final String id;
-  private final Optional<String> user;
   private final WebhookType type;
+  
+  private final Optional<String> user;
+  private final long timestamp;
+  
+  private final String id;
   
   public static SingularityWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
@@ -25,9 +27,9 @@ public class SingularityWebhook extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user, @JsonProperty("type") WebhookType type) {
+  public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("user") Optional<String> user, @JsonProperty("type") WebhookType type) {
     this.uri = uri;
-    this.timestamp = timestamp;
+    this.timestamp = timestamp.or(System.currentTimeMillis());
     this.user = user;
     this.id = type.name() + "-" + JavaUtils.urlEncode(uri);
     this.type = type;
