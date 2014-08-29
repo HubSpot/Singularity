@@ -215,7 +215,7 @@ public class SingularitySchedulerTest {
   }
 
   public void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
-    deployManager.saveDeployResult(marker, new SingularityDeployResult(DeployState.SUCCEEDED));
+    deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
     deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
   }
