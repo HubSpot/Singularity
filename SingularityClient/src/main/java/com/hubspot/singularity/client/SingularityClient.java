@@ -40,13 +40,17 @@ public class SingularityClient {
   private static final String RACKS_GET_ACTIVE_FORMAT = RACKS_FORMAT + "/active";
   private static final String RACKS_GET_DEAD_FORMAT = RACKS_FORMAT + "/dead";
   private static final String RACKS_GET_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/decomissioning";
+  private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decomission";
+  private static final String RACKS_DELETE_DEAD_FORMAT = RACKS_FORMAT + "/rack/%s/dead";
+  private static final String RACKS_DELETE_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/rack/%s/decomissioning";
   
   private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
   private static final String SLAVES_GET_ACTIVE_FORMAT = SLAVES_FORMAT + "/active";
   private static final String SLAVES_GET_DEAD_FORMAT = SLAVES_FORMAT + "/dead";
   private static final String SLAVES_GET_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/decomissioning";
   private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decomission";
-  private static final String SLAVES_DELETE_DECOMISSIONED_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
+  private static final String SLAVES_DELETE_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
+  private static final String SLAVES_DELETE_DEAD_FORMAT = SLAVES_FORMAT + "/slave/%s/dead";
   
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
@@ -731,6 +735,66 @@ public class SingularityClient {
 	}
   }
   
+  public void decomissionRack(String rackId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(RACKS_DECOMISSION_FORMAT, getHost(), contextPath, rackId), user);
+
+    LOG.info(String.format("Decomissioning rack %s - (%s)", rackId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = postUri(requestUri);
+
+    LOG.info(String.format("Decomissioning rack (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to decomission rack - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDecomissioningRack(String rackId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(RACKS_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, rackId), user);
+
+    LOG.info(String.format("Deleting rack %s - (%s)", rackId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting rack (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete rack - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDeadRack(String rackId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(RACKS_DELETE_DEAD_FORMAT, getHost(), contextPath, rackId), user);
+
+    LOG.info(String.format("Deleting rack %s - (%s)", rackId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting rack (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete rack - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
   //
   // SLAVES
   //
@@ -789,8 +853,28 @@ public class SingularityClient {
     }
   }
   
-  public void deleteDecomissionedSlave(String slaveId, Optional<String> user) {
-    final String requestUri = finishUri(String.format(SLAVES_DELETE_DECOMISSIONED_FORMAT, getHost(), contextPath, slaveId), user);
+  public void deleteDecomissioningSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, slaveId), user);
+
+    LOG.info(String.format("Deleting Slave %s - (%s)", slaveId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting Slave (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete slave - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDeadSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DELETE_DEAD_FORMAT, getHost(), contextPath, slaveId), user);
 
     LOG.info(String.format("Deleting Slave %s - (%s)", slaveId, requestUri));
 
