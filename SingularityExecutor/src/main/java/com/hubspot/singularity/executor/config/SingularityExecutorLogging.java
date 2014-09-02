@@ -6,8 +6,10 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 
+@Singleton
 public class SingularityExecutorLogging {
 
   private final static org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityExecutorLogging.class);

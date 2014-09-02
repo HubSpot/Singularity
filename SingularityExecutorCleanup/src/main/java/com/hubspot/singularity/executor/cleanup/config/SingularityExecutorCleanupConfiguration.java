@@ -3,9 +3,11 @@ package com.hubspot.singularity.executor.cleanup.config;
 import java.nio.file.Path;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 
+@Singleton
 public class SingularityExecutorCleanupConfiguration {
 
   private final boolean safeModeWontRunWithNoTasks;

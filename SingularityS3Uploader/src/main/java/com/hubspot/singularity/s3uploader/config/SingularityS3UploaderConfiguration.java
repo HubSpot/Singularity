@@ -4,10 +4,12 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
+@Singleton
 public class SingularityS3UploaderConfiguration {
 
   private final long pollForShutDownMillis;

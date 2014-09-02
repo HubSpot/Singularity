@@ -5,10 +5,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
+@Singleton
 public class SingularityExecutorConfiguration {
 
   private final String executorJavaLog;
