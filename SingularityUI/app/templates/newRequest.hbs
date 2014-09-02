@@ -1,0 +1,112 @@
+<h3>
+    New Request
+</h3>
+
+<div class="row new-form">
+    <form class="col-md-5">
+        <div class="form-group required">
+            <label for="id">ID</label>
+            <input type="text" id="id" class="form-control" placeholder="eg: my-awesome-request">
+        </div>
+
+        <div class="form-group">
+            <label for="owner-0">Owners</label>
+            
+            <div class="multi-input">
+                <input type="text" id="owner-0" class="owner form-control" placeholder="eg: user@example.com">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Type</label>
+
+            <div id="type" class="btn-group">
+                <button data-type="service" class="btn btn-default">
+                    Service
+                </button>
+                <button data-type="worker" class="btn btn-default">
+                    Worker
+                </button>
+                <button data-type="scheduled" class="btn btn-default">
+                    Scheduled
+                </button>
+                <button data-type="on-demand" class="btn btn-default">
+                    On-demand
+                </button>
+            </div>
+        </div>
+
+        <div id="service-expandable" class="row expandable hide">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="instances-service" class="col-sm-6">Instances</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="instances-service" class="form-control" placeholder="1">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="rack-sensitive-service">
+                        <input type="checkbox" id="rack-sensitive-service" checked>    
+                        Rack sensitive
+                    </label>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="load-balanced">
+                        <input type="checkbox" id="load-balanced" checked>
+                        Load balanced
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="worker-expandable" class="row expandable hide">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label for="instances-worker" class="col-sm-6">Instances</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="instances-worker" class="form-control" placeholder="1">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="rack-sensitive-worker">
+                        <input type="checkbox" id="rack-sensitive-worker" checked>    
+                        Rack sensitive
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="scheduled-expandable" class="expandable hide">
+            <div class="form-group required">
+                <label for="schedule">Schedule</label>
+                <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
+            </div>
+
+            <div class="form-group">
+                <label for="retries-on-failure">Number of retries on failure</label>
+                <input type="text" id="retries-on-failure" class="form-control">
+            </div>
+        </div>
+
+        <div id="button-row">
+            <span>
+                <button type="submit" class="btn btn-success btn-lg" disabled>
+                    Save
+                </button>
+            </span>
+            <button id="reset-button" class="btn btn-default btn-lg hide">
+                Reset
+            </button>
+        </div>
+    </form>
+
+    <div id="help-column" class="col-md-6 col-md-offset-1 hidden-xs hidden-sm">
+        
+    </div>
+</div>

@@ -25,7 +25,6 @@ public class SingularityS3Configuration {
       @Named(SingularityS3ConfigurationLoader.S3_DOWNLOAD_TIMEOUT_MILLIS) String s3DownloadTimeoutMillis,
       @Named(SingularityS3ConfigurationLoader.LOCAL_DOWNLOAD_HTTP_PORT) String localDownloadHttpPort,
       @Named(SingularityS3ConfigurationLoader.LOCAL_DOWNLOAD_HTTP_DOWNLOAD_PATH) String localDownloadPath
-
       ) {
     this.cacheDirectory = cacheDirectory;
     this.s3AccessKey = s3AccessKey;

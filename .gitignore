@@ -16,11 +16,12 @@ __pycache__
 local_singularity.yml
 qa_singularity.yml
 Docs/_build
+SingularityUI/npm-debug.log
 SingularityUI/node_modules/*
 SingularityUI/bower_components/*
 SingularityUI/brunchlog
 SingularityUI/app/env.coffee
-SingularityService/src/main/resources/static
 
 .vagrant
+vagrant/Berksfile.lock
 SingularityUI/.vee

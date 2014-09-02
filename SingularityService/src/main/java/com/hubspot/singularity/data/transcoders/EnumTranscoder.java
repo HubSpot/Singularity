@@ -10,7 +10,7 @@ public abstract class EnumTranscoder<T extends Enum<T>> implements Transcoder<T>
     String string = JavaUtils.toString(data);
     return fromString(string);
   }
-  
+
   protected abstract T fromString(String string);
 
   @Override

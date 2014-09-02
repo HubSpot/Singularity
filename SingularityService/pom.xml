@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.3.8-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <version>0.3.9-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -29,13 +27,13 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
-      <version>${singularity.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>MesosClient</artifactId>
-      <version>${singularity.version}</version>
+      <artifactId>SingularityMesosClient</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -185,7 +183,7 @@
     <dependency>
       <groupId>org.iq80.snappy</groupId>
       <artifactId>snappy</artifactId>
-      <version>0.4-SNAPSHOT</version>
+      <version>${snappy.version}</version>
     </dependency>
 
     <dependency>
@@ -219,6 +217,35 @@
 
   <build>
     <plugins>
+        <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <version>0.0.16</version>
+            <configuration>
+                <workingDirectory>../SingularityUI</workingDirectory>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>install node and npm</id>
+                    <goals>
+                        <goal>install-node-and-npm</goal>
+                    </goals>
+                    <configuration>
+                        <nodeVersion>v0.10.28</nodeVersion>
+                        <npmVersion>1.4.9</npmVersion>
+                    </configuration>
+                </execution>
+                <execution>
+                    <id>npm install</id>
+                    <goals>
+                        <goal>npm</goal>
+                    </goals>
+                    <configuration>
+                        <arguments>install</arguments>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -288,10 +315,8 @@
             </goals>
             <configuration>
               <transformers>
-                <transformer
-                  implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                <transformer
-                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>com.hubspot.singularity.SingularityService</mainClass>
                 </transformer>
               </transformers>
@@ -319,6 +344,38 @@
         </configuration>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.github.eirslett</groupId>
+                    <artifactId>frontend-maven-plugin</artifactId>
+                    <versionRange>[0.0.16,)</versionRange>
+                    <goals>
+                      <goal>install-node-and-npm</goal>
+                      <goal>npm</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute>
+                      <runOnIncremental>false</runOnIncremental>
+                    </execute>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 
 </project>

@@ -8,7 +8,6 @@ class FileBrowserSubview extends View
 
     events: ->
         'click [data-directory-path]':  'navigate'
-        'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({ @scrollWhenReady }) ->
         @listenTo @collection, 'sync',  @render
@@ -26,21 +25,11 @@ class FileBrowserSubview extends View
             path:        @collection.path
             breadcrumbs: breadcrumbs
 
-        if @scrollWhenReady
-            @scrollToTop()
-
-            # Only do it once
-            @scrollWhenReady = false
+        @$('.actions-column a[title]').tooltip()
 
     catchAjaxError: ->
         app.caughtError()
         @render()
-
-    scrollToTop: ->
-        return if @suppressExpansion
-
-        @$el.addClass 'expanded'
-        utils.animatedExpansion @$el, @shrink
 
     navigate: (event) ->
         event.preventDefault()
@@ -66,13 +55,5 @@ class FileBrowserSubview extends View
         $loaderContainer = @$ '.page-loader-container'
         if tableHeight?
             $loaderContainer.css 'height', "#{ tableHeight }px"
-
-    startShrink: ->
-        @$el.trigger 'shrink'
-        @shrink()        
-
-    shrink: =>
-        @$el.removeClass 'expanded'
-        @suppressExpansion = true
 
 module.exports = FileBrowserSubview

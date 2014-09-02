@@ -19,9 +19,9 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 public class SingularityRunnerBaseModule extends AbstractModule {
 
   public static final String PROCESS_NAME = "process.name";
-  
+
   private final SingularityConfigurationLoader[] configurations;
-  
+
   public SingularityRunnerBaseModule(SingularityConfigurationLoader... configurations) {
     this.configurations = ObjectArrays.concat(new SingularityRunnerBaseConfigurationLoader(), configurations);
   }
@@ -29,32 +29,32 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   @Override
   protected void configure() {
     Properties properties = new Properties();
-    
+
     for (SingularityConfigurationLoader configurationLoader : configurations) {
-      configurationLoader.bindDefaults(properties);
+      configurationLoader.bindAllDefaults(properties);
     }
-    
+
     for (SingularityConfigurationLoader configurationLoader : configurations) {
       configurationLoader.bindPropertiesFile(properties);
     }
-    
+
     Names.bindProperties(binder(), properties);
-    
+
     bind(Properties.class).toInstance(properties);
     bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
   }
-  
+
   @Provides
   @Singleton
   @Named(PROCESS_NAME)
   public String getProcessName() {
     String name = ManagementFactory.getRuntimeMXBean().getName();
-    if (name != null && name.contains("@")) {
+    if ((name != null) && name.contains("@")) {
       return name.substring(0, name.indexOf("@"));
     }
     return name;
   }
-  
+
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
@@ -65,11 +65,11 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     mapper.registerModule(new ProtobufModule());
     return mapper;
   }
-  
+
   @Provides
   @Singleton
   public MetricRegistry getMetricRegistry() {
     return new MetricRegistry();
   }
-  
+
 }

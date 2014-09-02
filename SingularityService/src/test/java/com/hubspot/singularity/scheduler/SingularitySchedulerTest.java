@@ -20,7 +20,6 @@ import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Protos.Value.Scalar;
 import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.zookeeper.data.Stat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,6 +56,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
 
 public class SingularitySchedulerTest {
@@ -81,11 +81,11 @@ public class SingularitySchedulerTest {
   @Inject
   private SingularityScheduler scheduler;
   @Inject
-  private TestingLoadBalancerClient testingLoadBalancerClient;
-  @Inject
   private SingularityDeployChecker deployChecker;
   @Inject
   private RequestResource requestResource;
+  @Inject
+  private DeployResource deployResource;
   @Inject
   private SingularityCleaner cleaner;
 
@@ -216,7 +216,7 @@ public class SingularitySchedulerTest {
   public void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
     deployManager.saveDeployResult(marker, new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()), Optional.<Stat> absent(), false);
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
   }
 
   public SingularityTask startTask(SingularityDeploy deploy) {
@@ -340,7 +340,7 @@ public class SingularitySchedulerTest {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
-    requestResource.deploy(requestId, newDeploy, Optional.<String> absent());
+    deployResource.deploy(newDeploy, Optional.<String> absent());
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -527,4 +527,39 @@ public class SingularitySchedulerTest {
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
 
+  @Test
+  public void testScheduledJobLivesThroughDeploy() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    createAndSchedulePendingTask(firstDeployId);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+
+    deployResource.deploy(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testOneOffsDontRunByThemselves() {
+    requestId = "oneoffRequest";
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId);
+    bldr.setDaemon(Optional.of(Boolean.FALSE));
+    requestResource.submit(bldr.build(), Optional.<String> absent());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+
+    deployResource.deploy(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+
+  }
 }

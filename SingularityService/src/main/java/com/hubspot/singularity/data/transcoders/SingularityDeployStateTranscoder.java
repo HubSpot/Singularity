@@ -8,7 +8,7 @@ import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 public class SingularityDeployStateTranscoder implements Transcoder<SingularityDeployResult> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityDeployStateTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -18,10 +18,10 @@ public class SingularityDeployStateTranscoder implements Transcoder<SingularityD
   public SingularityDeployResult transcode(byte[] data) {
     return SingularityDeployResult.fromBytes(data, objectMapper);
   }
-  
+
   @Override
   public byte[] toBytes(SingularityDeployResult object) throws SingularityJsonException {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

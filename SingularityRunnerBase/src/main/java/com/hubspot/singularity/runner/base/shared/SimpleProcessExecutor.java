@@ -24,7 +24,7 @@ public class SimpleProcessExecutor {
 
   private List<String> consumeStreamAsLines(InputStream is) throws IOException {
     List<String> lines = new ArrayList<>();
-    
+
     try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
       String line = br.readLine();
       while (line != null) {

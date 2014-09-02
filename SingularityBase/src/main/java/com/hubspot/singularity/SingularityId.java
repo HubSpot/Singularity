@@ -5,7 +5,7 @@ import java.util.Objects;
 public abstract class SingularityId {
 
   private String id;
-  
+
   public String getId() {
     if (this.id == null) {
       this.id = toString();
@@ -29,5 +29,5 @@ public abstract class SingularityId {
     SingularityId other = (SingularityId) obj;
     return Objects.equals(getId(), other.getId());
   }
-  
+
 }

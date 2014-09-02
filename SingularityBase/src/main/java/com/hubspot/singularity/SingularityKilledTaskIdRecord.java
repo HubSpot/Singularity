@@ -17,7 +17,7 @@ public class SingularityKilledTaskIdRecord extends SingularityJsonObject {
   private final Optional<RequestCleanupType> requestCleanupType;
   private final Optional<TaskCleanupType> taskCleanupType;
   private final int retries;
-  
+
   public static SingularityKilledTaskIdRecord fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityKilledTaskIdRecord.class);
@@ -25,10 +25,10 @@ public class SingularityKilledTaskIdRecord extends SingularityJsonObject {
       throw new SingularityJsonException(e);
     }
   }
-  
+
   @JsonCreator
-  public SingularityKilledTaskIdRecord(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("originalTimestamp") long originalTimestamp, 
-      @JsonProperty("requestCleanupType") Optional<RequestCleanupType> requestCleanupType, @JsonProperty("taskCleanupType") Optional<TaskCleanupType> taskCleanupType, 
+  public SingularityKilledTaskIdRecord(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("originalTimestamp") long originalTimestamp,
+      @JsonProperty("requestCleanupType") Optional<RequestCleanupType> requestCleanupType, @JsonProperty("taskCleanupType") Optional<TaskCleanupType> taskCleanupType,
       @JsonProperty("retries") int retries) {
     this.taskId = taskId;
     this.timestamp = timestamp;
@@ -37,7 +37,7 @@ public class SingularityKilledTaskIdRecord extends SingularityJsonObject {
     this.retries = retries;
     this.originalTimestamp = originalTimestamp;
   }
-  
+
   public SingularityTaskId getTaskId() {
     return taskId;
   }
@@ -67,5 +67,5 @@ public class SingularityKilledTaskIdRecord extends SingularityJsonObject {
     return "SingularityKilledTaskIdRecord [taskId=" + taskId + ", originalTimestamp=" + originalTimestamp + ", timestamp=" + timestamp + ", requestCleanupType=" + requestCleanupType + ", taskCleanupType=" + taskCleanupType + ", retries="
         + retries + "]";
   }
-  
+
 }

@@ -15,7 +15,7 @@ import com.hubspot.mesos.JavaUtils;
 public class JsonObjectFileHelper {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public JsonObjectFileHelper(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -25,35 +25,35 @@ public class JsonObjectFileHelper {
     final long start = System.currentTimeMillis();
 
     log.info("Reading {}", file);
-    
+
     byte[] bytes = Files.readAllBytes(file);
-    
+
     log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
-    
+
     if (bytes.length == 0) {
       return Optional.absent();
     }
-    
+
     try {
       T object = objectMapper.readValue(bytes, clazz);
       return Optional.of(object);
     } catch (IOException e) {
       log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), JavaUtils.toString(bytes), e);
     }
-    
+
     return Optional.absent();
   }
-  
+
   public boolean writeObject(Object object, Path path, Logger log) {
     final long start = System.currentTimeMillis();
-    
+
     try {
       final byte[] bytes = objectMapper.writeValueAsBytes(object);
-      
+
       log.info("Writing {} bytes of {} to {}", bytes.length, object, path);
-        
+
       Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    
+
       return true;
     } catch (Throwable t) {
       log.error("Failed writing {}", object, t);
@@ -62,5 +62,5 @@ public class JsonObjectFileHelper {
       log.trace("Finishing writing {} after {}", object, JavaUtils.duration(start));
     }
   }
-  
+
 }

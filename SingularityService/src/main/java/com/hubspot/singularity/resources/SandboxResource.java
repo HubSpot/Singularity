@@ -34,7 +34,7 @@ import com.hubspot.singularity.mesos.SingularityLogSupport;
 @Path(SingularityService.API_BASE_PATH + "/sandbox")
 @Produces({ MediaType.APPLICATION_JSON })
 public class SandboxResource extends AbstractHistoryResource {
-  
+
   private final SandboxManager sandboxManager;
   private final SingularityLogSupport logSupport;
   private final SingularityConfiguration configuration;
@@ -42,7 +42,7 @@ public class SandboxResource extends AbstractHistoryResource {
   @Inject
   public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
     super(historyManager, taskManager, deployManager);
-    
+
     this.configuration = configuration;
     this.sandboxManager = sandboxManager;
     this.logSupport = logSupport;
@@ -51,16 +51,16 @@ public class SandboxResource extends AbstractHistoryResource {
   private SingularityTaskHistory checkHistory(String taskId) {
     final SingularityTaskId taskIdObj = getTaskIdObject(taskId);
     final SingularityTaskHistory taskHistory = getTaskHistory(taskIdObj);
-    
+
     if (!taskHistory.getDirectory().isPresent()) {
       logSupport.checkDirectory(taskIdObj);
-      
+
       throw WebExceptions.badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }
-    
+
     return taskHistory;
   }
-  
+
   private String getDefaultPath(String taskId, String qPath) {
     if (!Strings.isNullOrEmpty(qPath)) {
       return qPath;
@@ -70,7 +70,7 @@ public class SandboxResource extends AbstractHistoryResource {
     }
     return "";
   }
-  
+
   @GET
   @Path("/{taskId}/browse")
   public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") String qPath) {

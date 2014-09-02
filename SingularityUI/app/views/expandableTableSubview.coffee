@@ -52,6 +52,8 @@ class ExpandableTableSubview extends View
             synced:  @collection.synced
             data:    _.pluck @collection.models, 'attributes'
 
+        @$('.actions-column a[title]').tooltip()
+
         @$('.table-container').css 'min-height', "#{ @containerMinHeight }px"
 
         haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)

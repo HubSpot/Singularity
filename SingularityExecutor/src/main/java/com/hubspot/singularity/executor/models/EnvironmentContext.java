@@ -6,9 +6,9 @@ import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.TaskInfo;
 
 public class EnvironmentContext {
-  
+
   private final TaskInfo taskInfo;
-  
+
   public EnvironmentContext(TaskInfo taskInfo) {
     this.taskInfo = taskInfo;
   }
@@ -21,5 +21,5 @@ public class EnvironmentContext {
   public String toString() {
     return "EnvironmentContext [taskInfo=" + taskInfo + "]";
   }
-  
+
 }

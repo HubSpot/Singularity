@@ -8,13 +8,13 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityTaskTranscoder extends SingularityCompressingTaskIdHolderTranscoder<SingularityTask> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityTaskTranscoder(SingularityConfiguration configuration, ObjectMapper objectMapper) {
     super(configuration);
     this.objectMapper = objectMapper;
   }
-  
+
   @Override
   protected SingularityTask actualTranscode(byte[] data) {
     return SingularityTask.fromBytes(data, objectMapper);

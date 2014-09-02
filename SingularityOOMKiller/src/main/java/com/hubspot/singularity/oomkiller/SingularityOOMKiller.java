@@ -31,9 +31,9 @@ public class SingularityOOMKiller {
   private final SingularityCGroupProcLocator cgroupProcLocator;
   private final SingularityProcessKiller processKiller;
   private final SingularityOOMKillerMetrics metrics;
-  
+
   @Inject
-  public SingularityOOMKiller(MesosClient mesos, SingularityOOMKillerConfiguration oomKillerConfiguration, SingularityClient singularity, SingularityCGroupProcLocator cgroupProcLocator, 
+  public SingularityOOMKiller(MesosClient mesos, SingularityOOMKillerConfiguration oomKillerConfiguration, SingularityClient singularity, SingularityCGroupProcLocator cgroupProcLocator,
       SingularityProcessKiller processKiller, SingularityOOMKillerMetrics metrics) {
     this.mesos = mesos;
     this.oomKillerConfiguration = oomKillerConfiguration;
@@ -42,34 +42,34 @@ public class SingularityOOMKiller {
     this.cgroupProcLocator = cgroupProcLocator;
     this.metrics = metrics;
   }
-  
+
   private double getOverageRatio(MesosTaskMonitorObject taskMonitor) {
     return taskMonitor.getStatistics().getMemRssBytes() / taskMonitor.getStatistics().getMemLimitBytes();
   }
-  
+
   public void checkForOOMS() {
     List<MesosTaskMonitorObject> taskMonitors = mesos.getSlaveResourceUsage(oomKillerConfiguration.getSlaveHostname());
     List<MesosTaskMonitorObject> oomTaskMonitors = new ArrayList<>();
-    
+
     for (MesosTaskMonitorObject taskMonitor : taskMonitors) {
       double useRatio = getOverageRatio(taskMonitor);
-     
+
       if (useRatio > oomKillerConfiguration.getRequestKillThresholdRatio()) {
         LOG.info("Memory usage for {} is over limit {}/{} ({})", taskMonitor.getExecutorId(), taskMonitor.getStatistics().getMemRssBytes(), taskMonitor.getStatistics().getMemLimitBytes(), useRatio);
         oomTaskMonitors.add(taskMonitor);
       }
     }
-    
+
     if (oomTaskMonitors.isEmpty()) {
       return;
     }
-    
+
     metrics.getEligibleForKillMeter().mark(oomTaskMonitors.size());
-    
+
     MesosSlaveStateObject slaveState = mesos.getSlaveState(oomKillerConfiguration.getSlaveHostname());
-  
+
     Map<String, Map<String, MesosExecutorObject>> frameworksById = Maps.newHashMapWithExpectedSize(slaveState.getFrameworks().size());
-    
+
     for (MesosSlaveFrameworkObject framework : slaveState.getFrameworks()) {
       Map<String, MesosExecutorObject> subMap = Maps.newHashMapWithExpectedSize(framework.getExecutors().size());
       for (MesosExecutorObject executor : framework.getExecutors()) {
@@ -77,18 +77,18 @@ public class SingularityOOMKiller {
       }
       frameworksById.put(framework.getId(), subMap);
     }
-    
+
     for (MesosTaskMonitorObject oomTaskMonitor : oomTaskMonitors) {
       Map<String, MesosExecutorObject> executorsForFramework = frameworksById.get(oomTaskMonitor.getFrameworkId());
-      
+
       if (executorsForFramework == null || !executorsForFramework.containsKey(oomTaskMonitor.getExecutorId())) {
         LOG.warn("Couldn't find a matching executor for oom task ({}-{})", oomTaskMonitor.getFrameworkId(), oomTaskMonitor.getExecutorId());
         metrics.getUnknownExecutorsMeter().mark();
         continue;
       }
-      
+
       MesosExecutorObject executor = executorsForFramework.get(oomTaskMonitor.getExecutorId());
-      
+
       double useRatio = getOverageRatio(oomTaskMonitor);
 
       if (useRatio > oomKillerConfiguration.getKillProcessDirectlyThresholdRatio()) {
@@ -99,10 +99,10 @@ public class SingularityOOMKiller {
       } else {
         for (MesosTaskObject task : executor.getCompletedTasks()) {
           Optional<SingularityTaskCleanupResult> taskCleanupResult = singularity.killTask(task.getId());
-          
+
           if (taskCleanupResult.isPresent()) {
             LOG.info("Kill result {} for {}", taskCleanupResult.get().getResult(), task.getId());
-          
+
             if (taskCleanupResult.get().getResult() == SingularityCreateResult.CREATED) {
               metrics.getOomSoftKillsMeter().mark();
             } else {
@@ -110,15 +110,15 @@ public class SingularityOOMKiller {
             }
           } else {
             metrics.getSingularityFailuresMeter().mark();
-            
+
             LOG.info("Unable to request kill for ({})", task.getId());
           }
         }
       }
     }
-    
-    
+
+
   }
-  
-  
+
+
 }

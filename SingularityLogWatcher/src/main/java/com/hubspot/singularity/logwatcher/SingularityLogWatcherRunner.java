@@ -17,14 +17,14 @@ public class SingularityLogWatcherRunner {
   public static void main(String... args) {
     new SingularityLogWatcherRunner().run(args);
   }
-  
+
   private SingularityLogWatcherRunner() {}
-  
+
   public void run(String[] args) {
     List<Module> modules = Lists.newArrayListWithCapacity(3);
     modules.add(new SingularityRunnerBaseModule(new SingularityLogWatcherConfigurationLoader()));
     modules.add(new SingularityLogWatcherModule());
-    
+
     if (args.length > 0) {
       if (args[0].equals("--test")) {
         System.out.println("Using test module...");
@@ -36,7 +36,7 @@ public class SingularityLogWatcherRunner {
     } else {
       modules.add(new SingularityLogWatcherImplModule());
     }
-    
+
     new SingularityRunner().run(modules);
   }
 

@@ -20,10 +20,10 @@ import com.hubspot.singularity.SingularityTaskRequest;
 public class TaskRequestManager {
 
   private final static Logger LOG = LoggerFactory.getLogger(TaskRequestManager.class);
-  
+
   private final DeployManager deployManager;
   private final RequestManager requestManager;
-  
+
   @Inject
   public TaskRequestManager(DeployManager deployManager, RequestManager requestManager) {
     this.deployManager = deployManager;
@@ -32,37 +32,37 @@ public class TaskRequestManager {
 
   public List<SingularityTaskRequest> getTaskRequests(List<SingularityPendingTask> tasks) {
     final Multimap<String, SingularityPendingTask> requestIdToPendingTaskId = ArrayListMultimap.create(tasks.size(), 1);
-    
+
     for (SingularityPendingTask task : tasks) {
       requestIdToPendingTaskId.put(task.getPendingTaskId().getRequestId(), task);
     }
-    
+
     final List<SingularityRequestWithState> matchingRequests = requestManager.getRequests(requestIdToPendingTaskId.keySet());
-    
+
     final Map<SingularityPendingTask, SingularityDeployKey> deployKeys = SingularityDeployKey.fromPendingTasks(requestIdToPendingTaskId.values());
     final Map<SingularityDeployKey, SingularityDeploy> matchingDeploys = deployManager.getDeploysForKeys(Sets.newHashSet(deployKeys.values()));
-    
+
     final List<SingularityTaskRequest> taskRequests = Lists.newArrayListWithCapacity(matchingRequests.size());
-    
+
     for (SingularityRequestWithState request : matchingRequests) {
       for (SingularityPendingTask task : requestIdToPendingTaskId.get(request.getRequest().getId())) {
         SingularityDeploy foundDeploy = matchingDeploys.get(deployKeys.get(task));
-        
+
         if (foundDeploy == null) {
           LOG.warn("Couldn't find a matching deploy for pending task {}", task);
           continue;
         }
-        
+
         if (!request.getState().isRunnable()) {
           LOG.warn("Request was in state {} for pending task {}", request.getState(), task);
           continue;
         }
-        
+
         taskRequests.add(new SingularityTaskRequest(request.getRequest(), foundDeploy, task));
       }
     }
-    
+
     return taskRequests;
   }
-  
+
 }

@@ -1,0 +1,103 @@
+@import colors
+
+.new-form
+    
+    #help-column
+        border-left 5px solid #eee
+
+    #type
+        display inline-block
+        width 100%
+
+    .row
+        label
+            padding-top 7px
+
+    .well .row:last-child, .well .form-group:last-child
+        margin-bottom 0
+
+    .alert
+        margin-top 15px
+
+    .required label::after
+        content "required"
+        margin-left .5em
+        font-weight 200
+        color #999
+        margin-left .5em
+        font-style italic
+
+    fieldset
+        margin-bottom 15px
+        padding-top 15px
+        border-top 1px solid #eee
+
+        h1, h2, h3, h4, h5, h6
+            margin 0 0 15px
+            color #888
+
+    #button-row
+        margin-top 30px
+        padding-top 15px
+        border-top 1px solid #eee
+
+        span
+            display inline-block
+
+.multi-input
+    
+    input
+        position relative
+        top 0
+        z-index 50
+        border-radius 0
+        border-top-width 0
+
+    input:nth-child(n+2):focus
+        top -1px
+        border-top-width 1px
+        z-index 100
+        padding-top 7px
+
+    input:first-child
+        top 0
+        border-top-width 1px !important
+        border-top-left-radius 4px !important
+        border-top-right-radius 4px !important
+
+    input:last-child
+        border-bottom-left-radius 4px !important
+        border-bottom-right-radius 4px !important
+
+#custom-artifacts:empty
+    padding 25px 0
+    text-align center
+    border 2px dashed #eee
+    margin-bottom 15px
+    color #888
+
+    &::after
+        content "No artifacts. Add one!"
+
+#artifact-button-row button
+    margin-bottom 5px
+
+.artifact
+    position relative
+
+    .remove-button
+        position absolute
+        top 5px
+        right 5px
+        padding 0 5px
+        line-height 1.5em
+
+        &:hover
+            background #fff
+            border-radius 3px
+            cursor pointer
+
+        &:after
+            content '×'
+            font-size 20px
+            color #999

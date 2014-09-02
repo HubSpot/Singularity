@@ -4,25 +4,25 @@ import com.google.common.base.Optional;
 
 
 public abstract class SingularityMachineAbstraction extends SingularityJsonObject {
-  
+
   private final String id;
   private final long firstSeenAt;
-  
+
   private Optional<String> decomissioningBy;
   private Optional<Long> decomissioningAt;
   private Optional<Long> decomissionedAt;
   private Optional<Long> deadAt;
-  
+
   private SingularityMachineState state;
-  
+
   public enum SingularityMachineState {
-    ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD, 
+    ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD,
   }
-  
+
   public SingularityMachineAbstraction(String id) {
     this(id, SingularityMachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent());
   }
-  
+
   public SingularityMachineAbstraction(String id, SingularityMachineState state, long firstSeenAt, Optional<String> decomissioningBy, Optional<Long> decomissioningAt, Optional<Long> decomissionedAt, Optional<Long> deadAt) {
     this.id = id;
     this.state = state;
@@ -32,7 +32,7 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
     this.decomissioningAt = decomissioningAt;
     this.decomissionedAt = decomissionedAt;
   }
-  
+
   public Optional<String> getDecomissioningBy() {
     return decomissioningBy;
   }
@@ -52,7 +52,7 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
   public String getId() {
     return id;
   }
-  
+
   public Optional<Long> getDeadAt() {
     return deadAt;
   }
@@ -76,10 +76,10 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
   public SingularityMachineState getState() {
     return state;
   }
-  
+
   public void setState(SingularityMachineState state) {
     this.state = state;
   }
-  
-  
+
+
 }

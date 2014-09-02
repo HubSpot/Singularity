@@ -11,5 +11,5 @@ public abstract class IdTranscoder<T extends SingularityId> implements Function<
   public T apply(String input) {
     return transcode(input);
   }
-  
+
 }

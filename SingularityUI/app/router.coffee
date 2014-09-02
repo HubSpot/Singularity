@@ -1,5 +1,8 @@
 DashboardController = require 'controllers/Dashboard'
-StatusController = require 'controllers/Status'
+StatusController    = require 'controllers/Status'
+
+NewRequestController = require 'controllers/NewRequest'
+NewDeployController  = require 'controllers/NewDeploy'
 
 RequestDetailController = require 'controllers/RequestDetail'
 RequestsTableController = require 'controllers/RequestsTable'
@@ -19,12 +22,16 @@ class Router extends Backbone.Router
         '(/)': 'dashboard'
         'status(/)': 'status'
 
+        'requests/new(/)': 'newRequest'
+
         'requests/:state/:subFilter/:searchFilter(/)': 'requestsTable'
         'requests/:state/:subFilter(/)': 'requestsTable'
         'requests/:state(/)': 'requestsTable'
         'requests(/)': 'requestsTable'
 
         'request/:requestId(/)': 'requestDetail'
+
+        'request/:requestId/deploy(/)': 'newDeploy'
 
         'tasks/:state/:searchFilter(/)': 'tasksTable'
         'tasks/:state(/)': 'tasksTable'
@@ -45,11 +52,17 @@ class Router extends Backbone.Router
     status: ->
         app.bootstrapController new StatusController
 
+    newRequest: ->
+        app.bootstrapController new NewRequestController
+
     requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
         app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
 
     requestDetail: (requestId) ->
         app.bootstrapController new RequestDetailController {requestId}
+
+    newDeploy: (requestId) ->
+        app.bootstrapController new NewDeployController {requestId}
 
     tasksTable: (state = 'active', searchFilter = '') ->
         app.bootstrapController new TasksTableController {state, searchFilter}

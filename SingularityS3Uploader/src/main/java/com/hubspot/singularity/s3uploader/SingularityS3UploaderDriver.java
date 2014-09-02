@@ -16,8 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -86,8 +88,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.metrics.setExpiringCollection(expiring);
 
     this.runLock = new ReentrantLock();
-
-    this.executorService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityS3Uploader-%d").build());
+    
+    this.executorService = new ThreadPoolExecutor(1, configuration.getExecutorMaxUploadThreads(), 30L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), 
+        new ThreadFactoryBuilder().setNameFormat("SingularityS3Uploader-%d").build());
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityS3Driver-%d").build());
   }
 
@@ -225,7 +228,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
             LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, durationSinceLastFile, configuration.getStopCheckingAfterMillisWithoutNewFile(), isFinished);
           }
         } else {
-          LOG.trace("Updating uploader {} last expire time");
+          LOG.trace("Updating uploader {} last expire time", uploader);
           uploaderLastHadFilesAt.put(uploader, now);
         }
 

@@ -80,7 +80,7 @@ EOF
 
 function compile_singularity_ui_static_files {
   cd /singularity/SingularityUI
-  npm install
+  npm install --unsafe-perm
 }
 
 function build_singularity {

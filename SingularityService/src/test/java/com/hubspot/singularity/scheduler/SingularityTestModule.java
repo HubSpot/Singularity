@@ -51,56 +51,56 @@ public class SingularityTestModule extends AbstractModule {
     Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.WARN);
     context.getLogger("com.hubspot").setLevel(Level.TRACE);
-    
-    
+
+
     try {
       TestingServer ts = new TestingServer();
-    
+
       bind(TestingServer.class).toInstance(ts);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
-    
+
     SingularityConfiguration config = new SingularityConfiguration();
     config.setLoadBalancerUri("test");
-    
+
     bind(SingularityConfiguration.class).toInstance(config);
     bind(SMTPConfiguration.class).toInstance(new SMTPConfiguration());
-    
+
     MesosConfiguration mc = new MesosConfiguration();
     mc.setDefaultCpus(1);
     mc.setDefaultMemory(128);
 
     config.setMesosConfiguration(mc);
-    
+
     bind(MesosConfiguration.class).toInstance(mc);
-    
+
     SingularityAbort abort = mock(SingularityAbort.class);
     SingularityMailer mailer = mock(SingularityMailer.class);
     SchedulerDriver driver = mock(SchedulerDriver.class);
     SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
-   
+
     when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
-    
+
     bind(SingularityLogSupport.class).toInstance(logSupport);
     bind(SchedulerDriver.class).toInstance(driver);
     bind(SingularityMailer.class).toInstance(mailer);
     bind(SingularityAbort.class).toInstance(abort);
-    
+
     TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
-    
+
     bind(LoadBalancerClient.class).toInstance(tlbc);
     bind(TestingLoadBalancerClient.class).toInstance(tlbc);
-    
+
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
-    
+
     HistoryManager hm = mock(HistoryManager.class);
     when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.<SingularityDeployHistory> absent());
-    
+
     bind(HistoryManager.class).toInstance(hm);
   }
-  
+
   @Provides
   @Singleton
   public SingularityDriverManager getDriverManager(TaskManager taskManager) {
@@ -109,39 +109,39 @@ public class SingularityTestModule extends AbstractModule {
       @Override
       public SingularityDriver get() {
         SingularityDriver mock = mock(SingularityDriver.class);
-        
+
         when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
         when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
-        
+
         return mock;
       }
-      
-      
+
+
     }, taskManager);
-    
+
     driverManager.start();
-    
+
     return driverManager;
   }
-  
+
   @Singleton
   @Provides
   @Named(SingularityServiceModule.UNDERLYING_CURATOR)
   public CuratorFramework provideUnderlyingCurator(CuratorFramework cf) {
     return cf;
   }
-  
+
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
     return SingularityServiceModule.OBJECT_MAPPER;
   }
-  
+
   @Singleton
   @Provides
   public CuratorFramework provideNamespaceCurator(TestingServer ts) {
     CuratorFramework cf= CuratorFrameworkFactory.newClient(ts.getConnectString(), new RetryPolicy() {
-      
+
       @Override
       public boolean allowRetry(int retryCount, long elapsedTimeMs, RetrySleeper sleeper) {
         return false;
@@ -150,7 +150,7 @@ public class SingularityTestModule extends AbstractModule {
     cf.start();
     return cf;
   }
-  
+
   @Provides
   @Singleton
   public Optional<Raven> providesNoRaven() {

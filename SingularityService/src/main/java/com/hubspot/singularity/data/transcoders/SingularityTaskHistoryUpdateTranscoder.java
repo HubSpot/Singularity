@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 public class SingularityTaskHistoryUpdateTranscoder extends SingularityTaskIdHolderTranscoder<SingularityTaskHistoryUpdate> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityTaskHistoryUpdateTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -22,5 +22,5 @@ public class SingularityTaskHistoryUpdateTranscoder extends SingularityTaskIdHol
   public byte[] toBytes(SingularityTaskHistoryUpdate object) {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

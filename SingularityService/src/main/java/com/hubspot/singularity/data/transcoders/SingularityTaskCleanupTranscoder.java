@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 public class SingularityTaskCleanupTranscoder implements Transcoder<SingularityTaskCleanup> {
 
   private final ObjectMapper objectMapper;
-  
+
   @Inject
   public SingularityTaskCleanupTranscoder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -22,5 +22,5 @@ public class SingularityTaskCleanupTranscoder implements Transcoder<SingularityT
   public SingularityTaskCleanup transcode(byte[] data) {
     return SingularityTaskCleanup.fromBytes(data, objectMapper);
   }
-  
+
 }

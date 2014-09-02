@@ -15,27 +15,27 @@ public interface HistoryManager {
   public enum OrderDirection {
     ASC, DESC;
   }
-  
+
   public enum RequestHistoryOrderBy {
     requestId, createdAt
   }
-  
+
   void saveRequestHistoryUpdate(SingularityRequest request, RequestHistoryType state, Optional<String> user);
-  
+
   void saveTaskHistory(SingularityTaskHistory taskHistory);
-  
+
   void saveDeployHistory(SingularityDeployHistory deployHistory);
-  
+
   Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId);
-  
+
   List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
 
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
 
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
- 
+
   List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
-  
+
   List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
-   
+
 }

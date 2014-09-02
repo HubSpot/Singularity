@@ -39,7 +39,7 @@ class RequestDetailController extends Controller
 
         @collections.activeTasks = new RequestTasks [],
             requestId: @requestId
-            state:     'active'
+            state:    'active'
 
         @collections.scheduledTasks = new Tasks [],
             requestId: @requestId

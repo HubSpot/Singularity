@@ -32,6 +32,8 @@ class SimpleSubview extends View
             synced:   @data.synced
             expanded: @expanded
 
+        @$('.actions-column a[title]').tooltip()
+
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
 
     expandToggle: (event) ->

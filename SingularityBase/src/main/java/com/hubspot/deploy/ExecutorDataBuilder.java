@@ -7,7 +7,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class ExecutorDataBuilder {
-  
+
   private String cmd;
   private List<EmbeddedArtifact> embeddedArtifacts;
   private List<ExternalArtifact> externalArtifacts;
@@ -19,7 +19,7 @@ public class ExecutorDataBuilder {
   private Optional<String> loggingTag;
   private Map<String, String> loggingExtraFields;
   private Optional<Long> sigKillProcessesAfterMillis;
-  
+
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
       Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis) {
     this.cmd = cmd;
@@ -33,15 +33,15 @@ public class ExecutorDataBuilder {
     this.loggingTag = loggingTag;
     this.loggingExtraFields = loggingExtraFields;
   }
-  
+
   public ExecutorDataBuilder() {
-    
+
   }
-  
+
   public ExecutorData build() {
     return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
   }
-  
+
   public Optional<String> getLoggingTag() {
     return loggingTag;
   }
@@ -92,7 +92,7 @@ public class ExecutorDataBuilder {
     this.cmd = cmd;
     return this;
   }
-  
+
   public Optional<Long> getSigKillProcessesAfterMillis() {
     return sigKillProcessesAfterMillis;
   }
@@ -131,7 +131,7 @@ public class ExecutorDataBuilder {
     this.extraCmdLineArgs = extraCmdLineArgs;
     return this;
   }
-  
+
   public List<S3Artifact> getS3Artifacts() {
     return s3Artifacts;
   }

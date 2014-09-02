@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor.config;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityExecutorConfigurationLoader extends SingularityConfigurationLoader {
@@ -53,10 +54,11 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS = "executor.local.download.service.timeout.millis";
 
   public SingularityExecutorConfigurationLoader() {
-    super("/etc/singularity.executor.properties");
+    super("/etc/singularity.executor.properties", Optional.of("singularity-executor.log"));
   }
 
-  public void bindDefaults(Properties properties) {
+  @Override
+  protected void bindDefaults(Properties properties) {
     properties.put(TASK_APP_DIRECTORY, "app");
     properties.put(TASK_EXECUTOR_BASH_LOG_PATH, "executor.bash.log");
     properties.put(TASK_EXECUTOR_JAVA_LOG_PATH, "executor.java.log");

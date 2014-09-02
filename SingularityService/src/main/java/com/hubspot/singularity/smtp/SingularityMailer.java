@@ -63,13 +63,13 @@ public class SingularityMailer implements SingularityCloseable {
   private final SingularityCloser closer;
 
   private final TaskManager taskManager;
-  
+
   private final JadeTemplate taskFailedTemplate;
   private final JadeTemplate requestInCooldownTemplate;
   private final JadeTemplate taskNotRunningWarningTemplate;
-  
+
   private final JadeHelper jadeHelper;
-  
+
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 
@@ -81,8 +81,8 @@ public class SingularityMailer implements SingularityCloseable {
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
 
   @Inject
-  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient, 
-      ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate, 
+  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
+      ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate, SingularityExceptionNotifier exceptionNotifier) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
@@ -95,14 +95,14 @@ public class SingularityMailer implements SingularityCloseable {
 
     if (maybeSmtpConfiguration.isPresent()) {
       this.mailSenderExecutorService = Optional.of(
-          new ThreadPoolExecutor(maybeSmtpConfiguration.get().getMailThreads(), maybeSmtpConfiguration.get().getMailMaxThreads(), 0L, TimeUnit.MILLISECONDS, 
+          new ThreadPoolExecutor(maybeSmtpConfiguration.get().getMailThreads(), maybeSmtpConfiguration.get().getMailMaxThreads(), 0L, TimeUnit.MILLISECONDS,
               new LinkedBlockingQueue<Runnable>(),
               new ThreadFactoryBuilder().setNameFormat("SingularityMailer-%d")
           .build()));
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }
-    
+
     this.taskFailedTemplate = taskFailedTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.taskNotRunningWarningTemplate = taskNotRunningWarningTemplate;
@@ -137,14 +137,14 @@ public class SingularityMailer implements SingularityCloseable {
 
   private Optional<String[]> getTaskLogFile(SingularityTaskId taskId, String filename) {
     final Optional<SingularityTask> task = taskManager.getTask(taskId);
-    
+
     if (!task.isPresent()) {
       LOG.error(String.format("No task found for %s", taskId.getId()));
       return Optional.absent();
     }
-    
+
     final Optional<String> directory = taskManager.getDirectory(taskId);
-    
+
     if (!directory.isPresent()) {
       LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
       return Optional.absent();
@@ -159,7 +159,7 @@ public class SingularityMailer implements SingularityCloseable {
     final SandboxManager sandboxManager = new SandboxManager(this.asyncHttpClient, this.objectMapper);
 
     final Optional<MesosFileChunkObject> logChunkObject;
-    
+
     try {
       logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
@@ -181,7 +181,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     templateSubs.put("request_id", request.getId());
     templateSubs.put("singularity_request_link", getSingularityRequestLink(request));
-    
+
     if (taskId.isPresent()) {
       templateSubs.put("singularity_task_link", getSingularityTaskLink(taskId.get()));
       templateSubs.put("stdout", getTaskLogFile(taskId.get(), "stdout").or(new String[0]));
@@ -191,19 +191,19 @@ public class SingularityMailer implements SingularityCloseable {
       templateSubs.put("deploy_id", taskId.get().getDeployId());
 
       templateSubs.put("task_directory", taskManager.getDirectory(taskId.get()).or("directory missing"));
-    
+
       Optional<SingularityTask> task = taskManager.getTask(taskId.get());
-      
+
       if (task.isPresent()) {
         templateSubs.put("slave_hostname", task.get().getOffer().getHostname());
       }
     }
 
     templateSubs.put("taskScheduled", request.isScheduled());
-    
+
     templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
     templateSubs.put("num_retries", request.getNumRetriesOnFailure().or(0));
-    
+
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().getDisplayName());
       templateSubs.put("taskStateLost", (taskState.get() == ExtendedTaskState.TASK_LOST || taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN));
@@ -212,7 +212,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     templateSubs.put("task_updates", jadeHelper.getJadeTaskHistory(taskHistory));
     templateSubs.put("taskEverRan", taskEverRan(taskHistory));
-    
+
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()) {
       templateSubs.put(bindingEntry.getKey(), bindingEntry.getValue());
     }
@@ -223,7 +223,7 @@ public class SingularityMailer implements SingularityCloseable {
   private List<String> getOwners(SingularityRequest request) {
     return request.getOwners().or(Collections.<String> emptyList());
   }
-  
+
   public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
     Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
@@ -261,17 +261,17 @@ public class SingularityMailer implements SingularityCloseable {
 
   public void sendRequestInCooldownMail(SingularityRequest request) {
     // should have task history
-    
+
     final List<String> to = getOwners(request);
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
-    
+
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
         .put("num_failures", configuration.getCooldownAfterFailures())
         .put("cooldown_delay_format", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())))
         .put("cooldown_expires_format", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())))
         .build();
 
-    final String body = populateGenericEmailTemplate(this.requestInCooldownTemplate, request, Optional.<SingularityTaskId> absent(), Collections.<SingularityTaskHistoryUpdate> emptyList(), 
+    final String body = populateGenericEmailTemplate(this.requestInCooldownTemplate, request, Optional.<SingularityTaskId> absent(), Collections.<SingularityTaskHistoryUpdate> emptyList(),
         Optional.<ExtendedTaskState> absent(), additionalBindings);
 
     queueMail(to, subject, body);
@@ -279,10 +279,10 @@ public class SingularityMailer implements SingularityCloseable {
 
   private boolean taskEverRan(Collection<SingularityTaskHistoryUpdate> history) {
     SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
-    
+
     return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
   }
-  
+
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
     if (!taskEverRan(history)) {
       return String.format("Task %s (%s) never started — Singularity", state.getDisplayName(), taskId.toString());
@@ -306,7 +306,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     return String.format(REQUEST_LINK_FORMAT, uiHostnameAndPath.get(), request.getId());
   }
-  
+
   private void queueMail(final List<String> toList, final String subject, final String body) {
     if (toList.isEmpty()) {
       LOG.warn(String.format("Couldn't queue email %s because no to address is present", getEmailLogFormat(toList, subject)));

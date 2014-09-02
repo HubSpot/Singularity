@@ -23,7 +23,7 @@ public class SingularityExecutorRunner {
     final long start = System.currentTimeMillis();
 
     try {
-      final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityExecutorConfigurationLoader(), new SingularityS3ConfigurationLoader()), new SingularityExecutorModule());
+      final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityExecutorConfigurationLoader()), new SingularityExecutorModule());
       final SingularityExecutorRunner executorRunner = injector.getInstance(SingularityExecutorRunner.class);
 
       final Protos.Status driverStatus = executorRunner.run();

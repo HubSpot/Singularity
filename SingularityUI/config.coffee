@@ -6,7 +6,7 @@ handlebars = require 'handlebars-brunch/node_modules/handlebars'
 # Brunch settings
 exports.config =
     paths:
-        public: path.resolve(__dirname, '../SingularityService/src/main/resources/static')
+        public: path.resolve(__dirname, '../SingularityService/target/generated-resources/static')
 
     files:
         javascripts:

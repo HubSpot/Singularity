@@ -17,7 +17,7 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   private final Optional<String> responseBody;
   private final Optional<String> errorMessage;
   private final long timestamp;
-  
+
   public static SingularityTaskHealthcheckResult fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityTaskHealthcheckResult.class);
@@ -27,10 +27,10 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   }
 
   @JsonCreator
-  public SingularityTaskHealthcheckResult(@JsonProperty("statusCode") Optional<Integer> statusCode, @JsonProperty("duration") Optional<Long> durationMillis, @JsonProperty("timestamp") long timestamp, 
+  public SingularityTaskHealthcheckResult(@JsonProperty("statusCode") Optional<Integer> statusCode, @JsonProperty("duration") Optional<Long> durationMillis, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("responseBody") Optional<String> responseBody, @JsonProperty("errorMessage") Optional<String> errorMessage, @JsonProperty("taskId") SingularityTaskId taskId) {
     super(taskId);
-    
+
     this.statusCode = statusCode;
     this.errorMessage = errorMessage;
     this.durationMillis = durationMillis;
@@ -49,11 +49,11 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   public Optional<Integer> getStatusCode() {
     return statusCode;
   }
-  
+
   public Optional<Long> getDurationMillis() {
     return durationMillis;
   }
-  
+
   public Optional<String> getErrorMessage() {
     return errorMessage;
   }
@@ -61,19 +61,19 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   public long getTimestamp() {
     return timestamp;
   }
-  
+
   public Optional<String> getResponseBody() {
     return responseBody;
   }
-  
+
   @JsonIgnore
   public boolean isFailed() {
     return getErrorMessage().isPresent() || (getStatusCode().isPresent() && !JavaUtils.isHttpSuccess(getStatusCode().get()));
   }
-  
+
   @Override
   public String toString() {
     return "SingularityTaskHealthcheckResult [statusCode=" + statusCode + ", durationMillis=" + durationMillis + ", timestamp=" + timestamp + ", responseBody=" + responseBody + ", errorMessage=" + errorMessage + ", taskId=" + getTaskId() + "]";
   }
-  
+
 }

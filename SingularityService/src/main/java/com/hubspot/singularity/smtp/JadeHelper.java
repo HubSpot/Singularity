@@ -19,12 +19,12 @@ import de.neuland.jade4j.template.TemplateLoader;
 public class JadeHelper {
 
   public static TemplateLoader JADE_LOADER = new TemplateLoader() {
-    
+
     @Override
     public Reader getReader(String name) throws IOException {
       return new InputStreamReader(ClassLoader.getSystemResourceAsStream(name));
     }
-    
+
     @Override
     public long getLastModified(String name) throws IOException {
       return -1;
@@ -32,10 +32,10 @@ public class JadeHelper {
   };
 
   private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
-  
+
   public List<Map<String, String>> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<Map<String, String>> output = Lists.newArrayListWithCapacity(taskHistory.size());
-    
+
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
           ImmutableMap.<String, String> builder()

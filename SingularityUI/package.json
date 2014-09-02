@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "brunch watch --server",
-    "postinstall": "bower install && brunch build --production"
+    "postinstall": "bower install --allow-root && brunch build --production"
   },
   "dependencies": {
     "bower": "^1.3.8",

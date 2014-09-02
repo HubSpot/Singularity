@@ -135,6 +135,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   // Use DeployResource.cancelDeploy() instead
+  @Override
   @DELETE
   @Path("/request/{requestId}/deploy/{deployId}")
   @Deprecated
@@ -231,13 +232,13 @@ public class RequestResource extends AbstractRequestResource {
       throw WebExceptions.conflict("Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
     }
 
-    requestManager.makeActive(requestWithState.getRequest());
-
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
-    if (maybeDeployId.isPresent() && shouldAddToPendingQueue(requestWithState.getRequest())) {
+    if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
     }
+
+    requestManager.makeActive(requestWithState.getRequest());
 
     historyManager.saveRequestHistoryUpdate(requestWithState.getRequest(), RequestHistoryType.UNPAUSED, user);
 
@@ -292,7 +293,6 @@ public class RequestResource extends AbstractRequestResource {
 
   @GET
   @PropertyFiltering
-  @Path("/")
   public Iterable<SingularityRequestParent> getRequests() {
     return getRequestsWithDeployState(requestManager.getRequests());
   }

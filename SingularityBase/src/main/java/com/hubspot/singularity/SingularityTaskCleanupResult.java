@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityTaskCleanupResult extends SingularityJsonObject {
-  
+
   private final SingularityCreateResult result;
   private final SingularityTask task;
 

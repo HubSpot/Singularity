@@ -26,6 +26,7 @@ public class SingularityMappers {
 
   public static class SingularityBytesMapper implements ResultSetMapper<byte[]> {
 
+    @Override
     public byte[] map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return r.getBytes("bytes");
     }
@@ -34,14 +35,16 @@ public class SingularityMappers {
 
   public static class SingularityRequestIdMapper implements ResultSetMapper<String> {
 
+    @Override
     public String map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return r.getString("requestId");
     }
 
   }
-  
+
   public static class SingularityRequestHistoryMapper implements ResultSetMapper<SingularityRequestHistory> {
 
+    @Override
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return new SingularityRequestHistory(r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), RequestHistoryType.valueOf(r.getString("requestState")), SingularityRequest.fromBytes(r.getBytes("request"),
           SingularityServiceModule.OBJECT_MAPPER));
@@ -51,6 +54,7 @@ public class SingularityMappers {
 
   public static class SingularityTaskIdHistoryMapper implements ResultSetMapper<SingularityTaskIdHistory> {
 
+    @Override
     public SingularityTaskIdHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       String lastTaskStatus = r.getString("lastTaskStatus");
 
@@ -67,6 +71,7 @@ public class SingularityMappers {
 
   public static class SingularityDeployHistoryLiteMapper implements ResultSetMapper<SingularityDeployHistory> {
 
+    @Override
     public SingularityDeployHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       SingularityDeployMarker marker = new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")));
       SingularityDeployResult deployState = new SingularityDeployResult(DeployState.valueOf(r.getString("deployState")), Optional.<String> absent(), Optional.<SingularityLoadBalancerUpdate> absent(), r.getTimestamp("deployStateAt").getTime());

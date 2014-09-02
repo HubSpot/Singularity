@@ -2,12 +2,14 @@ package com.hubspot.singularity.runner.base.config;
 
 import java.util.Properties;
 
+import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 
 public class SingularityRunnerBaseConfigurationLoader extends SingularityConfigurationLoader {
 
   public static final String LOGGING_PATTERN = "logging.pattern";
-  public static final String ROOT_LOG_PATH = "root.log.path";
+  public static final String ROOT_LOG_DIRECTORY = "root.log.directory";
+  public static final String ROOT_LOG_FILENAME = "root.log.filename";
 
   public static final String ROOT_LOG_LEVEL = "root.log.level";
   public static final String HUBSPOT_LOG_LEVEL = "hubspot.log.level";
@@ -19,10 +21,11 @@ public class SingularityRunnerBaseConfigurationLoader extends SingularityConfigu
   public static final String S3_METADATA_DIRECTORY = "s3uploader.metadata.directory";
 
   public SingularityRunnerBaseConfigurationLoader() {
-    super("/etc/singularity.base.properties");
+    super("/etc/singularity.base.properties", Optional.<String> absent());
   }
 
-  public void bindDefaults(Properties properties) {
+  @Override
+  protected void bindDefaults(Properties properties) {
     properties.put(LOGGING_PATTERN, JavaUtils.LOGBACK_LOGGING_PATTERN);
     properties.put(LOG_METADATA_SUFFIX, ".tail.json");
     properties.put(ROOT_LOG_LEVEL, "INFO");

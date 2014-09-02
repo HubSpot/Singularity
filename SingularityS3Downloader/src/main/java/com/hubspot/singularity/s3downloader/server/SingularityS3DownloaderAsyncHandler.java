@@ -9,9 +9,11 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Timer.Context;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
+import com.hubspot.singularity.s3downloader.SingularityS3DownloaderMetrics;
 
 public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
@@ -21,11 +23,13 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
   private final Continuation continuation;
   private final ArtifactManager artifactManager;
   private final long start;
+  private final SingularityS3DownloaderMetrics metrics;
 
-  public SingularityS3DownloaderAsyncHandler(ArtifactManager artifactManager, ArtifactDownloadRequest artifactDownloadRequest, Continuation continuation) {
+  public SingularityS3DownloaderAsyncHandler(ArtifactManager artifactManager, ArtifactDownloadRequest artifactDownloadRequest, Continuation continuation, SingularityS3DownloaderMetrics metrics) {
     this.artifactManager = artifactManager;
     this.artifactDownloadRequest = artifactDownloadRequest;
     this.continuation = continuation;
+    this.metrics = metrics;
     this.start = System.currentTimeMillis();
   }
 
@@ -62,9 +66,11 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
   @Override
   public void run() {
+    final Context context = metrics.getDownloadTimer().time();
     try {
       download();
     } catch (Throwable t) {
+      metrics.getServerErrorsMeter().mark();
       LOG.error("While handling {}", artifactDownloadRequest, t);
       try {
         getResponse().sendError(500);
@@ -72,6 +78,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
         LOG.error("While sending error", t2);
       }
     } finally {
+      context.close();
       continuation.complete();
     }
   }

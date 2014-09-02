@@ -42,7 +42,7 @@ class RequestsView extends View
 
     initialize: ({@state, @subFilter, @searchFilter}) ->
         @bodyTemplate = @bodyTemplateMap[@state]
-        @listenTo @collection, 'sync',   @render
+        @listenTo @collection, 'sync', @render
 
         # So we don't spam it with every keystroke
         @searchChange = _.debounce @searchChange, 200
@@ -94,7 +94,21 @@ class RequestsView extends View
             
         @currentRequests = requests
 
+    preventSearchOverwrite: ->
+        # If you've got a lot of requests like we do at HubSpot, the collection
+        # behind this view will take a while to download & parse. If you type stuff
+        # in the search field before this happens, it'll all be wiped.
+        $searchBox = @$ 'input[type="search"]'
+        searchVal = $searchBox.val()
+
+        @searchFilter = searchVal if not @searchFilter
+
+        if $searchBox.is ':focus'
+            @focusSearchAfterRender = true
+
     render: =>
+        @preventSearchOverwrite()
+        
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -113,6 +127,12 @@ class RequestsView extends View
             partials.partials.requestsFilter = @templateFilter
 
         @$el.html @templateBase context, partials
+
+        if @focusSearchAfterRender
+            $searchBox = @$ 'input[type="search"]'
+            $searchBox.focus()
+            $searchBox[0].setSelectionRange @searchFilter.length, @searchFilter.length
+            @focusSearchAfterRender = false
 
         @renderTable()
 
@@ -163,6 +183,8 @@ class RequestsView extends View
             utils.fixTableColumns $table
         else
             $tableBody.append $contents
+
+        @$('.actions-column a[title]').tooltip()
 
     sortTable: (event) =>
         @isSorted = true

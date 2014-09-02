@@ -19,11 +19,11 @@ public class SingularityDeployKey extends SingularityId {
   public static SingularityDeployKey fromPendingTask(SingularityPendingTask pendingTask) {
     return new SingularityDeployKey(pendingTask.getPendingTaskId().getRequestId(), pendingTask.getPendingTaskId().getDeployId());
   }
-  
+
   public static SingularityDeployKey fromDeployMarker(SingularityDeployMarker deployMarker) {
     return new SingularityDeployKey(deployMarker.getRequestId(), deployMarker.getDeployId());
   }
-  
+
   public static Map<SingularityDeployKey, SingularityDeploy> fromDeploys(Collection<SingularityDeploy> deploys) {
     return Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
@@ -32,7 +32,7 @@ public class SingularityDeployKey extends SingularityId {
       }
     });
   }
-  
+
   public static Map<SingularityPendingTask, SingularityDeployKey> fromPendingTasks(Collection<SingularityPendingTask> pendingTasks) {
     return Maps.toMap(pendingTasks, new Function<SingularityPendingTask, SingularityDeployKey>() {
       @Override
@@ -41,23 +41,23 @@ public class SingularityDeployKey extends SingularityId {
       }
     });
   }
-  
+
   public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(Collection<SingularityPendingDeploy> pendingDeploys) {
     return Maps.toMap(pendingDeploys, fromPendingDeployToDeployKey);
   }
-  
+
   public static Function<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeployToDeployKey = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
     @Override
     public SingularityDeployKey apply(SingularityPendingDeploy input) {
       return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
     }
   };
- 
+
   public SingularityDeployKey(String requestId, String deployId) {
     this.requestId = requestId;
     this.deployId = deployId;
   }
-  
+
   public String getRequestId() {
     return requestId;
   }
@@ -65,13 +65,13 @@ public class SingularityDeployKey extends SingularityId {
   public String getDeployId() {
     return deployId;
   }
-  
+
   public static SingularityDeployKey fromString(String string) {
     final String[] splits = JavaUtils.reverseSplit(string, 2, "-");
-    
+
     final String requestId = splits[0];
     final String deployId = splits[1];
-    
+
     return new SingularityDeployKey(requestId, deployId);
   }
 

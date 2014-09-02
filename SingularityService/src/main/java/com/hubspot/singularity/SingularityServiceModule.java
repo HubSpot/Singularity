@@ -63,19 +63,19 @@ import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityServiceModule extends AbstractModule {
-  
+
   private final static Logger LOG = LoggerFactory.getLogger(SingularityServiceModule.class);
-  
+
   private static final String LEADER_PATH = "/leader";
-  
+
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
   public static final String UNDERLYING_CURATOR = "curator.base.instance";
-  
+
   public static final String TASK_FAILED_TEMPLATE = "task.failed.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String TASK_NOT_RUNNING_WARNING_TEMPLATE = "task.not.running.warning.template";
-  
+
   @Override
   protected void configure() {
     bind(HistoryManager.class).to(JDBIHistoryManager.class);
@@ -91,18 +91,18 @@ public class SingularityServiceModule extends AbstractModule {
     bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
   }
-  
+
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
     bindInterceptor(Matchers.subclassesOf(JDBIHistoryManager.class), Matchers.any(), new MethodInterceptor() {
-      
+
       @Override
       public Object invoke(MethodInvocation invocation) throws Throwable {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        
+
         if (cl == null) {
           Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
         }
-        
+
         try {
           return invocation.proceed();
         } finally {
@@ -118,21 +118,21 @@ public class SingularityServiceModule extends AbstractModule {
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .registerModule(new ProtobufModule());
   }
-  
+
   public static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
-  
+
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
     return OBJECT_MAPPER;
   }
-  
+
   @Provides
   @Singleton
   public AsyncHttpClient providesAsyncHTTPClient() {
     return new AsyncHttpClient();
   }
-  
+
   @Provides
   @Singleton
   public ZooKeeperConfiguration zooKeeperConfiguration(SingularityConfiguration config) {
@@ -151,7 +151,7 @@ public class SingularityServiceModule extends AbstractModule {
     if (!config.isPresent()) {
       return Optional.absent();
     }
-    
+
     try {
       S3Service s3 = new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey()));
       return Optional.of(s3);
@@ -159,7 +159,7 @@ public class SingularityServiceModule extends AbstractModule {
       throw Throwables.propagate(t);
     }
   }
-  
+
   @Provides
   @Singleton
   @Named(HOSTNAME_PROPERTY)
@@ -173,7 +173,7 @@ public class SingularityServiceModule extends AbstractModule {
   public int providesHttpPortProperty(SingularityConfiguration config) {
     SimpleServerFactory simpleServerFactory = (SimpleServerFactory) config.getServerFactory();
     HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
-    
+
     return httpFactory.getPort();
   }
 
@@ -184,31 +184,31 @@ public class SingularityServiceModule extends AbstractModule {
                                         @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
     return new LeaderLatch(curator, LEADER_PATH, String.format("%s:%d", hostname, httpPort));
   }
-  
+
   @Provides
   @Singleton
   public MesosConfiguration mesosConfiguration(SingularityConfiguration config) {
     return config.getMesosConfiguration();
   }
-  
+
   @Provides
   @Singleton
   public Optional<SMTPConfiguration> smtpConfiguration(SingularityConfiguration config) {
     return config.getSmtpConfiguration();
   }
-  
+
   @Provides
   @Singleton
   public Optional<S3Configuration> s3Configuration(SingularityConfiguration config) {
     return config.getS3Configuration();
   }
-  
+
   @Provides
   @Singleton
   @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
     LOG.info("Creating curator/ZK client and blocking on connection to ZK quorum {} (timeout: {})", config.getQuorum(), config.getConnectTimeoutMillis());
-    
+
     CuratorFramework client = CuratorFrameworkFactory.builder()
         .defaultData(null)
         .sessionTimeoutMs(config.getSessionTimeoutMillis())
@@ -216,36 +216,36 @@ public class SingularityServiceModule extends AbstractModule {
         .connectString(config.getQuorum())
         .retryPolicy(new ExponentialBackoffRetry(config.getRetryBaseSleepTimeMilliseconds(), config.getRetryMaxTries()))
         .build();
-    
+
     client.start();
-    
+
     final long start = System.currentTimeMillis();
-    
+
     Preconditions.checkState(client.getZookeeperClient().blockUntilConnectedOrTimedOut());
-    
+
     LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
-    
+
     return client;
   }
-  
+
   @Singleton
   @Provides
   public CuratorFramework provideNamespaceCurator(@Named(UNDERLYING_CURATOR) CuratorFramework curator, ZooKeeperConfiguration config) {
     return curator.usingNamespace(config.getZkNamespace());
   }
-  
+
   @Provides
   @Singleton
   public DBI getDBI(Environment environment, SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
     final DBIFactory factory = new DBIFactory();
     return factory.build(environment, singularityConfiguration.getDataSourceFactory(), "db");
   }
-  
+
   @Provides
   public HistoryJDBI getHistoryJDBI(DBI dbi) {
     return dbi.onDemand(HistoryJDBI.class);
   }
-  
+
   private JadeTemplate getJadeTemplate(String name) throws IOException {
     Parser parser = new Parser("templates/" + name, JadeHelper.JADE_LOADER);
     Node root = parser.parse();
@@ -254,24 +254,24 @@ public class SingularityServiceModule extends AbstractModule {
 
     jadeTemplate.setTemplateLoader(JadeHelper.JADE_LOADER);
     jadeTemplate.setRootNode(root);
-    
+
     return jadeTemplate;
   }
-  
+
   @Provides
   @Singleton
   @Named(TASK_FAILED_TEMPLATE)
   public JadeTemplate getTaskFailedTemplate() throws IOException {
     return getJadeTemplate("task_failed.jade");
   }
-  
+
   @Provides
   @Singleton
   @Named(REQUEST_IN_COOLDOWN_TEMPLATE)
   public JadeTemplate getRequestPausedTemplate() throws IOException {
     return getJadeTemplate("request_in_cooldown.jade");
   }
-  
+
   @Provides
   @Singleton
   @Named(TASK_NOT_RUNNING_WARNING_TEMPLATE)

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <prerequisites>
@@ -14,6 +13,8 @@
   </parent>
 
   <properties>
+    <project.build.generated-resources>${project.build.directory}/generated-resources</project.build.generated-resources>
+
     <mesos.version>0.19.1</mesos.version>
     <sentry.version>5.0</sentry.version>
     <java.abi>1.7</java.abi>
@@ -25,13 +26,13 @@
     <guice.version>3.0</guice.version>
     <jets3t.version>0.9.0</jets3t.version>
     <guava.version>17.0</guava.version>
-    <baragon.version>0.1.0-SNAPSHOT</baragon.version> <!-- TODO: use release version of Baragon when complete -->
-    <singularity.version>0.3.8-SNAPSHOT</singularity.version>
+    <baragon.version>0.1.0</baragon.version>
+    <snappy.version>0.3</snappy.version>
   </properties>
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.3.8-SNAPSHOT</version>
+  <version>0.3.9-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -48,8 +49,9 @@
 
   <scm>
     <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
-    <developerConnection>scm:git:git@github.com:HubSpot/Singularity.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
     <url>git@github.com:HubSpot/Singularity.git</url>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
@@ -67,7 +69,7 @@
     <module>SingularityBase</module>
     <module>SingularityRunnerBase</module>
     <module>SingularityS3Base</module>
-    <module>MesosClient</module>
+    <module>SingularityMesosClient</module>
     <module>SingularityClient</module>
     <module>SingularityService</module>
     <module>SingularityExecutor</module>
@@ -79,6 +81,21 @@
   </modules>
 
   <build>
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/main/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.build.generated-resources}</directory>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -99,20 +116,6 @@
             <id>attach-sources</id>
             <goals>
               <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>1.4</version>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
             </goals>
           </execution>
         </executions>
