@@ -61,8 +61,15 @@ public class SingularityS3Uploader {
   public int upload(Set<Path> synchronizedToUpload) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
-
-    for (Path file : JavaUtils.iterable(Paths.get(fileDirectory))) {
+    
+    final Path directory = Paths.get(fileDirectory);
+    
+    if (!Files.exists(directory)) {
+      LOG.info("Path {} doesn't exist", fileDirectory);
+      return found;
+    }
+    
+    for (Path file : JavaUtils.iterable(directory)) {
       if (!pathMatcher.matches(file.getFileName())) {
         LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
         continue;

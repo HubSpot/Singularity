@@ -198,6 +198,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           try {
             returnValue = uploader.upload(filesToUpload);
           } catch (Throwable t) {
+            metrics.error();
             LOG.error("Error while processing uploader {}", uploader, t);
           }
           return returnValue;
@@ -234,6 +235,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         totesUploads += foundFiles;
       } catch (Throwable t) {
+        metrics.error();
         LOG.error("Waiting on future", t);
       }
     }
