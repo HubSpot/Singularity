@@ -15,6 +15,7 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfigurationL
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
+import com.hubspot.singularity.s3.base.config.SingularityS3ConfigurationLoader;
 
 
 public class SingularityExecutorCleanupRunner {
@@ -25,7 +26,7 @@ public class SingularityExecutorCleanupRunner {
     final long start = System.currentTimeMillis();
 
     try {
-      final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityExecutorConfigurationLoader(), new SingularityExecutorCleanupConfigurationLoader()), new SingularityExecutorModule());
+      final Injector injector = Guice.createInjector(new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityExecutorConfigurationLoader(), new SingularityExecutorCleanupConfigurationLoader()), new SingularityExecutorModule());
       final SingularityExecutorCleanupRunner runner = injector.getInstance(SingularityExecutorCleanupRunner.class);
 
       LOG.info("Starting cleanup");
