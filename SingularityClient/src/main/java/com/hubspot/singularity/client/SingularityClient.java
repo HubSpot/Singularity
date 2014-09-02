@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -14,11 +15,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestParent;
@@ -33,6 +36,11 @@ public class SingularityClient {
 
   private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
+  private static final String RACKS_FORMAT = "http://%s/%s/racks";
+  private static final String RACKS_GET_ACTIVE_FORMAT = RACKS_FORMAT + "/active";
+  private static final String RACKS_GET_DEAD_FORMAT = RACKS_FORMAT + "/dead";
+  private static final String RACKS_GET_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/decomissioning";
+  
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
@@ -70,6 +78,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
+  private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
 
   private final Random random;
   private final String[] hosts;
@@ -654,7 +663,45 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
+  
+  //
+  // RACKS
+  //
 
+  public Collection<SingularityRack> getActiveRacks() {
+	  return getRacks(RACKS_GET_ACTIVE_FORMAT);
+  }
+  
+  public Collection<SingularityRack> getDeadRacks() {
+	  return getRacks(RACKS_GET_DEAD_FORMAT);
+  }
+  
+  public Collection<SingularityRack> getDecomissioningRacks() {
+	  return getRacks(RACKS_GET_DECOMISSIONING_FORMAT);
+  }
+  
+  private Collection<SingularityRack> getRacks(String format) {
+	final String requestUri = String.format(format, getHost(), contextPath);
+
+	LOG.info(String.format("Getting racks (%s)", requestUri));
+	
+	final long start = System.currentTimeMillis();
+	
+	Response getResponse = getUri(requestUri);
+	
+	LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+	
+	if (getResponse.getStatusCode() == 404) {
+	  return ImmutableList.of();
+	}
+	
+	try {
+	  return objectMapper.readValue(getResponse.getResponseBodyAsStream(), RACKS_COLLECTION);
+	} catch (Exception e) {
+	  throw Throwables.propagate(e);
+	}
+  }
+  
   //
   // TASK HISTORY
   //
