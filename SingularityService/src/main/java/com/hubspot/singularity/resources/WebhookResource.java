@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityDeployWebhook;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -46,12 +47,11 @@ public class WebhookResource {
     return webhookManager.deleteWebhook(webhookId);
   }
 
-//  @GET
-//  @Path("/deploy/{webhookId}")
-//  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@PathParam("webhookId") String webhookId) {
-//    return webhookManager.getQueuedTaskUpdatesForHook(webhookId);
-//  }
-//
+  @GET
+  @Path("/deploy/{webhookId}")
+  public List<SingularityDeployWebhook> getQueuedDeployUpdates(@PathParam("webhookId") String webhookId) {
+    return webhookManager.getQueuedDeployUpdatesForHook(webhookId);
+  }
   
   @GET
   @Path("/request/{webhookId}")
