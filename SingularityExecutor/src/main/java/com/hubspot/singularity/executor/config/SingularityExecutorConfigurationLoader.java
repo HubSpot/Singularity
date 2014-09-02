@@ -26,8 +26,6 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
 
   public static final String DEFAULT_USER = "executor.default.user";
 
-  public static final String ARTIFACT_CACHE_DIRECTORY = "executor.artifact.cache.directory";
-
   public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
   public static final String GLOBAL_TASK_DEFINITION_SUFFIX = "executor.global.task.definition.suffix";
 

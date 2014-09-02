@@ -15,7 +15,6 @@ public class SingularityExecutorConfiguration {
   private final String executorBashLog;
   private final String serviceLog;
   private final String defaultRunAsUser;
-  private final String cacheDirectory;
   private final String taskAppDirectory;
   private final long shutdownTimeoutWaitMillis;
   private final long idleExecutorShutdownWaitMillis;
@@ -57,7 +56,6 @@ public class SingularityExecutorConfiguration {
 
   @Inject
   public SingularityExecutorConfiguration(
-      @Named(SingularityExecutorConfigurationLoader.ARTIFACT_CACHE_DIRECTORY) String cacheDirectory,
       @Named(SingularityExecutorConfigurationLoader.GLOBAL_TASK_DEFINITION_DIRECTORY) String globalTaskDefinitionDirectory,
       @Named(SingularityExecutorConfigurationLoader.GLOBAL_TASK_DEFINITION_SUFFIX) String globalTaskDefinitionSuffix,
       @Named(SingularityExecutorConfigurationLoader.TASK_APP_DIRECTORY) String taskAppDirectory,
@@ -96,7 +94,6 @@ public class SingularityExecutorConfiguration {
     this.globalTaskDefinitionSuffix = globalTaskDefinitionSuffix;
     this.taskAppDirectory = taskAppDirectory;
     this.executorJavaLog = executorJavaLog;
-    this.cacheDirectory = cacheDirectory;
     this.serviceLog = serviceLog;
     this.defaultRunAsUser = defaultRunAsUser;
     this.shutdownTimeoutWaitMillis = Long.parseLong(shutdownTimeoutWaitMillis);
@@ -210,10 +207,6 @@ public class SingularityExecutorConfiguration {
     return taskAppDirectory;
   }
 
-  public String getCacheDirectory() {
-    return cacheDirectory;
-  }
-
   public Path getTaskDirectoryPath(String taskId) {
     return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
   }
@@ -276,7 +269,7 @@ public class SingularityExecutorConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser + ", cacheDirectory=" + cacheDirectory
+    return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser
         + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
         + ", globalTaskDefinitionDirectory=" + globalTaskDefinitionDirectory + ", globalTaskDefinitionSuffix=" + globalTaskDefinitionSuffix + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads
         + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory="
