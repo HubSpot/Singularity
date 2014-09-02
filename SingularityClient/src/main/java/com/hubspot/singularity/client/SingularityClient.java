@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -25,6 +24,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -41,9 +41,17 @@ public class SingularityClient {
   private static final String RACKS_GET_DEAD_FORMAT = RACKS_FORMAT + "/dead";
   private static final String RACKS_GET_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/decomissioning";
   
+  private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
+  private static final String SLAVES_GET_ACTIVE_FORMAT = SLAVES_FORMAT + "/active";
+  private static final String SLAVES_GET_DEAD_FORMAT = SLAVES_FORMAT + "/dead";
+  private static final String SLAVES_GET_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/decomissioning";
+  private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decomission";
+  private static final String SLAVES_DELETE_DECOMISSIONED_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
+  
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
+  private static final String TASKS_GET_ACTIVE__PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
@@ -79,6 +87,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
+  private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
 
   private final Random random;
   private final String[] hosts;
@@ -612,6 +621,26 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
+  
+  public Collection<SingularityTask> getActiveTasks(final String host) {
+    final String requestUri = String.format(TASKS_GET_ACTIVE__PER_HOST_FORMAT, getHost(), contextPath, host);
+
+    LOG.info(String.format("Getting active tasks - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get active tasks", getResponse);
+
+    LOG.info(String.format("Successfully got active tasks from Singularity in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId) {
     final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getHost(), contextPath, taskId);
@@ -700,6 +729,84 @@ public class SingularityClient {
 	} catch (Exception e) {
 	  throw Throwables.propagate(e);
 	}
+  }
+  
+  //
+  // SLAVES
+  //
+
+  public Collection<SingularitySlave> getActiveSlaves() {
+	  return getSlaves(SLAVES_GET_ACTIVE_FORMAT);
+  }
+  
+  public Collection<SingularitySlave> getDeadSlaves() {
+	  return getSlaves(SLAVES_GET_DEAD_FORMAT);
+  }
+  
+  public Collection<SingularitySlave> getDecomissioningSlaves() {
+	  return getSlaves(SLAVES_GET_DECOMISSIONING_FORMAT);
+  }
+  
+  private Collection<SingularitySlave> getSlaves(String format) {
+	final String requestUri = String.format(format, getHost(), contextPath);
+
+	LOG.info(String.format("Getting racks (%s)", requestUri));
+	
+	final long start = System.currentTimeMillis();
+	
+	Response getResponse = getUri(requestUri);
+	
+	LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+	
+	if (getResponse.getStatusCode() == 404) {
+	  return ImmutableList.of();
+	}
+	
+	try {
+	  return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SLAVES_COLLECTION);
+	} catch (Exception e) {
+	  throw Throwables.propagate(e);
+	}
+  }
+  
+  public void decomissionSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId), user);
+
+    LOG.info(String.format("Decomissioning Slave %s - (%s)", slaveId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = postUri(requestUri);
+
+    LOG.info(String.format("Decomissioning Slave (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to decomission slave - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDecomissionedSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DELETE_DECOMISSIONED_FORMAT, getHost(), contextPath, slaveId), user);
+
+    LOG.info(String.format("Deleting Slave %s - (%s)", slaveId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting Slave (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete slave - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
   }
   
   //
