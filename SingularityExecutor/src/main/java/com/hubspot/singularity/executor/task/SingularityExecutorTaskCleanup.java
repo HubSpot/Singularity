@@ -29,12 +29,12 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
 
   public boolean cleanup() {
     final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
-    
+
     if (!Files.exists(taskDirectory)) {
       log.info("Directory {} didn't exist for cleanup", taskDirectory);
       return cleanTaskDefinitionFile();
     }
-    
+
     boolean logTearDownSuccess = taskLogManager.teardown();
     boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
 
@@ -46,7 +46,7 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
 
     return false;
   }
-  
+
   public boolean cleanTaskDefinitionFile() {
     Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
 

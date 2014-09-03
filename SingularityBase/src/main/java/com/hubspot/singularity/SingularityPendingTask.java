@@ -48,18 +48,23 @@ public class SingularityPendingTask extends SingularityJsonObject {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) {
+        return true;
+    }
+    if (obj == null) {
+        return false;
+    }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
     SingularityPendingTask other = (SingularityPendingTask) obj;
     if (taskId == null) {
-      if (other.taskId != null)
+      if (other.taskId != null) {
         return false;
-    } else if (!taskId.equals(other.taskId))
-      return false;
+    }
+    } else if (!taskId.equals(other.taskId)) {
+        return false;
+    }
     return true;
   }
 

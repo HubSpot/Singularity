@@ -45,18 +45,23 @@ public class TailMetadata {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) {
+        return true;
+    }
+    if (obj == null) {
+        return false;
+    }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
     TailMetadata other = (TailMetadata) obj;
     if (filename == null) {
-      if (other.filename != null)
+      if (other.filename != null) {
         return false;
-    } else if (!filename.equals(other.filename))
-      return false;
+    }
+    } else if (!filename.equals(other.filename)) {
+        return false;
+    }
     return true;
   }
 

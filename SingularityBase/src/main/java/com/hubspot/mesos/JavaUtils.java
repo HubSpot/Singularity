@@ -96,13 +96,15 @@ public class JavaUtils {
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
     while (interfaces.hasMoreElements()) {
       NetworkInterface current = interfaces.nextElement();
-      if (!current.isUp() || current.isLoopback() || current.isVirtual())
+      if (!current.isUp() || current.isLoopback() || current.isVirtual()) {
         continue;
+    }
       Enumeration<InetAddress> addresses = current.getInetAddresses();
       while (addresses.hasMoreElements()) {
         InetAddress current_addr = addresses.nextElement();
-        if (current_addr.isLoopbackAddress())
-          continue;
+        if (current_addr.isLoopbackAddress()) {
+            continue;
+        }
         if (current_addr instanceof Inet4Address) {
           return current_addr.getHostAddress();
         }
@@ -123,7 +125,7 @@ public class JavaUtils {
     }
   }
 
-  private final static String DURATION_FORMAT = "mm:ss.S";
+  private static final String DURATION_FORMAT = "mm:ss.S";
 
   public static String duration(final long start) {
     return DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, DURATION_FORMAT);

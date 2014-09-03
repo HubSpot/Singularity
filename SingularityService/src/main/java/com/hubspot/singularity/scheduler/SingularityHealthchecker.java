@@ -29,7 +29,7 @@ import com.ning.http.client.RequestBuilder;
 @SuppressWarnings("deprecation")
 public class SingularityHealthchecker implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
   private final AsyncHttpClient http;
   private final SingularityConfiguration configuration;

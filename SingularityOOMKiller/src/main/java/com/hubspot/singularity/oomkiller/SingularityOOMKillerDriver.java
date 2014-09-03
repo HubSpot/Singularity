@@ -17,7 +17,7 @@ import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 
 public class SingularityOOMKillerDriver implements SingularityDriver {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityOOMKillerDriver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityOOMKillerDriver.class);
 
   private final SingularityOOMKillerConfiguration configuration;
   private final ScheduledExecutorService scheduler;

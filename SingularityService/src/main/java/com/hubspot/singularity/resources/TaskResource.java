@@ -77,22 +77,22 @@ public class TaskResource {
       throw WebExceptions.badRequest("%s is not a valid pending task id: %s", pendingTaskIdStr, e.getMessage());
     }
   }
-  
+
   @GET
   @PropertyFiltering
   @Path("/scheduled/task/{pendingTaskId}")
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
     SingularityPendingTask pendingTask = taskManager.getPendingTask(getTaskIdFromStr(pendingTaskIdStr));
-    
+
     List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask));
-    
+
     if (taskRequestList.isEmpty()) {
       throw new NotFoundException("Couldn't find: " + pendingTaskIdStr);
     }
-    
+
     return Iterables.getFirst(taskRequestList, null);
   }
-  
+
   @GET
   @PropertyFiltering
   @Path("/scheduled/request/{requestId}")

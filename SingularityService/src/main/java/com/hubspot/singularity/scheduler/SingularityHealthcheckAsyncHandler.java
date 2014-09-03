@@ -15,7 +15,7 @@ import com.ning.http.client.Response;
 
 public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<Response> {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
   private final long startTime;
   private final SingularityExceptionNotifier exceptionNotifier;

@@ -49,7 +49,7 @@ import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfigurat
 
 public class SingularityS3UploaderDriver extends WatchServiceHelper implements SingularityDriver {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderDriver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderDriver.class);
 
   private final SingularityS3UploaderConfiguration configuration;
   private final ScheduledExecutorService scheduler;
@@ -88,8 +88,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.metrics.setExpiringCollection(expiring);
 
     this.runLock = new ReentrantLock();
-    
-    this.executorService = new ThreadPoolExecutor(1, configuration.getExecutorMaxUploadThreads(), 30L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), 
+
+    this.executorService = new ThreadPoolExecutor(1, configuration.getExecutorMaxUploadThreads(), 30L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
         new ThreadFactoryBuilder().setNameFormat("SingularityS3Uploader-%d").build());
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityS3Driver-%d").build());
   }

@@ -26,7 +26,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityLogSupport implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityLogSupport.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityLogSupport.class);
 
   private final MesosClient mesosClient;
   private final TaskManager taskManager;

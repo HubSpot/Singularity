@@ -19,7 +19,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfiguration> {
 
-  private final static org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SMTPAppenderBundle.class);
+  private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SMTPAppenderBundle.class);
 
   @Override
   public void run(SingularityConfiguration configuration, Environment environment) throws Exception {

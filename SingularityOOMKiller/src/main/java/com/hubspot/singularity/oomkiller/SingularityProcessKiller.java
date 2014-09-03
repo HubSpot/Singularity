@@ -9,7 +9,7 @@ import com.hubspot.singularity.runner.base.shared.Signal;
 
 public class SingularityProcessKiller {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityProcessKiller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityProcessKiller.class);
 
   public void sendSignal(String pid, Signal signal) {
     try {

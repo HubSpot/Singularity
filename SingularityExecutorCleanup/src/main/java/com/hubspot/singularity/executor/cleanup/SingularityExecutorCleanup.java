@@ -33,7 +33,7 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 
 public class SingularityExecutorCleanup {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
 
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityExecutorConfiguration executorConfiguration;

@@ -15,7 +15,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityLeaderController implements Managed, LeaderLatchListener {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
 
   private final LeaderLatch leaderLatch;
   private final SingularityDriverManager driverManager;

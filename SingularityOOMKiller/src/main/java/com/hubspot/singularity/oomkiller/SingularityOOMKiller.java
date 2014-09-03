@@ -23,7 +23,7 @@ import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfiguratio
 
 public class SingularityOOMKiller {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityOOMKiller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityOOMKiller.class);
 
   private final SingularityClient singularity;
   private final MesosClient mesos;

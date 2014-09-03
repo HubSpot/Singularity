@@ -37,7 +37,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityNewTaskChecker implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityNewTaskChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityNewTaskChecker.class);
 
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;

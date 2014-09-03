@@ -46,7 +46,7 @@ import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHea
 
 public class SingularityDeployChecker {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployChecker.class);
 
   private final DeployManager deployManager;
   private final TaskManager taskManager;

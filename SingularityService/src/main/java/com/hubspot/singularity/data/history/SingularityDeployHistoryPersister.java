@@ -16,7 +16,7 @@ import com.hubspot.singularity.data.DeployManager;
 
 public class SingularityDeployHistoryPersister {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployHistoryPersister.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployHistoryPersister.class);
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
