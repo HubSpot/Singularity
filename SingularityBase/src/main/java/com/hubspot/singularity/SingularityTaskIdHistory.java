@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Iterables;
@@ -40,6 +41,26 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
         .compare(o.getUpdatedAt(), updatedAt)
         .compare(taskId.getId(), o.getTaskId().getId())
         .result();
+  }
+
+  @Override
+  public int hashCode() {
+      return Objects.hashCode(taskId, updatedAt, lastTaskState);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+      if (other == this) {
+          return true;
+      }
+      if (other == null || other.getClass() != this.getClass()) {
+          return false;
+      }
+
+      SingularityTaskIdHistory that = (SingularityTaskIdHistory) other;
+      return Objects.equal(this.taskId , that.taskId)
+              && Objects.equal(this.updatedAt , that.updatedAt)
+              && Objects.equal(this.lastTaskState , that.lastTaskState);
   }
 
   public SingularityTaskId getTaskId() {

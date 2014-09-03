@@ -44,7 +44,7 @@ public class SingularityOOMKiller {
   }
 
   private double getOverageRatio(MesosTaskMonitorObject taskMonitor) {
-    return taskMonitor.getStatistics().getMemRssBytes() / taskMonitor.getStatistics().getMemLimitBytes();
+    return (double) taskMonitor.getStatistics().getMemRssBytes() / (double) taskMonitor.getStatistics().getMemLimitBytes();
   }
 
   public void checkForOOMS() {

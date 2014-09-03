@@ -10,6 +10,8 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 @Singleton
 public class SingularityExecutorConfiguration {
 
@@ -161,6 +163,7 @@ public class SingularityExecutorConfiguration {
     return logrotateExtrasDateformat;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public String[] getLogrotateExtrasFiles() {
     return logrotateExtrasFiles;
   }

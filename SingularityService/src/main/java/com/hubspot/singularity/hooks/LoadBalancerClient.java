@@ -10,10 +10,10 @@ import com.hubspot.singularity.SingularityTask;
 
 public interface LoadBalancerClient {
 
-  public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove);
+  SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove);
 
-  public SingularityLoadBalancerUpdate getState(LoadBalancerRequestId loadBalancerRequestId);
+  SingularityLoadBalancerUpdate getState(LoadBalancerRequestId loadBalancerRequestId);
 
-  public SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId);
+  SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId);
 
 }
