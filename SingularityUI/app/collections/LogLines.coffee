@@ -68,6 +68,11 @@ class LogLines extends Collection
     parse: (result) =>
         offset = result.offset
 
+        whiteSpace = /^\s*$/
+
+        # Return empty list if all we got is white space
+        return [] if result.data.match whiteSpace
+
         # We have more stuff to fetch if we got `requestLength` data back
         @moreToFetch = result.data.length is @requestLength
         # And (we're going forwards or we're at the start)
@@ -83,6 +88,10 @@ class LogLines extends Collection
         if offset > 0 and lines.length > 0
             offset += lines[0].length + 1
             lines = _.rest lines
+
+        # remove last line if empty, or if it only has whitespace
+        if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
+            lines.splice lines.length - 1
 
         # create the objects for LogLine models
         lines.map (data) ->

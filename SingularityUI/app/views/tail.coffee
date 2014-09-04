@@ -54,7 +54,7 @@ class TailView extends View
 
         # If starting fresh
         if $firstLine.length is 0
-            @$contents.html @linesTemplate lines: _.pluck @collection.models, 'attributes'
+            @$contents.html @linesTemplate lines: @collection.toJSON()
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
             lastLineOffset  = parseInt $lastLine.data 'offset'
