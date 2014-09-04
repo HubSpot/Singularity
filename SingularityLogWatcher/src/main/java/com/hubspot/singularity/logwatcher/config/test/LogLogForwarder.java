@@ -8,7 +8,7 @@ import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class LogLogForwarder implements LogForwarder {
 
-  private final static Logger LOG = LoggerFactory.getLogger(LogLogForwarder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LogLogForwarder.class);
 
   @Override
   public void forwardMessage(TailMetadata tailMetadata, String line) {

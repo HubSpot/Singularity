@@ -18,7 +18,7 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityAbort {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
 
   private final CuratorFramework curator;
   private final LeaderLatch leaderLatch;

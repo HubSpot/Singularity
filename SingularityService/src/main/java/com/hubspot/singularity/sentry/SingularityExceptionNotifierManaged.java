@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 
 public class SingularityExceptionNotifierManaged implements Managed {
-  private final static Logger LOG = LoggerFactory.getLogger(NotifyingExceptionMapper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyingExceptionMapper.class);
 
   private final SingularityExceptionNotifier exceptionNotifier;
 

@@ -69,7 +69,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
 
   public static SingularityPendingTaskId fromString(String string) {
     String[] splits = null;
-    
+
     try {
       splits = JavaUtils.reverseSplit(string, 5, "-");
     } catch (IllegalStateException ise) {
@@ -87,7 +87,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     } catch (IllegalArgumentException e) {
       throw new InvalidSingularityTaskIdException(String.format("PendingTaskId %s had an invalid parameter (%s)", string, e.getMessage()));
     }
-    
+
   }
 
   @Override

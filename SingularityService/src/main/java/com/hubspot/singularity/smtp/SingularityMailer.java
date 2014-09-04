@@ -54,7 +54,7 @@ import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityMailer implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
 
   private final SingularityConfiguration configuration;
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;

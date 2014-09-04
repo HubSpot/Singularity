@@ -15,7 +15,7 @@ import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class MemoryStore implements SimpleStore {
 
-  private final static Logger LOG = LoggerFactory.getLogger(MemoryStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MemoryStore.class);
 
   private final Map<TailMetadata, Long> map;
   private final List<TailMetadata> list;

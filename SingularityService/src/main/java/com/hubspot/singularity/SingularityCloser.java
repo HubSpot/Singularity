@@ -21,7 +21,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCloser {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
 
   private final Injector injector;
   private final long waitSeconds;

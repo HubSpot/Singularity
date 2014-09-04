@@ -28,17 +28,17 @@ import com.hubspot.singularity.data.transcoders.SingularityRequestWithStateTrans
 
 public class RequestManager extends CuratorAsyncManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(RequestManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
 
   private final SingularityRequestWithStateTranscoder requestTranscoder;
   private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
   private final SingularityRequestCleanupTranscoder requestCleanupTranscoder;
 
-  private final static String REQUEST_ROOT = "/requests";
+  private static final String REQUEST_ROOT = "/requests";
 
-  private final static String NORMAL_PATH_ROOT = REQUEST_ROOT + "/all";
-  private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
-  private final static String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
+  private static final String NORMAL_PATH_ROOT = REQUEST_ROOT + "/all";
+  private static final String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
+  private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
 
   @Inject
   public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityRequestCleanupTranscoder requestCleanupTranscoder, SingularityRequestWithStateTranscoder requestTranscoder, SingularityPendingRequestTranscoder pendingRequestTranscoder) {

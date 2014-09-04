@@ -27,7 +27,7 @@ import com.ning.http.client.Response;
 
 public class SingularityExecutorArtifactFetcher {
 
-  private final static String LOCAL_DOWNLOAD_STRING_FORMAT = "http://localhost:%s%s";
+  private static final String LOCAL_DOWNLOAD_STRING_FORMAT = "http://localhost:%s%s";
 
   private final AsyncHttpClient localDownloadHttpClient;
   private final String localDownloadUri;

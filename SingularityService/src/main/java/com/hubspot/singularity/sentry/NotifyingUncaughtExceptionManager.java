@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NotifyingUncaughtExceptionManager implements UncaughtExceptionHandler {
-  private final static Logger LOG = LoggerFactory.getLogger(NotifyingUncaughtExceptionManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyingUncaughtExceptionManager.class);
 
   private final SingularityExceptionNotifier notifier;
 

@@ -35,7 +35,7 @@ import com.ning.http.client.Response;
 
 public class LoadBalancerClientImpl implements LoadBalancerClient {
 
-  private final static Logger LOG = LoggerFactory.getLogger(LoadBalancerClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LoadBalancerClient.class);
 
   private static final String CONTENT_TYPE_JSON = "application/json";
   private static final String HEADER_CONTENT_TYPE = "Content-Type";

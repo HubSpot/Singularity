@@ -6,10 +6,8 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.executor.SingularityExecutorProcessKiller;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -22,11 +20,7 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
 
   @Override
-  protected void configure() {
-    bind(SingularityExecutorLogging.class).in(Scopes.SINGLETON);
-    bind(SingularityExecutorTaskBuilder.class).in(Scopes.SINGLETON);
-    bind(SingularityExecutorProcessKiller.class).in(Scopes.SINGLETON);
-  }
+  protected void configure() {}
 
   @Provides
   @Singleton

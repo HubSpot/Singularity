@@ -23,7 +23,7 @@ import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 
 public class SingularityS3Uploader {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
@@ -62,7 +62,14 @@ public class SingularityS3Uploader {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
 
-    for (Path file : JavaUtils.iterable(Paths.get(fileDirectory))) {
+    final Path directory = Paths.get(fileDirectory);
+
+    if (!Files.exists(directory)) {
+      LOG.info("Path {} doesn't exist", fileDirectory);
+      return found;
+    }
+
+    for (Path file : JavaUtils.iterable(directory)) {
       if (!pathMatcher.matches(file.getFileName())) {
         LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
         continue;
@@ -122,7 +129,7 @@ public class SingularityS3Uploader {
     object.setKey(key);
 
     s3Service.putObject(s3Bucket, object);
-    
+
     LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
   }
 

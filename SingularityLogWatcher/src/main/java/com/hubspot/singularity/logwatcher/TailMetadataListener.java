@@ -4,6 +4,6 @@ import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public interface TailMetadataListener {
 
-  public void tailChanged(TailMetadata tailMetadata);
+  void tailChanged(TailMetadata tailMetadata);
 
 }

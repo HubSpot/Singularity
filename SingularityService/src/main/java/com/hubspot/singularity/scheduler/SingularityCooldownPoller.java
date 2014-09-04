@@ -18,7 +18,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCooldownPoller {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityCooldownPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityCooldownPoller.class);
 
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityCooldownChecker checker;

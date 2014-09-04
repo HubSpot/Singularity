@@ -11,7 +11,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+@Singleton
 public class SingularityS3UploaderMetrics {
 
   private final MetricRegistry registry;

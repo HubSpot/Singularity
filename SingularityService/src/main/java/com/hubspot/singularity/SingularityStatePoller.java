@@ -15,7 +15,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityStatePoller implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityStatePoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityStatePoller.class);
 
   private final StateManager stateManager;
   private final long saveStateEverySeconds;
