@@ -13,6 +13,8 @@ class FileBrowserSubview extends View
         @listenTo @collection, 'sync',  @render
         @listenTo @collection, 'error', @catchAjaxError
 
+        @scrollAfterRender = Backbone.history.fragment.indexOf('/files') isnt -1
+
     render: ->
         # Ensure we have enough space to scroll
         offset = @$el.offset().top
@@ -24,6 +26,16 @@ class FileBrowserSubview extends View
             files:       _.pluck @collection.models, 'attributes'
             path:        @collection.path
             breadcrumbs: breadcrumbs
+
+        # make sure body is large enough so we can fit the browser
+        @$('body').css 'min-height', @$el.offset().top + $(window).height()
+
+        scroll = => $(window).scrollTop @$el.offset().top - 20
+        if @scrollAfterRender
+            @scrollAfterRender = false
+
+            scroll()
+            setTimeout scroll, 100
 
         @$('.actions-column a[title]').tooltip()
 
