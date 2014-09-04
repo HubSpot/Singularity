@@ -137,7 +137,7 @@ public class SingularityDeployChecker {
         return;
       } else {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
-        deployResult = new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState()));
+        deployResult = new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, Optional.of(String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState())), deployResult.getLbUpdate(), deployResult.getTimestamp());
       }
     } else if (!deployResult.getDeployState().isDeployFinished()) {
       return;
