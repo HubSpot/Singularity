@@ -91,7 +91,7 @@ class LogLines extends Collection
 
         # remove last line if empty, or if it only has whitespace
         if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
-            lines.splice lines.length - 1
+            lines = _.initial lines
 
         # create the objects for LogLine models
         lines.map (data) ->
