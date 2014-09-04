@@ -437,9 +437,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <execute>
-                      <runOnIncremental>false</runOnIncremental>
-                    </execute>
+                    <ignore></ignore>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
