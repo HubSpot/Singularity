@@ -7,8 +7,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.WordUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
