@@ -154,7 +154,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String fullPath = String.format("%s/%s", directory.get(), filename);
 
-    final Long logLength = new Long(this.maybeSmtpConfiguration.get().getTaskLogLength());
+    final Long logLength = Long.valueOf(this.maybeSmtpConfiguration.get().getTaskLogLength());
 
     final SandboxManager sandboxManager = new SandboxManager(this.asyncHttpClient, this.objectMapper);
 

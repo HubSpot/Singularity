@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -14,7 +16,7 @@ public class SingularityPendingTask extends SingularityJsonObject {
     return new Predicate<SingularityPendingTask>() {
 
       @Override
-      public boolean apply(SingularityPendingTask input) {
+      public boolean apply(@Nonnull SingularityPendingTask input) {
         return input.getPendingTaskId().getRequestId().equals(requestId);
       }
 
@@ -25,7 +27,7 @@ public class SingularityPendingTask extends SingularityJsonObject {
     return new Predicate<SingularityPendingTask>() {
 
       @Override
-      public boolean apply(SingularityPendingTask input) {
+      public boolean apply(@Nonnull SingularityPendingTask input) {
         return input.getPendingTaskId().getDeployId().equals(deployId);
       }
 

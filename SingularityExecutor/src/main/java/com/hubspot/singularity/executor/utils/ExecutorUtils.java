@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class ExecutorUtils {
 
   private final SingularityExecutorConfiguration configuration;
@@ -16,6 +18,7 @@ public class ExecutorUtils {
     this.configuration = configuration;
   }
 
+  @SuppressFBWarnings("DM_EXIT")
   public void sendStatusUpdate(ExecutorDriver driver, Protos.TaskInfo taskInfo, Protos.TaskState taskState, String message, Logger logger) {
     logger.info("Sending status update \"{}\" ({})", message, taskState.name());
 

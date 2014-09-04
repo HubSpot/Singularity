@@ -106,7 +106,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
     long end = System.currentTimeMillis();
 
-    if (history != null && history.getState() == RequestHistoryType.DELETED || history.getState() == RequestHistoryType.PAUSED) {
+    if (history != null && (history.getState() == RequestHistoryType.DELETED || history.getState() == RequestHistoryType.PAUSED)) {
       end = history.getCreatedAt() + TimeUnit.DAYS.toMillis(1);
     }
 

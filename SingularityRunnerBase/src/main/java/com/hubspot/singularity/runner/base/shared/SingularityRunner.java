@@ -3,6 +3,8 @@ package com.hubspot.singularity.runner.base.shared;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -11,6 +13,7 @@ public class SingularityRunner {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
 
+  @SuppressFBWarnings("DM_EXIT")
   public void run(Iterable<? extends Module> modules) {
     final Injector injector = Guice.createInjector(modules);
 

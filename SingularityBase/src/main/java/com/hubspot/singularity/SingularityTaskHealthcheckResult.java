@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
@@ -44,6 +45,29 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
         .compare(timestamp, o.getTimestamp())
         .compare(o.getTaskId().getId(), getTaskId().getId())
         .result();
+  }
+
+  @Override
+  public int hashCode() {
+      return Objects.hashCode(statusCode, durationMillis, responseBody, errorMessage, timestamp);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+      if (this == other) {
+          return true;
+      }
+      if (other == null || other.getClass() != this.getClass()) {
+          return false;
+      }
+
+      SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) other;
+
+      return Objects.equal(this.statusCode, that.statusCode)
+              && Objects.equal(this.durationMillis, that.durationMillis)
+              && Objects.equal(this.responseBody, that.responseBody)
+              && Objects.equal(this.errorMessage, that.errorMessage)
+              && Objects.equal(this.timestamp, that.timestamp);
   }
 
   public Optional<Integer> getStatusCode() {

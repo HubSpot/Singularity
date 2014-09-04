@@ -185,29 +185,32 @@ public class SingularityExecutorMonitor {
 
   public SubmitState submit(final SingularityExecutorTask task) {
     exitLock.lock();
-    task.getLock().lock();
-
     try {
-      if (runState == RunState.SHUTDOWN) {
-        finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.<String> absent());
+      final Lock taskLock = task.getLock();
+      taskLock.lock();
+      try {
+        if (runState == RunState.SHUTDOWN) {
+          finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.<String> absent());
 
-        return SubmitState.REJECTED;
+          return SubmitState.REJECTED;
+        }
+
+        if (tasks.containsKey(task.getTaskId())) {
+          return SubmitState.TASK_ALREADY_EXISTED;
+        }
+        tasks.put(task.getTaskId(), task);
+
+        clearExitCheckerUnsafe();
+
+        final ListenableFuture<ProcessBuilder> processBuildFuture = processBuilderPool.submit(task.getProcessBuilder());
+
+        processBuildingTasks.put(task.getTaskId(), processBuildFuture);
+
+        watchProcessBuilder(task, processBuildFuture);
+      } finally {
+        taskLock.unlock();
       }
-
-      if (tasks.containsKey(task.getTaskId())) {
-        return SubmitState.TASK_ALREADY_EXISTED;
-      }
-      tasks.put(task.getTaskId(), task);
-
-      clearExitCheckerUnsafe();
-
-      final ListenableFuture<ProcessBuilder> processBuildFuture = processBuilderPool.submit(task.getProcessBuilder());
-
-      processBuildingTasks.put(task.getTaskId(), processBuildFuture);
-
-      watchProcessBuilder(task, processBuildFuture);
     } finally {
-      task.getLock().unlock();
       exitLock.unlock();
     }
 
@@ -246,7 +249,8 @@ public class SingularityExecutorMonitor {
 
         boolean wasKilled = false;
 
-        task.getLock().lock();
+        final Lock taskLock = task.getLock();
+        taskLock.lock();
 
         try {
           processBuildingTasks.remove(task.getTaskId());
@@ -257,7 +261,7 @@ public class SingularityExecutorMonitor {
             processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
           }
         } finally {
-          task.getLock().unlock();
+          taskLock.unlock();
         }
 
         if (wasKilled) {

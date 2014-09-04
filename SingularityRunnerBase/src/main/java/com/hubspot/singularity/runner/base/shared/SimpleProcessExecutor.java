@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class SimpleProcessExecutor {
   private List<String> consumeStreamAsLines(InputStream is) throws IOException {
     List<String> lines = new ArrayList<>();
 
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
       String line = br.readLine();
       while (line != null) {
         lines.add(line);

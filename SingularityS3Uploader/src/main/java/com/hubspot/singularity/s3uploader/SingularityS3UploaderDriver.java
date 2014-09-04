@@ -319,12 +319,12 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     runLock.lock();
 
-    if (isStopped()) {
-      LOG.warn("Driver is stopped, ignoring file watch event for {}", filename);
-      return false;
-    }
-
     try {
+      if (isStopped()) {
+        LOG.warn("Driver is stopped, ignoring file watch event for {}", filename);
+        return false;
+      }
+
       final Path fullPath = configuration.getS3MetadataDirectory().resolve(filename);
 
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
