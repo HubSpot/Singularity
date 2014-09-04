@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.Resources;
 
 public class SingularityDeploy extends SingularityJsonObject {
@@ -20,6 +21,8 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<String> version;
   private final Optional<Long> timestamp;
   private final Optional<Map<String, String>> metadata;
+
+  private final Optional<SingularityContainerInfo> containerInfo;
 
   private final Optional<String> customExecutorCmd;
   private final Optional<String> customExecutorId;
@@ -57,7 +60,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,  @JsonProperty("customExecutorId") Optional<String> customExecutorId,
+  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("containerInfo") Optional<SingularityContainerInfo> containerInfo, @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,  @JsonProperty("customExecutorId") Optional<String> customExecutorId,
       @JsonProperty("customExecutorSource") Optional<String> customExecutorSource, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
@@ -67,6 +70,8 @@ public class SingularityDeploy extends SingularityJsonObject {
 
     this.command = command;
     this.resources = resources;
+
+    this.containerInfo = containerInfo;
 
     this.customExecutorCmd = customExecutorCmd;
     this.customExecutorId = customExecutorId;
@@ -98,6 +103,7 @@ public class SingularityDeploy extends SingularityJsonObject {
     return new SingularityDeployBuilder(requestId, id)
     .setCommand(command)
     .setResources(resources)
+    .setContainerInfo(containerInfo)
     .setCustomExecutorCmd(customExecutorCmd)
     .setCustomExecutorId(customExecutorId)
     .setCustomExecutorSource(customExecutorSource)
@@ -137,6 +143,10 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   public Optional<Map<String, String>> getMetadata() {
     return metadata;
+  }
+
+  public Optional<SingularityContainerInfo> getContainerInfo() {
+    return containerInfo;
   }
 
   public Optional<String> getCustomExecutorCmd() {
@@ -209,6 +219,7 @@ public class SingularityDeploy extends SingularityJsonObject {
         ", version=" + version +
         ", timestamp=" + timestamp +
         ", metadata=" + metadata +
+        ", containerInfo=" + containerInfo +
         ", customExecutorCmd=" + customExecutorCmd +
         ", customExecutorId=" + customExecutorId +
         ", customExecutorSource=" + customExecutorSource +
