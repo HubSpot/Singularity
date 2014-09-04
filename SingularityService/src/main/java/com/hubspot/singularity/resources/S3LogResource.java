@@ -53,7 +53,7 @@ import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy
 @Produces({ MediaType.APPLICATION_JSON })
 public class S3LogResource extends AbstractHistoryResource {
 
-  private final static Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
   private final Optional<S3Service> s3;
   private final Optional<S3Configuration> configuration;

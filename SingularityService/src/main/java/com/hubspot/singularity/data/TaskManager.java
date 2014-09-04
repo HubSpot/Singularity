@@ -46,24 +46,24 @@ import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
 public class TaskManager extends CuratorAsyncManager {
 
-  private final static String TASKS_ROOT = "/tasks";
+  private static final String TASKS_ROOT = "/tasks";
 
-  private final static String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
-  private final static String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
-  private final static String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
-  private final static String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
-  private final static String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
+  private static final String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
+  private static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
+  private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
+  private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
+  private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
 
-  private final static String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
+  private static final String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
 
-  private final static String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
-  private final static String DIRECTORY_KEY = "DIRECTORY";
-  private final static String TASK_KEY = "TASK";
+  private static final String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
+  private static final String DIRECTORY_KEY = "DIRECTORY";
+  private static final String TASK_KEY = "TASK";
 
-  private final static String LOAD_BALANCER_PRE_KEY = "LOAD_BALANCER_";
+  private static final String LOAD_BALANCER_PRE_KEY = "LOAD_BALANCER_";
 
-  private final static String HEALTHCHECKS_PATH = "/healthchecks";
-  private final static String UPDATES_PATH = "/updates";
+  private static final String HEALTHCHECKS_PATH = "/healthchecks";
+  private static final String UPDATES_PATH = "/updates";
 
   private final SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder;
   private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
@@ -380,11 +380,11 @@ public class TaskManager extends CuratorAsyncManager {
   public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
     return getData(getLoadBalancerStatePath(taskId, requestType), taskLoadBalancerUpdateTranscoder);
   }
-  
+
   public SingularityPendingTask getPendingTask(SingularityPendingTaskId pendingTaskId) {
     return pendingTaskIdToPendingTaskFunction.apply(pendingTaskId);
   }
-  
+
   public Optional<SingularityTask> getActiveTask(String taskId) {
     final String path = getActivePath(taskId);
 

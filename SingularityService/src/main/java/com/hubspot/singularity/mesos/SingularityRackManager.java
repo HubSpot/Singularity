@@ -31,7 +31,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 public class SingularityRackManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityRackManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityRackManager.class);
 
   private final String rackIdAttributeKey;
   private final String defaultRackId;

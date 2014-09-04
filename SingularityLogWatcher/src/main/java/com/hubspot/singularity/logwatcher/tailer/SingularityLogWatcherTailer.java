@@ -27,7 +27,7 @@ import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
 public class SingularityLogWatcherTailer extends WatchServiceHelper implements Closeable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherTailer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherTailer.class);
 
   private static final char END_OF_LINE_CHAR = '\n';
 

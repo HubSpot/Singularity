@@ -17,7 +17,7 @@ import com.hubspot.singularity.s3.base.config.SingularityS3ConfigurationLoader;
 
 public class SingularityExecutorRunner {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutorRunner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorRunner.class);
 
   public static void main(String... args) {
     final long start = System.currentTimeMillis();

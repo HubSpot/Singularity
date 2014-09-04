@@ -12,7 +12,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityCooldown {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityCooldown.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityCooldown.class);
 
   private final SingularityConfiguration configuration;
 

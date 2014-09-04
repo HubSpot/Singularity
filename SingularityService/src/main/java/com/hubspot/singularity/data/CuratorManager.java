@@ -22,7 +22,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class CuratorManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(CuratorManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CuratorManager.class);
 
   protected final CuratorFramework curator;
 

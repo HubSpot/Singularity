@@ -54,7 +54,7 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityScheduler {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
 
   private final SingularityConfiguration configuration;
   private final SingularityCooldown cooldown;

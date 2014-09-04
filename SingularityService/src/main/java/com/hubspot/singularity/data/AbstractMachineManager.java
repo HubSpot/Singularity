@@ -20,7 +20,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction> extends CuratorAsyncManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(AbstractMachineManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractMachineManager.class);
 
   private static final String ACTIVE_PATH = "active";
   private static final String DECOMISSIONING_PATH = "decomissioning";

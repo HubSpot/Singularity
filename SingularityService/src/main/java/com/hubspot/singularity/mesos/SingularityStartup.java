@@ -41,7 +41,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 public class SingularityStartup {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 
   private final MesosClient mesosClient;
   private final TaskManager taskManager;

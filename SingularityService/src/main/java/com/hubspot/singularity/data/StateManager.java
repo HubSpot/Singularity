@@ -31,7 +31,7 @@ import com.hubspot.singularity.data.transcoders.SingularityStateTranscoder;
 
 public class StateManager extends CuratorManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(StateManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
 
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "STATE";

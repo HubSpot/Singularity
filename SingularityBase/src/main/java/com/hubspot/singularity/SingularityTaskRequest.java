@@ -47,18 +47,23 @@ public class SingularityTaskRequest extends SingularityJsonObject implements Com
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) {
+        return true;
+    }
+    if (obj == null) {
+        return false;
+    }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
     SingularityTaskRequest other = (SingularityTaskRequest) obj;
     if (pendingTask == null) {
-      if (other.pendingTask != null)
+      if (other.pendingTask != null) {
         return false;
-    } else if (!pendingTask.getPendingTaskId().equals(other.pendingTask.getPendingTaskId()))
-      return false;
+    }
+    } else if (!pendingTask.getPendingTaskId().equals(other.pendingTask.getPendingTaskId())) {
+        return false;
+    }
     return true;
   }
 

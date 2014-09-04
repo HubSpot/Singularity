@@ -17,7 +17,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 
 public class SingularityDriver {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
 
   private final Protos.FrameworkInfo frameworkInfo;
   private final SingularityMesosSchedulerDelegator scheduler;

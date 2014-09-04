@@ -9,7 +9,7 @@ import com.google.inject.Module;
 
 public class SingularityRunner {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
 
   public void run(Iterable<? extends Module> modules) {
     final Injector injector = Guice.createInjector(modules);

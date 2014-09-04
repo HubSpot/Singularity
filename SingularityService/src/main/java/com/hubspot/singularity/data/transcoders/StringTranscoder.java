@@ -4,7 +4,7 @@ import com.hubspot.mesos.JavaUtils;
 
 public class StringTranscoder implements Transcoder<String> {
 
-  public final static StringTranscoder STRING_TRANSCODER = new StringTranscoder();
+  public static final StringTranscoder STRING_TRANSCODER = new StringTranscoder();
 
   @Override
   public String transcode(byte[] data) {

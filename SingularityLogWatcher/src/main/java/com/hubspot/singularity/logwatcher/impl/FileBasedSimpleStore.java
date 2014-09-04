@@ -27,7 +27,7 @@ import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
 public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleStore {
 
-  private final static Logger LOG = LoggerFactory.getLogger(FileBasedSimpleStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FileBasedSimpleStore.class);
 
   private final SingularityLogWatcherConfiguration configuration;
 

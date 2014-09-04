@@ -21,7 +21,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityDeployHealthHelper {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployHealthHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployHealthHelper.class);
 
   private final TaskManager taskManager;
   private final SingularityConfiguration configuration;

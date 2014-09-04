@@ -23,7 +23,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class CuratorAsyncManager extends CuratorManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
 
   private final long zkAsyncTimeout;
 

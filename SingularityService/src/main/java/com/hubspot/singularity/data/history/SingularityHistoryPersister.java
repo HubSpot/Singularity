@@ -16,7 +16,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityHistoryPersister implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
 
   private final SingularityTaskHistoryPersister taskPersister;
   private final SingularityDeployHistoryPersister deployPersister;

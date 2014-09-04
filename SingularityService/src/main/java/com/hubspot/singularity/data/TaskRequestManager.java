@@ -19,7 +19,7 @@ import com.hubspot.singularity.SingularityTaskRequest;
 
 public class TaskRequestManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(TaskRequestManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TaskRequestManager.class);
 
   private final DeployManager deployManager;
   private final RequestManager requestManager;

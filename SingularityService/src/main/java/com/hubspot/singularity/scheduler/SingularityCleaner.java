@@ -40,7 +40,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityCleaner {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityCleaner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityCleaner.class);
 
   private final TaskManager taskManager;
   private final DeployManager deployManager;

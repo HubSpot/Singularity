@@ -33,7 +33,7 @@ import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutorMonitor {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutorMonitor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorMonitor.class);
 
   private final ListeningExecutorService processBuilderPool;
   private final ListeningExecutorService runningProcessPool;
