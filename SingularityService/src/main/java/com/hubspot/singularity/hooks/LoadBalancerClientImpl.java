@@ -74,10 +74,13 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   public SingularityLoadBalancerUpdate getState(LoadBalancerRequestId loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
 
-    final Request request = httpClient.prepareGet(uri)
-      .build();
+    final BoundRequestBuilder requestBuilder = httpClient.prepareGet(uri);
 
-    return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, BaragonRequestState.UNKNOWN);
+    if (loadBalancerQueryParams.isPresent()) {
+      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
+    }
+
+    return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, requestBuilder.build(), BaragonRequestState.UNKNOWN);
   }
 
   private BaragonResponse readResponse(Response response)  {
