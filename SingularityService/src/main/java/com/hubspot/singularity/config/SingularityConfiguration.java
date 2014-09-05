@@ -161,6 +161,8 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
 
+  private boolean enableCorsFilter = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -513,5 +515,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setLoadBalancerQueryParams(Map<String, String> loadBalancerQueryParams) {
     this.loadBalancerQueryParams = loadBalancerQueryParams;
+  }
+
+  public boolean isEnableCorsFilter() {
+    return enableCorsFilter;
+  }
+
+  public void setEnableCorsFilter(boolean enableCorsFilter) {
+    this.enableCorsFilter = enableCorsFilter;
   }
 }
