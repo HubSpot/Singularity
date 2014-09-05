@@ -2,6 +2,7 @@ package com.hubspot.singularity.hooks;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -28,6 +29,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
@@ -41,6 +43,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
   private final String loadBalancerUri;
+  private final Optional<Map<String, String>> loadBalancerQueryParams;
   private final long loadBalancerTimeoutMillis;
 
   private final AsyncHttpClient httpClient;
@@ -54,10 +57,17 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
+    this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
   }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
     return String.format(OPERATION_URI, loadBalancerUri, loadBalancerRequestId);
+  }
+
+  private void addAllQueryParams(BoundRequestBuilder boundRequestBuilder, Map<String, String> queryParams) {
+    for (Map.Entry<String, String> entry : queryParams.entrySet()) {
+      boundRequestBuilder.addQueryParameter(entry.getKey(), entry.getValue());
+    }
   }
 
   @Override
@@ -142,12 +152,15 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     try {
       LOG.trace("Deploy {} is preparing to send {}", deploy.getId(), loadBalancerRequest);
 
-      final Request httpRequest = httpClient.preparePost(loadBalancerUri)
+      final BoundRequestBuilder requestBuilder = httpClient.preparePost(loadBalancerUri)
           .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
-          .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest))
-          .build();
+          .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest));
 
-      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, httpRequest, BaragonRequestState.FAILED);
+      if (loadBalancerQueryParams.isPresent()) {
+        addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
+      }
+
+      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, requestBuilder.build(), BaragonRequestState.FAILED);
     } catch (JsonProcessingException e) {
       throw new SingularityJsonException(e);
     }
@@ -173,9 +186,12 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   public SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId) {
     final String uri = getLoadBalancerUri(loadBalancerRequestId);
 
-    final Request request = httpClient.prepareDelete(uri)
-        .build();
+    final BoundRequestBuilder requestBuilder = httpClient.prepareDelete(uri);
 
-    return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CANCEL, request, BaragonRequestState.UNKNOWN);
+    if (loadBalancerQueryParams.isPresent()) {
+      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
+    }
+
+    return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CANCEL, requestBuilder.build(), BaragonRequestState.UNKNOWN);
   }
 }
