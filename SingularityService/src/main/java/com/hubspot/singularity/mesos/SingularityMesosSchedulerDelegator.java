@@ -29,7 +29,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosSchedulerDelegator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosSchedulerDelegator.class);
 
   private final SingularityExceptionNotifier exceptionNotifier;
 

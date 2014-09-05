@@ -23,6 +23,6 @@ class TasksTableController extends Controller
         # Don't refresh if the table is sorted
         return if @view.isSorted
 
-        @collections.tasks.fetch()
+        @collections.tasks.fetch reset: true
 
 module.exports = TasksTableController

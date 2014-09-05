@@ -1,8 +1,10 @@
 package com.hubspot.singularity.s3downloader.config;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+@Singleton
 public class SingularityS3DownloaderConfiguration {
 
   private final long httpServerTimeout;

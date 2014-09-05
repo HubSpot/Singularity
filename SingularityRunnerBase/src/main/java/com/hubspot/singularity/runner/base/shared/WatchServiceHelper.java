@@ -19,7 +19,7 @@ import com.hubspot.mesos.JavaUtils;
 
 public abstract class WatchServiceHelper implements Closeable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(WatchServiceHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WatchServiceHelper.class);
 
   private final WatchService watchService;
   private final Path watchDirectory;

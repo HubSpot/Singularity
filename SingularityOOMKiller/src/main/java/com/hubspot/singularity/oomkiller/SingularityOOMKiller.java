@@ -23,7 +23,7 @@ import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfiguratio
 
 public class SingularityOOMKiller {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityOOMKiller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityOOMKiller.class);
 
   private final SingularityClient singularity;
   private final MesosClient mesos;
@@ -44,7 +44,7 @@ public class SingularityOOMKiller {
   }
 
   private double getOverageRatio(MesosTaskMonitorObject taskMonitor) {
-    return taskMonitor.getStatistics().getMemRssBytes() / taskMonitor.getStatistics().getMemLimitBytes();
+    return (double) taskMonitor.getStatistics().getMemRssBytes() / (double) taskMonitor.getStatistics().getMemLimitBytes();
   }
 
   public void checkForOOMS() {

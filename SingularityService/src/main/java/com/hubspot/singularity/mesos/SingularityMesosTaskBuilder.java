@@ -34,7 +34,7 @@ import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 public class SingularityMesosTaskBuilder {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
   private final ObjectMapper objectMapper;
   private final SingularityRackManager rackManager;

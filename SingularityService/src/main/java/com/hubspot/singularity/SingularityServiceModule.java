@@ -72,7 +72,7 @@ import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityServiceModule extends AbstractModule {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityServiceModule.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityServiceModule.class);
 
   private static final String LEADER_PATH = "/leader";
 

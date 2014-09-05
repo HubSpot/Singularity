@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -14,7 +16,7 @@ public class SingularityPendingTask extends SingularityJsonObject {
     return new Predicate<SingularityPendingTask>() {
 
       @Override
-      public boolean apply(SingularityPendingTask input) {
+      public boolean apply(@Nonnull SingularityPendingTask input) {
         return input.getPendingTaskId().getRequestId().equals(requestId);
       }
 
@@ -25,7 +27,7 @@ public class SingularityPendingTask extends SingularityJsonObject {
     return new Predicate<SingularityPendingTask>() {
 
       @Override
-      public boolean apply(SingularityPendingTask input) {
+      public boolean apply(@Nonnull SingularityPendingTask input) {
         return input.getPendingTaskId().getDeployId().equals(deployId);
       }
 
@@ -48,18 +50,23 @@ public class SingularityPendingTask extends SingularityJsonObject {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) {
+        return true;
+    }
+    if (obj == null) {
+        return false;
+    }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
     SingularityPendingTask other = (SingularityPendingTask) obj;
     if (taskId == null) {
-      if (other.taskId != null)
+      if (other.taskId != null) {
         return false;
-    } else if (!taskId.equals(other.taskId))
-      return false;
+    }
+    } else if (!taskId.equals(other.taskId)) {
+        return false;
+    }
     return true;
   }
 

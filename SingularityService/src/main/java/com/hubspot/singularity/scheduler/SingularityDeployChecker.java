@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +46,7 @@ import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHea
 
 public class SingularityDeployChecker {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityDeployChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployChecker.class);
 
   private final DeployManager deployManager;
   private final TaskManager taskManager;
@@ -137,7 +137,7 @@ public class SingularityDeployChecker {
         return;
       } else {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
-        deployResult = new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState(), deployResult.getLbUpdate(), deployResult.getTimestamp()));
+        deployResult = new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, Optional.of(String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState())), deployResult.getLbUpdate(), deployResult.getTimestamp());
       }
     } else if (!deployResult.getDeployState().isDeployFinished()) {
       return;

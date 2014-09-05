@@ -21,7 +21,6 @@ SingularityUI/node_modules/*
 SingularityUI/bower_components/*
 SingularityUI/brunchlog
 SingularityUI/app/env.coffee
-SingularityService/src/main/resources/static
 
 .vagrant
 vagrant/Berksfile.lock

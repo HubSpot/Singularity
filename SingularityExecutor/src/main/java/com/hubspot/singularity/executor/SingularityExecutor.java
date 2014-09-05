@@ -18,7 +18,7 @@ import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
 public class SingularityExecutor implements Executor {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
   private final SingularityExecutorTaskBuilder taskBuilder;
   private final SingularityExecutorMonitor monitor;

@@ -31,7 +31,7 @@ import com.ning.http.client.Response;
 
 public class SingularityClient {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";

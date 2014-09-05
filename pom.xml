@@ -13,10 +13,11 @@
   </parent>
 
   <properties>
+    <project.build.generated-resources>${project.build.directory}/generated-resources</project.build.generated-resources>
     <mesos.version>0.19.1</mesos.version>
     <sentry.version>5.0</sentry.version>
     <java.abi>1.7</java.abi>
-    <dropwizard.version>0.7.0-rc2</dropwizard.version>
+    <dropwizard.version>0.7.0</dropwizard.version>
     <sl4fj.version>1.7.6</sl4fj.version>
     <jackson.version>2.3.1</jackson.version>
     <curator.version>2.4.2</curator.version>
@@ -79,6 +80,21 @@
   </modules>
 
   <build>
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/main/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.build.generated-resources}</directory>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -8,9 +8,11 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule;
 
+@Singleton
 public class SingularityS3DownloaderMetrics {
 
   private final MetricRegistry registry;

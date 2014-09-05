@@ -2,9 +2,12 @@ package com.hubspot.singularity;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
@@ -31,7 +34,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   public static SingularityTaskHistoryUpdate getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
     return Iterables.find(updates, new Predicate<SingularityTaskHistoryUpdate>() {
       @Override
-      public boolean apply(SingularityTaskHistoryUpdate input) {
+      public boolean apply(@Nonnull SingularityTaskHistoryUpdate input) {
         return input.getTaskState() == taskState;
       }
     });
@@ -72,6 +75,28 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
         .compare(timestamp, o.getTimestamp())
         .compare(o.getTaskId().getId(), getTaskId().getId())
         .result();
+  }
+
+  @Override
+  public int hashCode() {
+      return Objects.hashCode(timestamp, taskState, statusMessage);
+  }
+
+  @Override
+  public boolean equals(Object other)
+  {
+      if (this == other) {
+          return true;
+      }
+      if (other == null || other.getClass() != this.getClass()) {
+          return false;
+      }
+
+      SingularityTaskHistoryUpdate that = (SingularityTaskHistoryUpdate) other;
+
+      return Objects.equal(this.timestamp, that.timestamp)
+              && Objects.equal(this.taskState, that.taskState)
+              && Objects.equal(statusMessage, statusMessage);
   }
 
   public long getTimestamp() {

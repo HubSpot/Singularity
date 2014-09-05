@@ -26,7 +26,7 @@ import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public class SingularityLogWatcherDriver implements TailMetadataListener, SingularityDriver {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherDriver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherDriver.class);
 
   private final SimpleStore store;
   private final LogForwarder logForwarder;
@@ -143,12 +143,16 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
 
   public boolean markShutdown() {
     tailersLock.lock();
-    if (shutdown) {
-      return false;
+    try {
+      if (shutdown) {
+        return false;
+      }
+      shutdown = true;
+      return true;
     }
-    shutdown = true;
-    tailersLock.unlock();
-    return true;
+    finally {
+      tailersLock.unlock();
+    }
   }
 
   @Override

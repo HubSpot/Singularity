@@ -9,7 +9,7 @@ import com.hubspot.singularity.runner.base.shared.TailMetadata;
 public interface SimpleStore extends Closeable {
 
   @SuppressWarnings("serial")
-  public static class StoreException extends RuntimeException {
+  class StoreException extends RuntimeException {
 
     public StoreException(String message, Throwable cause) {
       super(message, cause);
@@ -29,18 +29,18 @@ public interface SimpleStore extends Closeable {
 
   }
 
-  public void start();
+  void start();
 
-  public void markConsumed(TailMetadata tail) throws StoreException;
+  void markConsumed(TailMetadata tail) throws StoreException;
 
-  public void savePosition(TailMetadata tail, long position) throws StoreException;
+  void savePosition(TailMetadata tail, long position) throws StoreException;
 
-  public Optional<Long> getPosition(TailMetadata tail) throws StoreException;
+  Optional<Long> getPosition(TailMetadata tail) throws StoreException;
 
-  public List<TailMetadata> getTails();
+  List<TailMetadata> getTails();
 
-  public void registerListener(TailMetadataListener listener);
+  void registerListener(TailMetadataListener listener);
 
-  public void removeListener(TailMetadataListener listener);
+  void removeListener(TailMetadataListener listener);
 
 }

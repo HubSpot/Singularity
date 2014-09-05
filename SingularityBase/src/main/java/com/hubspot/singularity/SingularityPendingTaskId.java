@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
@@ -19,7 +21,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     return new Predicate<SingularityPendingTaskId>() {
 
       @Override
-      public boolean apply(SingularityPendingTaskId input) {
+      public boolean apply(@Nonnull SingularityPendingTaskId input) {
         return input.getRequestId().equals(requestId);
       }
 
@@ -30,7 +32,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     return new Predicate<SingularityPendingTaskId>() {
 
       @Override
-      public boolean apply(SingularityPendingTaskId input) {
+      public boolean apply(@Nonnull SingularityPendingTaskId input) {
         return input.getDeployId().equals(deployId);
       }
 
@@ -69,7 +71,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
 
   public static SingularityPendingTaskId fromString(String string) {
     String[] splits = null;
-    
+
     try {
       splits = JavaUtils.reverseSplit(string, 5, "-");
     } catch (IllegalStateException ise) {
@@ -87,7 +89,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     } catch (IllegalArgumentException e) {
       throw new InvalidSingularityTaskIdException(String.format("PendingTaskId %s had an invalid parameter (%s)", string, e.getMessage()));
     }
-    
+
   }
 
   @Override

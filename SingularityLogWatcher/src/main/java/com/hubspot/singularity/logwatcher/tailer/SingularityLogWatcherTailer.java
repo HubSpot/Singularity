@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,9 +12,6 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -25,9 +23,12 @@ import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfigurat
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SingularityLogWatcherTailer extends WatchServiceHelper implements Closeable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherTailer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityLogWatcherTailer.class);
 
   private static final char END_OF_LINE_CHAR = '\n';
 
@@ -173,7 +174,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       nextNewLineIndex = string.indexOf(END_OF_LINE_CHAR, lastNewLineIndex);
     }
 
-    int remainingBytes = string.substring(lastNewLineIndex).getBytes().length;
+    int remainingBytes = string.substring(lastNewLineIndex).getBytes(StandardCharsets.UTF_8).length;
 
     return remainingBytes;
   }

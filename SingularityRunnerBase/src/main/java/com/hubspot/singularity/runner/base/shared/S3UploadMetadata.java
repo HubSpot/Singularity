@@ -50,23 +50,30 @@ public class S3UploadMetadata {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) {
+        return true;
+    }
+    if (obj == null) {
+        return false;
+    }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
     S3UploadMetadata other = (S3UploadMetadata) obj;
     if (directory == null) {
-      if (other.directory != null)
+      if (other.directory != null) {
         return false;
-    } else if (!directory.equals(other.directory))
-      return false;
+    }
+    } else if (!directory.equals(other.directory)) {
+        return false;
+    }
     if (fileGlob == null) {
-      if (other.fileGlob != null)
+      if (other.fileGlob != null) {
         return false;
-    } else if (!fileGlob.equals(other.fileGlob))
-      return false;
+    }
+    } else if (!fileGlob.equals(other.fileGlob)) {
+        return false;
+    }
     return true;
   }
 

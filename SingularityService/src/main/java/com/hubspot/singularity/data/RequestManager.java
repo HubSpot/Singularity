@@ -31,7 +31,7 @@ import com.hubspot.singularity.data.transcoders.SingularityRequestWithStateTrans
 
 public class RequestManager extends CuratorAsyncManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(RequestManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
 
   private final SingularityRequestWithStateTranscoder requestTranscoder;
   private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
@@ -40,7 +40,7 @@ public class RequestManager extends CuratorAsyncManager {
   
   private final WebhookManager webhookManager;
 
-  private final static String REQUEST_ROOT = "/requests";
+  private static final String REQUEST_ROOT = "/requests";
 
   private final static String NORMAL_PATH_ROOT = REQUEST_ROOT + "/all";
   private final static String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";

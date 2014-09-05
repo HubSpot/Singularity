@@ -38,7 +38,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 public class SingularityMesosScheduler implements Scheduler {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
 
   private final Resources DEFAULT_RESOURCES;
   private final TaskManager taskManager;

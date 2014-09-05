@@ -23,6 +23,6 @@ class RequestsTableController extends Controller
         # Don't refresh if the table is sorted
         return if @view.isSorted
 
-        @collections.requests.fetch()
+        @collections.requests.fetch reset: true
 
 module.exports = RequestsTableController

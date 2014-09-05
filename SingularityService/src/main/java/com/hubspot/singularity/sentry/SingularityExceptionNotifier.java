@@ -14,7 +14,7 @@ import net.kencochrane.raven.event.EventBuilder;
 import net.kencochrane.raven.event.interfaces.ExceptionInterface;
 
 public class SingularityExceptionNotifier {
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityExceptionNotifier.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExceptionNotifier.class);
 
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;

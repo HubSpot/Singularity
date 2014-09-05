@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor.task;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,29 +28,40 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
   }
 
   public boolean cleanup() {
+    final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
+
+    if (!Files.exists(taskDirectory)) {
+      log.info("Directory {} didn't exist for cleanup", taskDirectory);
+      return cleanTaskDefinitionFile();
+    }
+
     boolean logTearDownSuccess = taskLogManager.teardown();
     boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
 
     log.info("Cleaned up logs ({}) and task app directory ({})", logTearDownSuccess, cleanupTaskAppDirectorySuccess);
 
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
-      Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
-
-      log.info("Successfull cleanup, deleting file {}", taskDefinitionPath);
-
-      try {
-        boolean deleted = Files.deleteIfExists(taskDefinitionPath);
-
-        log.info("File deleted ({})", deleted);
-
-        return true;
-      } catch (IOException e) {
-        log.error("Failed deleting {}", taskDefinitionPath, e);
-        return false;
-      }
+      return cleanTaskDefinitionFile();
     }
 
     return false;
+  }
+
+  public boolean cleanTaskDefinitionFile() {
+    Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
+
+    log.info("Successfull cleanup, deleting file {}", taskDefinitionPath);
+
+    try {
+      boolean deleted = Files.deleteIfExists(taskDefinitionPath);
+
+      log.info("File deleted ({})", deleted);
+
+      return true;
+    } catch (IOException e) {
+      log.error("Failed deleting {}", taskDefinitionPath, e);
+      return false;
+    }
   }
 
   private boolean cleanupTaskAppDirectory() {

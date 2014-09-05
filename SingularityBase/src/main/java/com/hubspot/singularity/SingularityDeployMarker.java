@@ -49,23 +49,30 @@ public class SingularityDeployMarker extends SingularityJsonObject implements Co
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) {
+        return true;
+    }
+    if (obj == null) {
+        return false;
+    }
+    if (getClass() != obj.getClass()) {
+        return false;
+    }
     SingularityDeployMarker other = (SingularityDeployMarker) obj;
     if (deployId == null) {
-      if (other.deployId != null)
+      if (other.deployId != null) {
         return false;
-    } else if (!deployId.equals(other.deployId))
-      return false;
+    }
+    } else if (!deployId.equals(other.deployId)) {
+        return false;
+    }
     if (requestId == null) {
-      if (other.requestId != null)
+      if (other.requestId != null) {
         return false;
-    } else if (!requestId.equals(other.requestId))
-      return false;
+    }
+    } else if (!requestId.equals(other.requestId)) {
+        return false;
+    }
     return true;
   }
 

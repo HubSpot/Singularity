@@ -18,7 +18,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 public class SingularityTaskHistoryPersister {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
 
   private final TaskManager taskManager;
   private final DeployManager deployManager;

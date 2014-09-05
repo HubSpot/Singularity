@@ -18,7 +18,7 @@ import com.hubspot.singularity.data.RequestManager;
 
 public class SingularityCooldownChecker {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityCooldownChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityCooldownChecker.class);
 
   private final RequestManager requestManager;
   private final DeployManager deployManager;

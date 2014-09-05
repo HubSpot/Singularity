@@ -38,7 +38,7 @@ import com.hubspot.singularity.data.transcoders.SingularityRequestDeployStateTra
 
 public class DeployManager extends CuratorAsyncManager {
 
-  private final static Logger LOG = LoggerFactory.getLogger(DeployManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DeployManager.class);
 
   private final WebhookManager webhookManager;
   private final SingularityDeployTranscoder deployTranscoder;
@@ -49,20 +49,20 @@ public class DeployManager extends CuratorAsyncManager {
   private final SingularityDeployStateTranscoder deployStateTranscoder;
   private final SingularityDeployKeyTranscoder deployKeyTranscoder;
 
-  private final static String DEPLOY_ROOT = "/deploys";
+  private static final String DEPLOY_ROOT = "/deploys";
 
-  private final static String PENDING_ROOT = DEPLOY_ROOT + "/pending";
-  private final static String CANCEL_ROOT = DEPLOY_ROOT + "/cancel";
+  private static final String PENDING_ROOT = DEPLOY_ROOT + "/pending";
+  private static final String CANCEL_ROOT = DEPLOY_ROOT + "/cancel";
 
-  private final static String BY_REQUEST_ROOT = DEPLOY_ROOT + "/requests";
+  private static final String BY_REQUEST_ROOT = DEPLOY_ROOT + "/requests";
 
-  private final static String REQUEST_DEPLOY_STATE_KEY = "STATE";
-  private final static String DEPLOY_LIST_KEY = "/ids";
+  private static final String REQUEST_DEPLOY_STATE_KEY = "STATE";
+  private static final String DEPLOY_LIST_KEY = "/ids";
 
-  private final static String DEPLOY_DATA_KEY = "DEPLOY";
-  private final static String DEPLOY_MARKER_KEY = "MARKER";
-  private final static String DEPLOY_STATISTICS_KEY = "STATISTICS";
-  private final static String DEPLOY_RESULT_KEY = "RESULT_STATE";
+  private static final String DEPLOY_DATA_KEY = "DEPLOY";
+  private static final String DEPLOY_MARKER_KEY = "MARKER";
+  private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
+  private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
   @Inject
   public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityDeployTranscoder deployTranscoder, SingularityRequestDeployStateTranscoder requestDeployStateTranscoder,

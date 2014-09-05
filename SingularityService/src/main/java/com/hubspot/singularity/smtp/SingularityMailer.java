@@ -54,7 +54,7 @@ import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityMailer implements SingularityCloseable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
 
   private final SingularityConfiguration configuration;
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
@@ -154,7 +154,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String fullPath = String.format("%s/%s", directory.get(), filename);
 
-    final Long logLength = new Long(this.maybeSmtpConfiguration.get().getTaskLogLength());
+    final Long logLength = Long.valueOf(this.maybeSmtpConfiguration.get().getTaskLogLength());
 
     final SandboxManager sandboxManager = new SandboxManager(this.asyncHttpClient, this.objectMapper);
 
