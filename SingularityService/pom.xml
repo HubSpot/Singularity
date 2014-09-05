@@ -129,6 +129,11 @@
     </dependency>
 
     <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlets</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>de.neuland-bfi</groupId>
       <artifactId>jade4j</artifactId>
     </dependency>
