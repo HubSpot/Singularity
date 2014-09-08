@@ -14,14 +14,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -33,9 +36,26 @@ public class SingularityClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
+  private static final String RACKS_FORMAT = "http://%s/%s/racks";
+  private static final String RACKS_GET_ACTIVE_FORMAT = RACKS_FORMAT + "/active";
+  private static final String RACKS_GET_DEAD_FORMAT = RACKS_FORMAT + "/dead";
+  private static final String RACKS_GET_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/decomissioning";
+  private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decomission";
+  private static final String RACKS_DELETE_DEAD_FORMAT = RACKS_FORMAT + "/rack/%s/dead";
+  private static final String RACKS_DELETE_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/rack/%s/decomissioning";
+  
+  private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
+  private static final String SLAVES_GET_ACTIVE_FORMAT = SLAVES_FORMAT + "/active";
+  private static final String SLAVES_GET_DEAD_FORMAT = SLAVES_FORMAT + "/dead";
+  private static final String SLAVES_GET_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/decomissioning";
+  private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decomission";
+  private static final String SLAVES_DELETE_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
+  private static final String SLAVES_DELETE_DEAD_FORMAT = SLAVES_FORMAT + "/slave/%s/dead";
+  
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
+  private static final String TASKS_GET_ACTIVE__PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
@@ -70,6 +90,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
+  private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
+  private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
 
   private final Random random;
   private final String[] hosts;
@@ -603,6 +625,26 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
+  
+  public Collection<SingularityTask> getActiveTasks(final String host) {
+    final String requestUri = String.format(TASKS_GET_ACTIVE__PER_HOST_FORMAT, getHost(), contextPath, host);
+
+    LOG.info(String.format("Getting active tasks - (%s)", requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response getResponse = getUri(requestUri);
+
+    checkResponse("get active tasks", getResponse);
+
+    LOG.info(String.format("Successfully got active tasks from Singularity in %sms", System.currentTimeMillis() - start));
+
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId) {
     final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getHost(), contextPath, taskId);
@@ -654,7 +696,203 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
+  
+  //
+  // RACKS
+  //
 
+  public Collection<SingularityRack> getActiveRacks() {
+	  return getRacks(RACKS_GET_ACTIVE_FORMAT);
+  }
+  
+  public Collection<SingularityRack> getDeadRacks() {
+	  return getRacks(RACKS_GET_DEAD_FORMAT);
+  }
+  
+  public Collection<SingularityRack> getDecomissioningRacks() {
+	  return getRacks(RACKS_GET_DECOMISSIONING_FORMAT);
+  }
+  
+  private Collection<SingularityRack> getRacks(String format) {
+	final String requestUri = String.format(format, getHost(), contextPath);
+
+	LOG.info(String.format("Getting racks (%s)", requestUri));
+	
+	final long start = System.currentTimeMillis();
+	
+	Response getResponse = getUri(requestUri);
+	
+	LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+	
+	if (getResponse.getStatusCode() == 404) {
+	  return ImmutableList.of();
+	}
+	
+	try {
+	  return objectMapper.readValue(getResponse.getResponseBodyAsStream(), RACKS_COLLECTION);
+	} catch (Exception e) {
+	  throw Throwables.propagate(e);
+	}
+  }
+  
+  public void decomissionRack(String rackId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(RACKS_DECOMISSION_FORMAT, getHost(), contextPath, rackId), user);
+
+    LOG.info(String.format("Decomissioning rack %s - (%s)", rackId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = postUri(requestUri);
+
+    LOG.info(String.format("Decomissioning rack (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to decomission rack - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDecomissioningRack(String rackId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(RACKS_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, rackId), user);
+
+    LOG.info(String.format("Deleting rack %s - (%s)", rackId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting rack (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete rack - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDeadRack(String rackId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(RACKS_DELETE_DEAD_FORMAT, getHost(), contextPath, rackId), user);
+
+    LOG.info(String.format("Deleting rack %s - (%s)", rackId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting rack (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete rack - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  //
+  // SLAVES
+  //
+
+  public Collection<SingularitySlave> getActiveSlaves() {
+	  return getSlaves(SLAVES_GET_ACTIVE_FORMAT);
+  }
+  
+  public Collection<SingularitySlave> getDeadSlaves() {
+	  return getSlaves(SLAVES_GET_DEAD_FORMAT);
+  }
+  
+  public Collection<SingularitySlave> getDecomissioningSlaves() {
+	  return getSlaves(SLAVES_GET_DECOMISSIONING_FORMAT);
+  }
+  
+  private Collection<SingularitySlave> getSlaves(String format) {
+	final String requestUri = String.format(format, getHost(), contextPath);
+
+	LOG.info(String.format("Getting racks (%s)", requestUri));
+	
+	final long start = System.currentTimeMillis();
+	
+	Response getResponse = getUri(requestUri);
+	
+	LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+	
+	if (getResponse.getStatusCode() == 404) {
+	  return ImmutableList.of();
+	}
+	
+	try {
+	  return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SLAVES_COLLECTION);
+	} catch (Exception e) {
+	  throw Throwables.propagate(e);
+	}
+  }
+  
+  public void decomissionSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId), user);
+
+    LOG.info(String.format("Decomissioning Slave %s - (%s)", slaveId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = postUri(requestUri);
+
+    LOG.info(String.format("Decomissioning Slave (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to decomission slave - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDecomissioningSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, slaveId), user);
+
+    LOG.info(String.format("Deleting Slave %s - (%s)", slaveId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting Slave (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete slave - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
+  public void deleteDeadSlave(String slaveId, Optional<String> user) {
+    final String requestUri = finishUri(String.format(SLAVES_DELETE_DEAD_FORMAT, getHost(), contextPath, slaveId), user);
+
+    LOG.info(String.format("Deleting Slave %s - (%s)", slaveId, requestUri));
+
+    final long start = System.currentTimeMillis();
+
+    Response response = deleteUri(requestUri);
+
+    LOG.info(String.format("Deleting Slave (%s) from Singularity in %sms", response.getStatusCode(), System.currentTimeMillis() - start));
+
+    if (!isSuccess(response)) {
+      try {
+        LOG.warn(String.format("Failed to delete slave - (%s)", response.getResponseBody()));
+      } catch (IOException e) {
+        LOG.warn("Couldn't read response", e);
+      }
+    }
+  }
+  
   //
   // TASK HISTORY
   //
