@@ -2,8 +2,8 @@ package com.hubspot.singularity.runner.base.shared;
 
 public interface SingularityDriver {
 
-  public abstract void startAndWait();
+  void startAndWait();
 
-  public abstract void shutdown();
+  void shutdown();
 
 }

@@ -3,6 +3,8 @@ package com.hubspot.singularity;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
@@ -24,7 +26,7 @@ public class SingularityTaskId extends SingularityId {
     return new Predicate<SingularityTaskId>() {
 
       @Override
-      public boolean apply(SingularityTaskId input) {
+      public boolean apply(@Nonnull SingularityTaskId input) {
         return input.getRequestId().equals(requestId);
       }
 
@@ -35,7 +37,7 @@ public class SingularityTaskId extends SingularityId {
     return new Predicate<SingularityTaskId>() {
 
       @Override
-      public boolean apply(SingularityTaskId input) {
+      public boolean apply(@Nonnull SingularityTaskId input) {
         return input.getDeployId().equals(deployId);
       }
 

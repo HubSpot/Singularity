@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class SingularityDeployHistory extends SingularityJsonObject implements Comparable<SingularityDeployHistory> {
@@ -34,6 +35,27 @@ public class SingularityDeployHistory extends SingularityJsonObject implements C
   @Override
   public int compareTo(SingularityDeployHistory o) {
     return o.getDeployMarker().compareTo(getDeployMarker());
+  }
+
+  @Override
+  public int hashCode() {
+      return Objects.hashCode(deployResult, deployMarker, deploy, deployStatistics);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+      if (other == this) {
+          return true;
+      }
+      if (other == null || other.getClass() != this.getClass()) {
+          return false;
+      }
+
+      SingularityDeployHistory that = (SingularityDeployHistory) other;
+      return Objects.equal(this.deployResult, that.deployResult)
+              && Objects.equal(this.deployMarker, that.deployMarker)
+              && Objects.equal(this.deploy, that.deploy)
+              && Objects.equal(this.deployStatistics, that.deployStatistics);
   }
 
   public Optional<SingularityDeployResult> getDeployResult() {

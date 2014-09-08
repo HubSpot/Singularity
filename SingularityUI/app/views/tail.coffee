@@ -54,7 +54,7 @@ class TailView extends View
 
         # If starting fresh
         if $firstLine.length is 0
-            @$contents.html @linesTemplate lines: _.pluck @collection.models, 'attributes'
+            @$contents.html @linesTemplate lines: @collection.toJSON()
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
             lastLineOffset  = parseInt $lastLine.data 'offset'
@@ -73,7 +73,18 @@ class TailView extends View
                 @$contents.append @linesTemplate lines: _.pluck lines, 'attributes'
 
     scrollToTop:    => @$contents.scrollTop 0
-    scrollToBottom: => @$contents.scrollTop @$contents[0].scrollHeight
+    scrollToBottom: =>
+        scroll = => @$contents.scrollTop @$contents[0].scrollHeight
+        scroll()
+
+        # `preventFetch` will prevent the scroll-triggered fetch for
+        # happening for 100 ms. This is to prevent a bug that can
+        # happen if you have a REALLY busy log file
+        @preventFetch = true
+        setTimeout =>
+            scroll()
+            delete @preventFetch
+        , 100
 
     # Get rid of all lines. Used when collection is reset
     dumpContents: -> @$contents.empty()
@@ -93,6 +104,7 @@ class TailView extends View
 
             if atBottom and not atTop
                 if @collection.moreToFetch
+                    return if @preventFetch
                     @collection.fetchNext()
                 else
                     @startTailing()

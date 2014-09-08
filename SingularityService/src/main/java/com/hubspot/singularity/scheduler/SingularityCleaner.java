@@ -384,6 +384,7 @@ public class SingularityCleaner {
       final String errorMsg = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
       LOG.error(errorMsg);
       exceptionNotifier.notify(errorMsg);
+      return CheckLBState.DONE;
     case SUCCESS:
       return CheckLBState.DONE;
     case UNKNOWN:

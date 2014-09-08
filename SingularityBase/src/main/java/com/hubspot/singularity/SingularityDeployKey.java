@@ -3,6 +3,8 @@ package com.hubspot.singularity;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.JavaUtils;
@@ -27,7 +29,7 @@ public class SingularityDeployKey extends SingularityId {
   public static Map<SingularityDeployKey, SingularityDeploy> fromDeploys(Collection<SingularityDeploy> deploys) {
     return Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
-      public SingularityDeployKey apply(SingularityDeploy input) {
+      public SingularityDeployKey apply(@Nonnull SingularityDeploy input) {
         return SingularityDeployKey.fromDeploy(input);
       }
     });
@@ -36,7 +38,7 @@ public class SingularityDeployKey extends SingularityId {
   public static Map<SingularityPendingTask, SingularityDeployKey> fromPendingTasks(Collection<SingularityPendingTask> pendingTasks) {
     return Maps.toMap(pendingTasks, new Function<SingularityPendingTask, SingularityDeployKey>() {
       @Override
-      public SingularityDeployKey apply(SingularityPendingTask input) {
+      public SingularityDeployKey apply(@Nonnull SingularityPendingTask input) {
         return SingularityDeployKey.fromPendingTask(input);
       }
     });
@@ -46,9 +48,9 @@ public class SingularityDeployKey extends SingularityId {
     return Maps.toMap(pendingDeploys, fromPendingDeployToDeployKey);
   }
 
-  public static Function<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeployToDeployKey = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
+  public static final Function<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeployToDeployKey = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
     @Override
-    public SingularityDeployKey apply(SingularityPendingDeploy input) {
+    public SingularityDeployKey apply(@Nonnull SingularityPendingDeploy input) {
       return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
     }
   };

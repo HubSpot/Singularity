@@ -143,12 +143,16 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
 
   public boolean markShutdown() {
     tailersLock.lock();
-    if (shutdown) {
-      return false;
+    try {
+      if (shutdown) {
+        return false;
+      }
+      shutdown = true;
+      return true;
     }
-    shutdown = true;
-    tailersLock.unlock();
-    return true;
+    finally {
+      tailersLock.unlock();
+    }
   }
 
   @Override

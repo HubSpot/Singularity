@@ -111,9 +111,10 @@ public class SingularityStartup {
     int enqueuedNewTaskChecks = 0;
     int enqueuedHealthchecks = 0;
 
-    for (SingularityTaskId taskId : activeTaskMap.keySet()) {
+    for (Map.Entry<SingularityTaskId, SingularityTask> entry: activeTaskMap.entrySet()) {
+      SingularityTaskId taskId = entry.getKey();
+      SingularityTask task = entry.getValue();
       SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(taskUpdates.get(taskId));
-      SingularityTask task = activeTaskMap.get(taskId);
 
       if (simplifiedTaskState != SimplifiedTaskState.DONE) {
         SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());

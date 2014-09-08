@@ -3,6 +3,7 @@ package com.hubspot.singularity.config;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -37,6 +38,9 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("loadBalancerUri")
   private String loadBalancerUri;
+
+  @JsonProperty("loadBalancerQueryParams")
+  private Map<String, String> loadBalancerQueryParams;
 
   @JsonProperty("sentry")
   private SentryConfiguration sentryConfiguration;
@@ -483,4 +487,11 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
+  public Optional<Map<String, String>> getLoadBalancerQueryParams() {
+    return Optional.fromNullable(loadBalancerQueryParams);
+  }
+
+  public void setLoadBalancerQueryParams(Map<String, String> loadBalancerQueryParams) {
+    this.loadBalancerQueryParams = loadBalancerQueryParams;
+  }
 }
