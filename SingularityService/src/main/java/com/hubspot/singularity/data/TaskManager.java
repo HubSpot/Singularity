@@ -74,9 +74,10 @@ public class TaskManager extends CuratorAsyncManager {
   private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
   private final SingularityLoadBalancerUpdateTranscoder taskLoadBalancerUpdateTranscoder;
   private final Function<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTaskFunction;
-
+  private final WebhookManager webhookManager;
+  
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder, SingularityTaskIdTranscoder taskIdTranscoder,
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder, SingularityTaskIdTranscoder taskIdTranscoder,
       SingularityLoadBalancerUpdateTranscoder taskLoadBalancerHistoryUpdateTranscoder, SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder,
       SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder, SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
@@ -89,14 +90,15 @@ public class TaskManager extends CuratorAsyncManager {
     this.taskIdTranscoder = taskIdTranscoder;
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
     this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
-
+    this.webhookManager = webhookManager;
+    
     this.pendingTaskIdToPendingTaskFunction = new Function<SingularityPendingTaskId, SingularityPendingTask>() {
 
       @Override
       public SingularityPendingTask apply(SingularityPendingTaskId input) {
         Optional<String> maybeCmdLineArgs = Optional.absent();
 
-        if (input.getPendingType() == PendingType.ONEOFF || input.getPendingType() == PendingType.IMMEDIATE) {
+        if ((input.getPendingType() == PendingType.ONEOFF) || (input.getPendingType() == PendingType.IMMEDIATE)) {
           maybeCmdLineArgs = getStringData(ZKPaths.makePath(PENDING_PATH_ROOT, input.getId()));
         }
 
@@ -300,6 +302,8 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    webhookManager.enqueueTaskUpdate(taskHistoryUpdate);
+    
     return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
   }
 
@@ -431,7 +435,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     final byte[] data = taskTranscoder.toBytes(task);
 
-    // TODO - what if it fails also
+    // TODO - right now, for consistency, we double write this. should review this and check for what happens in failure cases
 
     curator.create().creatingParentsIfNeeded().forPath(getTaskPath(task.getTaskId()), data);
     curator.create().creatingParentsIfNeeded().forPath(activePath, data);

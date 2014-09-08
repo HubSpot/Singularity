@@ -37,7 +37,6 @@ import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.history.HistoryManager;
 
 @Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -47,17 +46,15 @@ public class RequestResource extends AbstractRequestResource {
 
   private final RequestManager requestManager;
   private final DeployManager deployManager;
-  private final HistoryManager historyManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager, HistoryManager historyManager) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager) {
     super(requestManager, deployManager, validator);
 
     this.validator = validator;
 
     this.deployManager = deployManager;
     this.requestManager = requestManager;
-    this.historyManager = historyManager;
   }
 
   @POST
@@ -89,9 +86,7 @@ public class RequestResource extends AbstractRequestResource {
       throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
     }
 
-    SingularityCreateResult result = requestManager.saveRequest(newRequest);
-
-    historyManager.saveRequestHistoryUpdate(newRequest, result == SingularityCreateResult.CREATED ? RequestHistoryType.CREATED : RequestHistoryType.UPDATED, user);
+    requestManager.activate(newRequest, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, user);
 
     checkReschedule(newRequest, maybeOldRequest);
 
@@ -204,7 +199,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkRequestStateNotPaused(requestWithState, "pause");
 
-    requestManager.pause(requestWithState.getRequest());
+    requestManager.pause(requestWithState.getRequest(), user);
 
     Optional<Boolean> killTasks = Optional.absent();
     if (pauseRequest.isPresent()) {
@@ -214,9 +209,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), killTasks, requestId));
 
-    if (result == SingularityCreateResult.CREATED) {
-      historyManager.saveRequestHistoryUpdate(requestWithState.getRequest(), RequestHistoryType.PAUSED, user);
-    } else {
+    if (result != SingularityCreateResult.CREATED) {
       throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s", requestId, result);
     }
 
@@ -238,9 +231,7 @@ public class RequestResource extends AbstractRequestResource {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
     }
 
-    requestManager.makeActive(requestWithState.getRequest());
-
-    historyManager.saveRequestHistoryUpdate(requestWithState.getRequest(), RequestHistoryType.UNPAUSED, user);
+    requestManager.unpause(requestWithState.getRequest(), user);
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE));
   }
@@ -326,8 +317,7 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequest deleteRequest(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
 
-    requestManager.deleteRequest(user, requestId);
-    historyManager.saveRequestHistoryUpdate(request, RequestHistoryType.DELETED, user);
+    requestManager.deleteRequest(request, user);
 
     return request;
   }

@@ -63,6 +63,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   @JsonCreator
   public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage) {
     super(taskId);
+
     this.timestamp = timestamp;
     this.taskState = taskState;
     this.statusMessage = statusMessage;

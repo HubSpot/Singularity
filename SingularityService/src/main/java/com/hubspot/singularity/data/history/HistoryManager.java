@@ -4,9 +4,7 @@ import java.util.List;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
@@ -16,12 +14,8 @@ public interface HistoryManager {
     ASC, DESC;
   }
 
-  public enum RequestHistoryOrderBy {
-    requestId, createdAt
-  }
-
-  void saveRequestHistoryUpdate(SingularityRequest request, RequestHistoryType state, Optional<String> user);
-
+  void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory);
+  
   void saveTaskHistory(SingularityTaskHistory taskHistory);
 
   void saveDeployHistory(SingularityDeployHistory deployHistory);
@@ -34,7 +28,7 @@ public interface HistoryManager {
 
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
 
-  List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
+  List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
 
   List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
 

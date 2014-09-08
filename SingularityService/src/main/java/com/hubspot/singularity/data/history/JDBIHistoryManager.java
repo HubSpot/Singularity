@@ -8,9 +8,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.transcoders.SingularityDeployHistoryTranscoder;
@@ -39,8 +37,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public void saveRequestHistoryUpdate(SingularityRequest request, RequestHistoryType state, Optional<String> user) {
-    history.insertRequestHistory(request.getId(), request.getAsBytes(objectMapper), new Date(), state.name(), user.orNull());
+  public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
+    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest().getAsBytes(objectMapper), new Date(requestHistory.getCreatedAt()), requestHistory.getEventType().name(), requestHistory.getUser().orNull());
   }
 
   @Override
@@ -71,12 +69,12 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
-    return orderDirection.or(OrderDirection.ASC).name();
+    return orderDirection.or(OrderDirection.DESC).name();
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<RequestHistoryOrderBy> orderBy, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
-    return history.getRequestHistory(requestId, orderBy.or(RequestHistoryOrderBy.createdAt).name(), getOrderDirection(orderDirection), limitStart, limitCount);
+  public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
+    return history.getRequestHistory(requestId, getOrderDirection(orderDirection), limitStart, limitCount);
   }
 
   @Override

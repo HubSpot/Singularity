@@ -47,7 +47,6 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
-import com.hubspot.singularity.data.history.HistoryManager.RequestHistoryOrderBy;
 
 @Path(SingularityService.API_BASE_PATH + "/logs")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -94,7 +93,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private Collection<String> getS3PrefixesForRequest(String requestId) {
-    SingularityRequestHistory history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.ASC), 0, 1), null);
+    SingularityRequestHistory history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.ASC), 0, 1), null);
 
     if (history == null) {
       throw WebExceptions.notFound("No request history found for %s", requestId);
@@ -102,11 +101,11 @@ public class S3LogResource extends AbstractHistoryResource {
 
     final long start = history.getCreatedAt();
 
-    history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(RequestHistoryOrderBy.createdAt), Optional.of(OrderDirection.DESC), 0, 1), null);
+    history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 1), null);
 
     long end = System.currentTimeMillis();
 
-    if (history != null && (history.getState() == RequestHistoryType.DELETED || history.getState() == RequestHistoryType.PAUSED)) {
+    if (history != null && (history.getEventType() == RequestHistoryType.DELETED || history.getEventType() == RequestHistoryType.PAUSED)) {
       end = history.getCreatedAt() + TimeUnit.DAYS.toMillis(1);
     }
 
