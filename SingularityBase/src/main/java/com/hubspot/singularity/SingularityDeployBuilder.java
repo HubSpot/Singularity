@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
-import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
 
 public class SingularityDeployBuilder {
 
@@ -26,6 +26,7 @@ public class SingularityDeployBuilder {
   private Optional<Resources> resources;
 
   private Optional<String> command;
+  private Optional<List<String>> arguments;
   private Optional<Map<String, String>> env;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
@@ -55,6 +56,7 @@ public class SingularityDeployBuilder {
     this.customExecutorSource = Optional.absent();
     this.resources = Optional.absent();
     this.command = Optional.absent();
+    this.arguments = Optional.absent();
     this.env = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
@@ -70,7 +72,7 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
         healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
   }
 
@@ -186,6 +188,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<List<String>> getArguments() {
+    return arguments;
+  }
+
+  public SingularityDeployBuilder setArguments(Optional<List<String>> arguments) {
+    this.arguments = arguments;
+    return this;
+  }
+
   public Optional<Map<String, String>> getEnv() {
     return env;
   }
@@ -290,6 +301,7 @@ public class SingularityDeployBuilder {
         ", customExecutorSource=" + customExecutorSource +
         ", resources=" + resources +
         ", command=" + command +
+        ", arguments=" + arguments +
         ", env=" + env +
         ", uris=" + uris +
         ", executorData=" + executorData +
