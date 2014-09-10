@@ -30,7 +30,7 @@ public class BlendedHistoryTest extends SingularityCuratorTestBase {
   private RequestManager requestManager;
 
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
-    when(hm.getRequestHistory(Matchers.anyString(), (Optional<OrderDirection>) Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
+    when(hm.getRequestHistory(Matchers.anyString(), Matchers.<Optional<OrderDirection>>any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
   }
 
   private SingularityRequest request;

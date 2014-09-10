@@ -11,30 +11,27 @@ import io.dropwizard.views.ViewBundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.google.inject.Stage;
-import com.hubspot.dropwizard.guice.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.guice.GuiceBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
 
   public static final String API_BASE_PATH = "/api";
 
   @Override
-  public void initialize(Bootstrap<SingularityConfiguration> bootstrap) {
-    GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.<SingularityConfiguration>newBuilder()
-        .addModule(new SingularityServiceModule())
-        .enableAutoConfig(getClass().getPackage().getName())
-        .setConfigClass(SingularityConfiguration.class)
-        .build(Stage.DEVELOPMENT);
+  public void initialize(final Bootstrap<SingularityConfiguration> bootstrap) {
+    final GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
+        .modules(new SingularityServiceModule())
+        .build();
     bootstrap.addBundle(guiceBundle);
 
+    bootstrap.addBundle(new CorsBundle());
     bootstrap.addBundle(new ViewBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
     bootstrap.addBundle(new MigrationsBundle<SingularityConfiguration>() {
       @Override
-      public DataSourceFactory getDataSourceFactory(SingularityConfiguration configuration) {
+      public DataSourceFactory getDataSourceFactory(final SingularityConfiguration configuration) {
         return configuration.getDatabaseConfiguration().get();
       }
     });
@@ -45,14 +42,12 @@ public class SingularityService extends Application<SingularityConfiguration> {
   }
 
   @Override
-  public void run(SingularityConfiguration configuration, Environment environment) throws Exception {
-    environment.jersey().register(PropertyFilteringMessageBodyWriter.class);
-  }
+  public void run(final SingularityConfiguration configuration, final Environment environment) throws Exception {}
 
-  public static void main(String[] args) {
+  public static void main(final String[] args) {
     try {
       new SingularityService().run(args);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
       System.exit(1);
     }
