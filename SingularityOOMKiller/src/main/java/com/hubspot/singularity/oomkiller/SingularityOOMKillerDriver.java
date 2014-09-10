@@ -57,10 +57,12 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
 
     try {
       future.get();
-    } catch (InterruptedException | ExecutionException e) {
-      LOG.warn("Unexpected exception while waiting on future", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return;
+    } catch (ExecutionException e) {
+      LOG.warn("Unexpected exception while waiting on future", e.getCause());
     }
-
   }
 
   @Override

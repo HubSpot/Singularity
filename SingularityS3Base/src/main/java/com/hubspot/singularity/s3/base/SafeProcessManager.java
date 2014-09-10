@@ -61,7 +61,8 @@ public abstract class SafeProcessManager {
     try {
       this.processLock.lockInterruptibly();
     } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
+      Thread.currentThread().interrupt();
+      return;
     }
   }
 
@@ -144,7 +145,10 @@ public abstract class SafeProcessManager {
       int signalCode = Runtime.getRuntime().exec(killCmd).waitFor();
 
       log.debug("Kill signal process got exit code {} after {}", signalCode, JavaUtils.duration(start));
-    } catch (InterruptedException | IOException e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return;
+    } catch (IOException e) {
       throw Throwables.propagate(e);
     }
   }

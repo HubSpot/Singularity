@@ -109,7 +109,9 @@ public class SingularityExecutorMonitor {
     try {
       latch.await();
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       LOG.warn("While awaiting shutdown of executor services", e);
+      return;
     }
 
     LOG.info("Waiting {} before exiting...", JavaUtils.durationFromMillis(configuration.getStopDriverAfterMillis()));
@@ -133,6 +135,7 @@ public class SingularityExecutorMonitor {
       exitLock.lockInterruptibly();
     } catch (InterruptedException e) {
       LOG.warn("Interrupted acquiring exit lock", e);
+      Thread.currentThread().interrupt();
       return;
     }
 
