@@ -121,7 +121,7 @@ public class SingularityServiceModule extends AbstractModule {
       }
     });
   }
-  
+
   @Provides
   public List<SingularityStartable> getStartableSingletons(Injector injector) {
     final List<SingularityStartable> startables = Lists.newArrayList();

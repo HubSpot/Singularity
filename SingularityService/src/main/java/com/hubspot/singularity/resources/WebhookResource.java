@@ -26,7 +26,7 @@ public class WebhookResource {
 
   private final WebhookManager webhookManager;
   private final UriInfo uriInfo;
-  
+
   @Inject
   public WebhookResource(WebhookManager webhookManager, UriInfo uriInfo) {
     this.webhookManager = webhookManager;
@@ -46,7 +46,7 @@ public class WebhookResource {
   private String getWebhookId() {
     return uriInfo.getPathParameters(false).getFirst("webhookId");
   }
-  
+
   @DELETE
   @Path("/{webhookId}")
   public SingularityDeleteResult deleteWebhook() {
@@ -58,13 +58,13 @@ public class WebhookResource {
   public List<SingularityDeployWebhook> getQueuedDeployUpdates() {
     return webhookManager.getQueuedDeployUpdatesForHook(getWebhookId());
   }
-  
+
   @GET
   @Path("/request/{webhookId}")
   public List<SingularityRequestHistory> getQueuedRequestUpdates() {
     return webhookManager.getQueuedRequestHistoryForHook(getWebhookId());
   }
-  
+
   @GET
   @Path("/task/{webhookId}")
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates() {

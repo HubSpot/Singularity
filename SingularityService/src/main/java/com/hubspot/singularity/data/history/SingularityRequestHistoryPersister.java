@@ -14,7 +14,7 @@ import com.hubspot.singularity.data.RequestManager;
 
 public class SingularityRequestHistoryPersister {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityRequestHistoryPersister.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityRequestHistoryPersister.class);
 
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
@@ -27,28 +27,28 @@ public class SingularityRequestHistoryPersister {
 
   public void checkRequestHistory() {
     LOG.info("Checking request history for persistence");
-    
+
     final long start = System.currentTimeMillis();
 
     final List<String> requestIdsWithHistory = requestManager.getRequestIdsWithHistory();
     final Set<String> requestIds = Sets.newHashSet(requestManager.getAllRequestIds());
-    
+
     int numHistoryTransferred = 0;
-    
+
     for (String requestId : requestIdsWithHistory) {
       List<SingularityRequestHistory> historyForRequestId = requestManager.getRequestHistory(requestId);
-      
+
       if (transferToHistoryDB(requestId, historyForRequestId)) {
         numHistoryTransferred += historyForRequestId.size();
       }
-      
+
       if (!requestIds.contains(requestId)) {
         LOG.debug("Deleting request history parent for {} because it wasn't in active request ids", requestId);
-        
+
         requestManager.deleteHistoryParent(requestId);
       }
     }
-    
+
     LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestIdsWithHistory.size(), JavaUtils.duration(start));
   }
 
@@ -62,10 +62,10 @@ public class SingularityRequestHistoryPersister {
         LOG.warn("Failed to persist {} into History", requestHistory, t);
         return false;
       }
-      
+
       requestManager.deleteHistoryItem(requestHistory);
     }
-    
+
     LOG.debug("Moved request history for {} ({} items) from ZK to History in {}", requestId, historyForRequestId.size(), JavaUtils.duration(start));
 
     return true;

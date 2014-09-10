@@ -18,7 +18,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityWebhookPoller implements SingularityCloseable, SingularityStartable {
 
-  private final static Logger LOG = LoggerFactory.getLogger(SingularityWebhookPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookPoller.class);
 
   private final SingularityWebhookSender webhookSender;
   private final SingularityExceptionNotifier exceptionNotifier;
@@ -39,7 +39,7 @@ public class SingularityWebhookPoller implements SingularityCloseable, Singulari
   @Override
   public void start() {
     LOG.info("Starting a webhookPoller that executes webhooks every {}", JavaUtils.durationFromMillis(configuration.getCheckWebhooksEveryMillis()));
-    
+
     executorService.scheduleAtFixedRate(new Runnable() {
 
       @Override

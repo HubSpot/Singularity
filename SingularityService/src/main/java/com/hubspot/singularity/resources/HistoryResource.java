@@ -34,7 +34,7 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployManager deployManager;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
-  
+
   @Inject
   public HistoryResource(HistoryManager historyManager, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager) {
     super(historyManager, taskManager, deployManager);

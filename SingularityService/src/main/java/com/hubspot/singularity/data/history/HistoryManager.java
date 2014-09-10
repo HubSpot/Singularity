@@ -15,7 +15,7 @@ public interface HistoryManager {
   }
 
   void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory);
-  
+
   void saveTaskHistory(SingularityTaskHistory taskHistory);
 
   void saveDeployHistory(SingularityDeployHistory deployHistory);

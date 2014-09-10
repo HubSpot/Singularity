@@ -8,16 +8,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
 public class SingularityDeployWebhook extends SingularityJsonObject {
-  
+
   public enum DeployEventType {
     STARTING, FINISHED;
   }
-  
+
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityDeploy> deploy;
   private final DeployEventType eventType;
   private final Optional<SingularityDeployResult> deployResult;
-  
+
   public static SingularityDeployWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityDeployWebhook.class);
