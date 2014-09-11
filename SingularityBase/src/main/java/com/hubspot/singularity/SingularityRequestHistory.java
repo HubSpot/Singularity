@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
@@ -42,6 +43,27 @@ public class SingularityRequestHistory extends SingularityJsonObject implements 
         .compare(createdAt, o.getCreatedAt())
         .compare(request.getId(), o.getRequest().getId())
         .result();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(createdAt, user, eventType, request);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || other.getClass() != this.getClass()) {
+      return false;
+    }
+
+    SingularityRequestHistory that = (SingularityRequestHistory) other;
+    return Objects.equal(this.createdAt, that.createdAt)
+        && Objects.equal(this.user, that.user)
+        && Objects.equal(this.eventType, that.eventType)
+        && Objects.equal(this.request, that.request);
   }
 
   public long getCreatedAt() {

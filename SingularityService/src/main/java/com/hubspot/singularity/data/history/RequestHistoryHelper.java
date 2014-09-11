@@ -23,7 +23,7 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
   @Override
   protected List<SingularityRequestHistory> getFromZk() {
     List<SingularityRequestHistory> requestHistory = requestManager.getRequestHistory(requestId);
-    
+
     Collections.sort(requestHistory);
 
     return requestHistory;

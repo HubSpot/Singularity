@@ -56,7 +56,7 @@ public class SingularityStartup {
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final MesosConfiguration mesosConfiguration;
-  
+
   private final List<SingularityStartable> startables;
 
   @Inject
@@ -103,7 +103,7 @@ public class SingularityStartup {
 
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
   }
-  
+
   private void startStartables() {
     for (SingularityStartable startable : startables) {
       startable.start();

@@ -50,7 +50,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final SingularityCleanupPoller cleanupPoller;
   private final SingularityDeployPoller deployPoller;
   private final SingularityCooldownPoller cooldownPoller;
-    
+
   private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
 
@@ -65,7 +65,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.cleanupPoller = cleanupPoller;
     this.deployPoller = deployPoller;
     this.cooldownPoller = cooldownPoller;
-        
+
     this.queuedUpdates = Lists.newArrayList();
 
     this.lock = new ReentrantLock();
@@ -74,7 +74,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.state = SchedulerState.STARTUP;
     this.lastOfferTimestamp = Optional.absent();
   }
-  
+
   public Optional<Long> getLastOfferTimestamp() {
     return lastOfferTimestamp;
   }

@@ -12,7 +12,7 @@ public class SingularityRequestHistoryTranscoder extends CompressingTranscoder<S
   @Inject
   public SingularityRequestHistoryTranscoder(ObjectMapper objectMapper, SingularityConfiguration configuration) {
     super(configuration);
-    
+
     this.objectMapper = objectMapper;
   }
 
@@ -25,5 +25,5 @@ public class SingularityRequestHistoryTranscoder extends CompressingTranscoder<S
   protected byte[] actualToBytes(SingularityRequestHistory object) {
     return object.getAsBytes(objectMapper);
   }
-  
+
 }

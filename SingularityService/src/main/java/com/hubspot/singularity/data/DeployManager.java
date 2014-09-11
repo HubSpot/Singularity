@@ -185,7 +185,7 @@ public class DeployManager extends CuratorAsyncManager {
     }
 
     webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult> absent()));
-    
+
     create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
 
     final Optional<SingularityRequestDeployState> currentState = getRequestDeployState(deploy.getRequestId());
@@ -305,7 +305,7 @@ public class DeployManager extends CuratorAsyncManager {
 
   public SingularityCreateResult saveDeployResult(SingularityDeployMarker deployMarker, Optional<SingularityDeploy> deploy, SingularityDeployResult result) {
     webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, deploy, DeployEventType.FINISHED, Optional.of(result)));
-    
+
     return save(getDeployResultPath(deployMarker.getRequestId(), deployMarker.getDeployId()), result, deployStateTranscoder);
   }
 

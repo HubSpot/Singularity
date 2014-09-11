@@ -10,7 +10,7 @@ public class SingularityTaskWebhook extends SingularityJsonObject {
 
   private final SingularityTask task;
   private final SingularityTaskHistoryUpdate taskUpdate;
-  
+
   public static SingularityTaskWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) throws SingularityJsonException {
     try {
       return objectMapper.readValue(bytes, SingularityTaskWebhook.class);
@@ -37,5 +37,5 @@ public class SingularityTaskWebhook extends SingularityJsonObject {
   public String toString() {
     return "SingularityTaskWebhook [task=" + task + ", taskUpdate=" + taskUpdate + "]";
   }
-  
+
 }

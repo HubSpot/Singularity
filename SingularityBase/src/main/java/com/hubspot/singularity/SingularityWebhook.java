@@ -12,12 +12,12 @@ public class SingularityWebhook extends SingularityJsonObject {
 
   private final String uri;
   private final WebhookType type;
-  
+
   private final Optional<String> user;
   private final long timestamp;
-  
+
   private final String id;
-  
+
   public static SingularityWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(bytes, SingularityWebhook.class);
@@ -59,5 +59,4 @@ public class SingularityWebhook extends SingularityJsonObject {
   public String toString() {
     return "SingularityWebhook [uri=" + uri + ", timestamp=" + timestamp + ", id=" + id + ", user=" + user + ", type=" + type + "]";
   }
-
 }
