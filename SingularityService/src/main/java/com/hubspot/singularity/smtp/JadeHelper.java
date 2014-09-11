@@ -17,7 +17,11 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 
 import de.neuland.jade4j.template.TemplateLoader;
 
-public class JadeHelper {
+public final class JadeHelper {
+
+  private JadeHelper() {
+    throw new AssertionError("do not instantiate");
+  }
 
   public static final TemplateLoader JADE_LOADER = new TemplateLoader() {
 
@@ -34,7 +38,7 @@ public class JadeHelper {
 
   private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
 
-  public List<Map<String, String>> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
+  public static List<Map<String, String>> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<Map<String, String>> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {

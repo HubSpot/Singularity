@@ -68,8 +68,6 @@ public class SingularityMailer implements SingularityCloseable {
   private final JadeTemplate requestInCooldownTemplate;
   private final JadeTemplate taskNotRunningWarningTemplate;
 
-  private final JadeHelper jadeHelper;
-
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 
@@ -81,12 +79,11 @@ public class SingularityMailer implements SingularityCloseable {
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
 
   @Inject
-  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
+  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
       ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate, SingularityExceptionNotifier exceptionNotifier) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
-    this.jadeHelper = jadeHelper;
     this.configuration = configuration;
     this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
@@ -210,7 +207,7 @@ public class SingularityMailer implements SingularityCloseable {
       templateSubs.put("taskStateFailed", (taskState.get() == ExtendedTaskState.TASK_FAILED));
     }
 
-    templateSubs.put("task_updates", jadeHelper.getJadeTaskHistory(taskHistory));
+    templateSubs.put("task_updates", JadeHelper.getJadeTaskHistory(taskHistory));
     templateSubs.put("taskEverRan", taskEverRan(taskHistory));
 
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()) {
