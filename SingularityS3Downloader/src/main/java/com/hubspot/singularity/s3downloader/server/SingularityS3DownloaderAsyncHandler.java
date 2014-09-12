@@ -66,8 +66,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
   @Override
   public void run() {
-    final Context context = metrics.getDownloadTimer().time();
-    try {
+    try (final Context context = metrics.getDownloadTimer().time()) {
       download();
     } catch (Throwable t) {
       metrics.getServerErrorsMeter().mark();
@@ -78,10 +77,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
         LOG.error("While sending error", t2);
       }
     } finally {
-      context.close();
       continuation.complete();
     }
   }
-
-
 }
