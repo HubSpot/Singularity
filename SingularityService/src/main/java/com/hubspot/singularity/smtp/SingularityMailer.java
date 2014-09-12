@@ -68,8 +68,6 @@ public class SingularityMailer implements SingularityCloseable {
   private final JadeTemplate requestInCooldownTemplate;
   private final JadeTemplate taskNotRunningWarningTemplate;
 
-  private final JadeHelper jadeHelper;
-
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 
@@ -81,14 +79,13 @@ public class SingularityMailer implements SingularityCloseable {
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
 
   @Inject
-  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, JadeHelper jadeHelper, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
+  public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
       ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate, SingularityExceptionNotifier exceptionNotifier) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
-    this.jadeHelper = jadeHelper;
     this.configuration = configuration;
-    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl().or(configuration.getSingularityUIHostnameAndPath());
+    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
@@ -98,7 +95,7 @@ public class SingularityMailer implements SingularityCloseable {
           new ThreadPoolExecutor(maybeSmtpConfiguration.get().getMailThreads(), maybeSmtpConfiguration.get().getMailMaxThreads(), 0L, TimeUnit.MILLISECONDS,
               new LinkedBlockingQueue<Runnable>(),
               new ThreadFactoryBuilder().setNameFormat("SingularityMailer-%d")
-          .build()));
+              .build()));
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }
@@ -206,11 +203,11 @@ public class SingularityMailer implements SingularityCloseable {
 
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().getDisplayName());
-      templateSubs.put("taskStateLost", (taskState.get() == ExtendedTaskState.TASK_LOST || taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN));
+      templateSubs.put("taskStateLost", ((taskState.get() == ExtendedTaskState.TASK_LOST) || (taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN)));
       templateSubs.put("taskStateFailed", (taskState.get() == ExtendedTaskState.TASK_FAILED));
     }
 
-    templateSubs.put("task_updates", jadeHelper.getJadeTaskHistory(taskHistory));
+    templateSubs.put("task_updates", JadeHelper.getJadeTaskHistory(taskHistory));
     templateSubs.put("taskEverRan", taskEverRan(taskHistory));
 
     for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()) {
@@ -228,7 +225,7 @@ public class SingularityMailer implements SingularityCloseable {
     Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
     final List<String> to = getOwners(request);
-    final String subject = String.format("Task %s has not started yet — Singularity", taskId.getId());
+    final String subject = String.format("Task has not started yet - %s", taskId.getId());
 
     ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
         .put("duration_running", DurationFormatUtils.formatDurationHMS(duration))
@@ -280,15 +277,15 @@ public class SingularityMailer implements SingularityCloseable {
   private boolean taskEverRan(Collection<SingularityTaskHistoryUpdate> history) {
     SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
+    return (simplifiedTaskState == SimplifiedTaskState.DONE) || (simplifiedTaskState == SimplifiedTaskState.RUNNING);
   }
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
     if (!taskEverRan(history)) {
-      return String.format("Task %s (%s) never started — Singularity", state.getDisplayName(), taskId.toString());
+      return String.format("Task %s, never started: (%s)", state.getDisplayName(), taskId.toString());
     }
 
-    return String.format("Task %s (%s) after running — Singularity", state.getDisplayName(), taskId.toString());
+    return String.format("Task %s after running: (%s)", state.getDisplayName(), taskId.toString());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {

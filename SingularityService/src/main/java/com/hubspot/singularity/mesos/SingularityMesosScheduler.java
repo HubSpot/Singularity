@@ -214,7 +214,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     Optional<SingularityPendingDeploy> pendingDeploy = null;
 
-    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
+    if (maybeActiveTask.isPresent() && (status.getState() == TaskState.TASK_RUNNING)) {
       pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
       healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);

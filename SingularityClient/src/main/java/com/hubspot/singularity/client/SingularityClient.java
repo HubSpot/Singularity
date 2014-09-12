@@ -43,7 +43,7 @@ public class SingularityClient {
   private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decomission";
   private static final String RACKS_DELETE_DEAD_FORMAT = RACKS_FORMAT + "/rack/%s/dead";
   private static final String RACKS_DELETE_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/rack/%s/decomissioning";
-  
+
   private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
   private static final String SLAVES_GET_ACTIVE_FORMAT = SLAVES_FORMAT + "/active";
   private static final String SLAVES_GET_DEAD_FORMAT = SLAVES_FORMAT + "/dead";
@@ -51,7 +51,7 @@ public class SingularityClient {
   private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decomission";
   private static final String SLAVES_DELETE_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
   private static final String SLAVES_DELETE_DEAD_FORMAT = SLAVES_FORMAT + "/slave/%s/dead";
-  
+
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
@@ -625,7 +625,7 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public Collection<SingularityTask> getActiveTasks(final String host) {
     final String requestUri = String.format(TASKS_GET_ACTIVE__PER_HOST_FORMAT, getHost(), contextPath, host);
 
@@ -696,45 +696,45 @@ public class SingularityClient {
       throw Throwables.propagate(e);
     }
   }
-  
+
   //
   // RACKS
   //
 
   public Collection<SingularityRack> getActiveRacks() {
-	  return getRacks(RACKS_GET_ACTIVE_FORMAT);
+    return getRacks(RACKS_GET_ACTIVE_FORMAT);
   }
-  
-  public Collection<SingularityRack> getDeadRacks() {
-	  return getRacks(RACKS_GET_DEAD_FORMAT);
-  }
-  
-  public Collection<SingularityRack> getDecomissioningRacks() {
-	  return getRacks(RACKS_GET_DECOMISSIONING_FORMAT);
-  }
-  
-  private Collection<SingularityRack> getRacks(String format) {
-	final String requestUri = String.format(format, getHost(), contextPath);
 
-	LOG.info(String.format("Getting racks (%s)", requestUri));
-	
-	final long start = System.currentTimeMillis();
-	
-	Response getResponse = getUri(requestUri);
-	
-	LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
-	
-	if (getResponse.getStatusCode() == 404) {
-	  return ImmutableList.of();
-	}
-	
-	try {
-	  return objectMapper.readValue(getResponse.getResponseBodyAsStream(), RACKS_COLLECTION);
-	} catch (Exception e) {
-	  throw Throwables.propagate(e);
-	}
+  public Collection<SingularityRack> getDeadRacks() {
+    return getRacks(RACKS_GET_DEAD_FORMAT);
   }
-  
+
+  public Collection<SingularityRack> getDecomissioningRacks() {
+    return getRacks(RACKS_GET_DECOMISSIONING_FORMAT);
+  }
+
+  private Collection<SingularityRack> getRacks(String format) {
+  final String requestUri = String.format(format, getHost(), contextPath);
+
+  LOG.info(String.format("Getting racks (%s)", requestUri));
+
+  final long start = System.currentTimeMillis();
+
+  Response getResponse = getUri(requestUri);
+
+  LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+
+  if (getResponse.getStatusCode() == 404) {
+    return ImmutableList.of();
+  }
+
+  try {
+    return objectMapper.readValue(getResponse.getResponseBodyAsStream(), RACKS_COLLECTION);
+  } catch (Exception e) {
+    throw Throwables.propagate(e);
+  }
+  }
+
   public void decomissionRack(String rackId, Optional<String> user) {
     final String requestUri = finishUri(String.format(RACKS_DECOMISSION_FORMAT, getHost(), contextPath, rackId), user);
 
@@ -754,7 +754,7 @@ public class SingularityClient {
       }
     }
   }
-  
+
   public void deleteDecomissioningRack(String rackId, Optional<String> user) {
     final String requestUri = finishUri(String.format(RACKS_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, rackId), user);
 
@@ -774,7 +774,7 @@ public class SingularityClient {
       }
     }
   }
-  
+
   public void deleteDeadRack(String rackId, Optional<String> user) {
     final String requestUri = finishUri(String.format(RACKS_DELETE_DEAD_FORMAT, getHost(), contextPath, rackId), user);
 
@@ -794,45 +794,45 @@ public class SingularityClient {
       }
     }
   }
-  
+
   //
   // SLAVES
   //
 
   public Collection<SingularitySlave> getActiveSlaves() {
-	  return getSlaves(SLAVES_GET_ACTIVE_FORMAT);
+    return getSlaves(SLAVES_GET_ACTIVE_FORMAT);
   }
-  
-  public Collection<SingularitySlave> getDeadSlaves() {
-	  return getSlaves(SLAVES_GET_DEAD_FORMAT);
-  }
-  
-  public Collection<SingularitySlave> getDecomissioningSlaves() {
-	  return getSlaves(SLAVES_GET_DECOMISSIONING_FORMAT);
-  }
-  
-  private Collection<SingularitySlave> getSlaves(String format) {
-	final String requestUri = String.format(format, getHost(), contextPath);
 
-	LOG.info(String.format("Getting racks (%s)", requestUri));
-	
-	final long start = System.currentTimeMillis();
-	
-	Response getResponse = getUri(requestUri);
-	
-	LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
-	
-	if (getResponse.getStatusCode() == 404) {
-	  return ImmutableList.of();
-	}
-	
-	try {
-	  return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SLAVES_COLLECTION);
-	} catch (Exception e) {
-	  throw Throwables.propagate(e);
-	}
+  public Collection<SingularitySlave> getDeadSlaves() {
+    return getSlaves(SLAVES_GET_DEAD_FORMAT);
   }
-  
+
+  public Collection<SingularitySlave> getDecomissioningSlaves() {
+    return getSlaves(SLAVES_GET_DECOMISSIONING_FORMAT);
+  }
+
+  private Collection<SingularitySlave> getSlaves(String format) {
+  final String requestUri = String.format(format, getHost(), contextPath);
+
+  LOG.info(String.format("Getting racks (%s)", requestUri));
+
+  final long start = System.currentTimeMillis();
+
+  Response getResponse = getUri(requestUri);
+
+  LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+
+  if (getResponse.getStatusCode() == 404) {
+    return ImmutableList.of();
+  }
+
+  try {
+    return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SLAVES_COLLECTION);
+  } catch (Exception e) {
+    throw Throwables.propagate(e);
+  }
+  }
+
   public void decomissionSlave(String slaveId, Optional<String> user) {
     final String requestUri = finishUri(String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId), user);
 
@@ -852,7 +852,7 @@ public class SingularityClient {
       }
     }
   }
-  
+
   public void deleteDecomissioningSlave(String slaveId, Optional<String> user) {
     final String requestUri = finishUri(String.format(SLAVES_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, slaveId), user);
 
@@ -872,7 +872,7 @@ public class SingularityClient {
       }
     }
   }
-  
+
   public void deleteDeadSlave(String slaveId, Optional<String> user) {
     final String requestUri = finishUri(String.format(SLAVES_DELETE_DEAD_FORMAT, getHost(), contextPath, slaveId), user);
 
@@ -892,7 +892,7 @@ public class SingularityClient {
       }
     }
   }
-  
+
   //
   // TASK HISTORY
   //

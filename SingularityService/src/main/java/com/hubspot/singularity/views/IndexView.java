@@ -19,7 +19,7 @@ public class IndexView extends View {
   public IndexView(SingularityConfiguration configuration) {
     super("index.mustache");
 
-    appRoot = configuration.getUiConfiguration().getBaseUrl().or(configuration.getSingularityUIHostnameAndPath().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath()));
+    appRoot = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     staticRoot = String.format("%s/static", appRoot);
     apiRoot = String.format("%s%s", appRoot, SingularityService.API_BASE_PATH);
 

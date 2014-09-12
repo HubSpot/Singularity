@@ -446,7 +446,7 @@ public class SingularityScheduler {
         // TODO send not cooldown anymore email
         LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
         requestState = RequestState.ACTIVE;
-        requestManager.makeActive(request);
+        requestManager.exitCooldown(request);
       }
     } else if (request.isScheduled()) {
       if (state.isFailed()) {
@@ -639,7 +639,7 @@ public class SingularityScheduler {
 
     if (state == RequestState.SYSTEM_COOLDOWN) {
       if (cooldown.hasCooldownExpired(deployStatistics)) {
-        requestManager.saveRequest(request);
+        requestManager.exitCooldown(request);
       } else if (pendingType != PendingType.NEW_DEPLOY) {
         final long prevNextRunAt = nextRunAt;
         nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));

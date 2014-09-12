@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
@@ -56,8 +57,10 @@ public class SingularityStartup {
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final MesosConfiguration mesosConfiguration;
 
+  private final List<SingularityStartable> startables;
+
   @Inject
-  public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder,
+  public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, List<SingularityStartable> startables, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder,
       SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
     this.mesosConfiguration = mesosConfiguration;
     this.mesosClient = mesosClient;
@@ -70,6 +73,7 @@ public class SingularityStartup {
     this.healthchecker = healthchecker;
     this.taskTranscoder = taskTranscoder;
     this.logSupport = logSupport;
+    this.startables = startables;
   }
 
   public void startup(MasterInfo masterInfo, boolean registered) {
@@ -95,7 +99,15 @@ public class SingularityStartup {
       throw Throwables.propagate(e);
     }
 
+    startStartables();
+
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
+  }
+
+  private void startStartables() {
+    for (SingularityStartable startable : startables) {
+      startable.start();
+    }
   }
 
   private void enqueueHealthAndNewTaskchecks() {
@@ -165,7 +177,7 @@ public class SingularityStartup {
       final String msg = String.format("Framework %s (new: %s) had no active tasks, expected ~ %s", mesosConfiguration.getFrameworkId(), frameworkIsNew, activeTaskIds.size());
 
       if (mesosConfiguration.getAllowMissingAllExistingTasksOnStartup().booleanValue()) {
-        LOG.info("Ignoring task mismatch because allowMissingAllExistingTasksOnStartup is true");
+        LOG.info(String.format("%s - %s", msg, "Ignoring task mismatch because allowMissingAllExistingTasksOnStartup is true"));
       } else {
         throw new IllegalStateException(String.format("%s - %s", msg, "set allowMissingAllExistingTasksOnStartup in mesos configuration to true or remove active tasks manually / check framework / zookeeper ids"));
       }

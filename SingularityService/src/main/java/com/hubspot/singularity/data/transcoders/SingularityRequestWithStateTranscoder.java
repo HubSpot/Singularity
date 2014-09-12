@@ -24,6 +24,4 @@ public class SingularityRequestWithStateTranscoder implements Transcoder<Singula
     return object.getAsBytes(objectMapper);
   }
 
-
-
 }
