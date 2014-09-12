@@ -1,6 +1,5 @@
 package com.hubspot.deploy;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -9,8 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.hubspot.mesos.JavaUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExecutorData {
@@ -33,34 +31,20 @@ public class ExecutorData {
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis) {
     this.cmd = cmd;
-    this.embeddedArtifacts = nonNullImmutable(embeddedArtifacts);
-    this.externalArtifacts = nonNullImmutable(externalArtifacts);
-    this.s3Artifacts = nonNullImmutable(s3Artifacts);
+    this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
+    this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
+    this.s3Artifacts = JavaUtils.nonNullImmutable(s3Artifacts);
     this.user = user;
-    this.successfulExitCodes = nonNullImmutable(successfulExitCodes);
-    this.extraCmdLineArgs = nonNullImmutable(extraCmdLineArgs);
+    this.successfulExitCodes = JavaUtils.nonNullImmutable(successfulExitCodes);
+    this.extraCmdLineArgs = JavaUtils.nonNullImmutable(extraCmdLineArgs);
     this.runningSentinel = runningSentinel;
     this.loggingTag = loggingTag;
-    this.loggingExtraFields = nonNullImmutable(loggingExtraFields);
+    this.loggingExtraFields = JavaUtils.nonNullImmutable(loggingExtraFields);
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
   }
 
   public ExecutorDataBuilder toBuilder() {
     return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
-  }
-
-  private <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
-    if (map == null) {
-      return Collections.emptyMap();
-    }
-    return ImmutableMap.copyOf(map);
-  }
-
-  private <T> List<T> nonNullImmutable(List<T> list) {
-    if (list == null) {
-      return Collections.emptyList();
-    }
-    return ImmutableList.copyOf(list);
   }
 
   public String getCmd() {

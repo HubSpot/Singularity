@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.List;
+
 import com.google.common.base.Optional;
 
 public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
@@ -11,9 +13,9 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   private int numFailures;
 
   private int numSequentialRetries;
-  private int numSequentialSuccess;
-  private int numSequentialFailures;
 
+  private List<Long> sequentialFailureTimestamps;
+  
   private Optional<Long> lastFinishAt;
   private Optional<ExtendedTaskState> lastTaskState;
 
@@ -26,7 +28,16 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   }
 
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, numSequentialSuccess, numSequentialFailures);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, sequentialFailureTimestamps);
+  }
+  
+  public List<Long> getSequentialFailureTimestamps() {
+    return sequentialFailureTimestamps;
+  }
+
+  public SingularityDeployStatisticsBuilder setSequentialFailureTimestamps(List<Long> sequentialFailureTimestamps) {
+    this.sequentialFailureTimestamps = sequentialFailureTimestamps;
+    return this;
   }
 
   public int getNumSuccess() {
@@ -53,24 +64,6 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
 
   public SingularityDeployStatisticsBuilder setNumSequentialRetries(int numSequentialRetries) {
     this.numSequentialRetries = numSequentialRetries;
-    return this;
-  }
-
-  public int getNumSequentialSuccess() {
-    return numSequentialSuccess;
-  }
-
-  public SingularityDeployStatisticsBuilder setNumSequentialSuccess(int numSequentialSuccess) {
-    this.numSequentialSuccess = numSequentialSuccess;
-    return this;
-  }
-
-  public int getNumSequentialFailures() {
-    return numSequentialFailures;
-  }
-
-  public SingularityDeployStatisticsBuilder setNumSequentialFailures(int numSequentialFailures) {
-    this.numSequentialFailures = numSequentialFailures;
     return this;
   }
 
@@ -103,7 +96,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries
-        + ", numSequentialSuccess=" + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+        + ", sequentialFailureTimestamps=" + sequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
-
+  
 }

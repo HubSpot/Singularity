@@ -203,13 +203,16 @@ public class SingularityMesosScheduler implements Scheduler {
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     final String taskId = status.getTaskId().getValue();
 
-    LOG.debug("Task {} is now {} ({})", taskId, status.getState(), status.getMessage());
+    long timestamp = System.currentTimeMillis();
+    
+    if (status.hasTimestamp()) {
+      timestamp = (long) status.getTimestamp() * 1000;
+    }
+    
+    LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
-
-    final long now = System.currentTimeMillis();
-
     final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
 
     Optional<SingularityPendingDeploy> pendingDeploy = null;
@@ -220,7 +223,7 @@ public class SingularityMesosScheduler implements Scheduler {
       healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);
     }
 
-    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, now, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);
@@ -231,7 +234,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
+      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     } else if (maybeActiveTask.isPresent()) {
       if (pendingDeploy == null) {
         pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());

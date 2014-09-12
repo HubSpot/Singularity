@@ -197,8 +197,11 @@ public class SingularityScheduler {
         checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
 
         final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
+        final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
-        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), maybeRequest.get().getState(), getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId()), pendingRequest, matchingTaskIds);
+        final RequestState requestState = checkCooldown(maybeRequest.get(), deployStatistics);
+        
+        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds);
 
         if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled()) {
           LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
@@ -220,7 +223,20 @@ public class SingularityScheduler {
 
     LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
   }
-
+  
+  private RequestState checkCooldown(SingularityRequestWithState requestWithState, SingularityDeployStatistics deployStatistics) {
+    if (requestWithState.getState() != RequestState.SYSTEM_COOLDOWN) {
+      return requestWithState.getState();
+    }
+    
+    if (cooldown.hasCooldownExpired(deployStatistics, Optional.<Long> absent())) {
+      requestManager.exitCooldown(requestWithState.getRequest());
+      return RequestState.ACTIVE;
+    }
+    
+    return requestWithState.getState();
+  }
+  
   private boolean shouldScheduleTasks(SingularityPendingRequest pendingRequest, Optional<SingularityRequestWithState> maybeRequest) {
     if (!isRequestActive(maybeRequest)) {
       return false;
@@ -394,7 +410,7 @@ public class SingularityScheduler {
     return matchesDeployMarker(requestDeployState.get().getPendingDeploy(), deployId);
   }
 
-  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, SingularityDeployStatistics deployStatistics, long failTime, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
 
     if (!isRequestActive(maybeRequestWithState)) {
@@ -429,7 +445,7 @@ public class SingularityScheduler {
         }
       }
 
-      if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, requestState, deployStatistics)) {
+      if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
         LOG.info("Request {} is entering cooldown due to failed task {}", request.getId(), taskId);
         requestState = RequestState.SYSTEM_COOLDOWN;
         requestManager.cooldown(request);
@@ -476,9 +492,7 @@ public class SingularityScheduler {
     return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
   }
 
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
-    final long failTime = System.currentTimeMillis();
-
+  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
     if (maybeActiveTask.isPresent()) {
@@ -487,24 +501,34 @@ public class SingularityScheduler {
 
     taskManager.createLBCleanupTask(taskId);
 
-    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, state, deployStatistics, failTime, taskHistoryUpdateCreateResult, stateCache);
+    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache);
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.EXISTED) {
       return;
     }
 
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
-
-    bldr.setLastFinishAt(Optional.of(failTime));
-    bldr.setLastTaskState(Optional.of(state));
+    
+    if (!bldr.getLastFinishAt().isPresent() || timestamp > bldr.getLastFinishAt().get()) {
+      bldr.setLastFinishAt(Optional.of(timestamp));
+      bldr.setLastTaskState(Optional.of(state));
+    }
 
     if (state.isFailed()) {
-      bldr.setNumSequentialFailures(bldr.getNumSequentialFailures() + 1);
-      bldr.setNumSequentialSuccess(0);
       bldr.setNumFailures(bldr.getNumFailures() + 1);
+      final List<Long> sequentialFailureTimestamps = Lists.newArrayList(bldr.getSequentialFailureTimestamps());
+      
+      if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
+        sequentialFailureTimestamps.add(timestamp);
+      } else if (timestamp > sequentialFailureTimestamps.get(0)) {
+        sequentialFailureTimestamps.set(0, timestamp);
+      }
+      
+      Collections.sort(sequentialFailureTimestamps);
+      
+      bldr.setSequentialFailureTimestamps(sequentialFailureTimestamps);
     } else if (state.isSuccess()) {
-      bldr.setNumSequentialFailures(0);
-      bldr.setNumSequentialSuccess(bldr.getNumSequentialSuccess() + 1);
+      bldr.setSequentialFailureTimestamps(Collections.<Long> emptyList());
       bldr.setNumSuccess(bldr.getNumSuccess() + 1);
     }
 
@@ -538,7 +562,7 @@ public class SingularityScheduler {
     return true;
   }
 
-  private boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics) {
+  private boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
     if (requestState != RequestState.ACTIVE || request.isOneOff()) {
       return false;
     }
@@ -546,20 +570,15 @@ public class SingularityScheduler {
     if (configuration.getCooldownAfterFailures() < 1) {
       return false;
     }
-
-    final int numSequentialFailures = deployStatistics.getNumSequentialFailures() + 1;
+    
+    final int numSequentialFailures = deployStatistics.getSequentialFailureTimestamps().size() + 1;
     final boolean failedTooManyTimes = numSequentialFailures >= configuration.getCooldownAfterFailures();
 
     if (failedTooManyTimes) {
       LOG.trace("Request {} failed {} times, which is over the cooldown threshold of {}", request.getId(), numSequentialFailures, configuration.getCooldownAfterFailures());
     }
 
-    if (!deployStatistics.getLastFinishAt().isPresent()) {
-      LOG.trace("Can't factor finish time into cooldown state for request {} because there wasn't a previous task finish time", request.getId());
-      return failedTooManyTimes;
-    }
-
-    if (cooldown.hasCooldownExpired(deployStatistics)) {
+    if (cooldown.hasCooldownExpired(deployStatistics, Optional.of(failureTimestamp))) {
       return false;
     }
 
@@ -637,14 +656,10 @@ public class SingularityScheduler {
       }
     }
 
-    if (state == RequestState.SYSTEM_COOLDOWN) {
-      if (cooldown.hasCooldownExpired(deployStatistics)) {
-        requestManager.exitCooldown(request);
-      } else if (pendingType != PendingType.NEW_DEPLOY) {
-        final long prevNextRunAt = nextRunAt;
-        nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));
-        LOG.trace("Adjusted next run of {} to {} (from: {}) due to cooldown", request.getId(), nextRunAt, prevNextRunAt);
-      }
+    if (state == RequestState.SYSTEM_COOLDOWN && pendingType != PendingType.NEW_DEPLOY) {
+      final long prevNextRunAt = nextRunAt;
+      nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));
+      LOG.trace("Adjusted next run of {} to {} (from: {}) due to cooldown", request.getId(), nextRunAt, prevNextRunAt);
     }
 
     return Optional.of(nextRunAt);

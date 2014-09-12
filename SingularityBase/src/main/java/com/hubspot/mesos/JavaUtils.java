@@ -12,8 +12,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +25,8 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 public class JavaUtils {
@@ -172,4 +177,18 @@ public class JavaUtils {
     return path;
   }
 
+  public static <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
+    if (map == null) {
+      return Collections.emptyMap();
+    }
+    return ImmutableMap.copyOf(map);
+  }
+
+  public static <T> List<T> nonNullImmutable(List<T> list) {
+    if (list == null) {
+      return Collections.emptyList();
+    }
+    return ImmutableList.copyOf(list);
+  }
+  
 }
