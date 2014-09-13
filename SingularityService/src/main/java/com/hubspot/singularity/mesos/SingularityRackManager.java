@@ -118,7 +118,7 @@ public class SingularityRackManager {
     }
 
     final double numPerRack = (double) numDesiredInstances / (double) getNumRacks();
-    final double numOnRack = Objects.firstNonNull(rackUsage.get(rackId), 0);
+    final double numOnRack = (double) Objects.firstNonNull(rackUsage.get(rackId), 0);
 
     final boolean isRackOk = numOnRack < numPerRack;
 
