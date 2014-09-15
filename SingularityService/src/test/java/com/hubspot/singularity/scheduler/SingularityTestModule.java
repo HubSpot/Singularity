@@ -48,7 +48,7 @@ public class SingularityTestModule extends AbstractModule {
   @Override
   protected void configure() {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-    Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
+    Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.WARN);
     context.getLogger("com.hubspot").setLevel(Level.TRACE);
 

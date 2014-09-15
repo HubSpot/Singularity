@@ -70,7 +70,7 @@ public class SandboxManager {
 
       final Response response = builder.execute().get();
 
-      if (response.getStatusCode() == 400) {
+      if (response.getStatusCode() == 404) {
         return Optional.absent();
       }
 

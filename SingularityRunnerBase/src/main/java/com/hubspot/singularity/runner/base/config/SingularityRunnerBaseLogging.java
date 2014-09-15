@@ -61,7 +61,7 @@ public class SingularityRunnerBaseLogging {
   }
 
   public Logger prepareRootLogger(LoggerContext context) {
-    Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
+    Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
 
     rootLogger.detachAndStopAllAppenders();
 
