@@ -32,7 +32,7 @@ public class SingularityValidator {
   private final boolean allowRequestsWithoutOwners;
   private final HistoryManager historyManager;
   private final DeployManager deployManager;
-  private final Resources DEFAULT_RESOURCES;
+  private final Resources defaultResources;
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
@@ -45,7 +45,7 @@ public class SingularityValidator {
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
 
-    DEFAULT_RESOURCES = new Resources(defaultCpus, defaultMemoryMb, 0);
+    defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0);
 
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
@@ -68,8 +68,8 @@ public class SingularityValidator {
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(DEFAULT_RESOURCES).getMemoryMb();
+    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
+    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
 
     check(cpusPerInstance > 0, "Request must have more than 0 cpus");
     check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");

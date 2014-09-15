@@ -94,7 +94,7 @@ public class SingularitySchedulerTest {
   private SingularityConfiguration configuration;
   @Inject
   private SingularityCooldownChecker cooldownChecker;
-  
+
   @Before
   public void setup() {
     Injector i = Guice.createInjector(new SingularityTestModule());
@@ -153,14 +153,14 @@ public class SingularitySchedulerTest {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(task.getMesosTask().getTaskId())
         .setState(state);
-    
+
     if (timestamp.isPresent()) {
       bldr.setTimestamp(timestamp.get() / 1000);
     }
 
     sms.statusUpdate(driver, bldr.build());
   }
-  
+
   public void statusUpdate(SingularityTask task, TaskState state) {
     statusUpdate(task, state, Optional.<Long> absent());
   }
@@ -577,56 +577,56 @@ public class SingularitySchedulerTest {
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
   }
-  
+
   @Test
   public void testCooldownAfterSequentialFailures() {
     initRequest();
     initFirstDeploy();
-    
+
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
-    
+
     configuration.setCooldownAfterFailures(2);
     configuration.setCooldownExpiresAfterMinutes(30);
-    
+
     SingularityTask firstTask = startTask(firstDeploy);
     SingularityTask secondTask = startTask(firstDeploy);
-    
+
     statusUpdate(firstTask, TaskState.TASK_FAILED);
-    
+
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
-    
+
     statusUpdate(secondTask, TaskState.TASK_FAILED);
-    
+
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
-    
+
     cooldownChecker.checkCooldowns();
-    
+
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
-    
+
     SingularityTask thirdTask = startTask(firstDeploy);
-    
+
     statusUpdate(thirdTask, TaskState.TASK_FINISHED);
-    
+
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
   }
-  
+
   @Test
   public void testCooldownOnlyWhenTasksRapidlyFail() {
     initRequest();
     initFirstDeploy();
-    
+
     configuration.setCooldownAfterFailures(1);
     configuration.setCooldownExpiresAfterMinutes(1);
-  
+
     SingularityTask firstTask = startTask(firstDeploy);
     statusUpdate(firstTask, TaskState.TASK_FAILED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)));
-    
+
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
-     
+
     SingularityTask secondTask = startTask(firstDeploy);
     statusUpdate(secondTask, TaskState.TASK_FAILED);
-    
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);    
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
   }
-  
+
 }

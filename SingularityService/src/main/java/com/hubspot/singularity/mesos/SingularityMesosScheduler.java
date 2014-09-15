@@ -40,7 +40,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
 
-  private final Resources DEFAULT_RESOURCES;
+  private final Resources defaultResources;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
@@ -55,7 +55,7 @@ public class SingularityMesosScheduler implements Scheduler {
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularityRackManager rackManager, SingularityNewTaskChecker newTaskChecker,
       SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager) {
-    DEFAULT_RESOURCES = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
+    defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.newTaskChecker = newTaskChecker;
@@ -162,7 +162,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
-      Resources taskResources = DEFAULT_RESOURCES;
+      Resources taskResources = defaultResources;
 
       if (taskRequest.getDeploy().getResources().isPresent()) {
         taskResources = taskRequest.getDeploy().getResources().get();
@@ -204,11 +204,11 @@ public class SingularityMesosScheduler implements Scheduler {
     final String taskId = status.getTaskId().getValue();
 
     long timestamp = System.currentTimeMillis();
-    
+
     if (status.hasTimestamp()) {
       timestamp = (long) status.getTimestamp() * 1000;
     }
-    
+
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
@@ -244,7 +244,6 @@ public class SingularityMesosScheduler implements Scheduler {
         newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
       }
     }
-
   }
 
   @Override

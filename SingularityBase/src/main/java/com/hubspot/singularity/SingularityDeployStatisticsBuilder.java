@@ -15,7 +15,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   private int numSequentialRetries;
 
   private List<Long> sequentialFailureTimestamps;
-  
+
   private Optional<Long> lastFinishAt;
   private Optional<ExtendedTaskState> lastTaskState;
 
@@ -30,7 +30,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   public SingularityDeployStatistics build() {
     return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, sequentialFailureTimestamps);
   }
-  
+
   public List<Long> getSequentialFailureTimestamps() {
     return sequentialFailureTimestamps;
   }
@@ -98,5 +98,5 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
     return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries
         + ", sequentialFailureTimestamps=" + sequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
-  
+
 }

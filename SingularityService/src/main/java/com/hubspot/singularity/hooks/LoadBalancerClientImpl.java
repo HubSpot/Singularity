@@ -49,7 +49,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
 
-  private final String OPERATION_URI = "%s/%s";
+  private static final String OPERATION_URI = "%s/%s";
 
   @Inject
   public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient) {

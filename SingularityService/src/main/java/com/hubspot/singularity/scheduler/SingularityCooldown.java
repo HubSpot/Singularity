@@ -28,30 +28,30 @@ public class SingularityCooldown {
     }
 
     int numberOfFailuresInsideExpiration = 0;
-    
+
     for (long failureTimestamp : deployStatistics.getSequentialFailureTimestamps()) {
       if (hasFailedInsideCooldown(failureTimestamp)) {
         numberOfFailuresInsideExpiration++;
       }
     }
-    
+
     if (recentFailureTimestamp.isPresent() && hasFailedInsideCooldown(recentFailureTimestamp.get())) {
       numberOfFailuresInsideExpiration++;
     }
-    
+
     final boolean hasCooldownExpired = numberOfFailuresInsideExpiration < configuration.getCooldownAfterFailures();
-    
+
     if (hasCooldownExpired) {
       LOG.trace("Request {} cooldown has expired or is not valid because only {} (required: {}) tasks have failed in the last {}", deployStatistics.getRequestId(), numberOfFailuresInsideExpiration, configuration.getCooldownAfterFailures(), JavaUtils.durationFromMillis(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
     }
 
     return hasCooldownExpired;
   }
-  
+
   private boolean hasFailedInsideCooldown(long failureTimestamp) {
     final long timeSinceFailure = System.currentTimeMillis() - failureTimestamp;
-    
+
     return timeSinceFailure < TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes());
   }
-  
+
 }

@@ -55,7 +55,7 @@ public class SingularityClient {
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
-  private static final String TASKS_GET_ACTIVE__PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
+  private static final String TASKS_GET_ACTIVE_PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
@@ -373,8 +373,8 @@ public class SingularityClient {
     try {
       SingularityRequestParent singularityRequestParent = objectMapper.readValue(response.getResponseBodyAsStream(), SingularityRequestParent.class);
 
-      String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent())? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy yet";
-      String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent())? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy (deploys for Scheduled requests become instantly active)";
+      String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent()) ? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy yet";
+      String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent()) ? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy (deploys for Scheduled requests become instantly active)";
       LOG.info(String.format("The status for the new deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'",
           requestId, pendingDeployId, activeDeployId));
 
@@ -400,8 +400,8 @@ public class SingularityClient {
     try {
       SingularityRequestParent singularityRequestParent = objectMapper.readValue(response.getResponseBodyAsStream(), SingularityRequestParent.class);
 
-      String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent())? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy";
-      String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent())? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy";
+      String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent()) ? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy";
+      String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent()) ? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy";
       LOG.info(String.format("The status for the canceled deploy is the following: Singularity request id: '%s' -> pending deploy id: '%s', active deploy id: '%s'",
           requestId, pendingDeployId, activeDeployId));
 
@@ -627,7 +627,7 @@ public class SingularityClient {
   }
 
   public Collection<SingularityTask> getActiveTasks(final String host) {
-    final String requestUri = String.format(TASKS_GET_ACTIVE__PER_HOST_FORMAT, getHost(), contextPath, host);
+    final String requestUri = String.format(TASKS_GET_ACTIVE_PER_HOST_FORMAT, getHost(), contextPath, host);
 
     LOG.info(String.format("Getting active tasks - (%s)", requestUri));
 
@@ -714,25 +714,25 @@ public class SingularityClient {
   }
 
   private Collection<SingularityRack> getRacks(String format) {
-  final String requestUri = String.format(format, getHost(), contextPath);
+    final String requestUri = String.format(format, getHost(), contextPath);
 
-  LOG.info(String.format("Getting racks (%s)", requestUri));
+    LOG.info(String.format("Getting racks (%s)", requestUri));
 
-  final long start = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
 
-  Response getResponse = getUri(requestUri);
+    Response getResponse = getUri(requestUri);
 
-  LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+    LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
 
-  if (getResponse.getStatusCode() == 404) {
-    return ImmutableList.of();
-  }
+    if (getResponse.getStatusCode() == 404) {
+      return ImmutableList.of();
+    }
 
-  try {
-    return objectMapper.readValue(getResponse.getResponseBodyAsStream(), RACKS_COLLECTION);
-  } catch (Exception e) {
-    throw Throwables.propagate(e);
-  }
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), RACKS_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   public void decomissionRack(String rackId, Optional<String> user) {
@@ -812,25 +812,25 @@ public class SingularityClient {
   }
 
   private Collection<SingularitySlave> getSlaves(String format) {
-  final String requestUri = String.format(format, getHost(), contextPath);
+    final String requestUri = String.format(format, getHost(), contextPath);
 
-  LOG.info(String.format("Getting racks (%s)", requestUri));
+    LOG.info(String.format("Getting racks (%s)", requestUri));
 
-  final long start = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
 
-  Response getResponse = getUri(requestUri);
+    Response getResponse = getUri(requestUri);
 
-  LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
+    LOG.info(String.format("Got racks from singularity in %sms", System.currentTimeMillis() - start));
 
-  if (getResponse.getStatusCode() == 404) {
-    return ImmutableList.of();
-  }
+    if (getResponse.getStatusCode() == 404) {
+      return ImmutableList.of();
+    }
 
-  try {
-    return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SLAVES_COLLECTION);
-  } catch (Exception e) {
-    throw Throwables.propagate(e);
-  }
+    try {
+      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), SLAVES_COLLECTION);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   public void decomissionSlave(String slaveId, Optional<String> user) {
@@ -978,8 +978,7 @@ public class SingularityClient {
       }
     } else if (getResponse.getStatusCode() == 404) {
       return Optional.<SingularityDeployHistory>absent();
-    }
-    else {
+    } else {
       throw fail("Get 'History for Request Deploy' failed", getResponse);
     }
   }

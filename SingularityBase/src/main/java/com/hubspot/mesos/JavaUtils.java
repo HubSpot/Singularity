@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-public class JavaUtils {
+public final class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
 
@@ -103,15 +103,15 @@ public class JavaUtils {
       NetworkInterface current = interfaces.nextElement();
       if (!current.isUp() || current.isLoopback() || current.isVirtual()) {
         continue;
-    }
+      }
       Enumeration<InetAddress> addresses = current.getInetAddresses();
       while (addresses.hasMoreElements()) {
-        InetAddress current_addr = addresses.nextElement();
-        if (current_addr.isLoopbackAddress()) {
-            continue;
+        InetAddress currentAddr = addresses.nextElement();
+        if (currentAddr.isLoopbackAddress()) {
+          continue;
         }
-        if (current_addr instanceof Inet4Address) {
-          return current_addr.getHostAddress();
+        if (currentAddr instanceof Inet4Address) {
+          return currentAddr.getHostAddress();
         }
       }
     }
@@ -190,5 +190,5 @@ public class JavaUtils {
     }
     return ImmutableList.copyOf(list);
   }
-  
+
 }

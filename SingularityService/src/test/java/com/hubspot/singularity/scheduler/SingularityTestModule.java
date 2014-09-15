@@ -140,7 +140,7 @@ public class SingularityTestModule extends AbstractModule {
   @Singleton
   @Provides
   public CuratorFramework provideNamespaceCurator(TestingServer ts) {
-    CuratorFramework cf= CuratorFrameworkFactory.newClient(ts.getConnectString(), new RetryPolicy() {
+    CuratorFramework cf = CuratorFrameworkFactory.newClient(ts.getConnectString(), new RetryPolicy() {
 
       @Override
       public boolean allowRetry(int retryCount, long elapsedTimeMs, RetrySleeper sleeper) {

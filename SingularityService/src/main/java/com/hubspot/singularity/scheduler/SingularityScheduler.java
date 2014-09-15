@@ -200,7 +200,7 @@ public class SingularityScheduler {
         final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
         final RequestState requestState = checkCooldown(maybeRequest.get(), deployStatistics);
-        
+
         int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds);
 
         if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled()) {
@@ -223,20 +223,20 @@ public class SingularityScheduler {
 
     LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
   }
-  
+
   private RequestState checkCooldown(SingularityRequestWithState requestWithState, SingularityDeployStatistics deployStatistics) {
     if (requestWithState.getState() != RequestState.SYSTEM_COOLDOWN) {
       return requestWithState.getState();
     }
-    
+
     if (cooldown.hasCooldownExpired(deployStatistics, Optional.<Long> absent())) {
       requestManager.exitCooldown(requestWithState.getRequest());
       return RequestState.ACTIVE;
     }
-    
+
     return requestWithState.getState();
   }
-  
+
   private boolean shouldScheduleTasks(SingularityPendingRequest pendingRequest, Optional<SingularityRequestWithState> maybeRequest) {
     if (!isRequestActive(maybeRequest)) {
       return false;
@@ -508,7 +508,7 @@ public class SingularityScheduler {
     }
 
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
-    
+
     if (!bldr.getLastFinishAt().isPresent() || timestamp > bldr.getLastFinishAt().get()) {
       bldr.setLastFinishAt(Optional.of(timestamp));
       bldr.setLastTaskState(Optional.of(state));
@@ -517,15 +517,15 @@ public class SingularityScheduler {
     if (state.isFailed()) {
       bldr.setNumFailures(bldr.getNumFailures() + 1);
       final List<Long> sequentialFailureTimestamps = Lists.newArrayList(bldr.getSequentialFailureTimestamps());
-      
+
       if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
         sequentialFailureTimestamps.add(timestamp);
       } else if (timestamp > sequentialFailureTimestamps.get(0)) {
         sequentialFailureTimestamps.set(0, timestamp);
       }
-      
+
       Collections.sort(sequentialFailureTimestamps);
-      
+
       bldr.setSequentialFailureTimestamps(sequentialFailureTimestamps);
     } else if (state.isSuccess()) {
       bldr.setSequentialFailureTimestamps(Collections.<Long> emptyList());
@@ -570,7 +570,7 @@ public class SingularityScheduler {
     if (configuration.getCooldownAfterFailures() < 1) {
       return false;
     }
-    
+
     final int numSequentialFailures = deployStatistics.getSequentialFailureTimestamps().size() + 1;
     final boolean failedTooManyTimes = numSequentialFailures >= configuration.getCooldownAfterFailures();
 
