@@ -152,8 +152,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
     final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
 
-    final List<UpstreamInfo> addUpstreams = transformTasksToUpstreams(add, loadBalancerRequestId.toString());
-    final List<UpstreamInfo> removeUpstreams = transformTasksToUpstreams(remove, loadBalancerRequestId.toString());
+    final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString());
+    final List<UpstreamInfo> removeUpstreams = tasksToUpstreams(remove, loadBalancerRequestId.toString());
 
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
 
@@ -174,7 +174,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     }
   }
 
-  private List<UpstreamInfo> transformTasksToUpstreams(List<SingularityTask> tasks, String requestId) {
+  private List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId) {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
