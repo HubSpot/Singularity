@@ -57,10 +57,10 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   @Inject
   public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, SingularityRackManager rackManager) {
-    this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.rackManager = rackManager;
+    this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
   }
