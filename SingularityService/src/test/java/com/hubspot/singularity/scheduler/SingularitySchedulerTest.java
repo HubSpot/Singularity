@@ -52,6 +52,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -109,7 +110,11 @@ public class SingularitySchedulerTest {
   }
 
   private Offer createOffer(double cpus, double memory) {
-    SlaveID slaveId = SlaveID.newBuilder().setValue("slave1").build();
+    return createOffer(cpus, memory, "slave1", "host1");
+  }
+
+  private Offer createOffer(double cpus, double memory, String slave, String host) {
+    SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
     Random r = new Random();
@@ -118,7 +123,7 @@ public class SingularitySchedulerTest {
         .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
         .setFrameworkId(frameworkId)
         .setSlaveId(slaveId)
-        .setHostname("host1")
+        .setHostname(host)
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
         .build();
@@ -627,6 +632,83 @@ public class SingularitySchedulerTest {
     statusUpdate(secondTask, TaskState.TASK_FAILED);
 
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
+  }
+
+  @Test
+  public void testSlavePlacementSeparate() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)).setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave1", "host1")));
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 2);
+  }
+
+  @Test
+  public void testSlavePlacementOptimistic() {
+    initRequest();
+    initFirstDeploy();
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() < 3);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() < 3);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+  }
+
+  @Test
+  public void testSlavePlacementOptimisticSingleOffer() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+  }
+
+  @Test
+  public void testSlavePlacementGreedy() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.GREEDY)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+  }
+
+  private void saveAndSchedule(SingularityRequestBuilder bldr) {
+    requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, Optional.<String> absent());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, PendingType.UPDATED_REQUEST));
+    scheduler.drainPendingQueue(stateCacheProvider.get());
   }
 
 }
