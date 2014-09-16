@@ -12,10 +12,10 @@ public class MesosTaskMonitorObject {
 
   @JsonCreator
   public MesosTaskMonitorObject(@JsonProperty("executor_id") String executorId,
-                                @JsonProperty("executor_name") String executorName,
-                                @JsonProperty("framework_id") String frameworkId,
-                                @JsonProperty("source") String source,
-                                @JsonProperty("statistics") MesosTaskStatisticsObject statistics) {
+      @JsonProperty("executor_name") String executorName,
+      @JsonProperty("framework_id") String frameworkId,
+      @JsonProperty("source") String source,
+      @JsonProperty("statistics") MesosTaskStatisticsObject statistics) {
     this.executorId = executorId;
     this.executorName = executorName;
     this.frameworkId = frameworkId;
@@ -45,12 +45,7 @@ public class MesosTaskMonitorObject {
 
   @Override
   public String toString() {
-    return "MesosTaskStatisticsInfoObject [" +
-        "executorId='" + executorId + '\'' +
-        ", executorName='" + executorName + '\'' +
-        ", frameworkId='" + frameworkId + '\'' +
-        ", source='" + source + '\'' +
-        ", statistics=" + statistics +
-        ']';
+    return "MesosTaskMonitorObject [executorId=" + executorId + ", executorName=" + executorName + ", frameworkId=" + frameworkId + ", source=" + source + ", statistics=" + statistics + "]";
   }
+
 }

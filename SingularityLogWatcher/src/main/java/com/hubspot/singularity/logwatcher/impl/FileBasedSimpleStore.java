@@ -158,7 +158,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
 
         final TailMetadata tail = maybeTail.get();
         if (tails.contains(tail)) {
-          LOG.warn("File {} contains a duplicate tail {}", file,tail);
+          LOG.warn("File {} contains a duplicate tail {}", file, tail);
           continue;
         }
         tails.add(tail);

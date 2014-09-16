@@ -118,7 +118,7 @@ public class SingularityStartup {
 
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(activeTaskMap.keySet());
 
-    final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(deployManager.getPendingDeploys(), SingularityDeployKey.fromPendingDeployToDeployKey);
+    final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(deployManager.getPendingDeploys(), SingularityDeployKey.FROM_PENDING_TO_DEPLOY_KEY);
 
     int enqueuedNewTaskChecks = 0;
     int enqueuedHealthchecks = 0;
@@ -190,7 +190,7 @@ public class SingularityStartup {
 
       logSupport.checkDirectory(taskId);
 
-      scheduler.handleCompletedTask(taskManager.getActiveTask(inactiveTaskId), taskId, ExtendedTaskState.TASK_LOST_WHILE_DOWN, taskHistoryUpdateCreateResult, stateCacheProvider.get());
+      scheduler.handleCompletedTask(taskManager.getActiveTask(inactiveTaskId), taskId, start, ExtendedTaskState.TASK_LOST_WHILE_DOWN, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     }
 
     LOG.info("Finished reconciling active tasks: {} active tasks, {} were deleted in {}", activeTaskIds.size(), inactiveTaskIds.size(), JavaUtils.duration(start));

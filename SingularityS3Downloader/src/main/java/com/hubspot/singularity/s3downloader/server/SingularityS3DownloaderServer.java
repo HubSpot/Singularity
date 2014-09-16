@@ -15,7 +15,7 @@ import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderConfig
 
 public class SingularityS3DownloaderServer implements SingularityDriver {
 
-  private final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderServer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderServer.class);
 
   private final SingularityS3DownloaderConfiguration configuration;
   private final SingularityS3Configuration s3Configuration;

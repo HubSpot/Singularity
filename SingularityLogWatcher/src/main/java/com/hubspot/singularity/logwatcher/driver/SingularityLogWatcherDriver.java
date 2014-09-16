@@ -149,8 +149,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       }
       shutdown = true;
       return true;
-    }
-    finally {
+    } finally {
       tailersLock.unlock();
     }
   }

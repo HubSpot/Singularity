@@ -17,7 +17,7 @@ import com.hubspot.singularity.s3downloader.SingularityS3DownloaderMetrics;
 
 public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
-  private final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderAsyncHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderAsyncHandler.class);
 
   private final ArtifactDownloadRequest artifactDownloadRequest;
   private final Continuation continuation;
