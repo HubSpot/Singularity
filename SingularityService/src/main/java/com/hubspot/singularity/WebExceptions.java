@@ -4,7 +4,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-public class WebExceptions {
+public final class WebExceptions {
+
+  private WebExceptions() {
+  }
 
   public static WebApplicationException badRequest(String message, Object... args) {
     throw webException(Status.BAD_REQUEST.getStatusCode(), message, args);

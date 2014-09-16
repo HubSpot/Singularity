@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -290,7 +291,7 @@
         <artifactId>hibernate-validator</artifactId>
         <version>5.0.2.Final</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.jdbi</groupId>
         <artifactId>jdbi</artifactId>
@@ -487,6 +488,26 @@
           <artifactId>frontend-maven-plugin</artifactId>
           <version>0.0.16</version>
         </plugin>
+        <plugin>
+          <groupId>com.ning.maven.plugins</groupId>
+          <artifactId>maven-duplicate-finder-plugin</artifactId>
+          <version>1.0.7</version>
+          <configuration>
+            <ignoredResources>
+              <ignoredResource>.*\.build\.json</ignoredResource>
+              <ignoredResource>.*\.html</ignoredResource>
+              <ignoredResource>META-INF/.*</ignoredResource>
+              <ignoredResource>about_files/.*</ignoredResource>
+              <ignoredResource>plugin\.properties</ignoredResource>
+              <ignoredResource>plugin\.xml</ignoredResource>
+              <ignoredResource>.*\.java</ignoredResource>
+              <ignoredResource>log4j\.xml</ignoredResource>
+              <ignoredResource>log4j\.properties</ignoredResource>
+              <ignoredResource>logback\.xml</ignoredResource>
+              <ignoredResource>logback\.properties</ignoredResource>
+            </ignoredResources>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -532,7 +553,7 @@
   </profiles>
 </project>
 
-<!-- Local Variables:     -->
-<!-- mode: nxml           -->
+<!-- Local Variables: -->
+<!-- mode: nxml -->
 <!-- nxml-child-indent: 2 -->
-<!-- End:                 -->
+<!-- End: -->

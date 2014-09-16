@@ -12,8 +12,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,9 +25,11 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-public class JavaUtils {
+public final class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
 
@@ -98,15 +103,15 @@ public class JavaUtils {
       NetworkInterface current = interfaces.nextElement();
       if (!current.isUp() || current.isLoopback() || current.isVirtual()) {
         continue;
-    }
+      }
       Enumeration<InetAddress> addresses = current.getInetAddresses();
       while (addresses.hasMoreElements()) {
-        InetAddress current_addr = addresses.nextElement();
-        if (current_addr.isLoopbackAddress()) {
-            continue;
+        InetAddress currentAddr = addresses.nextElement();
+        if (currentAddr.isLoopbackAddress()) {
+          continue;
         }
-        if (current_addr instanceof Inet4Address) {
-          return current_addr.getHostAddress();
+        if (currentAddr instanceof Inet4Address) {
+          return currentAddr.getHostAddress();
         }
       }
     }
@@ -170,6 +175,20 @@ public class JavaUtils {
     Preconditions.checkState(Files.isDirectory(path), "Path %s for %s wasn't a directory", path, name);
 
     return path;
+  }
+
+  public static <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
+    if (map == null) {
+      return Collections.emptyMap();
+    }
+    return ImmutableMap.copyOf(map);
+  }
+
+  public static <T> List<T> nonNullImmutable(List<T> list) {
+    if (list == null) {
+      return Collections.emptyList();
+    }
+    return ImmutableList.copyOf(list);
   }
 
 }

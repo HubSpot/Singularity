@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Longs;
 
-public class MesosUtils {
+public final class MesosUtils {
 
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";

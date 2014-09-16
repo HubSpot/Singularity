@@ -28,7 +28,7 @@ import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule
 
 public class SingularityS3DownloaderHandler extends AbstractHandler {
 
-  private final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderHandler.class);
 
   private final SingularityS3Configuration s3Configuration;
   private final ObjectMapper objectMapper;

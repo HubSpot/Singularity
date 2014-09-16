@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -21,22 +22,36 @@ public class SingularityCooldown {
     this.configuration = configuration;
   }
 
-  public boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics) {
-    if (configuration.getCooldownExpiresAfterMinutes() < 1 || !deployStatistics.getLastFinishAt().isPresent()) {
-      return false;
+  public boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
+    if (configuration.getCooldownExpiresAfterMinutes() < 1) {
+      return true;
     }
 
-    final long cooldownExpiresMillis = TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes());
+    int numberOfFailuresInsideExpiration = 0;
 
-    final long lastFinishAt = deployStatistics.getLastFinishAt().get().longValue();
-    final long timeSinceLastFinish = System.currentTimeMillis() - lastFinishAt;
+    for (long failureTimestamp : deployStatistics.getSequentialFailureTimestamps()) {
+      if (hasFailedInsideCooldown(failureTimestamp)) {
+        numberOfFailuresInsideExpiration++;
+      }
+    }
 
-    final boolean hasCooldownExpired = timeSinceLastFinish > cooldownExpiresMillis;
+    if (recentFailureTimestamp.isPresent() && hasFailedInsideCooldown(recentFailureTimestamp.get())) {
+      numberOfFailuresInsideExpiration++;
+    }
+
+    final boolean hasCooldownExpired = numberOfFailuresInsideExpiration < configuration.getCooldownAfterFailures();
 
     if (hasCooldownExpired) {
-      LOG.trace("Request {} cooldown has expired or is not valid because the last task finished {} ago (cooldowns expire after {})", deployStatistics.getRequestId(), JavaUtils.durationFromMillis(timeSinceLastFinish), JavaUtils.durationFromMillis(cooldownExpiresMillis));
+      LOG.trace("Request {} cooldown has expired or is not valid because only {} (required: {}) tasks have failed in the last {}", deployStatistics.getRequestId(), numberOfFailuresInsideExpiration, configuration.getCooldownAfterFailures(), JavaUtils.durationFromMillis(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
     }
 
     return hasCooldownExpired;
   }
+
+  private boolean hasFailedInsideCooldown(long failureTimestamp) {
+    final long timeSinceFailure = System.currentTimeMillis() - failureTimestamp;
+
+    return timeSinceFailure < TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes());
+  }
+
 }

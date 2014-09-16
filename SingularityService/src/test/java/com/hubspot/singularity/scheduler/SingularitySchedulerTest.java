@@ -43,16 +43,17 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -89,6 +90,10 @@ public class SingularitySchedulerTest {
   private DeployResource deployResource;
   @Inject
   private SingularityCleaner cleaner;
+  @Inject
+  private SingularityConfiguration configuration;
+  @Inject
+  private SingularityCooldownChecker cooldownChecker;
 
   @Before
   public void setup() {
@@ -144,11 +149,20 @@ public class SingularitySchedulerTest {
     return task;
   }
 
-  public void statusUpdate(SingularityTask task, TaskState state) {
-    sms.statusUpdate(driver, TaskStatus.newBuilder()
+  public void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
+    TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(task.getMesosTask().getTaskId())
-        .setState(state)
-        .build());
+        .setState(state);
+
+    if (timestamp.isPresent()) {
+      bldr.setTimestamp(timestamp.get() / 1000);
+    }
+
+    sms.statusUpdate(driver, bldr.build());
+  }
+
+  public void statusUpdate(SingularityTask task, TaskState state) {
+    statusUpdate(task, state, Optional.<Long> absent());
   }
 
   private String requestId;
@@ -563,4 +577,56 @@ public class SingularitySchedulerTest {
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
   }
+
+  @Test
+  public void testCooldownAfterSequentialFailures() {
+    initRequest();
+    initFirstDeploy();
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    configuration.setCooldownAfterFailures(2);
+    configuration.setCooldownExpiresAfterMinutes(30);
+
+    SingularityTask firstTask = startTask(firstDeploy);
+    SingularityTask secondTask = startTask(firstDeploy);
+
+    statusUpdate(firstTask, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    statusUpdate(secondTask, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
+
+    cooldownChecker.checkCooldowns();
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
+
+    SingularityTask thirdTask = startTask(firstDeploy);
+
+    statusUpdate(thirdTask, TaskState.TASK_FINISHED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+  }
+
+  @Test
+  public void testCooldownOnlyWhenTasksRapidlyFail() {
+    initRequest();
+    initFirstDeploy();
+
+    configuration.setCooldownAfterFailures(1);
+    configuration.setCooldownExpiresAfterMinutes(1);
+
+    SingularityTask firstTask = startTask(firstDeploy);
+    statusUpdate(firstTask, TaskState.TASK_FAILED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)));
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    SingularityTask secondTask = startTask(firstDeploy);
+    statusUpdate(secondTask, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
+  }
+
 }
