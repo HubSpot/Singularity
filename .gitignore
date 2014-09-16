@@ -25,3 +25,4 @@ SingularityUI/app/env.coffee
 .vagrant
 vagrant/Berksfile.lock
 SingularityUI/.vee
+
