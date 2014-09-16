@@ -46,7 +46,7 @@ public class SingularityStartup {
 
   private final MesosClient mesosClient;
   private final TaskManager taskManager;
-  private final SingularityRackManager rackManager;
+  private final SingularitySlaveMatchChecker rackManager;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final DeployManager deployManager;
@@ -61,7 +61,7 @@ public class SingularityStartup {
 
   @Inject
   public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, List<SingularityStartable> startables, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder,
-      SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
+      SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularitySlaveMatchChecker rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
     this.mesosConfiguration = mesosConfiguration;
     this.mesosClient = mesosClient;
     this.scheduler = scheduler;

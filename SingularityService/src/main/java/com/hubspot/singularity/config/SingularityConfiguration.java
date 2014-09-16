@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SlavePlacement;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -160,6 +161,9 @@ public class SingularityConfiguration extends Configuration {
 
   @NotNull
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
+
+  @NotNull
+  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -514,4 +518,13 @@ public class SingularityConfiguration extends Configuration {
   public void setLoadBalancerQueryParams(Map<String, String> loadBalancerQueryParams) {
     this.loadBalancerQueryParams = loadBalancerQueryParams;
   }
+
+  public SlavePlacement getDefaultSlavePlacement() {
+    return defaultSlavePlacement;
+  }
+
+  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
+    this.defaultSlavePlacement = defaultSlavePlacement;
+  }
+
 }

@@ -23,6 +23,7 @@ public class SingularityRequestBuilder {
 
   private Optional<Boolean> rackSensitive;
   private Optional<List<String>> rackAffinity;
+  private Optional<SlavePlacement> slavePlacement;
 
   private Optional<Boolean> loadBalanced;
 
@@ -39,10 +40,11 @@ public class SingularityRequestBuilder {
     this.loadBalanced = Optional.absent();
     this.quartzSchedule = Optional.absent();
     this.rackAffinity = Optional.absent();
+    this.slavePlacement = Optional.absent();
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity, slavePlacement);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -148,11 +150,20 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<SlavePlacement> getSlavePlacement() {
+    return slavePlacement;
+  }
+
+  public SingularityRequestBuilder setSlavePlacement(Optional<SlavePlacement> slavePlacement) {
+    this.slavePlacement = slavePlacement;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType
-        + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", loadBalanced="
-        + loadBalanced + "]";
+    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule
+        + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances
+        + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }

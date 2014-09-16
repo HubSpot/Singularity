@@ -37,11 +37,11 @@ public class SingularityMesosTaskBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
   private final ObjectMapper objectMapper;
-  private final SingularityRackManager rackManager;
+  private final SingularitySlaveMatchChecker rackManager;
   private final ExecutorIdGenerator idGenerator;
 
   @Inject
-  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularityRackManager rackManager, ExecutorIdGenerator idGenerator) {
+  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveMatchChecker rackManager, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
     this.rackManager = rackManager;
     this.idGenerator = idGenerator;
