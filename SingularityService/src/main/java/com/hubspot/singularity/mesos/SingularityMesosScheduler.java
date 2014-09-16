@@ -30,7 +30,7 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.mesos.SingularitySlaveMatchChecker.SlaveMatchState;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -47,19 +47,19 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
-  private final SingularitySlaveMatchChecker slaveMatchChecker;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityLogSupport logSupport;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
 
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveMatchChecker slaveMatchChecker, SingularityNewTaskChecker newTaskChecker,
+  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityNewTaskChecker newTaskChecker,
       SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager) {
     defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.newTaskChecker = newTaskChecker;
-    this.slaveMatchChecker = slaveMatchChecker;
+    this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
@@ -91,7 +91,7 @@ public class SingularityMesosScheduler implements Scheduler {
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
     for (Protos.Offer offer : offers) {
-      slaveMatchChecker.checkOffer(offer);
+      slaveAndRackManager.checkOffer(offer);
     }
 
     int numDueTasks = 0;
@@ -171,7 +171,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace("Attempting to match task {} resources {} with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), taskResources, offerHolder.getCurrentResources());
 
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offerHolder.getCurrentResources());
-      final SlaveMatchState slaveMatchState = slaveMatchChecker.checkSlave(offerHolder.getOffer(), taskRequest, stateCache);
+      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources);
@@ -260,7 +260,7 @@ public class SingularityMesosScheduler implements Scheduler {
   public void slaveLost(SchedulerDriver driver, Protos.SlaveID slaveId) {
     LOG.warn("Lost a slave {}", slaveId);
 
-    slaveMatchChecker.slaveLost(slaveId);
+    slaveAndRackManager.slaveLost(slaveId);
   }
 
   @Override

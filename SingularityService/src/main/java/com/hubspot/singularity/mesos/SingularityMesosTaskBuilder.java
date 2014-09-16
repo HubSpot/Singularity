@@ -37,19 +37,19 @@ public class SingularityMesosTaskBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
   private final ObjectMapper objectMapper;
-  private final SingularitySlaveMatchChecker rackManager;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final ExecutorIdGenerator idGenerator;
 
   @Inject
-  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveMatchChecker rackManager, ExecutorIdGenerator idGenerator) {
+  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
-    this.rackManager = rackManager;
+    this.slaveAndRackManager = slaveAndRackManager;
     this.idGenerator = idGenerator;
   }
 
   public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources) {
-    final String rackId = rackManager.getRackId(offer);
-    final String host = rackManager.getSlaveHost(offer);
+    final String rackId = slaveAndRackManager.getRackId(offer);
+    final String host = slaveAndRackManager.getSlaveHost(offer);
 
     final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(), taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), host, rackId);
 
@@ -132,10 +132,10 @@ public class SingularityMesosTaskBuilder {
 
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
-          .setCommand(commandBuilder.build())
-          .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
-          .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
-    );
+        .setCommand(commandBuilder.build())
+        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
+        .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+        );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
       ExecutorData executorData = task.getDeploy().getExecutorData().get();

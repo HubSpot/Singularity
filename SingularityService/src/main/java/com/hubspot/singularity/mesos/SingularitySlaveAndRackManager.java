@@ -28,9 +28,9 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
-public class SingularitySlaveMatchChecker {
+public class SingularitySlaveAndRackManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveMatchChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
   private final String rackIdAttributeKey;
   private final String defaultRackId;
@@ -41,7 +41,7 @@ public class SingularitySlaveMatchChecker {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularitySlaveMatchChecker(SingularityConfiguration configuration, MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  public SingularitySlaveAndRackManager(SingularityConfiguration configuration, MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
@@ -80,7 +80,7 @@ public class SingularitySlaveMatchChecker {
     return getHost(offer.getHostname());
   }
 
-  public SlaveMatchState checkSlave(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
+  public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
     final String host = getSlaveHost(offer);
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();
