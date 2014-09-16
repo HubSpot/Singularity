@@ -195,7 +195,7 @@ public class SingularitySlaveAndRackManager {
     }
   }
 
-  public void loadRacksFromMaster(MesosMasterStateObject state) {
+  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state) {
     clearRacksAndSlaves();
 
     int slaves = 0;

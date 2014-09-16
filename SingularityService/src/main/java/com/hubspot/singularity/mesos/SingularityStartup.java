@@ -86,7 +86,7 @@ public class SingularityStartup {
     try {
       MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-      slaveAndRackManager.loadRacksFromMaster(state);
+      slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
 
       // two things need to happen:
       // 1- we need to look for active tasks that are no longer active (assume that there is no such thing as a missing active task.)
