@@ -99,7 +99,6 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long healthcheckTimeoutSeconds = 5;
 
-  @NotNull
   private String hostname;
 
   @NotNull
@@ -114,7 +113,6 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long loadBalancerRequestTimeoutMillis = 2000;
 
-  @NotNull
   private String loadBalancerUri;
 
   @NotNull
