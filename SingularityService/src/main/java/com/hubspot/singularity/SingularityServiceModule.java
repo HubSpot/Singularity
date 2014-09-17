@@ -54,7 +54,7 @@ import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
-import com.hubspot.singularity.data.history.SingularityHistoryPersister;
+import com.hubspot.singularity.data.history.NoopHistoryManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
@@ -86,7 +86,6 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(HistoryManager.class).to(JDBIHistoryManager.class);
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     bind(SingularityStatePoller.class).in(Scopes.SINGLETON);
@@ -98,7 +97,6 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
-    bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
   }
 
@@ -161,6 +159,16 @@ public class SingularityServiceModule extends AbstractModule {
   @Singleton
   public AsyncHttpClient providesAsyncHTTPClient() {
     return new AsyncHttpClient();
+  }
+
+  @Provides
+  @Singleton
+  public HistoryManager getHistoryManager(Injector injector, SingularityConfiguration config) {
+    if (config.getDatabaseConfiguration().isPresent()) {
+      return injector.getInstance(JDBIHistoryManager.class);
+    }
+
+    return injector.getInstance(NoopHistoryManager.class);
   }
 
   @Provides

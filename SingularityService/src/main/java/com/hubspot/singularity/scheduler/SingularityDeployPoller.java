@@ -65,9 +65,7 @@ public class SingularityDeployPoller {
           mesosScheduler.release();
         }
       }
-    },
-
-    configuration.getCheckDeploysEverySeconds(), configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
+    }, configuration.getCheckDeploysEverySeconds(), configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
   }
 
   public void stop() {
