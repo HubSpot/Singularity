@@ -37,7 +37,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
     bootstrap.addBundle(new MigrationsBundle<SingularityConfiguration>() {
       @Override
       public DataSourceFactory getDataSourceFactory(SingularityConfiguration configuration) {
-        return configuration.getDataSourceFactory();
+        return configuration.getDatabaseConfiguration().get();
       }
     });
 

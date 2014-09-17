@@ -40,7 +40,7 @@ public class SingularityRequestHistory extends SingularityJsonObject implements 
   public int compareTo(SingularityRequestHistory o) {
     return ComparisonChain
         .start()
-        .compare(createdAt, o.getCreatedAt())
+        .compare(o.getCreatedAt(), createdAt)
         .compare(request.getId(), o.getRequest().getId())
         .result();
   }
