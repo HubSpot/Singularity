@@ -6,10 +6,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class UIConfiguration {
-  public static final String DEFAULT_TITLE = "Singularity";
 
   @NotEmpty
-  private String title = DEFAULT_TITLE;
+  private String title = "Singularity";
 
   private String baseUrl;
 
@@ -28,4 +27,5 @@ public class UIConfiguration {
   public void setBaseUrl(String baseUrl) {
     this.baseUrl = baseUrl;
   }
+
 }

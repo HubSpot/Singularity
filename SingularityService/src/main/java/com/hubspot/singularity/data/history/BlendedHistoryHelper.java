@@ -6,11 +6,11 @@ import com.google.common.collect.Lists;
 
 public abstract class BlendedHistoryHelper<T> {
 
-  protected abstract List<T> getFromZk();
-  protected abstract List<T> getFromHistory(int historyStart, int numFromHistory);
+  protected abstract List<T> getFromZk(String id);
+  protected abstract List<T> getFromHistory(String id, int historyStart, int numFromHistory);
 
-  public List<T> getBlendedHistory(Integer limitCount, Integer limitStart) {
-    final List<T> fromZk = getFromZk();
+  public List<T> getBlendedHistory(String id, Integer limitStart, Integer limitCount) {
+    final List<T> fromZk = getFromZk(id);
 
     final int numFromZk = Math.max(0, Math.min(limitCount, fromZk.size() - limitStart));
 
@@ -24,7 +24,7 @@ public abstract class BlendedHistoryHelper<T> {
     }
 
     if (numFromHistory > 0) {
-      returned.addAll(getFromHistory(historyStart, numFromHistory));
+      returned.addAll(getFromHistory(id, historyStart, numFromHistory));
     }
 
     return returned;

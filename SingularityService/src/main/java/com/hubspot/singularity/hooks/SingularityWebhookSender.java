@@ -15,15 +15,12 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployWebhook;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.WebhookManager;
-import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
@@ -34,18 +31,16 @@ public class SingularityWebhookSender {
   private final SingularityConfiguration configuration;
   private final AsyncHttpClient http;
   private final WebhookManager webhookManager;
-  private final TaskManager taskManager;
-  private final HistoryManager historyManager;
+  private final TaskHistoryHelper taskHistoryHelper;
   private final ObjectMapper objectMapper;
 
   @Inject
-  public SingularityWebhookSender(SingularityConfiguration configuration, AsyncHttpClient http, HistoryManager historyManager, ObjectMapper objectMapper, TaskManager taskManager, WebhookManager webhookManager) {
+  public SingularityWebhookSender(SingularityConfiguration configuration, AsyncHttpClient http, ObjectMapper objectMapper, TaskHistoryHelper taskHistoryHelper, WebhookManager webhookManager) {
     this.configuration = configuration;
     this.http = http;
     this.webhookManager = webhookManager;
-    this.taskManager = taskManager;
+    this.taskHistoryHelper = taskHistoryHelper;
     this.objectMapper = objectMapper;
-    this.historyManager = historyManager;
   }
 
   public void checkWebhooks() {
@@ -63,17 +58,17 @@ public class SingularityWebhookSender {
     for (SingularityWebhook webhook : webhooks) {
 
       switch (webhook.getType()) {
-      case TASK:
-        taskUpdates += checkTaskUpdates(webhook);
-        break;
-      case REQUEST:
-        requestUpdates += checkRequestUpdates(webhook);
-        break;
-      case DEPLOY:
-        deployUpdates += checkDeployUpdates(webhook);
-        break;
-      default:
-        break;
+        case TASK:
+          taskUpdates += checkTaskUpdates(webhook);
+          break;
+        case REQUEST:
+          requestUpdates += checkRequestUpdates(webhook);
+          break;
+        case DEPLOY:
+          deployUpdates += checkDeployUpdates(webhook);
+          break;
+        default:
+          break;
       }
     }
 
@@ -110,7 +105,7 @@ public class SingularityWebhookSender {
     int numTaskUpdates = 0;
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskUpdates) {
-      Optional<SingularityTask> task = getTask(taskUpdate.getTaskId());
+      Optional<SingularityTask> task = taskHistoryHelper.getTask(taskUpdate.getTaskId());
 
       // TODO compress
       if (!task.isPresent()) {
@@ -147,21 +142,5 @@ public class SingularityWebhookSender {
     }
   }
 
-  // TODO cache this?
-  private Optional<SingularityTask> getTask(SingularityTaskId taskId) {
-    Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
-
-    if (maybeTask.isPresent()) {
-      return maybeTask;
-    }
-
-    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(taskId.getId());
-
-    if (history.isPresent()) {
-      return Optional.of(history.get().getTask());
-    }
-
-    return Optional.absent();
-  }
 
 }

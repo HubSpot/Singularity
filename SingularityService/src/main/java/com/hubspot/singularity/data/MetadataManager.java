@@ -7,8 +7,10 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 
+@Singleton
 public class MetadataManager extends CuratorManager {
 
   private static final String ROOT_PATH = "/metadata";

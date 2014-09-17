@@ -210,8 +210,8 @@ public class SingularityServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public LeaderLatch provideLeaderLatch(CuratorFramework curator,
-                                        @Named(SingularityServiceModule.HOSTNAME_PROPERTY) String hostname,
-                                        @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
+      @Named(SingularityServiceModule.HOSTNAME_PROPERTY) String hostname,
+      @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
     return new LeaderLatch(curator, LEADER_PATH, String.format("%s:%d", hostname, httpPort));
   }
 
@@ -268,7 +268,7 @@ public class SingularityServiceModule extends AbstractModule {
   @Singleton
   public DBI getDBI(Environment environment, SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
     final DBIFactory factory = new DBIFactory();
-    return factory.build(environment, singularityConfiguration.getDataSourceFactory(), "db");
+    return factory.build(environment, singularityConfiguration.getDatabaseConfiguration().get(), "db");
   }
 
   @Provides
