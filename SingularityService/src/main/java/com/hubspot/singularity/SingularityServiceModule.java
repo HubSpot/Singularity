@@ -55,6 +55,7 @@ import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.data.history.NoopHistoryManager;
+import com.hubspot.singularity.data.history.SingularityHistoryPersister;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
@@ -98,6 +99,7 @@ public class SingularityServiceModule extends AbstractModule {
     bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
     bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
+    bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
   }
 
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {

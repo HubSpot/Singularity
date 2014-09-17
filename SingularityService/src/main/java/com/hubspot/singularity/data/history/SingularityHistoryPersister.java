@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
@@ -17,7 +16,6 @@ import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-@Singleton
 public class SingularityHistoryPersister implements SingularityCloseable, SingularityStartable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
