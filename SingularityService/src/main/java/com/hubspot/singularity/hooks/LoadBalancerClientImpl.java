@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.hubspot.baragon.models.UpstreamInfo;
-import com.hubspot.singularity.mesos.SingularityRackManager;
+import com.hubspot.singularity.mesos.SingularitySlaveMatchChecker;
 import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +51,12 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
-  private final SingularityRackManager rackManager;
+  private final SingularitySlaveMatchChecker rackManager;
 
   private final String OPERATION_URI = "%s/%s";
 
   @Inject
-  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, SingularityRackManager rackManager) {
+  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, SingularitySlaveMatchChecker rackManager) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.rackManager = rackManager;
