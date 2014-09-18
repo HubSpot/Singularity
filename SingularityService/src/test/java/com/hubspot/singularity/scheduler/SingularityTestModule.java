@@ -50,8 +50,6 @@ public class SingularityTestModule extends AbstractModule {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.WARN);
-    context.getLogger("com.hubspot").setLevel(Level.TRACE);
-
 
     try {
       TestingServer ts = new TestingServer();
