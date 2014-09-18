@@ -46,7 +46,7 @@ public class SingularityStartup {
 
   private final MesosClient mesosClient;
   private final TaskManager taskManager;
-  private final SingularityRackManager rackManager;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final DeployManager deployManager;
@@ -61,12 +61,12 @@ public class SingularityStartup {
 
   @Inject
   public SingularityStartup(MesosConfiguration mesosConfiguration, MesosClient mesosClient, ObjectMapper objectMapper, SingularityScheduler scheduler, List<SingularityStartable> startables, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityTaskTranscoder taskTranscoder,
-      SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularityRackManager rackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
+      SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityAbort abort) {
     this.mesosConfiguration = mesosConfiguration;
     this.mesosClient = mesosClient;
     this.scheduler = scheduler;
     this.stateCacheProvider = stateCacheProvider;
-    this.rackManager = rackManager;
+    this.slaveAndRackManager = slaveAndRackManager;
     this.deployManager = deployManager;
     this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
@@ -86,7 +86,7 @@ public class SingularityStartup {
     try {
       MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-      rackManager.loadRacksFromMaster(state);
+      slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
 
       // two things need to happen:
       // 1- we need to look for active tasks that are no longer active (assume that there is no such thing as a missing active task.)

@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SlavePlacement;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -151,6 +152,9 @@ public class SingularityConfiguration extends Configuration {
   public boolean allowTestResourceCalls() {
     return allowTestResourceCalls;
   }
+
+  @NotNull
+  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -506,6 +510,15 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+
+  public SlavePlacement getDefaultSlavePlacement() {
+    return defaultSlavePlacement;
+  }
+
+  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
+    this.defaultSlavePlacement = defaultSlavePlacement;
   }
 
 }
