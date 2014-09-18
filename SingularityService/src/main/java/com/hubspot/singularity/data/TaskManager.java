@@ -16,6 +16,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -44,6 +45,7 @@ import com.hubspot.singularity.data.transcoders.SingularityTaskIdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
+@Singleton
 public class TaskManager extends CuratorAsyncManager {
 
   private static final String TASKS_ROOT = "/tasks";

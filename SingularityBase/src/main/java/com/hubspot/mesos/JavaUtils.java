@@ -23,10 +23,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public final class JavaUtils {
@@ -189,6 +191,14 @@ public final class JavaUtils {
       return Collections.emptyList();
     }
     return ImmutableList.copyOf(list);
+  }
+
+  public static <T> Optional<T> getFirst(Iterable<T> iterable) {
+    return Optional.fromNullable(Iterables.getFirst(iterable, null));
+  }
+
+  public static <T> Optional<T> getLast(Iterable<T> iterable) {
+    return Optional.fromNullable(Iterables.getLast(iterable, null));
   }
 
 }

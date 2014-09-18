@@ -8,6 +8,7 @@ import org.apache.curator.utils.ZKPaths;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -22,6 +23,7 @@ import com.hubspot.singularity.data.transcoders.SingularityRequestHistoryTransco
 import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityWebhookTranscoder;
 
+@Singleton
 public class WebhookManager extends CuratorAsyncManager {
 
   private static final String ROOT_PATH = "/hooks";

@@ -9,12 +9,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
+@Singleton
 public class SandboxManager {
+
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 

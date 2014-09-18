@@ -19,7 +19,6 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -31,18 +30,20 @@ import com.hubspot.singularity.data.history.TaskHistoryHelper;
 public class HistoryResource extends AbstractHistoryResource {
 
   private final HistoryManager historyManager;
-  private final DeployManager deployManager;
   private final TaskManager taskManager;
-  private final RequestManager requestManager;
+  private final DeployHistoryHelper deployHistoryHelper;
+  private final TaskHistoryHelper taskHistoryHelper;
+  private final RequestHistoryHelper requestHistoryHelper;
 
   @Inject
-  public HistoryResource(HistoryManager historyManager, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager) {
+  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper, RequestHistoryHelper requestHistoryHelper) {
     super(historyManager, taskManager, deployManager);
 
-    this.requestManager = requestManager;
-    this.deployManager = deployManager;
-    this.historyManager = historyManager;
     this.taskManager = taskManager;
+    this.requestHistoryHelper = requestHistoryHelper;
+    this.deployHistoryHelper = deployHistoryHelper;
+    this.historyManager = historyManager;
+    this.taskHistoryHelper = taskHistoryHelper;
   }
 
   @GET
@@ -86,7 +87,7 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
-    return new TaskHistoryHelper(requestId, taskManager, historyManager).getHistoriesFor(activeTaskIds);
+    return taskHistoryHelper.getHistoriesFor(activeTaskIds);
   }
 
   @GET
@@ -101,7 +102,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return new TaskHistoryHelper(requestId, taskManager, historyManager).getBlendedHistory(limitCount, limitStart);
+    return taskHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
 
   @GET
@@ -110,7 +111,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return new DeployHistoryHelper(requestId, deployManager, historyManager).getBlendedHistory(limitCount, limitStart);
+    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
 
   @GET
@@ -119,7 +120,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return new RequestHistoryHelper(requestId, requestManager, historyManager).getBlendedHistory(limitCount, limitStart);
+    return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
 
   @GET
