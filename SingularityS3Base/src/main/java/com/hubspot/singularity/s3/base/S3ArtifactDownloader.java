@@ -161,7 +161,7 @@ public class S3ArtifactDownloader {
       log.error("Chunk {} timed out after {} - had {} remaining", chunk, JavaUtils.duration(start), JavaUtils.durationFromMillis(remainingMillis));
 
       future.cancel(true);
-    } catch (InterruptedException ie ) {
+    } catch (InterruptedException ie) {
       log.warn("Chunk {} interrupted", chunk);
     } catch (Throwable t) {
       log.error("Error while downloading chunk {}", chunk, t);

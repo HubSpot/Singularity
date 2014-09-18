@@ -45,10 +45,10 @@ public class SingularityDeployKey extends SingularityId {
   }
 
   public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(Collection<SingularityPendingDeploy> pendingDeploys) {
-    return Maps.toMap(pendingDeploys, fromPendingDeployToDeployKey);
+    return Maps.toMap(pendingDeploys, FROM_PENDING_TO_DEPLOY_KEY);
   }
 
-  public static final Function<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeployToDeployKey = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
+  public static final Function<SingularityPendingDeploy, SingularityDeployKey> FROM_PENDING_TO_DEPLOY_KEY = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
     @Override
     public SingularityDeployKey apply(@Nonnull SingularityPendingDeploy input) {
       return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());

@@ -1,11 +1,13 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityDeployStatistics extends SingularityJsonObject {
 
@@ -16,8 +18,8 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   private final int numFailures;
 
   private final int numSequentialRetries;
-  private final int numSequentialSuccess;
-  private final int numSequentialFailures;
+
+  private final List<Long> sequentialFailureTimestamps;
 
   private final Optional<Long> lastFinishAt;
   private final Optional<ExtendedTaskState> lastTaskState;
@@ -33,7 +35,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures,
       @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
-      @JsonProperty("numSequentialSuccess") int numSequentialSuccess, @JsonProperty("numSequentialFailures") int numSequentialFailures) {
+      @JsonProperty("sequentialFailureTimestamps") List<Long> sequentialFailureTimestamps) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
@@ -41,19 +43,17 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     this.lastFinishAt = lastFinishAt;
     this.lastTaskState = lastTaskState;
     this.numSequentialRetries = numSequentialRetries;
-    this.numSequentialFailures = numSequentialFailures;
-    this.numSequentialSuccess = numSequentialSuccess;
+    this.sequentialFailureTimestamps = JavaUtils.nonNullImmutable(sequentialFailureTimestamps);
   }
 
   public SingularityDeployStatisticsBuilder toBuilder() {
     return new SingularityDeployStatisticsBuilder(requestId, deployId)
-      .setLastFinishAt(lastFinishAt)
-      .setLastTaskState(lastTaskState)
-      .setNumSequentialFailures(numSequentialFailures)
-      .setNumSequentialRetries(numSequentialRetries)
-      .setNumSequentialSuccess(numSequentialSuccess)
-      .setNumFailures(numFailures)
-      .setNumSuccess(numSuccess);
+    .setLastFinishAt(lastFinishAt)
+    .setLastTaskState(lastTaskState)
+    .setNumSequentialRetries(numSequentialRetries)
+    .setNumFailures(numFailures)
+    .setNumSuccess(numSuccess)
+    .setSequentialFailureTimestamps(sequentialFailureTimestamps);
   }
 
   public String getRequestId() {
@@ -84,18 +84,14 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     return numSequentialRetries;
   }
 
-  public int getNumSequentialSuccess() {
-    return numSequentialSuccess;
-  }
-
-  public int getNumSequentialFailures() {
-    return numSequentialFailures;
+  public List<Long> getSequentialFailureTimestamps() {
+    return sequentialFailureTimestamps;
   }
 
   @Override
   public String toString() {
-    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries + ", numSequentialSuccess="
-        + numSequentialSuccess + ", numSequentialFailures=" + numSequentialFailures + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries +
+        "sequentialFailureTimestamps=" + sequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
 
 }

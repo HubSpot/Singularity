@@ -34,7 +34,7 @@ public class CounterMap<K> {
     return result;
   }
 
-  public static class Counter {
+  public static final class Counter {
     private long count;
 
     private Counter() {

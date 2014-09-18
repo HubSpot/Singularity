@@ -79,24 +79,23 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   @Override
   public int hashCode() {
-      return Objects.hashCode(timestamp, taskState, statusMessage);
+    return Objects.hashCode(timestamp, taskState, statusMessage);
   }
 
   @Override
-  public boolean equals(Object other)
-  {
-      if (this == other) {
-          return true;
-      }
-      if (other == null || other.getClass() != this.getClass()) {
-          return false;
-      }
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || other.getClass() != this.getClass()) {
+      return false;
+    }
 
-      SingularityTaskHistoryUpdate that = (SingularityTaskHistoryUpdate) other;
+    SingularityTaskHistoryUpdate that = (SingularityTaskHistoryUpdate) other;
 
-      return Objects.equal(this.timestamp, that.timestamp)
-              && Objects.equal(this.taskState, that.taskState)
-              && Objects.equal(statusMessage, statusMessage);
+    return Objects.equal(this.timestamp, that.timestamp)
+        && Objects.equal(this.taskState, that.taskState)
+        && Objects.equal(statusMessage, statusMessage);
   }
 
   public long getTimestamp() {
