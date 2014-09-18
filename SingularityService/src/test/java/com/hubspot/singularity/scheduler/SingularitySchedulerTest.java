@@ -35,6 +35,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -61,6 +62,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.ning.http.client.AsyncHttpClient;
 
 public class SingularitySchedulerTest {
 
@@ -95,6 +97,10 @@ public class SingularitySchedulerTest {
   private SingularityConfiguration configuration;
   @Inject
   private SingularityCooldownChecker cooldownChecker;
+  @Inject
+  private SingularityCloser closer;
+  @Inject
+  private AsyncHttpClient httpClient;
 
   @Before
   public void setup() {
@@ -105,6 +111,8 @@ public class SingularitySchedulerTest {
 
   @After
   public void teardown() throws Exception {
+    closer.closeAllCloseables();
+    httpClient.close();
     cf.close();
     ts.close();
   }
