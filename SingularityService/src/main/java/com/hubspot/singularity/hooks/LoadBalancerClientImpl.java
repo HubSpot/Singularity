@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.hubspot.baragon.models.UpstreamInfo;
-import com.hubspot.singularity.mesos.SingularitySlaveMatchChecker;
 import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +20,7 @@ import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonResponse;
 import com.hubspot.baragon.models.BaragonService;
+import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
@@ -31,12 +30,12 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
-
 
 public class LoadBalancerClientImpl implements LoadBalancerClient {
 
@@ -51,15 +50,15 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
-  private final SingularitySlaveMatchChecker rackManager;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   private static final String OPERATION_URI = "%s/%s";
 
   @Inject
-  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, SingularitySlaveMatchChecker rackManager) {
+  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, SingularitySlaveAndRackManager slaveAndRackManager) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
-    this.rackManager = rackManager;
+    this.slaveAndRackManager = slaveAndRackManager;
     this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
@@ -88,7 +87,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, requestBuilder.build(), BaragonRequestState.UNKNOWN);
   }
 
-  private BaragonResponse readResponse(Response response)  {
+  private BaragonResponse readResponse(Response response) {
     try {
       return objectMapper.readValue(response.getResponseBodyAsBytes(), BaragonResponse.class);
     } catch (Exception e) {
@@ -147,9 +146,10 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
-    final List<String> serviceOwners = request.getOwners().or(Collections.<String>emptyList());
-    final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
+  public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add,
+      List<SingularityTask> remove) {
+    final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
+    final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String> emptyList());
     final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
 
     final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString());
@@ -183,7 +183,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       if (maybeFirstPort.isPresent()) {
         Offer offer = task.getOffer();
         String upstream = String.format("%s:%d", offer.getHostname(), maybeFirstPort.get());
-        String rackId = rackManager.getRackId(offer);
+        String rackId = slaveAndRackManager.getRackId(offer);
 
         upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), Optional.fromNullable(rackId)));
       } else {
