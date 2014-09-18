@@ -60,8 +60,7 @@ public class SingularityCooldownPoller {
           mesosScheduler.release();
         }
       }
-    },
-    checkCooldownEveryMillis, checkCooldownEveryMillis, TimeUnit.MILLISECONDS);
+    }, checkCooldownEveryMillis, checkCooldownEveryMillis, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {

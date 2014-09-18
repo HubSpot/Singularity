@@ -54,6 +54,7 @@ import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.history.HistoryJDBI;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
+import com.hubspot.singularity.data.history.NoopHistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPersister;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
@@ -86,7 +87,6 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(HistoryManager.class).to(JDBIHistoryManager.class);
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     bind(SingularityStatePoller.class).in(Scopes.SINGLETON);
@@ -98,8 +98,8 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
-    bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
+    bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
   }
 
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
@@ -165,6 +165,16 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  public HistoryManager getHistoryManager(Injector injector, SingularityConfiguration config) {
+    if (config.getDatabaseConfiguration().isPresent()) {
+      return injector.getInstance(JDBIHistoryManager.class);
+    }
+
+    return injector.getInstance(NoopHistoryManager.class);
+  }
+
+  @Provides
+  @Singleton
   public ZooKeeperConfiguration zooKeeperConfiguration(SingularityConfiguration config) {
     return config.getZooKeeperConfiguration();
   }
@@ -210,8 +220,8 @@ public class SingularityServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public LeaderLatch provideLeaderLatch(CuratorFramework curator,
-                                        @Named(SingularityServiceModule.HOSTNAME_PROPERTY) String hostname,
-                                        @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
+      @Named(SingularityServiceModule.HOSTNAME_PROPERTY) String hostname,
+      @Named(SingularityServiceModule.HTTP_PORT_PROPERTY) int httpPort) {
     return new LeaderLatch(curator, LEADER_PATH, String.format("%s:%d", hostname, httpPort));
   }
 
@@ -268,7 +278,7 @@ public class SingularityServiceModule extends AbstractModule {
   @Singleton
   public DBI getDBI(Environment environment, SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
     final DBIFactory factory = new DBIFactory();
-    return factory.build(environment, singularityConfiguration.getDataSourceFactory(), "db");
+    return factory.build(environment, singularityConfiguration.getDatabaseConfiguration().get(), "db");
   }
 
   @Provides

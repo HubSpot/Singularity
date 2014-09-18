@@ -5,24 +5,27 @@ import java.util.List;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.data.DeployManager;
 
+@Singleton
 public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployHistory> {
 
-  private final String requestId;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
 
-  public DeployHistoryHelper(String requestId, DeployManager deployManager, HistoryManager historyManager) {
-    this.requestId = requestId;
+  @Inject
+  public DeployHistoryHelper(DeployManager deployManager, HistoryManager historyManager) {
     this.deployManager = deployManager;
     this.historyManager = historyManager;
   }
 
   @Override
-  protected List<SingularityDeployHistory> getFromZk() {
+  protected List<SingularityDeployHistory> getFromZk(String requestId) {
     final List<SingularityDeployKey> deployKeys = deployManager.getDeployIdsFor(requestId);
     final List<SingularityDeployHistory> histories = Lists.newArrayListWithCapacity(deployKeys.size());
 
@@ -39,8 +42,18 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
   }
 
   @Override
-  protected List<SingularityDeployHistory> getFromHistory(int historyStart, int numFromHistory) {
+  protected List<SingularityDeployHistory> getFromHistory(String requestId, int historyStart, int numFromHistory) {
     return historyManager.getDeployHistoryForRequest(requestId, historyStart, numFromHistory);
+  }
+
+  public boolean isDeployIdAvailable(String requestId, String deployId) {
+    Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, deployId);
+
+    if (deploy.isPresent()) {
+      return false;
+    }
+
+    return !historyManager.getDeployHistory(requestId, deployId).isPresent();
   }
 
 }
