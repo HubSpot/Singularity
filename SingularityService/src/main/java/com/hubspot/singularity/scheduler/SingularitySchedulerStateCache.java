@@ -29,6 +29,8 @@ public class SingularitySchedulerStateCache {
   private Optional<List<SingularitySlave>> decomissioningSlaves;
   private Optional<Set<String>> decomissioningSlaveIds;
   private Optional<List<SingularityTaskId>> cleaningTasks;
+  private Optional<Integer> numActiveRacks;
+  private Optional<Integer> numActiveSlaves;
 
   @Inject
   public SingularitySchedulerStateCache(TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager) {
@@ -43,6 +45,8 @@ public class SingularitySchedulerStateCache {
     decomissioningSlaves = Optional.absent();
     decomissioningSlaveIds = Optional.absent();
     cleaningTasks = Optional.absent();
+    numActiveRacks = Optional.absent();
+    numActiveSlaves = Optional.absent();
   }
 
   public List<SingularityTaskId> getActiveTaskIds() {
@@ -122,6 +126,26 @@ public class SingularitySchedulerStateCache {
     checkDecomissioningRacks();
 
     return decomissioningRackIds.get().contains(rackId);
+  }
+
+  public int getNumActiveRacks() {
+    if (numActiveRacks.isPresent()) {
+      return numActiveRacks.get();
+    }
+
+    numActiveRacks = Optional.of(rackManager.getNumActive());
+
+    return numActiveRacks.get();
+  }
+
+  public int getNumActiveSlaves() {
+    if (numActiveSlaves.isPresent()) {
+      return numActiveSlaves.get();
+    }
+
+    numActiveSlaves = Optional.of(slaveManager.getNumActive());
+
+    return numActiveSlaves.get();
   }
 
 }

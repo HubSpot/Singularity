@@ -8,11 +8,13 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -29,6 +31,7 @@ import com.hubspot.singularity.data.transcoders.SingularityRequestCleanupTransco
 import com.hubspot.singularity.data.transcoders.SingularityRequestHistoryTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityRequestWithStateTranscoder;
 
+@Singleton
 public class RequestManager extends CuratorAsyncManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
@@ -149,7 +152,8 @@ public class RequestManager extends CuratorAsyncManager {
     return result;
   }
 
-  private SingularityCreateResult saveHistory(SingularityRequestHistory history) {
+  @VisibleForTesting
+  protected SingularityCreateResult saveHistory(SingularityRequestHistory history) {
     final String path = getHistoryPath(history);
 
     webhookManager.enqueueRequestUpdate(history);

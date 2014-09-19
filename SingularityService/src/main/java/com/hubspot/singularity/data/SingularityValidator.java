@@ -14,7 +14,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
 public class SingularityValidator {
 
@@ -30,17 +30,15 @@ public class SingularityValidator {
   private final int defaultMemoryMb;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
-  private final HistoryManager historyManager;
-  private final DeployManager deployManager;
+  private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
-    this.deployManager = deployManager;
-    this.historyManager = historyManager;
+    this.deployHistoryHelper = deployHistoryHelper;
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
@@ -164,7 +162,7 @@ public class SingularityValidator {
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()),
         "If not using custom executor, specify a command. If using custom executor, specify executorData and customExecutorCmd and no command.");
 
-    check(!deployManager.getDeploy(request.getId(), deploy.getId()).isPresent() && !historyManager.getDeployHistory(request.getId(), deploy.getId()).isPresent(), "Can not deploy a deploy that has already been deployed");
+    check(deployHistoryHelper.isDeployIdAvailable(request.getId(), deploy.getId()), "Can not deploy a deploy that has already been deployed");
   }
 
   private boolean isValidCronSchedule(String schedule) {

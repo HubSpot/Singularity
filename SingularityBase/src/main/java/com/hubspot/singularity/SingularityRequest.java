@@ -28,6 +28,7 @@ public class SingularityRequest extends SingularityJsonObject {
 
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
+  private final Optional<SlavePlacement> slavePlacement;
 
   private final Optional<Boolean> loadBalanced;
 
@@ -48,7 +49,8 @@ public class SingularityRequest extends SingularityJsonObject {
       @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
-      @JsonProperty("quartzSchedule") Optional<String> quartzSchedule,  @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity) {
+      @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -61,6 +63,7 @@ public class SingularityRequest extends SingularityJsonObject {
     this.scheduleType = scheduleType;
     this.quartzSchedule = quartzSchedule;
     this.rackAffinity = rackAffinity;
+    this.slavePlacement = slavePlacement;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -74,7 +77,8 @@ public class SingularityRequest extends SingularityJsonObject {
     .setSchedule(schedule)
     .setKillOldNonLongRunningTasksAfterMillis(killOldNonLongRunningTasksAfterMillis)
     .setScheduleType(scheduleType)
-    .setRackAffinity(copyOfList(rackAffinity));
+    .setRackAffinity(copyOfList(rackAffinity))
+    .setSlavePlacement(slavePlacement);
   }
 
   public String getId() {
@@ -123,6 +127,10 @@ public class SingularityRequest extends SingularityJsonObject {
 
   public Optional<List<String>> getRackAffinity() {
     return rackAffinity;
+  }
+
+  public Optional<SlavePlacement> getSlavePlacement() {
+    return slavePlacement;
   }
 
   @JsonIgnore
@@ -181,9 +189,9 @@ public class SingularityRequest extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType
-        + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", loadBalanced="
-        + loadBalanced + "]";
+    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType="
+        + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
+        + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }
