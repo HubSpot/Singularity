@@ -550,12 +550,6 @@
         </pluginManagement>
       </build>
     </profile>
-    <profile>
-      <id>vagrantBuild</id>
-      <build>
-        <directory>${vagrant.build.directory}/${project.artifactId}</directory>
-      </build>
-    </profile>
   </profiles>
 </project>
 

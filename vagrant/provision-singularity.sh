@@ -63,15 +63,13 @@ EOF
 
 function build_singularity {
   cd /singularity
-  mkdir -p /home/vagrant/Singularity
-  chown vagrant /home/vagrant/Singularity
-  sudo -u vagrant HOME=/home/vagrant mvn clean package -PvagrantBuild -Dvagrant.build.directory=/home/vagrant/Singularity
+  sudo -u vagrant HOME=/home/vagrant mvn clean package
 }
 
 function install_singularity {
   mkdir -p /var/log/singularity
   mkdir -p /usr/local/singularity/bin
-  cp /home/vagrant/Singularity/SingularityService/SingularityService-*-SNAPSHOT.jar /usr/local/singularity/bin/singularity.jar
+  cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT.jar /usr/local/singularity/bin/singularity.jar
   cat > /usr/local/singularity/bin/migrate_singularity_db.sh <<EOF
 #!/bin/bash -x
 # Uses dropwizard liquibase integration to update singularity mysql db tables
