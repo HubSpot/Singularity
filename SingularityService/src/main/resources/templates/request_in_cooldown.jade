@@ -27,19 +27,11 @@ html
             h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has entered system cooldown
             a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularity_request_link }") View request
 
-        //- Status
         div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Status
           p #{ request_id } failed #{ num_failures } time(s) consecutively within #{ cooldown_expires_format }. Singularity has placed it into a system cooldown in order to protect cluster resources:
             ul
-              li New tasks will <em>still be scheduled and run</em>, but will be delayed #{cooldown_delay_format}.
-              li This penalty will clear when the next task finishes successfully or runs without failures for #{cooldown_expires_format}.
+              li New tasks will <em>still be scheduled and executed</em>, but these tasks will be delayed by #{cooldown_delay_format}.
+              li This penalty will clear when the a task finishes successfully or runs without failures for #{cooldown_expires_format}.
               li You will not receive failure mails for #{ request_id } while it is in cooldown.
-        //- Info
-        div
-          div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
-            h3(style="margin: 0; font-size: 20px; line-height: 1") Info
-          dl(style="margin-bottom: 0")
-            dt(style="font-weight: bold; margin: 0 0 9px") Request ID
-            dd(style="background: #eee; display: block; margin: 0; padding: 10px 14px; border-radius: 3px") #{ request_id }
