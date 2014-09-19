@@ -42,6 +42,7 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.smtp.SingularityMailer;
+import com.ning.http.client.AsyncHttpClient;
 
 public class SingularityTestModule extends AbstractModule {
 
@@ -50,8 +51,6 @@ public class SingularityTestModule extends AbstractModule {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.WARN);
-    context.getLogger("com.hubspot").setLevel(Level.TRACE);
-
 
     try {
       TestingServer ts = new TestingServer();
@@ -135,6 +134,12 @@ public class SingularityTestModule extends AbstractModule {
   @Singleton
   public ObjectMapper getObjectMapper() {
     return SingularityServiceModule.OBJECT_MAPPER;
+  }
+
+  @Provides
+  @Singleton
+  public AsyncHttpClient providesAsyncHTTPClient() {
+    return new AsyncHttpClient();
   }
 
   @Singleton

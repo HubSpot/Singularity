@@ -46,7 +46,7 @@ import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
+import com.hubspot.singularity.data.history.RequestHistoryHelper;
 
 @Path(SingularityService.API_BASE_PATH + "/logs")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -57,15 +57,15 @@ public class S3LogResource extends AbstractHistoryResource {
   private final Optional<S3Service> s3;
   private final Optional<S3Configuration> configuration;
   private final DeployManager deployManager;
-  private final HistoryManager historyManager;
+  private final RequestHistoryHelper requestHistoryHelper;
 
   @Inject
-  public S3LogResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3, Optional<S3Configuration> configuration) {
+  public S3LogResource(HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3, Optional<S3Configuration> configuration) {
     super(historyManager, taskManager, deployManager);
     this.s3 = s3;
     this.deployManager = deployManager;
     this.configuration = configuration;
-    this.historyManager = historyManager;
+    this.requestHistoryHelper = requestHistoryHelper;
   }
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId) {
@@ -93,20 +93,20 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private Collection<String> getS3PrefixesForRequest(String requestId) {
-    SingularityRequestHistory history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.ASC), 0, 1), null);
+    Optional<SingularityRequestHistory> firstHistory = requestHistoryHelper.getFirstHistory(requestId);
 
-    if (history == null) {
+    if (!firstHistory.isPresent()) {
       throw WebExceptions.notFound("No request history found for %s", requestId);
     }
 
-    final long start = history.getCreatedAt();
+    final long start = firstHistory.get().getCreatedAt();
 
-    history = Iterables.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 1), null);
+    Optional<SingularityRequestHistory> lastHistory = requestHistoryHelper.getLastHistory(requestId);
 
     long end = System.currentTimeMillis();
 
-    if (history != null && (history.getEventType() == RequestHistoryType.DELETED || history.getEventType() == RequestHistoryType.PAUSED)) {
-      end = history.getCreatedAt() + TimeUnit.DAYS.toMillis(1);
+    if (lastHistory.isPresent() && (lastHistory.get().getEventType() == RequestHistoryType.DELETED || lastHistory.get().getEventType() == RequestHistoryType.PAUSED)) {
+      end = lastHistory.get().getCreatedAt() + TimeUnit.DAYS.toMillis(1);
     }
 
     Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), requestId, start, end);

@@ -14,6 +14,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -23,10 +24,10 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployWebhook;
+import com.hubspot.singularity.SingularityDeployWebhook.DeployEventType;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityDeployWebhook.DeployEventType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityDeployKeyTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityDeployMarkerTranscoder;
@@ -36,6 +37,7 @@ import com.hubspot.singularity.data.transcoders.SingularityDeployTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityPendingDeployTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityRequestDeployStateTranscoder;
 
+@Singleton
 public class DeployManager extends CuratorAsyncManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(DeployManager.class);
