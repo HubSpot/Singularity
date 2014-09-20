@@ -13,16 +13,19 @@
 # limitations under the License.
 #
 
+# Fail fast and fail hard.
+set -eo pipefail
+
 function install_singularity_config {
   mkdir -p /etc/singularity
   cat > /etc/singularity/singularity.yaml <<EOF
 # singularity-related config:
 server:
   type: simple
-  applicationContextPath: /singularity/v2
+  applicationContextPath: /singularity
   connector:
     type: http
-    port: 7092
+    port: 7099
   requestLog:
     appenders:
       - type: file
@@ -42,11 +45,6 @@ mesos:
   frameworkName: Singularity
   frameworkId: Singularity
   frameworkFailoverTimeout: 1000000
-  maxNumInstancesPerRequest: 10
-  maxNumCpusPerInstance: 3
-  maxNumCpusPerRequest: 10
-  maxMemoryMbPerInstance: 24000
-  maxMemoryMbPerRequest: 160000
 
 zookeeper:
   quorum: localhost:2181
@@ -60,38 +58,21 @@ logging:
   loggers:
     "com.hubspot.singularity" : DEBUG
 
-smtp:
-  username: "mailuser"
-  password: "mailpassword"
-  host: "mail.server.com"
-  port: 25
-  from: "singularity@mycompany.com"
-  admins:
-    - singularity-admin@company.com
-  includeAdminsOnAllMails: true
-    
-s3:
-  s3SecretKey: "my s3 secret key"
-  s3AccessKey: "my s3 access key"
-  s3Bucket: "singularity-deployable-item-taks-logs"
-  s3KeyFormat: "%requestId/%Y/%m/%taskId_%index-%s%fileext"
+ui:
+  title: Singularity (vagrant)
+  baseUrl: http://vagrant-singularity:7099/singularity
 EOF
-}
-
-function compile_singularity_ui_static_files {
-  cd /singularity/SingularityUI
-  npm install --unsafe-perm
 }
 
 function build_singularity {
   cd /singularity
-  mvn clean package
+  sudo -u vagrant HOME=/home/vagrant mvn clean package
 }
 
 function install_singularity {
   mkdir -p /var/log/singularity
   mkdir -p /usr/local/singularity/bin
-  cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT.jar /usr/local/singularity/bin/singularity.jar
+  cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT-shaded.jar /usr/local/singularity/bin/singularity.jar
   cat > /usr/local/singularity/bin/migrate_singularity_db.sh <<EOF
 #!/bin/bash -x
 # Uses dropwizard liquibase integration to update singularity mysql db tables
@@ -121,15 +102,21 @@ function migrate_db {
   /usr/local/singularity/bin/migrate_singularity_db.sh
 }
 
+function stop_singularity {
+  set +e  # okay if this fails (i.e. not installed)
+  service singularity stop
+  set -e
+}
 
-function run_singularity {
+function start_singularity {
   service singularity start
 }
 
+stop_singularity
 install_singularity_config
-compile_singularity_ui_static_files
 build_singularity
 install_singularity
 migrate_db
-run_singularity
+start_singularity
 
+echo "The Singularity Web UI is available at http://vagrant-singularity:7099/singularity/"
