@@ -13,6 +13,9 @@
 # limitations under the License.
 #
 
+# Fail fast and fail hard.
+set -eo pipefail
+
 function install_singularity_config {
   mkdir -p /etc/singularity
   cat > /etc/singularity/singularity.yaml <<EOF
@@ -69,7 +72,7 @@ function build_singularity {
 function install_singularity {
   mkdir -p /var/log/singularity
   mkdir -p /usr/local/singularity/bin
-  cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT.jar /usr/local/singularity/bin/singularity.jar
+  cp /singularity/SingularityService/target/SingularityService-*-SNAPSHOT-shaded.jar /usr/local/singularity/bin/singularity.jar
   cat > /usr/local/singularity/bin/migrate_singularity_db.sh <<EOF
 #!/bin/bash -x
 # Uses dropwizard liquibase integration to update singularity mysql db tables
@@ -100,7 +103,9 @@ function migrate_db {
 }
 
 function stop_singularity {
+  set +e  # okay if this fails (i.e. not installed)
   service singularity stop
+  set -e
 }
 
 function start_singularity {
