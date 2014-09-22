@@ -11,7 +11,7 @@
   <artifactId>SingularityS3Downloader</artifactId>
 
   <properties>
-    <basepom.shaded.main-class>com.hubspot.singularity.s3uploader.SingularityS3DownloaderRunner</basepom.shaded.main-class>
+    <basepom.shaded.main-class>com.hubspot.singularity.s3downloader.SingularityS3DownloaderRunner</basepom.shaded.main-class>
   </properties>
 
   <dependencies>
