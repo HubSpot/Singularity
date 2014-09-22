@@ -52,7 +52,7 @@ localStorage.setItem('suppressRefresh', true)
 
 ## Cross-domain restrictions
 
-Your browser will not allow cross-domain requests if you're using a remote server. You have 2 options to get around this:
+Your browser will not allow cross-domain requests if you're using a remote server. You have a few options to get around this:
 
 ### Cheat using hosts
 
@@ -82,3 +82,26 @@ open -a Google\ Chrome\ Canary --args --disable-web-security
 ```
 
 And you're set! Just open up singularity and your browser won't prevent your API calls.
+
+### Use a local proxy
+
+If you have a local web server running, such as nginx or Apache, then you can add configuration to serve both local UI assets and remote API calls from a single local domain. 
+
+However, if you are not familiar with rolling your own nginx/Apache/other config, you can use [vee](https://github.com/hubspot/vee) (a small, dedicated proxy app). Here is an example `.vee` config:
+
+```yaml
+name: SingularityUI
+
+routes:
+  # Redirect static assets to local brunch server
+  ".*/static/.*": "http://localhost:4000/"
+
+  # Redirect any API calls to the your desired Singularity instance
+  ".*/api/.*": "https://<singularity domain/"
+
+  # All else to the index.html
+  ".*": "http://localhost:4000/singularity/v2/"
+
+# Uncomment to debug the above routes
+# debug: true
+```
