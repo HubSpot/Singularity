@@ -62,8 +62,8 @@
     </dependency>
 
     <dependency>
-      <groupId>javax.mail</groupId>
-      <artifactId>javax.mail-api</artifactId>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>javax.mail</artifactId>
     </dependency>
 
     <dependency>
@@ -307,6 +307,14 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>${project.basedir}/src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/target/generated-resources</directory>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>com.github.eirslett</groupId>
