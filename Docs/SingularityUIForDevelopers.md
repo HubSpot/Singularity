@@ -87,21 +87,25 @@ And you're set! Just open up singularity and your browser won't prevent your API
 
 If you have a local web server running, such as nginx or Apache, then you can add configuration to serve both local UI assets and remote API calls from a single local domain. 
 
-However, if you are not familiar with rolling your own nginx/Apache/other config, you can use [vee](https://github.com/hubspot/vee) (a small, dedicated proxy app). Here is an example `.vee` config:
+However, if you are not familiar with rolling your own nginx/Apache/other config, you can use [vee](https://github.com/hubspot/vee) (a small, dedicated proxy lib). Here is an example `.vee` config for SingularityUI development:
 
 ```yaml
 name: SingularityUI
 
 routes:
-  # Redirect static assets to local brunch server
+  
+  # Redirect static assets to local brunch server (assuming it is on port 4000)
   ".*/static/.*": "http://localhost:4000/"
+  
+  # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
+  ".*/api/.*": "http://<your_singularity_domain>/"
+  ".*/login.*": ""https://<your_singularity_domain>/"
 
-  # Redirect any API calls to the your desired Singularity instance
-  ".*/api/.*": "https://<singularity domain/"
-
-  # All else to the index.html
-  ".*": "http://localhost:4000/singularity/v2/"
+  # All else to the index.html (for all other Backbone routes)
+  ".*": "http://localhost:4000/singularity/"
 
 # Uncomment to debug the above routes
 # debug: true
 ```
+
+With the above config, you then visit http://localhost:<vee_port>/singularity/ and API requests will be proxied over `localhost:<vee_port>` to get around cross-domain issues.
