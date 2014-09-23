@@ -3,7 +3,6 @@ package com.hubspot.singularity.executor.cleanup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -31,7 +30,7 @@ public class SingularityExecutorCleanupRunner {
 
       LOG.info("Starting cleanup");
 
-      final Optional<SingularityExecutorCleanupStatistics> statistics = runner.cleanup();
+      final SingularityExecutorCleanupStatistics statistics = runner.cleanup();
 
       LOG.info("Finished with {} after {}", statistics, JavaUtils.duration(start));
 
@@ -53,12 +52,10 @@ public class SingularityExecutorCleanupRunner {
     this.cleanupConfiguration = cleanupConfiguration;
   }
 
-  public Optional<SingularityExecutorCleanupStatistics> cleanup() {
-    Optional<SingularityExecutorCleanupStatistics> cleanupStatistics = cleanup.clean();
+  public SingularityExecutorCleanupStatistics cleanup() {
+    SingularityExecutorCleanupStatistics cleanupStatistics = cleanup.clean();
 
-    if (cleanupStatistics.isPresent()) {
-      fileHelper.writeObject(cleanupStatistics.get(), cleanupConfiguration.getExecutorCleanupResultsDirectory().resolve(String.format("%s%s", System.currentTimeMillis(), cleanupConfiguration.getExecutorCleanupResultsSuffix())), LOG);
-    }
+    fileHelper.writeObject(cleanupStatistics, cleanupConfiguration.getExecutorCleanupResultsDirectory().resolve(String.format("%s%s", System.currentTimeMillis(), cleanupConfiguration.getExecutorCleanupResultsSuffix())), LOG);
 
     return cleanupStatistics;
   }
