@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -99,7 +100,7 @@ public final class JavaUtils {
     return statusCode >= 200 && statusCode < 300;
   }
 
-  public static String getHostAddress() throws Exception {
+  public static String getHostAddress() throws SocketException {
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
     while (interfaces.hasMoreElements()) {
       NetworkInterface current = interfaces.nextElement();
