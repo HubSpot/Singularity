@@ -50,7 +50,7 @@ Another useful localStorage override you can use is used to disabled the auto-re
 localStorage.setItem('suppressRefresh', true)
 ```
 
-## XSS restrictions
+## Cross-domain restrictions
 
 Your browser will not allow cross-domain requests if you're using a remote server. You have 2 options to get around this:
 
@@ -68,7 +68,7 @@ Let's say you're trying to use `http://apiroot.example/singularity/api` as your 
 127.0.0.1 local.apiroot.example
 ```
 
-So if you have SingularityUI running on localhost:3333, just point your browser to `http://local.apiroot.example:3333/singularity/api` and you've fooled your browser into not preventing XSS.
+So if you have SingularityUI running on localhost:3333, just point your browser to `http://local.apiroot.example:3333/singularity/api` and you've fooled your browser into having local UI and remote APIs on the same domain.
 
 ### Run Chrome with security disabled
 
