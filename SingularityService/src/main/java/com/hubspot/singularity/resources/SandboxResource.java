@@ -112,7 +112,7 @@ public class SandboxResource extends AbstractHistoryResource {
         final StringBuilder strBuilder = new StringBuilder(maybeChunk.get().getData().length());
 
         for (String line : Splitter.on("\n").split(maybeChunk.get().getData())) {
-          if (grepPattern.matcher(line).matches()) {
+          if (grepPattern.matcher(line).find()) {
             strBuilder.append(line);
             strBuilder.append("\n");
           }
