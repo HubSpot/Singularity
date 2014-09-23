@@ -512,7 +512,6 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
-
   public SlavePlacement getDefaultSlavePlacement() {
     return defaultSlavePlacement;
   }
