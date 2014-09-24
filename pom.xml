@@ -409,8 +409,8 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
-        <artifactId>HorizonApache</artifactId>
-        <version>0.0.3</version>
+        <artifactId>HorizonNing</artifactId>
+        <version>0.0.5</version>
       </dependency>
 
       <dependency>
