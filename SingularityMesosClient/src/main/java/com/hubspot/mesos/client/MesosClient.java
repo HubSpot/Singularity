@@ -82,7 +82,7 @@ public class MesosClient {
     try {
       return response.getAs(clazz);
     } catch (Exception e) {
-      throw new MesosClientException(String.format("Couldn't deserialize {} from {}", clazz.getSimpleName(), uri), e);
+      throw new MesosClientException(String.format("Couldn't deserialize %s from %s", clazz.getSimpleName(), uri), e);
     }
   }
 
