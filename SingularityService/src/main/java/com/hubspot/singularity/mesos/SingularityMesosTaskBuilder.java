@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
+import org.apache.mesos.Protos.ContainerInfo;
+import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
 import org.apache.mesos.Protos.Environment;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
@@ -14,6 +16,7 @@ import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.Volume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +30,9 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExecutorDataBuilder;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -62,6 +68,11 @@ public class SingularityMesosTaskBuilder {
     if (desiredTaskResources.getNumPorts() > 0) {
       portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources));
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
+    }
+
+    final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
+    if (containerInfo.isPresent()) {
+      prepareContainerInfo(bldr, containerInfo.get());
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
@@ -125,6 +136,28 @@ public class SingularityMesosTaskBuilder {
     commandBuilder.setEnvironment(envBldr.build());
   }
 
+  private void prepareContainerInfo(final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo) {
+    ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
+    containerBuilder.setType(containerInfo.getType());
+
+    final Optional<SingularityDockerInfo> dockerInfo = containerInfo.getDocker();
+    if (dockerInfo.isPresent()) {
+      containerBuilder.setDocker(DockerInfo.newBuilder().setImage(dockerInfo.get().getImage()));
+    }
+
+    for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
+      final Volume.Builder volumeBuilder = Volume.newBuilder();
+      volumeBuilder.setContainerPath(volumeInfo.getContainerPath());
+      if (volumeInfo.getHostPath().isPresent()) {
+        volumeBuilder.setHostPath(volumeInfo.getHostPath().get());
+      }
+      volumeBuilder.setMode(volumeInfo.getMode());
+      containerBuilder.addVolumes(volumeBuilder);
+    }
+
+    bldr.setContainer(containerBuilder);
+  }
+
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
@@ -181,7 +214,20 @@ public class SingularityMesosTaskBuilder {
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
-    commandBldr.setValue(getCommand(taskId, task));
+    if (task.getDeploy().getCommand().isPresent()) {
+      commandBldr.setValue(getCommand(taskId, task));
+    }
+
+    if (task.getDeploy().getArguments().isPresent()) {
+      commandBldr.addAllArguments(task.getDeploy().getArguments().get());
+    }
+
+    if (task.getDeploy().getArguments().isPresent() ||
+        // Hopefully temporary workaround for
+        // http://www.mail-archive.com/user@mesos.apache.org/msg01449.html
+        task.getDeploy().getContainerInfo().isPresent()) {
+      commandBldr.setShell(false);
+    }
 
     for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
