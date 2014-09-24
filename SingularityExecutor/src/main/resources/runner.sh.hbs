@@ -22,6 +22,8 @@ else
   echo "No deploy-specific environment variables"
 fi
 
+sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
+
 cd {{{ taskAppDirectory }}}/
 
 # load artifact's profile.d
