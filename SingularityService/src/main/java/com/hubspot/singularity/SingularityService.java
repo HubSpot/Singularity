@@ -15,6 +15,7 @@ import com.google.inject.Stage;
 import com.hubspot.dropwizard.guice.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
+import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.smtp.SMTPAppenderBundle;
 
@@ -26,6 +27,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
   public void initialize(Bootstrap<SingularityConfiguration> bootstrap) {
     GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.<SingularityConfiguration>newBuilder()
         .addModule(new SingularityServiceModule())
+        .addModule(new SingularityMesosClientModule())
         .enableAutoConfig(getClass().getPackage().getName())
         .setConfigClass(SingularityConfiguration.class)
         .build(Stage.DEVELOPMENT);

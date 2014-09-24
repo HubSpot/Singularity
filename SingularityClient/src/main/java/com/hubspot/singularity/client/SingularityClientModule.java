@@ -1,15 +1,12 @@
 package com.hubspot.singularity.client;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingHttpClient;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityClientModule extends AbstractModule {
 
@@ -22,15 +19,10 @@ public class SingularityClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    ObjectMapper objectMapper = new ObjectMapper()
-    .setSerializationInclusion(Include.NON_NULL)
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .registerModule(new GuavaModule())
-    .registerModule(new ProtobufModule());
+    ObjectMapper objectMapper = JavaUtils.newObjectMapper();
+    HttpClient httpClient = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
 
-    HttpClient client = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
-
-    bind(HttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(client);
+    bind(HttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(httpClient);
   }
 
 }
