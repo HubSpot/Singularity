@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.cleanup;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.client.MesosClient.MesosClientException;
 import com.hubspot.mesos.json.MesosExecutorObject;
 import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
@@ -50,11 +52,19 @@ public class SingularityExecutorCleanup {
     this.templateManager = templateManager;
   }
 
-  public Optional<SingularityExecutorCleanupStatistics> clean() {
+  public SingularityExecutorCleanupStatistics clean() {
     final SingularityExecutorCleanupStatisticsBuilder statisticsBldr = new SingularityExecutorCleanupStatisticsBuilder();
     final Path directory = Paths.get(executorConfiguration.getGlobalTaskDefinitionDirectory());
 
-    final Set<String> runningTaskIds = getRunningTaskIds();
+    Set<String> runningTaskIds = null;
+
+    try {
+      runningTaskIds = getRunningTaskIds();
+    } catch (MesosClientException mce) {
+      LOG.error("While fetching running tasks from mesos", mce);
+      statisticsBldr.setErrorMessage(mce.getMessage());
+      return statisticsBldr.build();
+    }
 
     LOG.info("Found {} running tasks from Mesos", runningTaskIds);
 
@@ -62,8 +72,10 @@ public class SingularityExecutorCleanup {
 
     if (runningTaskIds.isEmpty()) {
       if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-        LOG.error("Running in safe mode ({}) and found 0 running tasks - aborting cleanup", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
-        return Optional.absent();
+        final String errorMessage = String.format("Running in safe mode (%s) and found 0 running tasks - aborting cleanup", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
+        LOG.error(errorMessage);
+        statisticsBldr.setErrorMessage(errorMessage);
+        return statisticsBldr.build();
       } else {
         LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode ({})", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
       }
@@ -104,7 +116,7 @@ public class SingularityExecutorCleanup {
       }
     }
 
-    return Optional.of(statisticsBldr.build());
+    return statisticsBldr.build();
   }
 
   private MesosSlaveStateObject getSlaveState() {
@@ -112,7 +124,7 @@ public class SingularityExecutorCleanup {
       final String slaveUri = mesosClient.getSlaveUri(JavaUtils.getHostAddress());
 
       return mesosClient.getSlaveState(slaveUri);
-    } catch (Exception e) {
+    } catch (SocketException e) {
       throw Throwables.propagate(e);
     }
   }

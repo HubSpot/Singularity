@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 
 public class SingularityExecutorCleanupStatistics {
@@ -13,17 +14,13 @@ public class SingularityExecutorCleanupStatistics {
   private final int successfullyCleanedTasks;
   private final int errorTasks;
   private final int invalidTasks;
+  private final Optional<String> errorMessage;
 
   @JsonCreator
-  public SingularityExecutorCleanupStatistics(
-      @JsonProperty("totalTaskFiles") int totalTaskFiles,
-      @JsonProperty("mesosRunningTasks") int mesosRunningTasks,
-      @JsonProperty("runningTasksIgnored") int runningTasksIgnored,
-      @JsonProperty("successfullyCleanedTasks") int successfullyCleanedTasks,
-      @JsonProperty("ioErrorTasks") int ioErrorTasks,
-      @JsonProperty("errorTasks") int errorTasks,
-      @JsonProperty("invalidTasks") int invalidTasks
-    ) {
+  public SingularityExecutorCleanupStatistics(@JsonProperty("totalTaskFiles") int totalTaskFiles, @JsonProperty("mesosRunningTasks") int mesosRunningTasks,
+      @JsonProperty("runningTasksIgnored") int runningTasksIgnored, @JsonProperty("successfullyCleanedTasks") int successfullyCleanedTasks, @JsonProperty("ioErrorTasks") int ioErrorTasks,
+      @JsonProperty("errorTasks") int errorTasks, @JsonProperty("invalidTasks") int invalidTasks, @JsonProperty("errorMessage") Optional<String> errorMessage) {
+    this.errorMessage = errorMessage;
     this.totalTaskFiles = totalTaskFiles;
     this.mesosRunningTasks = mesosRunningTasks;
     this.runningTasksIgnored = runningTasksIgnored;
@@ -49,7 +46,6 @@ public class SingularityExecutorCleanupStatistics {
     return mesosRunningTasks;
   }
 
-
   public int getSuccessfullyCleanedTasks() {
     return successfullyCleanedTasks;
   }
@@ -62,10 +58,14 @@ public class SingularityExecutorCleanupStatistics {
     return invalidTasks;
   }
 
+  public Optional<String> getErrorMessage() {
+    return errorMessage;
+  }
+
   @Override
   public String toString() {
-    return "SingularityExecutorCleanupStatistics [totalTaskFiles=" + totalTaskFiles + ", ioErrorTasks=" + ioErrorTasks + ", runningTasksIgnored=" + runningTasksIgnored + ", mesosRunningTasks=" + mesosRunningTasks
-        + ", successfullyCleanedTasks=" + successfullyCleanedTasks + ", errorTasks=" + errorTasks + ", invalidTasks=" + invalidTasks + "]";
+    return "SingularityExecutorCleanupStatistics [totalTaskFiles=" + totalTaskFiles + ", ioErrorTasks=" + ioErrorTasks + ", runningTasksIgnored=" + runningTasksIgnored + ", mesosRunningTasks="
+        + mesosRunningTasks + ", successfullyCleanedTasks=" + successfullyCleanedTasks + ", errorTasks=" + errorTasks + ", invalidTasks=" + invalidTasks + ", errorMessage=" + errorMessage + "]";
   }
 
   public static class SingularityExecutorCleanupStatisticsBuilder {
@@ -77,6 +77,7 @@ public class SingularityExecutorCleanupStatistics {
     private int ioErrorTasks;
     private int errorTasks;
     private int invalidTasks;
+    private String errorMessage;
 
     public void incrTotalTaskFiles() {
       totalTaskFiles++;
@@ -106,8 +107,12 @@ public class SingularityExecutorCleanupStatistics {
       invalidTasks++;
     }
 
+    public void setErrorMessage(String errorMessage) {
+      this.errorMessage = errorMessage;
+    }
+
     public SingularityExecutorCleanupStatistics build() {
-      return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, runningTasksIgnored, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks);
+      return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, runningTasksIgnored, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks, Optional.fromNullable(errorMessage));
     }
 
   }
