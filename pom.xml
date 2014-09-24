@@ -435,6 +435,14 @@
             <groupId>com.ning</groupId>
             <artifactId>async-http-client</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId> com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
