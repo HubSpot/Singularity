@@ -277,8 +277,7 @@
         <artifactId>metrics-servlets</artifactId>
         <version>${dep.metrics.version}</version>
         <exclusions>
-          <!-- metrics servlets wants jackson core 2.2.x. However, everything 
-            else wants 2.3.x. -->
+          <!-- metrics servlets wants jackson core 2.2.x. However, everything else wants 2.3.x. -->
           <!-- exclude dep here and pray that this still works ... -->
           <exclusion>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -409,8 +408,42 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
+        <artifactId>HorizonCore</artifactId>
+        <version>0.0.5</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId> com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
         <artifactId>HorizonNing</artifactId>
         <version>0.0.5</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.ning</groupId>
+            <artifactId>async-http-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId> com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -470,8 +503,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- sentry wants jackson core 2.4.x. However, everything else 
-            wants 2.3.x. -->
+          <!-- sentry wants jackson core 2.4.x. However, everything else wants 2.3.x. -->
           <!-- exclude dep here and pray that this still works ... -->
           <exclusion>
             <groupId>com.fasterxml.jackson.core</groupId>
