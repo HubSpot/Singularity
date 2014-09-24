@@ -17,7 +17,7 @@ public class SingularityRequestHistory extends SingularityJsonObject implements 
   private final SingularityRequest request;
 
   public enum RequestHistoryType {
-    CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED;
+    CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE;
   }
 
   public static SingularityRequestHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) {

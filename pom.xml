@@ -277,7 +277,8 @@
         <artifactId>metrics-servlets</artifactId>
         <version>${dep.metrics.version}</version>
         <exclusions>
-          <!-- metrics servlets wants jackson core 2.2.x. However, everything else wants 2.3.x. -->
+          <!-- metrics servlets wants jackson core 2.2.x. However, everything 
+            else wants 2.3.x. -->
           <!-- exclude dep here and pray that this still works ... -->
           <exclusion>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -407,6 +408,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonApache</artifactId>
+        <version>0.0.3</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
         <version>2.5.0</version>
@@ -463,7 +470,8 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- sentry wants jackson core 2.4.x. However, everything else wants 2.3.x. -->
+          <!-- sentry wants jackson core 2.4.x. However, everything else 
+            wants 2.3.x. -->
           <!-- exclude dep here and pray that this still works ... -->
           <exclusion>
             <groupId>com.fasterxml.jackson.core</groupId>
