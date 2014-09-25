@@ -41,5 +41,7 @@ if [[ "$USE_ULIMIT" == "1" ]]; then
   ulimit -m $(($DEPLOY_MEM * 1024))
 fi
 
+echo "Going to execute: {{{ cmd }}}"
+
 # execute command
 exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1
