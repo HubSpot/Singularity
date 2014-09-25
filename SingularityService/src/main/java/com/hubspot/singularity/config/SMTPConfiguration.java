@@ -50,27 +50,15 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> admins = Collections.emptyList();
 
-  @NotNull
-  @JsonProperty
-  private boolean includeAdminsOnAllMails = false;
+  @JsonProperty("emails")
+  private EmailConfiguration emailConfiguration = new EmailConfiguration();
 
-  @JsonProperty("logging")
-  private SMTPLoggingConfiguration smtpLoggingConfiguration = new SMTPLoggingConfiguration();
-
-  public boolean isIncludeAdminsOnAllMails() {
-    return includeAdminsOnAllMails;
+  public EmailConfiguration getEmailConfiguration() {
+    return emailConfiguration;
   }
 
-  public void setIncludeAdminsOnAllMails(boolean includeAdminsOnAllMails) {
-    this.includeAdminsOnAllMails = includeAdminsOnAllMails;
-  }
-
-  public SMTPLoggingConfiguration getSmtpLoggingConfiguration() {
-    return smtpLoggingConfiguration;
-  }
-
-  public void setSmtpLoggingConfiguration(SMTPLoggingConfiguration smtpLoggingConfiguration) {
-    this.smtpLoggingConfiguration = smtpLoggingConfiguration;
+  public void setEmailConfiguration(EmailConfiguration emailConfiguration) {
+    this.emailConfiguration = emailConfiguration;
   }
 
   public int getTaskLogLength() {
@@ -78,7 +66,7 @@ public class SMTPConfiguration {
   }
 
   public void setTaskLogLength(Integer length) {
-    this.taskLogLength = length;
+    taskLogLength = length;
   }
 
   public Optional<String> getUsername() {

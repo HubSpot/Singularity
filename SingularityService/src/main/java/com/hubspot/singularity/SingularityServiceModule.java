@@ -81,7 +81,7 @@ public class SingularityServiceModule extends AbstractModule {
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
   public static final String UNDERLYING_CURATOR = "curator.base.instance";
 
-  public static final String TASK_FAILED_TEMPLATE = "task.failed.template";
+  public static final String TASK_COMPLETED_TEMPLATE = "task.completed.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String TASK_NOT_RUNNING_WARNING_TEMPLATE = "task.not.running.warning.template";
 
@@ -300,9 +300,9 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(TASK_FAILED_TEMPLATE)
-  public JadeTemplate getTaskFailedTemplate() throws IOException {
-    return getJadeTemplate("task_failed.jade");
+  @Named(TASK_COMPLETED_TEMPLATE)
+  public JadeTemplate getTaskCompletedTemplate() throws IOException {
+    return getJadeTemplate("task_completed.jade");
   }
 
   @Provides
@@ -310,13 +310,6 @@ public class SingularityServiceModule extends AbstractModule {
   @Named(REQUEST_IN_COOLDOWN_TEMPLATE)
   public JadeTemplate getRequestPausedTemplate() throws IOException {
     return getJadeTemplate("request_in_cooldown.jade");
-  }
-
-  @Provides
-  @Singleton
-  @Named(TASK_NOT_RUNNING_WARNING_TEMPLATE)
-  public JadeTemplate getTaskNotRunningWarningTemplate() throws IOException {
-    return getJadeTemplate("task_not_running_warning.jade");
   }
 
   @Provides
