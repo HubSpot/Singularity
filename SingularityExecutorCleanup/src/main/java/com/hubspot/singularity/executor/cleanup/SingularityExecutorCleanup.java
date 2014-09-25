@@ -150,7 +150,7 @@ public class SingularityExecutorCleanup {
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG);
 
-    return taskCleanup.cleanup();
+    return taskCleanup.cleanup(true);
   }
 
 }
