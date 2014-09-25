@@ -434,7 +434,7 @@ public class SingularityScheduler {
       boolean wasDecomissioning = wasDecomissioning(taskId, maybeActiveTask, stateCache);
 
       if (!wasDecomissioning && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
-        mailer.sendTaskFailedMail(taskId, request, state);
+        //        mailer.sendTaskFailedMail(taskId, request, state);
       } else {
         if (wasDecomissioning) {
           LOG.debug("Not sending a task failure email because task {} was on a decomissioning slave/rack", taskId);

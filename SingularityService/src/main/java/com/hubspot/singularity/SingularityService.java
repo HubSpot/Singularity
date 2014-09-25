@@ -17,7 +17,6 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.smtp.SMTPAppenderBundle;
 
 public class SingularityService extends Application<SingularityConfiguration> {
 
@@ -34,7 +33,6 @@ public class SingularityService extends Application<SingularityConfiguration> {
     bootstrap.addBundle(guiceBundle);
 
     bootstrap.addBundle(new ViewBundle());
-    bootstrap.addBundle(new SMTPAppenderBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
     bootstrap.addBundle(new MigrationsBundle<SingularityConfiguration>() {
       @Override

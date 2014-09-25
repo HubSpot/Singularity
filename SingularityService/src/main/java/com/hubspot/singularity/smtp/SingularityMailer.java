@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -42,6 +41,8 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.EmailConfiguration;
+import com.hubspot.singularity.config.EmailConfigurationEnum;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
@@ -64,14 +65,15 @@ public class SingularityMailer implements SingularityCloseable {
 
   private final TaskManager taskManager;
 
-  private final JadeTemplate taskFailedTemplate;
+  private final JadeTemplate taskCompletedTemplate;
   private final JadeTemplate requestInCooldownTemplate;
-  private final JadeTemplate taskNotRunningWarningTemplate;
 
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
 
   private final Optional<String> uiHostnameAndPath;
+
+  private final Joiner adminJoiner;
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -80,29 +82,29 @@ public class SingularityMailer implements SingularityCloseable {
 
   @Inject
   public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
-      ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_FAILED_TEMPLATE) JadeTemplate taskFailedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
-      @Named(SingularityServiceModule.TASK_NOT_RUNNING_WARNING_TEMPLATE) JadeTemplate taskNotRunningWarningTemplate, SingularityExceptionNotifier exceptionNotifier) {
+      ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_COMPLETED_TEMPLATE) JadeTemplate taskCompletedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
+      SingularityExceptionNotifier exceptionNotifier) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
     this.configuration = configuration;
-    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
+    uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
+    adminJoiner = Joiner.on(", ").skipNulls();
 
     if (maybeSmtpConfiguration.isPresent()) {
-      this.mailSenderExecutorService = Optional.of(
+      mailSenderExecutorService = Optional.of(
           new ThreadPoolExecutor(maybeSmtpConfiguration.get().getMailThreads(), maybeSmtpConfiguration.get().getMailMaxThreads(), 0L, TimeUnit.MILLISECONDS,
               new LinkedBlockingQueue<Runnable>(),
               new ThreadFactoryBuilder().setNameFormat("SingularityMailer-%d")
               .build()));
     } else {
-      this.mailSenderExecutorService = Optional.absent();
+      mailSenderExecutorService = Optional.absent();
     }
 
-    this.taskFailedTemplate = taskFailedTemplate;
+    this.taskCompletedTemplate = taskCompletedTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
-    this.taskNotRunningWarningTemplate = taskNotRunningWarningTemplate;
 
     this.exceptionNotifier = exceptionNotifier;
   }
@@ -118,14 +120,13 @@ public class SingularityMailer implements SingularityCloseable {
 
   public void sendAbortMail() {
     if (!maybeSmtpConfiguration.isPresent()) {
-      LOG.warn("Couldn't send abort mail because no SMTP configuration is present");
+      LOG.debug("Not sending abort mail - no SMTP configuration is present");
       return;
     }
 
-    final List<String> to = maybeSmtpConfiguration.get().getAdmins();
     final String subject = String.format("Singularity on %s is aborting", JavaUtils.getHostName());
 
-    queueMail(to, subject, "");
+    queueMail(maybeSmtpConfiguration.get().getEmailConfiguration().getAbort(), Optional.<SingularityRequest> absent(), subject, "");
   }
 
   private String getEmailLogFormat(List<String> toList, String subject) {
@@ -136,14 +137,14 @@ public class SingularityMailer implements SingularityCloseable {
     final Optional<SingularityTask> task = taskManager.getTask(taskId);
 
     if (!task.isPresent()) {
-      LOG.error(String.format("No task found for %s", taskId.getId()));
+      LOG.error("No task found for {}", taskId.getId());
       return Optional.absent();
     }
 
     final Optional<String> directory = taskManager.getDirectory(taskId);
 
     if (!directory.isPresent()) {
-      LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
+      LOG.error("No directory found for task {} to fetch logs", taskId);
       return Optional.absent();
     }
 
@@ -151,137 +152,145 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String fullPath = String.format("%s/%s", directory.get(), filename);
 
-    final Long logLength = Long.valueOf(this.maybeSmtpConfiguration.get().getTaskLogLength());
+    final Long logLength = Long.valueOf(maybeSmtpConfiguration.get().getTaskLogLength());
 
-    final SandboxManager sandboxManager = new SandboxManager(this.asyncHttpClient, this.objectMapper);
+    final SandboxManager sandboxManager = new SandboxManager(asyncHttpClient, objectMapper);
 
     final Optional<MesosFileChunkObject> logChunkObject;
 
     try {
       logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
-      LOG.error(String.format("Sandboxmanager failed to read %s/%s on slave %s", directory, filename, slaveHostname),  e);
+      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory, filename, slaveHostname,  e);
       return Optional.absent();
     }
 
     if (logChunkObject.isPresent()) {
       return Optional.of(logChunkObject.get().getData().split("[\r\n]+"));
     } else {
-      LOG.error(String.format("Singularity mailer failed to get %s log for %s task ", filename, taskId.getId()));
+      LOG.error("Singularity mailer failed to get {} log for {} task ", filename, taskId.getId());
       return Optional.absent();
     }
   }
 
-  private String populateGenericEmailTemplate(JadeTemplate template, SingularityRequest request, Optional<SingularityTaskId> taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, Optional<ExtendedTaskState> taskState,
-      Map<String, Object> additionalBindings) {
-    Builder<String, Object> templateSubs = ImmutableMap.<String, Object> builder();
+  private void populateRequestEmailProperties(Builder<String, Object> templateProperties, SingularityRequest request) {
+    templateProperties.put("requestId", request.getId());
+    templateProperties.put("singularityRequestLink", getSingularityRequestLink(request));
 
-    templateSubs.put("request_id", request.getId());
-    templateSubs.put("singularity_request_link", getSingularityRequestLink(request));
+    templateProperties.put("requestScheduled", request.isScheduled());
+    templateProperties.put("requestOneOff", request.isOneOff());
 
-    if (taskId.isPresent()) {
-      templateSubs.put("singularity_task_link", getSingularityTaskLink(taskId.get()));
-      templateSubs.put("stdout", getTaskLogFile(taskId.get(), "stdout").or(new String[0]));
-      templateSubs.put("stderr", getTaskLogFile(taskId.get(), "stderr").or(new String[0]));
-      templateSubs.put("duration_left", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())));
-      templateSubs.put("task_id", taskId.get().getId());
-      templateSubs.put("deploy_id", taskId.get().getDeployId());
-
-      templateSubs.put("task_directory", taskManager.getDirectory(taskId.get()).or("directory missing"));
-
-      Optional<SingularityTask> task = taskManager.getTask(taskId.get());
-
-      if (task.isPresent()) {
-        templateSubs.put("slave_hostname", task.get().getOffer().getHostname());
-      }
-    }
-
-    templateSubs.put("taskScheduled", request.isScheduled());
-
-    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
-    templateSubs.put("num_retries", request.getNumRetriesOnFailure().or(0));
-
-    if (taskState.isPresent()) {
-      templateSubs.put("status", taskState.get().getDisplayName());
-      templateSubs.put("taskStateLost", ((taskState.get() == ExtendedTaskState.TASK_LOST) || (taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN)));
-      templateSubs.put("taskStateFailed", (taskState.get() == ExtendedTaskState.TASK_FAILED));
-    }
-
-    templateSubs.put("task_updates", JadeHelper.getJadeTaskHistory(taskHistory));
-    templateSubs.put("taskEverRan", taskEverRan(taskHistory));
-
-    for (Map.Entry<String, Object> bindingEntry : additionalBindings.entrySet()) {
-      templateSubs.put(bindingEntry.getKey(), bindingEntry.getValue());
-    }
-
-    return Jade4J.render(template, templateSubs.build());
+    templateProperties.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
+    templateProperties.put("numRetries", request.getNumRetriesOnFailure().or(0));
   }
 
-  private List<String> getOwners(SingularityRequest request) {
-    return request.getOwners().or(Collections.<String> emptyList());
+  private void populateTaskEmailProperties(Builder<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
+    templateProperties.put("singularityTaskLink", getSingularityTaskLink(taskId));
+    templateProperties.put("stdout", getTaskLogFile(taskId, "stdout").or(new String[0]));
+    templateProperties.put("stderr", getTaskLogFile(taskId, "stderr").or(new String[0]));
+    templateProperties.put("taskId", taskId.getId());
+    templateProperties.put("deployId", taskId.getDeployId());
+
+    templateProperties.put("taskDirectory", taskManager.getDirectory(taskId).or("directory missing"));
+
+    Optional<SingularityTask> task = taskManager.getTask(taskId);
+
+    if (task.isPresent()) {
+      templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
+    }
+
+    templateProperties.put("status", taskState.getDisplayName());
+    templateProperties.put("taskStateLost", taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN);
+    templateProperties.put("taskStateFailed", taskState == ExtendedTaskState.TASK_FAILED);
+    templateProperties.put("taskStateFinished", taskState == ExtendedTaskState.TASK_FINISHED);
+    templateProperties.put("taskStateKilled", taskState == ExtendedTaskState.TASK_KILLED);
+
+    templateProperties.put("taskUpdates", JadeHelper.getJadeTaskHistory(taskHistory));
+    templateProperties.put("taskRan", didTaskRun(taskHistory));
   }
 
-  public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
+  private List<EmailConfigurationEnum> getEmailConfigurationEnums(ExtendedTaskState taskState) {
+    EmailConfiguration emailConfiguration = maybeSmtpConfiguration.get().getEmailConfiguration();
+
+    switch (taskState) {
+      case TASK_FAILED:
+        return emailConfiguration.getTaskFailed();
+      case TASK_FINISHED:
+        return emailConfiguration.getTaskFinished();
+      case TASK_KILLED:
+        return emailConfiguration.getTaskKilled();
+      case TASK_LOST:
+      case TASK_LOST_WHILE_DOWN:
+        return emailConfiguration.getTaskLost();
+      default:
+        return Collections.emptyList();
+    }
+  }
+
+  public void sendTaskCompletedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending task completed mail - no SMTP configuration is present");
+      return;
+    }
+
+    final List<EmailConfigurationEnum> emailSendConfiguration = getEmailConfigurationEnums(taskState);
+
+    if (emailSendConfiguration.isEmpty()) {
+      LOG.debug("Not configured to send task completed mail for {}", taskState);
+      return;
+    }
+
     Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
-    final List<String> to = getOwners(request);
-    final String subject = String.format("Task has not started yet - %s", taskId.getId());
+    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object> builder();
+    populateRequestEmailProperties(templateProperties, request);
+    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState);
 
-    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
-        .put("duration_running", DurationFormatUtils.formatDurationHMS(duration))
-        .build();
+    final String subject = getSubjectForTaskHistory(taskId, taskState, taskHistory);
 
-    final String body = populateGenericEmailTemplate(this.taskNotRunningWarningTemplate, request, Optional.of(taskId), taskHistory, Optional.<ExtendedTaskState> absent(), additionalBindings);
+    final String adminEmails = adminJoiner.join(maybeSmtpConfiguration.get().getAdmins());
+    templateProperties.put("adminEmails", adminEmails);
 
-    queueMail(to, subject, body);
-  }
+    final String body = Jade4J.render(taskCompletedTemplate, templateProperties.build());
 
-  public void sendTaskFailedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
-    if (maybeSmtpConfiguration.isPresent()) {
-      Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
-
-      final List<String> to = getOwners(request);
-      final String subject = getSubjectForTaskHistory(taskId, taskState, taskHistory);
-
-      Joiner joiner = Joiner.on(", ").skipNulls();
-      final String adminEmails = joiner.join(maybeSmtpConfiguration.get().getAdmins());
-
-      ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object>builder()
-          .put("adminEmails", adminEmails.toString())
-          .build();
-
-      final String body = populateGenericEmailTemplate(taskFailedTemplate, request, Optional.of(taskId), taskHistory, Optional.of(taskState), additionalBindings);
-
-      queueMail(to, subject, body);
-    }
+    queueMail(emailSendConfiguration, Optional.of(request), subject, body);
   }
 
   public void sendRequestInCooldownMail(SingularityRequest request) {
-    // should have task history
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending request in cooldown mail - no SMTP configuration is present");
+      return;
+    }
 
-    final List<String> to = getOwners(request);
+    final List<EmailConfigurationEnum> emailSendConfiguration = maybeSmtpConfiguration.get().getEmailConfiguration().getRequestCooldown();
+
+    if (emailSendConfiguration.isEmpty()) {
+      LOG.debug("Not configured to send request cooldown mail for");
+      return;
+    }
+
+    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object> builder();
+    populateRequestEmailProperties(templateProperties, request);
+
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
 
-    ImmutableMap<String, Object> additionalBindings = ImmutableMap.<String, Object> builder()
-        .put("num_failures", configuration.getCooldownAfterFailures())
-        .put("cooldown_delay_format", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())))
-        .put("cooldown_expires_format", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())))
-        .build();
+    templateProperties.put("numFailures", configuration.getCooldownAfterFailures());
+    templateProperties.put("cooldownDelayFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())));
+    templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
 
-    final String body = populateGenericEmailTemplate(this.requestInCooldownTemplate, request, Optional.<SingularityTaskId> absent(), Collections.<SingularityTaskHistoryUpdate> emptyList(),
-        Optional.<ExtendedTaskState> absent(), additionalBindings);
+    final String body = Jade4J.render(requestInCooldownTemplate, templateProperties.build());
 
-    queueMail(to, subject, body);
+    queueMail(emailSendConfiguration, Optional.of(request), subject, body);
   }
 
-  private boolean taskEverRan(Collection<SingularityTaskHistoryUpdate> history) {
+  private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
     SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return (simplifiedTaskState == SimplifiedTaskState.DONE) || (simplifiedTaskState == SimplifiedTaskState.RUNNING);
+    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
   }
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
-    if (!taskEverRan(history)) {
+    if (!didTaskRun(history)) {
       return String.format("Task %s, never started: (%s)", state.getDisplayName(), taskId.toString());
     }
 
@@ -304,14 +313,21 @@ public class SingularityMailer implements SingularityCloseable {
     return String.format(REQUEST_LINK_FORMAT, uiHostnameAndPath.get(), request.getId());
   }
 
-  private void queueMail(final List<String> toList, final String subject, final String body) {
-    if (toList.isEmpty()) {
-      LOG.warn(String.format("Couldn't queue email %s because no to address is present", getEmailLogFormat(toList, subject)));
-      return;
+  private void queueMail(final List<EmailConfigurationEnum> emailConfiguration, final Optional<SingularityRequest> request, final String subject, final String body) {
+    final List<String> toList = Lists.newArrayList();
+    final List<String> ccList = Lists.newArrayList();
+
+    if (emailConfiguration.contains(EmailConfigurationEnum.OWNERS) && request.isPresent() && request.get().getOwners().isPresent()) {
+      toList.addAll(request.get().getOwners().get());
+      if (emailConfiguration.contains(EmailConfigurationEnum.ADMINS)) {
+        ccList.addAll(maybeSmtpConfiguration.get().getAdmins());
+      }
+    } else if (emailConfiguration.contains(EmailConfigurationEnum.ADMINS)) {
+      toList.addAll(maybeSmtpConfiguration.get().getAdmins());
     }
 
-    if (!mailSenderExecutorService.isPresent()) {
-      LOG.warn(String.format("Couldn't queue email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject)));
+    if (toList.isEmpty()) {
+      LOG.warn("Couldn't queue email {} because no to address is present", subject);
       return;
     }
 
@@ -319,11 +335,11 @@ public class SingularityMailer implements SingularityCloseable {
 
       @Override
       public void run() {
-        sendMail(toList, subject, body);
+        sendMail(toList, ccList, subject, body);
       }
     };
 
-    LOG.debug(String.format("Queuing an email to %s (subject: %s)", toList, subject));
+    LOG.debug("Queuing an email to {}/{} (subject: {})", toList, ccList, subject);
 
     mailSenderExecutorService.get().submit(cmd);
   }
@@ -345,11 +361,7 @@ public class SingularityMailer implements SingularityCloseable {
     }
   }
 
-  public void sendMail(List<String> toList, String subject, String body) {
-    if (!maybeSmtpConfiguration.isPresent()) {
-      LOG.warn(String.format("Couldn't send email %s because no SMTP configuration is present", getEmailLogFormat(toList, subject)));
-    }
-
+  private void sendMail(List<String> toList, List<String> ccList, String subject, String body) {
     final SMTPConfiguration smtpConfiguration = maybeSmtpConfiguration.get();
 
     boolean useAuth = false;
@@ -357,7 +369,7 @@ public class SingularityMailer implements SingularityCloseable {
     if (smtpConfiguration.getUsername().isPresent() && smtpConfiguration.getPassword().isPresent()) {
       useAuth = true;
     } else if (smtpConfiguration.getUsername().isPresent() || smtpConfiguration.getPassword().isPresent()) {
-      LOG.warn(String.format("Not using smtp authentication because username (%s) or password (%s) was not present", smtpConfiguration.getUsername().isPresent(), smtpConfiguration.getPassword().isPresent()));
+      LOG.warn("Not using smtp authentication because username ({}) or password ({}) was not present", smtpConfiguration.getUsername().isPresent(), smtpConfiguration.getPassword().isPresent());
     }
 
     try {
@@ -365,28 +377,24 @@ public class SingularityMailer implements SingularityCloseable {
 
       MimeMessage message = new MimeMessage(session);
 
-      message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
+      Address[] toArray = getAddresses(toList);
+      message.addRecipients(RecipientType.TO, toArray);
 
-      if (maybeSmtpConfiguration.get().isIncludeAdminsOnAllMails()) {
-        Address[] ccArray = getAddresses(maybeSmtpConfiguration.get().getAdmins());
-        if (ccArray.length > 0) {
-          LOG.trace(String.format("Adding admins %s to mail %s", Arrays.toString(ccArray), subject));
-          message.addRecipients(RecipientType.CC, ccArray);
-        }
+      if (!ccList.isEmpty()) {
+        Address[] ccArray = getAddresses(ccList);
+        message.addRecipients(RecipientType.CC, ccArray);
       }
+
+      message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
 
       message.setSubject(subject);
       message.setContent(body, "text/html; charset=utf-8");
 
-      Address[] toArray = getAddresses(toList);
-
-      message.addRecipients(RecipientType.TO, toArray);
-
-      LOG.trace(String.format("Sending a message to %s - %s", Arrays.toString(toArray), getEmailLogFormat(toList, subject)));
+      LOG.trace("Sending a message to {} - {}", Arrays.toString(toArray), getEmailLogFormat(toList, subject));
 
       Transport.send(message);
     } catch (Throwable t) {
-      LOG.warn(String.format("Unable to send message %s", getEmailLogFormat(toList, subject)), t);
+      LOG.warn("Unable to send message {}", getEmailLogFormat(toList, subject), t);
       exceptionNotifier.notify(t);
     }
   }
@@ -398,7 +406,7 @@ public class SingularityMailer implements SingularityCloseable {
       try {
         addresses.add(new InternetAddress(to));
       } catch (AddressException t) {
-        LOG.warn(String.format("Invalid address %s - ignoring", to), t);
+        LOG.warn("Invalid address {} - ignoring", to, t);
       }
     }
 
