@@ -234,7 +234,7 @@ public class SingularityExecutorMonitor {
       try {
         sendStatusUpdate(task, taskState, message);
 
-        onFinish(task);
+        onFinish(task, taskState);
       } catch (Throwable t) {
         logAndExit(3, "Failed while finishing task {} (state {})", task.getTaskId(), taskState, t);
       }
@@ -302,12 +302,12 @@ public class SingularityExecutorMonitor {
     executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), taskState, message, task.getLog());
   }
 
-  private void onFinish(SingularityExecutorTask task) {
+  private void onFinish(SingularityExecutorTask task, Protos.TaskState taskState) {
     tasks.remove(task.getTaskId());
     processRunningTasks.remove(task.getTaskId());
     processBuildingTasks.remove(task.getTaskId());
 
-    task.cleanup();
+    task.cleanup(taskState);
 
     logging.stopTaskLogger(task.getTaskId(), task.getLog());
 
@@ -396,36 +396,52 @@ public class SingularityExecutorMonitor {
       // these code blocks must not throw exceptions since they are executed inside an executor. (or must be caught)
       @Override
       public void onSuccess(Integer exitCode) {
-        if (task.wasKilled()) {
-          String message = "Task killed. Process exited gracefully with code " + exitCode;
+        TaskState taskState = null;
+        String message = null;
 
-          if (task.wasDestroyed()) {
+        if (task.wasKilled()) {
+          taskState = TaskState.TASK_KILLED;
+
+          if (!task.wasDestroyed()) {
+            message = "Task killed. Process exited gracefully with code " + exitCode;
+          } else {
             final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis());
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
           }
-
-          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, message);
         } else if (task.isSuccessExitCode(exitCode)) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_FINISHED, "Process exited normally with code " + exitCode);
+          taskState = TaskState.TASK_FINISHED;
+
+          message = "Process exited normally with code " + exitCode;
         } else {
-          sendStatusUpdate(task, Protos.TaskState.TASK_FAILED, "Process failed with code " + exitCode);
+          taskState = TaskState.TASK_FAILED;
+
+          message = "Process failed with code " + exitCode;
         }
 
-        onFinish(task);
+        sendStatusUpdate(task, taskState, message);
+
+        onFinish(task, taskState);
       }
 
       @Override
       public void onFailure(Throwable t) {
         task.getLog().error("Task {} failed while running process", task, t);
 
+        TaskState taskState = null;
+        String message = null;
+
         if (task.wasKilled()) {
-          sendStatusUpdate(task, Protos.TaskState.TASK_KILLED, String.format("Task killed, caught %s", t.getClass().getSimpleName()));
+          taskState = TaskState.TASK_KILLED;
+          message = String.format("Task killed, caught %s", t.getClass().getSimpleName());
         } else {
-          sendStatusUpdate(task, Protos.TaskState.TASK_LOST, String.format("%s while running process %s", t.getClass().getSimpleName(), t.getMessage()));
+          taskState = TaskState.TASK_LOST;
+          message = String.format("%s while running process %s", t.getClass().getSimpleName(), t.getMessage());
         }
 
-        onFinish(task);
+        sendStatusUpdate(task, taskState, message);
+
+        onFinish(task, taskState);
       }
 
     });
