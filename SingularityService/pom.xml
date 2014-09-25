@@ -185,11 +185,6 @@
 
     <dependency>
       <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-logging</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-views</artifactId>
     </dependency>
 
@@ -198,7 +193,6 @@
       <artifactId>dropwizard-views-mustache</artifactId>
       <scope>runtime</scope>
     </dependency>
-
 
     <dependency>
       <groupId>com.codahale.metrics</groupId>
