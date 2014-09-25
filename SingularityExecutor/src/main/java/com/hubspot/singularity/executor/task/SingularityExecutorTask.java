@@ -5,12 +5,14 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskState;
 
 import ch.qos.logback.classic.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
@@ -46,8 +48,12 @@ public class SingularityExecutorTask {
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, configuration, taskDefinition.getExecutorData(), executorPid);
   }
 
-  public void cleanup() {
-    taskCleanup.cleanup();
+  public void cleanup(TaskState state) {
+    ExtendedTaskState extendedTaskState = ExtendedTaskState.fromTaskState(state);
+
+    boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed();
+
+    taskCleanup.cleanup(cleanupAppTaskDirectory);
   }
 
   public SingularityExecutorTaskLogManager getTaskLogManager() {
