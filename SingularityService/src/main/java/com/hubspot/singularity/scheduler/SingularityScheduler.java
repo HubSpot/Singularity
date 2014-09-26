@@ -420,8 +420,6 @@ public class SingularityScheduler {
       return Optional.absent();
     }
 
-    PendingType pendingType = PendingType.TASK_DONE;
-
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
       mailer.sendTaskCompletedMail(taskId, request, state);
     } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
@@ -440,6 +438,8 @@ public class SingularityScheduler {
     if (request.isOneOff()) {
       return Optional.absent();
     }
+
+    PendingType pendingType = PendingType.TASK_DONE;
 
     if (state.isSuccess()) {
       if (requestState == RequestState.SYSTEM_COOLDOWN) {
