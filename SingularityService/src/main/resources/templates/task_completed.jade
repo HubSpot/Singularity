@@ -50,7 +50,7 @@ html
           if requestOneOff
             p Singularity will not run your task again unless manually instructed.
           if !taskStateFinished
-            if !taskEverRan
+            if !taskRan
               p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
             else
               if taskStateFailed
