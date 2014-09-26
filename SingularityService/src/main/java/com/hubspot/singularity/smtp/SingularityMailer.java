@@ -199,7 +199,9 @@ public class SingularityMailer implements SingularityCloseable {
       templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
     }
 
-    templateProperties.put("status", taskState.getDisplayName());
+    boolean needsBeenPrefix = taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_KILLED || taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN;
+
+    templateProperties.put("status", String.format("%s%s", needsBeenPrefix ? "been " : "", taskState.getDisplayName()));
     templateProperties.put("taskStateLost", taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN);
     templateProperties.put("taskStateFailed", taskState == ExtendedTaskState.TASK_FAILED);
     templateProperties.put("taskStateFinished", taskState == ExtendedTaskState.TASK_FINISHED);
@@ -291,10 +293,10 @@ public class SingularityMailer implements SingularityCloseable {
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
     if (!didTaskRun(history)) {
-      return String.format("Task %s, never started: (%s)", state.getDisplayName(), taskId.toString());
+      return String.format("Task never started and was %s (%s)", state.getDisplayName(), taskId.toString());
     }
 
-    return String.format("Task %s after running: (%s)", state.getDisplayName(), taskId.toString());
+    return String.format("Task %s (%s)", state.getDisplayName(), taskId.toString());
   }
 
   private String getSingularityTaskLink(SingularityTaskId taskId) {
