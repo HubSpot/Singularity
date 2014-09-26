@@ -41,8 +41,8 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.config.EmailConfiguration;
-import com.hubspot.singularity.config.EmailConfigurationEnum;
+import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
+import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
@@ -126,7 +126,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String subject = String.format("Singularity on %s is aborting", JavaUtils.getHostName());
 
-    queueMail(maybeSmtpConfiguration.get().getEmailConfiguration().getAbort(), Optional.<SingularityRequest> absent(), subject, "");
+    queueMail(getDestination(EmailType.SINGULARITY_ABORTING), Optional.<SingularityRequest> absent(), subject, "");
   }
 
   private String getEmailLogFormat(List<String> toList, String subject) {
@@ -211,19 +211,18 @@ public class SingularityMailer implements SingularityCloseable {
     templateProperties.put("taskRan", didTaskRun(taskHistory));
   }
 
-  private List<EmailConfigurationEnum> getEmailConfigurationEnums(ExtendedTaskState taskState) {
-    EmailConfiguration emailConfiguration = maybeSmtpConfiguration.get().getEmailConfiguration();
-
+  private List<EmailDestination> getEmailDestination(ExtendedTaskState taskState, Collection<SingularityTaskHistoryUpdate> taskHistory) {
     switch (taskState) {
       case TASK_FAILED:
-        return emailConfiguration.getTaskFailed();
+        return getDestination(EmailType.TASK_FAILED);
       case TASK_FINISHED:
-        return emailConfiguration.getTaskFinished();
+        return getDestination(EmailType.TASK_FINISHED);
       case TASK_KILLED:
-        return emailConfiguration.getTaskKilled();
+        // TODO check for cleaning
+        return getDestination(EmailType.TASK_KILLED);
       case TASK_LOST:
       case TASK_LOST_WHILE_DOWN:
-        return emailConfiguration.getTaskLost();
+        return getDestination(EmailType.TASK_LOST);
       default:
         return Collections.emptyList();
     }
@@ -235,14 +234,13 @@ public class SingularityMailer implements SingularityCloseable {
       return;
     }
 
-    final List<EmailConfigurationEnum> emailSendConfiguration = getEmailConfigurationEnums(taskState);
+    final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
+    final List<EmailDestination> emailDestination = getEmailDestination(taskState, taskHistory);
 
-    if (emailSendConfiguration.isEmpty()) {
+    if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task completed mail for {}", taskState);
       return;
     }
-
-    Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
 
     final Builder<String, Object> templateProperties = ImmutableMap.<String, Object> builder();
     populateRequestEmailProperties(templateProperties, request);
@@ -255,7 +253,11 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String body = Jade4J.render(taskCompletedTemplate, templateProperties.build());
 
-    queueMail(emailSendConfiguration, Optional.of(request), subject, body);
+    queueMail(emailDestination, Optional.of(request), subject, body);
+  }
+
+  private List<EmailDestination> getDestination(EmailType type) {
+    return maybeSmtpConfiguration.get().getEmailConfiguration().get(type);
   }
 
   public void sendRequestInCooldownMail(SingularityRequest request) {
@@ -264,9 +266,9 @@ public class SingularityMailer implements SingularityCloseable {
       return;
     }
 
-    final List<EmailConfigurationEnum> emailSendConfiguration = maybeSmtpConfiguration.get().getEmailConfiguration().getRequestCooldown();
+    final List<EmailDestination> emailDestination = getDestination(EmailType.REQUEST_IN_COOLDOWN);
 
-    if (emailSendConfiguration.isEmpty()) {
+    if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send request cooldown mail for");
       return;
     }
@@ -282,7 +284,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties.build());
 
-    queueMail(emailSendConfiguration, Optional.of(request), subject, body);
+    queueMail(emailDestination, Optional.of(request), subject, body);
   }
 
   private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
@@ -315,16 +317,16 @@ public class SingularityMailer implements SingularityCloseable {
     return String.format(REQUEST_LINK_FORMAT, uiHostnameAndPath.get(), request.getId());
   }
 
-  private void queueMail(final List<EmailConfigurationEnum> emailConfiguration, final Optional<SingularityRequest> request, final String subject, final String body) {
+  private void queueMail(final List<EmailDestination> destination, final Optional<SingularityRequest> request, final String subject, final String body) {
     final List<String> toList = Lists.newArrayList();
     final List<String> ccList = Lists.newArrayList();
 
-    if (emailConfiguration.contains(EmailConfigurationEnum.OWNERS) && request.isPresent() && request.get().getOwners().isPresent()) {
+    if (destination.contains(EmailDestination.OWNERS) && request.isPresent() && request.get().getOwners().isPresent()) {
       toList.addAll(request.get().getOwners().get());
-      if (emailConfiguration.contains(EmailConfigurationEnum.ADMINS)) {
+      if (destination.contains(EmailDestination.ADMINS)) {
         ccList.addAll(maybeSmtpConfiguration.get().getAdmins());
       }
-    } else if (emailConfiguration.contains(EmailConfigurationEnum.ADMINS)) {
+    } else if (destination.contains(EmailDestination.ADMINS)) {
       toList.addAll(maybeSmtpConfiguration.get().getAdmins());
     }
 
