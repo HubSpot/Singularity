@@ -382,14 +382,6 @@ public class SingularityScheduler {
     return numMissingInstances;
   }
 
-  private boolean wasDecomissioning(SingularityTaskId taskId, Optional<SingularityTask> maybeActiveTask, SingularitySchedulerStateCache stateCache) {
-    if (!maybeActiveTask.isPresent()) {
-      return false;
-    }
-
-    return stateCache.isSlaveDecomissioning(maybeActiveTask.get().getMesosTask().getSlaveId().getValue()) || stateCache.isRackDecomissioning(taskId.getRackId());
-  }
-
   private boolean isRequestActive(Optional<SingularityRequestWithState> maybeRequestWithState) {
     return SingularityRequestWithState.isActive(maybeRequestWithState);
   }
@@ -430,18 +422,12 @@ public class SingularityScheduler {
 
     PendingType pendingType = PendingType.TASK_DONE;
 
-    boolean wasDecomissioning = wasDecomissioning(taskId, maybeActiveTask, stateCache);
-
-    if (!wasDecomissioning && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
+    if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
       mailer.sendTaskCompletedMail(taskId, request, state);
+    } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
+      LOG.debug("Not sending a task completed email because task {} is in SYSTEM_COOLDOWN", taskId);
     } else {
-      if (wasDecomissioning) {
-        LOG.debug("Not sending a task completed email because task {} was on a decomissioning slave/rack", taskId);
-      } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
-        LOG.debug("Not sending a task completed email because task {} is in SYSTEM_COOLDOWN", taskId);
-      } else {
-        LOG.debug("Not sending a task completed email for task {} because Singularity already processed this update", taskId);
-      }
+      LOG.debug("Not sending a task completed email for task {} because Singularity already processed this update", taskId);
     }
 
     if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
