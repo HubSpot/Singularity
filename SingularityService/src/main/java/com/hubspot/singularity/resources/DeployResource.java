@@ -25,7 +25,6 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
@@ -83,7 +82,7 @@ public class DeployResource extends AbstractRequestResource {
     deployManager.saveDeploy(request, deployMarker, deployRequest.getDeploy());
 
     if (requestWithState.getState() == RequestState.PAUSED) {
-      requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployRequest.getUser());
+      requestManager.deployToUnpause(request, deployRequest.getUser());
     }
 
     if (request.isDeployable()) {
