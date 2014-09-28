@@ -295,7 +295,11 @@ public class SingularityMailer implements SingularityCloseable {
   }
 
   private List<EmailDestination> getDestination(EmailType type) {
-    return maybeSmtpConfiguration.get().getEmailConfiguration().get(type);
+    List<EmailDestination> fromMap = maybeSmtpConfiguration.get().getEmailConfiguration().get(type);
+    if (fromMap == null) {
+      return Collections.emptyList();
+    }
+    return fromMap;
   }
 
   public void sendRequestInCooldownMail(SingularityRequest request) {
