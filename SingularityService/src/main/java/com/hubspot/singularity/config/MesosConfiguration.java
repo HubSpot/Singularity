@@ -25,8 +25,6 @@ public class MesosConfiguration {
   @NotNull
   private String defaultRackId = "DEFAULT";
   @NotNull
-  private Boolean allowMissingAllExistingTasksOnStartup = false;
-  @NotNull
   private Integer slaveHttpPort = 5051;
   @NotNull
   private Optional<Integer> slaveHttpsPort = Optional.absent();
@@ -79,15 +77,6 @@ public class MesosConfiguration {
 
   public void setMaxMemoryMbPerRequest(int maxMemoryMbPerRequest) {
     this.maxMemoryMbPerRequest = maxMemoryMbPerRequest;
-  }
-
-
-  public Boolean getAllowMissingAllExistingTasksOnStartup() {
-    return allowMissingAllExistingTasksOnStartup;
-  }
-
-  public void setAllowMissingAllExistingTasksOnStartup(Boolean allowMissingAllExistingTasksOnStartup) {
-    this.allowMissingAllExistingTasksOnStartup = allowMissingAllExistingTasksOnStartup;
   }
 
   public String getRackIdAttributeKey() {

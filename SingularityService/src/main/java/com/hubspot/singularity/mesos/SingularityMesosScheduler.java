@@ -235,14 +235,20 @@ public class SingularityMesosScheduler implements Scheduler {
       taskManager.deleteKilledRecord(taskIdObj);
 
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
-    } else if (maybeActiveTask.isPresent()) {
-      if (pendingDeploy == null) {
-        pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+
+      taskManager.deleteLastActiveTaskStatus(taskIdObj);
+    } else {
+      if (maybeActiveTask.isPresent()) {
+        if (pendingDeploy == null) {
+          pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+        }
+
+        if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+          newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
+        }
       }
 
-      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-        newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
-      }
+      taskManager.saveLastActiveTaskStatus(taskIdObj, status);
     }
   }
 

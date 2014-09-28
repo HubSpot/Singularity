@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,12 +20,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.scheduler.SingularityCleanupPoller;
 import com.hubspot.singularity.scheduler.SingularityCooldownPoller;
 import com.hubspot.singularity.scheduler.SingularityDeployPoller;
+import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
+import com.hubspot.singularity.scheduler.SingularityTaskReconciliationPoller;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityMesosSchedulerDelegator implements Scheduler {
@@ -47,24 +51,22 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private volatile SchedulerState state;
 
   private final List<Protos.TaskStatus> queuedUpdates;
-  private final SingularityCleanupPoller cleanupPoller;
-  private final SingularityDeployPoller deployPoller;
-  private final SingularityCooldownPoller cooldownPoller;
+
+  private final Collection<SingularityLeaderOnlyPoller> pollers;
 
   private Optional<Long> lastOfferTimestamp;
   private MasterInfo master;
 
   @Inject
   public SingularityMesosSchedulerDelegator(SingularityExceptionNotifier exceptionNotifier, SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort,
-      SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller, SingularityCooldownPoller cooldownPoller) {
+      SingularityCleanupPoller cleanupPoller, SingularityDeployPoller deployPoller, SingularityCooldownPoller cooldownPoller, SingularityTaskReconciliationPoller reconciliationPoller) {
     this.exceptionNotifier = exceptionNotifier;
 
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
-    this.cleanupPoller = cleanupPoller;
-    this.deployPoller = deployPoller;
-    this.cooldownPoller = cooldownPoller;
+
+    this.pollers = ImmutableList.of(cleanupPoller, deployPoller, cooldownPoller, reconciliationPoller);
 
     this.queuedUpdates = Lists.newArrayList();
 
@@ -96,9 +98,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   public void notifyStopping() {
     LOG.info("Scheduler is moving to stopped, current state: {}", state);
 
-    cleanupPoller.stop();
-    deployPoller.stop();
-    cooldownPoller.stop();
+    for (SingularityLeaderOnlyPoller poller : pollers) {
+      poller.stop();
+    }
 
     state = SchedulerState.STOPPED;
 
@@ -113,16 +115,16 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     abort.abort();
   }
 
-  private void startup(SchedulerDriver driver, MasterInfo masterInfo, boolean registered) {
+  private void startup(SchedulerDriver driver, MasterInfo masterInfo) {
     Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
 
     master = masterInfo;
 
-    startup.startup(masterInfo, registered);
+    startup.startup(masterInfo, driver);
 
-    cleanupPoller.start(this);
-    deployPoller.start(this);
-    cooldownPoller.start(this);
+    for (SingularityLeaderOnlyPoller poller : pollers) {
+      poller.start(this, driver);
+    }
 
     stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
 
@@ -143,7 +145,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo, true);
+      startup(driver, masterInfo);
 
       scheduler.registered(driver, frameworkId, masterInfo);
     } catch (Throwable t) {
@@ -158,7 +160,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo, false);
+      startup(driver, masterInfo);
 
       scheduler.reregistered(driver, masterInfo);
     } catch (Throwable t) {

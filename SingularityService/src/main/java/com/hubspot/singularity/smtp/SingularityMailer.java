@@ -203,7 +203,7 @@ public class SingularityMailer implements SingularityCloseable {
 
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().getDisplayName());
-      templateSubs.put("taskStateLost", ((taskState.get() == ExtendedTaskState.TASK_LOST) || (taskState.get() == ExtendedTaskState.TASK_LOST_WHILE_DOWN)));
+      templateSubs.put("taskStateLost", (taskState.get() == ExtendedTaskState.TASK_LOST));
       templateSubs.put("taskStateFailed", (taskState.get() == ExtendedTaskState.TASK_FAILED));
     }
 

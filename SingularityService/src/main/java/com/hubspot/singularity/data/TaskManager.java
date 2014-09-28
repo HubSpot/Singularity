@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.apache.mesos.Protos.TaskStatus;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -42,6 +43,7 @@ import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder
 import com.hubspot.singularity.data.transcoders.SingularityTaskHealthcheckResultTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskIdTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityTaskStatusTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
@@ -51,6 +53,7 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String TASKS_ROOT = "/tasks";
 
   private static final String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
+  private static final String LAST_ACTIVE_TASK_STATUSES_PATH_ROOT = TASKS_ROOT + "/statuses";
   private static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
@@ -70,6 +73,7 @@ public class TaskManager extends CuratorAsyncManager {
   private final SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder;
   private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
   private final SingularityTaskTranscoder taskTranscoder;
+  private final SingularityTaskStatusTranscoder taskStatusTranscoder;
   private final SingularityTaskIdTranscoder taskIdTranscoder;
   private final SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder;
   private final SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder;
@@ -79,13 +83,15 @@ public class TaskManager extends CuratorAsyncManager {
   private final WebhookManager webhookManager;
 
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder, SingularityTaskIdTranscoder taskIdTranscoder,
-      SingularityLoadBalancerUpdateTranscoder taskLoadBalancerHistoryUpdateTranscoder, SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder,
-      SingularityTaskCleanupTranscoder taskCleanupTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder, SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder) {
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder,
+      SingularityTaskIdTranscoder taskIdTranscoder, SingularityLoadBalancerUpdateTranscoder taskLoadBalancerHistoryUpdateTranscoder, SingularityTaskStatusTranscoder taskStatusTranscoder,
+      SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder,
+      SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder, SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
     this.taskTranscoder = taskTranscoder;
+    this.taskStatusTranscoder = taskStatusTranscoder;
     this.killedTaskIdRecordTranscoder = killedTaskIdRecordTranscoder;
     this.taskCleanupTranscoder = taskCleanupTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
@@ -115,6 +121,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   private String getHealthcheckParentPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), HEALTHCHECKS_PATH);
+  }
+
+  private String getLastActiveTaskStatusPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskId.getId());
   }
 
   private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
@@ -187,6 +197,10 @@ public class TaskManager extends CuratorAsyncManager {
     save(getDirectoryPath(taskId), Optional.of(JavaUtils.toBytes(directory)));
   }
 
+  public void saveLastActiveTaskStatus(SingularityTaskId taskId, TaskStatus taskStatus) {
+    save(getLastActiveTaskStatusPath(taskId), taskStatus, taskStatusTranscoder);
+  }
+
   public Optional<String> getDirectory(SingularityTaskId taskId) {
     return getData(getDirectoryPath(taskId), StringTranscoder.STRING_TRANSCODER);
   }
@@ -249,6 +263,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityTask> getActiveTasks() {
     return getAsyncChildren(ACTIVE_PATH_ROOT, taskTranscoder);
+  }
+
+  public List<TaskStatus> getLastActiveTaskStatuses() {
+    return getAsyncChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskStatusTranscoder);
   }
 
   public List<SingularityTask> getTasksOnSlave(List<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
@@ -473,6 +491,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteKilledRecord(SingularityTaskId taskId) {
     return delete(getKilledPath(taskId));
+  }
+
+  public SingularityDeleteResult deleteLastActiveTaskStatus(SingularityTaskId taskId) {
+    return delete(getLastActiveTaskStatusPath(taskId));
   }
 
   public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {

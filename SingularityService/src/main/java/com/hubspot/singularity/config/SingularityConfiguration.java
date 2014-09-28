@@ -141,6 +141,9 @@ public class SingularityConfiguration extends Configuration {
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @NotNull
+  private long reconcileTasksEveryMillis = TimeUnit.SECONDS.toMillis(30);
+
+  @NotNull
   private boolean sandboxDefaultsToTaskId = true;
 
   @NotNull
@@ -274,6 +277,14 @@ public class SingularityConfiguration extends Configuration {
 
   public int getMaxRequestIdSize() {
     return maxRequestIdSize;
+  }
+
+  public long getReconcileTasksEveryMillis() {
+    return reconcileTasksEveryMillis;
+  }
+
+  public void setReconcileTasksEveryMillis(long reconcileTasksEveryMillis) {
+    this.reconcileTasksEveryMillis = reconcileTasksEveryMillis;
   }
 
   public MesosConfiguration getMesosConfiguration() {
