@@ -29,9 +29,9 @@ public class SingularityTaskReconciliation {
     Set<SingularityTaskId> taskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
     List<TaskStatus> taskStatuses = taskManager.getLastActiveTaskStatuses();
 
-    for (Iterator<TaskStatus> taskStatusItr = taskStatuses.iterator(); taskStatusItr.hasNext(); ) {
+    for (Iterator<TaskStatus> taskStatusItr = taskStatuses.iterator(); taskStatusItr.hasNext();) {
       TaskStatus taskStatus = taskStatusItr.next();
-      SingularityTaskId taskId = SingularityTaskId.fromString(taskStatus.getTaskId().toString());
+      SingularityTaskId taskId = SingularityTaskId.fromString(taskStatus.getTaskId().getValue());
 
       if (!taskIds.contains(taskId)) {
         LOG.info("Task {} not found, deleting taskStatus", taskId);
