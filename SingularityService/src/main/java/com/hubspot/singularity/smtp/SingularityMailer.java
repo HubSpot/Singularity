@@ -200,10 +200,10 @@ public class SingularityMailer implements SingularityCloseable {
       templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
     }
 
-    boolean needsBeenPrefix = (taskState == ExtendedTaskState.TASK_LOST) || (taskState == ExtendedTaskState.TASK_KILLED) || (taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN);
+    boolean needsBeenPrefix = (taskState == ExtendedTaskState.TASK_LOST) || (taskState == ExtendedTaskState.TASK_KILLED);
 
     templateProperties.put("status", String.format("%s%s", needsBeenPrefix ? "been " : "", taskState.getDisplayName()));
-    templateProperties.put("taskStateLost", (taskState == ExtendedTaskState.TASK_LOST) || (taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN));
+    templateProperties.put("taskStateLost", taskState == ExtendedTaskState.TASK_LOST);
     templateProperties.put("taskStateFailed", taskState == ExtendedTaskState.TASK_FAILED);
     templateProperties.put("taskStateFinished", taskState == ExtendedTaskState.TASK_FINISHED);
     templateProperties.put("taskStateKilled", taskState == ExtendedTaskState.TASK_KILLED);
@@ -259,7 +259,6 @@ public class SingularityMailer implements SingularityCloseable {
 
         return Optional.of(EmailType.TASK_KILLED);
       case TASK_LOST:
-      case TASK_LOST_WHILE_DOWN:
         return Optional.of(EmailType.TASK_LOST);
       default:
         return Optional.absent();
