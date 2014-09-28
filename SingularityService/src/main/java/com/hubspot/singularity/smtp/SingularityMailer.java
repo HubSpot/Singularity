@@ -38,6 +38,7 @@ import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -199,10 +200,10 @@ public class SingularityMailer implements SingularityCloseable {
       templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
     }
 
-    boolean needsBeenPrefix = taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_KILLED || taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN;
+    boolean needsBeenPrefix = (taskState == ExtendedTaskState.TASK_LOST) || (taskState == ExtendedTaskState.TASK_KILLED) || (taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN);
 
     templateProperties.put("status", String.format("%s%s", needsBeenPrefix ? "been " : "", taskState.getDisplayName()));
-    templateProperties.put("taskStateLost", taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN);
+    templateProperties.put("taskStateLost", (taskState == ExtendedTaskState.TASK_LOST) || (taskState == ExtendedTaskState.TASK_LOST_WHILE_DOWN));
     templateProperties.put("taskStateFailed", taskState == ExtendedTaskState.TASK_FAILED);
     templateProperties.put("taskStateFinished", taskState == ExtendedTaskState.TASK_FINISHED);
     templateProperties.put("taskStateKilled", taskState == ExtendedTaskState.TASK_KILLED);
@@ -211,20 +212,57 @@ public class SingularityMailer implements SingularityCloseable {
     templateProperties.put("taskRan", didTaskRun(taskHistory));
   }
 
-  private List<EmailDestination> getEmailDestination(ExtendedTaskState taskState, Collection<SingularityTaskHistoryUpdate> taskHistory) {
+  private Optional<TaskCleanupType> getTaskCleanupTypefromSingularityTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    if (!taskHistoryUpdate.getStatusMessage().isPresent()) {
+      return Optional.absent();
+    }
+
+    try {
+      return Optional.of(TaskCleanupType.valueOf(taskHistoryUpdate.getStatusMessage().get()));
+    } catch (IllegalArgumentException iae) {
+      LOG.warn("Couldn't parse TaskCleanupType from update {}", taskHistoryUpdate);
+      return Optional.absent();
+    }
+  }
+
+  private Collection<EmailDestination> getEmailDestination(ExtendedTaskState taskState, Collection<SingularityTaskHistoryUpdate> taskHistory) {
+    Optional<EmailType> emailType = getEmailType(taskState, taskHistory);
+    if (!emailType.isPresent()) {
+      return Collections.emptyList();
+    }
+    return getDestination(emailType.get());
+  }
+
+  private Optional<EmailType> getEmailType(ExtendedTaskState taskState, Collection<SingularityTaskHistoryUpdate> taskHistory) {
     switch (taskState) {
       case TASK_FAILED:
-        return getDestination(EmailType.TASK_FAILED);
+        return Optional.of(EmailType.TASK_FAILED);
       case TASK_FINISHED:
-        return getDestination(EmailType.TASK_FINISHED);
+        return Optional.of(EmailType.TASK_FINISHED);
       case TASK_KILLED:
-        // TODO check for cleaning
-        return getDestination(EmailType.TASK_KILLED);
+        Optional<SingularityTaskHistoryUpdate> cleaningUpdate = SingularityTaskHistoryUpdate.getUpdate(taskHistory, ExtendedTaskState.TASK_CLEANING);
+
+        if (cleaningUpdate.isPresent()) {
+          Optional<TaskCleanupType> cleanupType = getTaskCleanupTypefromSingularityTaskHistoryUpdate(cleaningUpdate.get());
+
+          if (cleanupType.isPresent()) {
+            switch (cleanupType.get()) {
+              case DECOMISSIONING:
+                return Optional.of(EmailType.TASK_KILLED_DECOMISSIONED);
+              case UNHEALTHY_NEW_TASK:
+              case OVERDUE_NEW_TASK:
+                return Optional.of(EmailType.TASK_KILLED_UNHEALTHY);
+              default:
+            }
+          }
+        }
+
+        return Optional.of(EmailType.TASK_KILLED);
       case TASK_LOST:
       case TASK_LOST_WHILE_DOWN:
-        return getDestination(EmailType.TASK_LOST);
+        return Optional.of(EmailType.TASK_LOST);
       default:
-        return Collections.emptyList();
+        return Optional.absent();
     }
   }
 
@@ -235,7 +273,7 @@ public class SingularityMailer implements SingularityCloseable {
     }
 
     final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
-    final List<EmailDestination> emailDestination = getEmailDestination(taskState, taskHistory);
+    final Collection<EmailDestination> emailDestination = getEmailDestination(taskState, taskHistory);
 
     if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task completed mail for {}", taskState);
@@ -290,7 +328,7 @@ public class SingularityMailer implements SingularityCloseable {
   private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
     SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
+    return (simplifiedTaskState == SimplifiedTaskState.DONE) || (simplifiedTaskState == SimplifiedTaskState.RUNNING);
   }
 
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
@@ -317,7 +355,7 @@ public class SingularityMailer implements SingularityCloseable {
     return String.format(REQUEST_LINK_FORMAT, uiHostnameAndPath.get(), request.getId());
   }
 
-  private void queueMail(final List<EmailDestination> destination, final Optional<SingularityRequest> request, final String subject, final String body) {
+  private void queueMail(final Collection<EmailDestination> destination, final Optional<SingularityRequest> request, final String subject, final String body) {
     final List<String> toList = Lists.newArrayList();
     final List<String> ccList = Lists.newArrayList();
 
