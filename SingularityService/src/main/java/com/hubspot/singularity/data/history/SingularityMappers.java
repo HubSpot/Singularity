@@ -5,6 +5,8 @@ import java.sql.SQLException;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
@@ -23,6 +25,8 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
 public class SingularityMappers {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMappers.class);
 
   public static class SingularityBytesMapper implements ResultSetMapper<byte[]> {
 
@@ -56,15 +60,20 @@ public class SingularityMappers {
 
     @Override
     public SingularityTaskIdHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-      String lastTaskStatus = r.getString("lastTaskStatus");
+      final SingularityTaskId taskId = SingularityTaskId.fromString(r.getString("taskId"));
+      final String lastTaskStatus = r.getString("lastTaskStatus");
 
       Optional<ExtendedTaskState> lastTaskState = Optional.absent();
 
       if (lastTaskStatus != null) {
-        lastTaskState = Optional.of(ExtendedTaskState.valueOf(lastTaskStatus));
+        try {
+          lastTaskState = Optional.of(ExtendedTaskState.valueOf(lastTaskStatus));
+        } catch (IllegalArgumentException e) {
+          LOG.warn("Found invalid taskState {} in DB for task {}", lastTaskState, taskId, e);
+        }
       }
 
-      return new SingularityTaskIdHistory(SingularityTaskId.fromString(r.getString("taskId")), r.getTimestamp("updatedAt").getTime(), lastTaskState);
+      return new SingularityTaskIdHistory(taskId, r.getTimestamp("updatedAt").getTime(), lastTaskState);
     }
 
   }
