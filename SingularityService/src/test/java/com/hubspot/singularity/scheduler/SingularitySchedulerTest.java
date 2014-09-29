@@ -555,7 +555,11 @@ public class SingularitySchedulerTest {
   }
 
   private void deploy(String deployId) {
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+    deploy(deployId, Optional.<Boolean> absent());
+  }
+
+  private void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), Optional.<String> absent(), unpauseOnDeploy));
   }
 
   @Test
@@ -722,4 +726,49 @@ public class SingularitySchedulerTest {
     scheduler.drainPendingQueue(stateCacheProvider.get());
   }
 
+  @Test
+  public void testUnpauseoOnDeploy() {
+    initRequest();
+    initFirstDeploy();
+
+    requestManager.pause(request, Optional.<String> absent());
+
+    boolean exception = false;
+
+    try {
+      deploy("d2");
+    } catch (Exception e) {
+      exception = true;
+    }
+
+    Assert.assertTrue(exception);
+
+    deploy("d3", Optional.of(true));
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.PAUSED);
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+
+    deploy("d4", Optional.of(true));
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_RUNNING);
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+  }
 }

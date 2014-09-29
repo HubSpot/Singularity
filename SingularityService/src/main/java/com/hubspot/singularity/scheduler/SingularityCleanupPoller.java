@@ -1,13 +1,9 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.mesos.SchedulerDriver;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
@@ -15,54 +11,20 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityCleanupPoller {
+public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityCleanupPoller.class);
-
-  private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityCleaner cleaner;
-  private final SingularityConfiguration configuration;
-  private final ScheduledExecutorService executorService;
-  private final SingularityAbort abort;
-  private final SingularityCloser closer;
 
   @Inject
   public SingularityCleanupPoller(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityCleaner cleaner, SingularityAbort abort, SingularityCloser closer) {
-    this.exceptionNotifier = exceptionNotifier;
+    super(exceptionNotifier, abort, closer, configuration.getCleanupEverySeconds(), TimeUnit.SECONDS,  SchedulerLockType.LOCK);
+
     this.cleaner = cleaner;
-    this.abort = abort;
-    this.configuration = configuration;
-    this.closer = closer;
-
-    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityCleanupPoller-%d").build());
   }
 
-  public void start(final SingularityMesosSchedulerDelegator mesosScheduler) {
-    LOG.info(String.format("Starting a cleanup poller with a %s second delay", configuration.getCleanupEverySeconds()));
-
-    executorService.scheduleWithFixedDelay(new Runnable() {
-
-      @Override
-      public void run() {
-        mesosScheduler.lock();
-
-        try {
-          cleaner.drainCleanupQueue();
-
-        } catch (Throwable t) {
-          LOG.error("Caught an exception while draining cleanup queue -- aborting", t);
-          exceptionNotifier.notify(t);
-          abort.abort();
-        } finally {
-          mesosScheduler.release();
-        }
-      }
-    },
-    configuration.getCleanupEverySeconds(), configuration.getCleanupEverySeconds(), TimeUnit.SECONDS);
-  }
-
-  public void stop() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  @Override
+  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler, SchedulerDriver driver) {
+    cleaner.drainCleanupQueue();
   }
 
 }

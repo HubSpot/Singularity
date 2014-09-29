@@ -4,17 +4,14 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityRunnerBaseModule extends AbstractModule {
 
@@ -49,7 +46,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   @Named(PROCESS_NAME)
   public String getProcessName() {
     String name = ManagementFactory.getRuntimeMXBean().getName();
-    if ((name != null) && name.contains("@")) {
+    if (name != null && name.contains("@")) {
       return name.substring(0, name.indexOf("@"));
     }
     return name;
@@ -58,12 +55,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
-    final ObjectMapper mapper = new ObjectMapper();
-    mapper.setSerializationInclusion(Include.NON_NULL);
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.registerModule(new GuavaModule());
-    mapper.registerModule(new ProtobufModule());
-    return mapper;
+    return JavaUtils.newObjectMapper();
   }
 
   @Provides

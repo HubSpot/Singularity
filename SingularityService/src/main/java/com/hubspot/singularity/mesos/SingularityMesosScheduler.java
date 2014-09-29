@@ -212,12 +212,12 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
-    final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
     final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
+    final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
 
     Optional<SingularityPendingDeploy> pendingDeploy = null;
 
-    if (maybeActiveTask.isPresent() && (status.getState() == TaskState.TASK_RUNNING)) {
+    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
       pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
       healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);
@@ -235,14 +235,20 @@ public class SingularityMesosScheduler implements Scheduler {
       taskManager.deleteKilledRecord(taskIdObj);
 
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
-    } else if (maybeActiveTask.isPresent()) {
-      if (pendingDeploy == null) {
-        pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+
+      taskManager.deleteLastActiveTaskStatus(taskIdObj);
+    } else {
+      if (maybeActiveTask.isPresent()) {
+        if (pendingDeploy == null) {
+          pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+        }
+
+        if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+          newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
+        }
       }
 
-      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-        newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
-      }
+      taskManager.saveLastActiveTaskStatus(taskIdObj, status);
     }
   }
 

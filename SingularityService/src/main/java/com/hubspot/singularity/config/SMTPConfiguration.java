@@ -2,11 +2,16 @@ package com.hubspot.singularity.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
+import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 
 public class SMTPConfiguration {
 
@@ -50,27 +55,21 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> admins = Collections.emptyList();
 
-  @NotNull
-  @JsonProperty
-  private boolean includeAdminsOnAllMails = false;
+  @JsonProperty("emails")
+  private Map<EmailType, List<EmailDestination>> emailConfiguration = ImmutableMap.<EmailType, List<EmailDestination>>builder()
+      .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
+      .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
+      .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
+      .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
+      .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .build();
 
-  @JsonProperty("logging")
-  private SMTPLoggingConfiguration smtpLoggingConfiguration = new SMTPLoggingConfiguration();
-
-  public boolean isIncludeAdminsOnAllMails() {
-    return includeAdminsOnAllMails;
+  public Map<EmailType, List<EmailDestination>> getEmailConfiguration() {
+    return emailConfiguration;
   }
 
-  public void setIncludeAdminsOnAllMails(boolean includeAdminsOnAllMails) {
-    this.includeAdminsOnAllMails = includeAdminsOnAllMails;
-  }
-
-  public SMTPLoggingConfiguration getSmtpLoggingConfiguration() {
-    return smtpLoggingConfiguration;
-  }
-
-  public void setSmtpLoggingConfiguration(SMTPLoggingConfiguration smtpLoggingConfiguration) {
-    this.smtpLoggingConfiguration = smtpLoggingConfiguration;
+  public void setEmailConfiguration(Map<EmailType, List<EmailDestination>> emailConfiguration) {
+    this.emailConfiguration = emailConfiguration;
   }
 
   public int getTaskLogLength() {
@@ -78,7 +77,7 @@ public class SMTPConfiguration {
   }
 
   public void setTaskLogLength(Integer length) {
-    this.taskLogLength = length;
+    taskLogLength = length;
   }
 
   public Optional<String> getUsername() {
