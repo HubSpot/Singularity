@@ -33,6 +33,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.SingularityDeployRequest;
 
 public class SingularityClient {
 
@@ -209,26 +210,14 @@ public class SingularityClient {
   }
 
   private HttpResponse post(String uri, String type, Optional<?> body, Optional<String> user) {
-    final Collection<Pair<String, String>> queryParams;
-
-    if (user.isPresent()) {
-      queryParams = ImmutableList.of(Pair.of("user", user.get()));
-    } else {
-      queryParams = ImmutableList.of();
-    }
-
-    return post(uri, type, body, queryParams);
-  }
-
-  private HttpResponse post(String uri, String type, Optional<?> body, Collection<Pair<String, String>> queryParams) {
     LOG.info("Posting {} to {}", type, uri);
 
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.POST);
 
-    for (Pair<String, String> queryParam : queryParams) {
-      request.addQueryParam(queryParam.getKey(), queryParam.getValue());
+    if (user.isPresent()) {
+      request.addQueryParam("user", user.get());
     }
 
     if (body.isPresent()) {
@@ -317,7 +306,8 @@ public class SingularityClient {
       queryParams.add(Pair.of("deployUnpause", Boolean.toString(deployUnpause.get())));
     }
 
-    HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())), Optional.of(pendingDeploy), queryParams);
+    HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
+        Optional.of(new SingularityDeployRequest(pendingDeploy, user, deployUnpause)), Optional.<String> absent());
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }
