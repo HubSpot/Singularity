@@ -4,13 +4,13 @@ import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SlavePlacement;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -205,7 +205,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
-    return Optional.fromNullable(databaseConfiguration);
+    return Optional.ofNullable(databaseConfiguration);
   }
 
   public long getDeltaAfterWhichTasksAreLateMillis() {
@@ -241,7 +241,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<Map<String, String>> getLoadBalancerQueryParams() {
-    return Optional.fromNullable(loadBalancerQueryParams);
+    return Optional.ofNullable(loadBalancerQueryParams);
   }
 
   public long getLoadBalancerRequestTimeoutMillis() {
@@ -289,7 +289,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<S3Configuration> getS3Configuration() {
-    return Optional.fromNullable(s3Configuration);
+    return Optional.ofNullable(s3Configuration);
   }
 
   public long getSaveStateEverySeconds() {
@@ -297,11 +297,11 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<SentryConfiguration> getSentryConfiguration(){
-    return Optional.fromNullable(sentryConfiguration);
+    return Optional.ofNullable(sentryConfiguration);
   }
 
   public Optional<SMTPConfiguration> getSmtpConfiguration() {
-    return Optional.fromNullable(smtpConfiguration);
+    return Optional.ofNullable(smtpConfiguration);
   }
 
   public UIConfiguration getUiConfiguration() {

@@ -3,11 +3,11 @@ package com.hubspot.singularity.logwatcher.config.test;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
@@ -44,7 +44,7 @@ public class MemoryStore implements SimpleStore {
 
   @Override
   public Optional<Long> getPosition(TailMetadata tail) {
-    return Optional.fromNullable(map.get(tail));
+    return Optional.ofNullable(map.get(tail));
   }
 
   @Override

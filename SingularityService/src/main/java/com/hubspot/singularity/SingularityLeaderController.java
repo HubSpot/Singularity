@@ -2,6 +2,8 @@ package com.hubspot.singularity;
 
 import io.dropwizard.lifecycle.Managed;
 
+import java.util.Optional;
+
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.mesos.Protos;
@@ -9,7 +11,6 @@ import org.apache.mesos.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 

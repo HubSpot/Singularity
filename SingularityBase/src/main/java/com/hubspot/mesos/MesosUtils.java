@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import org.apache.mesos.Protos.MasterInfo;
@@ -17,7 +18,6 @@ import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -235,7 +235,7 @@ public final class MesosUtils {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private static final Comparator<Range> RANGE_COMPARATOR = new Comparator<Range>() {

@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 
@@ -31,7 +31,7 @@ public class JsonObjectFileHelper {
     log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
 
     if (bytes.length == 0) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     try {
@@ -41,7 +41,7 @@ public class JsonObjectFileHelper {
       log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), JavaUtils.toString(bytes), e);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public boolean writeObject(Object object, Path path, Logger log) {

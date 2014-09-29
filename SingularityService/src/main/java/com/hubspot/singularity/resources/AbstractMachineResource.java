@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.data.AbstractMachineManager;

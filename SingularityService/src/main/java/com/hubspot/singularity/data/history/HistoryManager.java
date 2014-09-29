@@ -1,8 +1,8 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;

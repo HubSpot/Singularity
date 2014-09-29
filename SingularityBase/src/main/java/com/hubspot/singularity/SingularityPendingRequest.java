@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 public class SingularityPendingRequest extends SingularityJsonObject {
 
@@ -40,7 +40,7 @@ public class SingularityPendingRequest extends SingularityJsonObject {
   }
 
   public SingularityPendingRequest(String requestId, String deployId, PendingType pendingType) {
-    this(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
+    this(requestId, deployId, System.currentTimeMillis(), Optional.empty(), Optional.empty(), pendingType);
   }
 
   @JsonCreator

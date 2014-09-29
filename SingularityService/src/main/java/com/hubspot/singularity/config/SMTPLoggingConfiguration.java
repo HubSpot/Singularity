@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.Optional;
 import java.util.TimeZone;
 
 import javax.validation.constraints.NotNull;
@@ -7,7 +8,6 @@ import javax.validation.constraints.NotNull;
 import ch.qos.logback.classic.Level;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class SMTPLoggingConfiguration {
 
@@ -54,11 +54,11 @@ public class SMTPLoggingConfiguration {
   }
 
   public Optional<String> getLogFormat() {
-    return Optional.fromNullable(logFormat);
+    return Optional.ofNullable(logFormat);
   }
 
   public Optional<String> getLocalhost() {
-    return Optional.fromNullable(localhost);
+    return Optional.ofNullable(localhost);
   }
 
   public String getSubject() {

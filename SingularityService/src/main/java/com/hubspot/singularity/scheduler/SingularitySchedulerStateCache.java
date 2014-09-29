@@ -1,9 +1,9 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -38,15 +38,15 @@ public class SingularitySchedulerStateCache {
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
 
-    activeTaskIds = Optional.absent();
-    scheduledTasks = Optional.absent();
-    decomissioningRacks = Optional.absent();
-    decomissioningRackIds = Optional.absent();
-    decomissioningSlaves = Optional.absent();
-    decomissioningSlaveIds = Optional.absent();
-    cleaningTasks = Optional.absent();
-    numActiveRacks = Optional.absent();
-    numActiveSlaves = Optional.absent();
+    activeTaskIds = Optional.empty();
+    scheduledTasks = Optional.empty();
+    decomissioningRacks = Optional.empty();
+    decomissioningRackIds = Optional.empty();
+    decomissioningSlaves = Optional.empty();
+    decomissioningSlaveIds = Optional.empty();
+    cleaningTasks = Optional.empty();
+    numActiveRacks = Optional.empty();
+    numActiveSlaves = Optional.empty();
   }
 
   public List<SingularityTaskId> getActiveTaskIds() {

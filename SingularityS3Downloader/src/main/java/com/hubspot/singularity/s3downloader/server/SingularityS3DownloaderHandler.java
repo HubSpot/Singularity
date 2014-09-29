@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3downloader.server;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.servlet.ServletException;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -84,7 +84,7 @@ public class SingularityS3DownloaderHandler extends AbstractHandler {
     try {
       return Optional.of(objectMapper.readValue(request.getInputStream(), ArtifactDownloadRequest.class));
     } catch (Throwable t) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

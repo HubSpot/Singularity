@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.mesos.Protos.MasterInfo;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -130,7 +130,7 @@ public class SingularityStartup {
 
       if (simplifiedTaskState != SimplifiedTaskState.DONE) {
         SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
-        Optional<SingularityPendingDeploy> pendingDeploy = Optional.fromNullable(pendingDeploys.get(deployKey));
+        Optional<SingularityPendingDeploy> pendingDeploy = Optional.ofNullable(pendingDeploys.get(deployKey));
 
         if (!pendingDeploy.isPresent()) {
           newTaskChecker.enqueueNewTaskCheck(task);
@@ -186,7 +186,7 @@ public class SingularityStartup {
     for (String inactiveTaskId : inactiveTaskIds) {
       SingularityTaskId taskId = SingularityTaskId.fromString(inactiveTaskId);
 
-      SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), ExtendedTaskState.TASK_LOST_WHILE_DOWN, Optional.<String> absent()));
+      SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), ExtendedTaskState.TASK_LOST_WHILE_DOWN, Optional.empty()));
 
       logSupport.checkDirectory(taskId);
 

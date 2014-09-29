@@ -5,9 +5,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Properties;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
 public abstract class SingularityConfigurationLoader {

@@ -2,8 +2,8 @@ package com.hubspot.singularity.logwatcher;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
 public interface SimpleStore extends Closeable {

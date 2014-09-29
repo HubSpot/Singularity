@@ -1,10 +1,11 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
+
 import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
 public class SingularityPendingTask extends SingularityJsonObject {

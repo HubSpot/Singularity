@@ -18,13 +18,13 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -195,11 +195,11 @@ public final class JavaUtils {
   }
 
   public static <T> Optional<T> getFirst(Iterable<T> iterable) {
-    return Optional.fromNullable(Iterables.getFirst(iterable, null));
+    return Optional.ofNullable(Iterables.getFirst(iterable, null));
   }
 
   public static <T> Optional<T> getLast(Iterable<T> iterable) {
-    return Optional.fromNullable(Iterables.getLast(iterable, null));
+    return Optional.ofNullable(Iterables.getLast(iterable, null));
   }
 
 }

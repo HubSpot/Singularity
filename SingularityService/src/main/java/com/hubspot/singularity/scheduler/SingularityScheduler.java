@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -13,7 +14,6 @@ import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -90,7 +90,7 @@ public class SingularityScheduler {
 
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decomissioningObject);
 
-    taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
+    taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
   }
 
   public void checkForDecomissions(SingularitySchedulerStateCache stateCache) {
@@ -229,7 +229,7 @@ public class SingularityScheduler {
       return requestWithState.getState();
     }
 
-    if (cooldown.hasCooldownExpired(deployStatistics, Optional.<Long> absent())) {
+    if (cooldown.hasCooldownExpired(deployStatistics, Optional.empty())) {
       requestManager.exitCooldown(requestWithState.getRequest());
       return RequestState.ACTIVE;
     }
@@ -375,7 +375,7 @@ public class SingularityScheduler {
 
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
 
-        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
+        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
       }
     }
 
@@ -415,7 +415,7 @@ public class SingularityScheduler {
 
     if (!isRequestActive(maybeRequestWithState)) {
       LOG.warn("Not scheduling a new task, {} is {}", taskId.getRequestId(), SingularityRequestWithState.getRequestState(maybeRequestWithState));
-      return Optional.absent();
+      return Optional.empty();
     }
 
     RequestState requestState = maybeRequestWithState.get().getState();
@@ -425,7 +425,7 @@ public class SingularityScheduler {
 
     if (!isDeployInUse(requestDeployState, taskId.getDeployId(), true)) {
       LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId(), requestDeployState);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     PendingType pendingType = PendingType.TASK_DONE;
@@ -454,7 +454,7 @@ public class SingularityScheduler {
     }
 
     if (request.isOneOff()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (state.isSuccess()) {
@@ -642,7 +642,7 @@ public class SingularityScheduler {
           final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
 
           if (nextRunAtDate == null) {
-            return Optional.absent();
+            return Optional.empty();
           }
 
           LOG.trace("Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.logwatcher.driver;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,7 +12,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -194,7 +194,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       return Optional.of(tailer);
     } catch (Throwable t) {
       LOG.warn("Couldn't create a tailer for {}", tail, t);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

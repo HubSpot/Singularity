@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -9,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -137,11 +137,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult cooldown(SingularityRequest request) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, Optional.<String> absent());
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, Optional.empty());
   }
 
   public SingularityCreateResult finish(SingularityRequest request) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, Optional.<String> absent());
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, Optional.empty());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -166,7 +166,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult exitCooldown(SingularityRequest request) {
-    return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.<String> absent());
+    return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.empty());
   }
 
   public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, Optional<String> user) {

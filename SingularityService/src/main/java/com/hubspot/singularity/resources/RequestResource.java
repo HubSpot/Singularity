@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -13,7 +14,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -21,7 +21,6 @@ import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -65,11 +64,11 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
-    Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
+    Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.empty();
     Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+    Optional<SingularityDeploy> activeDeploy = Optional.empty();
+    Optional<SingularityDeploy> pendingDeploy = Optional.empty();
 
     if (requestDeployState.isPresent()) {
       if (requestDeployState.get().getActiveDeploy().isPresent()) {
@@ -159,7 +158,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkRequestStateNotPaused(requestWithState, "bounce");
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), Optional.empty(), user, PendingType.BOUNCE));
 
     return fillEntireRequest(requestWithState);
   }
@@ -171,7 +170,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkRequestStateNotPaused(requestWithState, "run now");
 
-    Optional<String> maybeCmdLineArgs = Optional.absent();
+    Optional<String> maybeCmdLineArgs = Optional.empty();
 
     PendingType pendingType = null;
 
@@ -201,7 +200,7 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.pause(requestWithState.getRequest(), user);
 
-    Optional<Boolean> killTasks = Optional.absent();
+    Optional<Boolean> killTasks = Optional.empty();
     if (pauseRequest.isPresent()) {
       user = pauseRequest.get().getUser();
       killTasks = pauseRequest.get().getKillTasks();
@@ -228,7 +227,7 @@ public class RequestResource extends AbstractRequestResource {
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.empty(), user, PendingType.UNPAUSED));
     }
 
     requestManager.unpause(requestWithState.getRequest(), user);
@@ -254,8 +253,8 @@ public class RequestResource extends AbstractRequestResource {
     Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
 
     for (SingularityRequestWithState requestWithState : requests) {
-      Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
-      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(), Optional.<SingularityPendingDeploy> absent()));
+      Optional<SingularityRequestDeployState> deployState = Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId()));
+      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState, Optional.empty(), Optional.empty(), Optional.empty()));
     }
 
     return parents;

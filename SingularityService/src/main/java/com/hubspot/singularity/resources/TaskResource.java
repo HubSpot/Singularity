@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -11,7 +12,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

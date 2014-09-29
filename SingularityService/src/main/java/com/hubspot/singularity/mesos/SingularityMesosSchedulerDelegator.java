@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,7 +18,6 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -72,7 +72,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     this.stateLock = new ReentrantLock();
 
     this.state = SchedulerState.STARTUP;
-    this.lastOfferTimestamp = Optional.absent();
+    this.lastOfferTimestamp = Optional.empty();
   }
 
   public Optional<Long> getLastOfferTimestamp() {

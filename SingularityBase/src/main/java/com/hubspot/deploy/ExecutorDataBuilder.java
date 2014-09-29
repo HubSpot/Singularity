@@ -2,9 +2,9 @@ package com.hubspot.deploy;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 
 public class ExecutorDataBuilder {
 

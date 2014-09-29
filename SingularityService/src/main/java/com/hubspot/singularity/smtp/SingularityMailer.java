@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -24,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
@@ -97,7 +97,7 @@ public class SingularityMailer implements SingularityCloseable {
               new ThreadFactoryBuilder().setNameFormat("SingularityMailer-%d")
               .build()));
     } else {
-      this.mailSenderExecutorService = Optional.absent();
+      this.mailSenderExecutorService = Optional.empty();
     }
 
     this.taskFailedTemplate = taskFailedTemplate;
@@ -137,14 +137,14 @@ public class SingularityMailer implements SingularityCloseable {
 
     if (!task.isPresent()) {
       LOG.error(String.format("No task found for %s", taskId.getId()));
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final Optional<String> directory = taskManager.getDirectory(taskId);
 
     if (!directory.isPresent()) {
       LOG.error(String.format("No directory found for task %s to fetch logs", taskId));
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final String slaveHostname = task.get().getOffer().getHostname();
@@ -161,14 +161,14 @@ public class SingularityMailer implements SingularityCloseable {
       logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error(String.format("Sandboxmanager failed to read %s/%s on slave %s", directory, filename, slaveHostname),  e);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (logChunkObject.isPresent()) {
       return Optional.of(logChunkObject.get().getData().split("[\r\n]+"));
     } else {
       LOG.error(String.format("Singularity mailer failed to get %s log for %s task ", filename, taskId.getId()));
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -181,13 +181,13 @@ public class SingularityMailer implements SingularityCloseable {
 
     if (taskId.isPresent()) {
       templateSubs.put("singularity_task_link", getSingularityTaskLink(taskId.get()));
-      templateSubs.put("stdout", getTaskLogFile(taskId.get(), "stdout").or(new String[0]));
-      templateSubs.put("stderr", getTaskLogFile(taskId.get(), "stderr").or(new String[0]));
+      templateSubs.put("stdout", getTaskLogFile(taskId.get(), "stdout").orElse(new String[0]));
+      templateSubs.put("stderr", getTaskLogFile(taskId.get(), "stderr").orElse(new String[0]));
       templateSubs.put("duration_left", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds())));
       templateSubs.put("task_id", taskId.get().getId());
       templateSubs.put("deploy_id", taskId.get().getDeployId());
 
-      templateSubs.put("task_directory", taskManager.getDirectory(taskId.get()).or("directory missing"));
+      templateSubs.put("task_directory", taskManager.getDirectory(taskId.get()).orElse("directory missing"));
 
       Optional<SingularityTask> task = taskManager.getTask(taskId.get());
 
@@ -198,8 +198,8 @@ public class SingularityMailer implements SingularityCloseable {
 
     templateSubs.put("taskScheduled", request.isScheduled());
 
-    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
-    templateSubs.put("num_retries", request.getNumRetriesOnFailure().or(0));
+    templateSubs.put("taskWillRetry", request.getNumRetriesOnFailure().orElse(0) > 0);
+    templateSubs.put("num_retries", request.getNumRetriesOnFailure().orElse(0));
 
     if (taskState.isPresent()) {
       templateSubs.put("status", taskState.get().getDisplayName());
@@ -218,7 +218,7 @@ public class SingularityMailer implements SingularityCloseable {
   }
 
   private List<String> getOwners(SingularityRequest request) {
-    return request.getOwners().or(Collections.<String> emptyList());
+    return request.getOwners().orElse(Collections.emptyList());
   }
 
   public void sendTaskNotRunningWarningEmail(SingularityTaskId taskId, long duration, SingularityRequest request) {
@@ -231,7 +231,7 @@ public class SingularityMailer implements SingularityCloseable {
         .put("duration_running", DurationFormatUtils.formatDurationHMS(duration))
         .build();
 
-    final String body = populateGenericEmailTemplate(this.taskNotRunningWarningTemplate, request, Optional.of(taskId), taskHistory, Optional.<ExtendedTaskState> absent(), additionalBindings);
+    final String body = populateGenericEmailTemplate(this.taskNotRunningWarningTemplate, request, Optional.of(taskId), taskHistory, Optional.empty(), additionalBindings);
 
     queueMail(to, subject, body);
   }
@@ -268,8 +268,8 @@ public class SingularityMailer implements SingularityCloseable {
         .put("cooldown_expires_format", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())))
         .build();
 
-    final String body = populateGenericEmailTemplate(this.requestInCooldownTemplate, request, Optional.<SingularityTaskId> absent(), Collections.<SingularityTaskHistoryUpdate> emptyList(),
-        Optional.<ExtendedTaskState> absent(), additionalBindings);
+    final String body = populateGenericEmailTemplate(this.requestInCooldownTemplate, request, Optional.empty(), Collections.emptyList(),
+        Optional.empty(), additionalBindings);
 
     queueMail(to, subject, body);
   }

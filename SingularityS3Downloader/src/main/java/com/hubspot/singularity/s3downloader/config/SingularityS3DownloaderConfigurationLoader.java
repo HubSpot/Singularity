@@ -1,9 +1,9 @@
 package com.hubspot.singularity.s3downloader.config;
 
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityS3DownloaderConfigurationLoader extends SingularityConfigurationLoader {

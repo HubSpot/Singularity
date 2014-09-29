@@ -4,9 +4,9 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -26,7 +26,7 @@ public class SingularityS3FormatHelper {
   public static String getS3KeyFormat(String s3KeyFormat, String requestId, String deployId, Optional<String> loggingTag) {
     s3KeyFormat = getS3KeyFormat(s3KeyFormat, requestId);
 
-    s3KeyFormat = s3KeyFormat.replace("%tag", loggingTag.or(""));
+    s3KeyFormat = s3KeyFormat.replace("%tag", loggingTag.orElse(""));
     s3KeyFormat = s3KeyFormat.replace("%deployId", deployId);
 
     return s3KeyFormat;
@@ -180,7 +180,7 @@ public class SingularityS3FormatHelper {
 
   public static void main(String[] args) {
     SingularityTaskId taskId = new SingularityTaskId("rid", "did", System.currentTimeMillis(), 1, "host", "rackid");
-    Optional<String> tag = Optional.<String> absent();
+    Optional<String> tag = Optional.<String> empty();
     Calendar c = Calendar.getInstance();
 
     c.add(Calendar.DAY_OF_YEAR, -1);

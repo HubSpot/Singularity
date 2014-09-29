@@ -2,12 +2,12 @@ package com.hubspot.singularity;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 public class SingularityRequest extends SingularityJsonObject {
 
@@ -135,7 +135,7 @@ public class SingularityRequest extends SingularityJsonObject {
 
   @JsonIgnore
   public int getInstancesSafe() {
-    return getInstances().or(1);
+    return getInstances().orElse(1);
   }
 
   @JsonIgnore
@@ -154,7 +154,7 @@ public class SingularityRequest extends SingularityJsonObject {
 
   @JsonIgnore
   public boolean isDaemon() {
-    return daemon.or(Boolean.TRUE).booleanValue();
+    return daemon.orElse(Boolean.TRUE).booleanValue();
   }
 
   @JsonIgnore
@@ -174,17 +174,17 @@ public class SingularityRequest extends SingularityJsonObject {
 
   @JsonIgnore
   public boolean isRackSensitive() {
-    return rackSensitive.or(Boolean.FALSE).booleanValue();
+    return rackSensitive.orElse(Boolean.FALSE).booleanValue();
   }
 
   @JsonIgnore
   public boolean isLoadBalanced() {
-    return loadBalanced.or(Boolean.FALSE).booleanValue();
+    return loadBalanced.orElse(Boolean.FALSE).booleanValue();
   }
 
   @JsonIgnore
   public ScheduleType getScheduleTypeSafe() {
-    return scheduleType.or(ScheduleType.CRON);
+    return scheduleType.orElse(ScheduleType.CRON);
   }
 
   @Override

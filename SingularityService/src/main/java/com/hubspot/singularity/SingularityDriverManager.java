@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -8,7 +9,6 @@ import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -34,7 +34,7 @@ public class SingularityDriverManager {
     this.driverLock = new ReentrantLock();
 
     this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
-    this.driver = Optional.absent();
+    this.driver = Optional.empty();
   }
 
   public Protos.Status getCurrentStatus() {
@@ -51,10 +51,10 @@ public class SingularityDriverManager {
 
     try {
       if (!driver.isPresent()) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
-      return Optional.fromNullable(driver.get().getMaster());
+      return Optional.ofNullable(driver.get().getMaster());
     } finally {
       driverLock.unlock();
     }
@@ -65,7 +65,7 @@ public class SingularityDriverManager {
 
     try {
       if (!driver.isPresent()) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       return driver.get().getLastOfferTimestamp();
@@ -75,11 +75,11 @@ public class SingularityDriverManager {
   }
 
   public Protos.Status killAndRecord(SingularityTaskId taskId, RequestCleanupType requestCleanupType) {
-    return killAndRecord(taskId, Optional.of(requestCleanupType), Optional.<TaskCleanupType> absent(), Optional.<Long> absent(), Optional.<Integer> absent());
+    return killAndRecord(taskId, Optional.of(requestCleanupType), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   public Protos.Status killAndRecord(SingularityTaskId taskId, TaskCleanupType taskCleanupType) {
-    return killAndRecord(taskId, Optional.<RequestCleanupType> absent(), Optional.of(taskCleanupType), Optional.<Long> absent(), Optional.<Integer> absent());
+    return killAndRecord(taskId, Optional.empty(), Optional.of(taskCleanupType), Optional.empty(), Optional.empty());
   }
 
   public Protos.Status killAndRecord(SingularityTaskId taskId, Optional<RequestCleanupType> requestCleanupType, Optional<TaskCleanupType> taskCleanupType, Optional<Long> originalTimestamp, Optional<Integer> retries) {
@@ -90,7 +90,7 @@ public class SingularityDriverManager {
 
       currentStatus = driver.get().kill(taskId);
 
-      taskManager.saveKilledRecord(new SingularityKilledTaskIdRecord(taskId, System.currentTimeMillis(), originalTimestamp.or(System.currentTimeMillis()), requestCleanupType, taskCleanupType, retries.or(-1) + 1));
+      taskManager.saveKilledRecord(new SingularityKilledTaskIdRecord(taskId, System.currentTimeMillis(), originalTimestamp.orElse(System.currentTimeMillis()), requestCleanupType, taskCleanupType, retries.orElse(-1) + 1));
 
       Preconditions.checkState(currentStatus == Status.DRIVER_RUNNING);
     } finally {

@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 public class SingularityDeployResult extends SingularityJsonObject {
 
@@ -23,7 +23,7 @@ public class SingularityDeployResult extends SingularityJsonObject {
   }
 
   public SingularityDeployResult(DeployState deployState) {
-    this(deployState, Optional.<String> absent(), Optional.<SingularityLoadBalancerUpdate> absent(), System.currentTimeMillis());
+    this(deployState, Optional.empty(), Optional.empty(), System.currentTimeMillis());
   }
 
   public SingularityDeployResult(DeployState deployState, SingularityLoadBalancerUpdate lbUpdate) {
@@ -31,7 +31,7 @@ public class SingularityDeployResult extends SingularityJsonObject {
   }
 
   public SingularityDeployResult(DeployState deployState, String message) {
-    this(deployState, Optional.of(message), Optional.<SingularityLoadBalancerUpdate> absent(), System.currentTimeMillis());
+    this(deployState, Optional.of(message), Optional.empty(), System.currentTimeMillis());
   }
 
   @JsonCreator

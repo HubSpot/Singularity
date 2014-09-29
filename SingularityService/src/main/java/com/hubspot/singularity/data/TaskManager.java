@@ -4,12 +4,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -98,7 +98,7 @@ public class TaskManager extends CuratorAsyncManager {
 
       @Override
       public SingularityPendingTask apply(SingularityPendingTaskId input) {
-        Optional<String> maybeCmdLineArgs = Optional.absent();
+        Optional<String> maybeCmdLineArgs = Optional.empty();
 
         if ((input.getPendingType() == PendingType.ONEOFF) || (input.getPendingType() == PendingType.IMMEDIATE)) {
           maybeCmdLineArgs = getStringData(ZKPaths.makePath(PENDING_PATH_ROOT, input.getId()));
@@ -211,7 +211,7 @@ public class TaskManager extends CuratorAsyncManager {
   private void createPendingTask(SingularityPendingTask task) throws Exception {
     final String pendingPath = getPendingPath(task.getPendingTaskId());
 
-    Optional<byte[]> data = Optional.absent();
+    Optional<byte[]> data = Optional.empty();
 
     if (task.getMaybeCmdLineArgs().isPresent()) {
       data = Optional.of(JavaUtils.toBytes(task.getMaybeCmdLineArgs().get()));
@@ -360,7 +360,7 @@ public class TaskManager extends CuratorAsyncManager {
     final Optional<SingularityTask> task = getTask(taskId);
 
     if (!task.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);

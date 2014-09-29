@@ -3,13 +3,13 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -43,6 +43,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
+import com.hubspot.util.OptionalUtils;
 
 public class SingularityDeployChecker {
 
@@ -93,7 +94,7 @@ public class SingularityDeployChecker {
 
   private void checkDeploy(final SingularityPendingDeploy pendingDeploy, final List<SingularityDeployMarker> cancelDeploys, final Map<SingularityPendingDeploy, SingularityDeployKey> pendingDeployToKey, final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy) {
     final SingularityDeployKey deployKey = pendingDeployToKey.get(pendingDeploy);
-    final Optional<SingularityDeploy> deploy = Optional.fromNullable(deployKeyToDeploy.get(deployKey));
+    final Optional<SingularityDeploy> deploy = Optional.ofNullable(deployKeyToDeploy.get(deployKey));
 
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
 
@@ -144,7 +145,7 @@ public class SingularityDeployChecker {
     }
 
     // success case is handled, handle failure cases:
-    saveNewDeployState(pendingDeployMarker, Optional.<SingularityDeployMarker> absent());
+    saveNewDeployState(pendingDeployMarker, Optional.empty());
     finishDeploy(request, deploy, pendingDeploy, deployMatchingTasks, deployResult);
   }
 
@@ -162,7 +163,7 @@ public class SingularityDeployChecker {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void updateLoadBalancerStateForTasks(Collection<SingularityTaskId> taskIds, LoadBalancerRequestType type, SingularityLoadBalancerUpdate update) {
@@ -173,7 +174,7 @@ public class SingularityDeployChecker {
 
   private void cleanupTasks(Iterable<SingularityTaskId> tasksToKill, TaskCleanupType cleanupType, long timestamp) {
     for (SingularityTaskId matchingTask : tasksToKill) {
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), cleanupType, timestamp, matchingTask));
+      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.empty(), cleanupType, timestamp, matchingTask));
     }
   }
 
@@ -185,8 +186,8 @@ public class SingularityDeployChecker {
       return false;
     }
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(deployState.get().getRequestId(), newActiveDeploy.or(deployState.get().getActiveDeploy()),
-        Optional.<SingularityDeployMarker> absent()));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(deployState.get().getRequestId(), OptionalUtils.firstPresent(newActiveDeploy, deployState.get().getActiveDeploy()),
+        Optional.empty()));
 
     return true;
   }
@@ -210,10 +211,10 @@ public class SingularityDeployChecker {
   }
 
   private long getAllowedMillis(SingularityDeploy deploy) {
-    long seconds = deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
+    long seconds = deploy.getDeployHealthTimeoutSeconds().orElse(configuration.getDeployHealthyBySeconds());
 
-    if (deploy.getHealthcheckUri().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {
-      seconds += deploy.getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()) + deploy.getHealthcheckTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
+    if (deploy.getHealthcheckUri().isPresent() && !deploy.getSkipHealthchecksOnDeploy().orElse(false)) {
+      seconds += deploy.getHealthcheckIntervalSeconds().orElse(configuration.getHealthcheckIntervalSeconds()) + deploy.getHealthcheckTimeoutSeconds().orElse(configuration.getHealthcheckTimeoutSeconds());
     }
 
     return TimeUnit.SECONDS.toMillis(seconds);
@@ -264,7 +265,7 @@ public class SingularityDeployChecker {
 
     final LoadBalancerRequestId lbRequestId = getLoadBalancerRequestId(pendingDeploy.getDeployMarker());
 
-    updateLoadBalancerStateForTasks(deployTasks, LoadBalancerRequestType.ADD, new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.<String> absent()));
+    updateLoadBalancerStateForTasks(deployTasks, LoadBalancerRequestType.ADD, new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.empty(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.empty()));
 
     SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(lbRequestId, request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
 

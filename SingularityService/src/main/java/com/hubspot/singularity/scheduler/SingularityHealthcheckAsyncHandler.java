@@ -1,9 +1,10 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -40,13 +41,13 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
 
   @Override
   public Response onCompleted(Response response) throws Exception {
-    Optional<String> responseBody = Optional.absent();
+    Optional<String> responseBody = Optional.empty();
 
     if (response.hasResponseBody()) {
       responseBody = Optional.of(response.getResponseBodyExcerpt(maxHealthcheckResponseBodyBytes));
     }
 
-    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent());
+    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> empty());
 
     return response;
   }
@@ -55,7 +56,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   public void onThrowable(Throwable t) {
     LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
 
-    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())));
+    saveResult(Optional.empty(), Optional.empty(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())));
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage) {

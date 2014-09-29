@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 
 public class SingularityWebhook extends SingularityJsonObject {
@@ -29,7 +29,7 @@ public class SingularityWebhook extends SingularityJsonObject {
   @JsonCreator
   public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("user") Optional<String> user, @JsonProperty("type") WebhookType type) {
     this.uri = uri;
-    this.timestamp = timestamp.or(System.currentTimeMillis());
+    this.timestamp = timestamp.orElse(System.currentTimeMillis());
     this.user = user;
     this.id = type.name() + "-" + JavaUtils.urlEncode(uri);
     this.type = type;

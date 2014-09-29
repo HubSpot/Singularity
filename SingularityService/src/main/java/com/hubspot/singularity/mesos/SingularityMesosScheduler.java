@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.mesos.Protos;
@@ -12,7 +13,6 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -191,7 +191,7 @@ public class SingularityMesosScheduler implements Scheduler {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
@@ -223,7 +223,7 @@ public class SingularityMesosScheduler implements Scheduler {
       healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);
     }
 
-    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.empty());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);

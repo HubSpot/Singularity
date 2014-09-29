@@ -36,7 +36,7 @@ public class SingularityExecutorProcessKiller {
         processCallable.getTask().markDestroyed();
         processCallable.destroyProcessIfActive();
       }
-    }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS);
+    }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().orElse(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS);
   }
 
   public ExecutorService getExecutorService() {

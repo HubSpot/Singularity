@@ -1,6 +1,6 @@
 package com.hubspot.deploy;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public abstract class RemoteArtifact extends Artifact {
 

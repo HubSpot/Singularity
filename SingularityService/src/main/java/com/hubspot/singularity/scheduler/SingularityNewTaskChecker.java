@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,7 +13,6 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -83,12 +83,12 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task)) {
-      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().orElse(configuration.getHealthcheckIntervalSeconds());
     } else if (task.getTaskRequest().getRequest().isLoadBalanced()) {
       return delaySeconds;
     }
 
-    delaySeconds += task.getTaskRequest().getDeploy().getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
+    delaySeconds += task.getTaskRequest().getDeploy().getDeployHealthTimeoutSeconds().orElse(configuration.getDeployHealthyBySeconds());
 
     return delaySeconds;
   }
@@ -191,14 +191,14 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
       break;
     case CHECK_IF_OVERDUE:
       if (isOverdue(task)) {
-        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
         break;
       } // otherwise, reEnqueue
     case LB_IN_PROGRESS_CHECK_AGAIN:
       reEnqueue = true;
       break;
     case UNHEALTHY_KILL_TASK:
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
       break;
     }
 
@@ -249,9 +249,9 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
 
     if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD,
-          new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.<String> absent()));
+          new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.empty(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.empty()));
 
-      newLbUpdate = lbClient.enqueue(loadBalancerRequestId, task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.<SingularityTask> emptyList());
+      newLbUpdate = lbClient.enqueue(loadBalancerRequestId, task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.emptyList());
     } else {
       Optional<CheckTaskState> maybeCheckTaskState = checkLbState(lbUpdate.get().getLoadBalancerState());
 
@@ -286,7 +286,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
       break;
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private boolean isOverdue(SingularityTask task) {

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -63,7 +63,7 @@ public class SingularityLogSupport implements SingularityCloseable {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void loadDirectory(SingularityTask task) {
@@ -75,7 +75,7 @@ public class SingularityLogSupport implements SingularityCloseable {
 
     MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
 
-    Optional<String> directory = Optional.absent();
+    Optional<String> directory = Optional.empty();
 
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
       directory = findDirectory(task.getTaskId(), slaveFramework.getExecutors());

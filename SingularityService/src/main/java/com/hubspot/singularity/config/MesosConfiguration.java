@@ -1,8 +1,8 @@
 package com.hubspot.singularity.config;
 
-import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
+import javax.validation.constraints.NotNull;
 
 public class MesosConfiguration {
 
@@ -29,7 +29,7 @@ public class MesosConfiguration {
   @NotNull
   private Integer slaveHttpPort = 5051;
   @NotNull
-  private Optional<Integer> slaveHttpsPort = Optional.absent();
+  private Optional<Integer> slaveHttpsPort = Optional.empty();
   @NotNull
   private int maxNumInstancesPerRequest = 25;
   @NotNull

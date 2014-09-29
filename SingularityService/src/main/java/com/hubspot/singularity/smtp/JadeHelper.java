@@ -46,7 +46,7 @@ public final class JadeHelper {
           ImmutableMap.<String, String> builder()
           .put("date", DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN))
           .put("update", WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()))
-          .put("message", taskUpdate.getStatusMessage().or(""))
+          .put("message", taskUpdate.getStatusMessage().orElse(""))
           .build());
     }
 

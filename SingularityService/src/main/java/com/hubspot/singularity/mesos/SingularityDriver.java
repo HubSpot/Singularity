@@ -1,5 +1,7 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Optional;
+
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
@@ -10,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;

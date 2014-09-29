@@ -9,6 +9,7 @@ import io.dropwizard.setup.Environment;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
@@ -29,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -189,7 +189,7 @@ public class SingularityServiceModule extends AbstractModule {
   @Singleton
   public Optional<S3Service> s3Service(Optional<S3Configuration> config) {
     if (!config.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     try {
@@ -325,7 +325,7 @@ public class SingularityServiceModule extends AbstractModule {
     if (configuration.getSentryConfiguration().isPresent()) {
       return Optional.of(RavenFactory.ravenInstance(configuration.getSentryConfiguration().get().getDsn()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }

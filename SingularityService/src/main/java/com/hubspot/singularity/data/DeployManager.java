@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -36,6 +36,8 @@ import com.hubspot.singularity.data.transcoders.SingularityDeployStatisticsTrans
 import com.hubspot.singularity.data.transcoders.SingularityDeployTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityPendingDeployTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityRequestDeployStateTranscoder;
+import com.hubspot.util.OptionalUtils;
+
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
@@ -186,14 +188,14 @@ public class DeployManager extends CuratorAsyncManager {
       LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));
     }
 
-    webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult> absent()));
+    webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.empty()));
 
     create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
 
     final Optional<SingularityRequestDeployState> currentState = getRequestDeployState(deploy.getRequestId());
 
-    Optional<SingularityDeployMarker> activeDeploy = Optional.absent();
-    Optional<SingularityDeployMarker> pendingDeploy = Optional.absent();
+    Optional<SingularityDeployMarker> activeDeploy = Optional.empty();
+    Optional<SingularityDeployMarker> pendingDeploy = Optional.empty();
 
     if (request.isDeployable()) {
       if (currentState.isPresent()) {
@@ -213,19 +215,19 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityDeployMarker> deployMarker = getData(getDeployMarkerPath(requestId, deployId), deployMarkerTranscoder);
 
     if (!deployMarker.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
 
     if (!loadEntireHistory) {
-      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics >absent()));
+      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.empty(), Optional.empty()));
     }
 
     Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
 
     if (!deploy.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Optional<SingularityDeployStatistics> deployStatistics = getDeployStatistics(requestId, deployId);
@@ -243,10 +245,10 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
 
     if (!deployState.isPresent() || (!deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent())) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
-    return Optional.of(deployState.get().getActiveDeploy().or(deployState.get().getPendingDeploy()).get().getDeployId());
+    return Optional.of(OptionalUtils.firstPresent(deployState.get().getActiveDeploy(), deployState.get().getPendingDeploy()).get().getDeployId());
   }
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
