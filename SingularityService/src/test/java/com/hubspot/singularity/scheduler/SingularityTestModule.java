@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import net.kencochrane.raven.Raven;
 
 import org.apache.curator.RetryPolicy;
