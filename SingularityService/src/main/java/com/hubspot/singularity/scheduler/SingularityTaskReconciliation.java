@@ -5,14 +5,20 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.mesos.Protos.Status;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -41,7 +47,42 @@ public class SingularityTaskReconciliation {
         LOG.info("Task {} not found, deleting taskStatus", taskId);
         taskManager.deleteLastActiveTaskStatus(taskId);
         taskStatusItr.remove();
+      } else {
+        taskIds.remove(taskId);
       }
+    }
+
+    // didn't find a taskStatus -- this is temporary for migration
+    for (SingularityTaskId taskId : taskIds) {
+      Optional<SingularityTask> task = taskManager.getActiveTask(taskId.getId());
+
+      if (!task.isPresent()) {
+        LOG.info("Task {} didn't have an active task", taskId);
+        continue;
+      }
+
+      List<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(taskId);
+
+      if (updates.isEmpty()) {
+        LOG.info("Task {} didn't have updates", taskId);
+        continue;
+      }
+
+      SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(updates);
+
+      TaskState taskState = TaskState.TASK_RUNNING;
+
+      if (simplifiedTaskState == SimplifiedTaskState.UNKNOWN) {
+        taskState = TaskState.TASK_STARTING;
+      }
+
+      LOG.info("Adding a task status {} for {}", taskState, taskId);
+
+      taskStatuses.add(TaskStatus.newBuilder()
+          .setSlaveId(task.get().getOffer().getSlaveId())
+          .setState(taskState)
+          .setTaskId(TaskID.newBuilder().setValue(taskId.getId()))
+          .build());
     }
 
     LOG.info("Requesting reconciliation for {} taskStatuses", taskStatuses.size());
