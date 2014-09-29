@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -224,6 +225,14 @@ public class SingularityMesosScheduler implements Scheduler {
     }
 
     final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+
+    if (taskState.isDone() && !maybeActiveTask.isPresent() && !taskManager.taskHistoryUpdateExists(taskUpdate)) {
+      if (SingularityTaskHistoryUpdate.getCurrentState(taskManager.getTaskHistoryUpdates(taskIdObj)) == SimplifiedTaskState.DONE) {
+        LOG.info("Ignoring taskUpdate {} because task {} is already done from a different update", status.getState(), taskIdObj);
+        return;
+      }
+    }
+
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);

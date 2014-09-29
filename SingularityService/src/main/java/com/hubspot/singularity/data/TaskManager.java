@@ -321,6 +321,10 @@ public class TaskManager extends CuratorAsyncManager {
     return Maps.uniqueIndex(healthcheckResults, healthcheckResultTranscoder);
   }
 
+  public boolean taskHistoryUpdateExists(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    return exists(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()));
+  }
+
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     webhookManager.enqueueTaskUpdate(taskHistoryUpdate);
 
