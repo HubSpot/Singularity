@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -28,7 +28,7 @@ public class EmbeddedArtifact extends Artifact {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("name", getName())
         .add("filaname", getFilename())
         .add("md5sum", getMd5sum())

@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class ExternalArtifact extends RemoteArtifact {
 
@@ -22,7 +22,7 @@ public class ExternalArtifact extends RemoteArtifact {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("name", getName())
         .add("filaname", getFilename())
         .add("md5sum", getMd5sum())

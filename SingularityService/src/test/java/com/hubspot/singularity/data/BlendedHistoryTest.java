@@ -24,7 +24,6 @@ import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 
@@ -34,8 +33,6 @@ public class BlendedHistoryTest {
   private CuratorFramework cf;
   @Inject
   private TestingServer ts;
-  @Inject
-  private RequestHistoryHelper requestHistoryHelper;
   @Inject
   private RequestManager requestManager;
 
@@ -53,7 +50,7 @@ public class BlendedHistoryTest {
   }
 
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
-    when(hm.getRequestHistory(Matchers.anyString(), (Optional<OrderDirection>) Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
+    when(hm.getRequestHistory(Matchers.anyString(), Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
   }
 
   private SingularityRequest request;
