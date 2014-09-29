@@ -45,10 +45,10 @@ html
               p Singularity will retry the task #{ numRetries } times before it resumes on its normal schedule.
             if !taskWillRetry
               p Singularity will run the task again on its normal schedule.
-          if !requestScheduled
-            p Singularity will continue to restart your task immediately.
           if requestOneOff
             p Singularity will not run your task again unless manually instructed.
+          else if !requestScheduled
+            p Singularity will continue to restart your task immediately.
           if !taskStateFinished
             if !taskRan
               p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
