@@ -38,7 +38,11 @@ public class MesosClient {
   }
 
   public String getMasterUri(MasterInfo masterInfo) {
-    return String.format(MASTER_STATE_FORMAT, MesosUtils.getMasterHostAndPort(masterInfo));
+    return getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
+  }
+
+  public String getMasterUri(String hostnameAndPort) {
+    return String.format(MASTER_STATE_FORMAT, hostnameAndPort);
   }
 
   @SuppressWarnings("serial")
