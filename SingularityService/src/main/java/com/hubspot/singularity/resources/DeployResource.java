@@ -61,6 +61,10 @@ public class DeployResource extends AbstractRequestResource {
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent deploy(SingularityDeployRequest deployRequest) {
+    if (deployRequest.getDeploy() == null || deployRequest.getDeploy().getRequestId() == null) {
+      throw WebExceptions.badRequest("DeployRequest must have a deploy object with a non-null requestId");
+    }
+
     final String requestId = deployRequest.getDeploy().getRequestId();
 
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
