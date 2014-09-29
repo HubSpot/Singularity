@@ -29,6 +29,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -38,6 +39,8 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 public class SingularityClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
+
+  private static final String STATE_FORMAT = "http://%s/%s/state";
 
   private static final String RACKS_FORMAT = "http://%s/%s/racks";
   private static final String RACKS_GET_ACTIVE_FORMAT = RACKS_FORMAT + "/active";
@@ -231,6 +234,35 @@ public class SingularityClient {
     LOG.info("Successfully posted {} in {}ms", type, System.currentTimeMillis() - start);
 
     return response;
+  }
+
+  //
+  // GLOBAL
+  //
+
+  public SingularityState getState(Optional<Boolean> skipCache, Optional<Boolean> includeRequestIds) {
+    final String uri = String.format(STATE_FORMAT, getHost(), contextPath);
+
+    LOG.info("Fetching state from {}", uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
+
+    if (skipCache.isPresent()) {
+      request.addQueryParam("skipCache", skipCache.get().booleanValue());
+    }
+    if (includeRequestIds.isPresent()) {
+      request.addQueryParam("includeRequestIds", includeRequestIds.get().booleanValue());
+    }
+
+    HttpResponse response = httpClient.execute(request.build());
+
+    checkResponse("state", response);
+
+    LOG.info("Got state in {}ms", System.currentTimeMillis() - start);
+
+    return response.getAs(SingularityState.class);
   }
 
   //
