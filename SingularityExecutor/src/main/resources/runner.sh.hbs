@@ -22,6 +22,12 @@ else
   echo "No deploy-specific environment variables"
 fi
 
+# TODO: consider removing this when all artifacts have tmp folder created at build time?
+if [[ ! -d ./tmp ]]; then
+  mkdir ./tmp
+  sudo chown -R {{{ user }}} ./tmp
+fi
+
 sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
 
 cd {{{ taskAppDirectory }}}/
