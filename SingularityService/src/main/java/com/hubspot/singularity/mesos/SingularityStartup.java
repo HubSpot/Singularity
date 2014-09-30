@@ -13,6 +13,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -62,7 +63,7 @@ public class SingularityStartup {
   public void startup(MasterInfo masterInfo, SchedulerDriver driver) {
     final long start = System.currentTimeMillis();
 
-    final String uri = mesosClient.getMasterUri(masterInfo);
+    final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
 
     LOG.info("Starting up... fetching state data from: " + uri);
 
