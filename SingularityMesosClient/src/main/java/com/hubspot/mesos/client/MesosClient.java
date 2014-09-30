@@ -2,7 +2,6 @@ package com.hubspot.mesos.client;
 
 import java.util.List;
 
-import org.apache.mesos.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,6 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -35,10 +33,6 @@ public class MesosClient {
   @Inject
   public MesosClient(@Named(HTTP_CLIENT_NAME) HttpClient httpClient) {
     this.httpClient = httpClient;
-  }
-
-  public String getMasterUri(MasterInfo masterInfo) {
-    return getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
   }
 
   public String getMasterUri(String hostnameAndPort) {
