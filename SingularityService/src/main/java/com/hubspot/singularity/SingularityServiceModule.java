@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -146,7 +147,8 @@ public class SingularityServiceModule extends AbstractModule {
     return Jackson.newObjectMapper()
         .setSerializationInclusion(Include.NON_NULL)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .registerModule(new ProtobufModule());
+        .registerModule(new ProtobufModule())
+        .registerModule(new Jdk8Module());
   }
 
   public static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
