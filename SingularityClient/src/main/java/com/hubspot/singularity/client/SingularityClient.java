@@ -235,7 +235,7 @@ public class SingularityClient {
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
       }
-    } catch (SingularityClientException e) {
+    } catch (Exception e) {
       LOG.warn("Http post failed", e);
     }
 
