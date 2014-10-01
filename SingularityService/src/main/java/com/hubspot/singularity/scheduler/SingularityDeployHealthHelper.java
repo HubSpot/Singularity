@@ -53,24 +53,24 @@ public class SingularityDeployHealthHelper {
       SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(updates);
 
       switch (currentState) {
-      case UNKNOWN:
-      case WAITING:
-        return DeployHealth.WAITING;
-      case DONE:
-        LOG.warn("Unexpectedly found an active task ({}) in done state: {}}", taskId, updates);
-        return DeployHealth.UNHEALTHY;
-      case RUNNING:
-        long runningThreshold = configuration.getConsiderTaskHealthyAfterRunningForSeconds();
-        if (deploy.isPresent()) {
-          runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().or(runningThreshold);
-        }
-        SingularityTaskHistoryUpdate runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
-        long taskDuration = System.currentTimeMillis() - runningUpdate.getTimestamp();
-
-        if (taskDuration < runningThreshold) {
-          LOG.debug("Task {} has been running for {}, has not yet reached running threshold of {}", taskId, JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(runningThreshold));
+        case UNKNOWN:
+        case WAITING:
           return DeployHealth.WAITING;
-        }
+        case DONE:
+          LOG.warn("Unexpectedly found an active task ({}) in done state: {}}", taskId, updates);
+          return DeployHealth.UNHEALTHY;
+        case RUNNING:
+          long runningThreshold = configuration.getConsiderTaskHealthyAfterRunningForSeconds();
+          if (deploy.isPresent()) {
+            runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().or(runningThreshold);
+          }
+          Optional<SingularityTaskHistoryUpdate> runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
+          long taskDuration = System.currentTimeMillis() - runningUpdate.get().getTimestamp();
+
+          if (taskDuration < runningThreshold) {
+            LOG.debug("Task {} has been running for {}, has not yet reached running threshold of {}", taskId, JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(runningThreshold));
+            return DeployHealth.WAITING;
+          }
       }
     }
 
