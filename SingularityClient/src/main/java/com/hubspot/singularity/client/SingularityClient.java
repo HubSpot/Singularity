@@ -20,20 +20,26 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.SingularityDeployWebhook;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 
 public class SingularityClient {
@@ -87,6 +93,12 @@ public class SingularityClient {
   private static final String DEPLOYS_FORMAT = "http://%s/%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
 
+  private static final String WEBHOOKS_FORMAT = "http://%s/%s/webhooks";
+  private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT +"/%s";
+  private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy/%s";
+  private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request/%s";
+  private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task/%s";
+
   private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
@@ -94,6 +106,10 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
   private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
+  private static final TypeReference<Collection<SingularityWebhook>> WEBHOOKS_COLLECTION = new TypeReference<Collection<SingularityWebhook>>() {};
+  private static final TypeReference<Collection<SingularityDeployWebhook>> DEPLOY_UPDATES_COLLECTION = new TypeReference<Collection<SingularityDeployWebhook>>() {};
+  private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
+  private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
 
   private final Random random;
   private final String[] hosts;
@@ -210,6 +226,20 @@ public class SingularityClient {
     }
 
     return Optional.absent();
+  }
+
+  private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<String> user, Optional<Class<T>> clazz) {
+    try {
+      HttpResponse response = post(uri, type, body, user);
+
+      if (clazz.isPresent()) {
+        return Optional.of(response.getAs(clazz.get()));
+      }
+    } catch (SingularityClientException e) {
+      LOG.warn("Http post failed", e);
+    }
+
+    return Optional.<T>absent();
   }
 
   private HttpResponse post(String uri, String type, Optional<?> body, Optional<String> user) {
@@ -593,6 +623,46 @@ public class SingularityClient {
     final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getHost(), contextPath, requestId, deployId);
 
     return getSingle(requestUri, "deploy history", new SingularityDeployKey(requestId, deployId).getId(), SingularityDeployHistory.class);
+  }
+
+  //
+  // WEBHOOKS
+  //
+
+  public Optional<SingularityCreateResult> addWebhook(SingularityWebhook webhook, Optional<String> user) {
+    final String requestUri = String.format(WEBHOOKS_FORMAT, getHost(), contextPath);
+
+    return post(requestUri, String.format("webhook %s", webhook.getUri()), Optional.of(webhook), user, Optional.of(SingularityCreateResult.class));
+  }
+
+  public Optional<SingularityDeleteResult> deleteWebhook(String webhookId, Optional<String> user) {
+    final String requestUri = String.format(WEBHOOKS_DELETE_FORMAT, getHost(), contextPath, webhookId);
+
+    return delete(requestUri, String.format("webhook with id %s", webhookId), webhookId, user, Optional.of(SingularityDeleteResult.class));
+  }
+
+  public Collection<SingularityWebhook> getActiveWebhook() {
+    final String requestUri = String.format(WEBHOOKS_FORMAT, getHost(), contextPath);
+
+    return getCollection(requestUri, "active webhooks", WEBHOOKS_COLLECTION);
+  }
+
+  public Collection<SingularityDeployWebhook> getQueuedDeployUpdates(String webhookId) {
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getHost(), contextPath, webhookId);
+
+    return getCollection(requestUri, "deploy updates", DEPLOY_UPDATES_COLLECTION);
+  }
+
+  public Collection<SingularityRequestHistory> getQueuedRequestUpdates(String webhookId) {
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT, getHost(), contextPath, webhookId);
+
+    return getCollection(requestUri, "request updates", REQUEST_UPDATES_COLLECTION);
+  }
+
+  public Collection<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(String webhookId) {
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getHost(), contextPath, webhookId);
+
+    return getCollection(requestUri, "request updates", TASK_UPDATES_COLLECTION);
   }
 
 }
