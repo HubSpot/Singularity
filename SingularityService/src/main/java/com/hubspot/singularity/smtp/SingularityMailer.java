@@ -68,6 +68,7 @@ public class SingularityMailer implements SingularityCloseable {
 
   private final JadeTemplate taskCompletedTemplate;
   private final JadeTemplate requestInCooldownTemplate;
+  private final JadeTemplate requestModifiedTemplate;
 
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
@@ -84,15 +85,15 @@ public class SingularityMailer implements SingularityCloseable {
   @Inject
   public SingularityMailer(SingularityConfiguration configuration, Optional<SMTPConfiguration> maybeSmtpConfiguration, SingularityCloser closer, TaskManager taskManager, AsyncHttpClient asyncHttpClient,
       ObjectMapper objectMapper, @Named(SingularityServiceModule.TASK_COMPLETED_TEMPLATE) JadeTemplate taskCompletedTemplate, @Named(SingularityServiceModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
-      SingularityExceptionNotifier exceptionNotifier) {
+      @Named(SingularityServiceModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate, SingularityExceptionNotifier exceptionNotifier) {
     this.maybeSmtpConfiguration = maybeSmtpConfiguration;
     this.closer = closer;
     this.configuration = configuration;
-    uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
+    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
-    adminJoiner = Joiner.on(", ").skipNulls();
+    this.adminJoiner = Joiner.on(", ").skipNulls();
 
     if (maybeSmtpConfiguration.isPresent()) {
       mailSenderExecutorService = Optional.of(
@@ -104,6 +105,7 @@ public class SingularityMailer implements SingularityCloseable {
       mailSenderExecutorService = Optional.absent();
     }
 
+    this.requestModifiedTemplate = requestModifiedTemplate;
     this.taskCompletedTemplate = taskCompletedTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
 
@@ -299,6 +301,65 @@ public class SingularityMailer implements SingularityCloseable {
       return Collections.emptyList();
     }
     return fromMap;
+  }
+
+  public enum RequestMailType {
+
+    PAUSED(EmailType.REQUEST_PAUSED), UNPAUSED(EmailType.REQUEST_UNPAUSED), REMOVED(EmailType.REQUEST_REMOVED);
+
+    private final EmailType emailType;
+
+    private RequestMailType(EmailType emailType) {
+      this.emailType = emailType;
+    }
+
+    public EmailType getEmailType() {
+      return emailType;
+    }
+
+  }
+
+  private void sendRequestMail(SingularityRequest request, RequestMailType type, Optional<String> user) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending request mail - no SMTP configuration is present");
+      return;
+    }
+
+    final List<EmailDestination> emailDestination = getDestination(type.getEmailType());
+
+    if (emailDestination.isEmpty()) {
+      LOG.debug("Not configured to send request cooldown mail for");
+      return;
+    }
+
+    final String subject = String.format("Request %s has been %s — Singularity", request.getId(), type.name().toLowerCase());
+    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object> builder();
+    populateRequestEmailProperties(templateProperties, request);
+
+    templateProperties.put("requestPaused", type == RequestMailType.PAUSED);
+    templateProperties.put("requestUnpaused", type == RequestMailType.UNPAUSED);
+    templateProperties.put("action", type.name().toLowerCase());
+    templateProperties.put("hasUser", user.isPresent());
+
+    if (user.isPresent()) {
+      templateProperties.put("user", user.get());
+    }
+
+    final String body = Jade4J.render(requestModifiedTemplate, templateProperties.build());
+
+    queueMail(emailDestination, Optional.of(request), subject, body);
+  }
+
+  public void sendRequestPausedMail(SingularityRequest request, Optional<String> user) {
+    sendRequestMail(request, RequestMailType.PAUSED, user);
+  }
+
+  public void sendRequestUnpausedMail(SingularityRequest request, Optional<String> user) {
+    sendRequestMail(request, RequestMailType.UNPAUSED, user);
+  }
+
+  public void sendRequestRemovedMail(SingularityRequest request, Optional<String> user) {
+    sendRequestMail(request, RequestMailType.REMOVED, user);
   }
 
   public void sendRequestInCooldownMail(SingularityRequest request) {

@@ -30,7 +30,6 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
@@ -50,15 +49,13 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   private static final String OPERATION_URI = "%s/%s";
 
   @Inject
-  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, SingularitySlaveAndRackManager slaveAndRackManager) {
+  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
-    this.slaveAndRackManager = slaveAndRackManager;
     this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
@@ -181,9 +178,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       final Optional<Long> maybeFirstPort = task.getFirstPort();
 
       if (maybeFirstPort.isPresent()) {
-        Offer offer = task.getOffer();
-        String upstream = String.format("%s:%d", offer.getHostname(), maybeFirstPort.get());
-        String rackId = slaveAndRackManager.getRackId(offer);
+        String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeFirstPort.get());
+        String rackId = task.getTaskId().getRackId();
 
         upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), Optional.fromNullable(rackId)));
       } else {

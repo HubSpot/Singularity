@@ -83,7 +83,7 @@ public class SingularityServiceModule extends AbstractModule {
 
   public static final String TASK_COMPLETED_TEMPLATE = "task.completed.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
-  public static final String TASK_NOT_RUNNING_WARNING_TEMPLATE = "task.not.running.warning.template";
+  public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
 
   @Override
   protected void configure() {
@@ -310,6 +310,13 @@ public class SingularityServiceModule extends AbstractModule {
   @Named(REQUEST_IN_COOLDOWN_TEMPLATE)
   public JadeTemplate getRequestPausedTemplate() throws IOException {
     return getJadeTemplate("request_in_cooldown.jade");
+  }
+
+  @Provides
+  @Singleton
+  @Named(REQUEST_MODIFIED_TEMPLATE)
+  public JadeTemplate getRequestModifiedTemplate() throws IOException {
+    return getJadeTemplate("request_modified.jade");
   }
 
   @Provides
