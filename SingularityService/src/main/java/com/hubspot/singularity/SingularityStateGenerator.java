@@ -2,11 +2,11 @@ package com.hubspot.singularity;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Optional;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.MasterInfo;
 
-import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 
@@ -27,7 +27,7 @@ public class SingularityStateGenerator {
 
     final long now = System.currentTimeMillis();
     final Optional<Long> lastOfferTimestamp = managed.getLastOfferTimestamp();
-    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long> absent();
+    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long> empty();
 
     String hostAddress = null;
 

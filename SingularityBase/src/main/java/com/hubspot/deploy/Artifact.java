@@ -1,7 +1,8 @@
 package com.hubspot.deploy;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Artifact {

@@ -1,8 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class SingularityRequestBuilder {
 
@@ -29,18 +28,18 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder(String id) {
     this.id = id;
-    this.owners = Optional.absent();
-    this.numRetriesOnFailure = Optional.absent();
-    this.schedule = Optional.absent();
-    this.scheduleType = Optional.absent();
-    this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
-    this.daemon = Optional.absent();
-    this.instances = Optional.absent();
-    this.rackSensitive = Optional.absent();
-    this.loadBalanced = Optional.absent();
-    this.quartzSchedule = Optional.absent();
-    this.rackAffinity = Optional.absent();
-    this.slavePlacement = Optional.absent();
+    this.owners = Optional.empty();
+    this.numRetriesOnFailure = Optional.empty();
+    this.schedule = Optional.empty();
+    this.scheduleType = Optional.empty();
+    this.killOldNonLongRunningTasksAfterMillis = Optional.empty();
+    this.daemon = Optional.empty();
+    this.instances = Optional.empty();
+    this.rackSensitive = Optional.empty();
+    this.loadBalanced = Optional.empty();
+    this.quartzSchedule = Optional.empty();
+    this.rackAffinity = Optional.empty();
+    this.slavePlacement = Optional.empty();
   }
 
   public SingularityRequest build() {

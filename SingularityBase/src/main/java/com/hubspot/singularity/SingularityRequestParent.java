@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 public class SingularityRequestParent extends SingularityJsonObject {
 
@@ -17,7 +17,7 @@ public class SingularityRequestParent extends SingularityJsonObject {
   private final Optional<SingularityPendingDeploy> pendingDeployState;
 
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
-    this(request, state, Optional.<SingularityRequestDeployState>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityPendingDeploy>absent());
+    this(request, state, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   public static SingularityRequestParent fromBytes(byte[] bytes, ObjectMapper objectMapper) {

@@ -2,6 +2,7 @@ package com.hubspot.singularity.s3.base;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -9,7 +10,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
@@ -30,9 +30,9 @@ public abstract class SafeProcessManager {
   public SafeProcessManager(Logger log) {
     this.log = log;
 
-    this.currentProcessCmd = Optional.absent();
-    this.currentProcess = Optional.absent();
-    this.currentProcessPid = Optional.absent();
+    this.currentProcessCmd = Optional.empty();
+    this.currentProcess = Optional.empty();
+    this.currentProcessPid = Optional.empty();
 
     this.processLock = new ReentrantLock();
 
@@ -98,10 +98,10 @@ public abstract class SafeProcessManager {
   }
 
   private void resetCurrentVariables() {
-    currentProcess = Optional.absent();
-    currentProcessPid = Optional.absent();
-    currentProcessCmd = Optional.absent();
-    currentProcessStart = Optional.absent();
+    currentProcess = Optional.empty();
+    currentProcessPid = Optional.empty();
+    currentProcessCmd = Optional.empty();
+    currentProcessStart = Optional.empty();
   }
 
   public void processFinished(int exitCode) {
@@ -150,7 +150,7 @@ public abstract class SafeProcessManager {
   }
 
   public String getCurrentProcessToString() {
-    return String.format("%s - (pid: %s)", currentProcessCmd.or("<none>"), currentProcessPid.or(0));
+    return String.format("%s - (pid: %s)", currentProcessCmd.orElse("<none>"), currentProcessPid.orElse(0));
   }
 
   public void signalProcessIfActive() {

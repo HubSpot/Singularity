@@ -12,8 +12,8 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;

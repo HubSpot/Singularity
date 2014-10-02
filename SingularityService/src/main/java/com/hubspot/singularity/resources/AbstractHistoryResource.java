@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;

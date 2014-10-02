@@ -5,6 +5,8 @@ import io.dropwizard.logging.DropwizardLayout;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
+import java.util.Optional;
+
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Logger;
@@ -12,7 +14,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.classic.net.SMTPAppender;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SMTPLoggingConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -76,9 +77,9 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
     Optional<Integer> port = smtp.getPort();
 
     if (smtp.isSsl()) {
-      appender.setSMTPPort(port.or(465));
+      appender.setSMTPPort(port.orElse(465));
     } else {
-      appender.setSMTPPort(port.or(25));
+      appender.setSMTPPort(port.orElse(25));
     }
 
     if (smtp.getUsername().isPresent()) {
@@ -91,7 +92,7 @@ public class SMTPAppenderBundle implements ConfiguredBundle<SingularityConfigura
     appender.setSSL(smtp.isSsl());
     appender.setSTARTTLS(smtp.isStartTLS());
     appender.setCharsetEncoding(smtpLogging.getCharsetEncoding());
-    appender.setLocalhost(smtpLogging.getLocalhost().orNull());
+    appender.setLocalhost(smtpLogging.getLocalhost().orElse(null));
     appender.start();
 
     return appender;

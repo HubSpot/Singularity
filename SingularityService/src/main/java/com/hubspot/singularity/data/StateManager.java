@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -81,12 +81,13 @@ public class StateManager extends CuratorManager {
     List<SingularityHostState> states = Lists.newArrayListWithCapacity(children.size());
 
     for (String child : children) {
-
+      final String path = ZKPaths.makePath(ROOT_PATH, child);
       try {
-        byte[] bytes = curator.getData().forPath(ZKPaths.makePath(ROOT_PATH, child));
+        byte[] bytes = curator.getData().forPath(path);
 
         states.add(SingularityHostState.fromBytes(bytes, objectMapper));
       } catch (NoNodeException nne) {
+        LOG.trace("Keeper node {} doesn't exist", path, nne);
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
@@ -110,7 +111,7 @@ public class StateManager extends CuratorManager {
   }
 
   public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
-    Optional<SingularityState> fromZk = Optional.absent();
+    Optional<SingularityState> fromZk = Optional.empty();
 
     if (!skipCache) {
       fromZk = getData(STATE_PATH, stateTranscoder);
@@ -174,6 +175,7 @@ public class StateManager extends CuratorManager {
         cooldownRequests++;
         break;
       default:
+        break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {

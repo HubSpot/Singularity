@@ -1,12 +1,12 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 
 public class SingularityDeployHistory extends SingularityJsonObject implements Comparable<SingularityDeployHistory> {
 

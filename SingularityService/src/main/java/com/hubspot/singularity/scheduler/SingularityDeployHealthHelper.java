@@ -3,11 +3,11 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -37,7 +37,7 @@ public class SingularityDeployHealthHelper {
   }
 
   public DeployHealth getDeployHealth(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
-    if (!deploy.isPresent() || !deploy.get().getHealthcheckUri().isPresent() || (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().or(false))) {
+    if (!deploy.isPresent() || !deploy.get().getHealthcheckUri().isPresent() || (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().orElse(false))) {
       return getNoHealthcheckDeployHealth(deploy, activeTasks);
     } else {
       return getHealthCheckDeployState(activeTasks);
@@ -62,7 +62,7 @@ public class SingularityDeployHealthHelper {
       case RUNNING:
         long runningThreshold = configuration.getConsiderTaskHealthyAfterRunningForSeconds();
         if (deploy.isPresent()) {
-          runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().or(runningThreshold);
+          runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().orElse(runningThreshold);
         }
         SingularityTaskHistoryUpdate runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
         long taskDuration = System.currentTimeMillis() - runningUpdate.getTimestamp();

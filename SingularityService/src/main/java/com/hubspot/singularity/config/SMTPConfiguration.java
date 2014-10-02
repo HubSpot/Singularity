@@ -2,11 +2,11 @@ package com.hubspot.singularity.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class SMTPConfiguration {
 
@@ -82,7 +82,7 @@ public class SMTPConfiguration {
   }
 
   public Optional<String> getUsername() {
-    return Optional.fromNullable(username);
+    return Optional.ofNullable(username);
   }
 
   public void setUsername(String username) {
@@ -106,7 +106,7 @@ public class SMTPConfiguration {
   }
 
   public Optional<String> getPassword() {
-    return Optional.fromNullable(password);
+    return Optional.ofNullable(password);
   }
 
   public void setPassword(String password) {
@@ -122,7 +122,7 @@ public class SMTPConfiguration {
   }
 
   public Optional<Integer> getPort() {
-    return Optional.fromNullable(port);
+    return Optional.ofNullable(port);
   }
 
   public void setPort(Integer port) {

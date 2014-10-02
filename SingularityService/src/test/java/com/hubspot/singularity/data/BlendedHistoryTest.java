@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
@@ -15,7 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 
-import com.google.common.base.Optional;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -24,7 +24,6 @@ import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 
@@ -34,8 +33,6 @@ public class BlendedHistoryTest {
   private CuratorFramework cf;
   @Inject
   private TestingServer ts;
-  @Inject
-  private RequestHistoryHelper requestHistoryHelper;
   @Inject
   private RequestManager requestManager;
 
@@ -53,7 +50,7 @@ public class BlendedHistoryTest {
   }
 
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
-    when(hm.getRequestHistory(Matchers.anyString(), (Optional<OrderDirection>) Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
+    when(hm.getRequestHistory(Matchers.anyString(), Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
   }
 
   private SingularityRequest request;
@@ -63,7 +60,7 @@ public class BlendedHistoryTest {
   }
 
   private SingularityRequestHistory makeHistory(long createdAt, RequestHistoryType type) {
-    return new SingularityRequestHistory(createdAt, Optional.<String> absent(), type, request);
+    return new SingularityRequestHistory(createdAt, Optional.empty(), type, request);
   }
 
 
@@ -108,7 +105,7 @@ public class BlendedHistoryTest {
     Assert.assertTrue(history.get(0).getCreatedAt() == 52);
     Assert.assertTrue(history.get(2).getCreatedAt() == 50);
 
-    mockRequestHistory(hm, Collections.<SingularityRequestHistory> emptyList());
+    mockRequestHistory(hm, Collections.emptyList());
 
     history = rhh.getBlendedHistory(rid, 3, 5);
     Assert.assertTrue(history.isEmpty());

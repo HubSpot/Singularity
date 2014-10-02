@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Attribute;
@@ -10,7 +11,6 @@ import org.apache.mesos.Protos.SlaveID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
@@ -93,14 +93,14 @@ public class SingularitySlaveAndRackManager {
       return SlaveMatchState.RACK_DECOMISSIONING;
     }
 
-    if (!taskRequest.getRequest().getRackAffinity().or(Collections.<String> emptyList()).isEmpty()) {
+    if (!taskRequest.getRequest().getRackAffinity().orElse(Collections.emptyList()).isEmpty()) {
       if (!taskRequest.getRequest().getRackAffinity().get().contains(rackId)) {
         LOG.trace("Task {} requires a rack in {} (current rack {})", taskRequest.getPendingTask().getPendingTaskId(), taskRequest.getRequest().getRackAffinity().get(), rackId);
         return SlaveMatchState.RACK_AFFINITY_NOT_MATCHING;
       }
     }
 
-    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
+    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().orElse(configuration.getDefaultSlavePlacement());
 
     if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
       return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
@@ -202,9 +202,9 @@ public class SingularitySlaveAndRackManager {
     int racks = 0;
 
     for (MesosMasterSlaveObject slave : state.getSlaves()) {
-      Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey));
+      Optional<String> maybeRackId = Optional.ofNullable(slave.getAttributes().get(rackIdAttributeKey));
       String slaveId = slave.getId();
-      String rackId = getSafeString(maybeRackId.or(defaultRackId));
+      String rackId = getSafeString(maybeRackId.orElse(defaultRackId));
       String host = getHost(slave.getHostname());
 
       if (checkSlave(slaveId, host, rackId).saveResult == SaveResult.NEW) {
@@ -258,7 +258,7 @@ public class SingularitySlaveAndRackManager {
     private final SaveResult saveResult;
 
     public SaveResultHolder(SaveResult saveResult) {
-      this(Optional.<SingularityMachineAbstraction> absent(), saveResult);
+      this(Optional.<SingularityMachineAbstraction> empty(), saveResult);
     }
 
     public SaveResultHolder(Optional<SingularityMachineAbstraction> newObject, SaveResult saveResult) {

@@ -2,7 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -62,8 +61,8 @@ public class SingularityMesosTaskBuilder {
     final TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
 
-    Optional<long[]> ports = Optional.absent();
-    Optional<Resource> portsResource = Optional.absent();
+    Optional<long[]> ports = Optional.empty();
+    Optional<Resource> portsResource = Optional.empty();
 
     if (desiredTaskResources.getNumPorts() > 0) {
       portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources));
@@ -110,12 +109,12 @@ public class SingularityMesosTaskBuilder {
         .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
         .build());
 
-    for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      envBldr.addVariables(Variable.newBuilder()
-          .setName(envEntry.getKey())
-          .setValue(envEntry.getValue())
-          .build());
-    }
+    task.getDeploy().getEnv().ifPresent(e ->
+      e.forEach((k, v) ->
+        envBldr.addVariables(Variable.newBuilder()
+          .setName(k)
+          .setValue(v)
+          .build())));
 
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
@@ -145,7 +144,7 @@ public class SingularityMesosTaskBuilder {
       containerBuilder.setDocker(DockerInfo.newBuilder().setImage(dockerInfo.get().getImage()));
     }
 
-    for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
+    for (SingularityVolume volumeInfo : containerInfo.getVolumes().orElse(Collections.emptyList())) {
       final Volume.Builder volumeBuilder = Volume.newBuilder();
       volumeBuilder.setContainerPath(volumeInfo.getContainerPath());
       if (volumeInfo.getHostPath().isPresent()) {
@@ -166,8 +165,8 @@ public class SingularityMesosTaskBuilder {
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
         .setCommand(commandBuilder.build())
-        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
-        .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().orElse(idGenerator.getNextExecutorId())))
+        .setSource(task.getDeploy().getCustomExecutorSource().orElse(task.getPendingTask().getPendingTaskId().getId()))
         );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
@@ -229,7 +228,7 @@ public class SingularityMesosTaskBuilder {
       commandBldr.setShell(false);
     }
 
-    for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
+    for (String uri : task.getDeploy().getUris().orElse(Collections.emptyList())) {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
 

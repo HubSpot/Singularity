@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -66,8 +66,8 @@ public class SingularityValidator {
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
+    double cpusPerInstance = deploy.getResources().orElse(defaultResources).getCpus();
+    double memoryMbPerInstance = deploy.getResources().orElse(defaultResources).getMemoryMb();
 
     check(cpusPerInstance > 0, "Request must have more than 0 cpus");
     check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
@@ -111,16 +111,16 @@ public class SingularityValidator {
       check(!request.getQuartzSchedule().isPresent() || !request.getSchedule().isPresent(), "Specify one of schedule or quartzSchedule");
 
       check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
-      check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
+      check(request.getInstances().orElse(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
       if (request.getQuartzSchedule().isPresent()) {
-        check(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+        check(request.getScheduleType().orElse(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
       }
 
       if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
         quartzSchedule = originalSchedule;
       } else {
-        check(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+        check(request.getScheduleType().orElse(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
         check(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
 
         quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
@@ -140,12 +140,12 @@ public class SingularityValidator {
     }
 
     if (request.isScheduled()) {
-      check(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
+      check(request.getInstances().orElse(1) == 1, "Scheduler requests can not be ran on more than one instance");
     } else if (request.isOneOff()) {
       check(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
 
-    return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+    return request.toBuilder().setQuartzSchedule(Optional.ofNullable(quartzSchedule)).build();
   }
 
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {

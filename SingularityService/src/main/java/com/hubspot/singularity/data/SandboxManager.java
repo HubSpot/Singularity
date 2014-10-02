@@ -3,10 +3,10 @@ package com.hubspot.singularity.data;
 import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -74,7 +74,7 @@ public class SandboxManager {
       final Response response = builder.execute().get();
 
       if (response.getStatusCode() == 404) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       if (response.getStatusCode() != 200) {

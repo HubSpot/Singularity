@@ -1,8 +1,8 @@
 package com.hubspot.singularity.runner.base.config;
 
+import java.util.Optional;
 import java.util.Properties;
 
-import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 
 public class SingularityRunnerBaseConfigurationLoader extends SingularityConfigurationLoader {
@@ -21,7 +21,7 @@ public class SingularityRunnerBaseConfigurationLoader extends SingularityConfigu
   public static final String S3_METADATA_DIRECTORY = "s3uploader.metadata.directory";
 
   public SingularityRunnerBaseConfigurationLoader() {
-    super("/etc/singularity.base.properties", Optional.<String> absent());
+    super("/etc/singularity.base.properties", Optional.empty());
   }
 
   @Override

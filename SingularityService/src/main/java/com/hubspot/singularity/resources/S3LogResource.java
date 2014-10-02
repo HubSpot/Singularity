@@ -3,6 +3,7 @@ package com.hubspot.singularity.resources;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -20,7 +21,6 @@ import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -76,7 +76,7 @@ public class S3LogResource extends AbstractHistoryResource {
     final long start = taskId.getStartedAt();
     final long end = taskState == SimplifiedTaskState.DONE ? Iterables.getLast(history.getTaskUpdates()).getTimestamp() : System.currentTimeMillis();
 
-    Optional<String> tag = Optional.absent();
+    Optional<String> tag = Optional.empty();
     if (history.getTask().getTaskRequest().getDeploy().getExecutorData().isPresent()) {
       tag = history.getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
     }
@@ -89,7 +89,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private boolean isCurrentDeploy(String requestId, String deployId) {
-    return deployId.equals(deployManager.getInUseDeployId(requestId).orNull());
+    return deployId.equals(deployManager.getInUseDeployId(requestId).orElse(null));
   }
 
   private Collection<String> getS3PrefixesForRequest(String requestId) {
@@ -127,7 +127,7 @@ public class S3LogResource extends AbstractHistoryResource {
       end = deployHistory.getDeployStatistics().get().getLastFinishAt().get() + TimeUnit.DAYS.toMillis(1);
     }
 
-    Optional<String> tag = Optional.absent();
+    Optional<String> tag = Optional.empty();
 
     if (deployHistory.getDeploy().isPresent() && deployHistory.getDeploy().get().getExecutorData().isPresent()) {
       tag = deployHistory.getDeploy().get().getExecutorData().get().getLoggingTag();

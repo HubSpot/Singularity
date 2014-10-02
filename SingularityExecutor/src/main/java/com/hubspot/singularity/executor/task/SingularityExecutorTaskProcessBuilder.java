@@ -2,12 +2,12 @@ package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -42,7 +42,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     this.templateManager = templateManager;
     this.configuration = configuration;
     this.executorPid = executorPid;
-    this.taskArtifactFetcher = Optional.absent();
+    this.taskArtifactFetcher = Optional.empty();
   }
 
   @Override
@@ -85,7 +85,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
     task.getLog().info("Writing a runner script to execute {}", cmd);
 
-    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(cmd, configuration.getTaskAppDirectory(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId()));
+    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(cmd, configuration.getTaskAppDirectory(), executorData.getUser().orElse(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId()));
 
     List<String> command = Lists.newArrayList();
     command.add("bash");

@@ -2,8 +2,8 @@ package com.hubspot.singularity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -47,28 +47,28 @@ public class SingularityDeployBuilder {
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
     this.id = id;
-    this.version = Optional.absent();
-    this.timestamp = Optional.absent();
-    this.metadata = Optional.absent();
-    this.containerInfo = Optional.absent();
-    this.customExecutorCmd = Optional.absent();
-    this.customExecutorId = Optional.absent();
-    this.customExecutorSource = Optional.absent();
-    this.resources = Optional.absent();
-    this.command = Optional.absent();
-    this.arguments = Optional.absent();
-    this.env = Optional.absent();
-    this.uris = Optional.absent();
-    this.executorData = Optional.absent();
-    this.healthcheckUri = Optional.absent();
-    this.healthcheckIntervalSeconds = Optional.absent();
-    this.healthcheckTimeoutSeconds = Optional.absent();
-    this.skipHealthchecksOnDeploy = Optional.absent();
-    this.deployHealthTimeoutSeconds = Optional.absent();
-    this.considerHealthyAfterRunningForSeconds = Optional.absent();
-    this.serviceBasePath = Optional.absent();
-    this.loadBalancerGroups = Optional.absent();
-    this.loadBalancerOptions = Optional.absent();
+    this.version = Optional.empty();
+    this.timestamp = Optional.empty();
+    this.metadata = Optional.empty();
+    this.containerInfo = Optional.empty();
+    this.customExecutorCmd = Optional.empty();
+    this.customExecutorId = Optional.empty();
+    this.customExecutorSource = Optional.empty();
+    this.resources = Optional.empty();
+    this.command = Optional.empty();
+    this.arguments = Optional.empty();
+    this.env = Optional.empty();
+    this.uris = Optional.empty();
+    this.executorData = Optional.empty();
+    this.healthcheckUri = Optional.empty();
+    this.healthcheckIntervalSeconds = Optional.empty();
+    this.healthcheckTimeoutSeconds = Optional.empty();
+    this.skipHealthchecksOnDeploy = Optional.empty();
+    this.deployHealthTimeoutSeconds = Optional.empty();
+    this.considerHealthyAfterRunningForSeconds = Optional.empty();
+    this.serviceBasePath = Optional.empty();
+    this.loadBalancerGroups = Optional.empty();
+    this.loadBalancerOptions = Optional.empty();
   }
 
   public SingularityDeploy build() {

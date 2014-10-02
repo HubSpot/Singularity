@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -15,7 +16,6 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -72,7 +72,7 @@ public class SingularityExecutorMonitor {
     this.runState = RunState.RUNNING;
     this.exitLock = new ReentrantLock();
 
-    this.exitCheckerFuture = Optional.of(startExitChecker(Optional.<ExecutorDriver> absent()));
+    this.exitCheckerFuture = Optional.of(startExitChecker(Optional.empty()));
   }
 
   public enum RunState {
@@ -179,7 +179,7 @@ public class SingularityExecutorMonitor {
     if (exitCheckerFuture.isPresent()) {
       LOG.info("Canceling an exit checker");
       exitCheckerFuture.get().cancel(true);
-      exitCheckerFuture = Optional.absent();
+      exitCheckerFuture = Optional.empty();
     }
   }
 
@@ -190,7 +190,7 @@ public class SingularityExecutorMonitor {
       taskLock.lock();
       try {
         if (runState == RunState.SHUTDOWN) {
-          finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.<String> absent());
+          finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.empty());
 
           return SubmitState.REJECTED;
         }
@@ -265,7 +265,7 @@ public class SingularityExecutorMonitor {
         }
 
         if (wasKilled) {
-          finishTask(task, TaskState.TASK_KILLED, "Task killed before service process started", Optional.<String> absent());
+          finishTask(task, TaskState.TASK_KILLED, "Task killed before service process started", Optional.empty());
         }
       }
 
@@ -333,7 +333,7 @@ public class SingularityExecutorMonitor {
   }
 
   public KillState requestKill(String taskId) {
-    final Optional<SingularityExecutorTask> maybeTask = Optional.fromNullable(tasks.get(taskId));
+    final Optional<SingularityExecutorTask> maybeTask = Optional.ofNullable(tasks.get(taskId));
 
     if (!maybeTask.isPresent()) {
       return KillState.DIDNT_EXIST;
@@ -400,7 +400,7 @@ public class SingularityExecutorMonitor {
           String message = "Task killed. Process exited gracefully with code " + exitCode;
 
           if (task.wasDestroyed()) {
-            final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis());
+            final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().orElse(configuration.getHardKillAfterMillis());
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
           }

@@ -9,7 +9,7 @@ import org.apache.mesos.Protos;
 import ch.qos.logback.classic.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -112,7 +112,7 @@ public class SingularityExecutorTask {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("taskId", getTaskId())
         .add("killed", killed.get())
         .add("taskInfo", taskInfo)

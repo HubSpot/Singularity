@@ -1,8 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
 
@@ -23,8 +22,8 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
     this.requestId = requestId;
     this.deployId = deployId;
 
-    this.lastFinishAt = Optional.absent();
-    this.lastTaskState = Optional.absent();
+    this.lastFinishAt = Optional.empty();
+    this.lastTaskState = Optional.empty();
   }
 
   public SingularityDeployStatistics build() {

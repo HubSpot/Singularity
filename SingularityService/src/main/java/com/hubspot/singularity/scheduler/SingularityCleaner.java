@@ -2,12 +2,12 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -91,7 +91,7 @@ public class SingularityCleaner {
 
     if (!request.isLongRunning()) {
       final long timeSinceCleanup = System.currentTimeMillis() - taskCleanup.getTimestamp();
-      final long maxWaitTime = request.getKillOldNonLongRunningTasksAfterMillis().or(killNonLongRunningTasksInCleanupAfterMillis);
+      final long maxWaitTime = request.getKillOldNonLongRunningTasksAfterMillis().orElse(killNonLongRunningTasksInCleanupAfterMillis);
       final boolean tooOld = maxWaitTime < 1 || (timeSinceCleanup > maxWaitTime);
 
       if (!tooOld) {
@@ -165,7 +165,7 @@ public class SingularityCleaner {
       final String requestId = requestCleanup.getRequestId();
       final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
 
-      boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
+      boolean killActiveTasks = requestCleanup.getKillTasks().orElse(configuration.isDefaultValueForKillTasksOfPausedRequests());
       boolean killScheduledTasks = true;
 
       if (requestCleanup.getCleanupType() == RequestCleanupType.PAUSING) {

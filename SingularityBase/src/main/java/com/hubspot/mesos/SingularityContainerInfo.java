@@ -1,10 +1,10 @@
 package com.hubspot.mesos;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import org.apache.mesos.Protos.ContainerInfo.Type;
 

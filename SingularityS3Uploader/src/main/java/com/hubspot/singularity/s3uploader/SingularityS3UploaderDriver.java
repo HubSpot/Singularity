@@ -10,6 +10,7 @@ import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,11 +31,8 @@ import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -328,18 +326,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       final Path fullPath = configuration.getS3MetadataDirectory().resolve(filename);
 
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-        Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
-          @Override
-          public boolean apply(SingularityS3Uploader input) {
-            return input.getMetadataPath().equals(fullPath);
-          }
-        });
+
+        final Optional<SingularityS3Uploader> found = metadataToUploader.values().stream()
+            .filter(u -> u.getMetadataPath().equals(fullPath))
+            .findFirst();
 
         LOG.trace("Found {} to match deleted path {}", found, filename);
-
-        if (found.isPresent()) {
-          expiring.add(found.get());
-        }
+        found.ifPresent(expiring::add);
       } else {
         return handleNewOrModifiedS3Metadata(fullPath);
       }

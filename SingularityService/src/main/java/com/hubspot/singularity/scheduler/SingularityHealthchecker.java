@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -10,7 +11,6 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -74,7 +74,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   private void privateEnqueueHealthcheck(SingularityTask task) {
-    ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
+    ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().orElse(configuration.getHealthcheckIntervalSeconds()));
 
     ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
 
@@ -128,7 +128,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
 
   private Optional<String> getHealthcheckUri(SingularityTask task) {
     if (task.getTaskRequest().getDeploy().getHealthcheckUri() == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final String hostname = task.getOffer().getHostname();
@@ -137,7 +137,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
 
     if (!firstPort.isPresent() || firstPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String uri = task.getTaskRequest().getDeploy().getHealthcheckUri().get();
@@ -150,7 +150,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
-    handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message));
+    handler.saveResult(Optional.empty(), Optional.empty(), Optional.of(message));
   }
 
   private boolean shouldHealthcheck(final SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
@@ -158,7 +158,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       return false;
     }
 
-    if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().or(false)) {
+    if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().orElse(false)) {
       return false;
     }
 
@@ -174,7 +174,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       return;
     }
 
-    final Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
+    final Long timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheckTimeoutSeconds().orElse(configuration.getHealthcheckTimeoutSeconds());
 
     try {
       PerRequestConfig prc = new PerRequestConfig();

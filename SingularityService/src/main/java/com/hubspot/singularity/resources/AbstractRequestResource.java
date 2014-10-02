@@ -1,15 +1,15 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Optional;
+
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -58,8 +58,8 @@ public class AbstractRequestResource {
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {
     Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+    Optional<SingularityDeploy> activeDeploy = Optional.empty();
+    Optional<SingularityDeploy> pendingDeploy = Optional.empty();
 
     if (requestDeployState.isPresent()) {
       activeDeploy = fillDeploy(requestDeployState.get().getActiveDeploy());
@@ -73,7 +73,7 @@ public class AbstractRequestResource {
 
   protected Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {
     if (!deployMarker.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return deployManager.getDeploy(deployMarker.get().getRequestId(), deployMarker.get().getDeployId());
@@ -90,16 +90,16 @@ public class AbstractRequestResource {
     validator.checkDeploy(request, pendingDeploy);
 
     SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, pendingDeploy.getId(), System.currentTimeMillis(), user);
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING);
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.empty(), DeployState.WAITING);
 
     if (deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED) {
-      throw WebExceptions.conflict("Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
+      throw WebExceptions.conflict("Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orElse(null));
     }
 
     deployManager.saveDeploy(request, deployMarker, pendingDeploy);
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.empty(), user, PendingType.NEW_DEPLOY));
     }
 
     return fillEntireRequest(requestWithState);

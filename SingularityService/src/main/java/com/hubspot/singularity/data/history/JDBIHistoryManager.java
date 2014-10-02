@@ -2,9 +2,9 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -38,7 +38,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
-    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest().getAsBytes(objectMapper), new Date(requestHistory.getCreatedAt()), requestHistory.getEventType().name(), requestHistory.getUser().orNull());
+    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest().getAsBytes(objectMapper), new Date(requestHistory.getCreatedAt()), requestHistory.getEventType().name(), requestHistory.getUser().orElse(null));
   }
 
   @Override
@@ -46,7 +46,7 @@ public class JDBIHistoryManager implements HistoryManager {
     history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
         deployHistory.getDeployMarker().getDeployId(),
         new Date(deployHistory.getDeployMarker().getTimestamp()),
-        deployHistory.getDeployMarker().getUser().orNull(),
+        deployHistory.getDeployMarker().getUser().orElse(null),
         deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
         deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
         deployHistoryTranscoder.toBytes(deployHistory));
@@ -57,7 +57,7 @@ public class JDBIHistoryManager implements HistoryManager {
     byte[] historyBytes = history.getDeployHistoryForDeploy(requestId, deployId);
 
     if (historyBytes == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(deployHistoryTranscoder.transcode(historyBytes));
@@ -69,7 +69,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
-    return orderDirection.or(OrderDirection.DESC).name();
+    return orderDirection.orElse(OrderDirection.DESC).name();
   }
 
   @Override
@@ -103,7 +103,7 @@ public class JDBIHistoryManager implements HistoryManager {
     byte[] historyBytes = history.getTaskHistoryForTask(taskId);
 
     if (historyBytes == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(taskHistoryTranscoder.transcode(historyBytes));

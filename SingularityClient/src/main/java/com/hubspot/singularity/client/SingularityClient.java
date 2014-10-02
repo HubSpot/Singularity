@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -12,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -204,12 +204,12 @@ public class SingularityClient {
     if (isSuccess(getResponse)) {
       LOG.info(String.format("Successfully got Singularity Request with id: '%s', in %sms", requestId, System.currentTimeMillis() - start));
       try {
-        return Optional.fromNullable(objectMapper.readValue(getResponse.getResponseBodyAsStream(), SingularityRequestParent.class));
+        return Optional.ofNullable(objectMapper.readValue(getResponse.getResponseBodyAsStream(), SingularityRequestParent.class));
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
     } else if (getResponse.getStatusCode() == 404) {
-      return Optional.<SingularityRequestParent>absent();
+      return Optional.empty();
     } else {
       throw fail("Get 'Singularity Request' failed", getResponse);
     }
@@ -234,8 +234,8 @@ public class SingularityClient {
   /**
    * Delete a singularity request that is active.
    * If the deletion is successful the deleted singularity request is returned.
-   * If the request to be deleted is not found {code Optional.absent()} is returned
-   * If the singularity request to be deleted is paused the deletion will fail ({code Optional.absent()} will be returned)
+   * If the request to be deleted is not found {code Optional.empty()} is returned
+   * If the singularity request to be deleted is paused the deletion will fail ({code Optional.empty()} will be returned)
    * If you want to delete a paused singularity request use the provided {@link SingularityClient#deletePausedSingularityRequest}
    *
    * @param requestId
@@ -255,7 +255,7 @@ public class SingularityClient {
     Response deleteResponse = deleteUri(requestUri);
 
     if (deleteResponse.getStatusCode() == 404) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     checkResponse("delete active singularity request", deleteResponse);
@@ -287,7 +287,7 @@ public class SingularityClient {
     Response deleteResponse = deleteUri(requestUri);
 
     if (deleteResponse.getStatusCode() == 404) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     checkResponse("delete paused singularity request", deleteResponse);
@@ -663,7 +663,7 @@ public class SingularityClient {
       } catch (IOException e) {
         LOG.warn("Couldn't read response", e);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     try {
@@ -909,7 +909,7 @@ public class SingularityClient {
     LOG.info(String.format("Got task history from Singularity in %sms", System.currentTimeMillis() - start));
 
     if (getResponse.getStatusCode() == 404) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     try {
@@ -977,7 +977,7 @@ public class SingularityClient {
         throw Throwables.propagate(e);
       }
     } else if (getResponse.getStatusCode() == 404) {
-      return Optional.<SingularityDeployHistory>absent();
+      return Optional.empty();
     } else {
       throw fail("Get 'History for Request Deploy' failed", getResponse);
     }

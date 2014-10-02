@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.basepom</groupId>
     <artifactId>basepom-standard-oss</artifactId>
-    <version>6</version>
+    <version>7</version>
   </parent>
 
   <groupId>com.hubspot</groupId>
@@ -33,10 +33,12 @@
   </developers>
 
   <properties>
-    <project.jdk7.home>${env.JAVA7_HOME}</project.jdk7.home>
-    <project.build.targetJdk>1.7</project.build.targetJdk>
+    <project.build.targetJdk>1.8</project.build.targetJdk>
     <basepom.check.skip-license>true</basepom.check.skip-license>
     <basepom.check.fail-extended>true</basepom.check.fail-extended>
+
+    <!-- XXX: remove once https://github.com/checkstyle/checkstyle/issues/10 is fixed-->
+    <basepom.check.skip-checkstyle>true</basepom.check.skip-checkstyle>
 
     <!-- hubspot jackson and dropwizard dep use 2.3.x -->
     <dep.jackson.version>2.3.2</dep.jackson.version>
@@ -299,6 +301,27 @@
       </dependency>
 
       <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jdk8</artifactId>
+        <version>2.4.3-SNAPSHOT</version>
+        <!-- XXX: remove once we move to Jackson 2.4.x or later -->
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>com.github.jknack</groupId>
         <artifactId>handlebars</artifactId>
         <version>1.3.1</version>
@@ -511,46 +534,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <profiles>
-    <profile>
-      <id>travis</id>
-      <activation>
-        <property>
-          <name>env.TRAVIS</name>
-        </property>
-      </activation>
-      <properties>
-        <project.jdk7.home>${env.JAVA_HOME}</project.jdk7.home>
-      </properties>
-    </profile>
-    <profile>
-      <id>cross-compile</id>
-      <activation>
-        <jdk>(1.7,]</jdk>
-      </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <configuration>
-                <compilerArguments children.combine="append">
-                  <bootclasspath>${project.jdk7.home}/jre/lib/rt.jar:${project.jdk7.home}/jre/lib/jce.jar:${project.jdk7.home}/../classes/classes.jar</bootclasspath>
-                </compilerArguments>
-              </configuration>
-            </plugin>
-            <plugin>
-              <artifactId>maven-javadoc-plugin</artifactId>
-              <configuration>
-                <bootclasspath>${project.jdk7.home}/jre/lib/rt.jar:${project.jdk7.home}/jre/lib/jce.jar:${project.jdk7.home}/../classes/classes.jar</bootclasspath>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-    </profile>
-  </profiles>
 </project>
 
 <!-- Local Variables: -->

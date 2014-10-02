@@ -1,6 +1,6 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 
 public abstract class SingularityMachineAbstraction extends SingularityJsonObject {
@@ -20,7 +20,7 @@ public abstract class SingularityMachineAbstraction extends SingularityJsonObjec
   }
 
   public SingularityMachineAbstraction(String id) {
-    this(id, SingularityMachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent());
+    this(id, SingularityMachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> empty(), Optional.<Long> empty(), Optional.<Long> empty(), Optional.<Long> empty());
   }
 
   public SingularityMachineAbstraction(String id, SingularityMachineState state, long firstSeenAt, Optional<String> decomissioningBy, Optional<Long> decomissioningAt, Optional<Long> decomissionedAt, Optional<Long> deadAt) {

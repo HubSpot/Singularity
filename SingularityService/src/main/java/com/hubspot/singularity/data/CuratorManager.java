@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.GetDataBuilder;
@@ -13,7 +14,6 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -47,13 +47,13 @@ public abstract class CuratorManager {
   protected Optional<Stat> checkExists(String path) {
     try {
       Stat stat = curator.checkExists().forPath(path);
-      return Optional.fromNullable(stat);
+      return Optional.ofNullable(stat);
     } catch (NoNodeException nne) {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   protected boolean exists(String path) {
@@ -83,7 +83,7 @@ public abstract class CuratorManager {
   }
 
   protected SingularityCreateResult create(String path) {
-    return create(path, Optional.<byte[]> absent());
+    return create(path, Optional.empty());
   }
 
   protected <T> SingularityCreateResult create(String path, T object, Transcoder<T> transcoder) {
@@ -159,19 +159,19 @@ public abstract class CuratorManager {
 
       if (data == null || data.length == 0) {
         LOG.trace("Empty data found for path {}", path);
-        return Optional.absent();
+        return Optional.empty();
       }
 
       return Optional.of(transcoder.transcode(data));
     } catch (NoNodeException nne) {
-      return Optional.absent();
+      return Optional.empty();
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    return getData(path, Optional.<Stat> absent(), transcoder);
+    return getData(path, Optional.empty(), transcoder);
   }
 
   protected Optional<String> getStringData(String path) {

@@ -1,8 +1,9 @@
 package com.hubspot.singularity.config;
 
+import java.util.Optional;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class UIConfiguration {
@@ -21,7 +22,7 @@ public class UIConfiguration {
   }
 
   public Optional<String> getBaseUrl() {
-    return Optional.fromNullable(Strings.emptyToNull(baseUrl));
+    return Optional.ofNullable(Strings.emptyToNull(baseUrl));
   }
 
   public void setBaseUrl(String baseUrl) {

@@ -1,10 +1,11 @@
 package com.hubspot.singularity.data;
 
+import java.util.Optional;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,7 +37,7 @@ public class MetadataManager extends CuratorManager {
       throw Throwables.propagate(t);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public void saveLastCheckTimestamp(long newTimestamp) {

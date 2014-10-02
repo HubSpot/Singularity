@@ -2,6 +2,7 @@ package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.core.HttpHeaders;
 
@@ -10,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;

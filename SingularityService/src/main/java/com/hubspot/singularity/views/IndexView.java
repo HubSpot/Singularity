@@ -19,14 +19,14 @@ public class IndexView extends View {
   public IndexView(SingularityConfiguration configuration) {
     super("index.mustache");
 
-    appRoot = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    appRoot = configuration.getUiConfiguration().getBaseUrl().orElse(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     staticRoot = String.format("%s/static", appRoot);
     apiRoot = String.format("%s%s", appRoot, SingularityService.API_BASE_PATH);
 
     title = configuration.getUiConfiguration().getTitle();
 
     mesosLogsPort = configuration.getMesosConfiguration().getSlaveHttpPort();
-    mesosLogsPortHttps = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
+    mesosLogsPortHttps = configuration.getMesosConfiguration().getSlaveHttpsPort().orElse(null);
   }
 
   public String getAppRoot() {

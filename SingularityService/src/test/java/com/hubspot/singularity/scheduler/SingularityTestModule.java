@@ -2,6 +2,9 @@ package com.hubspot.singularity.scheduler;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import net.kencochrane.raven.Raven;
 
 import org.apache.curator.RetryPolicy;
@@ -19,7 +22,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -28,7 +30,6 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTaskId;
@@ -95,7 +96,7 @@ public class SingularityTestModule extends AbstractModule {
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
 
     HistoryManager hm = mock(HistoryManager.class);
-    when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.<SingularityDeployHistory> absent());
+    when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.empty());
 
     bind(HistoryManager.class).toInstance(hm);
   }
@@ -159,12 +160,12 @@ public class SingularityTestModule extends AbstractModule {
   @Provides
   @Singleton
   public Optional<Raven> providesNoRaven() {
-    return Optional.<Raven> absent();
+    return Optional.empty();
   }
 
   @Provides
   @Singleton
   public Optional<SentryConfiguration> providesNoSentryConfiguration() {
-    return Optional.absent();
+    return Optional.empty();
   }
 }

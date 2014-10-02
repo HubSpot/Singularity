@@ -7,10 +7,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
@@ -45,7 +45,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 0, PendingType.IMMEDIATE), Optional.<String>absent());
+    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 0, PendingType.IMMEDIATE), Optional.empty());
 
     final SingularitySlaveAndRackManager rackManager = mock(SingularitySlaveAndRackManager.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);

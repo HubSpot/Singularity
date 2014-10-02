@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -69,7 +69,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
       return Optional.of(history.get().getTask());
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
 }

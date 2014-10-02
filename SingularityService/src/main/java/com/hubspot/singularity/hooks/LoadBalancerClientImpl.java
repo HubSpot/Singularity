@@ -3,6 +3,7 @@ package com.hubspot.singularity.hooks;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.util.OptionalUtils;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
@@ -131,7 +132,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
       BaragonResponse lbResponse = readResponse(response);
 
-      return new LoadBalancerUpdateHolder(lbResponse.getLoadBalancerState(), lbResponse.getMessage());
+      return new LoadBalancerUpdateHolder(lbResponse.getLoadBalancerState(), OptionalUtils.convert(lbResponse.getMessage()));
     } catch (TimeoutException te) {
       LOG.trace("LB {} request {} timed out after waiting {}", request.getMethod(), loadBalancerRequestId, JavaUtils.durationFromMillis(loadBalancerTimeoutMillis));
       return new LoadBalancerUpdateHolder(BaragonRequestState.UNKNOWN, Optional.of(String.format("Timed out after %s", JavaUtils.durationFromMillis(loadBalancerTimeoutMillis))));
@@ -143,9 +144,9 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   @Override
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add, List<SingularityTask> remove) {
-    final List<String> serviceOwners = request.getOwners().or(Collections.<String>emptyList());
-    final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptyList());
-    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
+    final List<String> serviceOwners = request.getOwners().orElse(Collections.emptyList());
+    final List<String> loadBalancerGroups = deploy.getLoadBalancerGroups().orElse(Collections.emptyList());
+    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orElse(null));
 
     final List<String> addUpstreams = transformTasksToUpstreams(add);
     final List<String> removeUpstreams = transformTasksToUpstreams(remove);

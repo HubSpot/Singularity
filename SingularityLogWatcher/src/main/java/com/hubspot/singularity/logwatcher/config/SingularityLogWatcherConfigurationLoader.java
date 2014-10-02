@@ -1,8 +1,8 @@
 package com.hubspot.singularity.logwatcher.config;
 
+import java.util.Optional;
 import java.util.Properties;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.config.SingularityConfigurationLoader;
 
 public class SingularityLogWatcherConfigurationLoader extends SingularityConfigurationLoader {
