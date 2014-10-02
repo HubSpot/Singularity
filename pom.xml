@@ -37,6 +37,9 @@
     <basepom.check.skip-license>true</basepom.check.skip-license>
     <basepom.check.fail-extended>true</basepom.check.fail-extended>
 
+    <!-- XXX: remove once https://github.com/checkstyle/checkstyle/issues/10 is fixed-->
+    <basepom.check.skip-checkstyle>true</basepom.check.skip-checkstyle>
+
     <!-- hubspot jackson and dropwizard dep use 2.3.x -->
     <dep.jackson.version>2.3.2</dep.jackson.version>
     <dep.jackson.core.version>${dep.jackson.version}</dep.jackson.core.version>
