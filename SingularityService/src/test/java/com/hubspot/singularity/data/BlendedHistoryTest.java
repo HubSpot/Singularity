@@ -35,8 +35,6 @@ public class BlendedHistoryTest {
   @Inject
   private TestingServer ts;
   @Inject
-  private RequestHistoryHelper requestHistoryHelper;
-  @Inject
   private RequestManager requestManager;
 
   @Before
@@ -52,6 +50,7 @@ public class BlendedHistoryTest {
     ts.close();
   }
 
+  @SuppressWarnings("unchecked")
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
     when(hm.getRequestHistory(Matchers.anyString(), (Optional<OrderDirection>) Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
   }
