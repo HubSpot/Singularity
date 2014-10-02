@@ -81,12 +81,13 @@ public class StateManager extends CuratorManager {
     List<SingularityHostState> states = Lists.newArrayListWithCapacity(children.size());
 
     for (String child : children) {
-
+      final String path = ZKPaths.makePath(ROOT_PATH, child);
       try {
-        byte[] bytes = curator.getData().forPath(ZKPaths.makePath(ROOT_PATH, child));
+        byte[] bytes = curator.getData().forPath(path);
 
         states.add(SingularityHostState.fromBytes(bytes, objectMapper));
       } catch (NoNodeException nne) {
+        LOG.trace("Keeper node {} doesn't exist", path, nne);
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
@@ -174,6 +175,7 @@ public class StateManager extends CuratorManager {
         cooldownRequests++;
         break;
       default:
+        break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {
