@@ -3,6 +3,8 @@ package com.hubspot.singularity.hooks;
 import java.io.IOException;
 import java.util.List;
 
+import javax.ws.rs.core.HttpHeaders;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,6 +126,8 @@ public class SingularityWebhookSender {
     LOG.trace("Sending {} to {}", payload, webhook.getUri());
 
     BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
+
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 
     try {
       postRequest.setBody(objectMapper.writeValueAsBytes(payload));
