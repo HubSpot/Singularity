@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
