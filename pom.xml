@@ -49,7 +49,7 @@
     <dep.metrics.version>3.0.2</dep.metrics.version>
     <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
 
-    <baragon.version>0.1.1</baragon.version>
+    <baragon.version>0.1.2</baragon.version>
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.0</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>

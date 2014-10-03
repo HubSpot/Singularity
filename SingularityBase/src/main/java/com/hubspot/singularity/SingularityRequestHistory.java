@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
@@ -75,6 +76,7 @@ public class SingularityRequestHistory extends SingularityJsonObject implements 
   }
 
   @Deprecated
+  @JsonIgnore
   public RequestHistoryType getState() {
     return eventType;
   }
