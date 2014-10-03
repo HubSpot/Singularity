@@ -77,6 +77,7 @@ public class SingularityRequest extends SingularityJsonObject {
     .setSchedule(schedule)
     .setKillOldNonLongRunningTasksAfterMillis(killOldNonLongRunningTasksAfterMillis)
     .setScheduleType(scheduleType)
+    .setQuartzSchedule(quartzSchedule)
     .setRackAffinity(copyOfList(rackAffinity))
     .setSlavePlacement(slavePlacement);
   }
