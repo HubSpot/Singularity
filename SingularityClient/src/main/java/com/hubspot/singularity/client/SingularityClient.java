@@ -29,6 +29,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskRequest;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
@@ -90,6 +91,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION =
       new TypeReference<Collection<SingularityTask>>() {};
+  private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION =
+      new TypeReference<Collection<SingularityTaskRequest>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
   private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
@@ -678,7 +681,7 @@ public class SingularityClient {
   // SCHEDULED TASKS
   //
 
-  public Collection<SingularityTask> getScheduledTasks() {
+  public Collection<SingularityTaskRequest> getScheduledTasks() {
     final String requestUri = String.format(TASKS_GET_SCHEDULED_FORMAT, getHost(), contextPath);
 
     LOG.info(String.format("Getting scheduled tasks - (%s)", requestUri));
@@ -693,7 +696,8 @@ public class SingularityClient {
         System.currentTimeMillis() - start));
 
     try {
-      return objectMapper.readValue(getResponse.getResponseBodyAsStream(), TASKS_COLLECTION);
+      return objectMapper
+          .readValue(getResponse.getResponseBodyAsStream(), TASKS_REQUEST_COLLECTION);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
