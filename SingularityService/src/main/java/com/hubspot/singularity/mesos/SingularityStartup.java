@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
@@ -88,11 +90,7 @@ public class SingularityStartup {
 
       slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
 
-      // two things need to happen:
-      // 1- we need to look for active tasks that are no longer active (assume that there is no such thing as a missing active task.)
-      // 2- we need to reschedule the world.
-
-      checkForMissingActiveTasks(state, registered);
+      checkForCompletedActiveTasks(state);
       enqueueHealthAndNewTaskchecks();
 
     } catch (Exception e) {
@@ -147,15 +145,10 @@ public class SingularityStartup {
     LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), JavaUtils.duration(start));
   }
 
-  private void checkForMissingActiveTasks(MesosMasterStateObject state, boolean frameworkIsNew) {
+  private void checkForCompletedActiveTasks(MesosMasterStateObject state) {
     final long start = System.currentTimeMillis();
 
-    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-
-    final Set<String> inactiveTaskIds = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
-    for (SingularityTaskId taskId : activeTaskIds) {
-      inactiveTaskIds.add(taskId.toString());
-    }
+    final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
 
     List<MesosTaskObject> frameworkRunningTasks = Collections.emptyList();
 
@@ -168,32 +161,33 @@ public class SingularityStartup {
       frameworkRunningTasks = framework.getTasks();
     }
 
+    int completedTasks = 0;
+
     for (MesosTaskObject taskObject : frameworkRunningTasks) {
-      inactiveTaskIds.remove(taskObject.getId());
-    }
+      SingularityTaskId taskId = SingularityTaskId.fromString(taskObject.getId());
 
-    // we've lost all tasks
-    if (frameworkRunningTasks.isEmpty() && !activeTaskIds.isEmpty()) {
-      final String msg = String.format("Framework %s (new: %s) had no active tasks, expected ~ %s", mesosConfiguration.getFrameworkId(), frameworkIsNew, activeTaskIds.size());
+      if (!activeTaskIds.contains(taskId)) {
+        continue;
+      }
 
-      if (mesosConfiguration.getAllowMissingAllExistingTasksOnStartup().booleanValue()) {
-        LOG.info(String.format("%s - %s", msg, "Ignoring task mismatch because allowMissingAllExistingTasksOnStartup is true"));
-      } else {
-        throw new IllegalStateException(String.format("%s - %s", msg, "set allowMissingAllExistingTasksOnStartup in mesos configuration to true or remove active tasks manually / check framework / zookeeper ids"));
+      final TaskState taskState = TaskState.valueOf(taskObject.getState());
+
+      if (MesosUtils.isTaskDone(taskState)) {
+        completedTasks++;
+
+        sendTaskUpdate(taskId, ExtendedTaskState.fromTaskState(taskState), start);
       }
     }
 
-    for (String inactiveTaskId : inactiveTaskIds) {
-      SingularityTaskId taskId = SingularityTaskId.fromString(inactiveTaskId);
+    LOG.info("Finished reconciling active tasks: {} active tasks, {} were completed in {}", activeTaskIds.size(), completedTasks, JavaUtils.duration(start));
+  }
 
-      SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), ExtendedTaskState.TASK_LOST_WHILE_DOWN, Optional.<String> absent()));
+  private void sendTaskUpdate(SingularityTaskId taskId, ExtendedTaskState extendedTaskState, final long start) {
+    SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, System.currentTimeMillis(), extendedTaskState, Optional.<String> absent()));
 
-      logSupport.checkDirectory(taskId);
+    logSupport.checkDirectory(taskId);
 
-      scheduler.handleCompletedTask(taskManager.getActiveTask(inactiveTaskId), taskId, start, ExtendedTaskState.TASK_LOST_WHILE_DOWN, taskHistoryUpdateCreateResult, stateCacheProvider.get());
-    }
-
-    LOG.info("Finished reconciling active tasks: {} active tasks, {} were deleted in {}", activeTaskIds.size(), inactiveTaskIds.size(), JavaUtils.duration(start));
+    scheduler.handleCompletedTask(taskManager.getActiveTask(taskId.getId()), taskId, start, extendedTaskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
   }
 
 }
