@@ -244,12 +244,6 @@
 
       <dependency>
         <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-logging</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-views</artifactId>
         <version>${dropwizard.version}</version>
       </dependency>

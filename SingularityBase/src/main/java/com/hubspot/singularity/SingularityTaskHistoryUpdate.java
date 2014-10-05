@@ -31,13 +31,13 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     UNKNOWN, WAITING, RUNNING, DONE
   }
 
-  public static SingularityTaskHistoryUpdate getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
-    return Iterables.find(updates, new Predicate<SingularityTaskHistoryUpdate>() {
+  public static Optional<SingularityTaskHistoryUpdate> getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
+    return Optional.fromNullable(Iterables.find(updates, new Predicate<SingularityTaskHistoryUpdate>() {
       @Override
       public boolean apply(@Nonnull SingularityTaskHistoryUpdate input) {
         return input.getTaskState() == taskState;
       }
-    });
+    }));
   }
 
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {
@@ -87,7 +87,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     if (this == other) {
       return true;
     }
-    if (other == null || other.getClass() != this.getClass()) {
+    if ((other == null) || (other.getClass() != this.getClass())) {
       return false;
     }
 
