@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityDeployKey;
