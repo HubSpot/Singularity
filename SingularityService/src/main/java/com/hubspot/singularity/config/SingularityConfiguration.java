@@ -159,6 +159,8 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
+  private boolean enableCorsFilter = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -530,6 +532,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
     this.defaultSlavePlacement = defaultSlavePlacement;
+  }
+
+  public boolean isEnableCorsFilter() {
+    return enableCorsFilter;
+  }
+
+  public void setEnableCorsFilter(boolean enableCorsFilter) {
+    this.enableCorsFilter = enableCorsFilter;
   }
 
 }

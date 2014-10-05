@@ -27,6 +27,7 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
         return killNonLongRunningTaskInstantly;
       }
     }
+
   }
 
   private final Optional<String> user;

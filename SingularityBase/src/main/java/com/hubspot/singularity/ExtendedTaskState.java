@@ -9,12 +9,10 @@ public enum ExtendedTaskState {
 
   private final String displayName;
   private final boolean isDone;
-  private final boolean isFailed;
 
-  private ExtendedTaskState(String displayName, boolean isDone, boolean isFailed) {
+  private ExtendedTaskState(String displayName, boolean isDone) {
     this.displayName = displayName;
     this.isDone = isDone;
-    this.isFailed = isFailed;
   }
 
   public String getDisplayName() {
@@ -26,7 +24,7 @@ public enum ExtendedTaskState {
   }
 
   public boolean isFailed() {
-    return isFailed;
+    return this == TASK_FAILED;
   }
 
   public boolean isSuccess() {
@@ -52,6 +50,8 @@ public enum ExtendedTaskState {
       default:
         throw new IllegalStateException(String.format("TaskState: %s not found", taskState));
     }
+
+    throw new IllegalStateException(String.format("TaskState: %s not found", taskState));
   }
 
 }

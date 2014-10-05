@@ -37,6 +37,7 @@ import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Path(SingularityService.API_BASE_PATH + "/requests")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -44,15 +45,17 @@ public class RequestResource extends AbstractRequestResource {
 
   private final SingularityValidator validator;
 
+  private final SingularityMailer mailer;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager, SingularityMailer mailer) {
     super(requestManager, deployManager, validator);
 
     this.validator = validator;
 
+    this.mailer = mailer;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
   }
@@ -199,13 +202,14 @@ public class RequestResource extends AbstractRequestResource {
 
     checkRequestStateNotPaused(requestWithState, "pause");
 
-    requestManager.pause(requestWithState.getRequest(), user);
-
     Optional<Boolean> killTasks = Optional.absent();
     if (pauseRequest.isPresent()) {
       user = pauseRequest.get().getUser();
       killTasks = pauseRequest.get().getKillTasks();
     }
+
+    mailer.sendRequestPausedMail(requestWithState.getRequest(), user);
+    requestManager.pause(requestWithState.getRequest(), user);
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), killTasks, requestId));
 
@@ -224,6 +228,8 @@ public class RequestResource extends AbstractRequestResource {
     if (requestWithState.getState() != RequestState.PAUSED) {
       throw WebExceptions.conflict("Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
     }
+
+    mailer.sendRequestUnpausedMail(requestWithState.getRequest(), user);
 
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
@@ -317,6 +323,7 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequest deleteRequest(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
 
+    mailer.sendRequestRemovedMail(request, user);
     requestManager.deleteRequest(request, user);
 
     return request;

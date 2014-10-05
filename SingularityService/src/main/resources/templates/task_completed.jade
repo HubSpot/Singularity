@@ -23,33 +23,40 @@ html
         //- Header
         div(style="padding-bottom: 20px")
           div(style="border-top: 10px solid #df4210; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
-            h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ request_id }
-            h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has failed
-            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularity_task_link }") View task
+            h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ requestId }
+            h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has #{ status }
+            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityTaskLink }") View task
 
         //- Status
         div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Status
           p
-            if !taskEverRan || taskStateLost
+            if taskStateLost
               | This is likely an infrastructure issue. No action is required.
-            else
-              | The task failed with a non-zero exit code. Consider investigating your process to see if there is an application level error.
-          if taskScheduled
+            if taskStateFinished
+              | The task finished running and exited with a normal exit code. No action is required.
+            if taskStateKilled
+              | The task was killed by either Singularity, the OOM killer, or user action.
+            if taskStateFailed
+              | The task failed with a non-zero exit code. Consider investigating to see if there is an application level error.
+          if requestScheduled
             if taskWillRetry
-              p Singularity will retry the task #{ num_retries } times before it resumes on its normal schedule.
+              p Singularity will retry the task #{ numRetries } times before it resumes on its normal schedule.
             if !taskWillRetry
               p Singularity will run the task again on its normal schedule.
-          if !taskScheduled
+          if requestOneOff
+            p Singularity will not run your task again unless manually instructed.
+          else if !requestScheduled
             p Singularity will continue to restart your task immediately.
-          if !taskEverRan
-            p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
-          if taskEverRan
-            if taskStateFailed
-              p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
-            if taskStateLost
-              p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
+          if !taskStateFinished
+            if !taskRan
+              p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
+            else
+              if taskStateFailed
+                p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
+              if taskStateLost
+                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
 
         //- History
         div(style="padding-bottom: 20px")
@@ -58,13 +65,13 @@ html
           table(style="border: 0; border-collapse: collapse; background: #eee")
             tr
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
-              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Status
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Message
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
-            each task_update, i in task_updates
+            each taskUpdate, i in taskUpdates
               tr
-                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.update
-                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.message
-                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= task_update.date
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= taskUpdate.update
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= taskUpdate.message
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= taskUpdate.date
 
         //- Info
         div(style="padding-bottom: 20px")
@@ -72,17 +79,15 @@ html
             h3(style="margin: 0; font-size: 20px; line-height: 1") Info
           dl
             dt(style="font-weight: bold; margin: 0 0 9px") Request ID
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ request_id }
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ requestId }
             dt(style="font-weight: bold; margin: 0 0 9px") Deploy ID
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ deploy_id }
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ deployId }
             dt(style="font-weight: bold; margin: 0 0 9px") Task ID
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ task_id }
-            dt(style="font-weight: bold; margin: 0 0 9px") Status
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ status }
-            dt(style="font-weight: bold; margin: 0 0 9px") Directory
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ task_directory }
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ taskId }
             dt(style="font-weight: bold; margin: 0 0 9px") Hostname of slave task ran on
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slave_hostname }
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slaveHostname }
+            dt(style="font-weight: bold; margin: 0 0 9px") Directory
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ taskDirectory }
 
         //- Files
         div
