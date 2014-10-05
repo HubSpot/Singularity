@@ -44,7 +44,7 @@ public class SingularityStateGenerator {
       mesosMaster = MesosUtils.getMasterHostAndPort(mesosMasterInfo.get());
     }
 
-    final SingularityHostState hostState = new SingularityHostState(isMaster, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, JavaUtils.getHostName(), mesosMaster);
+    final SingularityHostState hostState = new SingularityHostState(isMaster, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, JavaUtils.getHostName().or("unknown"), mesosMaster);
 
     return hostState;
   }

@@ -73,7 +73,7 @@ public class SingularityStartup {
 
       enqueueHealthAndNewTaskchecks();
 
-      taskReconciliation.reconcileTasks(driver);
+      taskReconciliation.startReconciliation(driver);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

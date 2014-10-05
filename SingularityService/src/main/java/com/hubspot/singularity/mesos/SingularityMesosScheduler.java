@@ -17,16 +17,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -51,10 +54,12 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityLogSupport logSupport;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
+  private final String serverId;
 
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityNewTaskChecker newTaskChecker,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager) {
+      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
+      @Named(SingularityServiceModule.SERVER_ID_PROPERTY) String serverId) {
     defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
@@ -65,6 +70,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
     this.healthchecker = healthchecker;
+    this.serverId = serverId;
   }
 
   @Override
@@ -199,6 +205,33 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info("Offer {} rescinded", offerId);
   }
 
+
+  /**
+   * 1- we have a previous update, and this is a duplicate of it (ignore)
+   * 2- we don't have a previous update, 2 cases:
+   *  a - this task has already been destroyed (we can ignore it then)
+   *  b - we've never heard of this task (very unlikely since we first write a status into zk before we launch a task)
+   */
+  private boolean isDuplicateOrIgnorableStatusUpdate(Optional<SingularityTaskStatusHolder> previousTaskStatusHolder, final SingularityTaskStatusHolder newTaskStatusHolder) {
+    if (!previousTaskStatusHolder.isPresent()) {
+      return true;
+    }
+
+    if (!previousTaskStatusHolder.get().getTaskStatus().isPresent()) { // this is our launch state
+      return false;
+    }
+
+    return previousTaskStatusHolder.get().getTaskStatus().get().getState() == newTaskStatusHolder.getTaskStatus().get().getState();
+  }
+
+  private void saveNewTaskStatusHolder(SingularityTaskId taskIdObj, SingularityTaskStatusHolder newTaskStatusHolder, ExtendedTaskState taskState) {
+    if (taskState.isDone()) {
+      taskManager.deleteLastActiveTaskStatus(taskIdObj);
+    } else {
+      taskManager.saveLastActiveTaskStatus(newTaskStatusHolder);
+    }
+  }
+
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     final String taskId = status.getTaskId().getValue();
@@ -212,9 +245,17 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
-    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId);
+    final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
 
+    if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
+      LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
+      saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+      return;
+    }
+
+    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
     Optional<SingularityPendingDeploy> pendingDeploy = null;
 
     if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
@@ -235,21 +276,18 @@ public class SingularityMesosScheduler implements Scheduler {
       taskManager.deleteKilledRecord(taskIdObj);
 
       scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
-
-      taskManager.deleteLastActiveTaskStatus(taskIdObj);
-    } else {
-      if (maybeActiveTask.isPresent()) {
-        if (pendingDeploy == null) {
-          pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
-        }
-
-        if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-          newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
-        }
+    } else if (maybeActiveTask.isPresent()) {
+      if (pendingDeploy == null) {
+        pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
       }
 
-      taskManager.saveLastActiveTaskStatus(taskIdObj, status);
+      // TODO do we need a new task check if we have hit TASK_RUNNING?
+      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+        newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
+      }
     }
+
+    saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
   }
 
   @Override

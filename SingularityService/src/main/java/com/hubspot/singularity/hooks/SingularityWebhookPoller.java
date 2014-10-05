@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -16,19 +17,19 @@ import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityWebhookPoller implements SingularityCloseable, SingularityStartable {
+public class SingularityWebhookPoller extends SingularityCloseable<ScheduledExecutorService> implements SingularityStartable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookPoller.class);
 
   private final SingularityWebhookSender webhookSender;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityConfiguration configuration;
-  private final SingularityCloser closer;
   private final ScheduledExecutorService executorService;
 
   @Inject
   public SingularityWebhookPoller(SingularityWebhookSender webhookSender, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration) {
-    this.closer = closer;
+    super(closer);
+
     this.webhookSender = webhookSender;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
@@ -55,8 +56,8 @@ public class SingularityWebhookPoller implements SingularityCloseable, Singulari
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return Optional.of(executorService);
   }
 
 }

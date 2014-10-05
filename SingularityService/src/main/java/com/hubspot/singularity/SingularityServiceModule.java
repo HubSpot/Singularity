@@ -9,6 +9,7 @@ import io.dropwizard.setup.Environment;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
@@ -43,6 +44,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -85,6 +87,8 @@ public class SingularityServiceModule extends AbstractModule {
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
 
+  public static final String SERVER_ID_PROPERTY = "singularity.server.id";
+
   @Override
   protected void configure() {
     bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
@@ -100,6 +104,7 @@ public class SingularityServiceModule extends AbstractModule {
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
     bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
     bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
+    bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
   }
 
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {

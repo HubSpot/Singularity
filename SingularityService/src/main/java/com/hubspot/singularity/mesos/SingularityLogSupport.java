@@ -24,7 +24,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
-public class SingularityLogSupport implements SingularityCloseable {
+public class SingularityLogSupport extends SingularityCloseable<ThreadPoolExecutor> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLogSupport.class);
 
@@ -33,20 +33,19 @@ public class SingularityLogSupport implements SingularityCloseable {
 
   private final ThreadPoolExecutor logLookupExecutorService;
 
-  private final SingularityCloser closer;
-
   @Inject
   public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, TaskManager taskManager, SingularityCloser closer) {
+    super(closer);
+
     this.mesosClient = mesosClient;
     this.taskManager = taskManager;
-    this.closer = closer;
 
     this.logLookupExecutorService = new ThreadPoolExecutor(configuration.getLogFetchCoreThreads(), configuration.getLogFetchMaxThreads(), 250L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("SingularityDirectoryFetcher-%d").build());
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), logLookupExecutorService);
+  public Optional<ThreadPoolExecutor> getExecutorService() {
+    return Optional.of(logLookupExecutorService);
   }
 
   private Optional<String> findDirectory(SingularityTaskId taskId, List<MesosExecutorObject> executors) {

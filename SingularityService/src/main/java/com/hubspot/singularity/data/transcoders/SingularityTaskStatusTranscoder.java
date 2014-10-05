@@ -1,31 +1,29 @@
 package com.hubspot.singularity.data.transcoders;
 
-import org.apache.mesos.Protos.TaskStatus;
-
-import com.google.common.base.Throwables;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class SingularityTaskStatusTranscoder extends CompressingTranscoder<TaskStatus> {
+public class SingularityTaskStatusTranscoder extends CompressingTranscoder<SingularityTaskStatusHolder> {
+
+  private final ObjectMapper objectMapper;
 
   @Inject
-  public SingularityTaskStatusTranscoder(SingularityConfiguration configuration) {
+  public SingularityTaskStatusTranscoder(SingularityConfiguration configuration, ObjectMapper objectMapper) {
     super(configuration);
+
+    this.objectMapper = objectMapper;
   }
 
   @Override
-  protected TaskStatus actualTranscode(byte[] data) {
-    try {
-      return TaskStatus.parseFrom(data);
-    } catch (InvalidProtocolBufferException e) {
-      throw Throwables.propagate(e);
-    }
+  protected SingularityTaskStatusHolder actualTranscode(byte[] data) {
+    return SingularityTaskStatusHolder.fromBytes(data, objectMapper);
   }
 
   @Override
-  protected byte[] actualToBytes(TaskStatus object) {
-    return object.toByteArray();
+  protected byte[] actualToBytes(SingularityTaskStatusHolder object) {
+    return object.getAsBytes(objectMapper);
   }
 
 }

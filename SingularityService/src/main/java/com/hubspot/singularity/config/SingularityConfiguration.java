@@ -141,7 +141,10 @@ public class SingularityConfiguration extends Configuration {
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @NotNull
-  private long reconcileTasksEveryMillis = TimeUnit.SECONDS.toMillis(30);
+  private long checkReconcileWhenRunningEverySeconds = 30;
+
+  @NotNull
+  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toMillis(10);
 
   @NotNull
   private boolean sandboxDefaultsToTaskId = true;
@@ -281,12 +284,20 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
-  public long getReconcileTasksEveryMillis() {
-    return reconcileTasksEveryMillis;
+  public long getCheckReconcileWhenRunningEverySeconds() {
+    return checkReconcileWhenRunningEverySeconds;
   }
 
-  public void setReconcileTasksEveryMillis(long reconcileTasksEveryMillis) {
-    this.reconcileTasksEveryMillis = reconcileTasksEveryMillis;
+  public void setCheckReconcileWhenRunningEverySeconds(long checkReconcileWhenRunningEverySeconds) {
+    this.checkReconcileWhenRunningEverySeconds = checkReconcileWhenRunningEverySeconds;
+  }
+
+  public long getStartNewReconcileEverySeconds() {
+    return startNewReconcileEverySeconds;
+  }
+
+  public void setStartNewReconcileEverySeconds(long startNewReconcileEverySeconds) {
+    this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
   }
 
   public MesosConfiguration getMesosConfiguration() {

@@ -7,30 +7,32 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityStatePoller implements SingularityCloseable {
+public class SingularityStatePoller extends SingularityCloseable<ScheduledExecutorService> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStatePoller.class);
 
   private final StateManager stateManager;
   private final long saveStateEverySeconds;
 
-  private final SingularityCloser closer;
   private final SingularityExceptionNotifier exceptionNotifier;
 
-  private ScheduledExecutorService executorService;
+  private Optional<ScheduledExecutorService> executorService;
   private Runnable stateUpdateRunnable;
 
   @Inject
   public SingularityStatePoller(StateManager stateManager, SingularityConfiguration configuration, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
+    super(closer);
+
+    this.executorService = Optional.absent();
     this.stateManager = stateManager;
     this.saveStateEverySeconds = configuration.getSaveStateEverySeconds();
-    this.closer = closer;
     this.exceptionNotifier = exceptionNotifier;
   }
 
@@ -39,7 +41,7 @@ public class SingularityStatePoller implements SingularityCloseable {
 
     LOG.info(String.format("Starting a state poller that will report every %s seconds", saveStateEverySeconds));
 
-    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityStatePoller-%d").build());
+    this.executorService = Optional.of(Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityStatePoller-%d").build()));
 
     stateUpdateRunnable = new Runnable() {
 
@@ -57,16 +59,21 @@ public class SingularityStatePoller implements SingularityCloseable {
       }
     };
 
-    this.executorService.scheduleWithFixedDelay(stateUpdateRunnable, 0, saveStateEverySeconds, TimeUnit.SECONDS);
+    this.executorService.get().scheduleWithFixedDelay(stateUpdateRunnable, 0, saveStateEverySeconds, TimeUnit.SECONDS);
   }
 
   public void updateStateNow() {
-    this.executorService.execute(stateUpdateRunnable);
+    if (!executorService.isPresent()) {
+      LOG.warn("Asked to update state, but executor service wasn't present");
+      return;
+    }
+
+    this.executorService.get().execute(stateUpdateRunnable);
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService);
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return executorService;
   }
 
 }
