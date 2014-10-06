@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.inject.Inject;
@@ -19,7 +21,11 @@ public class ZkMigrationTest extends SingularityCuratorTestBase {
 
   @Test
   public void testMigrationRunner() {
-    metadataManager.getZkDataVersion();
+    Assert.assertTrue(migrationRunner.checkMigrations() == 1);
+
+    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("1"));
+
+    Assert.assertTrue(migrationRunner.checkMigrations() == 0);
   }
 
 }

@@ -23,16 +23,20 @@ public class ZkDataMigrationRunner {
     this.migrations = migrations;
   }
 
-  public void checkMigrations() {
+  public int checkMigrations() {
+    final long start = System.currentTimeMillis();
     final Optional<String> currentVersion = metadataManager.getZkDataVersion();
     final int intVersionNumber = Integer.parseInt(currentVersion.or("0"));
 
     LOG.info("Current ZK data version is {}, known migrations: {}", intVersionNumber, migrations);
 
+    int numMigrationsApplied = 0;
     int lastAppliedMigration = intVersionNumber;
 
     for (ZkDataMigration migration : migrations) {
       if (migration.getMigrationNumber() > intVersionNumber) {
+        numMigrationsApplied++;
+
         final long migrationStart = System.currentTimeMillis();
 
         LOG.info("Applying {}", migration);
@@ -49,6 +53,10 @@ public class ZkDataMigrationRunner {
       LOG.info("Setting new version to {}", lastAppliedMigration);
       metadataManager.setZkDataVersion(Integer.toString(lastAppliedMigration));
     }
+
+    LOG.info("Applied {} migrations in {}", numMigrationsApplied, JavaUtils.duration(start));
+
+    return numMigrationsApplied;
   }
 
 }
