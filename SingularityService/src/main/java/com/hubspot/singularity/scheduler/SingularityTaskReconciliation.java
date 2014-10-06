@@ -75,6 +75,8 @@ public class SingularityTaskReconciliation extends SingularityCloseable<Schedule
     final long reconciliationStart = System.currentTimeMillis();
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
+    LOG.info("Starting a reconciliation cycle - {} current active tasks", activeTaskIds.size());
+
     driver.reconcileTasks(Collections.<TaskStatus> emptyList());
 
     scheduleReconciliationCheck(driver, reconciliationStart, activeTaskIds, 0);

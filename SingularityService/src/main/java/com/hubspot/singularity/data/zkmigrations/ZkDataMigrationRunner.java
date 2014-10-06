@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data.zkmigrations;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -25,8 +24,6 @@ public class ZkDataMigrationRunner {
   }
 
   public void checkMigrations() {
-    Collections.sort(migrations);
-
     final Optional<String> currentVersion = metadataManager.getZkDataVersion();
     final int intVersionNumber = Integer.parseInt(currentVersion.or("0"));
 

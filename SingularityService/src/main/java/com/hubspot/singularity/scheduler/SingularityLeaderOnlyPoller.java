@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
@@ -42,7 +43,7 @@ public abstract class SingularityLeaderOnlyPoller {
   }
 
   public void start(final SingularityMesosSchedulerDelegator mesosScheduler, final SchedulerDriver driver) {
-    LOG.info("Starting a {} with a {} {} delay", getClass().getSimpleName(), pollDelay, pollTimeUnit);
+    LOG.info("Starting a {} with a {} delay", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
 
     executorService.scheduleWithFixedDelay(new Runnable() {
 
