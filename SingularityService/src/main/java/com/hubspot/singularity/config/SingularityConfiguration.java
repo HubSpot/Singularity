@@ -144,7 +144,7 @@ public class SingularityConfiguration extends Configuration {
   private long checkReconcileWhenRunningEverySeconds = 30;
 
   @NotNull
-  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toMillis(10);
+  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
   @NotNull
   private boolean sandboxDefaultsToTaskId = true;
