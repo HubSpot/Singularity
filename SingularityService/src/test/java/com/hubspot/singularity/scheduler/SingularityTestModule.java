@@ -15,7 +15,6 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
-import org.parboiled.common.ImmutableList;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -25,6 +24,7 @@ import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
