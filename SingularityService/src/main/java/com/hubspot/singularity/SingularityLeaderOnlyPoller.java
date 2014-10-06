@@ -4,8 +4,8 @@ import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 
 public interface SingularityLeaderOnlyPoller {
 
-  public void start(final SingularityMesosSchedulerDelegator mesosScheduler);
+  void start(final SingularityMesosSchedulerDelegator mesosScheduler);
 
-  public void stop();
+  void stop();
 
 }
