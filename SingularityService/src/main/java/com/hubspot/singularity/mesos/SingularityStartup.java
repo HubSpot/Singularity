@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
@@ -41,14 +42,16 @@ public class SingularityStartup {
   private final DeployManager deployManager;
   private final SingularityTaskTranscoder taskTranscoder;
   private final SingularityTaskReconciliation taskReconciliation;
+  private final ZkDataMigrationRunner zkDataMigrationRunner;
 
   private final List<SingularityStartable> startables;
 
   @Inject
   public SingularityStartup(MesosClient mesosClient, List<SingularityStartable> startables, SingularityTaskTranscoder taskTranscoder, SingularityHealthchecker healthchecker,
       SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, DeployManager deployManager,
-      SingularityTaskReconciliation taskReconciliation) {
+      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner) {
     this.mesosClient = mesosClient;
+    this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
     this.deployManager = deployManager;
     this.newTaskChecker = newTaskChecker;
@@ -67,6 +70,8 @@ public class SingularityStartup {
     LOG.info("Starting up... fetching state data from: " + uri);
 
     try {
+      zkDataMigrationRunner.checkMigrations();
+
       MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
       slaveAndRackManager.loadSlavesAndRacksFromMaster(state);

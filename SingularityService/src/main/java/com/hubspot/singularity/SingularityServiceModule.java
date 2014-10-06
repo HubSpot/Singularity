@@ -23,6 +23,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.security.AWSCredentials;
+import org.parboiled.common.ImmutableList;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,8 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.data.history.NoopHistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPersister;
+import com.hubspot.singularity.data.zkmigrations.LastTaskStatusMigration;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigration;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
@@ -81,7 +84,6 @@ public class SingularityServiceModule extends AbstractModule {
 
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
-  public static final String UNDERLYING_CURATOR = "curator.base.instance";
 
   public static final String TASK_COMPLETED_TEMPLATE = "task.completed.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
@@ -145,6 +147,12 @@ public class SingularityServiceModule extends AbstractModule {
     }
 
     return startables;
+  }
+
+  @Provides
+  @Singleton
+  public static List<ZkDataMigration> getZkDataMigrations(LastTaskStatusMigration lastTaskStatusMigration) {
+    return ImmutableList.<ZkDataMigration> of(lastTaskStatusMigration);
   }
 
   private static ObjectMapper createObjectMapper() {
@@ -250,7 +258,6 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
     LOG.info("Creating curator/ZK client and blocking on connection to ZK quorum {} (timeout: {})", config.getQuorum(), config.getConnectTimeoutMillis());
 
@@ -270,13 +277,7 @@ public class SingularityServiceModule extends AbstractModule {
 
     LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
 
-    return client;
-  }
-
-  @Singleton
-  @Provides
-  public CuratorFramework provideNamespaceCurator(@Named(UNDERLYING_CURATOR) CuratorFramework curator, ZooKeeperConfiguration config) {
-    return curator.usingNamespace(config.getZkNamespace());
+    return client.usingNamespace(config.getZkNamespace());
   }
 
   @Provides
