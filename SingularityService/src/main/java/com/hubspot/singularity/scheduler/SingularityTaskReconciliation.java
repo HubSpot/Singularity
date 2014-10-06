@@ -63,13 +63,9 @@ public class SingularityTaskReconciliation extends SingularityCloseable<Schedule
   }
 
   public void startReconciliation(SchedulerDriver driver) {
-    synchronized (isRunningReconciliation) {
-      if (isRunningReconciliation.get()) {
-        LOG.info("Reconciliation is already running, NOT starting a new reconciliation process");
-        return;
-      }
-
-      isRunningReconciliation.set(true);
+    if (!isRunningReconciliation.compareAndSet(false, true)) {
+      LOG.info("Reconciliation is already running, NOT starting a new reconciliation process");
+      return;
     }
 
     final long reconciliationStart = System.currentTimeMillis();
