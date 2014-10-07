@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -16,7 +17,7 @@ import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityHistoryPersister implements SingularityCloseable, SingularityStartable {
+public class SingularityHistoryPersister extends SingularityCloseable<ScheduledExecutorService> implements SingularityStartable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
 
@@ -24,25 +25,25 @@ public class SingularityHistoryPersister implements SingularityCloseable, Singul
   private final SingularityDeployHistoryPersister deployPersister;
   private final SingularityRequestHistoryPersister requestHistoryPersister;
   private final ScheduledExecutorService executorService;
-  private final SingularityCloser closer;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityHistoryPersister(SingularityExceptionNotifier exceptionNotifier, SingularityTaskHistoryPersister taskPersister, SingularityRequestHistoryPersister requestHistoryPersister, SingularityDeployHistoryPersister deployPersister, SingularityConfiguration configuration, SingularityCloser closer) {
+    super(closer);
+
     this.taskPersister = taskPersister;
     this.deployPersister = deployPersister;
     this.exceptionNotifier = exceptionNotifier;
     this.requestHistoryPersister = requestHistoryPersister;
-    this.closer = closer;
     this.configuration = configuration;
 
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityHistoryPersister-%d").build());
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return Optional.of(executorService);
   }
 
   @Override

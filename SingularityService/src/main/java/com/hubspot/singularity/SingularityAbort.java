@@ -1,6 +1,9 @@
 package com.hubspot.singularity;
 
+import java.lang.reflect.Field;
+
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkImpl;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
@@ -12,7 +15,6 @@ import ch.qos.logback.classic.LoggerContext;
 
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -31,7 +33,7 @@ public class SingularityAbort {
   private volatile boolean stopping;
 
   @Inject
-  public SingularityAbort(@Named(SingularityServiceModule.UNDERLYING_CURATOR) CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityAbort(CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer, SingularityExceptionNotifier exceptionNotifier) {
     this.curator = curator;
     this.leaderLatch = leaderLatch;
     this.driverManager = driverManager;
@@ -122,7 +124,11 @@ public class SingularityAbort {
 
   private void closeCurator() {
     try {
-      Closeables.close(curator, false);
+      // Curator is bullshit, their facade doesn't expose underlying client to close it.
+      Field field = curator.getClass().getDeclaredField("client");
+      field.setAccessible(true);
+      CuratorFrameworkImpl underlyingClient = (CuratorFrameworkImpl) field.get(curator);
+      Closeables.close(underlyingClient, false);
     } catch (Throwable t) {
       LOG.warn("While closing curator", t);
       exceptionNotifier.notify(t);

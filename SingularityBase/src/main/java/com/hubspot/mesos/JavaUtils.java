@@ -121,15 +121,15 @@ public final class JavaUtils {
     throw new RuntimeException("Couldn't deduce host address");
   }
 
-  public static String getHostName() {
+  public static Optional<String> getHostName() {
     try {
       InetAddress addr = InetAddress.getLocalHost();
 
       String hostname = addr.getHostName();
 
-      return hostname;
+      return Optional.fromNullable(hostname);
     } catch (Throwable t) {
-      return null;
+      return Optional.absent();
     }
   }
 
