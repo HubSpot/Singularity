@@ -4,6 +4,8 @@
 # Task ID: {{{ taskId }}}
 #
 
+export MESOS_TASK_ID={{{bashEscaped taskId}}}  # I can't believe Mesos doesn't expose this.
+
 # load system-wide profile.d
 if [[ -d /etc/profile.d ]]; then
   for i in /etc/profile.d/*.sh; do
