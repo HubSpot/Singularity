@@ -9,6 +9,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
+import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 
@@ -58,7 +59,8 @@ public class SingularityExecutorModule extends AbstractModule {
   public Handlebars providesHandlebars() {
     final Handlebars handlebars = new Handlebars();
 
-    handlebars.registerHelper("bashEscaped", new BashEscapedHelper());
+    handlebars.registerHelper(BashEscapedHelper.NAME, BashEscapedHelper.INSTANCE);
+    handlebars.registerHelper(IfPresentHelper.NAME, IfPresentHelper.INSTANCE);
 
     return handlebars;
   }
