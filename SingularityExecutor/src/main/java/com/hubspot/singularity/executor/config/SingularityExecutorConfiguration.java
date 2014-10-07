@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -58,6 +60,8 @@ public class SingularityExecutorConfiguration {
   private final boolean useLocalDownloadService;
   private final long localDownloadServiceTimeoutMillis;
 
+  private final Optional<Integer> maxTaskThreads;
+
   @Inject
   public SingularityExecutorConfiguration(
       @Named(SingularityExecutorConfigurationLoader.GLOBAL_TASK_DEFINITION_DIRECTORY) String globalTaskDefinitionDirectory,
@@ -91,7 +95,8 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog,
       @Named(SingularityExecutorConfigurationLoader.USE_LOCAL_DOWNLOAD_SERVICE) String useLocalDownloadService,
-      @Named(SingularityExecutorConfigurationLoader.LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS) String localDownloadServiceTimeoutMillis
+      @Named(SingularityExecutorConfigurationLoader.LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS) String localDownloadServiceTimeoutMillis,
+      @Named(SingularityExecutorConfigurationLoader.MAX_TASK_THREADS) String maxTaskThreadsAsString
       ) {
     this.executorBashLog = executorBashLog;
     this.globalTaskDefinitionDirectory = globalTaskDefinitionDirectory;
@@ -129,6 +134,12 @@ public class SingularityExecutorConfiguration {
     }
     this.useLocalDownloadService = Boolean.parseBoolean(useLocalDownloadService);
     this.localDownloadServiceTimeoutMillis = Long.parseLong(localDownloadServiceTimeoutMillis);
+
+    if (Strings.isNullOrEmpty(maxTaskThreadsAsString)) {
+      this.maxTaskThreads = Optional.absent();
+    } else {
+      this.maxTaskThreads = Optional.of(Integer.parseInt(maxTaskThreadsAsString));
+    }
   }
 
   public boolean isUseLocalDownloadService() {
@@ -272,16 +283,46 @@ public class SingularityExecutorConfiguration {
     return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
   }
 
-  @Override
-  public String toString() {
-    return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser
-        + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis + ", stopDriverAfterMillis=" + stopDriverAfterMillis
-        + ", globalTaskDefinitionDirectory=" + globalTaskDefinitionDirectory + ", globalTaskDefinitionSuffix=" + globalTaskDefinitionSuffix + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads
-        + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory=" + logrotateConfDirectory + ", logrotateToDirectory="
-        + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat=" + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat
-        + ", logrotateExtrasFiles=" + Arrays.toString(logrotateExtrasFiles) + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave
-        + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket
-        + ", useLocalDownloadService=" + useLocalDownloadService + ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis + "]";
+  public Optional<Integer> getMaxTaskThreads() {
+    return maxTaskThreads;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityExecutorConfiguration [" +
+        "executorJavaLog='" + executorJavaLog + '\'' +
+        ", executorBashLog='" + executorBashLog + '\'' +
+        ", serviceLog='" + serviceLog + '\'' +
+        ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
+        ", taskAppDirectory='" + taskAppDirectory + '\'' +
+        ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+        ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
+        ", stopDriverAfterMillis=" + stopDriverAfterMillis +
+        ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
+        ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
+        ", hardKillAfterMillis=" + hardKillAfterMillis +
+        ", killThreads=" + killThreads +
+        ", maxTaskMessageLength=" + maxTaskMessageLength +
+        ", logrotateCommand='" + logrotateCommand + '\'' +
+        ", logrotateStateFile='" + logrotateStateFile + '\'' +
+        ", logrotateConfDirectory=" + logrotateConfDirectory +
+        ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
+        ", logrotateMaxageDays='" + logrotateMaxageDays + '\'' +
+        ", logrotateCount='" + logrotateCount + '\'' +
+        ", logrotateDateformat='" + logrotateDateformat + '\'' +
+        ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+        ", logrotateExtrasFiles=" + Arrays.toString(logrotateExtrasFiles) +
+        ", logMetadataDirectory=" + logMetadataDirectory +
+        ", logMetadataSuffix='" + logMetadataSuffix + '\'' +
+        ", tailLogLinesToSave=" + tailLogLinesToSave +
+        ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
+        ", s3MetadataSuffix='" + s3MetadataSuffix + '\'' +
+        ", s3MetadataDirectory=" + s3MetadataDirectory +
+        ", s3KeyPattern='" + s3KeyPattern + '\'' +
+        ", s3Bucket='" + s3Bucket + '\'' +
+        ", useLocalDownloadService=" + useLocalDownloadService +
+        ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
+        ", maxTaskThreads=" + maxTaskThreads +
+        ']';
+  }
 }
