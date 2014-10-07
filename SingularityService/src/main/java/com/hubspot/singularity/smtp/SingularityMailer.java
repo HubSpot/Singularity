@@ -198,7 +198,7 @@ public class SingularityMailer extends SingularityCloseable<ThreadPoolExecutor> 
     }
 
     boolean needsBeenPrefix = taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_KILLED;
-    
+
     templateProperties.put("status", String.format("%s%s", needsBeenPrefix ? "been " : "", taskState.getDisplayName()));
     templateProperties.put("taskStateLost", taskState == ExtendedTaskState.TASK_LOST);
     templateProperties.put("taskStateFailed", taskState == ExtendedTaskState.TASK_FAILED);
