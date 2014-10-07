@@ -13,7 +13,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -26,6 +25,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
@@ -42,14 +42,16 @@ public class SingularityStartup {
   private final DeployManager deployManager;
   private final SingularityTaskTranscoder taskTranscoder;
   private final SingularityTaskReconciliation taskReconciliation;
+  private final ZkDataMigrationRunner zkDataMigrationRunner;
 
   private final List<SingularityStartable> startables;
 
   @Inject
   public SingularityStartup(MesosClient mesosClient, List<SingularityStartable> startables, SingularityTaskTranscoder taskTranscoder, SingularityHealthchecker healthchecker,
       SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, DeployManager deployManager,
-      SingularityTaskReconciliation taskReconciliation) {
+      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner) {
     this.mesosClient = mesosClient;
+    this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
     this.deployManager = deployManager;
     this.newTaskChecker = newTaskChecker;
@@ -63,18 +65,20 @@ public class SingularityStartup {
   public void startup(MasterInfo masterInfo, SchedulerDriver driver) {
     final long start = System.currentTimeMillis();
 
-    final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
+	final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
 
     LOG.info("Starting up... fetching state data from: " + uri);
 
     try {
+      zkDataMigrationRunner.checkMigrations();
+
       MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
       slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
 
       enqueueHealthAndNewTaskchecks();
 
-      taskReconciliation.reconcileTasks(driver);
+      taskReconciliation.startReconciliation(driver);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

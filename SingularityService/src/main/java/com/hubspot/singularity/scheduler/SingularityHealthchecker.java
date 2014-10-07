@@ -27,7 +27,7 @@ import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
 @SuppressWarnings("deprecation")
-public class SingularityHealthchecker implements SingularityCloseable {
+public class SingularityHealthchecker extends SingularityCloseable<ScheduledExecutorService> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -40,18 +40,18 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final Map<String, ScheduledFuture<?>> taskIdToHealthcheck;
 
   private final ScheduledExecutorService executorService;
-  private final SingularityCloser closer;
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
+    super(closer);
+
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
     this.abort = abort;
-    this.closer = closer;
     this.exceptionNotifier = exceptionNotifier;
 
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
@@ -60,8 +60,8 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return Optional.of(executorService);
   }
 
   public void reEnqueueHealthcheck(SingularityTask task) {

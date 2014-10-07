@@ -18,14 +18,14 @@ public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPo
   @Inject
   public SingularityTaskReconciliationPoller(SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier,
       SingularityTaskReconciliation taskReconciliation) {
-    super(exceptionNotifier, abort, closer, configuration.getReconcileTasksEveryMillis(), TimeUnit.MILLISECONDS, SchedulerLockType.NO_LOCK);
+    super(exceptionNotifier, abort, closer, configuration.getStartNewReconcileEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.NO_LOCK);
 
     this.taskReconciliation = taskReconciliation;
   }
 
   @Override
   public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler, SchedulerDriver driver) {
-    taskReconciliation.reconcileTasks(driver);
+    taskReconciliation.startReconciliation(driver);
   }
 
 }

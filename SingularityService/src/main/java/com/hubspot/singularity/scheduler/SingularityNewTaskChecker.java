@@ -40,13 +40,12 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
  * Since we are making changes to these tasks, either killing them or blessing them, we don't have to do it actually as part of a lock.
  * b/c we will use a queue to kill them.
  */
-public class SingularityNewTaskChecker implements SingularityCloseable {
+public class SingularityNewTaskChecker extends SingularityCloseable<ScheduledExecutorService> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityNewTaskChecker.class);
 
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
-  private final SingularityCloser closer;
   private final LoadBalancerClient lbClient;
   private final long killAfterUnhealthyMillis;
 
@@ -58,10 +57,11 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
 
   @Inject
   public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
+    super(closer);
+
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lbClient = lbClient;
-    this.closer = closer;
 
     taskIdToCheck = Maps.newConcurrentMap();
     killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
@@ -72,8 +72,8 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return Optional.of(executorService);
   }
 
   private boolean hasHealthcheck(SingularityTask task) {

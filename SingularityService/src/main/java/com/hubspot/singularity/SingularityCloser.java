@@ -47,24 +47,24 @@ public class SingularityCloser {
   }
 
   public void shutdown(String name, ExecutorService executorService, long waitSeconds) {
-    LOG.info(String.format("Shutting down %s - waiting %s seconds", name, waitSeconds));
+    LOG.info("Shutting down {} - waiting {} seconds", name, waitSeconds);
 
     try {
       executorService.shutdown();
       executorService.awaitTermination(waitSeconds, TimeUnit.SECONDS);
       executorService.shutdownNow();
     } catch (Throwable t) {
-      LOG.warn(String.format("While shutting down %s executor service", name), t);
+      LOG.warn("While shutting down {}", name, t);
       exceptionNotifier.notify(t);
     }
   }
 
   public void submitCloseables(final ExecutorService es) {
-    final List<SingularityCloseable> toClose = getCloseableSingletons();
+    final List<SingularityCloseable<?>> toClose = getCloseableSingletons();
 
-    LOG.info(String.format("Closing %s closeables", toClose.size()));
+    LOG.info("Auto-closing {} closeables", toClose.size());
 
-    for (final SingularityCloseable close : toClose) {
+    for (final SingularityCloseable<?> close : toClose) {
       es.submit(new Runnable() {
 
         @Override
@@ -81,17 +81,17 @@ public class SingularityCloser {
     }
   }
 
-  private List<SingularityCloseable> getCloseableSingletons() {
-    final List<SingularityCloseable> toClose = Lists.newArrayList();
+  private List<SingularityCloseable<?>> getCloseableSingletons() {
+    final List<SingularityCloseable<?>> toClose = Lists.newArrayList();
 
     for (Map.Entry<Key<?>, Binding<?>> bindingEntry : injector.getAllBindings().entrySet()) {
       final Key<?> key = bindingEntry.getKey();
       if (SingularityCloseable.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
         @SuppressWarnings("unchecked")
-        final Binding<SingularityCloseable> binding = (Binding<SingularityCloseable>) bindingEntry.getValue();
+        final Binding<SingularityCloseable<?>> binding = (Binding<SingularityCloseable<?>>) bindingEntry.getValue();
 
         if (Scopes.isSingleton(binding)) {
-          SingularityCloseable closeable = binding.getProvider().get();
+          SingularityCloseable<?> closeable = binding.getProvider().get();
           toClose.add(closeable);
         }
       }

@@ -1,95 +1,128 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityCloseable;
+import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityTaskReconciliation {
+public class SingularityTaskReconciliation extends SingularityCloseable<ScheduledExecutorService> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskReconciliation.class);
 
   private final TaskManager taskManager;
+  private final String serverId;
+  private final ScheduledExecutorService executorService;
+  private final AtomicBoolean isRunningReconciliation;
+  private final SingularityConfiguration configuration;
+  private final SingularityAbort abort;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityTaskReconciliation(TaskManager taskManager) {
+  public SingularityTaskReconciliation(SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager, SingularityConfiguration configuration,
+      @Named(SingularityServiceModule.SERVER_ID_PROPERTY) String serverId, SingularityAbort abort) {
+    super(closer);
+
     this.taskManager = taskManager;
+    this.serverId = serverId;
+
+    this.exceptionNotifier = exceptionNotifier;
+    this.configuration = configuration;
+    this.abort = abort;
+
+    this.isRunningReconciliation = new AtomicBoolean(false);
+    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityTaskReconciliation-%d").build());
   }
 
-  public void reconcileTasks(SchedulerDriver driver) {
-    final long start = System.currentTimeMillis();
+  @Override
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return Optional.of(executorService);
+  }
 
-    Set<SingularityTaskId> taskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
-    List<TaskStatus> taskStatuses = taskManager.getLastActiveTaskStatuses();
+  public void startReconciliation(SchedulerDriver driver) {
+    if (!isRunningReconciliation.compareAndSet(false, true)) {
+      LOG.info("Reconciliation is already running, NOT starting a new reconciliation process");
+      return;
+    }
 
-    for (Iterator<TaskStatus> taskStatusItr = taskStatuses.iterator(); taskStatusItr.hasNext();) {
-      TaskStatus taskStatus = taskStatusItr.next();
-      SingularityTaskId taskId = SingularityTaskId.fromString(taskStatus.getTaskId().getValue());
+    final long reconciliationStart = System.currentTimeMillis();
+    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
-      if (!taskIds.contains(taskId)) {
-        LOG.info("Task {} not found, deleting taskStatus", taskId);
-        taskManager.deleteLastActiveTaskStatus(taskId);
-        taskStatusItr.remove();
+    LOG.info("Starting a reconciliation cycle - {} current active tasks", activeTaskIds.size());
+
+    driver.reconcileTasks(Collections.<TaskStatus> emptyList());
+
+    scheduleReconciliationCheck(driver, reconciliationStart, activeTaskIds, 0);
+  }
+
+  private void scheduleReconciliationCheck(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
+    executorService.schedule(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          checkReconciliation(driver, reconciliationStart, remainingTaskIds, numTimes + 1);
+        } catch (Throwable t) {
+          LOG.error("While checking for reconciliation tasks", t);
+          exceptionNotifier.notify(t);
+          abort.abort();
+        }
+      }
+    }, configuration.getCheckReconcileWhenRunningEverySeconds(), TimeUnit.SECONDS);
+  }
+
+  private void checkReconciliation(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
+    final List<SingularityTaskStatusHolder> taskStatusHolders = taskManager.getLastActiveTaskStatusesFor(remainingTaskIds);
+    final List<TaskStatus> taskStatuses = Lists.newArrayListWithCapacity(taskStatusHolders.size());
+
+    for (SingularityTaskStatusHolder taskStatusHolder : taskStatusHolders) {
+      if (taskStatusHolder.getServerId().equals(serverId) && taskStatusHolder.getServerTimestamp() > reconciliationStart) {
+        continue;
+      }
+
+      if (taskStatusHolder.getTaskStatus().isPresent()) {
+        taskStatuses.add(taskStatusHolder.getTaskStatus().get());
       } else {
-        taskIds.remove(taskId);
+        LOG.warn("Task {} doesn't have a TaskStatus yet, can't re-request reconciliation", taskStatusHolder.getTaskId());
       }
     }
 
-    // didn't find a taskStatus -- this is temporary for migration
-    for (SingularityTaskId taskId : taskIds) {
-      Optional<SingularityTask> task = taskManager.getActiveTask(taskId.getId());
+    if (taskStatuses.isEmpty()) {
+      LOG.info("Task reconciliation ended after {}", JavaUtils.duration(reconciliationStart));
 
-      if (!task.isPresent()) {
-        LOG.info("Task {} didn't have an active task", taskId);
-        continue;
-      }
+      isRunningReconciliation.set(false);
 
-      List<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(taskId);
-
-      if (updates.isEmpty()) {
-        LOG.info("Task {} didn't have updates", taskId);
-        continue;
-      }
-
-      SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(updates);
-
-      TaskState taskState = TaskState.TASK_RUNNING;
-
-      if (simplifiedTaskState == SimplifiedTaskState.UNKNOWN) {
-        taskState = TaskState.TASK_STARTING;
-      }
-
-      LOG.info("Adding a task status {} for {}", taskState, taskId);
-
-      taskStatuses.add(TaskStatus.newBuilder()
-          .setSlaveId(task.get().getOffer().getSlaveId())
-          .setState(taskState)
-          .setTaskId(TaskID.newBuilder().setValue(taskId.getId()))
-          .build());
+      return;
     }
 
-    LOG.info("Requesting reconciliation for {} taskStatuses", taskStatuses.size());
+    LOG.info("Requesting reconciliation of {} taskStatuses, task reconciliation has been running for {}", taskStatuses.size(), JavaUtils.duration(reconciliationStart));
 
-    Status status = driver.reconcileTasks(taskStatuses);
+    driver.reconcileTasks(taskStatuses);
 
-    LOG.info("Requested reconciliation of {} taskStatuses with driver status {} in {}", taskStatuses.size(), status, JavaUtils.duration(start));
+    scheduleReconciliationCheck(driver, reconciliationStart, remainingTaskIds, numTimes);
   }
 
 }

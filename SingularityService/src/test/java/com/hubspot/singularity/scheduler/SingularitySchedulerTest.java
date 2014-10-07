@@ -6,8 +6,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
@@ -22,20 +20,18 @@ import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -65,8 +61,7 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.ning.http.client.AsyncHttpClient;
 
-public class SingularitySchedulerTest {
-
+public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
   @Inject
   private Provider<SingularitySchedulerStateCache> stateCacheProvider;
@@ -78,10 +73,6 @@ public class SingularitySchedulerTest {
   private DeployManager deployManager;
   @Inject
   private TaskManager taskManager;
-  @Inject
-  private CuratorFramework cf;
-  @Inject
-  private TestingServer ts;
   @Inject
   private SchedulerDriver driver;
   @Inject
@@ -103,19 +94,12 @@ public class SingularitySchedulerTest {
   @Inject
   private AsyncHttpClient httpClient;
 
-  @Before
-  public void setup() {
-    Injector i = Guice.createInjector(new SingularityTestModule());
-
-    i.injectMembers(this);
-  }
-
   @After
   public void teardown() throws Exception {
     closer.closeAllCloseables();
     httpClient.close();
-    cf.close();
-    ts.close();
+
+    super.teardown();
   }
 
   private Offer createOffer(double cpus, double memory) {

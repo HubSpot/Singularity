@@ -92,7 +92,7 @@ public class SingularityCleaner {
     if (!request.isLongRunning()) {
       final long timeSinceCleanup = System.currentTimeMillis() - taskCleanup.getTimestamp();
       final long maxWaitTime = request.getKillOldNonLongRunningTasksAfterMillis().or(killNonLongRunningTasksInCleanupAfterMillis);
-      final boolean tooOld = maxWaitTime < 1 || (timeSinceCleanup > maxWaitTime);
+      final boolean tooOld = (maxWaitTime < 1) || (timeSinceCleanup > maxWaitTime);
 
       if (!tooOld) {
         LOG.trace("Not killing a non-longRunning task {}, running time since cleanup {} (max wait time is {})", taskCleanup, timeSinceCleanup, maxWaitTime);
@@ -132,14 +132,14 @@ public class SingularityCleaner {
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, matchingTasks, false);
 
     switch (deployHealth) {
-    case HEALTHY:
-      LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
-      return true;
-    case WAITING:
-    case UNHEALTHY:
-    default:
-      LOG.trace("Not killing a task {}, waiting for new replacement tasks to be healthy (current state: {})", taskCleanup, deployState);
-      return false;
+      case HEALTHY:
+        LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
+        return true;
+      case WAITING:
+      case UNHEALTHY:
+      default:
+        LOG.trace("Not killing a task {}, waiting for new replacement tasks to be healthy (current state: {})", taskCleanup, deployState);
+        return false;
     }
   }
 
@@ -261,7 +261,8 @@ public class SingularityCleaner {
 
         rekilled++;
       } else {
-        LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
+        LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", killedTaskIdRecord, JavaUtils.durationFromMillis(duration),
+            JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
 
         waiting++;
       }
@@ -315,12 +316,12 @@ public class SingularityCleaner {
     LOG.debug("TaskCleanup {} had LB state {} after {}", cleanupTask, checkLbState, JavaUtils.duration(start));
 
     switch (checkLbState) {
-    case DONE:
-    case NOT_LOAD_BALANCED:
-    case MISSING_TASK:
-    case LOAD_BALANCE_FAILED:
-      return true;
-    case WAITING:
+      case DONE:
+      case NOT_LOAD_BALANCED:
+      case MISSING_TASK:
+      case LOAD_BALANCE_FAILED:
+        return true;
+      case WAITING:
     }
 
     return false;
@@ -332,13 +333,13 @@ public class SingularityCleaner {
 
   private boolean shouldRemoveLbState(SingularityTaskId taskId, SingularityLoadBalancerUpdate loadBalancerUpdate) {
     switch (loadBalancerUpdate.getLoadBalancerState()) {
-    case UNKNOWN:
-    case WAITING:
-    case SUCCESS:
-      return true;
-    default:
-      LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
-      return false;
+      case UNKNOWN:
+      case WAITING:
+      case SUCCESS:
+        return true;
+      default:
+        LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
+        return false;
     }
   }
 
@@ -358,7 +359,7 @@ public class SingularityCleaner {
 
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE);
 
-    if (!maybeLbRemoveUpdate.isPresent() || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
+    if (!maybeLbRemoveUpdate.isPresent() || (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN)) {
       final Optional<SingularityTask> task = taskManager.getTask(taskId);
 
       if (!task.isPresent()) {
@@ -378,18 +379,18 @@ public class SingularityCleaner {
     }
 
     switch (lbRemoveUpdate.getLoadBalancerState()) {
-    case FAILED:
-    case CANCELED:
-    case CANCELING:
-      final String errorMsg = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
-      LOG.error(errorMsg);
-      exceptionNotifier.notify(errorMsg);
-      return CheckLBState.DONE;
-    case SUCCESS:
-      return CheckLBState.DONE;
-    case UNKNOWN:
-    case WAITING:
-      LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
+      case FAILED:
+      case CANCELED:
+      case CANCELING:
+        final String errorMsg = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+        LOG.error(errorMsg);
+        exceptionNotifier.notify(errorMsg);
+        return CheckLBState.DONE;
+      case SUCCESS:
+        return CheckLBState.DONE;
+      case UNKNOWN:
+      case WAITING:
+        LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
     }
 
     return CheckLBState.WAITING;
@@ -418,15 +419,15 @@ public class SingularityCleaner {
       LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, JavaUtils.duration(checkStart));
 
       switch (checkLbState) {
-      case WAITING:
-        continue;
-      case DONE:
-      case MISSING_TASK:
-        cleanedTasks++;
-        break;
-      case NOT_LOAD_BALANCED:
-      case LOAD_BALANCE_FAILED:
-        ignoredTasks++;
+        case WAITING:
+          continue;
+        case DONE:
+        case MISSING_TASK:
+          cleanedTasks++;
+          break;
+        case NOT_LOAD_BALANCED:
+        case LOAD_BALANCE_FAILED:
+          ignoredTasks++;
       }
 
       taskManager.deleteLBCleanupTask(taskId);
