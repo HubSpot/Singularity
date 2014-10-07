@@ -26,9 +26,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityCuratorTestBase;
@@ -37,6 +39,7 @@ import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -93,7 +96,10 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   private SingularityCloser closer;
   @Inject
   private AsyncHttpClient httpClient;
+  @Inject
+  private TestingLoadBalancerClient testingLbClient;
 
+  @Override
   @After
   public void teardown() throws Exception {
     closer.closeAllCloseables();
@@ -708,6 +714,58 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, Optional.<String> absent());
     requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, PendingType.UPDATED_REQUEST));
     scheduler.drainPendingQueue(stateCacheProvider.get());
+  }
+
+  private void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {
+    final LoadBalancerRequestId lbri = new LoadBalancerRequestId(taskId.getId(), lbrt, Optional.<Integer> absent());
+    SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, null);
+
+    taskManager.saveLoadBalancerState(taskId, lbrt, update);
+  }
+
+  @Test
+  public void testLBCleanup() {
+    initLoadBalancedRequest();
+    initFirstDeploy();
+
+    SingularityTask task = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, task.getTaskId(), LoadBalancerRequestType.ADD);
+
+    statusUpdate(task, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.FAILED);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.FAILED);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(taskManager.getLBCleanupTasks().isEmpty());
+    lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS);
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerRequestId().getAttemptNumber() == 2);
+
   }
 
   @Test
