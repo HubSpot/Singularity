@@ -239,7 +239,6 @@ public class SingularityCleaner {
     int rekilled = 0;
 
     for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecords) {
-      // TODO should we check mesos HTTP state? does that make sense?
       if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId().getId())) {
         SingularityDeleteResult deleteResult = taskManager.deleteKilledRecord(killedTaskIdRecord.getTaskId());
 
@@ -321,6 +320,7 @@ public class SingularityCleaner {
       case MISSING_TASK:
       case LOAD_BALANCE_FAILED:
         return true;
+      case RETRY:
       case WAITING:
     }
 
@@ -328,7 +328,7 @@ public class SingularityCleaner {
   }
 
   private enum CheckLBState {
-    NOT_LOAD_BALANCED, LOAD_BALANCE_FAILED, MISSING_TASK, WAITING, DONE;
+    NOT_LOAD_BALANCED, LOAD_BALANCE_FAILED, MISSING_TASK, WAITING, DONE, RETRY;
   }
 
   private boolean shouldRemoveLbState(SingularityTaskId taskId, SingularityLoadBalancerUpdate loadBalancerUpdate) {
@@ -341,6 +341,38 @@ public class SingularityCleaner {
         LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
         return false;
     }
+  }
+
+  private LoadBalancerRequestId getLoadBalancerRequestId(SingularityTaskId taskId, Optional<SingularityLoadBalancerUpdate> lbRemoveUpdate) {
+    if (!lbRemoveUpdate.isPresent()) {
+      return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, Optional.<Integer> absent());
+    }
+
+    switch (lbRemoveUpdate.get().getLoadBalancerState()) {
+      case FAILED:
+      case CANCELED:
+        return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, Optional.of(lbRemoveUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1));
+      default:
+        return lbRemoveUpdate.get().getLoadBalancerRequestId();
+    }
+  }
+
+  private boolean shouldEnqueueLbRequest(Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate) {
+    if (!maybeLbRemoveUpdate.isPresent()) {
+      return true;
+    }
+
+    switch (maybeLbRemoveUpdate.get().getLoadBalancerState()) {
+      case UNKNOWN:
+      case FAILED:
+      case CANCELED:
+        return true;
+      case CANCELING:
+      case SUCCESS:
+      case WAITING:
+    }
+
+    return false;
   }
 
   private CheckLBState checkLbState(SingularityTaskId taskId) {
@@ -357,9 +389,9 @@ public class SingularityCleaner {
     Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
     SingularityLoadBalancerUpdate lbRemoveUpdate = null;
 
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE);
+    final LoadBalancerRequestId loadBalancerRequestId = getLoadBalancerRequestId(taskId, maybeLbRemoveUpdate);
 
-    if (!maybeLbRemoveUpdate.isPresent() || (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN)) {
+    if (shouldEnqueueLbRequest(maybeLbRemoveUpdate)) {
       final Optional<SingularityTask> task = taskManager.getTask(taskId);
 
       if (!task.isPresent()) {
@@ -370,7 +402,7 @@ public class SingularityCleaner {
       lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
 
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
-    } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING) {
+    } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
       lbRemoveUpdate = lbClient.getState(loadBalancerRequestId);
 
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
@@ -379,18 +411,18 @@ public class SingularityCleaner {
     }
 
     switch (lbRemoveUpdate.getLoadBalancerState()) {
+      case SUCCESS:
+        return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
-      case CANCELING:
         final String errorMsg = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
         LOG.error(errorMsg);
         exceptionNotifier.notify(errorMsg);
-        return CheckLBState.DONE;
-      case SUCCESS:
-        return CheckLBState.DONE;
+        return CheckLBState.RETRY;
       case UNKNOWN:
+      case CANCELING:
       case WAITING:
-        LOG.trace("Waiting on LB cleanup request {}", loadBalancerRequestId);
+        LOG.trace("Waiting on LB cleanup request {} in state {}", loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
     }
 
     return CheckLBState.WAITING;
@@ -420,6 +452,7 @@ public class SingularityCleaner {
 
       switch (checkLbState) {
         case WAITING:
+        case RETRY:
           continue;
         case DONE:
         case MISSING_TASK:

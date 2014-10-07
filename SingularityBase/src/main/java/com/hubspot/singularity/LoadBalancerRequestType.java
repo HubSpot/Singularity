@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.mesos.JavaUtils;
+import com.google.common.base.Optional;
 
 public enum LoadBalancerRequestType {
 
@@ -12,21 +12,18 @@ public enum LoadBalancerRequestType {
 
     private final String id;
     private final LoadBalancerRequestType requestType;
+    private final int attemptNumber;
 
     @JsonCreator
-    public LoadBalancerRequestId(@JsonProperty("id") String id, @JsonProperty("requestType") LoadBalancerRequestType requestType) {
+    public LoadBalancerRequestId(@JsonProperty("id") String id, @JsonProperty("requestType") LoadBalancerRequestType requestType, @JsonProperty("attemptNumber") Optional<Integer> attemptNumber) {
       this.id = id;
       this.requestType = requestType;
+      this.attemptNumber = attemptNumber.or(1);
     }
 
     @Override
     public String toString() {
-      return String.format("%s-%s", id, requestType);
-    }
-
-    public static LoadBalancerRequestId fromString(String string) {
-      String[] items = JavaUtils.reverseSplit(string, 2, "-");
-      return new LoadBalancerRequestId(items[0], LoadBalancerRequestType.valueOf(items[1]));
+      return String.format("%s-%s-%s", id, requestType, attemptNumber);
     }
 
     public String getId() {
@@ -35,6 +32,10 @@ public enum LoadBalancerRequestType {
 
     public LoadBalancerRequestType getRequestType() {
       return requestType;
+    }
+
+    public int getAttemptNumber() {
+      return attemptNumber;
     }
 
   }
