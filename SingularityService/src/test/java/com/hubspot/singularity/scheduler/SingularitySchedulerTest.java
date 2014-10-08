@@ -6,8 +6,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
@@ -22,25 +20,26 @@ import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
+import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -64,8 +63,7 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.ning.http.client.AsyncHttpClient;
 
-public class SingularitySchedulerTest {
-
+public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
   @Inject
   private Provider<SingularitySchedulerStateCache> stateCacheProvider;
@@ -77,10 +75,6 @@ public class SingularitySchedulerTest {
   private DeployManager deployManager;
   @Inject
   private TaskManager taskManager;
-  @Inject
-  private CuratorFramework cf;
-  @Inject
-  private TestingServer ts;
   @Inject
   private SchedulerDriver driver;
   @Inject
@@ -101,20 +95,16 @@ public class SingularitySchedulerTest {
   private SingularityCloser closer;
   @Inject
   private AsyncHttpClient httpClient;
+  @Inject
+  private TestingLoadBalancerClient testingLbClient;
 
-  @Before
-  public void setup() {
-    Injector i = Guice.createInjector(new SingularityTestModule());
-
-    i.injectMembers(this);
-  }
-
+  @Override
   @After
   public void teardown() throws Exception {
     closer.closeAllCloseables();
     httpClient.close();
-    cf.close();
-    ts.close();
+
+    super.teardown();
   }
 
   private Offer createOffer(double cpus, double memory) {
@@ -717,6 +707,58 @@ public class SingularitySchedulerTest {
     requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, Optional.<String> absent());
     requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, PendingType.UPDATED_REQUEST));
     scheduler.drainPendingQueue(stateCacheProvider.get());
+  }
+
+  private void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {
+    final LoadBalancerRequestId lbri = new LoadBalancerRequestId(taskId.getId(), lbrt, Optional.<Integer> absent());
+    SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, null);
+
+    taskManager.saveLoadBalancerState(taskId, lbrt, update);
+  }
+
+  @Test
+  public void testLBCleanup() {
+    initLoadBalancedRequest();
+    initFirstDeploy();
+
+    SingularityTask task = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, task.getTaskId(), LoadBalancerRequestType.ADD);
+
+    statusUpdate(task, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.FAILED);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.FAILED);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(taskManager.getLBCleanupTasks().isEmpty());
+    lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS);
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerRequestId().getAttemptNumber() == 2);
+
   }
 
 }

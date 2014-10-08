@@ -23,9 +23,9 @@ import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -35,13 +35,17 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityNewTaskChecker implements SingularityCloseable {
+/**
+ * Handles tasks we need to check for staleness | load balancer state, etc - tasks that are not part of a deploy. ie, new replacement tasks.
+ * Since we are making changes to these tasks, either killing them or blessing them, we don't have to do it actually as part of a lock.
+ * b/c we will use a queue to kill them.
+ */
+public class SingularityNewTaskChecker extends SingularityCloseable<ScheduledExecutorService> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityNewTaskChecker.class);
 
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
-  private final SingularityCloser closer;
   private final LoadBalancerClient lbClient;
   private final long killAfterUnhealthyMillis;
 
@@ -51,16 +55,13 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
-  // only tasks we need to check for staleness | load balancer state, etc. is tasks that are not part of a deploy. ie, new replacement tasks.
-  // since we are making changes to these tasks, either killing them or blessing them, we don't have to do it actually as part of alock.
-  // b/c we will use q to kill them. we sould assume everythign in here is safe to be in here.
-
   @Inject
   public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
+    super(closer);
+
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lbClient = lbClient;
-    this.closer = closer;
 
     this.taskIdToCheck = Maps.newConcurrentMap();
     this.killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
@@ -71,8 +72,8 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public Optional<ScheduledExecutorService> getExecutorService() {
+    return Optional.of(executorService);
   }
 
   private boolean hasHealthcheck(SingularityTask task) {
@@ -186,20 +187,20 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     boolean reEnqueue = false;
 
     switch (state) {
-    case HEALTHY:
-    case OBSOLETE:
-      break;
-    case CHECK_IF_OVERDUE:
-      if (isOverdue(task)) {
-        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+      case HEALTHY:
+      case OBSOLETE:
         break;
-      } // otherwise, reEnqueue
-    case LB_IN_PROGRESS_CHECK_AGAIN:
-      reEnqueue = true;
-      break;
-    case UNHEALTHY_KILL_TASK:
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
-      break;
+      case CHECK_IF_OVERDUE:
+        if (isOverdue(task)) {
+          taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+          break;
+        } // otherwise, reEnqueue
+      case LB_IN_PROGRESS_CHECK_AGAIN:
+        reEnqueue = true;
+        break;
+      case UNHEALTHY_KILL_TASK:
+        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+        break;
     }
 
     if (reEnqueue) {
@@ -217,12 +218,12 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     SimplifiedTaskState taskState = SingularityTaskHistoryUpdate.getCurrentState(taskManager.getTaskHistoryUpdates(task.getTaskId()));
 
     switch (taskState) {
-    case DONE:
-      return CheckTaskState.OBSOLETE;
-    case WAITING:
-    case UNKNOWN:
-      return CheckTaskState.CHECK_IF_OVERDUE;
-    case RUNNING:
+      case DONE:
+        return CheckTaskState.OBSOLETE;
+      case WAITING:
+      case UNKNOWN:
+        return CheckTaskState.CHECK_IF_OVERDUE;
+      case RUNNING:
     }
 
     if (hasHealthcheck(task)) {
@@ -245,7 +246,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     SingularityLoadBalancerUpdate newLbUpdate = null;
 
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD);
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.<Integer> absent());
 
     if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD,
@@ -275,15 +276,15 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
 
   private Optional<CheckTaskState> checkLbState(BaragonRequestState lbState) {
     switch (lbState) {
-    case SUCCESS:
-      return Optional.of(CheckTaskState.HEALTHY);
-    case CANCELED:
-    case FAILED:
-      return Optional.of(CheckTaskState.UNHEALTHY_KILL_TASK);
-    case CANCELING:
-    case UNKNOWN:
-    case WAITING:
-      break;
+      case SUCCESS:
+        return Optional.of(CheckTaskState.HEALTHY);
+      case CANCELED:
+      case FAILED:
+        return Optional.of(CheckTaskState.UNHEALTHY_KILL_TASK);
+      case CANCELING:
+      case UNKNOWN:
+      case WAITING:
+        break;
     }
 
     return Optional.absent();

@@ -2,6 +2,9 @@ package com.hubspot.singularity.scheduler;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import net.kencochrane.raven.Raven;
 
 import org.apache.curator.RetryPolicy;
@@ -21,12 +24,13 @@ import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDriverManager;
@@ -38,6 +42,8 @@ import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.zkmigrations.LastTaskStatusMigration;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigration;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
@@ -98,6 +104,8 @@ public class SingularityTestModule extends AbstractModule {
     when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.<SingularityDeployHistory> absent());
 
     bind(HistoryManager.class).toInstance(hm);
+
+    bindConstant().annotatedWith(Names.named(SingularityServiceModule.SERVER_ID_PROPERTY)).to("testServerId");
   }
 
   @Provides
@@ -123,13 +131,6 @@ public class SingularityTestModule extends AbstractModule {
     return driverManager;
   }
 
-  @Singleton
-  @Provides
-  @Named(SingularityServiceModule.UNDERLYING_CURATOR)
-  public CuratorFramework provideUnderlyingCurator(CuratorFramework cf) {
-    return cf;
-  }
-
   @Provides
   @Singleton
   public ObjectMapper getObjectMapper() {
@@ -144,7 +145,7 @@ public class SingularityTestModule extends AbstractModule {
 
   @Singleton
   @Provides
-  public CuratorFramework provideNamespaceCurator(TestingServer ts) {
+  public CuratorFramework provideCurator(TestingServer ts) {
     CuratorFramework cf = CuratorFrameworkFactory.newClient(ts.getConnectString(), new RetryPolicy() {
 
       @Override
@@ -167,4 +168,11 @@ public class SingularityTestModule extends AbstractModule {
   public Optional<SentryConfiguration> providesNoSentryConfiguration() {
     return Optional.absent();
   }
+
+  @Provides
+  @Singleton
+  public static List<ZkDataMigration> getZkDataMigrations(LastTaskStatusMigration lastTaskStatusMigration) {
+    return ImmutableList.<ZkDataMigration> of(lastTaskStatusMigration);
+  }
+
 }

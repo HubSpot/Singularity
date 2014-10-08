@@ -1,20 +1,39 @@
 package com.hubspot.singularity;
 
+import java.util.Map;
+
 import org.apache.mesos.Protos.TaskState;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 public enum ExtendedTaskState {
 
-  TASK_STAGING("staging", false, false), TASK_STARTING("starting", false, false), TASK_RUNNING("running", false, false), TASK_CLEANING("cleaning", false, false),
-  TASK_FINISHED("finished", true, false), TASK_FAILED("failed", true, true), TASK_KILLED("killed", true, false), TASK_LOST("lost", true, false), TASK_LOST_WHILE_DOWN("lost while down", true, false);
+  TASK_LAUNCHED("launched", false, Optional.<TaskState> absent()), TASK_STAGING("staging", false, Optional.of(TaskState.TASK_STAGING)),
+  TASK_STARTING("starting", false, Optional.of(TaskState.TASK_STARTING)), TASK_RUNNING("running", false, Optional.of(TaskState.TASK_RUNNING)),
+  TASK_CLEANING("cleaning", false, Optional.<TaskState> absent()), TASK_FINISHED("finished", true, Optional.of(TaskState.TASK_FINISHED)),
+  TASK_FAILED("failed", true, Optional.of(TaskState.TASK_FAILED)), TASK_KILLED("killed", true, Optional.of(TaskState.TASK_KILLED)),
+  TASK_LOST("lost", true, Optional.of(TaskState.TASK_LOST));
+
+  private static final Map<TaskState, ExtendedTaskState> map;
+  static {
+    map = Maps.newHashMapWithExpectedSize(ExtendedTaskState.values().length);
+    for (ExtendedTaskState extendedTaskState : ExtendedTaskState.values()) {
+      if (extendedTaskState.toTaskState().isPresent()) {
+        map.put(extendedTaskState.toTaskState().get(), extendedTaskState);
+      }
+    }
+  }
 
   private final String displayName;
   private final boolean isDone;
-  private final boolean isFailed;
+  private final Optional<TaskState> taskState;
 
-  private ExtendedTaskState(String displayName, boolean isDone, boolean isFailed) {
+  private ExtendedTaskState(String displayName, boolean isDone, Optional<TaskState> taskState) {
     this.displayName = displayName;
     this.isDone = isDone;
-    this.isFailed = isFailed;
+    this.taskState = taskState;
   }
 
   public String getDisplayName() {
@@ -26,32 +45,21 @@ public enum ExtendedTaskState {
   }
 
   public boolean isFailed() {
-    return isFailed;
+    return this == TASK_FAILED;
   }
 
   public boolean isSuccess() {
     return this == TASK_FINISHED;
   }
 
+  public Optional<TaskState> toTaskState() {
+    return taskState;
+  }
+
   public static ExtendedTaskState fromTaskState(TaskState taskState) {
-    switch (taskState) {
-    case TASK_FAILED:
-      return TASK_FAILED;
-    case TASK_FINISHED:
-      return TASK_FINISHED;
-    case TASK_KILLED:
-      return TASK_KILLED;
-    case TASK_STARTING:
-      return TASK_STARTING;
-    case TASK_STAGING:
-      return TASK_STAGING;
-    case TASK_LOST:
-      return TASK_LOST;
-    case TASK_RUNNING:
-      return TASK_RUNNING;
-    default:
-      throw new IllegalStateException(String.format("TaskState: %s not found", taskState));
-    }
+    ExtendedTaskState extendedTaskState = map.get(taskState);
+    Preconditions.checkArgument(extendedTaskState != null);
+    return extendedTaskState;
   }
 
 }

@@ -9,6 +9,7 @@ import io.dropwizard.setup.Environment;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
@@ -33,6 +34,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
@@ -43,6 +45,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -56,6 +59,8 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.JDBIHistoryManager;
 import com.hubspot.singularity.data.history.NoopHistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPersister;
+import com.hubspot.singularity.data.zkmigrations.LastTaskStatusMigration;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigration;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
@@ -79,11 +84,12 @@ public class SingularityServiceModule extends AbstractModule {
 
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
-  public static final String UNDERLYING_CURATOR = "curator.base.instance";
 
-  public static final String TASK_FAILED_TEMPLATE = "task.failed.template";
+  public static final String TASK_COMPLETED_TEMPLATE = "task.completed.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
-  public static final String TASK_NOT_RUNNING_WARNING_TEMPLATE = "task.not.running.warning.template";
+  public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
+
+  public static final String SERVER_ID_PROPERTY = "singularity.server.id";
 
   @Override
   protected void configure() {
@@ -100,6 +106,7 @@ public class SingularityServiceModule extends AbstractModule {
     bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
     bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
     bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
+    bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
   }
 
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
@@ -140,6 +147,12 @@ public class SingularityServiceModule extends AbstractModule {
     }
 
     return startables;
+  }
+
+  @Provides
+  @Singleton
+  public static List<ZkDataMigration> getZkDataMigrations(LastTaskStatusMigration lastTaskStatusMigration) {
+    return ImmutableList.<ZkDataMigration> of(lastTaskStatusMigration);
   }
 
   private static ObjectMapper createObjectMapper() {
@@ -245,7 +258,6 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(UNDERLYING_CURATOR)
   public CuratorFramework provideCurator(ZooKeeperConfiguration config) throws InterruptedException {
     LOG.info("Creating curator/ZK client and blocking on connection to ZK quorum {} (timeout: {})", config.getQuorum(), config.getConnectTimeoutMillis());
 
@@ -265,13 +277,7 @@ public class SingularityServiceModule extends AbstractModule {
 
     LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
 
-    return client;
-  }
-
-  @Singleton
-  @Provides
-  public CuratorFramework provideNamespaceCurator(@Named(UNDERLYING_CURATOR) CuratorFramework curator, ZooKeeperConfiguration config) {
-    return curator.usingNamespace(config.getZkNamespace());
+    return client.usingNamespace(config.getZkNamespace());
   }
 
   @Provides
@@ -300,9 +306,9 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(TASK_FAILED_TEMPLATE)
-  public JadeTemplate getTaskFailedTemplate() throws IOException {
-    return getJadeTemplate("task_failed.jade");
+  @Named(TASK_COMPLETED_TEMPLATE)
+  public JadeTemplate getTaskCompletedTemplate() throws IOException {
+    return getJadeTemplate("task_completed.jade");
   }
 
   @Provides
@@ -314,9 +320,9 @@ public class SingularityServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(TASK_NOT_RUNNING_WARNING_TEMPLATE)
-  public JadeTemplate getTaskNotRunningWarningTemplate() throws IOException {
-    return getJadeTemplate("task_not_running_warning.jade");
+  @Named(REQUEST_MODIFIED_TEMPLATE)
+  public JadeTemplate getRequestModifiedTemplate() throws IOException {
+    return getJadeTemplate("request_modified.jade");
   }
 
   @Provides
