@@ -7,26 +7,21 @@ import com.github.jknack.handlebars.Options;
 import com.google.common.base.Optional;
 
 public class IfPresentHelper implements Helper<Object> {
-  public static final Helper<Object> INSTANCE = new IfPresentHelper();
 
   public static final String NAME = "ifPresent";
 
+  @SuppressWarnings("unchecked")
   @Override
   public CharSequence apply(Object context, Options options) throws IOException {
-    if ((context != null) && (context instanceof Optional)) {
-      final Optional<Object> maybeContext = (Optional<Object>)context;
+    if (context instanceof Optional) {
+      context = ((Optional<Object>) context).orNull();
+    }
 
-      if (maybeContext.isPresent()) {
-        return options.fn(maybeContext.get());
-      } else {
-        return options.inverse();
-      }
+    if (context != null) {
+      return options.fn(context);
     } else {
-      if (context != null) {
-        return options.fn(context);
-      } else {
-        return options.inverse();
-      }
+      return options.inverse();
     }
   }
+
 }

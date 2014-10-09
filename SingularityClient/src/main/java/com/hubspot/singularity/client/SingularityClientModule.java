@@ -12,9 +12,13 @@ public class SingularityClientModule extends AbstractModule {
 
   public static final String HTTP_CLIENT_NAME = "singularity.http.client";
 
-  public static final String HOSTS_PROPERTY_NAME = "singularity.hosts"; // bind this name to not use the curator discovery
-  public static final String CURATOR_NAME = "singularity.curator"; // bind this instead to provide a curator framework to discover singularity
+  // bind this name to not use the curator discovery, eg: http://localhost:5060,http://localhost:7000
+  public static final String HOSTS_PROPERTY_NAME = "singularity.hosts";
 
+  // bind this instead to provide a curator framework to discover singularity
+  public static final String CURATOR_NAME = "singularity.curator";
+
+  // bind this to provide the path for singularity eg: singularity/v2/api
   public static final String CONTEXT_PATH = "singularity.context.path";
 
   @Override

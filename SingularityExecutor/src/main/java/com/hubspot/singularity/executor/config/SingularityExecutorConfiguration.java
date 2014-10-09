@@ -96,8 +96,7 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog,
       @Named(SingularityExecutorConfigurationLoader.USE_LOCAL_DOWNLOAD_SERVICE) String useLocalDownloadService,
       @Named(SingularityExecutorConfigurationLoader.LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS) String localDownloadServiceTimeoutMillis,
-      @Named(SingularityExecutorConfigurationLoader.MAX_TASK_THREADS) String maxTaskThreadsAsString
-      ) {
+      @Named(SingularityExecutorConfigurationLoader.MAX_TASK_THREADS) String maxTaskThreadsAsString) {
     this.executorBashLog = executorBashLog;
     this.globalTaskDefinitionDirectory = globalTaskDefinitionDirectory;
     this.globalTaskDefinitionSuffix = globalTaskDefinitionSuffix;

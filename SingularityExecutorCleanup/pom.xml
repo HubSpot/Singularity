@@ -37,7 +37,7 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityMesosClient</artifactId>
+      <artifactId>SingularityClient</artifactId>
     </dependency>
 
     <dependency>

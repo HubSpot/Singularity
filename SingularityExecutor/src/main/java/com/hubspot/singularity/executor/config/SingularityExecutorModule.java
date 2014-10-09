@@ -59,8 +59,8 @@ public class SingularityExecutorModule extends AbstractModule {
   public Handlebars providesHandlebars() {
     final Handlebars handlebars = new Handlebars();
 
-    handlebars.registerHelper(BashEscapedHelper.NAME, BashEscapedHelper.INSTANCE);
-    handlebars.registerHelper(IfPresentHelper.NAME, IfPresentHelper.INSTANCE);
+    handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());
+    handlebars.registerHelper(IfPresentHelper.NAME, new IfPresentHelper());
 
     return handlebars;
   }
