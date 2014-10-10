@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.jaxrs.PropertyFilter;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
-import com.hubspot.jackson.jaxrs.PropertyFilteringMessageBodyWriter;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
@@ -89,7 +88,7 @@ public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyP
   }
 
   private Timer getTimer() {
-    return getMetricRegistry().timer(MetricRegistry.name(PropertyFilteringMessageBodyWriter.class, "filter"));
+    return getMetricRegistry().timer(MetricRegistry.name(GuicePropertyFilteringMessageBodyWriter.class, "filter"));
   }
 
   private MetricRegistry getMetricRegistry() {
