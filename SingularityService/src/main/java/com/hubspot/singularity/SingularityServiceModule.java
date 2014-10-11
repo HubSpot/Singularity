@@ -184,7 +184,6 @@ public class SingularityServiceModule extends AbstractModule {
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
-    bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
     bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
     bind(SingularityHistoryPersister.class).in(Scopes.SINGLETON);
 
@@ -368,8 +367,7 @@ public class SingularityServiceModule extends AbstractModule {
   public HistoryManager getHistoryManager(SingularityConfiguration configuration, Injector injector) {
     if (configuration.getDatabaseConfiguration().isPresent()) {
       return injector.getInstance(JDBIHistoryManager.class);
-    }
-    else {
+    } else {
       return injector.getInstance(NoopHistoryManager.class);
     }
   }
