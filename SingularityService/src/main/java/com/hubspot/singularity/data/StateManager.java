@@ -174,6 +174,7 @@ public class StateManager extends CuratorManager {
         cooldownRequests++;
         break;
       default:
+        break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {
