@@ -16,6 +16,7 @@ public class SingularityTranscoderModule extends AbstractModule {
     bind(SingularityTaskHealthcheckResultTranscoder.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryTranscoder.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryUpdateTranscoder.class).in(Scopes.SINGLETON);
+    bind(SingularityTaskStatusTranscoder.class).in(Scopes.SINGLETON);
     bind(SingularityDeployKeyTranscoder.class).in(Scopes.SINGLETON);
     bind(SingularityDeployMarkerTranscoder.class).in(Scopes.SINGLETON);
     bind(SingularityDeployStateTranscoder.class).in(Scopes.SINGLETON);

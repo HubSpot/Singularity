@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityServiceModule;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -25,7 +25,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
   private final String serverId;
 
   @Inject
-  public LastTaskStatusMigration(TaskManager taskManager, @Named(SingularityServiceModule.SERVER_ID_PROPERTY) String serverId) {
+  public LastTaskStatusMigration(TaskManager taskManager, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(1);
     this.taskManager = taskManager;
     this.serverId = serverId;

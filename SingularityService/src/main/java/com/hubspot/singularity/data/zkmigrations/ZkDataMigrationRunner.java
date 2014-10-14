@@ -1,6 +1,6 @@
 package com.hubspot.singularity.data.zkmigrations;
 
-import java.util.List;
+import java.util.Set;
 
 import javax.inject.Singleton;
 
@@ -18,10 +18,10 @@ public class ZkDataMigrationRunner {
   private static final Logger LOG = LoggerFactory.getLogger(ZkDataMigrationRunner.class);
 
   private final MetadataManager metadataManager;
-  private final List<ZkDataMigration> migrations;
+  private final Set<ZkDataMigration> migrations;
 
   @Inject
-  public ZkDataMigrationRunner(MetadataManager metadataManager, List<ZkDataMigration> migrations) {
+  public ZkDataMigrationRunner(MetadataManager metadataManager, Set<ZkDataMigration> migrations) {
     this.metadataManager = metadataManager;
     this.migrations = migrations;
   }

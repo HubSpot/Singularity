@@ -1,5 +1,9 @@
 package com.hubspot.singularity.mesos;
 
+import java.io.IOException;
+
+import javax.inject.Singleton;
+
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
@@ -25,7 +29,7 @@ public class SingularityDriver {
   private final MesosSchedulerDriver driver;
 
   @Inject
-  public SingularityDriver(SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
+  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final MesosConfiguration configuration) throws IOException {
     this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())

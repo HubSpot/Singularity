@@ -1,7 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.Date;
 import java.util.List;
 
@@ -18,7 +16,7 @@ import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryTranscoder
 
 public class JDBIHistoryManager implements HistoryManager {
 
-  private final Optional<HistoryJDBI> history;
+  private final HistoryJDBI history;
   private final SingularityTaskHistoryTranscoder taskHistoryTranscoder;
   private final SingularityDeployHistoryTranscoder deployHistoryTranscoder;
   private final ObjectMapper objectMapper;
@@ -26,7 +24,7 @@ public class JDBIHistoryManager implements HistoryManager {
   // TODO jdbi timeouts / exceptions
 
   @Inject
-  public JDBIHistoryManager(Optional<HistoryJDBI> history, ObjectMapper objectMapper, SingularityTaskHistoryTranscoder taskHistoryTranscoder, SingularityDeployHistoryTranscoder deployHistoryTranscoder) {
+  public JDBIHistoryManager(HistoryJDBI history, ObjectMapper objectMapper, SingularityTaskHistoryTranscoder taskHistoryTranscoder, SingularityDeployHistoryTranscoder deployHistoryTranscoder) {
     this.taskHistoryTranscoder = taskHistoryTranscoder;
     this.deployHistoryTranscoder = deployHistoryTranscoder;
     this.history = history;
@@ -35,20 +33,17 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    return history.get().getTaskHistoryForRequest(requestId, limitStart, limitCount);
+    return history.getTaskHistoryForRequest(requestId, limitStart, limitCount);
   }
 
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    history.get().insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest().getAsBytes(objectMapper), new Date(requestHistory.getCreatedAt()), requestHistory.getEventType().name(), requestHistory.getUser().orNull());
+    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest().getAsBytes(objectMapper), new Date(requestHistory.getCreatedAt()), requestHistory.getEventType().name(), requestHistory.getUser().orNull());
   }
 
   @Override
   public void saveDeployHistory(SingularityDeployHistory deployHistory) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    history.get().insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
+    history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
         deployHistory.getDeployMarker().getDeployId(),
         new Date(deployHistory.getDeployMarker().getTimestamp()),
         deployHistory.getDeployMarker().getUser().orNull(),
@@ -59,8 +54,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    byte[] historyBytes = history.get().getDeployHistoryForDeploy(requestId, deployId);
+    byte[] historyBytes = history.getDeployHistoryForDeploy(requestId, deployId);
 
     if (historyBytes == null) {
       return Optional.absent();
@@ -71,8 +65,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    return history.get().getDeployHistoryForRequest(requestId, limitStart, limitCount);
+    return history.getDeployHistoryForRequest(requestId, limitStart, limitCount);
   }
 
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
@@ -81,18 +74,17 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
-    return history.get().getRequestHistory(requestId, getOrderDirection(orderDirection), limitStart, limitCount);
+    return history.getRequestHistory(requestId, getOrderDirection(orderDirection), limitStart, limitCount);
   }
 
   @Override
   public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
-    return history.get().getRequestHistoryLike(requestIdLike, limitStart, limitCount);
+    return history.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
 
   @Override
   public void saveTaskHistory(SingularityTaskHistory taskHistory) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    if (history.get().getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()) != null) {
+    if (history.getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()) != null) {
       return;
     }
 
@@ -103,13 +95,12 @@ public class JDBIHistoryManager implements HistoryManager {
       lastTaskStatus = taskIdHistory.getLastTaskState().get().name();
     }
 
-    history.get().insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()), lastTaskStatus);
+    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()), lastTaskStatus);
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    checkState(history.isPresent(), "no DBI connection available!");
-    byte[] historyBytes = history.get().getTaskHistoryForTask(taskId);
+    byte[] historyBytes = history.getTaskHistoryForTask(taskId);
 
     if (historyBytes == null) {
       return Optional.absent();

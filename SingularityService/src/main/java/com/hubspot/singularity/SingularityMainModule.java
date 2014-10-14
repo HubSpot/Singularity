@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Provider;
@@ -24,7 +23,6 @@ import org.jets3t.service.security.AWSCredentials;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -42,8 +40,6 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
-import com.hubspot.singularity.data.zkmigrations.LastTaskStatusMigration;
-import com.hubspot.singularity.data.zkmigrations.ZkDataMigration;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
@@ -155,12 +151,6 @@ public class SingularityMainModule implements Module {
     }
 
     return Optional.<S3Service>of(new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
-  }
-
-  @Provides
-  @Singleton
-  public static List<ZkDataMigration> getZkDataMigrations(LastTaskStatusMigration lastTaskStatusMigration) {
-    return ImmutableList.<ZkDataMigration> of(lastTaskStatusMigration);
   }
 
   @Provides

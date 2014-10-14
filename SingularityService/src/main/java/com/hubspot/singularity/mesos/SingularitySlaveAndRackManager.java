@@ -44,8 +44,10 @@ class SingularitySlaveAndRackManager {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularitySlaveAndRackManager(SingularityConfiguration configuration, MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularityConfiguration configuration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
+
+    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();

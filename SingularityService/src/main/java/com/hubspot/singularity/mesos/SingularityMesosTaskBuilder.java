@@ -50,7 +50,7 @@ class SingularityMesosTaskBuilder {
   private final ExecutorIdGenerator idGenerator;
 
   @Inject
-  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
     this.slaveAndRackManager = slaveAndRackManager;
     this.idGenerator = idGenerator;

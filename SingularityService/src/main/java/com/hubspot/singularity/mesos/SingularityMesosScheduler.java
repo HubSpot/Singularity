@@ -25,8 +25,8 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -58,12 +58,13 @@ public class SingularityMesosScheduler implements Scheduler {
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
+  private final SchedulerDriverSupplier schedulerDriverSupplier;
 
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityNewTaskChecker newTaskChecker,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
-      @Named(SingularityServiceModule.SERVER_ID_PROPERTY) String serverId) {
-    defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
+  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
+      SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider,
+      SingularityHealthchecker healthchecker, DeployManager deployManager, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier) {
+    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.newTaskChecker = newTaskChecker;
@@ -74,16 +75,19 @@ public class SingularityMesosScheduler implements Scheduler {
     this.stateCacheProvider = stateCacheProvider;
     this.healthchecker = healthchecker;
     this.serverId = serverId;
+    this.schedulerDriverSupplier = schedulerDriverSupplier;
   }
 
   @Override
   public void registered(SchedulerDriver driver, Protos.FrameworkID frameworkId, Protos.MasterInfo masterInfo) {
     LOG.info("Registered driver {}, with frameworkId {} and master {}", driver, frameworkId, masterInfo);
+    schedulerDriverSupplier.setSchedulerDriver(driver);
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, Protos.MasterInfo masterInfo) {
     LOG.info("Reregistered driver {}, with master {}", driver, masterInfo);
+    schedulerDriverSupplier.setSchedulerDriver(driver);
   }
 
   @Override
@@ -300,7 +304,8 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void disconnected(SchedulerDriver driver) {
-    LOG.warn("Scheduler/Driver disconnected");
+    schedulerDriverSupplier.setSchedulerDriver(null);
+   LOG.warn("Scheduler/Driver disconnected");
   }
 
   @Override

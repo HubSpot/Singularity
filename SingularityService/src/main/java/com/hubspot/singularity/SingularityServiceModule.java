@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-<<<<<<< HEAD
 import com.google.inject.Binder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;

@@ -1,5 +1,12 @@
 package com.hubspot.singularity.data;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import io.dropwizard.lifecycle.Managed;
+
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
@@ -9,20 +16,33 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
-public class ExecutorIdGenerator {
+@Singleton
+public class ExecutorIdGenerator implements Managed {
 
-  private final DistributedAtomicInteger distributedGenerator;
+  private volatile DistributedAtomicInteger distributedGenerator = null;
   private final char[] alphabet;
 
   private static final String COUNTER_PATH = "/executors/counter";
 
+  private final Provider<CuratorFramework> curatorProvider;
+
   @Inject
-  public ExecutorIdGenerator(CuratorFramework curator) {
-    this.distributedGenerator = new DistributedAtomicInteger(curator, COUNTER_PATH, new RetryOneTime(1));
+  public ExecutorIdGenerator(Provider<CuratorFramework> curatorProvider) {
+    this.curatorProvider = curatorProvider;
     this.alphabet = buildAlphabet();
   }
 
+  @Override
+  public void start() {
+    this.distributedGenerator = new DistributedAtomicInteger(curatorProvider.get(), COUNTER_PATH, new RetryOneTime(1));
+  }
+
+  @Override
+  public void stop() {
+  }
+
   public String getNextExecutorId() {
+    checkState(distributedGenerator != null, "never started!");
     try {
       AtomicValue<Integer> atomic = distributedGenerator.increment();
       Preconditions.checkState(atomic.succeeded(), "Atomic increment did not succeed");

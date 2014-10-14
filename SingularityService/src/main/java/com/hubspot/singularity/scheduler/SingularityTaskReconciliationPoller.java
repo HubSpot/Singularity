@@ -4,11 +4,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.SchedulerDriver;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -19,16 +16,15 @@ public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPo
   private final SingularityTaskReconciliation taskReconciliation;
 
   @Inject
-  public SingularityTaskReconciliationPoller(SingularityConfiguration configuration, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier,
-      SingularityTaskReconciliation taskReconciliation) {
-    super(exceptionNotifier, abort, closer, configuration.getStartNewReconcileEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.NO_LOCK);
+  public SingularityTaskReconciliationPoller(SingularityMesosSchedulerDelegator mesosScheduler, SingularityConfiguration configuration,
+                                             SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, SingularityTaskReconciliation taskReconciliation) {
+      super(mesosScheduler, exceptionNotifier, abort, configuration.getStartNewReconcileEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.NO_LOCK);
 
     this.taskReconciliation = taskReconciliation;
   }
 
   @Override
-  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler, SchedulerDriver driver) {
-    taskReconciliation.startReconciliation(driver);
+  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler) {
+       taskReconciliation.startReconciliation();
   }
-
 }

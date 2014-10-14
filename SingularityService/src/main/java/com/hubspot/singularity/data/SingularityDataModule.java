@@ -7,6 +7,7 @@ public class SingularityDataModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(MetadataManager.class).in(Scopes.SINGLETON);
     bind(StateManager.class).in(Scopes.SINGLETON);
     bind(TaskManager.class).in(Scopes.SINGLETON);
     bind(DeployManager.class).in(Scopes.SINGLETON);
