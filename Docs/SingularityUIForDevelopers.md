@@ -146,11 +146,11 @@ As mentioned before, SingularityUI uses [Backbone](http://backbonejs.org/). If y
 
 What follows is a run-down of how things work in Singularity, using the Slaves page as an example.
 
-First you request `/singularity/slaves`. This triggers [our router](../SingularityUI/app/router.coffee) to fire up [SlavesController](../SingularityUI/app/controllers/Slaves.coffee).
+First you request `/singularity/slaves`. This triggers [our router](../SingularityUI/app/router.coffee) to fire up [`SlavesController`](../SingularityUI/app/controllers/Slaves.coffee).
 
 The controller bootstraps the things we need for the requested page. First, it creates 3 collections--one for each API endpoint we're going to hit.
 
-Afterwards, it creates 3 instances of [SimpleSubview](../SingularityUI/app/views/simpleSubview.coffee) and gives each one a template to render and a collection to use for data.
+Afterwards, it creates 3 instances of [`SimpleSubview`](../SingularityUI/app/views/simpleSubview.coffee) and gives each one a template to render and a collection to use for data.
 
 `SimpleSubview` is a reusable class that renders its template in response to change events from the collection you gave it. For the slaves page, when one of the collections receives a response from the service `SimpleSubview` renders the required table and nothing more, therefore giving it ownership over one component of the page, with the collection telling it when to render it.
 
