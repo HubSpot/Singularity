@@ -11,25 +11,25 @@ Install [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 
 Open a command shell and run the following commands to install the required vagrant plugins with the specified order (If vagrant version 1.5 or later is used *vagrant-omnibus* should be installed before *vagrant-berkshelf* because omnibus causes a downgrade of berkshelf version back to 1.3.7 which in turn will cause 'vagrant up' to fail).
 
-```
-$ vagrant plugin install vagrant-omnibus
-$ vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1
-$ vagrant plugin install vagrant-hostsupdater
+```bash
+vagrant plugin install vagrant-omnibus
+vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1
+vagrant plugin install vagrant-hostsupdater
 ```
 
 Clone Singularity from *github.com* in you preferred directory and go into the *vagrant* directory inside the cloned project:
 
-```
-$ cd my_home/tests
-$ git clone git@github.com:HubSpot/Singularity.git
-$ cd Singularity/vagrant
-$ ls
+```bash
+cd my_home/tests
+git clone git@github.com:HubSpot/Singularity.git
+cd Singularity/vagrant
+ls
 ```
 
 Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command: 
 
-```
-$ vagrant up
+```bash
+vagrant up
 ```
 
 This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then install all the required software packages as well as build and install Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up. 
@@ -39,17 +39,17 @@ During the installation your local machine hosts file is configured with the VM 
 When vagrant command finishes check that everything has been installed successfully executing the following steps:
 
 First verify that Zookeeper is running by logging into the virtual machine and using the zookeeper command line tool to connect to the zookeeper server and list the available nodes:
-```
-$ vagrant ssh
-$ sudo /usr/share/zookeeper/bin/zkCli.sh -server localhost:2181
+```bash
+vagrant ssh
+sudo /usr/share/zookeeper/bin/zkCli.sh -server localhost:2181
 
-When connected execute the following command to list the root nodes:
+# When connected execute the following command to list the root nodes:
 ls /
 
-You should see the following listing:
-[singularity, mesos, zookeeper]
+# You should see the following listing:
+# [singularity, mesos, zookeeper]
 
-type 'quit' to exit zookeper console
+# type 'quit' to exit zookeper console
 ```
  
 Then verify that the mesos cluster is running and the Mesos UI is accessible at:
@@ -58,16 +58,16 @@ Then verify that the mesos cluster is running and the Mesos UI is accessible at:
 
 Verify that mysql server is running: 
 
-```
-$ mysql -u root -p
+```bash
+mysql -u root -p
 
-specify *mesos7mysql* as password
+# specify *mesos7mysql* as password
 
-then check if singularity database has been created:
+#then check if singularity database has been created:
 
 mysql> show databases;
 
-You should something like the following:
+# You should something like the following:
 +--------------------+
 | Database           |
 +--------------------+
@@ -77,7 +77,7 @@ You should something like the following:
 | singularity        |
 +--------------------+
 
-type 'exit' to exit mysql client console
+# type 'exit' to exit mysql client console
 ```
 
 Verify that Singularity is running:
@@ -90,6 +90,6 @@ If everything went well you will see the following screen:
 Enter your username to let Singularity populate a personalized dashboard and go to [Deploy Examples](Singularity_Deploy_Examples.md) to find out how to deploy some test projects.
 
 At a later time you can update the VM installed packages using the latest *singularity* chef recipe by running:
-```
-$ vagrant reload --provision 
+```bash
+vagrant reload --provision 
 ```
