@@ -1,111 +1,177 @@
-# Build and Run SingularityUI
+# SingularityUI
 
-The Maven build process is configured to automatically build and package the UI into SingularityService. To manually build SingularityUI on its own, you'll need [nodejs](http://nodejs.org/) with [npm](https://www.npmjs.org/). Once these are installed, `cd` into the `SingularityUI` folder and run:
+This document is intended for people who want to work on SingularityUI independently of the other Singularity modules.
 
-```bash
-npm install
-```
+If you're here just looking for information on how to build SingularityUI, please note that the Maven build process is configured to automatically build and package the UI into SingularityService.
 
-All the dependencies will be installed and the UI will be built in "production" mode. The compiled static files will be placed in [`../SingularityService/src/main/resources/`](../SingularityService/src/main/resources/).
+The compiled static files are placed in [`../SingularityService/target/generated-resources/static/`](../SingularityService/target/generated-resources/static/).
 
-# Developing SingularityUI
+## Contents
 
-If you want to locally develop on SingularityUI independently of the other Singularity modules, read on.
+* [Developer overview](#developer-overview)
+* [Set-up](#set-up)
+* [Developing locally](#developing-locally)
+  * [Cross-domain restrictions](#cross-domain-restrictions)
+  * [Connecting to the API](#connecting-to-the-api)
+* [Code structure](#code-structure)
+  * [Useful links](#useful-links)
+
+## Developer overview
+
+SingularityUI is a static app that relies on SingularityService for its data.
+
+The app is built using Brunch (i.e. compiling CoffeeScript, etc), with Bower being used to manage its dependencies (e.g. jQuery, Backbone).
+
+We recommend you familiarise yourself with the following if you haven't used them before:
+
+* [CoffeeScript](http://coffeescript.org/) is the language used for all logic.
+* [Stylus](http://learnboost.github.io/stylus/) is used instead of CSS.
+* [Handlebars](http://handlebarsjs.com/) is the templating library.
+* [Backbone](http://backbonejs.org/) acts as the front-end framework.
 
 ## Set-up
 
-SingularityUI uses [Brunch](http://brunch.io) to build itself (compile CoffeeScript, etc) and [Bower](http://bower.io) to manage project dependencies. You will want to install these globally for easier access:
+You will need to have the following:
+
+* [nodejs](http://nodejs.org/) with [npm](https://www.npmjs.org/).
+* [Brunch](http://brunch.io) & [Bower](http://bower.io), installable via `npm install -g brunch bower`.
+
+Below are some commands you might find useful when working on SingularityUI:
 
 ```bash
-sudo npm install -g brunch bower
-```
-
-Some commands you should be aware of:
-
-```bash
-# Download dependencies for Brunch & Bower, then compile everything
+# Install NPM deps, Bower deps, and do one production build
 npm install
 
-# Install dependencies for Bower (these are the application dependencies, e.g. Backbone & jQuery, not things like CoffeeScript)
+# Install just the Bower dependencies
 bower install
 
-# Build the project to development mode by default (with source maps), or minified mode if given --production
+# Remove dependencies (reinstall them using 'npm install')
+rm -rf node_modules bower_components
+
+# Build SingularityUI. '--production' (optional) optimises the output files
 brunch build [--production]
 
-# Watch the app files and auto-build when changes happen. If given --server it hosts an HTTP server for you, and -p can be used to specify a port for said server.
-brunch watch [--server [-p 3333]]
+# Watch the project and build it when there are changes
+brunch watch
+
+# Same as above, but also start an HTTP server that serves the static files. '-p <number>' (optional) specifies what port it runs on
+brunch watch --server [-p 3333]
 ```
 
-So to start off, `npm install` to install the dependencies, then `brunch watch --server` to get it running. You can now acceess SingularityUI at [localhost:3333/singularity](http://localhost:3333/singularity) by default.
+When you first start, run `npm install` to download all the dependencies. Once that's done, you're ready to roll!
 
-From here you'll need to hook up to an API. You can either use SingularityService running locally, or a remote version like your development cluster. Open up [SingularityUI](http://localhost:3333/singularity) and you'll be prompted for an API root. This is something like `http://example/singularity/api`. To change this in the future, you can use your JS console:
+## Developing locally
 
-```javascript
-localStorage.set('apiRootOverride', 'http://example/singularity/api')
-```
+So far you have SingularityUI with all its dependencies installed. You're able to run SingularityUI and have it served using `brunch watch --server`. What we need now is a running SingularityService to pull information from.
 
-Another useful localStorage override you can use is used to disabled the auto-refresh which will stop the page re-rendering so you can properly inspect the DOM:
+If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Vagrant](Singularity_Local_Setup_For_Testing.md). Once the VM is up and running, the API's root is available at [`http://vagrant-singularity:7099/singularity/api`](http://vagrant-singularity:7099/singularity/api) by default.
 
-```javascript
-localStorage.setItem('suppressRefresh', true)
-```
+You might also be running SingularityService locally without a VM. This works too!
 
-## Cross-domain restrictions
+-----
 
-Your browser will not allow cross-domain requests if you're using a remote server. You have a few options to get around this:
+From this point onwards we're assuming you have a running SingularityService you can use. We'll be using `http://example/singularity/api` as a placeholder for the root URL of the API you're using.
 
-### Cheat using hosts
+### Cross-domain restrictions
 
-Open up your hosts file:
+Your browser will not allow cross-domain requests if you're using a remote server (Vagrant included). To get around this we'll use an open-source HubSpot mini-proxy called [vee](https://github.com/HubSpot/vee).
 
-* OS X `/private/etc/hosts`
-* Linux `/etc/hosts`
-* Windows `C:\windows\system32\drivers\etc\hosts`
+If you're able to configure your own nginx or Apache server to be used as a proxy, feel free to do it that way if you wish. Otherwise, read on!
 
-Let's say you're trying to use `http://apiroot.example/singularity/api` as your API root. You would add a new line to your hosts file saying:
+Go ahead and install vee by running `npm install -g vee`.
 
-```
-127.0.0.1 local.apiroot.example
-```
-
-So if you have SingularityUI running on localhost:3333, just point your browser to `http://local.apiroot.example:3333/singularity/api` and you've fooled your browser into having local UI and remote APIs on the same domain.
-
-### Run Chrome with security disabled
-
-Running Google Chome with `--args --disable-web-security` will stop it from preventing your API calls. Be careful not to use your browser normally in this mode as it can cause securiy issues.
-
-```bash
-# OS X example
-open -a Google\ Chrome\ Canary --args --disable-web-security
-
-# Windows example
-```
-
-And you're set! Just open up singularity and your browser won't prevent your API calls.
-
-### Use a local proxy
-
-If you have a local web server running, such as nginx or Apache, then you can add configuration to serve both local UI assets and remote API calls from a single local domain. 
-
-However, if you are not familiar with rolling your own nginx/Apache/other config, you can use [vee](https://github.com/hubspot/vee) (a small, dedicated proxy lib). Here is an example `.vee` config for SingularityUI development:
+Afterwards you will need to create a `.vee` file which will act as the configuration. Place this inside of `/SingularityUI`. Here is an example `.vee` file you can use:
 
 ```yaml
 name: SingularityUI
 
 routes:
-  
-  # Redirect static assets to local brunch server (assuming it is on port 4000)
-  ".*/static/.*": "http://localhost:4000/"
-  
+
+  # Redirect static assets to local brunch server (assuming it is on port 3333)
+  ".*/static/.*": "http://localhost:3333/"
+
   # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
-  ".*/api/.*": "http://<your_singularity_domain>/"
-  ".*/login.*": ""https://<your_singularity_domain>/"
+  ".*/api/.*": "http://example/"
+  ".*/login/.*": "https://example/"
 
   # All else to the index.html (for all other Backbone routes)
-  ".*": "http://localhost:4000/singularity/"
+  ".*": "http://localhost:3333/singularity/"
 
 # Uncomment to debug the above routes
 # debug: true
 ```
 
-With the above config, you then visit http://localhost:<vee_port>/singularity/ and API requests will be proxied over `localhost:<vee_port>` to get around cross-domain issues.
+Once you have the file up and running, go ahead and run vee (from the dir `.vee` is in):
+
+```bash
+# Run vee on ports 80 and 443
+sudo vee
+
+# Run vee on specific ports
+vee -p 4001 -s 4002
+```
+
+Assuming you used the second command, you can now access SingularityUI by going to [`http://localhost:4001/singularity`](http://localhost:4001/singularity).
+
+If you're confused as to what's going on here, all your requests are being processed by vee so that:
+
+* Requests to `localhost:4001/singularity/api` are sent to the server at `example`.
+* All other requests, including static files, are sent to the Brunch server running locally.
+
+### Connecting to the API
+
+So far you have SingularityUI being served by Brunch, SingularityService running somewhere, and you have vee directing requests to each of them as required.
+
+Open up SingularityUI in your browser by going to [http://localhost:4001](http://localhost:4001) (if running through vee) or [http://localhost:3333](http://localhost:3333).
+
+You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it `http://localhost:<port>`, where `<port>` is `4001` if running through vee, or your local instance SingularityService port if you're doing it that way.
+
+You can change the value of this at any point by typing the following in your JS console:
+
+```javascript
+localStorage.set('apiRootOverride', 'http://example/singularity/api')
+```
+
+And there you go! You should at this point have SingularityUI running in your browser with it connected to SingularityService. Just let Brunch watch and compile your files as you work and try it out in your browser.
+
+While we're on the topic of localStorage overrides, another useful one you can use disables the auto-refresh which will stop the page re-rendering so you can properly inspect the DOM:
+
+```javascript
+localStorage.setItem('suppressRefresh', true)
+```
+
+## Code structure
+
+As mentioned before, SingularityUI uses [Backbone](http://backbonejs.org/). If you're not familiar with how it does things, please look into it and familiarise yourself with Views, Models, Collections, and the event-based interaction between them all.
+
+What follows is a run-down of how things work in Singularity, using the Slaves page as an example.
+
+First you request `/singularity/slaves`. This triggers [our router](../SingularityUI/app/router.coffee) to fire up [SlavesController](../SingularityUI/app/controllers/Slaves.coffee).
+
+The controller bootstraps the things we need for the requested page. First, it creates 3 collections--one for each API endpoint we're going to hit.
+
+Afterwards, it creates 3 instances of [SimpleSubview](../SingularityUI/app/views/simpleSubview.coffee) and gives each one a template to render and a collection to use for data.
+
+`SimpleSubview` is a reusable class that renders its template in response to change events from the collection you gave it. For the slaves page, when one of the collections receives a response from the service `SimpleSubview` renders the required table and nothing more, therefore giving it ownership over one component of the page, with the collection telling it when to render it.
+
+The controller also creates a [`SlavesView`](../SingularityUI/app/views/slaves.coffee) and assigns it as its primary view using `Controller.setView(View)`. This view is special because it represents the entire page being rendered. We feed it with references to our sub-views so that it can embed them into itself.
+
+Finally, we tell the app to render this main view of ours and to start all of the collection fetches, which will eventually trigger the subview renders when completed.
+
+Everything else is standard [Backbone](http://backbonejs.org/)-structured code. Please refer to the official docs for how to do things like respond to UI events, etc.
+
+### Useful links
+
+There are some libraries/classes in SingularityUI which you should be aware of if you plan on working on it:
+
+* [Application](../SingularityUI/app/application.coffee) is responsible for a lot of global behaviour, including error-handling.
+* [Router](../SingularityUI/app/router.coffee) points requests to their respective controllers.
+* [Utils](../SingularityUI/app/utils.coffee) contains a bunch of reusable static functions.
+* The base classes. The various components extend the following:
+  * [Model](../SingularityUI/app/models/model.coffee)
+  * [Collection](../SingularityUI/app/collections/collection.coffee) & [PaginableCollection](../SingularityUI/app/collections/PaginableCollection.coffee)
+  * [View](../SingularityUI/app/views/view.coffee)
+  * [Controller](../SingularityUI/app/controllers/Controller.coffee)
+* Reusable components:
+  * [SimpleSubview](../SingularityUI/app/views/simpleSubview.coffee)
+  * [ExpandableTableSubview](../SingularityUI/app/views/expandableTableSubview.coffee)
