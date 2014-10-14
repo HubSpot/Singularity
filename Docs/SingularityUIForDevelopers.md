@@ -122,7 +122,7 @@ If you're confused as to what's going on here, all your requests are being proce
 
 So far you have SingularityUI being served by Brunch, SingularityService running somewhere, and you have vee directing requests to each of them as required.
 
-Open up SingularityUI in your browser by going to [http://localhost:4001](http://localhost:4001) (if running through vee) or [http://localhost:3333](http://localhost:3333).
+Open up SingularityUI in your browser by going to [`http://localhost:4001`](http://localhost:4001) (if running through vee) or [`http://localhost:3333`](http://localhost:3333).
 
 You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it `http://localhost:<port>`, where `<port>` is `4001` if running through vee, or your local instance SingularityService port if you're doing it that way.
 
@@ -159,6 +159,12 @@ The controller also creates a [`SlavesView`](../SingularityUI/app/views/slaves.c
 Finally, we tell the app to render this main view of ours and to start all of the collection fetches, which will eventually trigger the subview renders when completed.
 
 Everything else is standard [Backbone](http://backbonejs.org/)-structured code. Please refer to the official docs for how to do things like respond to UI events, etc.
+
+To summarise:
+* A controller bootstraps everything (collections, models, views) for a page.
+* If there is more than one collection/model involved, we split the view up into subviews in order to keep things modular and easy to change/render. A primary view glues everything together.
+* If there is one/no collection/model being used, we just use the primary view for everything.
+* Use Backbone conventions wherever possible. Try to rely on events, not callbacks.
 
 ### Useful links
 
