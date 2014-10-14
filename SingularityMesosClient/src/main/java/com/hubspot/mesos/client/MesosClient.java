@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosMasterStateObject;
@@ -17,6 +18,7 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
+@Singleton
 public class MesosClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(MesosClient.class);
@@ -40,6 +42,7 @@ public class MesosClient {
 
   @SuppressWarnings("serial")
   public static class MesosClientException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
     public MesosClientException(String message) {
       super(message);
