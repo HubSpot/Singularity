@@ -2,6 +2,8 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.SchedulerDriver;
 
 import com.google.inject.Inject;
@@ -11,6 +13,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
+@Singleton
 public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPoller {
 
   private final SingularityTaskReconciliation taskReconciliation;

@@ -8,6 +8,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
+@Singleton
 public class SingularityTaskReconciliation extends SingularityCloseable<ScheduledExecutorService> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskReconciliation.class);

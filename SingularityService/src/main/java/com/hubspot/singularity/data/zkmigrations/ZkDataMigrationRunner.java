@@ -2,6 +2,8 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +12,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.data.MetadataManager;
 
+@Singleton
 public class ZkDataMigrationRunner {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZkDataMigrationRunner.class);

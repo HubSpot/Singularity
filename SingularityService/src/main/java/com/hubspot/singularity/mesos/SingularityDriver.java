@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 
+@Singleton
 public class SingularityDriver {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);

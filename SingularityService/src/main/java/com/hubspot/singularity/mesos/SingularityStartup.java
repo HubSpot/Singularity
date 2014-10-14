@@ -3,6 +3,8 @@ package com.hubspot.singularity.mesos;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -30,7 +32,8 @@ import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
-public class SingularityStartup {
+@Singleton
+class SingularityStartup {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 

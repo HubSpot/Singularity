@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.FrameworkID;
@@ -31,6 +33,7 @@ import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliationPoller;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
+@Singleton
 public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosSchedulerDelegator.class);

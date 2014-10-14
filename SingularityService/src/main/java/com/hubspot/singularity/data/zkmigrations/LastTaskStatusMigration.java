@@ -2,6 +2,8 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskStatus;
 
@@ -16,6 +18,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.data.TaskManager;
 
+@Singleton
 public class LastTaskStatusMigration extends ZkDataMigration {
 
   private final TaskManager taskManager;

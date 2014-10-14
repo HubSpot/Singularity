@@ -1,9 +1,11 @@
 package com.hubspot.singularity.data.transcoders;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.hubspot.singularity.SingularityDeployKey;
 
+@Singleton
 public class SingularityDeployKeyTranscoder extends IdTranscoder<SingularityDeployKey> {
 
   @Inject

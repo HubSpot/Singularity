@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
@@ -39,6 +41,7 @@ import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
+@Singleton
 public class SingularityMesosScheduler implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);

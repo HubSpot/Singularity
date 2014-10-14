@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
@@ -38,7 +40,8 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
-public class SingularityMesosTaskBuilder {
+@Singleton
+class SingularityMesosTaskBuilder {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
