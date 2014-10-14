@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.dropwizard.setup.Environment;
 
 import com.google.inject.Injector;
@@ -18,10 +20,10 @@ import com.sun.jersey.spi.container.servlet.WebConfig;
  * A Guice based Jersey container that can pull resources out of the dropwizard environment.
  */
 public class DropwizardGuiceContainer extends GuiceContainer {
-  private final transient Environment environment;
+  @SuppressFBWarnings("BAD_PRACTICE")
+  private final Environment environment;
 
   private static final long serialVersionUID = 1L;
-
 
   @Inject
   public DropwizardGuiceContainer(final Injector injector, final Environment environment) {
