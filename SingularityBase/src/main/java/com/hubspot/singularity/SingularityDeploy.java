@@ -104,7 +104,7 @@ public class SingularityDeploy extends SingularityJsonObject {
   public SingularityDeployBuilder toBuilder() {
     return new SingularityDeployBuilder(requestId, id)
     .setCommand(command)
-    .setArguments(arguments)
+    .setArguments(copyOfList(arguments))
     .setResources(resources)
     .setContainerInfo(containerInfo)
     .setCustomExecutorCmd(customExecutorCmd)
@@ -119,8 +119,8 @@ public class SingularityDeploy extends SingularityJsonObject {
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
-    .setLoadBalancerGroups(loadBalancerGroups)
-    .setLoadBalancerOptions(loadBalancerOptions)
+    .setLoadBalancerGroups(copyOfList(loadBalancerGroups))
+    .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
 
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
