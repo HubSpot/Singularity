@@ -1,12 +1,16 @@
 package com.hubspot.singularity.client;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
@@ -22,9 +26,24 @@ public class SingularityClientModule extends AbstractModule {
 
   public static final String CONTEXT_PATH = "singularity.context.path";
 
+  private final List<String> hosts;
+
+  public SingularityClientModule() {
+    this(null);
+  }
+
+  public SingularityClientModule(List<String> hosts) {
+    this.hosts = hosts;
+  }
+
   @Override
   protected void configure() {
+    bind(SingularityClient.class).toProvider(SingularityClientProvider.class).in(Scopes.SINGLETON);
     bind(AsyncHttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(new AsyncHttpClient());
+
+    if (hosts != null) {
+      bind(new TypeLiteral<List<String>>() {}).annotatedWith(Names.named(HOSTS_PROPERTY_NAME)).toInstance(hosts);
+    }
   }
 
   @Provides

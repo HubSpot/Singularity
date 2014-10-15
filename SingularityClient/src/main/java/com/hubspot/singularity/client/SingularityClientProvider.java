@@ -53,7 +53,8 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     return setHosts(getClusterMembers(curator));
   }
 
-  public SingularityClientProvider setHosts(List<String> hosts) {
+  @Inject(optional=true)
+  public SingularityClientProvider setHosts(@Named(SingularityClientModule.HOSTS_PROPERTY_NAME) List<String> hosts) {
     this.hosts = ImmutableList.copyOf(hosts);
     return this;
   }
