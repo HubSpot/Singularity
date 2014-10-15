@@ -107,6 +107,12 @@ public class SingularityDeploy extends SingularityJsonObject {
     .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
     .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
 
+    .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
+    .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
+    .setServiceBasePath(serviceBasePath)
+    .setLoadBalancerGroups(copyOfList(loadBalancerGroups))
+    .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
+
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
     .setTimestamp(timestamp)
