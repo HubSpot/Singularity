@@ -390,30 +390,42 @@ public class SingularityDeployChecker {
     }
 
     if ((deployActiveTasks.size() < request.getInstancesSafe()) || !deploy.isPresent()) {
-      return checkOverdue(deploy, isDeployOverdue);
+      String message = null;
+
+      if (deploy.isPresent()) {
+        message = String.format("Deploy was only able to launch %s out of a required %s tasks in %s: it is likely not enough resources or slaves are available and eligible", deployActiveTasks.size(), request.getInstancesSafe(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
+      }
+
+      return checkOverdue(deploy, isDeployOverdue, message);
     }
 
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks, true);
 
     switch (deployHealth) {
-      case WAITING:
-        return checkOverdue(deploy, isDeployOverdue);
-      case HEALTHY:
-        if (request.isLoadBalanced()) {
-          // don't check overdue here because we want to give it a chance to enqueue the load balancer request. the next check will determine its fate.
-          return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
-        } else {
-          return new SingularityDeployResult(DeployState.SUCCEEDED);
-        }
-      case UNHEALTHY:
+    case WAITING:
+      String message = null;
+
+      if (deploy.isPresent()) {
+        message = String.format("Deploy was able to launch %s tasks, but not all of them became healthy within %s", deployActiveTasks.size(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
+      }
+
+      return checkOverdue(deploy, isDeployOverdue, message);
+    case HEALTHY:
+      if (request.isLoadBalanced()) {
+        // don't check overdue here because we want to give it a chance to enqueue the load balancer request. the next check will determine its fate.
+        return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
+      } else {
+        return new SingularityDeployResult(DeployState.SUCCEEDED);
+      }
+    case UNHEALTHY:
     }
 
     return new SingularityDeployResult(DeployState.FAILED, "At least one task for this deploy failed");
   }
 
-  private SingularityDeployResult checkOverdue(Optional<SingularityDeploy> deploy, boolean isOverdue) {
+  private SingularityDeployResult checkOverdue(Optional<SingularityDeploy> deploy, boolean isOverdue, String message) {
     if (deploy.isPresent() && isOverdue) {
-      return new SingularityDeployResult(DeployState.OVERDUE, String.format("Deploy did not become healthy after %s", JavaUtils.durationFromMillis(getAllowedMillis(deploy.get()))));
+      return new SingularityDeployResult(DeployState.OVERDUE, message);
     } else {
       return new SingularityDeployResult(DeployState.WAITING);
     }
