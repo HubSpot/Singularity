@@ -402,22 +402,23 @@ public class SingularityDeployChecker {
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks, true);
 
     switch (deployHealth) {
-    case WAITING:
-      String message = null;
+      case WAITING:
+        String message = null;
 
-      if (deploy.isPresent()) {
-        message = String.format("Deploy was able to launch %s tasks, but not all of them became healthy within %s", deployActiveTasks.size(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
-      }
+        if (deploy.isPresent()) {
+          message = String.format("Deploy was able to launch %s tasks, but not all of them became healthy within %s", deployActiveTasks.size(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
+        }
 
-      return checkOverdue(deploy, isDeployOverdue, message);
-    case HEALTHY:
-      if (request.isLoadBalanced()) {
-        // don't check overdue here because we want to give it a chance to enqueue the load balancer request. the next check will determine its fate.
-        return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
-      } else {
-        return new SingularityDeployResult(DeployState.SUCCEEDED);
-      }
-    case UNHEALTHY:
+        return checkOverdue(deploy, isDeployOverdue, message);
+      case HEALTHY:
+        if (request.isLoadBalanced()) {
+          // don't check overdue here because we want to give it a chance to enqueue the load
+          // balancer request. the next check will determine its fate.
+          return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
+        } else {
+          return new SingularityDeployResult(DeployState.SUCCEEDED);
+        }
+      case UNHEALTHY:
     }
 
     return new SingularityDeployResult(DeployState.FAILED, "At least one task for this deploy failed");
