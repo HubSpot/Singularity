@@ -25,8 +25,6 @@ import com.hubspot.singularity.data.history.RequestHistoryHelper;
 public class BlendedHistoryTest extends SingularityCuratorTestBase {
 
   @Inject
-  private RequestHistoryHelper requestHistoryHelper;
-  @Inject
   private RequestManager requestManager;
 
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
@@ -102,8 +100,4 @@ public class BlendedHistoryTest extends SingularityCuratorTestBase {
     Assert.assertTrue(rhh.getFirstHistory(rid).get().getCreatedAt() == 1);
     Assert.assertTrue(rhh.getLastHistory(rid).get().getCreatedAt() == 120);
   }
-
-
-
 }
-

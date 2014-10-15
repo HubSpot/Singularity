@@ -1,178 +1,183 @@
 package com.hubspot.singularity.scheduler;
 
+import static com.google.inject.name.Names.named;
+import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
+import java.util.Set;
 
-import net.kencochrane.raven.Raven;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.lifecycle.Managed;
 
-import org.apache.curator.RetryPolicy;
-import org.apache.curator.RetrySleeper;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.net.HostAndPort;
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
+import com.google.inject.Stage;
+import com.google.inject.TypeLiteral;
+import com.google.inject.util.Modules;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityDriverManager;
-import com.hubspot.singularity.SingularityServiceModule;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.zkmigrations.LastTaskStatusMigration;
-import com.hubspot.singularity.data.zkmigrations.ZkDataMigration;
+import com.hubspot.singularity.config.ZooKeeperConfiguration;
+import com.hubspot.singularity.data.SingularityDataModule;
+import com.hubspot.singularity.data.history.SingularityHistoryModule;
+import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
+import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
+import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
-import com.ning.http.client.AsyncHttpClient;
 
-public class SingularityTestModule extends AbstractModule {
+import net.kencochrane.raven.Raven;
 
-  @Override
-  protected void configure() {
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+
+public class SingularityTestModule implements Module {
+  private final TestingServer ts;
+  private final GuiceBundle.DropwizardModule dropwizardModule;
+
+  public SingularityTestModule() throws Exception {
+    dropwizardModule = new GuiceBundle.DropwizardModule();
+
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.WARN);
 
-    try {
-      TestingServer ts = new TestingServer();
+    this.ts = new TestingServer();
+  }
 
-      bind(TestingServer.class).toInstance(ts);
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
+  public Injector getInjector() throws Exception {
+    return Guice.createInjector(Stage.PRODUCTION, dropwizardModule, new SingularityTestModule());
+  }
+
+  public void start() throws Exception {
+    // Start all the managed instances in dropwizard.
+    Set<Managed> managedObjects = ImmutableSet.copyOf(dropwizardModule.getManaged());
+    for (Managed managed : managedObjects) {
+      managed.start();
     }
+  }
 
+  public void stop() throws Exception {
+    ImmutableSet<Managed> managedObjects = ImmutableSet.copyOf(dropwizardModule.getManaged());
+    for (Managed managed : Lists.reverse(managedObjects.asList())) {
+      managed.stop();
+    }
+  }
+
+  @Override
+  public void configure(Binder mainBinder) {
+
+    mainBinder.install(new GuiceBundle.GuiceEnforcerModule());
+
+    mainBinder.bind(TestingServer.class).toInstance(ts);
+
+    mainBinder.install(Modules.override(new SingularityMainModule())
+        .with(new Module() {
+
+            @Override
+            public void configure(Binder binder) {
+              binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
+
+              SingularityAbort abort = mock(SingularityAbort.class);
+              SingularityMailer mailer = mock(SingularityMailer.class);
+              SchedulerDriver driver = mock(SchedulerDriver.class);
+
+              when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
+
+              binder.bind(SchedulerDriver.class).toInstance(driver);
+              binder.bind(SingularityMailer.class).toInstance(mailer);
+              binder.bind(SingularityAbort.class).toInstance(abort);
+
+              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+              binder.bind(LoadBalancerClient.class).toInstance(tlbc);
+              binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
+
+              binder.bind(ObjectMapper.class).toInstance(Jackson.newObjectMapper()
+                  .setSerializationInclusion(Include.NON_NULL)
+                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                  .registerModule(new ProtobufModule()));
+
+              binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
+
+              binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven> absent());
+              binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration> absent());
+            }
+          }));
+
+    mainBinder.install(Modules.override(new SingularityMesosModule())
+          .with(new Module() {
+
+            @Override
+            public void configure(Binder binder) {
+              SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
+              binder.bind(SingularityLogSupport.class).toInstance(logSupport);
+
+              SingularityDriver mock = mock(SingularityDriver.class);
+              when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
+              when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
+              when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
+              binder.bind(SingularityDriver.class).toInstance(mock);
+            }
+          }));
+
+    mainBinder.install(new SingularityDataModule());
+    mainBinder.install(new SingularitySchedulerModule());
+    mainBinder.install(new SingularityTranscoderModule());
+    mainBinder.install(new SingularityHistoryModule());
+    mainBinder.install(new SingularityZkMigrationsModule());
+
+    mainBinder.bind(DeployResource.class);
+    mainBinder.bind(RequestResource.class);
+  }
+
+  @Provides
+  @Singleton
+  public SingularityConfiguration getTestingConfiguration(final TestingServer ts)
+  {
     SingularityConfiguration config = new SingularityConfiguration();
     config.setLoadBalancerUri("test");
-
-    bind(SingularityConfiguration.class).toInstance(config);
-    bind(SMTPConfiguration.class).toInstance(new SMTPConfiguration());
 
     MesosConfiguration mc = new MesosConfiguration();
     mc.setDefaultCpus(1);
     mc.setDefaultMemory(128);
-
     config.setMesosConfiguration(mc);
 
-    bind(MesosConfiguration.class).toInstance(mc);
+    config.setSmtpConfiguration(new SMTPConfiguration());
 
-    SingularityAbort abort = mock(SingularityAbort.class);
-    SingularityMailer mailer = mock(SingularityMailer.class);
-    SchedulerDriver driver = mock(SchedulerDriver.class);
-    SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
+    ZooKeeperConfiguration zookeeperConfiguration = new ZooKeeperConfiguration();
+    zookeeperConfiguration.setQuorum(ts.getConnectString());
 
-    when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
-
-    bind(SingularityLogSupport.class).toInstance(logSupport);
-    bind(SchedulerDriver.class).toInstance(driver);
-    bind(SingularityMailer.class).toInstance(mailer);
-    bind(SingularityAbort.class).toInstance(abort);
-
-    TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
-
-    bind(LoadBalancerClient.class).toInstance(tlbc);
-    bind(TestingLoadBalancerClient.class).toInstance(tlbc);
-
-    bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
-    bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
-
-    HistoryManager hm = mock(HistoryManager.class);
-    when(hm.getDeployHistory(Matchers.anyString(), Matchers.anyString())).thenReturn(Optional.<SingularityDeployHistory> absent());
-
-    bind(HistoryManager.class).toInstance(hm);
-
-    bindConstant().annotatedWith(Names.named(SingularityServiceModule.SERVER_ID_PROPERTY)).to("testServerId");
+    config.setZooKeeperConfiguration(zookeeperConfiguration);
+    return config;
   }
-
-  @Provides
-  @Singleton
-  public SingularityDriverManager getDriverManager(TaskManager taskManager) {
-    SingularityDriverManager driverManager = new SingularityDriverManager(new Provider<SingularityDriver>() {
-
-      @Override
-      public SingularityDriver get() {
-        SingularityDriver mock = mock(SingularityDriver.class);
-
-        when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
-        when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
-
-        return mock;
-      }
-
-
-    }, taskManager);
-
-    driverManager.start();
-
-    return driverManager;
-  }
-
-  @Provides
-  @Singleton
-  public ObjectMapper getObjectMapper() {
-    return SingularityServiceModule.OBJECT_MAPPER;
-  }
-
-  @Provides
-  @Singleton
-  public AsyncHttpClient providesAsyncHTTPClient() {
-    return new AsyncHttpClient();
-  }
-
-  @Singleton
-  @Provides
-  public CuratorFramework provideCurator(TestingServer ts) {
-    CuratorFramework cf = CuratorFrameworkFactory.newClient(ts.getConnectString(), new RetryPolicy() {
-
-      @Override
-      public boolean allowRetry(int retryCount, long elapsedTimeMs, RetrySleeper sleeper) {
-        return false;
-      }
-    });
-    cf.start();
-    return cf;
-  }
-
-  @Provides
-  @Singleton
-  public Optional<Raven> providesNoRaven() {
-    return Optional.<Raven> absent();
-  }
-
-  @Provides
-  @Singleton
-  public Optional<SentryConfiguration> providesNoSentryConfiguration() {
-    return Optional.absent();
-  }
-
-  @Provides
-  @Singleton
-  public static List<ZkDataMigration> getZkDataMigrations(LastTaskStatusMigration lastTaskStatusMigration) {
-    return ImmutableList.<ZkDataMigration> of(lastTaskStatusMigration);
-  }
-
 }
