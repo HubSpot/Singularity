@@ -222,20 +222,23 @@ public class SingularityMailer extends SingularityCloseable<ThreadPoolExecutor> 
     }
   }
 
-  private Collection<EmailDestination> getEmailDestination(ExtendedTaskState taskState, Collection<SingularityTaskHistoryUpdate> taskHistory) {
-    Optional<EmailType> emailType = getEmailType(taskState, taskHistory);
+  private Collection<EmailDestination> getEmailDestination(ExtendedTaskState taskState, SingularityRequest request, Collection<SingularityTaskHistoryUpdate> taskHistory) {
+    Optional<EmailType> emailType = getEmailType(taskState, request, taskHistory);
     if (!emailType.isPresent()) {
       return Collections.emptyList();
     }
     return getDestination(emailType.get());
   }
 
-  private Optional<EmailType> getEmailType(ExtendedTaskState taskState, Collection<SingularityTaskHistoryUpdate> taskHistory) {
+  private Optional<EmailType> getEmailType(ExtendedTaskState taskState, SingularityRequest request, Collection<SingularityTaskHistoryUpdate> taskHistory) {
     switch (taskState) {
       case TASK_FAILED:
         return Optional.of(EmailType.TASK_FAILED);
       case TASK_FINISHED:
-        return Optional.of(EmailType.TASK_FINISHED);
+        if (request.isScheduled()) {
+          return Optional.of(EmailType.TASK_FINISHED);
+        }
+        return Optional.of(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST);
       case TASK_KILLED:
         Optional<SingularityTaskHistoryUpdate> cleaningUpdate = SingularityTaskHistoryUpdate.getUpdate(taskHistory, ExtendedTaskState.TASK_CLEANING);
 
@@ -269,7 +272,7 @@ public class SingularityMailer extends SingularityCloseable<ThreadPoolExecutor> 
     }
 
     final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
-    final Collection<EmailDestination> emailDestination = getEmailDestination(taskState, taskHistory);
+    final Collection<EmailDestination> emailDestination = getEmailDestination(taskState, request, taskHistory);
 
     if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task completed mail for {}", taskState);
