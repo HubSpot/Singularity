@@ -35,7 +35,10 @@ html
             if taskStateLost
               | This is likely an infrastructure issue. No action is required.
             if taskStateFinished
-              | The task finished running and exited with a normal exit code. No action is required.
+              if requestScheduled
+                | The task finished running and exited with a normal exit code. No action is required.
+              else
+                | The task finished running and exited with a normal exit code. Since this task was not part of a scheduled request, it is worth investigating whether this was the expected behavior. Often this means the task actually failed and exited with an incorrect exit code.
             if taskStateKilled
               | The task was killed by either Singularity, the OOM killer, or user action.
             if taskStateFailed
