@@ -4,6 +4,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -16,9 +18,9 @@ public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPo
   private final SingularityTaskReconciliation taskReconciliation;
 
   @Inject
-  public SingularityTaskReconciliationPoller(SingularityMesosSchedulerDelegator mesosScheduler, SingularityConfiguration configuration,
+  public SingularityTaskReconciliationPoller(LeaderLatch leaderLatch, SingularityMesosSchedulerDelegator mesosScheduler, SingularityConfiguration configuration,
                                              SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, SingularityTaskReconciliation taskReconciliation) {
-      super(mesosScheduler, exceptionNotifier, abort, configuration.getStartNewReconcileEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.NO_LOCK);
+      super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getStartNewReconcileEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.NO_LOCK);
 
     this.taskReconciliation = taskReconciliation;
   }

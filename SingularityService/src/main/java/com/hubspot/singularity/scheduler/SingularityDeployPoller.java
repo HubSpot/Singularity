@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +23,8 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
   private final SingularityDeployChecker deployChecker;
 
   @Inject
-  public SingularityDeployPoller(final SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort) {
-      super(mesosScheduler, exceptionNotifier, abort, configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.LOCK);
+  public SingularityDeployPoller(final LeaderLatch leaderLatch, final SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort) {
+      super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.LOCK);
 
     this.deployChecker = deployChecker;
   }

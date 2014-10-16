@@ -4,6 +4,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -16,9 +18,9 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
   private final SingularityCleaner cleaner;
 
   @Inject
-  public SingularityCleanupPoller(SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration,
+  public SingularityCleanupPoller(LeaderLatch leaderLatch, SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration,
       SingularityCleaner cleaner, SingularityAbort abort) {
-    super(mesosScheduler, exceptionNotifier, abort, configuration.getCleanupEverySeconds(), TimeUnit.SECONDS,  SchedulerLockType.LOCK);
+    super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCleanupEverySeconds(), TimeUnit.SECONDS,  SchedulerLockType.LOCK);
 
     this.cleaner = cleaner;
   }

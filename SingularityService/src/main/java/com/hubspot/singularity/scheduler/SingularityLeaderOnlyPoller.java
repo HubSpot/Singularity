@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.dropwizard.lifecycle.Managed;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderOnlyPoller.class);
 
+  private final LeaderLatch leaderLatch;
   private final SingularityMesosSchedulerDelegator mesosScheduler;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final ScheduledExecutorService executorService;
@@ -32,8 +34,10 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     LOCK, NO_LOCK
   }
 
-  protected SingularityLeaderOnlyPoller(SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
+  protected SingularityLeaderOnlyPoller(LeaderLatch leaderLatch,
+      SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
       long pollDelay, TimeUnit pollTimeUnit, SchedulerLockType schedulerLockType) {
+    this.leaderLatch = leaderLatch;
     this.mesosScheduler = mesosScheduler;
     this.exceptionNotifier = exceptionNotifier;
     this.abort = abort;
@@ -52,19 +56,21 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
       @Override
       public void run() {
-        if (schedulerLockType == SchedulerLockType.LOCK) {
-          mesosScheduler.lock();
-        }
-
-        try {
-          runActionOnPoll(mesosScheduler);
-        } catch (Throwable t) {
-          LOG.error("Caught an exception while running {} -- aborting", getClass().getSimpleName(), t);
-          exceptionNotifier.notify(t);
-          abort.abort();
-        } finally {
+        if (leaderLatch.hasLeadership()) {
           if (schedulerLockType == SchedulerLockType.LOCK) {
-            mesosScheduler.release();
+            mesosScheduler.lock();
+          }
+
+          try {
+            runActionOnPoll(mesosScheduler);
+          } catch (Throwable t) {
+            LOG.error("Caught an exception while running {} -- aborting", getClass().getSimpleName(), t);
+            exceptionNotifier.notify(t);
+            abort.abort();
+          } finally {
+            if (schedulerLockType == SchedulerLockType.LOCK) {
+              mesosScheduler.release();
+            }
           }
         }
       }
