@@ -23,7 +23,7 @@ import org.apache.curator.utils.ZKPaths;
 
 @Singleton
 public class SingularityClientProvider implements Provider<SingularityClient> {
-  private static final String DEFAULT_CONTEXT_PATH = "singularity";
+  private static final String DEFAULT_CONTEXT_PATH = "singularity/api";
 
   private final ObjectMapper objectMapper;
   private final AsyncHttpClient httpClient;
