@@ -6,6 +6,7 @@ import static com.google.inject.name.Names.named;
 import java.io.IOException;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 import io.dropwizard.jetty.HttpConnectorFactory;
@@ -109,9 +110,10 @@ public class SingularityMainModule implements Module {
     private String hostname;
     private final int httpPort;
 
+    @Inject
     SingularityHostAndPortProvider(final SingularityConfiguration configuration) throws IOException {
       checkNotNull(configuration, "configuration is null");
-      this.hostname = Strings.isNullOrEmpty(configuration.getHostname()) ? configuration.getHostname() : JavaUtils.getHostAddress();
+      this.hostname = !Strings.isNullOrEmpty(configuration.getHostname()) ? configuration.getHostname() : JavaUtils.getHostAddress();
 
       SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
       HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();

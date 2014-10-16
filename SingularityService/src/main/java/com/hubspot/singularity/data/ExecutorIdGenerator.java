@@ -2,10 +2,9 @@ package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import io.dropwizard.lifecycle.Managed;
-
-import javax.inject.Provider;
 import javax.inject.Singleton;
+
+import io.dropwizard.lifecycle.Managed;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
@@ -24,17 +23,17 @@ public class ExecutorIdGenerator implements Managed {
 
   private static final String COUNTER_PATH = "/executors/counter";
 
-  private final Provider<CuratorFramework> curatorProvider;
+  private final CuratorFramework curator;
 
   @Inject
-  public ExecutorIdGenerator(Provider<CuratorFramework> curatorProvider) {
-    this.curatorProvider = curatorProvider;
+  public ExecutorIdGenerator(CuratorFramework curator) {
+    this.curator = curator;
     this.alphabet = buildAlphabet();
   }
 
   @Override
   public void start() {
-    this.distributedGenerator = new DistributedAtomicInteger(curatorProvider.get(), COUNTER_PATH, new RetryOneTime(1));
+    this.distributedGenerator = new DistributedAtomicInteger(curator, COUNTER_PATH, new RetryOneTime(1));
   }
 
   @Override
