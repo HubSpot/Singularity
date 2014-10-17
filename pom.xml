@@ -48,6 +48,7 @@
 
     <dep.metrics.version>3.0.2</dep.metrics.version>
     <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
+    <dep.guava.version>18.0</dep.guava.version>
 
     <baragon.version>0.1.0</baragon.version>
     <curator.version>2.4.2</curator.version>
