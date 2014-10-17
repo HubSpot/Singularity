@@ -1,13 +1,12 @@
 package com.hubspot.singularity;
 
-import io.dropwizard.lifecycle.ServerLifecycleListener;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import ch.qos.logback.classic.LoggerContext;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -16,8 +15,6 @@ import org.eclipse.jetty.server.Server;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.LoggerContext;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +29,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
 @Singleton
-public class SingularityAbort implements ConnectionStateListener, ServerLifecycleListener {
+public class SingularityAbort implements ConnectionStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
 
@@ -41,12 +38,14 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
   private final HostAndPort hostAndPort;
   private final SingularityExceptionNotifier exceptionNotifier;
 
-  private final AtomicReference<Server> serverHolder = new AtomicReference<>();
+  private final ServerProvider serverProvider;
   private final AtomicBoolean aborting = new AtomicBoolean();
 
   @Inject
-  public SingularityAbort(SingularitySmtpSender smtpSender, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+  public SingularityAbort(SingularitySmtpSender smtpSender, SingularityConfiguration configuration, ServerProvider serverProvider,
+      SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
+    this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
     this.hostAndPort = hostAndPort;
@@ -64,11 +63,6 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
     LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
   }
 
-  @Override
-  public void serverStarted(Server server) {
-    serverHolder.set(server);
-  }
-
   public void abort(AbortReason abortReason) {
     if (!aborting.getAndSet(true)) {
       try {
@@ -81,10 +75,10 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
   }
 
   private void exit() {
-    Server server = serverHolder.getAndSet(null);
-    if (server != null) {
+    Optional<Server> server = serverProvider.get();
+    if (server.isPresent()) {
       try {
-        server.stop();
+        server.get().stop();
       } catch (Exception e) {
         LOG.warn("While aborting server", e);
       } finally {
@@ -97,7 +91,7 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
   }
 
   private void sendAbortNotification(AbortReason abortReason) {
-    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText());
+    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText(), abortReason);
 
     sendAbortMail(message);
 
