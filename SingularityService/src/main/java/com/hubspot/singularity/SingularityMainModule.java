@@ -103,6 +103,8 @@ public class SingularityMainModule implements Module {
     binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
     binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toProvider(SingularityHostAndPortProvider.class).in(Scopes.SINGLETON);
 
+    binder.bind(AsyncHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
+
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
   }
 
@@ -125,12 +127,6 @@ public class SingularityMainModule implements Module {
     public HostAndPort get() {
       return HostAndPort.fromParts(hostname, httpPort);
     }
-  }
-
-  @Provides
-  @Singleton
-  public AsyncHttpClient providesAsyncHTTPClient() {
-    return new AsyncHttpClient();
   }
 
   @Provides

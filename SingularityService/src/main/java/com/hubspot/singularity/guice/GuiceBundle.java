@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.lifecycle.ServerLifecycleListener;
 import io.dropwizard.servlets.tasks.Task;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -123,6 +124,10 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
       LOG.info("Added guice injected health check: {}", healthcheck.getClass().getName());
     }
 
+    for (ServerLifecycleListener serverLifecycleListener : dropwizardModule.getServerLifecycleListeners()) {
+      environment.lifecycle().addServerLifecycleListener(serverLifecycleListener);
+    }
+
     environment.jersey().replace(replacer);
     environment.servlets().addFilter("Guice Filter", GuiceFilter.class).addMappingForUrlPatterns(null, false, environment.getApplicationContext().getContextPath() + "*");
   }
@@ -155,6 +160,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     private final ImmutableSet.Builder<Managed> managedBuilder = ImmutableSet.builder();
     private final ImmutableSet.Builder<Task> taskBuilder = ImmutableSet.builder();
     private final ImmutableSet.Builder<HealthCheck> healthcheckBuilder = ImmutableSet.builder();
+    private final ImmutableSet.Builder<ServerLifecycleListener> serverLifecycleListenerBuilder = ImmutableSet.builder();
 
     @Override
     public void configure(final Binder binder) {
@@ -176,6 +182,10 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
                     if (obj instanceof HealthCheck) {
                       healthcheckBuilder.add((HealthCheck) obj);
                     }
+
+                    if (obj instanceof ServerLifecycleListener) {
+                      serverLifecycleListenerBuilder.add((ServerLifecycleListener) obj);
+                    }
                   }
               });
           }
@@ -195,6 +205,11 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     public Set<HealthCheck> getHealthChecks()
     {
       return healthcheckBuilder.build();
+    }
+
+    public Set<ServerLifecycleListener> getServerLifecycleListeners()
+    {
+      return serverLifecycleListenerBuilder.build();
     }
   }
 
