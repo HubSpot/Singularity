@@ -135,6 +135,11 @@
 
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlets</artifactId>
     </dependency>
 
