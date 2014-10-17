@@ -72,7 +72,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     }
 
     try {
-      runActionOnPoll(mesosScheduler);
+      runActionOnPoll();
     } catch (Throwable t) {
       LOG.error("Caught an exception while running {} -- aborting", getClass().getSimpleName(), t);
       exceptionNotifier.notify(t);
@@ -84,7 +84,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     }
   }
 
-  public abstract void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler);
+  public abstract void runActionOnPoll();
 
   @Override
   public void stop() {

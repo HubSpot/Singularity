@@ -30,7 +30,7 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
   }
 
   @Override
-  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler) {
+  public void runActionOnPoll() {
     final long start = System.currentTimeMillis();
 
     final int numDeploys = deployChecker.checkDeploys();
