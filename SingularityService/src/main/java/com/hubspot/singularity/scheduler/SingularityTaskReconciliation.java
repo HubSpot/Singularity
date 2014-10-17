@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -9,8 +11,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Singleton;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
@@ -106,7 +107,7 @@ public class SingularityTaskReconciliation implements Managed {
         } catch (Throwable t) {
           LOG.error("While checking for reconciliation tasks", t);
           exceptionNotifier.notify(t);
-          abort.abort();
+          abort.abort(AbortReason.UNRECOVERABLE_ERROR);
         }
       }
     }, configuration.getCheckReconcileWhenRunningEverySeconds(), TimeUnit.SECONDS);

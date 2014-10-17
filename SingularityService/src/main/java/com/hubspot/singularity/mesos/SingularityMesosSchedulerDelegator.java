@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
@@ -99,7 +100,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
     exceptionNotifier.notify(t);
 
-    abort.abort();
+    abort.abort(AbortReason.UNRECOVERABLE_ERROR);
   }
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) throws Exception {
@@ -313,7 +314,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
       LOG.error("Aborting due to error: {}", message);
 
-      abort.abort();
+      abort.abort(AbortReason.MESOS_ERROR);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {

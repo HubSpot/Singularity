@@ -1,14 +1,12 @@
 package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.dropwizard.lifecycle.Managed;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -17,10 +15,8 @@ import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import com.google.common.net.HostAndPort;
 
 public class SingularityLeaderLatch extends LeaderLatch implements Managed {
-  private static final String LEADER_PATH = "/leader";
 
-  private final AtomicBoolean started = new AtomicBoolean();
-  private final AtomicBoolean stopped = new AtomicBoolean();
+  private static final String LEADER_PATH = "/leader";
 
   @Inject
   public SingularityLeaderLatch(@Named(SingularityMainModule.HTTP_HOST_AND_PORT) final HostAndPort httpHostAndPort,
@@ -34,16 +30,8 @@ public class SingularityLeaderLatch extends LeaderLatch implements Managed {
   }
 
   @Override
-  public void start() throws Exception {
-    if (!started.getAndSet(true)) {
-      super.start();
-    }
+  public void stop() throws Exception {
+    super.close();
   }
 
-  @Override
-  public void stop() throws Exception {
-    if (started.get() && !stopped.getAndSet(true)) {
-      super.close();
-    }
-  }
 }
