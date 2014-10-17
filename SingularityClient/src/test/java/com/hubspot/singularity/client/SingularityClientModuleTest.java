@@ -30,6 +30,7 @@ public class SingularityClientModuleTest {
     {
       binder().disableCircularProxies();
       binder().requireAtInjectOnConstructors();
+      binder().requireExactBindingAnnotations();
       binder().requireExplicitBindings();
     }
   }
