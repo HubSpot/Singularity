@@ -9,6 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+import javax.inject.Provider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +100,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
 
   private final Random random;
-  private final List<String> hosts;
+  private final Provider<List<String>> hostsProvider;
   private final String contextPath;
 
   private final ObjectMapper objectMapper;
@@ -111,15 +113,20 @@ public class SingularityClient {
   }
 
   public SingularityClient(String contextPath, AsyncHttpClient httpClient, ObjectMapper objectMapper, List<String> hosts) {
+    this(contextPath, httpClient, objectMapper, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)));
+  }
+
+  public SingularityClient(String contextPath, AsyncHttpClient httpClient, ObjectMapper objectMapper, Provider<List<String>> hostsProvider) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.contextPath = contextPath;
 
-    this.hosts = ImmutableList.copyOf(hosts);
+    this.hostsProvider = hostsProvider;
     this.random = new Random();
   }
 
   private String getHost() {
+    final List<String> hosts = hostsProvider.get();
     return hosts.get(random.nextInt(hosts.size()));
   }
 

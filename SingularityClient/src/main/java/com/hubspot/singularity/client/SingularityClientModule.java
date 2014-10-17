@@ -7,14 +7,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
+import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.ning.http.client.AsyncHttpClient;
+
+import org.apache.curator.framework.CuratorFramework;
 
 public class SingularityClientModule extends AbstractModule {
 
@@ -42,7 +46,7 @@ public class SingularityClientModule extends AbstractModule {
     bind(AsyncHttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(new AsyncHttpClient());
 
     if (hosts != null) {
-      bind(new TypeLiteral<List<String>>() {}).annotatedWith(Names.named(HOSTS_PROPERTY_NAME)).toInstance(hosts);
+      bindHosts(binder()).toInstance(hosts);
     }
   }
 
@@ -57,4 +61,15 @@ public class SingularityClientModule extends AbstractModule {
         .registerModule(new ProtobufModule());
   }
 
+  public static LinkedBindingBuilder<List<String>> bindHosts(Binder binder) {
+    return binder.bind(new TypeLiteral<List<String>>() {}).annotatedWith(Names.named(HOSTS_PROPERTY_NAME));
+  }
+
+  public static LinkedBindingBuilder<String> bindContextPath(Binder binder) {
+    return binder.bind(String.class).annotatedWith(Names.named(CONTEXT_PATH));
+  }
+
+  public static LinkedBindingBuilder<CuratorFramework> bindCurator(Binder binder) {
+    return binder.bind(CuratorFramework.class).annotatedWith(Names.named(CURATOR_NAME));
+  }
 }
