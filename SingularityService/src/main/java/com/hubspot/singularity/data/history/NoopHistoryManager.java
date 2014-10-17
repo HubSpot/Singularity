@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -10,6 +12,10 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
 public class NoopHistoryManager implements HistoryManager {
+
+  @Inject
+  public NoopHistoryManager() {
+  }
 
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {

@@ -1,10 +1,13 @@
 package com.hubspot.singularity.data.transcoders;
 
+import javax.inject.Singleton;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
+@Singleton
 public class SingularityStateTranscoder extends CompressingTranscoder<SingularityState> {
 
   private final ObjectMapper objectMapper;

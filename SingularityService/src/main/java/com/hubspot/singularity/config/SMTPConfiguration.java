@@ -22,24 +22,22 @@ public class SMTPConfiguration {
   private String password;
 
   @JsonProperty
-  private Integer taskLogLength = 512;
+  private int taskLogLength = 512;
 
   @NotNull
   @JsonProperty
   private String host = "localhost";
 
   @JsonProperty
-  private Integer port;
+  private Integer port = 25; // SMTP
 
   @JsonProperty
   @NotNull
   private String from = "singularity-no-reply@example.com";
 
-  @NotNull
   @JsonProperty
   private int mailThreads = 1;
 
-  @NotNull
   @JsonProperty
   private int mailMaxThreads = 3;
 
@@ -80,7 +78,7 @@ public class SMTPConfiguration {
     return taskLogLength;
   }
 
-  public void setTaskLogLength(Integer length) {
+  public void setTaskLogLength(int length) {
     taskLogLength = length;
   }
 
@@ -124,11 +122,11 @@ public class SMTPConfiguration {
     this.host = host;
   }
 
-  public Optional<Integer> getPort() {
-    return Optional.fromNullable(port);
+  public int getPort() {
+    return port;
   }
 
-  public void setPort(Integer port) {
+  public void setPort(int port) {
     this.port = port;
   }
 

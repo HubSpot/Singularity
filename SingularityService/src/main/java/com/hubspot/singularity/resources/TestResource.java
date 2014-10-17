@@ -10,6 +10,7 @@ import org.apache.mesos.Protos.TaskStatus;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityService;
@@ -78,7 +79,7 @@ public class TestResource {
   public void abort() {
     checkAllowed();
 
-    abort.abort();
+    abort.abort(AbortReason.TEST_ABORT);
   }
 
   @POST
