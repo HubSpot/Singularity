@@ -10,6 +10,7 @@ public class IndexView extends View {
   private final String appRoot;
   private final String staticRoot;
   private final String apiRoot;
+  private final String navColor;
 
   private final String title;
 
@@ -27,6 +28,8 @@ public class IndexView extends View {
 
     mesosLogsPort = configuration.getMesosConfiguration().getSlaveHttpPort();
     mesosLogsPortHttps = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
+
+    navColor = configuration.getUiConfiguration().getNavColor();
   }
 
   public String getAppRoot() {
@@ -51,5 +54,9 @@ public class IndexView extends View {
 
   public String getTitle() {
     return title;
+  }
+
+  public String getNavColor() {
+    return navColor;
   }
 }

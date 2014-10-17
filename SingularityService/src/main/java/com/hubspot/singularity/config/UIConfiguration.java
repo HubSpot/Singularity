@@ -1,15 +1,24 @@
 package com.hubspot.singularity.config;
 
+import javax.validation.constraints.Pattern;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class UIConfiguration {
 
   @NotEmpty
+  @JsonProperty
   private String title = "Singularity";
 
+  @JsonProperty
+  @Pattern( regexp = "^|#[0-9a-fA-F]{6}$" )
+  private String navColor = "";
+
+  @JsonProperty
   private String baseUrl;
 
   public String getTitle() {
@@ -28,4 +37,11 @@ public class UIConfiguration {
     this.baseUrl = baseUrl;
   }
 
+  public String getNavColor() {
+    return navColor;
+  }
+
+  public void setNavColor(String navColor) {
+    this.navColor = navColor;
+  }
 }
