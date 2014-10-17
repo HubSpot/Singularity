@@ -2,18 +2,17 @@ package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-
-import java.util.Set;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
 import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.servlets.tasks.Task;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,10 +61,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
   @Named(GUICE_BUNDLE_NAME)
   private volatile Function<ResourceConfig, ServletContainer> replacer = null;
 
-  private GuiceBundle(final Class<T> configClass,
-      final ImmutableSet<Module> guiceModules,
-      final ImmutableSet<ConfigurationAwareModule<T>> configurationAwareModules,
-      final Stage guiceStage) {
+  private GuiceBundle(final Class<T> configClass, final ImmutableSet<Module> guiceModules, final ImmutableSet<ConfigurationAwareModule<T>> configurationAwareModules, final Stage guiceStage) {
     this.configClass = configClass;
 
     this.guiceModules = guiceModules;
@@ -85,25 +81,25 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
 
     final DropwizardModule dropwizardModule = new DropwizardModule();
 
-    final Injector injector = Guice.createInjector(guiceStage,
-        ImmutableSet.<Module> builder()
-        .addAll(guiceModules)
-        .addAll(configurationAwareModules)
-        .add(new GuiceEnforcerModule())
-        .add(new JerseyServletModule())
-        .add(dropwizardModule)
-        .add(new Module() {
-          @Override
-          public void configure(final Binder binder) {
-            binder.bind(Environment.class).toInstance(environment);
-            binder.bind(configClass).toInstance(configuration);
+    final Injector injector =
+        Guice.createInjector(guiceStage,
+            ImmutableSet.<Module>builder()
+            .addAll(guiceModules)
+            .addAll(configurationAwareModules)
+            .add(new GuiceEnforcerModule())
+            .add(new JerseyServletModule())
+            .add(dropwizardModule).add(new Module() {
+              @Override
+              public void configure(final Binder binder) {
+                binder.bind(Environment.class).toInstance(environment);
+                binder.bind(configClass).toInstance(configuration);
 
-            binder.bind(GuiceContainer.class).to(DropwizardGuiceContainer.class).in(Scopes.SINGLETON);
+                binder.bind(GuiceContainer.class).to(DropwizardGuiceContainer.class).in(Scopes.SINGLETON);
 
-            binder.bind(new TypeLiteral<Function<ResourceConfig, ServletContainer>>() {
-            }).annotatedWith(GUICE_BUNDLE_NAMED).to(GuiceContainerReplacer.class).in(Scopes.SINGLETON);
-          }
-        }).build());
+                binder.bind(ServerProvider.class).toInstance(new ServerProvider(environment));
+                binder.bind(new TypeLiteral<Function<ResourceConfig, ServletContainer>>() {}).annotatedWith(GUICE_BUNDLE_NAMED).to(GuiceContainerReplacer.class).in(Scopes.SINGLETON);
+              }
+            }).build());
 
     injector.injectMembers(this);
     checkState(replacer != null, "No guice container replacer was injected!");
@@ -159,41 +155,37 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     @Override
     public void configure(final Binder binder) {
       binder.bindListener(Matchers.any(), new TypeListener() {
-          @Override
-          public <T> void hear(TypeLiteral<T> type, TypeEncounter<T> encounter)
-          {
-              encounter.register(new InjectionListener<T>() {
-                  @Override
-                  public void afterInjection(T obj) {
-                    if (obj instanceof Managed) {
-                      managedBuilder.add((Managed) obj);
-                    }
+        @Override
+        public <T> void hear(TypeLiteral<T> type, TypeEncounter<T> encounter) {
+          encounter.register(new InjectionListener<T>() {
+            @Override
+            public void afterInjection(T obj) {
+              if (obj instanceof Managed) {
+                managedBuilder.add((Managed) obj);
+              }
 
-                    if (obj instanceof Task) {
-                      taskBuilder.add((Task) obj);
-                    }
+              if (obj instanceof Task) {
+                taskBuilder.add((Task) obj);
+              }
 
-                    if (obj instanceof HealthCheck) {
-                      healthcheckBuilder.add((HealthCheck) obj);
-                    }
-                  }
-              });
-          }
+              if (obj instanceof HealthCheck) {
+                healthcheckBuilder.add((HealthCheck) obj);
+              }
+            }
+          });
+        }
       });
     }
 
-    public Set<Managed> getManaged()
-    {
+    public Set<Managed> getManaged() {
       return managedBuilder.build();
     }
 
-    public Set<Task> getTasks()
-    {
+    public Set<Task> getTasks() {
       return taskBuilder.build();
     }
 
-    public Set<HealthCheck> getHealthChecks()
-    {
+    public Set<HealthCheck> getHealthChecks() {
       return healthcheckBuilder.build();
     }
   }
@@ -223,7 +215,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     }
 
     @SafeVarargs
-    public final Builder<U> modules(final ConfigurationAwareModule<U> ... modules) {
+    public final Builder<U> modules(final ConfigurationAwareModule<U>... modules) {
       configurationAwareModules.add(modules);
       return this;
     }

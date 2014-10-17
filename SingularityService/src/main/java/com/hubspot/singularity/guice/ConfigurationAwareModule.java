@@ -23,6 +23,6 @@ public abstract class ConfigurationAwareModule<Configuration> implements Module 
     return checkNotNull(this.configuration, "configuration was not set!");
   }
 
-
   protected abstract void configure(final Binder binder, final Configuration configuration);
+
 }
