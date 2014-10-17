@@ -56,13 +56,13 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
       @Override
       public void run() {
-        runActionIfLeader();
+        runActionIfLeaderAndMesosIsRunning();
       }
 
     }, pollDelay, pollDelay, pollTimeUnit);
   }
 
-  private void runActionIfLeader() {
+  private void runActionIfLeaderAndMesosIsRunning() {
     if (!leaderLatch.hasLeadership() || !mesosScheduler.isRunning()) {
       return;
     }

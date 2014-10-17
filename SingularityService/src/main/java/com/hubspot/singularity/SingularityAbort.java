@@ -1,16 +1,13 @@
 package com.hubspot.singularity;
 
+import io.dropwizard.lifecycle.ServerLifecycleListener;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-
-import io.dropwizard.lifecycle.Managed;
-
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.lifecycle.ServerLifecycleListener;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -31,7 +28,6 @@ import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.guice.ServerProvider;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
@@ -48,14 +44,11 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
   private final AtomicReference<Server> serverHolder = new AtomicReference<>();
   private final AtomicBoolean aborting = new AtomicBoolean();
 
-  private final ServerProvider serverProvider;
-
   @Inject
-  public SingularityAbort(SingularitySmtpSender smtpSender, ServerProvider serverProvider, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+  public SingularityAbort(SingularitySmtpSender smtpSender, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
-    this.serverProvider = serverProvider;
     this.hostAndPort = hostAndPort;
   }
 
@@ -69,7 +62,7 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
 
   public enum AbortReason {
     LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
-}
+  }
 
   @Override
   public void serverStarted(Server server) {
@@ -95,7 +88,7 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
       } catch (Exception e) {
         LOG.warn("While aborting server", e);
       } finally {
-		System.exit(1)
+		System.exit(1);
       }
     } else {
       LOG.warn("SingularityAbort called before server has fully initialized!");
