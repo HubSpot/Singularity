@@ -2,6 +2,8 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +13,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
+@Singleton
 public class SingularityCooldown {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCooldown.class);

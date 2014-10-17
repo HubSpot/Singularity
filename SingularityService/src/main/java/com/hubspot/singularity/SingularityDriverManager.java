@@ -1,7 +1,11 @@
 package com.hubspot.singularity;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.MasterInfo;
@@ -17,7 +21,8 @@ import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
 
-public class SingularityDriverManager {
+@Singleton
+public class SingularityDriverManager implements Managed {
 
   private final Provider<SingularityDriver> driverProvider;
   private final TaskManager taskManager;
@@ -35,6 +40,15 @@ public class SingularityDriverManager {
 
     this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
     this.driver = Optional.absent();
+  }
+
+  @Override
+  public void start() {
+  }
+
+  @Override
+  public void stop() {
+    stopMesos();
   }
 
   public Protos.Status getCurrentStatus() {
@@ -100,7 +114,7 @@ public class SingularityDriverManager {
     return currentStatus;
   }
 
-  public Protos.Status start() {
+  public Protos.Status startMesos() {
     driverLock.lock();
 
     try {
@@ -128,7 +142,7 @@ public class SingularityDriverManager {
     return driver.isPresent() && currentStatus == Status.DRIVER_RUNNING;
   }
 
-  public Protos.Status stop() {
+  public Protos.Status stopMesos() {
     driverLock.lock();
 
     try {

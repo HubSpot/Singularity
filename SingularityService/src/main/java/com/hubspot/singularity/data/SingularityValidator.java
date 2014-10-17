@@ -2,6 +2,8 @@ package com.hubspot.singularity.data;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -16,6 +18,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
+@Singleton
 public class SingularityValidator {
 
   private static final Joiner JOINER = Joiner.on(" ");

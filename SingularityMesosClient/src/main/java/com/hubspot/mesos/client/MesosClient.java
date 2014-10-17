@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
@@ -16,6 +17,7 @@ import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 
+@Singleton
 public class MesosClient {
 
   public static final String HTTP_CLIENT_NAME = "mesos.http.client";
@@ -41,6 +43,7 @@ public class MesosClient {
 
   @SuppressWarnings("serial")
   public static class MesosClientException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
     public MesosClientException(String message) {
       super(message);

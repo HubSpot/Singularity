@@ -27,7 +27,6 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
         return killNonLongRunningTaskInstantly;
       }
     }
-
   }
 
   private final Optional<String> user;
@@ -71,5 +70,4 @@ public class SingularityTaskCleanup extends SingularityJsonObject {
   public String toString() {
     return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + "]";
   }
-
 }

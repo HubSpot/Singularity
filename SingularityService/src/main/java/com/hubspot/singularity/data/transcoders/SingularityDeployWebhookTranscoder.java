@@ -1,10 +1,13 @@
 package com.hubspot.singularity.data.transcoders;
 
+import javax.inject.Singleton;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
+@Singleton
 public class SingularityDeployWebhookTranscoder extends CompressingTranscoder<SingularityDeployWebhook> {
 
   private final ObjectMapper objectMapper;

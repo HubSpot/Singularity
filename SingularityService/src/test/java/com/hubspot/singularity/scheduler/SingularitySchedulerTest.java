@@ -32,7 +32,6 @@ import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -93,19 +92,15 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   @Inject
   private SingularityCooldownChecker cooldownChecker;
   @Inject
-  private SingularityCloser closer;
-  @Inject
   private AsyncHttpClient httpClient;
   @Inject
   private TestingLoadBalancerClient testingLbClient;
 
-  @Override
   @After
   public void teardown() throws Exception {
-    closer.closeAllCloseables();
-    httpClient.close();
-
-    super.teardown();
+    if (httpClient != null) {
+      httpClient.close();
+    }
   }
 
   private Offer createOffer(double cpus, double memory) {

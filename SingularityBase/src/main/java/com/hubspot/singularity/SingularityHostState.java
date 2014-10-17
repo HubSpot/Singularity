@@ -30,7 +30,13 @@ public class SingularityHostState extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityHostState(@JsonProperty("master") boolean master, @JsonProperty("uptime") long uptime, @JsonProperty("driverStatus") String driverStatus, @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer, @JsonProperty("hostAddress") String hostAddress, @JsonProperty("hostname") String hostname, @JsonProperty("mesosMaster") String mesosMaster) {
+  public SingularityHostState(@JsonProperty("master") boolean master,
+      @JsonProperty("uptime") long uptime,
+      @JsonProperty("driverStatus") String driverStatus,
+      @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer,
+      @JsonProperty("hostAddress") String hostAddress,
+      @JsonProperty("hostname") String hostname,
+      @JsonProperty("mesosMaster") String mesosMaster) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;

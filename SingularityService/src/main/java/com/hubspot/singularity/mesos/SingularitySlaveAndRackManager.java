@@ -3,6 +3,8 @@ package com.hubspot.singularity.mesos;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.Offer;
@@ -28,7 +30,8 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
-public class SingularitySlaveAndRackManager {
+@Singleton
+class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
@@ -41,8 +44,10 @@ public class SingularitySlaveAndRackManager {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularitySlaveAndRackManager(SingularityConfiguration configuration, MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularityConfiguration configuration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
+
+    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
