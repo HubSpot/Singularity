@@ -111,6 +111,7 @@ public class SingularityMainModule implements Module {
 
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
 
+    binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
 
     try {
