@@ -11,8 +11,8 @@ import io.dropwizard.views.ViewBundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.guice.GuiceBundle;
 
@@ -23,7 +23,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
   @Override
   public void initialize(final Bootstrap<SingularityConfiguration> bootstrap) {
     final GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
-        .modules(new SingularityServiceModule(), new SingularityMesosClientModule())
+        .modules(new SingularityServiceModule())
         .build();
     bootstrap.addBundle(guiceBundle);
 
@@ -38,6 +38,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
     });
 
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
+    bootstrap.getObjectMapper().registerModule(new GuavaModule());
     bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_NULL);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
