@@ -41,7 +41,6 @@ public class MesosClient {
     return String.format(MASTER_STATE_FORMAT, hostnameAndPort);
   }
 
-  @SuppressWarnings("serial")
   public static class MesosClientException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
