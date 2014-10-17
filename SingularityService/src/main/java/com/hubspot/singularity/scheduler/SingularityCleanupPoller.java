@@ -26,7 +26,7 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
   }
 
   @Override
-  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler) {
+  public void runActionOnPoll() {
     cleaner.drainCleanupQueue();
   }
 }

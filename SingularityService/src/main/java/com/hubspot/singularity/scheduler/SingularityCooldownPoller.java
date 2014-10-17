@@ -25,7 +25,7 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
   }
 
   @Override
-  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler) {
+  public void runActionOnPoll() {
     checker.checkCooldowns();
   }
 }

@@ -26,7 +26,7 @@ public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPo
   }
 
   @Override
-  public void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler) {
+  public void runActionOnPoll() {
        taskReconciliation.startReconciliation();
   }
 }
