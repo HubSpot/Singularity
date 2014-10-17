@@ -79,6 +79,7 @@ public class SingularityAbort implements ConnectionStateListener {
       serverProvider.get().stop();
     } catch (Throwable t) {
       LOG.error("Failed to call stop() on server", t);
+    } finally {
       System.exit(1);
     }
   }

@@ -4,17 +4,22 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.lifecycle.Managed;
 
 import java.util.Set;
 
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.lifecycle.Managed;
+import net.kencochrane.raven.Raven;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -33,6 +38,7 @@ import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
@@ -54,12 +60,6 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
-
-import net.kencochrane.raven.Raven;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
@@ -155,6 +155,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule());
     mainBinder.install(new SingularityZkMigrationsModule());
+    mainBinder.install(new SingularityMesosClientModule());
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
