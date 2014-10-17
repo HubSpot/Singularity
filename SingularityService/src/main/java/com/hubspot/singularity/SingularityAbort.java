@@ -88,7 +88,7 @@ public class SingularityAbort implements ConnectionStateListener, ServerLifecycl
       } catch (Exception e) {
         LOG.warn("While aborting server", e);
       } finally {
-		System.exit(1);
+        System.exit(1);
       }
     } else {
       LOG.warn("SingularityAbort called before server has fully initialized!");

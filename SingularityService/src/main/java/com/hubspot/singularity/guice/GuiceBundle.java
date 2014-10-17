@@ -198,8 +198,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
       return healthcheckBuilder.build();
     }
 
-    public Set<ServerLifecycleListener> getServerLifecycleListeners()
-    {
+    public Set<ServerLifecycleListener> getServerLifecycleListeners() {
       return serverLifecycleListenerBuilder.build();
     }
   }
