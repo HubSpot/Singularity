@@ -1,10 +1,10 @@
 package com.hubspot.singularity.scheduler;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -14,6 +14,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -34,8 +35,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     LOCK, NO_LOCK
   }
 
-  protected SingularityLeaderOnlyPoller(LeaderLatch leaderLatch,
-      SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
+  protected SingularityLeaderOnlyPoller(LeaderLatch leaderLatch, SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
       long pollDelay, TimeUnit pollTimeUnit, SchedulerLockType schedulerLockType) {
     this.leaderLatch = leaderLatch;
     this.mesosScheduler = mesosScheduler;
@@ -56,28 +56,35 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
       @Override
       public void run() {
-        if (leaderLatch.hasLeadership() && mesosScheduler.isRunning()) {
-          if (schedulerLockType == SchedulerLockType.LOCK) {
-            mesosScheduler.lock();
-          }
-
-          try {
-            runActionOnPoll();
-          } catch (Throwable t) {
-            LOG.error("Caught an exception while running {} -- aborting", getClass().getSimpleName(), t);
-            exceptionNotifier.notify(t);
-            abort.abort();
-          } finally {
-            if (schedulerLockType == SchedulerLockType.LOCK) {
-              mesosScheduler.release();
-            }
-          }
-        }
+        runActionIfLeader();
       }
+
     }, pollDelay, pollDelay, pollTimeUnit);
   }
 
-  public abstract void runActionOnPoll();
+  private void runActionIfLeader() {
+    if (!leaderLatch.hasLeadership() || !mesosScheduler.isRunning()) {
+      return;
+    }
+
+    if (schedulerLockType == SchedulerLockType.LOCK) {
+      mesosScheduler.lock();
+    }
+
+    try {
+      runActionOnPoll(mesosScheduler);
+    } catch (Throwable t) {
+      LOG.error("Caught an exception while running {} -- aborting", getClass().getSimpleName(), t);
+      exceptionNotifier.notify(t);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+    } finally {
+      if (schedulerLockType == SchedulerLockType.LOCK) {
+        mesosScheduler.release();
+      }
+    }
+  }
+
+  public abstract void runActionOnPoll(SingularityMesosSchedulerDelegator mesosScheduler);
 
   @Override
   public void stop() {

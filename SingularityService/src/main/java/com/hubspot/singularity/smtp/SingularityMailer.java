@@ -16,7 +16,6 @@ import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityMainModule;
@@ -78,17 +77,6 @@ public class SingularityMailer {
     this.requestModifiedTemplate = requestModifiedTemplate;
     this.taskCompletedTemplate = taskCompletedTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
-  }
-
-  public void sendAbortMail() {
-    if (!maybeSmtpConfiguration.isPresent()) {
-      LOG.debug("Not sending abort mail - no SMTP configuration is present");
-      return;
-    }
-
-    final String subject = String.format("Singularity on %s is aborting", JavaUtils.getHostName());
-
-    queueMail(getDestination(EmailType.SINGULARITY_ABORTING), Optional.<SingularityRequest>absent(), subject, "");
   }
 
   private Optional<String[]> getTaskLogFile(SingularityTaskId taskId, String filename) {

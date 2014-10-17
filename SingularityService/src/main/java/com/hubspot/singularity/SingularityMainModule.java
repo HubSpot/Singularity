@@ -2,15 +2,15 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.SimpleServerFactory;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -24,6 +24,7 @@ import org.jets3t.service.security.AWSCredentials;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -59,6 +60,7 @@ import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 
 public class SingularityMainModule implements Module {
+
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
 
@@ -67,11 +69,14 @@ public class SingularityMainModule implements Module {
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
+  public static final String HOST_ADDRESS_PROPERTY = "singularity.host.address";
 
   public static final String HTTP_HOST_AND_PORT = "http.host.and.port";
 
   @Override
   public void configure(Binder binder) {
+    binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toProvider(SingularityHostAndPortProvider.class).in(Scopes.SINGLETON);
+
     binder.bind(LeaderLatch.class).to(SingularityLeaderLatch.class).in(Scopes.SINGLETON);
     binder.bind(CuratorFramework.class).toProvider(SingularityCuratorProvider.class).in(Scopes.SINGLETON);
 
@@ -101,32 +106,39 @@ public class SingularityMainModule implements Module {
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
     binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
-    binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toProvider(SingularityHostAndPortProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
 
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
+
+    try {
+      binder.bindConstant().annotatedWith(Names.named(HOST_ADDRESS_PROPERTY)).to(JavaUtils.getHostAddress());
+    } catch (SocketException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   public static class SingularityHostAndPortProvider implements Provider<HostAndPort> {
-    private String hostname;
+
+    private final String hostname;
     private final int httpPort;
 
     @Inject
-    SingularityHostAndPortProvider(final SingularityConfiguration configuration) throws IOException {
+    SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_ADDRESS_PROPERTY) String hostAddress) {
       checkNotNull(configuration, "configuration is null");
-      this.hostname = !Strings.isNullOrEmpty(configuration.getHostname()) ? configuration.getHostname() : JavaUtils.getHostAddress();
+      this.hostname = !Strings.isNullOrEmpty(configuration.getHostname()) ? configuration.getHostname() : JavaUtils.getHostName().or(hostAddress);
 
       SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
       HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
 
       this.httpPort = httpFactory.getPort();
-        }
+    }
 
     @Override
     public HostAndPort get() {
       return HostAndPort.fromParts(hostname, httpPort);
     }
+
   }
 
   @Provides

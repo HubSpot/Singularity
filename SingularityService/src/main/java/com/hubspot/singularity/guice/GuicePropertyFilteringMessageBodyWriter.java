@@ -1,6 +1,8 @@
 package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
+import io.dropwizard.setup.Environment;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,9 +16,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
-
-import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
-import io.dropwizard.setup.Environment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +41,7 @@ public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyP
   private final ObjectMapper objectMapper;
 
   @Inject
-  public GuicePropertyFilteringMessageBodyWriter(final Environment environment,
-      final ObjectMapper objectMapper)
-  {
+  public GuicePropertyFilteringMessageBodyWriter(final Environment environment, final ObjectMapper objectMapper) {
     super(objectMapper, environment.getValidator());
     this.environment = checkNotNull(environment, "environment is null");
     this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");

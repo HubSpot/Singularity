@@ -18,9 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -34,22 +36,25 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final SingularityDriverManager driverManager;
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final HostAndPort hostAndPort;
+  private final String hostAddress;
 
   private final long saveStateEveryMs;
 
-  private final AtomicBoolean started = new AtomicBoolean();
-  private final AtomicBoolean stopped = new AtomicBoolean();
   private final StatePoller statePoller;
 
   private volatile boolean master;
 
   @Inject
-  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier,
+      @Named(SingularityMainModule.HOST_ADDRESS_PROPERTY) String hostAddress, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.driverManager = driverManager;
     this.stateManager = stateManager;
     this.abort = abort;
     this.exceptionNotifier = exceptionNotifier;
 
+    this.hostAddress = hostAddress;
+    this.hostAndPort = hostAndPort;
     this.saveStateEveryMs = TimeUnit.SECONDS.toMillis(configuration.getSaveStateEverySeconds());
     this.statePoller = new StatePoller();
 
@@ -58,18 +63,12 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
   @Override
   public void start() throws Exception {
-    if (!started.getAndSet(true)) {
-      statePoller.start();
-    }
+    statePoller.start();
   }
 
   @Override
   public void stop() throws Exception {
-    if (started.get() && !stopped.getAndSet(true)) {
-      LOG.info("Graceful STOP initiating...");
-      statePoller.finish();
-      LOG.info("STOP finished");
-    }
+    statePoller.finish();
   }
 
   @Override
@@ -85,11 +84,11 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
         exceptionNotifier.notify(t);
-        abort.abort();
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR);
       }
 
       if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
-        abort.abort();
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR);
       }
     }
   }
@@ -125,7 +124,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         LOG.error("While stopping driver", t);
         exceptionNotifier.notify(t);
       } finally {
-        abort.abort();
+        abort.abort(AbortReason.LOST_LEADERSHIP);
       }
     }
   }
@@ -141,14 +140,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     final Optional<Long> lastOfferTimestamp = getLastOfferTimestamp();
     final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long> absent();
 
-    String hostAddress = null;
-
-    try {
-      hostAddress = JavaUtils.getHostAddress();
-    } catch (Exception e) {
-      hostAddress = "Unknown";
-    }
-
     String mesosMaster = null;
     Optional<MasterInfo> mesosMasterInfo = getMaster();
 
@@ -156,9 +147,10 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       mesosMaster = MesosUtils.getMasterHostAndPort(mesosMasterInfo.get());
     }
 
-    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, JavaUtils.getHostName().or("unknown"), mesosMaster);
+    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, hostAndPort.getHostText(), mesosMaster);
   }
 
+  // This thread lives inside of this class solely so that we can instantly update the state when the leader latch changes.
   public class StatePoller extends Thread {
     private final AtomicBoolean finished = new AtomicBoolean();
     private Lock lock = new ReentrantLock();
