@@ -129,9 +129,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo);
-
       scheduler.registered(driver, frameworkId, masterInfo);
+
+      startup(driver, masterInfo);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
@@ -144,9 +144,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo);
-
       scheduler.reregistered(driver, masterInfo);
+
+      startup(driver, masterInfo);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
