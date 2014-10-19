@@ -80,7 +80,7 @@ class TaskDetailController extends Controller
         @collections.files.fetch().error @ignore404
 
         app.showView @view
-    
+
     refresh: ->
         @models.task.fetch().error =>
             # If this 404s the task doesn't exist
@@ -96,7 +96,6 @@ class TaskDetailController extends Controller
             @collections.s3Logs.fetch().error =>
                 # It probably means S3 logs haven't been configured
                 app.caughtError()
-                @view.displayS3Error()
                 delete @collections.s3Logs
 
 module.exports = TaskDetailController
