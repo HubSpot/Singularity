@@ -9,6 +9,7 @@ import javax.inject.Singleton;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
+import org.eclipse.jetty.server.Server;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.guice.ServerProvider;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
@@ -74,12 +74,18 @@ public class SingularityAbort implements ConnectionStateListener {
   }
 
   private void exit() {
-    try {
-      serverProvider.get().stop();
-    } catch (Throwable t) {
-      LOG.error("Failed to call stop() on server", t);
-    } finally {
-      System.exit(1);
+    Optional<Server> server = serverProvider.get();
+    if (server.isPresent()) {
+      try {
+        server.get().stop();
+      } catch (Exception e) {
+        LOG.warn("While aborting server", e);
+      } finally {
+        System.exit(1);
+      }
+    } else {
+      LOG.warn("SingularityAbort called before server has fully initialized!");
+      System.exit(1); // Use the hammer.
     }
   }
 

@@ -97,7 +97,6 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
 
                 binder.bind(GuiceContainer.class).to(DropwizardGuiceContainer.class).in(Scopes.SINGLETON);
 
-                binder.bind(ServerProvider.class).toInstance(new ServerProvider(environment));
                 binder.bind(new TypeLiteral<Function<ResourceConfig, ServletContainer>>() {}).annotatedWith(GUICE_BUNDLE_NAMED).to(GuiceContainerReplacer.class).in(Scopes.SINGLETON);
               }
             }).build());
