@@ -12,6 +12,7 @@ import java.util.Set;
 import net.kencochrane.raven.Raven;
 
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
@@ -144,6 +145,7 @@ public class SingularityTestModule implements Module {
 
               SingularityDriver mock = mock(SingularityDriver.class);
               when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
+              when(mock.getMaster()).thenReturn(Optional.<MasterInfo> absent());
               when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
               when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
               binder.bind(SingularityDriver.class).toInstance(mock);

@@ -6,7 +6,8 @@ import io.dropwizard.setup.Environment;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.jetty.server.Server;
-import org.parboiled.common.Preconditions;
+
+import com.google.common.base.Preconditions;
 
 public class ServerProvider {
 
