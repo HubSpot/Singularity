@@ -38,16 +38,15 @@ public class SingularityAbort implements ConnectionStateListener {
   private final HostAndPort hostAndPort;
   private final SingularityExceptionNotifier exceptionNotifier;
 
-  private final AtomicBoolean aborting = new AtomicBoolean();
-
   private final ServerProvider serverProvider;
+  private final AtomicBoolean aborting = new AtomicBoolean();
 
   @Inject
   public SingularityAbort(SingularitySmtpSender smtpSender, ServerProvider serverProvider, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
+    this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
-    this.serverProvider = serverProvider;
     this.hostAndPort = hostAndPort;
   }
 
@@ -85,7 +84,7 @@ public class SingularityAbort implements ConnectionStateListener {
   }
 
   private void sendAbortNotification(AbortReason abortReason) {
-    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText());
+    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText(), abortReason);
 
     sendAbortMail(message);
 

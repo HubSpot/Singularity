@@ -7,16 +7,16 @@ import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 
-import ch.qos.logback.classic.Logger;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
+
+import ch.qos.logback.classic.Logger;
 
 public class SingularityExecutorTask {
 
@@ -118,7 +118,7 @@ public class SingularityExecutorTask {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("taskId", getTaskId())
         .add("killed", killed.get())
         .add("taskInfo", taskInfo)

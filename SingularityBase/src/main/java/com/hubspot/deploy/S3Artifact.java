@@ -2,7 +2,7 @@ package com.hubspot.deploy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 public class S3Artifact extends RemoteArtifact {
@@ -28,7 +28,7 @@ public class S3Artifact extends RemoteArtifact {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("name", getName())
         .add("filename", getFilename())
         .add("md5sum", getMd5sum())

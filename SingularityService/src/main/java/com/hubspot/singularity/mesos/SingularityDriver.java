@@ -47,7 +47,7 @@ public class SingularityDriver {
     return scheduler;
   }
 
-  public MasterInfo getMaster() {
+  public Optional<MasterInfo> getMaster() {
     return scheduler.getMaster();
   }
 

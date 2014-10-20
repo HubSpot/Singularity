@@ -59,6 +59,7 @@ import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 
+
 public class SingularityMainModule implements Module {
 
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
@@ -107,6 +108,11 @@ public class SingularityMainModule implements Module {
 
     binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
 
+    binder.bind(AsyncHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
+
+    binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
 
     try {
@@ -137,12 +143,7 @@ public class SingularityMainModule implements Module {
       return HostAndPort.fromParts(hostname, httpPort);
     }
 
-  }
 
-  @Provides
-  @Singleton
-  public AsyncHttpClient providesAsyncHTTPClient() {
-    return new AsyncHttpClient();
   }
 
   @Provides

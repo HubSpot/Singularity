@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -50,7 +51,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final List<Protos.TaskStatus> queuedUpdates;
 
   private Optional<Long> lastOfferTimestamp;
-  private MasterInfo master;
+  private final AtomicReference<MasterInfo> masterInfoHolder = new AtomicReference<>();
 
   @Inject
   SingularityMesosSchedulerDelegator(SingularityExceptionNotifier exceptionNotifier, SingularityMesosScheduler scheduler, SingularityStartup startup, SingularityAbort abort) {
@@ -73,8 +74,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     return lastOfferTimestamp;
   }
 
-  public MasterInfo getMaster() {
-    return master;
+  public Optional<MasterInfo> getMaster() {
+    return Optional.fromNullable(masterInfoHolder.get());
   }
 
   // TODO should the lock wait on a timeout and then notify that it's taking a while?
@@ -106,7 +107,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) throws Exception {
     Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
 
-    master = masterInfo;
+    masterInfoHolder.set(masterInfo);
 
     startup.startup(masterInfo, driver);
 
@@ -129,9 +130,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo);
-
       scheduler.registered(driver, frameworkId, masterInfo);
+
+      startup(driver, masterInfo);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
@@ -144,9 +145,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     lock();
 
     try {
-      startup(driver, masterInfo);
-
       scheduler.reregistered(driver, masterInfo);
+
+      startup(driver, masterInfo);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
