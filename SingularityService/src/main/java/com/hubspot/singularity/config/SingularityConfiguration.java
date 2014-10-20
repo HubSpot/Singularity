@@ -117,10 +117,7 @@ public class SingularityConfiguration extends Configuration {
   private String loadBalancerUri;
 
   @NotNull
-  private int logFetchCoreThreads = 3;
-
-  @NotNull
-  private int logFetchMaxThreads = 25;
+  private int logFetchMaxThreads = 15;
 
   @NotNull
   private int maxDeployIdSize = 50;
@@ -258,10 +255,6 @@ public class SingularityConfiguration extends Configuration {
 
   public String getLoadBalancerUri() {
     return loadBalancerUri;
-  }
-
-  public int getLogFetchCoreThreads() {
-    return logFetchCoreThreads;
   }
 
   public int getLogFetchMaxThreads() {
@@ -466,10 +459,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setLoadBalancerUri(String loadBalancerUri) {
     this.loadBalancerUri = loadBalancerUri;
-  }
-
-  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
-    this.logFetchCoreThreads = logFetchCoreThreads;
   }
 
   public void setLogFetchMaxThreads(int logFetchMaxThreads) {

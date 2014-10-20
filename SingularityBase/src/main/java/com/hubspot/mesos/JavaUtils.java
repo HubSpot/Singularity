@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -35,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 
 public final class JavaUtils {
@@ -214,6 +217,12 @@ public final class JavaUtils {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());
     return mapper;
+  }
+
+  public static ThreadPoolExecutor newFixedTimingOutThreadPool(int maxThreads, long timeoutMillis, String nameFormat) {
+    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(maxThreads, maxThreads, timeoutMillis, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat(nameFormat).build());
+    threadPoolExecutor.allowCoreThreadTimeOut(true);
+    return threadPoolExecutor;
   }
 
 }

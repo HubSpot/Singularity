@@ -1,20 +1,18 @@
 package com.hubspot.singularity.mesos;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
@@ -42,7 +40,7 @@ public class SingularityLogSupport implements Managed {
     this.mesosClient = mesosClient;
     this.taskManager = taskManager;
 
-    this.logLookupExecutorService = new ThreadPoolExecutor(configuration.getLogFetchCoreThreads(), configuration.getLogFetchMaxThreads(), 250L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("SingularityDirectoryFetcher-%d").build());
+    this.logLookupExecutorService = JavaUtils.newFixedTimingOutThreadPool(configuration.getLogFetchMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityDirectoryFetcher-%d");
   }
 
   @Override

@@ -1,9 +1,10 @@
 package com.hubspot.singularity.smtp;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -16,16 +17,14 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import io.dropwizard.lifecycle.Managed;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -44,12 +43,7 @@ public class SingularitySmtpSender implements Managed {
     this.exceptionNotifier = exceptionNotifier;
 
     if (maybeSmtpConfiguration.isPresent()) {
-      this.mailSenderExecutorService = Optional.of(new ThreadPoolExecutor(maybeSmtpConfiguration.get().getMailThreads(),
-          maybeSmtpConfiguration.get().getMailMaxThreads(),
-          0L,
-          TimeUnit.MILLISECONDS,
-          new LinkedBlockingQueue<Runnable>(),
-          new ThreadFactoryBuilder().setNameFormat("SingularityMailer-%d").build()));
+      this.mailSenderExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailer-%d"));;
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }
