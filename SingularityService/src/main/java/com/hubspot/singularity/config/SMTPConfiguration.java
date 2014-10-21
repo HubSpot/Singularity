@@ -61,6 +61,7 @@ public class SMTPConfiguration {
       .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
       .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
       .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
+      .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
