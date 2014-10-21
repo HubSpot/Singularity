@@ -6,6 +6,7 @@ import io.dropwizard.db.DataSourceFactory;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,6 +33,7 @@ public class SingularityConfiguration extends Configuration {
   private SMTPConfiguration smtpConfiguration;
 
   @JsonProperty("ui")
+  @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
 
   @JsonProperty("zookeeper")

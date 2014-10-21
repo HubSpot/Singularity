@@ -42,6 +42,7 @@ exports.config =
             apiRoot: ''
             mesosLogsPort: 5051
             title: 'Singularity (local dev)'
+            navColor: ''
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate
