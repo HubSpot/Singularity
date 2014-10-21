@@ -28,5 +28,5 @@ public class EmbeddedArtifact extends Artifact {
   public String toString() {
     return "EmbeddedArtifact [getName()=" + getName() + ", getFilename()=" + getFilename() + ", getMd5sum()=" + getMd5sum() + "]";
   }
-  
+
 }

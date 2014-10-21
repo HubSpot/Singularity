@@ -157,5 +157,5 @@ public class ExecutorDataBuilder {
         + successfulExitCodes + ", runningSentinel=" + runningSentinel + ", user=" + user + ", extraCmdLineArgs=" + extraCmdLineArgs + ", loggingTag=" + loggingTag + ", loggingExtraFields="
         + loggingExtraFields + ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis + ", maxTaskThreads=" + maxTaskThreads + "]";
   }
-  
+
 }

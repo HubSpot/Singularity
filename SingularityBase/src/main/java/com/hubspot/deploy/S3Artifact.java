@@ -24,7 +24,7 @@ public class S3Artifact extends RemoteArtifact {
   public String getS3ObjectKey() {
     return s3ObjectKey;
   }
-  
+
   @Override
   public String toString() {
     return "S3Artifact [s3Bucket=" + s3Bucket + ", s3ObjectKey=" + s3ObjectKey + ", getFilesize()=" + getFilesize() + ", getName()=" + getName() + ", getFilename()=" + getFilename()
