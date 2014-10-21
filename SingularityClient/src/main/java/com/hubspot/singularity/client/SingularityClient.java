@@ -213,18 +213,17 @@ public class SingularityClient {
 
     HttpResponse response = httpClient.execute(request.build());
 
-    if (response.isSuccess()) {
-      LOG.info("Deleted {} ({}) from Singularity in %sms", type, id, System.currentTimeMillis() - start);
+    if (response.getStatusCode() == 404) {
+      LOG.info("{} ({}) was not found", type, id);
+      return Optional.absent();
+    }
 
-      if (clazz.isPresent()) {
-        return Optional.of(response.getAs(clazz.get()));
-      }
-    } else {
-      try {
-        LOG.warn("Failed to delete {} {} - ({})", type, id, response.getAsString());
-      } catch (Exception e) {
-        LOG.warn("Failed to delete {} {}, and couldn't read response", type, id, e);
-      }
+    checkResponse(type, response);
+
+    LOG.info("Deleted {} ({}) from Singularity in %sms", type, id, System.currentTimeMillis() - start);
+
+    if (clazz.isPresent()) {
+      return Optional.of(response.getAs(clazz.get()));
     }
 
     return Optional.absent();
@@ -319,7 +318,8 @@ public class SingularityClient {
    * Delete a singularity request that is active.
    * If the deletion is successful the deleted singularity request is returned.
    * If the request to be deleted is not found {code Optional.absent()} is returned
-   * If the singularity request to be deleted is paused the deletion will fail ({code Optional.absent()} will be returned)
+   * If an error occurs during deletion an exception is returned
+   * If the singularity request to be deleted is paused the deletion will fail with an exception
    * If you want to delete a paused singularity request use the provided {@link SingularityClient#deletePausedSingularityRequest}
    *
    * @param requestId
