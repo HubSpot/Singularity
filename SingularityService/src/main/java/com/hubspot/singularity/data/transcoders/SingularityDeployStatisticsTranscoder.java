@@ -1,10 +1,13 @@
 package com.hubspot.singularity.data.transcoders;
 
+import javax.inject.Singleton;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 
+@Singleton
 public class SingularityDeployStatisticsTranscoder implements Transcoder<SingularityDeployStatistics> {
 
   private final ObjectMapper objectMapper;

@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 
+@Singleton
 public class SingularityTaskHistoryPersister {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);

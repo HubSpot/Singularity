@@ -1,151 +1,123 @@
 package com.hubspot.singularity;
 
-import java.lang.reflect.Field;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import ch.qos.logback.classic.LoggerContext;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.imps.CuratorFrameworkImpl;
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
+import org.eclipse.jetty.server.Server;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.LoggerContext;
-
-import com.google.common.io.Closeables;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
+import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
+import com.hubspot.singularity.config.SMTPConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
-import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
-public class SingularityAbort {
+@Singleton
+public class SingularityAbort implements ConnectionStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
 
-  private final CuratorFramework curator;
-  private final LeaderLatch leaderLatch;
-  private final SingularityDriverManager driverManager;
-  private final SingularityCloser closer;
-  private final SingularityMailer mailer;
+  private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
+  private final SingularitySmtpSender smtpSender;
+  private final HostAndPort hostAndPort;
   private final SingularityExceptionNotifier exceptionNotifier;
 
-  private volatile boolean aborting;
-  private volatile boolean stopping;
+  private final ServerProvider serverProvider;
+  private final AtomicBoolean aborting = new AtomicBoolean();
 
   @Inject
-  public SingularityAbort(CuratorFramework curator, LeaderLatch leaderLatch, SingularityDriverManager driverManager, SingularityCloser closer, SingularityMailer mailer, SingularityExceptionNotifier exceptionNotifier) {
-    this.curator = curator;
-    this.leaderLatch = leaderLatch;
-    this.driverManager = driverManager;
-    this.closer = closer;
-    this.mailer = mailer;
-
-    this.aborting = false;
-    this.stopping = false;
-
+  public SingularityAbort(SingularitySmtpSender smtpSender, SingularityConfiguration configuration, ServerProvider serverProvider,
+      SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+    this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
+    this.serverProvider = serverProvider;
+    this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
+    this.hostAndPort = hostAndPort;
+  }
 
-    this.curator.getConnectionStateListenable().addListener(new ConnectionStateListener() {
+  @Override
+  public void stateChanged(CuratorFramework client, ConnectionState newState) {
+    if (newState == ConnectionState.LOST) {
+      LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
+      abort(AbortReason.LOST_ZK_CONNECTION);
+    }
+  }
 
-      @Override
-      public void stateChanged(CuratorFramework client, ConnectionState newState) {
-        if (newState == ConnectionState.LOST) {
-          LOG.error("Aborting due to new connection state recieved from ZooKeeper: {}", newState);
-          abort();
-        }
+  public enum AbortReason {
+    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
+  }
+
+  public void abort(AbortReason abortReason) {
+    if (!aborting.getAndSet(true)) {
+      try {
+        sendAbortNotification(abortReason);
+        flushLogs();
+      } finally {
+        exit();
       }
-    });
-  }
-
-  private synchronized boolean checkAlreadyAborting() {
-    if (!aborting) {
-      aborting = true;
-      return false;
-    } else {
-      LOG.warn("Abort asked to abort, but already aborting");
-      return true;
     }
-  }
-
-  private synchronized boolean checkAlreadyStopping() {
-    if (!stopping) {
-      stopping = true;
-      return false;
-    } else {
-      LOG.warn("Abort asked to stop, but already stopping");
-      return true;
-    }
-  }
-
-  public void abort() {
-    if (checkAlreadyAborting()) {
-      return;
-    }
-
-    mailer.sendAbortMail();
-
-    stop();
-
-    flushLogs();
-
-    exit();
   }
 
   private void exit() {
-    System.exit(1);
+    Optional<Server> server = serverProvider.get();
+    if (server.isPresent()) {
+      try {
+        server.get().stop();
+      } catch (Exception e) {
+        LOG.warn("While aborting server", e);
+      } finally {
+        System.exit(1);
+      }
+    } else {
+      LOG.warn("SingularityAbort called before server has fully initialized!");
+      System.exit(1); // Use the hammer.
+    }
   }
 
-  public void stop() {
-    if (checkAlreadyStopping()) {
+  private void sendAbortNotification(AbortReason abortReason) {
+    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText(), abortReason);
+
+    sendAbortMail(message);
+
+    exceptionNotifier.notify(message);
+  }
+
+  private void sendAbortMail(final String message) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.warn("Couldn't send abort mail because no SMTP configuration is present");
       return;
     }
 
-    closeDriver();
+    final List<EmailDestination> emailDestination = maybeSmtpConfiguration.get().getEmailConfiguration().get(EmailType.SINGULARITY_ABORTING);
 
-    closeCloseables();
-
-    closeLeader();
-
-    closeCurator();
-  }
-
-  private void closeCloseables() {
-    closer.closeAllCloseables();
-  }
-
-  private void closeDriver() {
-    try {
-      driverManager.stop();
-    } catch (Throwable t) {
-      LOG.warn("While stopping driver", t);
-      exceptionNotifier.notify(t);
+    if (emailDestination.isEmpty() || !emailDestination.contains(EmailDestination.ADMINS)) {
+      LOG.info("Not configured to send abort mail");
+      return;
     }
-  }
 
-  private void closeCurator() {
-    try {
-      // Curator is bullshit, their facade doesn't expose underlying client to close it.
-      Field field = curator.getClass().getDeclaredField("client");
-      field.setAccessible(true);
-      CuratorFrameworkImpl underlyingClient = (CuratorFrameworkImpl) field.get(curator);
-      Closeables.close(underlyingClient, false);
-    } catch (Throwable t) {
-      LOG.warn("While closing curator", t);
-      exceptionNotifier.notify(t);
-    }
-  }
-
-  private void closeLeader() {
-    try {
-      Closeables.close(leaderLatch, false);
-    } catch (Throwable t) {
-      LOG.warn("While closing leader latch", t);
-      exceptionNotifier.notify(t);
-    }
+    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.<String> of(), message, "");
   }
 
   private void flushLogs() {
-    LOG.info("Attempting to flush logs and wait for 5 seconds...");
+    final long millisToWait = 100;
+
+    LOG.info("Attempting to flush logs and wait {} ...", JavaUtils.durationFromMillis(millisToWait));
 
     ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
     if (loggerFactory instanceof LoggerContext) {
@@ -154,10 +126,9 @@ public class SingularityAbort {
     }
 
     try {
-      Thread.sleep(5000);
+      Thread.sleep(millisToWait);
     } catch (Exception e) {
       LOG.info("While sleeping for log flush", e);
-      exceptionNotifier.notify(e);
     }
   }
 
