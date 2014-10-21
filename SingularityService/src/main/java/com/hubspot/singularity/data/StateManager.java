@@ -179,7 +179,8 @@ public class StateManager extends CuratorManager {
       case SYSTEM_COOLDOWN:
         cooldownRequests++;
         break;
-      default:
+      case DELETED:
+        break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {
