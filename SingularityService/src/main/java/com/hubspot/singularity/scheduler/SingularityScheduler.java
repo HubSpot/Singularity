@@ -419,7 +419,7 @@ public class SingularityScheduler {
     final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
     if (!isDeployInUse(requestDeployState, taskId.getDeployId(), true)) {
-      LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId(), requestDeployState);
+      LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId());
       return Optional.absent();
     }
 
