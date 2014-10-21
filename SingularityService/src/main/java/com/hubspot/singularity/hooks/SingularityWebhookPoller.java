@@ -4,20 +4,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
+import io.dropwizard.lifecycle.Managed;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
-import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-public class SingularityWebhookPoller extends SingularityCloseable<ScheduledExecutorService> implements SingularityStartable {
+@Singleton
+public class SingularityWebhookPoller implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookPoller.class);
 
@@ -27,9 +29,7 @@ public class SingularityWebhookPoller extends SingularityCloseable<ScheduledExec
   private final ScheduledExecutorService executorService;
 
   @Inject
-  public SingularityWebhookPoller(SingularityWebhookSender webhookSender, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration) {
-    super(closer);
-
+  public SingularityWebhookPoller(SingularityWebhookSender webhookSender, SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration) {
     this.webhookSender = webhookSender;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
@@ -56,8 +56,7 @@ public class SingularityWebhookPoller extends SingularityCloseable<ScheduledExec
   }
 
   @Override
-  public Optional<ScheduledExecutorService> getExecutorService() {
-    return Optional.of(executorService);
+  public void stop() {
+    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
-
 }

@@ -27,11 +27,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.hubspot.dropwizard</groupId>
-      <artifactId>dropwizard-guice</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.hubspot.jackson</groupId>
       <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
     </dependency>
@@ -52,6 +47,16 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-servlet</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-multibindings</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
@@ -59,6 +64,11 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
     </dependency>
 
     <dependency>
@@ -145,6 +155,11 @@
 
     <dependency>
       <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-servlets</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-jdbi</artifactId>
     </dependency>
 
@@ -201,13 +216,12 @@
 
     <dependency>
       <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-servlets</artifactId>
+      <artifactId>metrics-core</artifactId>
     </dependency>
 
     <dependency>
       <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-healthchecks</artifactId>
-      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -224,6 +238,11 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-guava</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>com.sun.jersey</groupId>
@@ -238,6 +257,11 @@
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-servlet</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-guice</artifactId>
     </dependency>
 
     <dependency>
@@ -285,6 +309,11 @@
     <dependency>
       <groupId>net.java.dev.jets3t</groupId>
       <artifactId>jets3t</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
     </dependency>
 
     <dependency>

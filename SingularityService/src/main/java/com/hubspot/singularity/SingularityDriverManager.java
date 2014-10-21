@@ -1,60 +1,61 @@
 package com.hubspot.singularity;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
 
-public class SingularityDriverManager {
+@Singleton
+public class SingularityDriverManager implements Managed {
 
-  private final Provider<SingularityDriver> driverProvider;
+  private final SingularityDriver driver;
   private final TaskManager taskManager;
   private final Lock driverLock;
 
-  private Optional<SingularityDriver> driver;
   private Protos.Status currentStatus;
 
   @Inject
-  public SingularityDriverManager(Provider<SingularityDriver> driverProvider, TaskManager taskManager) {
-    this.driverProvider = driverProvider;
+  public SingularityDriverManager(SingularityDriver driver, TaskManager taskManager) {
     this.taskManager = taskManager;
 
     this.driverLock = new ReentrantLock();
 
     this.currentStatus = Protos.Status.DRIVER_NOT_STARTED;
-    this.driver = Optional.absent();
+    this.driver = driver;
+  }
+
+  @Override
+  public void start() {
+  }
+
+  @Override
+  public void stop() {
+    stopMesos();
   }
 
   public Protos.Status getCurrentStatus() {
     return currentStatus;
   }
 
-  @VisibleForTesting
-  public SingularityDriver getDriver() {
-    return driver.get();
-  }
-
   public Optional<MasterInfo> getMaster() {
     driverLock.lock();
 
     try {
-      if (!driver.isPresent()) {
-        return Optional.absent();
-      }
-
-      return Optional.fromNullable(driver.get().getMaster());
+      return driver.getMaster();
     } finally {
       driverLock.unlock();
     }
@@ -64,11 +65,7 @@ public class SingularityDriverManager {
     driverLock.lock();
 
     try {
-      if (!driver.isPresent()) {
-        return Optional.absent();
-      }
-
-      return driver.get().getLastOfferTimestamp();
+      return driver.getLastOfferTimestamp();
     } finally {
       driverLock.unlock();
     }
@@ -88,7 +85,7 @@ public class SingularityDriverManager {
     try {
       Preconditions.checkState(canKillTask());
 
-      currentStatus = driver.get().kill(taskId);
+      currentStatus = driver.kill(taskId);
 
       taskManager.saveKilledRecord(new SingularityKilledTaskIdRecord(taskId, System.currentTimeMillis(), originalTimestamp.or(System.currentTimeMillis()), requestCleanupType, taskCleanupType, retries.or(-1) + 1));
 
@@ -100,15 +97,13 @@ public class SingularityDriverManager {
     return currentStatus;
   }
 
-  public Protos.Status start() {
+  public Protos.Status startMesos() {
     driverLock.lock();
 
     try {
       Preconditions.checkState(isStartable());
 
-      driver = Optional.of(driverProvider.get());
-
-      currentStatus = driver.get().start();
+      currentStatus = driver.start();
     } finally {
       driverLock.unlock();
     }
@@ -117,23 +112,23 @@ public class SingularityDriverManager {
   }
 
   private boolean canKillTask() {
-    return driver.isPresent() && currentStatus == Status.DRIVER_RUNNING;
+    return currentStatus == Status.DRIVER_RUNNING;
   }
 
   private boolean isStartable() {
-    return !driver.isPresent() && currentStatus == Status.DRIVER_NOT_STARTED;
+    return currentStatus == Status.DRIVER_NOT_STARTED;
   }
 
   private boolean isStoppable() {
-    return driver.isPresent() && currentStatus == Status.DRIVER_RUNNING;
+    return currentStatus == Status.DRIVER_RUNNING;
   }
 
-  public Protos.Status stop() {
+  public Protos.Status stopMesos() {
     driverLock.lock();
 
     try {
       if (isStoppable()) {
-        currentStatus = driver.get().abort();
+        currentStatus = driver.abort();
       }
     } finally {
       driverLock.unlock();

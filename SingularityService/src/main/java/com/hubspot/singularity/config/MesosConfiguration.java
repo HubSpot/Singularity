@@ -12,20 +12,23 @@ public class MesosConfiguration {
   private String frameworkName;
   @NotNull
   private String frameworkId;
-  @NotNull
-  private Double frameworkFailoverTimeout;
-  @NotNull
-  private Integer defaultCpus;
-  @NotNull
-  private Integer defaultMemory;
-  @NotNull
-  private Boolean checkpoint = false;
+
+  private double frameworkFailoverTimeout = 0.0;
+
+  private int defaultCpus = 1;
+
+  private int defaultMemory = 64;
+
+  private boolean checkpoint = false;
+
   @NotNull
   private String rackIdAttributeKey = "rackid";
+
   @NotNull
   private String defaultRackId = "DEFAULT";
-  @NotNull
-  private Integer slaveHttpPort = 5051;
+
+  private int slaveHttpPort = 5051;
+
   @NotNull
   private Optional<Integer> slaveHttpsPort = Optional.absent();
   @NotNull
@@ -115,11 +118,11 @@ public class MesosConfiguration {
     this.frameworkName = frameworkName;
   }
 
-  public Double getFrameworkFailoverTimeout() {
+  public double getFrameworkFailoverTimeout() {
     return frameworkFailoverTimeout;
   }
 
-  public void setFrameworkFailoverTimeout(Double frameworkFailoverTimeout) {
+  public void setFrameworkFailoverTimeout(double frameworkFailoverTimeout) {
     this.frameworkFailoverTimeout = frameworkFailoverTimeout;
   }
 
@@ -127,35 +130,35 @@ public class MesosConfiguration {
     this.master = master;
   }
 
-  public Boolean getCheckpoint() {
+  public boolean getCheckpoint() {
     return checkpoint;
   }
 
-  public void setCheckpoint(Boolean checkpoint) {
+  public void setCheckpoint(boolean checkpoint) {
     this.checkpoint = checkpoint;
   }
 
-  public Integer getDefaultCpus() {
+  public int getDefaultCpus() {
     return defaultCpus;
   }
 
-  public void setDefaultCpus(Integer defaultCpus) {
+  public void setDefaultCpus(int defaultCpus) {
     this.defaultCpus = defaultCpus;
   }
 
-  public Integer getDefaultMemory() {
+  public int getDefaultMemory() {
     return defaultMemory;
   }
 
-  public void setDefaultMemory(Integer defaultMemory) {
+  public void setDefaultMemory(int defaultMemory) {
     this.defaultMemory = defaultMemory;
   }
 
-  public Integer getSlaveHttpPort() {
+  public int getSlaveHttpPort() {
     return slaveHttpPort;
   }
 
-  public void setSlaveHttpPort(Integer slaveHttpPort) {
+  public void setSlaveHttpPort(int slaveHttpPort) {
     this.slaveHttpPort = slaveHttpPort;
   }
 

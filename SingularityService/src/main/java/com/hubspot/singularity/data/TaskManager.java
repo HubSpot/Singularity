@@ -26,10 +26,10 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -91,7 +91,7 @@ public class TaskManager extends CuratorAsyncManager {
       SingularityTaskIdTranscoder taskIdTranscoder, SingularityLoadBalancerUpdateTranscoder taskLoadBalancerHistoryUpdateTranscoder, SingularityTaskStatusTranscoder taskStatusTranscoder,
       SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder,
       SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder, SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder,
-      @Named(SingularityServiceModule.SERVER_ID_PROPERTY) String serverId) {
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -338,6 +338,10 @@ public class TaskManager extends CuratorAsyncManager {
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("healthchecks_by_ids", paths, healthcheckResultTranscoder);
 
     return Maps.uniqueIndex(healthcheckResults, healthcheckResultTranscoder);
+  }
+
+  public boolean taskHistoryUpdateExists(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    return exists(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()));
   }
 
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {

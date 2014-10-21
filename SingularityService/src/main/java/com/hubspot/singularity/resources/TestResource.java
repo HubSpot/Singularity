@@ -10,26 +10,27 @@ import org.apache.mesos.Protos.TaskStatus;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityDriverManager;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.mesos.SingularityDriver;
 
 @Path(SingularityService.API_BASE_PATH + "/test")
 public class TestResource {
 
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;
-  private final SingularityDriverManager driverManager;
   private final SingularityConfiguration configuration;
+  private final SingularityDriver driver;
 
   @Inject
-  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, SingularityDriverManager driverManager) {
+  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityDriver driver) {
     this.configuration = configuration;
     this.managed = managed;
     this.abort = abort;
-    this.driverManager = driverManager;
+    this.driver = driver;
   }
 
   private void checkAllowed() {
@@ -43,7 +44,7 @@ public class TestResource {
   public void statusUpdate(@PathParam("taskId") String taskId, @PathParam("taskState") String taskState) {
     checkAllowed();
 
-    driverManager.getDriver().getScheduler().statusUpdate(null, TaskStatus.newBuilder()
+    driver.getScheduler().statusUpdate(null, TaskStatus.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId))
         .setState(TaskState.valueOf(taskState))
         .build());
@@ -78,7 +79,7 @@ public class TestResource {
   public void abort() {
     checkAllowed();
 
-    abort.abort();
+    abort.abort(AbortReason.TEST_ABORT);
   }
 
   @POST

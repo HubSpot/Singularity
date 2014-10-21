@@ -3,6 +3,7 @@ package com.hubspot.singularity.hooks;
 import java.io.IOException;
 import java.util.List;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
+@Singleton
 public class SingularityWebhookSender {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookSender.class);

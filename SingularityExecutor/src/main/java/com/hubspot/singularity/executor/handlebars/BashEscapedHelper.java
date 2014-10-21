@@ -7,6 +7,8 @@ import com.github.jknack.handlebars.Options;
 
 public class BashEscapedHelper implements Helper<Object> {
 
+  public static final String NAME = "bashEscaped";
+
   @Override
   public CharSequence apply(Object context, Options options) throws IOException {
     if (context == null) {

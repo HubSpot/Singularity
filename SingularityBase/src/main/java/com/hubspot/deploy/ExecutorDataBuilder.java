@@ -3,7 +3,7 @@ package com.hubspot.deploy;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 public class ExecutorDataBuilder {
@@ -19,9 +19,10 @@ public class ExecutorDataBuilder {
   private Optional<String> loggingTag;
   private Map<String, String> loggingExtraFields;
   private Optional<Long> sigKillProcessesAfterMillis;
+  private Optional<Integer> maxTaskThreads;
 
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
-      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis) {
+      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -32,6 +33,7 @@ public class ExecutorDataBuilder {
     this.extraCmdLineArgs = extraCmdLineArgs;
     this.loggingTag = loggingTag;
     this.loggingExtraFields = loggingExtraFields;
+    this.maxTaskThreads = maxTaskThreads;
   }
 
   public ExecutorDataBuilder() {
@@ -39,7 +41,7 @@ public class ExecutorDataBuilder {
   }
 
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads);
   }
 
   public Optional<String> getLoggingTag() {
@@ -141,9 +143,18 @@ public class ExecutorDataBuilder {
     return this;
   }
 
+  public Optional<Integer> getMaxTaskThreads() {
+    return maxTaskThreads;
+  }
+
+  public ExecutorDataBuilder setMaxTaskThreads(Optional<Integer> maxTaskThreads) {
+    this.maxTaskThreads = maxTaskThreads;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("cmd", cmd)
         .add("embeddedArtifacts", embeddedArtifacts)
         .add("externalArtifacts", externalArtifacts)
@@ -155,6 +166,7 @@ public class ExecutorDataBuilder {
         .add("loggingTag", loggingTag)
         .add("loggingExtraFields", loggingExtraFields)
         .add("sigKillProcessesAfterMillis", sigKillProcessesAfterMillis)
+        .add("maxTaskThreads", maxTaskThreads)
         .toString();
   }
 }
