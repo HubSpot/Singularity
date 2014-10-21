@@ -1,20 +1,19 @@
 package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.dropwizard.setup.Environment;
 
 import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import io.dropwizard.setup.Environment;
-
 import com.google.inject.Injector;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.sun.jersey.spi.container.servlet.WebConfig;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * A Guice based Jersey container that can pull resources out of the dropwizard environment.

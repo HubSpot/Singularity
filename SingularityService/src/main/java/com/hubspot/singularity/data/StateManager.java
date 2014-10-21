@@ -167,20 +167,21 @@ public class StateManager extends CuratorManager {
 
     for (SingularityRequestWithState requestWithState : requests) {
       switch (requestWithState.getState()) {
-      case ACTIVE:
-        numActiveRequests++;
-        break;
-      case FINISHED:
-        numFinishedRequests++;
-        break;
-      case PAUSED:
-        numPausedRequests++;
-        break;
-      case SYSTEM_COOLDOWN:
-        cooldownRequests++;
-        break;
-      case DELETED:
-        break;
+        case DEPLOYING_TO_UNPAUSE:
+        case ACTIVE:
+          numActiveRequests++;
+          break;
+        case FINISHED:
+          numFinishedRequests++;
+          break;
+        case PAUSED:
+          numPausedRequests++;
+          break;
+        case SYSTEM_COOLDOWN:
+          cooldownRequests++;
+          break;
+        case DELETED:
+          break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {

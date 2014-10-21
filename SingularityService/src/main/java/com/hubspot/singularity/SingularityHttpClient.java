@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
-import javax.inject.Inject;
-
 import io.dropwizard.lifecycle.Managed;
+
+import javax.inject.Inject;
 
 import com.ning.http.client.AsyncHttpClient;
 

@@ -27,7 +27,6 @@ public class BlendedHistoryTest extends SingularityCuratorTestBase {
   @Inject
   private RequestManager requestManager;
 
-  @SuppressWarnings("unchecked")
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
     when(hm.getRequestHistory(Matchers.anyString(), Matchers.<Optional<OrderDirection>>any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
   }
