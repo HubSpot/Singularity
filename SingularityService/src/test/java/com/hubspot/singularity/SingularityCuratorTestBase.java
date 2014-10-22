@@ -38,4 +38,5 @@ public class SingularityCuratorTestBase {
       ts.close();
     }
   }
+
 }

@@ -140,7 +140,7 @@ public class SingularityConfiguration extends Configuration {
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @NotNull
-  private long checkReconcileWhenRunningEverySeconds = 30;
+  private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   @NotNull
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
@@ -279,12 +279,12 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
-  public long getCheckReconcileWhenRunningEverySeconds() {
-    return checkReconcileWhenRunningEverySeconds;
+  public long getCheckReconcileWhenRunningEveryMillis() {
+    return checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckReconcileWhenRunningEverySeconds(long checkReconcileWhenRunningEverySeconds) {
-    this.checkReconcileWhenRunningEverySeconds = checkReconcileWhenRunningEverySeconds;
+  public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
+    this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
   public long getStartNewReconcileEverySeconds() {

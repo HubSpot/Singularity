@@ -54,6 +54,7 @@ import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -105,52 +106,57 @@ public class SingularityTestModule implements Module {
     mainBinder.install(Modules.override(new SingularityMainModule())
         .with(new Module() {
 
-            @Override
-            public void configure(Binder binder) {
-              binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
+          @Override
+          public void configure(Binder binder) {
+            binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
 
-              SingularityAbort abort = mock(SingularityAbort.class);
-              SingularityMailer mailer = mock(SingularityMailer.class);
-              SchedulerDriver driver = mock(SchedulerDriver.class);
+            SingularityAbort abort = mock(SingularityAbort.class);
+            SingularityMailer mailer = mock(SingularityMailer.class);
 
-              when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
+            binder.bind(SingularityMailer.class).toInstance(mailer);
+            binder.bind(SingularityAbort.class).toInstance(abort);
 
-              binder.bind(SchedulerDriver.class).toInstance(driver);
-              binder.bind(SingularityMailer.class).toInstance(mailer);
-              binder.bind(SingularityAbort.class).toInstance(abort);
+            TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+            binder.bind(LoadBalancerClient.class).toInstance(tlbc);
+            binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
 
-              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
-              binder.bind(LoadBalancerClient.class).toInstance(tlbc);
-              binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
+            binder.bind(ObjectMapper.class).toInstance(Jackson.newObjectMapper()
+                .setSerializationInclusion(Include.NON_NULL)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .registerModule(new ProtobufModule()));
 
-              binder.bind(ObjectMapper.class).toInstance(Jackson.newObjectMapper()
-                  .setSerializationInclusion(Include.NON_NULL)
-                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                  .registerModule(new ProtobufModule()));
+            binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
 
-              binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
-
-              binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven> absent());
-              binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration> absent());
-            }
-          }));
+            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven> absent());
+            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration> absent());
+          }
+        }));
 
     mainBinder.install(Modules.override(new SingularityMesosModule())
-          .with(new Module() {
+        .with(new Module() {
 
-            @Override
-            public void configure(Binder binder) {
-              SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
-              binder.bind(SingularityLogSupport.class).toInstance(logSupport);
+          @Override
+          public void configure(Binder binder) {
+            SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
+            binder.bind(SingularityLogSupport.class).toInstance(logSupport);
 
-              SingularityDriver mock = mock(SingularityDriver.class);
-              when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
-              when(mock.getMaster()).thenReturn(Optional.<MasterInfo> absent());
-              when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
-              when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
-              binder.bind(SingularityDriver.class).toInstance(mock);
-            }
-          }));
+            SingularityDriver mock = mock(SingularityDriver.class);
+            when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
+            when(mock.getMaster()).thenReturn(Optional.<MasterInfo> absent());
+            when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
+            when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
+            binder.bind(SingularityDriver.class).toInstance(mock);
+
+            SchedulerDriver driver = mock(SchedulerDriver.class);
+
+            when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
+
+            SchedulerDriverSupplier driverSupplier = new SchedulerDriverSupplier();
+            driverSupplier.setSchedulerDriver(driver);
+
+            binder.bind(SchedulerDriverSupplier.class).toInstance(driverSupplier);
+          }
+        }));
 
     mainBinder.install(new SingularityDataModule());
     mainBinder.install(new SingularitySchedulerModule());

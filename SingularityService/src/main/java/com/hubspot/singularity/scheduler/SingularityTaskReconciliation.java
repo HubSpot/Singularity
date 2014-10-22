@@ -14,11 +14,13 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -78,28 +80,44 @@ public class SingularityTaskReconciliation implements Managed {
     MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 
-  public void startReconciliation() {
+  enum ReconciliationState {
+    ALREADY_RUNNING, STARTED, NO_DRIVER;
+  }
+
+  @VisibleForTesting
+  boolean isReconciliationRunning() {
+    return isRunningReconciliation.get();
+  }
+
+  public ReconciliationState startReconciliation() {
     if (!isRunningReconciliation.compareAndSet(false, true)) {
       LOG.info("Reconciliation is already running, NOT starting a new reconciliation process");
-      return;
+      return ReconciliationState.ALREADY_RUNNING;
     }
 
     Optional<SchedulerDriver> schedulerDriver = schedulerDriverSupplier.get();
 
-    if (schedulerDriver.isPresent()) {
-      final long reconciliationStart = System.currentTimeMillis();
-      final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-
-      LOG.info("Starting a reconciliation cycle - {} current active tasks", activeTaskIds.size());
-
-      SchedulerDriver driver = schedulerDriver.get();
-      driver.reconcileTasks(Collections.<TaskStatus> emptyList());
-
-      scheduleReconciliationCheck(driver, reconciliationStart, activeTaskIds, 0);
+    if (!schedulerDriver.isPresent()) {
+      LOG.trace("Not running reconciliation - no schedulerDriver present");
+      return ReconciliationState.NO_DRIVER;
     }
+
+    final long reconciliationStart = System.currentTimeMillis();
+    final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+
+    LOG.info("Starting a reconciliation cycle - {} current active tasks", activeTaskIds.size());
+
+    SchedulerDriver driver = schedulerDriver.get();
+    driver.reconcileTasks(Collections.<TaskStatus> emptyList());
+
+    scheduleReconciliationCheck(driver, reconciliationStart, activeTaskIds, 0);
+
+    return ReconciliationState.STARTED;
   }
 
   private void scheduleReconciliationCheck(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
+    LOG.info("Scheduling the {} reconciliation check with {} ids to run in {}", numTimes + 1, remainingTaskIds.size(), JavaUtils.duration(configuration.getCheckReconcileWhenRunningEveryMillis()));
+
     executorService.schedule(new Runnable() {
 
       @Override
@@ -112,7 +130,7 @@ public class SingularityTaskReconciliation implements Managed {
           abort.abort(AbortReason.UNRECOVERABLE_ERROR);
         }
       }
-    }, configuration.getCheckReconcileWhenRunningEverySeconds(), TimeUnit.SECONDS);
+    }, configuration.getCheckReconcileWhenRunningEveryMillis(), TimeUnit.MILLISECONDS);
   }
 
   private void checkReconciliation(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
@@ -128,7 +146,8 @@ public class SingularityTaskReconciliation implements Managed {
         taskStatuses.add(taskStatusHolder.getTaskStatus().get());
       } else {
         TaskStatus.Builder fakeTaskStatusBuilder = TaskStatus.newBuilder()
-            .setTaskId(TaskID.newBuilder().setValue(taskStatusHolder.getTaskId().getId()));
+            .setTaskId(TaskID.newBuilder().setValue(taskStatusHolder.getTaskId().getId()))
+            .setState(TaskState.TASK_STARTING);
 
         if (taskStatusHolder.getSlaveId().isPresent()) {
           fakeTaskStatusBuilder.setSlaveId(SlaveID.newBuilder().setValue(taskStatusHolder.getSlaveId().get()));
@@ -140,7 +159,7 @@ public class SingularityTaskReconciliation implements Managed {
     }
 
     if (taskStatuses.isEmpty()) {
-      LOG.info("Task reconciliation ended after {}", JavaUtils.duration(reconciliationStart));
+      LOG.info("Task reconciliation ended after {} checks and {}", numTimes, JavaUtils.duration(reconciliationStart));
 
       isRunningReconciliation.set(false);
 
