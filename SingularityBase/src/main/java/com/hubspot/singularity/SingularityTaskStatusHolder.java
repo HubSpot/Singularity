@@ -15,6 +15,7 @@ public class SingularityTaskStatusHolder extends SingularityJsonObject {
   private final SingularityTaskId taskId;
   private final long serverTimestamp;
   private final String serverId;
+  private final Optional<String> slaveId;
 
   public static SingularityTaskStatusHolder fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
@@ -25,11 +26,12 @@ public class SingularityTaskStatusHolder extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityTaskStatusHolder(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("taskStatus") Optional<TaskStatus> taskStatus, @JsonProperty("serverTimestamp") long serverTimestamp, @JsonProperty("serverId") String serverId) {
+  public SingularityTaskStatusHolder(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("taskStatus") Optional<TaskStatus> taskStatus, @JsonProperty("serverTimestamp") long serverTimestamp, @JsonProperty("serverId") String serverId, @JsonProperty("slaveId") Optional<String> slaveId) {
     this.taskId = taskId;
     this.taskStatus = taskStatus;
     this.serverTimestamp = serverTimestamp;
     this.serverId = serverId;
+    this.slaveId = slaveId;
   }
 
   public Optional<TaskStatus> getTaskStatus() {
@@ -48,9 +50,13 @@ public class SingularityTaskStatusHolder extends SingularityJsonObject {
     return serverId;
   }
 
+  public Optional<String> getSlaveId() {
+    return slaveId;
+  }
+
   @Override
   public String toString() {
-    return "SingularityTaskStatusHolder [taskStatus=" + taskStatus + ", taskId=" + taskId + ", serverTimestamp=" + serverTimestamp + ", serverId=" + serverId + "]";
+    return "SingularityTaskStatusHolder [taskStatus=" + taskStatus + ", taskId=" + taskId + ", serverTimestamp=" + serverTimestamp + ", serverId=" + serverId + ", slaveId=" + slaveId + "]";
   }
 
 }

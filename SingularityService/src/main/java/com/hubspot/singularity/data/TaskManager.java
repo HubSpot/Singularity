@@ -483,7 +483,7 @@ public class TaskManager extends CuratorAsyncManager {
     final long now = System.currentTimeMillis();
 
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.<String> absent()));
-    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus> absent(), now, serverId));
+    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus> absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
     curator.create().creatingParentsIfNeeded().forPath(getTaskPath(task.getTaskId()), data);
     curator.create().creatingParentsIfNeeded().forPath(activePath, data);

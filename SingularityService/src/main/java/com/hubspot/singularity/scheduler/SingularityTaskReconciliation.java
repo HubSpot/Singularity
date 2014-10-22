@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -125,7 +127,15 @@ public class SingularityTaskReconciliation implements Managed {
       if (taskStatusHolder.getTaskStatus().isPresent()) {
         taskStatuses.add(taskStatusHolder.getTaskStatus().get());
       } else {
-        LOG.warn("Task {} doesn't have a TaskStatus yet, can't re-request reconciliation", taskStatusHolder.getTaskId());
+        TaskStatus.Builder fakeTaskStatusBuilder = TaskStatus.newBuilder()
+            .setTaskId(TaskID.newBuilder().setValue(taskStatusHolder.getTaskId().getId()));
+
+        if (taskStatusHolder.getSlaveId().isPresent()) {
+          fakeTaskStatusBuilder.setSlaveId(SlaveID.newBuilder().setValue(taskStatusHolder.getSlaveId().get()));
+        }
+
+        LOG.info("Task {} didn't have a TaskStatus yet, submitting fake status", taskStatusHolder.getTaskId());
+        taskStatuses.add(fakeTaskStatusBuilder.build());
       }
     }
 
