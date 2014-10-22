@@ -9,21 +9,20 @@ import org.apache.mesos.SchedulerDriver;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 
-public class SchedulerDriverSupplier implements Supplier<Optional<SchedulerDriver>>
-{
-    private AtomicReference<SchedulerDriver> driverHolder = new AtomicReference<>();
+public class SchedulerDriverSupplier implements Supplier<Optional<SchedulerDriver>> {
 
-    @Inject
-    public SchedulerDriverSupplier() {}
+  private final AtomicReference<SchedulerDriver> driverHolder = new AtomicReference<>();
 
-    public void setSchedulerDriver(SchedulerDriver schedulerDriver)
-    {
-        driverHolder.set(schedulerDriver);
-    }
+  @Inject
+  public SchedulerDriverSupplier() {}
 
-    @Override
-        public Optional<SchedulerDriver> get()
-    {
-        return Optional.fromNullable(driverHolder.get());
-    }
+  public void setSchedulerDriver(SchedulerDriver schedulerDriver) {
+    driverHolder.set(schedulerDriver);
+  }
+
+  @Override
+  public Optional<SchedulerDriver> get() {
+    return Optional.fromNullable(driverHolder.get());
+  }
+
 }

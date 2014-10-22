@@ -20,12 +20,15 @@ import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.DeployState;
@@ -39,6 +42,7 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -51,6 +55,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
@@ -58,9 +63,11 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 import com.ning.http.client.AsyncHttpClient;
 
 public class SingularitySchedulerTest extends SingularityCuratorTestBase {
@@ -76,6 +83,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   @Inject
   private TaskManager taskManager;
   @Inject
+  private SchedulerDriverSupplier driverSupplier;
   private SchedulerDriver driver;
   @Inject
   private SingularityScheduler scheduler;
@@ -95,12 +103,22 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   private AsyncHttpClient httpClient;
   @Inject
   private TestingLoadBalancerClient testingLbClient;
+  @Inject
+  private SingularityTaskReconciliation taskReconciliation;
+  @Inject
+  @Named(SingularityMainModule.SERVER_ID_PROPERTY)
+  private String serverId;
 
   @After
   public void teardown() throws Exception {
     if (httpClient != null) {
       httpClient.close();
     }
+  }
+
+  @Before
+  public final void setupDriver() throws Exception {
+    driver = driverSupplier.get().get();
   }
 
   private Offer createOffer(double cpus, double memory) {
@@ -808,4 +826,57 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
   }
+
+  private void sleep(long millis) {
+    try {
+      Thread.sleep(millis);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  private void saveLastActiveTaskStatus(SingularityTask task, Optional<TaskStatus> taskStatus, long millisAdjustment) {
+    taskManager.saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), taskStatus, System.currentTimeMillis() + millisAdjustment, serverId, Optional.of("slaveId")));
+  }
+
+  private TaskStatus buildTaskStatus(SingularityTask task) {
+    return TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build();
+  }
+
+  @Test
+  public void testReconciliation() {
+    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+
+    configuration.setCheckReconcileWhenRunningEveryMillis(1);
+
+    initRequest();
+    initFirstDeploy();
+
+    Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
+    sleep(2);
+    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, TaskState.TASK_STARTING);
+    SingularityTask taskTwo = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+
+    saveLastActiveTaskStatus(taskOne, Optional.<TaskStatus> absent(), -1000);
+
+    Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
+    Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.ALREADY_RUNNING);
+
+    sleep(2);
+    Assert.assertTrue(taskReconciliation.isReconciliationRunning());
+
+    saveLastActiveTaskStatus(taskOne, Optional.of(buildTaskStatus(taskOne)), +1000);
+
+    sleep(2);
+    Assert.assertTrue(taskReconciliation.isReconciliationRunning());
+
+    saveLastActiveTaskStatus(taskTwo, Optional.of(buildTaskStatus(taskTwo)), +1000);
+
+    sleep(2);
+
+    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+  }
+
 }

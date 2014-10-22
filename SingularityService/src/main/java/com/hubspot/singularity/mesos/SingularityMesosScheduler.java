@@ -252,7 +252,7 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
     final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId);
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId, Optional.<String> absent());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
 
@@ -305,7 +305,7 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void disconnected(SchedulerDriver driver) {
     schedulerDriverSupplier.setSchedulerDriver(null);
-   LOG.warn("Scheduler/Driver disconnected");
+    LOG.warn("Scheduler/Driver disconnected");
   }
 
   @Override

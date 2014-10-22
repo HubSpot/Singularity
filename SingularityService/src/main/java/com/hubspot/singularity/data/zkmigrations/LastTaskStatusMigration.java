@@ -54,7 +54,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
         }
       }
 
-      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId);
+      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.<String> absent());
 
       taskManager.saveLastActiveTaskStatus(taskStatusHolder);
     }
