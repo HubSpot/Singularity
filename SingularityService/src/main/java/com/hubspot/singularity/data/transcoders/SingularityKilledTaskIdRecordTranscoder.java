@@ -1,9 +1,12 @@
 package com.hubspot.singularity.data.transcoders;
 
+import javax.inject.Singleton;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 
+@Singleton
 public class SingularityKilledTaskIdRecordTranscoder implements Transcoder<SingularityKilledTaskIdRecord> {
 
   private final ObjectMapper objectMapper;

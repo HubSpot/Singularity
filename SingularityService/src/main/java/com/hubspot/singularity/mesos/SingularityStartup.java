@@ -3,21 +3,22 @@ package com.hubspot.singularity.mesos;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityStartable;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
@@ -30,7 +31,8 @@ import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
-public class SingularityStartup {
+@Singleton
+class SingularityStartup {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 
@@ -44,12 +46,10 @@ public class SingularityStartup {
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
 
-  private final List<SingularityStartable> startables;
-
   @Inject
-  public SingularityStartup(MesosClient mesosClient, List<SingularityStartable> startables, SingularityTaskTranscoder taskTranscoder, SingularityHealthchecker healthchecker,
-      SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, DeployManager deployManager,
-      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner) {
+  SingularityStartup(MesosClient mesosClient, SingularityTaskTranscoder taskTranscoder, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
+      SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, DeployManager deployManager, SingularityTaskReconciliation taskReconciliation,
+      ZkDataMigrationRunner zkDataMigrationRunner) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -58,40 +58,27 @@ public class SingularityStartup {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.taskTranscoder = taskTranscoder;
-    this.startables = startables;
     this.taskReconciliation = taskReconciliation;
   }
 
-  public void startup(MasterInfo masterInfo, SchedulerDriver driver) {
+  public void startup(MasterInfo masterInfo, SchedulerDriver driver) throws Exception {
     final long start = System.currentTimeMillis();
 
-    final String uri = mesosClient.getMasterUri(masterInfo);
+    final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
 
     LOG.info("Starting up... fetching state data from: " + uri);
 
-    try {
-      zkDataMigrationRunner.checkMigrations();
+    zkDataMigrationRunner.checkMigrations();
 
-      MesosMasterStateObject state = mesosClient.getMasterState(uri);
+    MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-      slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
+    slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
 
-      enqueueHealthAndNewTaskchecks();
+    enqueueHealthAndNewTaskchecks();
 
-      taskReconciliation.startReconciliation(driver);
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
-
-    startStartables();
+    taskReconciliation.startReconciliation();
 
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
-  }
-
-  private void startStartables() {
-    for (SingularityStartable startable : startables) {
-      startable.start();
-    }
   }
 
   private void enqueueHealthAndNewTaskchecks() {
@@ -130,5 +117,4 @@ public class SingularityStartup {
 
     LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), JavaUtils.duration(start));
   }
-
 }

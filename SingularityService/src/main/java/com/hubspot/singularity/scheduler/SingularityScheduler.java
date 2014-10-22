@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
+@Singleton
 public class SingularityScheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
@@ -416,7 +419,7 @@ public class SingularityScheduler {
     final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
     if (!isDeployInUse(requestDeployState, taskId.getDeployId(), true)) {
-      LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId(), requestDeployState);
+      LOG.debug("Task {} completed, but it didn't match active deploy state {} - ignoring", taskId.getId(), requestDeployState);
       return Optional.absent();
     }
 

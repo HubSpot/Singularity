@@ -3,11 +3,14 @@ package com.hubspot.singularity.data.history;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.inject.Inject;
+
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -20,7 +23,6 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
@@ -28,7 +30,11 @@ public class SingularityMappers {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMappers.class);
 
-  public static class SingularityBytesMapper implements ResultSetMapper<byte[]> {
+  static class SingularityBytesMapper implements ResultSetMapper<byte[]> {
+
+    @Inject
+    SingularityBytesMapper() {
+    }
 
     @Override
     public byte[] map(int index, ResultSet r, StatementContext ctx) throws SQLException {
@@ -37,7 +43,11 @@ public class SingularityMappers {
 
   }
 
-  public static class SingularityRequestIdMapper implements ResultSetMapper<String> {
+  static class SingularityRequestIdMapper implements ResultSetMapper<String> {
+
+    @Inject
+    SingularityRequestIdMapper() {
+    }
 
     @Override
     public String map(int index, ResultSet r, StatementContext ctx) throws SQLException {
@@ -46,17 +56,27 @@ public class SingularityMappers {
 
   }
 
-  public static class SingularityRequestHistoryMapper implements ResultSetMapper<SingularityRequestHistory> {
+  static class SingularityRequestHistoryMapper implements ResultSetMapper<SingularityRequestHistory> {
+    private final ObjectMapper objectMapper;
+
+    @Inject
+    SingularityRequestHistoryMapper(ObjectMapper objectMapper) {
+      this.objectMapper = objectMapper;
+    }
 
     @Override
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return new SingularityRequestHistory(r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), RequestHistoryType.valueOf(r.getString("requestState")), SingularityRequest.fromBytes(r.getBytes("request"),
-          SingularityServiceModule.OBJECT_MAPPER));
+          objectMapper));
     }
 
   }
 
-  public static class SingularityTaskIdHistoryMapper implements ResultSetMapper<SingularityTaskIdHistory> {
+  static class SingularityTaskIdHistoryMapper implements ResultSetMapper<SingularityTaskIdHistory> {
+
+    @Inject
+    SingularityTaskIdHistoryMapper() {
+    }
 
     @Override
     public SingularityTaskIdHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
@@ -75,10 +95,13 @@ public class SingularityMappers {
 
       return new SingularityTaskIdHistory(taskId, r.getTimestamp("updatedAt").getTime(), lastTaskState);
     }
-
   }
 
-  public static class SingularityDeployHistoryLiteMapper implements ResultSetMapper<SingularityDeployHistory> {
+  static class SingularityDeployHistoryLiteMapper implements ResultSetMapper<SingularityDeployHistory> {
+
+    @Inject
+    SingularityDeployHistoryLiteMapper() {
+    }
 
     @Override
     public SingularityDeployHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
@@ -87,7 +110,5 @@ public class SingularityMappers {
 
       return new SingularityDeployHistory(Optional.of(deployState), marker, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics> absent());
     }
-
   }
-
 }

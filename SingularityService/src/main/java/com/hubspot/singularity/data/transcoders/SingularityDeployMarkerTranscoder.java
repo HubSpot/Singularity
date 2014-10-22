@@ -1,9 +1,12 @@
 package com.hubspot.singularity.data.transcoders;
 
+import javax.inject.Singleton;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployMarker;
 
+@Singleton
 public class SingularityDeployMarkerTranscoder implements Transcoder<SingularityDeployMarker> {
 
   private final ObjectMapper objectMapper;

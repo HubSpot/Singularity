@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -75,7 +76,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     } catch (Throwable t) {
       LOG.error("Aborting, caught throwable while saving health check result {}", result, t);
       exceptionNotifier.notify(t);
-      abort.abort();
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
     }
   }
 

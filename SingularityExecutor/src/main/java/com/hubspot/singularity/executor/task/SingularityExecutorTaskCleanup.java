@@ -27,7 +27,7 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
     this.log = log;
   }
 
-  public boolean cleanup() {
+  public boolean cleanup(boolean cleanupTaskAppDirectory) {
     final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
 
     if (!Files.exists(taskDirectory)) {
@@ -36,7 +36,11 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
     }
 
     boolean logTearDownSuccess = taskLogManager.teardown();
-    boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+    boolean cleanupTaskAppDirectorySuccess = false;
+
+    if (cleanupTaskAppDirectory) {
+      cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+    }
 
     log.info("Cleaned up logs ({}) and task app directory ({})", logTearDownSuccess, cleanupTaskAppDirectorySuccess);
 

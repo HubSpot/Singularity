@@ -42,6 +42,10 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
   public Response onCompleted(Response response) throws Exception {
     LOG.trace("Webhook {} for {} completed with {} after {}", webhook.getUri(), update, response.getStatusCode(), JavaUtils.duration(start));
 
+    if (response.hasResponseBody()) {
+      LOG.trace("Webhook response message is: '{}'", response.getResponseBody());
+    }
+
     if (JavaUtils.isHttpSuccess(response.getStatusCode()) || shouldDeleteUpdateDueToQueueAboveCapacity) {
       deleteWebhookUpdate();
     }

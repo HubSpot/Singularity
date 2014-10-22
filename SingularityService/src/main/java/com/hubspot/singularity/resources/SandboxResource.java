@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -32,7 +34,7 @@ import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 
 @Path(SingularityService.API_BASE_PATH + "/sandbox")
-@Produces({ MediaType.APPLICATION_JSON })
+@Produces({MediaType.APPLICATION_JSON})
 public class SandboxResource extends AbstractHistoryResource {
 
   private final SandboxManager sandboxManager;
@@ -40,7 +42,8 @@ public class SandboxResource extends AbstractHistoryResource {
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport, SingularityConfiguration configuration) {
+  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport,
+      SingularityConfiguration configuration) {
     super(historyManager, taskManager, deployManager);
 
     this.configuration = configuration;
@@ -89,8 +92,8 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String qPath,
-                                   @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
+  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String qPath, @QueryParam("grep") Optional<String> grep, @QueryParam("offset") Optional<Long> offset,
+      @QueryParam("length") Optional<Long> length) {
     final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
@@ -102,6 +105,20 @@ public class SandboxResource extends AbstractHistoryResource {
 
       if (!maybeChunk.isPresent()) {
         throw WebExceptions.notFound("File %s does not exist for task ID %s", fullPath, taskId);
+      }
+
+      if (grep.isPresent()) {
+        final Pattern grepPattern = Pattern.compile(grep.get());
+        final StringBuilder strBuilder = new StringBuilder(maybeChunk.get().getData().length());
+
+        for (String line : Splitter.on("\n").split(maybeChunk.get().getData())) {
+          if (grepPattern.matcher(line).find()) {
+            strBuilder.append(line);
+            strBuilder.append("\n");
+          }
+        }
+
+        return new MesosFileChunkObject(strBuilder.toString(), maybeChunk.get().getOffset());
       }
 
       return maybeChunk.get();

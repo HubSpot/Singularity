@@ -169,6 +169,10 @@ public class RequestManager extends CuratorAsyncManager {
     return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.<String> absent());
   }
 
+  public SingularityCreateResult deployToUnpause(SingularityRequest request, Optional<String> user) {
+    return save(request, RequestState.DEPLOYING_TO_UNPAUSE, RequestHistoryType.DEPLOYED_TO_UNPAUSE, user);
+  }
+
   public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, Optional<String> user) {
     return save(request, RequestState.ACTIVE, historyType, user);
   }
@@ -194,19 +198,24 @@ public class RequestManager extends CuratorAsyncManager {
     return getAsync(RequestManager.NORMAL_PATH_ROOT, paths, requestTranscoder);
   }
 
-  private Iterable<SingularityRequestWithState> filter(List<SingularityRequestWithState> requests, final RequestState state) {
+  private Iterable<SingularityRequestWithState> filter(List<SingularityRequestWithState> requests, final RequestState... states) {
     return Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
 
       @Override
       public boolean apply(SingularityRequestWithState input) {
-        return input.getState() == state;
+        for (RequestState state : states) {
+          if (input.getState() == state) {
+            return true;
+          }
+        }
+        return false;
       }
 
     });
   }
 
-  private Iterable<SingularityRequestWithState> getRequests(RequestState state) {
-    return filter(getRequests(), state);
+  private Iterable<SingularityRequestWithState> getRequests(RequestState... states) {
+    return filter(getRequests(), states);
   }
 
   public Iterable<SingularityRequestWithState> getPausedRequests() {
@@ -214,7 +223,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Iterable<SingularityRequestWithState> getActiveRequests() {
-    return getRequests(RequestState.ACTIVE);
+    return getRequests(RequestState.ACTIVE, RequestState.DEPLOYING_TO_UNPAUSE);
   }
 
   public Iterable<SingularityRequestWithState> getCooldownRequests() {

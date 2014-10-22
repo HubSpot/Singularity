@@ -1,9 +1,12 @@
 package com.hubspot.singularity.data.transcoders;
 
+import javax.inject.Singleton;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 
+@Singleton
 public class SingularityLoadBalancerUpdateTranscoder implements Transcoder<SingularityLoadBalancerUpdate> {
 
   private final ObjectMapper objectMapper;

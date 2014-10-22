@@ -37,7 +37,7 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityMesosClient</artifactId>
+      <artifactId>SingularityClient</artifactId>
     </dependency>
 
     <dependency>
@@ -61,10 +61,6 @@
       <scope>runtime</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.mesos</groupId>
-      <artifactId>mesos</artifactId>
-    </dependency>
   </dependencies>
 
   <build>

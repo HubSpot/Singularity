@@ -1,10 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -12,11 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -27,7 +30,8 @@ import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
 @SuppressWarnings("deprecation")
-public class SingularityHealthchecker extends SingularityCloseable<ScheduledExecutorService> {
+@Singleton
+public class SingularityHealthchecker implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -44,9 +48,7 @@ public class SingularityHealthchecker extends SingularityCloseable<ScheduledExec
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
-    super(closer);
-
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
@@ -60,8 +62,12 @@ public class SingularityHealthchecker extends SingularityCloseable<ScheduledExec
   }
 
   @Override
-  public Optional<ScheduledExecutorService> getExecutorService() {
-    return Optional.of(executorService);
+  public void start() {
+  }
+
+  @Override
+  public void stop() {
+    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 
   public void reEnqueueHealthcheck(SingularityTask task) {

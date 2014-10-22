@@ -13,6 +13,9 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
@@ -22,9 +25,6 @@ import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SingularityLogWatcherTailer extends WatchServiceHelper implements Closeable {
 
