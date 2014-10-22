@@ -2,9 +2,12 @@ package com.hubspot.singularity.client;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+
+import javax.inject.Provider;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -114,22 +117,32 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
 
   private final Random random;
-  private final String[] hosts;
+  private final Provider<List<String>> hostsProvider;
   private final String contextPath;
 
   private final HttpClient httpClient;
 
   @Inject
+  @Deprecated
   public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
+    this(contextPath, httpClient, Arrays.asList(hosts.split(",")));
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts) {
+    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)));
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
-    this.hosts = hosts.split(",");
-    random = new Random();
+    this.hostsProvider = hostsProvider;
+    this.random = new Random();
   }
 
   private String getHost() {
-    return hosts[random.nextInt(hosts.length)];
+    final List<String> hosts = hostsProvider.get();
+    return hosts.get(random.nextInt(hosts.size()));
   }
 
   private void checkResponse(String type, HttpResponse response) {
