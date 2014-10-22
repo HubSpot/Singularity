@@ -1,11 +1,10 @@
 package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.dropwizard.setup.Environment;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import io.dropwizard.setup.Environment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

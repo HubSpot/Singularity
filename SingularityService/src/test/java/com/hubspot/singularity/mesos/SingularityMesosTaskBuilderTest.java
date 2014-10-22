@@ -9,6 +9,17 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.mesos.Protos.ContainerInfo.Type;
+import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.Protos.Volume.Mode;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
@@ -25,17 +36,6 @@ import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
-
-import org.apache.mesos.Protos.ContainerInfo.Type;
-import org.apache.mesos.Protos.FrameworkID;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.Volume.Mode;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class SingularityMesosTaskBuilderTest {
   private SingularityMesosTaskBuilder builder;

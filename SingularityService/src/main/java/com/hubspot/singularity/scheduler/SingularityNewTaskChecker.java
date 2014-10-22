@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -9,8 +11,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -65,10 +65,10 @@ public class SingularityNewTaskChecker implements Managed {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
 
-    this.taskIdToCheck = Maps.newConcurrentMap();
-    this.killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
+    taskIdToCheck = Maps.newConcurrentMap();
+    killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
 
-    this.executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
+    executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
 
     this.exceptionNotifier = exceptionNotifier;
   }

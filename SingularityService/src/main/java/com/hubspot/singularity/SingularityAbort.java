@@ -6,8 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import ch.qos.logback.classic.LoggerContext;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
@@ -15,6 +13,8 @@ import org.eclipse.jetty.server.Server;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.LoggerContext;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -42,8 +42,7 @@ public class SingularityAbort implements ConnectionStateListener {
   private final AtomicBoolean aborting = new AtomicBoolean();
 
   @Inject
-  public SingularityAbort(SingularitySmtpSender smtpSender, SingularityConfiguration configuration, ServerProvider serverProvider,
-      SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+  public SingularityAbort(SingularitySmtpSender smtpSender, ServerProvider serverProvider, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
     this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;

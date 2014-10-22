@@ -11,6 +11,7 @@ import io.dropwizard.views.ViewBundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.guice.GuiceBundle;
@@ -37,6 +38,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
     });
 
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
+    bootstrap.getObjectMapper().registerModule(new GuavaModule());
     bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_NULL);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }

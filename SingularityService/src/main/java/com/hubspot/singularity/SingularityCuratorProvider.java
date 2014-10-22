@@ -2,14 +2,13 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import io.dropwizard.lifecycle.Managed;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;

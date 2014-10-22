@@ -1,10 +1,9 @@
 package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkState;
+import io.dropwizard.lifecycle.Managed;
 
 import javax.inject.Singleton;
-
-import io.dropwizard.lifecycle.Managed;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;

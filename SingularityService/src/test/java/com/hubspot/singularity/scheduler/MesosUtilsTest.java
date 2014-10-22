@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.mesos.Protos.FrameworkID;
@@ -14,8 +16,12 @@ import org.apache.mesos.Protos.Value.Type;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
 
 public class MesosUtilsTest {
 
@@ -31,6 +37,26 @@ public class MesosUtilsTest {
     Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(ranges));
 
     assertFound(numPorts, resource);
+  }
+
+  @Test
+  public void testTaskOrdering() {
+    final SingularityTaskId taskId = new SingularityTaskId("r", "d", System.currentTimeMillis(), 1, "h", "r");
+    final Optional<String> msg = Optional.absent();
+
+    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg);
+    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg);
+    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg);
+
+    List<SingularityTaskHistoryUpdate> list = Arrays.asList(update2, update1, update3);
+
+    Collections.sort(list);
+
+    Assert.assertTrue(list.get(0).getTaskState() == ExtendedTaskState.TASK_LAUNCHED);
+    Assert.assertTrue(list.get(1).getTaskState() == ExtendedTaskState.TASK_RUNNING);
+    Assert.assertTrue(list.get(2).getTaskState() == ExtendedTaskState.TASK_FAILED);
+
+
   }
 
   @Test

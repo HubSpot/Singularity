@@ -51,10 +51,9 @@ public class RequestResource extends AbstractRequestResource {
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager, SingularityMailer mailer) {
-    super(requestManager, deployManager, validator);
+    super(requestManager, deployManager);
 
     this.validator = validator;
-
     this.mailer = mailer;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -121,24 +120,6 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     return false;
-  }
-
-  // Use DeployResource.deploy() instead
-  @POST
-  @Consumes({ MediaType.APPLICATION_JSON })
-  @Path("/request/{requestId}/deploy")
-  @Deprecated
-  public SingularityRequestParent deploy(@PathParam("requestId") String requestId, SingularityDeploy pendingDeploy, @QueryParam("user") Optional<String> user) {
-    return super.deploy(pendingDeploy, user);
-  }
-
-  // Use DeployResource.cancelDeploy() instead
-  @Override
-  @DELETE
-  @Path("/request/{requestId}/deploy/{deployId}")
-  @Deprecated
-  public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {
-    return super.cancelDeploy(requestId, deployId, user);
   }
 
   private String getAndCheckDeployId(String requestId) {

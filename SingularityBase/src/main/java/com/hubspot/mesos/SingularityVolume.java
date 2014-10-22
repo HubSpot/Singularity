@@ -1,10 +1,10 @@
 package com.hubspot.mesos;
 
+import org.apache.mesos.Protos.Volume.Mode;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-
-import org.apache.mesos.Protos.Volume.Mode;
 
 public class SingularityVolume {
   private final String containerPath;

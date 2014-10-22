@@ -1,12 +1,11 @@
 package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Set;
-
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.setup.Environment;
+
+import java.util.Set;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;

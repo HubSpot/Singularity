@@ -2,24 +2,25 @@ package com.hubspot.mesos.client;
 
 import java.util.List;
 
-import org.apache.mesos.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.horizon.HttpRequest;
+import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Response;
 
 @Singleton
 public class MesosClient {
+
+  public static final String HTTP_CLIENT_NAME = "mesos.http.client";
 
   private static final Logger LOG = LoggerFactory.getLogger(MesosClient.class);
 
@@ -27,20 +28,19 @@ public class MesosClient {
   private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state.json";
   private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics.json";
 
-  private final AsyncHttpClient asyncHttpClient;
-  private final ObjectMapper objectMapper;
+  private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
+
+  private final HttpClient httpClient;
 
   @Inject
-  public MesosClient(AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper) {
-    this.asyncHttpClient = asyncHttpClient;
-    this.objectMapper = objectMapper;
+  public MesosClient(@Named(HTTP_CLIENT_NAME) HttpClient httpClient) {
+    this.httpClient = httpClient;
   }
 
-  public String getMasterUri(MasterInfo masterInfo) {
-    return String.format(MASTER_STATE_FORMAT, MesosUtils.getMasterHostAndPort(masterInfo));
+  public String getMasterUri(String hostnameAndPort) {
+    return String.format(MASTER_STATE_FORMAT, hostnameAndPort);
   }
 
-  @SuppressWarnings("serial")
   public static class MesosClientException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
@@ -54,36 +54,40 @@ public class MesosClient {
 
   }
 
-  private Response getResponse(String uri) {
-    Response response = null;
+  private HttpResponse getFromMesos(String uri) {
+    HttpResponse response = null;
 
     final long start = System.currentTimeMillis();
 
     LOG.debug("Fetching {} from mesos", uri);
 
     try {
-      response = asyncHttpClient.prepareGet(uri).execute().get();
+      response = httpClient.execute(HttpRequest.newBuilder().setUrl(uri).build());
 
       LOG.debug("Response {} - {} after {}", response.getStatusCode(), uri, JavaUtils.duration(start));
     } catch (Exception e) {
       throw new MesosClientException(String.format("Exception fetching %s after %s", uri, JavaUtils.duration(start)), e);
     }
 
-    if (response.getStatusCode() < 200 || response.getStatusCode() > 299) {
+    if (!response.isSuccess()) {
       throw new MesosClientException(String.format("Invalid response code from %s : %s", uri, response.getStatusCode()));
     }
 
     return response;
   }
 
-  public MesosMasterStateObject getMasterState(String uri) {
-    Response response = getResponse(uri);
+  private <T> T getFromMesos(String uri, Class<T> clazz) {
+    HttpResponse response = getFromMesos(uri);
 
     try {
-      return objectMapper.readValue(response.getResponseBodyAsStream(), MesosMasterStateObject.class);
+      return response.getAs(clazz);
     } catch (Exception e) {
-      throw new MesosClientException("Invalid response from uri: " + uri, e);
+      throw new MesosClientException(String.format("Couldn't deserialize %s from %s", clazz.getSimpleName(), uri), e);
     }
+  }
+
+  public MesosMasterStateObject getMasterState(String uri) {
+    return getFromMesos(uri, MesosMasterStateObject.class);
   }
 
   public String getSlaveUri(String hostname) {
@@ -91,24 +95,18 @@ public class MesosClient {
   }
 
   public MesosSlaveStateObject getSlaveState(String uri) {
-    Response response = getResponse(uri);
-
-    try {
-      return objectMapper.readValue(response.getResponseBodyAsStream(), MesosSlaveStateObject.class);
-    } catch (Exception e) {
-      throw new MesosClientException("Invalid response from uri: " + uri, e);
-    }
+    return getFromMesos(uri, MesosSlaveStateObject.class);
   }
 
   public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
     final String uri = String.format(MESOS_SLAVE_STATISTICS_URL, hostname);
 
-    Response response = getResponse(uri);
+    HttpResponse response = getFromMesos(uri);
 
     try {
-      return objectMapper.readValue(response.getResponseBodyAsStream(), new TypeReference<List<MesosTaskMonitorObject>>() {});
+      return response.getAs(TASK_MONITOR_TYPE_REFERENCE);
     } catch (Exception e) {
-      throw new MesosClientException("Invalid response from uri: " + uri, e);
+      throw new MesosClientException(String.format("Unable to deserialize task monitor object from %s", uri), e);
     }
   }
 

@@ -36,9 +36,6 @@ public class SMTPConfiguration {
   private String from = "singularity-no-reply@example.com";
 
   @JsonProperty
-  private int mailThreads = 1;
-
-  @JsonProperty
   private int mailMaxThreads = 3;
 
   @NotNull
@@ -88,14 +85,6 @@ public class SMTPConfiguration {
 
   public void setUsername(String username) {
     this.username = username;
-  }
-
-  public int getMailThreads() {
-    return mailThreads;
-  }
-
-  public void setMailThreads(int mailThreads) {
-    this.mailThreads = mailThreads;
   }
 
   public int getMailMaxThreads() {

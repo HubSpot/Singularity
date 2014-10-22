@@ -2,6 +2,8 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -9,12 +11,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import de.neuland.jade4j.parser.Parser;
-import de.neuland.jade4j.parser.node.Node;
-import de.neuland.jade4j.template.JadeTemplate;
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.SimpleServerFactory;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -58,6 +54,11 @@ import com.hubspot.singularity.smtp.JadeHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.ning.http.client.AsyncHttpClient;
+
+import de.neuland.jade4j.parser.Parser;
+import de.neuland.jade4j.parser.node.Node;
+import de.neuland.jade4j.template.JadeTemplate;
+
 
 public class SingularityMainModule implements Module {
 
@@ -141,6 +142,7 @@ public class SingularityMainModule implements Module {
     public HostAndPort get() {
       return HostAndPort.fromParts(hostname, httpPort);
     }
+
 
   }
 

@@ -3,12 +3,12 @@ package com.hubspot.singularity.runner.base.shared;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SingularityRunner {
 

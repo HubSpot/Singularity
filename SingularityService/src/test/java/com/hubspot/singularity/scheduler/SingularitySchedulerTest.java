@@ -52,6 +52,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -346,14 +347,12 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
 
-    SingularityDeploy newDeploy = new SingularityDeployBuilder(requestId, "nextDeployId").setCommand(Optional.of("sleep 100")).build();
-
     Assert.assertTrue(taskManager.getPendingTasks().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
-    deployResource.deploy(newDeploy, Optional.<String> absent());
+    deploy("nextDeployId");
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -540,6 +539,14 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
 
+  private void deploy(String deployId) {
+    deploy(deployId, Optional.<Boolean> absent());
+  }
+
+  private void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), Optional.<String> absent(), unpauseOnDeploy));
+  }
+
   @Test
   public void testScheduledJobLivesThroughDeploy() {
     initScheduledRequest();
@@ -549,7 +556,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
 
-    deployResource.deploy(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    deploy("d2");
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     deployChecker.checkDeploys();
@@ -567,7 +574,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     requestResource.submit(bldr.build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    deployResource.deploy(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("hi")).build(), Optional.<String> absent());
+    deploy("d2");
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
     deployChecker.checkDeploys();
@@ -756,4 +763,49 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
   }
 
+  @Test
+  public void testUnpauseoOnDeploy() {
+    initRequest();
+    initFirstDeploy();
+
+    requestManager.pause(request, Optional.<String> absent());
+
+    boolean exception = false;
+
+    try {
+      deploy("d2");
+    } catch (Exception e) {
+      exception = true;
+    }
+
+    Assert.assertTrue(exception);
+
+    deploy("d3", Optional.of(true));
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.PAUSED);
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+
+    deploy("d4", Optional.of(true));
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_RUNNING);
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+  }
 }
