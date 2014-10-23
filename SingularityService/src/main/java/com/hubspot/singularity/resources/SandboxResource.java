@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.GET;
@@ -14,13 +15,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
@@ -76,15 +81,26 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/browse")
-  public Collection<MesosFileObject> browse(@PathParam("taskId") String taskId, @QueryParam("path") String qPath) {
+  public SingularitySandbox browse(@PathParam("taskId") String taskId, @QueryParam("path") String qPath) {
     final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), path).toString();
+    final String rootPath = history.getDirectory().get();
+    final String fullPath = new File(rootPath, path).toString();
 
     try {
-      return sandboxManager.browse(slaveHostname, fullPath);
+      Collection<MesosFileObject> mesosFiles = sandboxManager.browse(slaveHostname, fullPath);
+      List<MesosFileObject> mesosFilesRelativePaths = Lists.newArrayList(Iterables.transform(mesosFiles, new Function<MesosFileObject, MesosFileObject>() {
+
+        @Override
+        public MesosFileObject apply(MesosFileObject input) {
+          return new MesosFileObject(input.getGid(), input.getMode(), input.getMtime(), input.getNlink(), input.getPath().substring(rootPath.length() + 1), input.getSize(), input.getUid());
+        }
+
+      }));
+
+      return new SingularitySandbox(mesosFilesRelativePaths, rootPath);
     } catch (SlaveNotFoundException snfe) {
       throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
@@ -94,11 +110,10 @@ public class SandboxResource extends AbstractHistoryResource {
   @Path("/{taskId}/read")
   public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String qPath, @QueryParam("grep") Optional<String> grep, @QueryParam("offset") Optional<Long> offset,
       @QueryParam("length") Optional<Long> length) {
-    final String path = getDefaultPath(taskId, qPath);
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
-    final String fullPath = new File(history.getDirectory().get(), path).toString();
+    final String fullPath = new File(history.getDirectory().get(), qPath).toString();
 
     try {
       final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
