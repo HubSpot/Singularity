@@ -47,6 +47,7 @@
 
     <dep.metrics.version>3.0.2</dep.metrics.version>
     <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
+    <dep.plugin.surefire.version>2.18-SNAPSHOT</dep.plugin.surefire.version>
 
     <baragon.version>0.1.2</baragon.version>
     <curator.version>2.4.2</curator.version>
