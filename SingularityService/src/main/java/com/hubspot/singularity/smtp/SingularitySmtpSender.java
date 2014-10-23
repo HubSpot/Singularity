@@ -16,6 +16,7 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +128,7 @@ public class SingularitySmtpSender implements Managed {
 
       message.setFrom(new InternetAddress(smtpConfiguration.getFrom()));
 
-      message.setSubject(subject);
+      message.setSubject(MimeUtility.encodeText(subject, "utf-8", null));
       message.setContent(body, "text/html; charset=utf-8");
 
       LOG.trace("Sending a message to {} - {}", Arrays.toString(toArray), getEmailLogFormat(toList, subject));
