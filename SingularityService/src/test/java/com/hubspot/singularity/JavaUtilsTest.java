@@ -19,7 +19,7 @@ public class JavaUtilsTest {
 
     ThreadPoolExecutor es = JavaUtils.newFixedTimingOutThreadPool(numMaxThreads, timeoutMillis, "test");
 
-    Thread.sleep(timeoutMillis + 1);
+    Thread.sleep(timeoutMillis + 100);
 
     Assert.assertTrue(es.getPoolSize() == 0);
 
@@ -47,7 +47,7 @@ public class JavaUtilsTest {
     Assert.assertTrue(es.getPoolSize() == numMaxThreads);
     block.countDown();
 
-    Thread.sleep(timeoutMillis + 1);
+    Thread.sleep(timeoutMillis + 100);
     Assert.assertTrue(es.getMaximumPoolSize() == numMaxThreads);
     Assert.assertTrue(es.getPoolSize() == 0);
 
