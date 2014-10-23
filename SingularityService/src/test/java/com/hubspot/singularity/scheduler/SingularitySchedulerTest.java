@@ -853,7 +853,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initFirstDeploy();
 
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
-    sleep(2);
+    sleep(50);
     Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
 
     SingularityTask taskOne = launchTask(request, firstDeploy, TaskState.TASK_STARTING);
@@ -864,17 +864,17 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.ALREADY_RUNNING);
 
-    sleep(2);
+    sleep(50);
     Assert.assertTrue(taskReconciliation.isReconciliationRunning());
 
     saveLastActiveTaskStatus(taskOne, Optional.of(buildTaskStatus(taskOne)), +1000);
 
-    sleep(2);
+    sleep(50);
     Assert.assertTrue(taskReconciliation.isReconciliationRunning());
 
     saveLastActiveTaskStatus(taskTwo, Optional.of(buildTaskStatus(taskTwo)), +1000);
 
-    sleep(2);
+    sleep(50);
 
     Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
   }
