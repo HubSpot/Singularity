@@ -5,15 +5,17 @@ class TaskFiles extends Collection
     url: -> "#{ config.apiRoot }/sandbox/#{ @taskId }/browse"
 
     initialize: (models, { @taskId, @path }) ->
-        @path = if not @path? then @taskId else @path
-
+    
     fetch: (params) ->
+        data = if @path then {@path} else {}
         super _.extend params or {},
-            data: {@path}
+            data: data
 
-    parse: (taskFiles) ->
+    parse: (sandbox) ->
+        taskFiles = sandbox.files
+        
         for taskLogFile in taskFiles
-            taskLogFile.requestPath = taskLogFile.path.replace new RegExp("^.*\/(#{ @taskId }.*?)$"), '$1'
+            taskLogFile.requestPath = taskLogFile.path
             downloadParams = $.param {path: taskLogFile.requestPath}
 
             taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
@@ -25,9 +27,8 @@ class TaskFiles extends Collection
             if not taskLogFile.isDirectory
                 extension = _.clone(taskLogFile.shortPath).replace /^.*?\.(.*?)$/g, '$1'
                 isZip = extension.indexOf('zip') isnt -1 or extension.indexOf('gz') isnt -1
-                isExe = taskLogFile.mode.indexOf('x') isnt -1
 
-                taskLogFile.isTailable = not isZip and not isExe
+                taskLogFile.isTailable = not isZip
 
         taskFiles
 
