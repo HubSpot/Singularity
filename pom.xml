@@ -47,7 +47,6 @@
 
     <dep.metrics.version>3.0.2</dep.metrics.version>
     <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
-    <dep.plugin.surefire.version>2.18-SNAPSHOT</dep.plugin.surefire.version>
 
     <baragon.version>0.1.2</baragon.version>
     <curator.version>2.4.2</curator.version>
@@ -496,14 +495,6 @@
     </dependencies>
   </dependencyManagement>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>apache-snapshots</id>
-      <name>Apache snapshots</name>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <build>
     <pluginManagement>
       <plugins>
@@ -546,6 +537,10 @@
       </activation>
       <properties>
         <project.jdk7.home>${env.JAVA_HOME}</project.jdk7.home>
+        <basepom.test.reuse-vm>false</basepom.test.reuse-vm>
+        <basepom.test.fork-count>1</basepom.test.fork-count>
+        <!-- travis is actually pretty slow. -->
+        <basepom.test.timeout>120</basepom.test.timeout>
       </properties>
     </profile>
     <profile>
