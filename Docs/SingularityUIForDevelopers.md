@@ -39,6 +39,7 @@ You will need to have the following:
 Below are some commands you might find useful when working on SingularityUI:
 
 ```bash
+# cd Singularity/SingularityUI
 # Install NPM deps, Bower deps, and do one production build
 npm install
 
