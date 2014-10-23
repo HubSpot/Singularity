@@ -52,6 +52,10 @@ public class SingularityHistoryPersister implements Managed {
       LOG.warn("Not persisting history because persistHistoryEverySeconds is set to {}", configuration.getPersistHistoryEverySeconds());
       return;
     }
+    if (!configuration.getDatabaseConfiguration().isPresent()) {
+      LOG.info("Not persisting history because no database configuration is present");
+      return;
+    }
 
     LOG.info("Starting a history persister with a {} delay", JavaUtils.durationFromMillis(TimeUnit.SECONDS.toMillis(configuration.getPersistHistoryEverySeconds())));
 

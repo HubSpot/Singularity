@@ -67,6 +67,11 @@ public class SingularityDeployHealthHelper {
           if (deploy.isPresent()) {
             runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().or(runningThreshold);
           }
+
+          if (runningThreshold < 1) {
+            return DeployHealth.HEALTHY;
+          }
+
           Optional<SingularityTaskHistoryUpdate> runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
           long taskDuration = System.currentTimeMillis() - runningUpdate.get().getTimestamp();
 
