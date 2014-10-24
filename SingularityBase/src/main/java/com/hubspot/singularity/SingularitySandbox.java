@@ -4,30 +4,41 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.mesos.json.MesosFileObject;
 
 public class SingularitySandbox extends SingularityJsonObject {
 
-  private final List<MesosFileObject> files;
-  private final String rootPath;
+  private final List<SingularitySandboxFile> files;
+  private final String fullPathToRoot;
+  private final String currentDirectory;
+  private final String slaveHostname;
 
   @JsonCreator
-  public SingularitySandbox(@JsonProperty("files") List<MesosFileObject> files, @JsonProperty("rootPath") String rootPath) {
+  public SingularitySandbox(@JsonProperty("files") List<SingularitySandboxFile> files, @JsonProperty("fullPathToRoot") String fullPathToRoot, @JsonProperty("currentDirectory") String currentDirectory, @JsonProperty("slaveHostname") String slaveHostname) {
     this.files = files;
-    this.rootPath = rootPath;
+    this.currentDirectory = currentDirectory;
+    this.fullPathToRoot = fullPathToRoot;
+    this.slaveHostname = slaveHostname;
   }
 
-  public List<MesosFileObject> getFiles() {
+  public String getFullPathToRoot() {
+    return fullPathToRoot;
+  }
+
+  public String getSlaveHostname() {
+    return slaveHostname;
+  }
+
+  public List<SingularitySandboxFile> getFiles() {
     return files;
   }
 
-  public String getRootPath() {
-    return rootPath;
+  public String getCurrentDirectory() {
+    return currentDirectory;
   }
 
   @Override
   public String toString() {
-    return "SingularitySandbox [files=" + files + ", rootPath=" + rootPath + "]";
+    return "SingularitySandbox [files=" + files + ", fullPathToRoot=" + fullPathToRoot + ", currentDirectory=" + currentDirectory + ", slaveHostname=" + slaveHostname + "]";
   }
 
 
