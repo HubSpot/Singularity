@@ -163,9 +163,11 @@ public class SingularityValidator {
     checkForIllegalResources(request, deploy);
 
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) ||
-          (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
-          (deploy.getContainerInfo().isPresent())),
+        (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
+            (deploy.getContainerInfo().isPresent())),
         "If not using custom executor, specify a command or containerInfo. If using custom executor, specify executorData and customExecutorCmd and no command.");
+
+    check(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
     check(deployHistoryHelper.isDeployIdAvailable(request.getId(), deploy.getId()), "Can not deploy a deploy that has already been deployed");
   }
