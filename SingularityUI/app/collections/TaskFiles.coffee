@@ -25,7 +25,15 @@ class TaskFiles extends Collection
             taskLogFile.fullPath = sandbox.fullPathToRoot + "/" + taskLogFile.uiPath
               
             taskLogFile.mtime = taskLogFile.mtime * 1000
-            taskLogFile.downloadLink = "http://#{ sandbox.slaveHostname }:5051/files/download.json?path=#{ taskLogFile.fullPath }"
+            
+            httpPrefix = "http"
+            httpPort = config.slaveHttpPort
+            
+            if config.slaveHttpsPort
+              httpPrefix = "https"
+              httpPort = config.slaveHttpsPort
+              
+            taskLogFile.downloadLink = "#{httpPrefix}://#{ sandbox.slaveHostname }:#{httpPort}/files/download.json?path=#{ taskLogFile.fullPath }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.taskId = @taskId
 

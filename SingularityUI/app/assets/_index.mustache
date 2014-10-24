@@ -22,10 +22,10 @@
             appRoot: "{{{appRoot}}}",
             apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
             title: "{{{title}}}",
-            mesosLogPort: {{{mesosLogsPort}}},
-            {{#mesosLogsPortHttps}}
-            mesosLogsPortHttps: {{{mesosLogsPortHttps}}}
-            {{/mesosLogsPortHttps}}
+            slaveHttpPort: {{{slaveHttpPort}}},
+            {{#slaveHttpsPort}}
+            slaveHttpsPort: {{{slaveHttpsPort}}}
+            {{/slaveHttpsPort}}
         };
     </script>
     <script src="{{{staticRoot}}}/js/app.js"></script>
