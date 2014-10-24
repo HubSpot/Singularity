@@ -19,7 +19,7 @@ class FileBrowserSubview extends View
         # Ensure we have enough space to scroll
         offset = @$el.offset().top
         
-        breadcrumbs = utils.pathToBreadcrumbs @collection.path
+        breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
 
         @$el.html @template
             synced:      @collection.synced
