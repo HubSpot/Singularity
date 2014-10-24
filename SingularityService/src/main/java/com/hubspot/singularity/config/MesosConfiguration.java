@@ -28,18 +28,13 @@ public class MesosConfiguration {
   private String defaultRackId = "DEFAULT";
 
   private int slaveHttpPort = 5051;
-
   @NotNull
   private Optional<Integer> slaveHttpsPort = Optional.absent();
-  @NotNull
+
   private int maxNumInstancesPerRequest = 25;
-  @NotNull
   private int maxNumCpusPerInstance = 50;
-  @NotNull
   private int maxNumCpusPerRequest = 900;
-  @NotNull
   private int maxMemoryMbPerInstance = 24000;
-  @NotNull
   private int maxMemoryMbPerRequest = 450000;
 
   public int getMaxNumInstancesPerRequest() {
