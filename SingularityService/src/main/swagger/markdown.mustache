@@ -1,0 +1,128 @@
+#{{#apiInfo}}{{title}}
+
+{{description}}
+
+Terms of Service: [{{termsOfServiceUrl}}]({{termsOfServiceUrl}})
+
+Contact: [{{contact}}](mailto:{{contact}})
+
+License: [{{license}}]({{licenseUrl}})
+
+{{/apiInfo}}
+
+BasePath: {{basePath}}
+
+Api Version: {{apiVersion}}
+
+## APIs
+{{#apiDocuments}}
+### {{resourcePath}}
+{{#description}}
+#### Overview
+{{{description}}}
+{{/description}}
+
+{{#apis}}
+{{#operations}}
+#### **{{httpMethod}}** `{{path}}`
+##### {{nickname}} 
+
+{{summary}}
+{{{notes}}}
+
+###### URL
+{{url}}
+###### Parameters
+{{#parameters}}
+- {{paramType}}
+
+<table border="1">
+    <tr>
+        <th>Parameter</th>
+        <th>Required</th>
+        <th>Description</th>
+        <th>Data Type</th>
+    </tr>
+    {{#paras}}
+    <tr>
+        <th>{{name}}</th>
+        <td>{{required}}</td>
+        <td>{{description}}</td>
+        <td>{{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}}</td>
+    </tr>
+    {{/paras}}
+</table>
+{{/parameters}}
+
+{{#responseClass}}
+###### Response
+[{{className}}](#{{classLinkName}}){{^genericClasses}}{{/genericClasses}}{{#genericClasses}}< [{{className}}](#{{classLinkName}}) >{{/genericClasses}}
+{{/responseClass}}
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+{{#errorResponses}}
+| {{code}}    | {{message}} | {{#linkType}}[{{type}}](#{{linkType}}){{/linkType}}{{^linkType}}{{#type}}{{{type}}}{{/type}}{{^type}}-{{/type}}{{/linkType}} |
+{{/errorResponses}}
+
+{{#samples}}
+###### Samples
+{{/samples}}
+{{#samples}}
+{{sampleDescription}}
+
+- Sample Request
+
+```
+{{{sampleRequest}}}
+```
+
+- Sample Response
+
+```
+{{{sampleResponse}}}
+```
+
+{{/samples}}
+
+- - -
+{{/operations}}
+{{/apis}}
+{{/apiDocuments}}
+
+## Data Types
+{{#dataTypes}}
+
+
+## <a name="{{name}}">{{name}}</a>
+
+<table border="1">
+    <tr>
+        <th>type</th>
+        <th>required</th>
+        <th>access</th>
+        <th>description</th>
+        <th>notes</th>
+    </tr>
+    {{#items}}
+    <tr>
+        <td>{{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}}</td>
+        <td>{{#required}}required{{/required}}{{^required}}optional{{/required}}</td>
+        <td>{{#access}}{{{access}}}{{/access}}{{^access}}-{{/access}}</td>
+        <td>{{#description}}{{{description}}}{{/description}}{{^description}}-{{/description}}{{#allowableValue}} Allowable
+        values:{{.}}{{/allowableValue}}</td>
+        <td>{{#notes}}{{{notes}}}{{/notes}}{{^notes}}-{{/notes}}</td>
+    </tr>
+    {{/items}}
+</table>
+
+{{/dataTypes}}
+
+{{#enumTypes}}
+## {{name}}
+{{#allowableValues}}
+{{.}}
+{{/allowableValues}}
+{{/enumTypes}}
