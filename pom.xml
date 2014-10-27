@@ -60,18 +60,19 @@
   </properties>
 
   <modules>
+    <module>SingularityService</module>
     <module>SingularityBase</module>
     <module>SingularityRunnerBase</module>
     <module>SingularityS3Base</module>
     <module>SingularityMesosClient</module>
     <module>SingularityClient</module>
-    <module>SingularityService</module>
     <module>SingularityExecutor</module>
     <module>SingularityExecutorCleanup</module>
     <module>SingularityLogWatcher</module>
     <module>SingularityS3Uploader</module>
     <module>SingularityS3Downloader</module>
     <module>SingularityOOMKiller</module>
+    <module>EmbedSingularityExample</module>
   </modules>
 
   <dependencyManagement>
