@@ -123,13 +123,6 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <!-- clashes with ning async-http-client -->
-      <exclusions>
-        <exclusion>
-          <artifactId>netty</artifactId>
-          <groupId>org.jboss.netty</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
