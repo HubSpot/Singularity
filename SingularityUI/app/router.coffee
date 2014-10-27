@@ -38,7 +38,7 @@ class Router extends Backbone.Router
         'tasks(/)': 'tasksTable'
 
         'task/:taskId(/)': 'taskDetail'
-        'task/:taskId/files(/)*path': 'taskDetail'
+        'task/:taskId/files(/)*path': 'taskFileBrowser'
         'task/:taskId/tail/*path': 'tail'
 
         'racks(/)': 'racks'
@@ -67,9 +67,12 @@ class Router extends Backbone.Router
     tasksTable: (state = 'active', searchFilter = '') ->
         app.bootstrapController new TasksTableController {state, searchFilter}
 
-    taskDetail: (taskId, filePath) ->
+    taskDetail: (taskId) ->
+        app.bootstrapController new TaskDetailController {taskId, filePath:null}
+      
+    taskFileBrowser: (taskId, filePath="") ->
         app.bootstrapController new TaskDetailController {taskId, filePath}
-
+        
     tail: (taskId, path = '') ->
         app.bootstrapController new TailController {taskId, path}
 

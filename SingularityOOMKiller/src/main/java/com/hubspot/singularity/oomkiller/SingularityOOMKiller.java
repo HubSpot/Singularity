@@ -98,7 +98,7 @@ public class SingularityOOMKiller {
         }
       } else {
         for (MesosTaskObject task : executor.getCompletedTasks()) {
-          Optional<SingularityTaskCleanupResult> taskCleanupResult = singularity.killTask(task.getId());
+          Optional<SingularityTaskCleanupResult> taskCleanupResult = singularity.killTask(task.getId(), Optional.<String> absent());
 
           if (taskCleanupResult.isPresent()) {
             LOG.info("Kill result {} for {}", taskCleanupResult.get().getResult(), task.getId());

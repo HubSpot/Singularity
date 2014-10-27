@@ -4,11 +4,14 @@
 # Task ID: {{{ taskId }}}
 #
 
+export MESOS_TASK_ID={{{bashEscaped taskId}}}  # I can't believe Mesos doesn't expose this.
+
 # load system-wide profile.d
 if [[ -d /etc/profile.d ]]; then
+  echo "Sourcing files from /etc/profile.d"
   for i in /etc/profile.d/*.sh; do
     source $i >/dev/null 2>&1
-    echo "Sourced $i"
+    echo "    Sourced $i"
   done
 else
   echo "No /etc/profile.d to source"
@@ -16,11 +19,21 @@ fi
 
 # load env vars
 if [[ -f deploy.env ]]; then
+  echo "Sourcing deploy-specific environment variables"
   source deploy.env
-  echo "Sourced deploy-specific environment variables"
 else
   echo "No deploy-specific environment variables"
 fi
+
+# TODO: consider removing this when all artifacts have tmp folder created at build time?
+if [[ ! -d ./tmp ]]; then
+  echo "Creating tmp directory in sandbox"
+  mkdir ./tmp
+  sudo chown -R {{{ user }}} ./tmp
+fi
+
+echo "Ensuring {{{ taskAppDirectory }}} is owned by {{{ user }}}"
+sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
 
 cd {{{ taskAppDirectory }}}/
 
@@ -34,10 +47,13 @@ else
   echo "No deploy-specific profile.d"
 fi
 
-if [[ "$USE_ULIMIT" == "1" ]]; then
-  echo "Setting max memory via ulimit -m $(($DEPLOY_MEM * 1024))"
-  ulimit -m $(($DEPLOY_MEM * 1024))
-fi
+{{#ifPresent maxTaskThreads}}
+echo "Setting max threads via ulimit -u {{{this}}}"
+ulimit -u {{{this}}}
+{{else}}
+echo "No max thread limit to set"
+{{/ifPresent}}
 
 # execute command
+echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1"
 exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1

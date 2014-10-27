@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -29,6 +32,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityStateTranscoder;
 
+@Singleton
 public class StateManager extends CuratorManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
@@ -47,9 +51,9 @@ public class StateManager extends CuratorManager {
   private final SingularityConfiguration singularityConfiguration;
 
   @Inject
-  public StateManager(CuratorFramework curator, ObjectMapper objectMapper, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, SingularityStateTranscoder stateTranscoder,
+  public StateManager(CuratorFramework curatorFramework, ObjectMapper objectMapper, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, SingularityStateTranscoder stateTranscoder,
       SingularityConfiguration singularityConfiguration) {
-    super(curator);
+    super(curatorFramework);
 
     this.objectMapper = objectMapper;
     this.requestManager = requestManager;
@@ -61,18 +65,20 @@ public class StateManager extends CuratorManager {
     this.singularityConfiguration = singularityConfiguration;
   }
 
-  public void save(SingularityHostState hostState) {
+  public void save(SingularityHostState hostState) throws InterruptedException {
     final String path = ZKPaths.makePath(ROOT_PATH, hostState.getHostname());
     final byte[] data = hostState.getAsBytes(objectMapper);
 
-    try {
-      if (exists(path)) {
-        curator.setData().forPath(path, data);
-      } else {
-        curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
+    if (curator.getState() == CuratorFrameworkState.STARTED) {
+      try {
+        if (exists(path)) {
+          curator.setData().forPath(path, data);
+        } else {
+          curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
+        }
+      } catch (Throwable t) {
+        throw Throwables.propagate(t);
       }
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
     }
   }
 
@@ -161,19 +167,21 @@ public class StateManager extends CuratorManager {
 
     for (SingularityRequestWithState requestWithState : requests) {
       switch (requestWithState.getState()) {
-      case ACTIVE:
-        numActiveRequests++;
-        break;
-      case FINISHED:
-        numFinishedRequests++;
-        break;
-      case PAUSED:
-        numPausedRequests++;
-        break;
-      case SYSTEM_COOLDOWN:
-        cooldownRequests++;
-        break;
-      default:
+        case DEPLOYING_TO_UNPAUSE:
+        case ACTIVE:
+          numActiveRequests++;
+          break;
+        case FINISHED:
+          numFinishedRequests++;
+          break;
+        case PAUSED:
+          numPausedRequests++;
+          break;
+        case SYSTEM_COOLDOWN:
+          cooldownRequests++;
+          break;
+        case DELETED:
+          break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {

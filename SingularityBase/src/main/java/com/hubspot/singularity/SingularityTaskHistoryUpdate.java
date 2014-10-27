@@ -73,13 +73,14 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   public int compareTo(SingularityTaskHistoryUpdate o) {
     return ComparisonChain.start()
         .compare(timestamp, o.getTimestamp())
+        .compare(taskState.ordinal(), o.getTaskState().ordinal())
         .compare(o.getTaskId().getId(), getTaskId().getId())
         .result();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(timestamp, taskState, statusMessage);
+    return Objects.hashCode(getTaskId(), timestamp, taskState, statusMessage);
   }
 
   @Override
@@ -93,7 +94,8 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
     SingularityTaskHistoryUpdate that = (SingularityTaskHistoryUpdate) other;
 
-    return Objects.equal(this.timestamp, that.timestamp)
+    return Objects.equal(this.getTaskId(), that.getTaskId())
+        && Objects.equal(this.timestamp, that.timestamp)
         && Objects.equal(this.taskState, that.taskState)
         && Objects.equal(statusMessage, statusMessage);
   }
@@ -112,7 +114,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   @Override
   public String toString() {
-    return "SingularityTaskHistoryUpdate [timestamp=" + timestamp + ", taskState=" + taskState + ", statusMessage=" + statusMessage + "]";
+    return "SingularityTaskHistoryUpdate [taskId=" + getTaskId() + ", timestamp=" + timestamp + ", taskState=" + taskState + ", statusMessage=" + statusMessage + "]";
   }
 
 }

@@ -92,15 +92,15 @@ class Utils
             # Set the table layout to be fixed based on these new widths
             $table.css "table-layout", "fixed"
 
-    @pathToBreadcrumbs: (path) ->
-        # a/b/c => [a, b, c]
+    @pathToBreadcrumbs: (path="") ->
         pathComponents = path.split '/'
         # [a, b, c] => [a, a/b, a/b/c]
-        _.map pathComponents, (crumb, index) =>
+        results = _.map pathComponents, (crumb, index) =>
             path = _.first pathComponents, index
             path.push crumb
-            name = if index is 0 then 'root' else crumb
-            return { name: name, path: path.join '/' }
+            return { name: crumb, path: path.join '/' }
+        results.unshift { name: "root", path: "" }
+        results
 
     # Will make $el as tall as the page and will attach a scroll event
     # that shrinks it

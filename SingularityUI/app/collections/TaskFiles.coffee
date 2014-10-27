@@ -5,29 +5,43 @@ class TaskFiles extends Collection
     url: -> "#{ config.apiRoot }/sandbox/#{ @taskId }/browse"
 
     initialize: (models, { @taskId, @path }) ->
-        @path = if not @path? then @taskId else @path
-
+    
     fetch: (params) ->
+        data = if @path isnt null then {@path} else {}
         super _.extend params or {},
-            data: {@path}
+            data: data
 
-    parse: (taskFiles) ->
+    parse: (sandbox) ->
+        taskFiles = sandbox.files
+        
+        @currentDirectory = sandbox.currentDirectory
+                
         for taskLogFile in taskFiles
-            taskLogFile.requestPath = taskLogFile.path.replace new RegExp("^.*\/(#{ @taskId }.*?)$"), '$1'
-            downloadParams = $.param {path: taskLogFile.requestPath}
-
-            taskLogFile.shortPath = taskLogFile.path.split(/\//).reverse()[0]
+            if sandbox.currentDirectory
+              taskLogFile.uiPath = sandbox.currentDirectory + "/" + taskLogFile.name
+            else
+              taskLogFile.uiPath = taskLogFile.name
+            
+            taskLogFile.fullPath = sandbox.fullPathToRoot + "/" + taskLogFile.uiPath
+              
             taskLogFile.mtime = taskLogFile.mtime * 1000
-            taskLogFile.downloadLink = "#{ config.apiRoot }/sandbox/#{ @taskId }/download?#{ downloadParams }"
+            
+            httpPrefix = "http"
+            httpPort = config.slaveHttpPort
+            
+            if config.slaveHttpsPort
+              httpPrefix = "https"
+              httpPort = config.slaveHttpsPort
+              
+            taskLogFile.downloadLink = "#{httpPrefix}://#{ sandbox.slaveHostname }:#{httpPort}/files/download.json?path=#{ taskLogFile.fullPath }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.taskId = @taskId
 
             if not taskLogFile.isDirectory
-                extension = _.clone(taskLogFile.shortPath).replace /^.*?\.(.*?)$/g, '$1'
+                extension = _.clone(taskLogFile.name).replace /^.*?\.(.*?)$/g, '$1'
                 isZip = extension.indexOf('zip') isnt -1 or extension.indexOf('gz') isnt -1
-                isExe = taskLogFile.mode.indexOf('x') isnt -1
 
-                taskLogFile.isTailable = not isZip and not isExe
+                taskLogFile.isTailable = not isZip
 
         taskFiles
 

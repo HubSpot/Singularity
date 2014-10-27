@@ -2,6 +2,8 @@ package com.hubspot.singularity.data;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -16,6 +18,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
+@Singleton
 public class SingularityValidator {
 
   private static final Joiner JOINER = Joiner.on(" ");
@@ -160,9 +163,11 @@ public class SingularityValidator {
     checkForIllegalResources(request, deploy);
 
     check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) ||
-          (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
-          (deploy.getContainerInfo().isPresent())),
+        (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
+            (deploy.getContainerInfo().isPresent())),
         "If not using custom executor, specify a command or containerInfo. If using custom executor, specify executorData and customExecutorCmd and no command.");
+
+    check(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
     check(deployHistoryHelper.isDeployIdAvailable(request.getId(), deploy.getId()), "Can not deploy a deploy that has already been deployed");
   }

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -11,7 +10,7 @@
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.3.9-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -49,7 +48,7 @@
     <dep.metrics.version>3.0.2</dep.metrics.version>
     <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
 
-    <baragon.version>0.1.0</baragon.version>
+    <baragon.version>0.1.2</baragon.version>
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.0</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>
@@ -57,6 +56,7 @@
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
     <sentry.version>5.0</sentry.version>
+    <horizon.version>0.0.10</horizon.version>
   </properties>
 
   <modules>
@@ -140,18 +140,6 @@
         <groupId>com.hubspot</groupId>
         <artifactId>BaragonCore</artifactId>
         <version>${baragon.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot.dropwizard</groupId>
-        <artifactId>dropwizard-guice</artifactId>
-        <version>0.7.0.3</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
@@ -240,6 +228,22 @@
         <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-lifecycle</artifactId>
         <version>${dropwizard.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-servlets</artifactId>
+        <version>${dropwizard.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.eclipse.jetty.orbit</groupId>
+            <artifactId>javax.servlet</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -397,7 +401,24 @@
             <artifactId>jline</artifactId>
             <groupId>jline</groupId>
           </exclusion>
+          <!-- Replaced by io.netty:netty; clashes with ning async-http-client -->
+          <exclusion>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonCore</artifactId>
+        <version>${horizon.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonNing</artifactId>
+        <version>${horizon.version}</version>
       </dependency>
 
       <dependency>
@@ -516,6 +537,10 @@
       </activation>
       <properties>
         <project.jdk7.home>${env.JAVA_HOME}</project.jdk7.home>
+        <basepom.test.reuse-vm>false</basepom.test.reuse-vm>
+        <basepom.test.fork-count>1</basepom.test.fork-count>
+        <!-- travis is actually pretty slow. -->
+        <basepom.test.timeout>120</basepom.test.timeout>
       </properties>
     </profile>
     <profile>

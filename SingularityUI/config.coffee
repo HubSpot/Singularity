@@ -40,7 +40,7 @@ exports.config =
             staticRoot: "#{ @config.server.base }/static"
             appRoot: @config.server.base
             apiRoot: ''
-            mesosLogsPort: 5051
+            slaveHttpPort: 5051
             title: 'Singularity (local dev)'
             navColor: ''
 

@@ -7,13 +7,13 @@ public class ZooKeeperConfiguration {
   @NotNull
   private String quorum;
   @NotNull
-  private Integer sessionTimeoutMillis;
+  private int sessionTimeoutMillis = 600_000;
   @NotNull
-  private Integer connectTimeoutMillis;
+  private int connectTimeoutMillis = 60_000;
   @NotNull
-  private Integer retryBaseSleepTimeMilliseconds;
+  private int retryBaseSleepTimeMilliseconds = 1_000;
   @NotNull
-  private Integer retryMaxTries;
+  private int retryMaxTries = 3;
   @NotNull
   private String zkNamespace;
 
@@ -25,35 +25,35 @@ public class ZooKeeperConfiguration {
     this.quorum = quorum;
   }
 
-  public Integer getSessionTimeoutMillis() {
+  public int getSessionTimeoutMillis() {
     return sessionTimeoutMillis;
   }
 
-  public void setSessionTimeoutMillis(Integer sessionTimeoutMillis) {
+  public void setSessionTimeoutMillis(int sessionTimeoutMillis) {
     this.sessionTimeoutMillis = sessionTimeoutMillis;
   }
 
-  public Integer getConnectTimeoutMillis() {
+  public int getConnectTimeoutMillis() {
     return connectTimeoutMillis;
   }
 
-  public void setConnectTimeoutMillis(Integer connectTimeoutMillis) {
+  public void setConnectTimeoutMillis(int connectTimeoutMillis) {
     this.connectTimeoutMillis = connectTimeoutMillis;
   }
 
-  public Integer getRetryBaseSleepTimeMilliseconds() {
+  public int getRetryBaseSleepTimeMilliseconds() {
     return retryBaseSleepTimeMilliseconds;
   }
 
-  public void setRetryBaseSleepTimeMilliseconds(Integer retryBaseSleepTimeMilliseconds) {
+  public void setRetryBaseSleepTimeMilliseconds(int retryBaseSleepTimeMilliseconds) {
     this.retryBaseSleepTimeMilliseconds = retryBaseSleepTimeMilliseconds;
   }
 
-  public Integer getRetryMaxTries() {
+  public int getRetryMaxTries() {
     return retryMaxTries;
   }
 
-  public void setRetryMaxTries(Integer retryMaxTries) {
+  public void setRetryMaxTries(int retryMaxTries) {
     this.retryMaxTries = retryMaxTries;
   }
 

@@ -7,6 +7,7 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class IndexView extends View {
+
   private final String appRoot;
   private final String staticRoot;
   private final String apiRoot;
@@ -14,8 +15,8 @@ public class IndexView extends View {
 
   private final String title;
 
-  private final Integer mesosLogsPort;
-  private final Integer mesosLogsPortHttps;
+  private final Integer slaveHttpPort;
+  private final Integer slaveHttpsPort;
 
   public IndexView(SingularityConfiguration configuration) {
     super("index.mustache");
@@ -26,8 +27,8 @@ public class IndexView extends View {
 
     title = configuration.getUiConfiguration().getTitle();
 
-    mesosLogsPort = configuration.getMesosConfiguration().getSlaveHttpPort();
-    mesosLogsPortHttps = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
+    slaveHttpPort = configuration.getMesosConfiguration().getSlaveHttpPort();
+    slaveHttpsPort = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
 
     navColor = configuration.getUiConfiguration().getNavColor();
   }
@@ -44,14 +45,6 @@ public class IndexView extends View {
     return apiRoot;
   }
 
-  public Integer getMesosLogsPort() {
-    return mesosLogsPort;
-  }
-
-  public Integer getMesosLogsPortHttps() {
-    return mesosLogsPortHttps;
-  }
-
   public String getTitle() {
     return title;
   }
@@ -59,4 +52,19 @@ public class IndexView extends View {
   public String getNavColor() {
     return navColor;
   }
+
+  public Integer getSlaveHttpPort() {
+    return slaveHttpPort;
+  }
+
+  public Integer getSlaveHttpsPort() {
+    return slaveHttpsPort;
+  }
+
+  @Override
+  public String toString() {
+    return "IndexView [appRoot=" + appRoot + ", staticRoot=" + staticRoot + ", apiRoot=" + apiRoot + ", navColor=" + navColor + ", title=" + title + ", slaveHttpPort=" + slaveHttpPort
+        + ", slaveHttpsPort=" + slaveHttpsPort + "]";
+  }
+
 }

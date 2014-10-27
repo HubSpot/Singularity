@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Set;
 
-import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +15,11 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
-import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.mesos.client.MesosClient.MesosClientException;
-import com.hubspot.mesos.json.MesosExecutorObject;
-import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
-import com.hubspot.mesos.json.MesosSlaveStateObject;
-import com.hubspot.mesos.json.MesosTaskObject;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.client.SingularityClient;
+import com.hubspot.singularity.client.SingularityClientException;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -39,16 +37,16 @@ public class SingularityExecutorCleanup {
 
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityExecutorConfiguration executorConfiguration;
-  private final MesosClient mesosClient;
+  private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
 
   @Inject
-  public SingularityExecutorCleanup(MesosClient mesosClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager) {
+  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
-    this.mesosClient = mesosClient;
+    this.singularityClient = singularityClient;
     this.templateManager = templateManager;
   }
 
@@ -60,9 +58,9 @@ public class SingularityExecutorCleanup {
 
     try {
       runningTaskIds = getRunningTaskIds();
-    } catch (MesosClientException mce) {
-      LOG.error("While fetching running tasks from mesos", mce);
-      statisticsBldr.setErrorMessage(mce.getMessage());
+    } catch (SingularityClientException sce) {
+      LOG.error("While fetching running tasks from singularity", sce);
+      statisticsBldr.setErrorMessage(sce.getMessage());
       return statisticsBldr.build();
     }
 
@@ -98,12 +96,24 @@ public class SingularityExecutorCleanup {
           continue;
         }
 
-        if (runningTaskIds.contains(taskDefinition.get().getTaskId())) {
+        final String taskId = taskDefinition.get().getTaskId();
+
+        if (runningTaskIds.contains(taskId)) {
           statisticsBldr.incrRunningTasksIgnored();
           continue;
         }
 
-        if (cleanTask(taskDefinition.get())) {
+        Optional<SingularityTaskHistory> taskHistory = null;
+
+        try {
+          taskHistory = singularityClient.getHistoryForTask(taskId);
+        } catch (SingularityClientException sce) {
+          LOG.error("While fetching history for {}", taskId, sce);
+          statisticsBldr.incrErrorTasks();
+          continue;
+        }
+
+        if (cleanTask(taskDefinition.get(), taskHistory)) {
           statisticsBldr.incrSuccessfullyCleanedTasks();
         } else {
           statisticsBldr.incrErrorTasks();
@@ -119,38 +129,48 @@ public class SingularityExecutorCleanup {
     return statisticsBldr.build();
   }
 
-  private MesosSlaveStateObject getSlaveState() {
+  private Collection<SingularityTask> getActiveTasksOnSlave() {
     try {
-      final String slaveUri = mesosClient.getSlaveUri(JavaUtils.getHostAddress());
-
-      return mesosClient.getSlaveState(slaveUri);
+      return singularityClient.getActiveTasks(JavaUtils.getHostAddress());
     } catch (SocketException e) {
       throw Throwables.propagate(e);
     }
   }
 
   private Set<String> getRunningTaskIds() {
+    final Collection<SingularityTask> activeTasks = getActiveTasksOnSlave();
+
     final Set<String> runningTaskIds = Sets.newHashSet();
 
-    for (MesosSlaveFrameworkObject framework: getSlaveState().getFrameworks()) {
-      for (MesosExecutorObject executor : framework.getExecutors()) {
-        for (MesosTaskObject task : executor.getTasks()) {
-          if (!MesosUtils.isTaskDone(TaskState.valueOf(task.getState()))) {
-            runningTaskIds.add(task.getId());
-          }
-        }
-      }
+    for (SingularityTask task : activeTasks) {
+      runningTaskIds.add(task.getTaskId().getId());
     }
 
     return runningTaskIds;
   }
 
-  private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition) {
+  private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
     SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, executorConfiguration, LOG, jsonObjectFileHelper);
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG);
 
-    return taskCleanup.cleanup();
+    boolean cleanupTaskAppDirectory = true;
+
+    if (taskHistory.isPresent()) {
+      final Optional<SingularityTaskHistoryUpdate> lastUpdate = JavaUtils.getLast(taskHistory.get().getTaskUpdates());
+
+      if (lastUpdate.isPresent() && lastUpdate.get().getTaskState().isFailed()) {
+        final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
+
+        if (delta < cleanupConfiguration.getCleanupAppDirectoryOfFailedTasksAfterMillis()) {
+          LOG.info("Not cleaning up task app directory of {} because only {} has elapsed since it failed (will cleanup after {})", taskDefinition.getTaskId(),
+              JavaUtils.durationFromMillis(delta), JavaUtils.durationFromMillis(cleanupConfiguration.getCleanupAppDirectoryOfFailedTasksAfterMillis()));
+          cleanupTaskAppDirectory = false;
+        }
+      }
+    }
+
+    return taskCleanup.cleanup(cleanupTaskAppDirectory);
   }
 
 }

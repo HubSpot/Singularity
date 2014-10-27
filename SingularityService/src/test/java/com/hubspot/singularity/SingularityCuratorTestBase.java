@@ -5,9 +5,7 @@ import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.Before;
 
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 
 public class SingularityCuratorTestBase {
@@ -17,17 +15,28 @@ public class SingularityCuratorTestBase {
   @Inject
   protected TestingServer ts;
 
-  @Before
-  public void setup() {
-    Injector i = Guice.createInjector(new SingularityTestModule());
+  private SingularityTestModule singularityTestModule;
 
-    i.injectMembers(this);
+  @Before
+  public final void curatorSetup() throws Exception {
+    singularityTestModule = new SingularityTestModule();
+
+    singularityTestModule.getInjector().injectMembers(this);
+    singularityTestModule.start();
   }
 
   @After
-  public void teardown() throws Exception {
-    cf.close();
-    ts.close();
+  public final void curatorTeardown() throws Exception {
+
+    singularityTestModule.stop();
+
+    if (cf != null) {
+      cf.close();
+    }
+
+    if (ts != null) {
+      ts.close();
+    }
   }
 
 }

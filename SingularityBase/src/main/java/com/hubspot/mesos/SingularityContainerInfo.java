@@ -2,11 +2,11 @@ package com.hubspot.mesos;
 
 import java.util.List;
 
+import org.apache.mesos.Protos.ContainerInfo.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-
-import org.apache.mesos.Protos.ContainerInfo.Type;
 
 public class SingularityContainerInfo {
   private final Type type;

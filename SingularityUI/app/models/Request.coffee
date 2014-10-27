@@ -46,8 +46,6 @@ class Request extends Model
             type: 'POST'
 
     pause: (killTasks) =>
-        killTasks = if not killTasks then undefined else killTasks
-
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'

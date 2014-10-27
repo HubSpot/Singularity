@@ -37,6 +37,9 @@ logging:
   loggers:
     "com.hubspot.singularity" : TRACE
 
+enableCorsFilter: true
+sandboxDefaultsToTaskId: false  # enable if using SingularityExecutor
+
 ui:
   title: Singularity (local)
   baseUrl: http://localhost:7099/singularity

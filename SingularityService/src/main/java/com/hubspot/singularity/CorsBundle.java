@@ -4,6 +4,7 @@ import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
 
@@ -54,7 +55,7 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
 
       @Override
       public Enumeration<String> getInitParameterNames() {
-        return Iterators.asEnumeration(Iterators.<String>emptyIterator());
+        return Iterators.asEnumeration(Collections.<String>emptyIterator());
       }
     };
 

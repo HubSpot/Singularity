@@ -119,10 +119,7 @@ public class SingularityConfiguration extends Configuration {
   private String loadBalancerUri;
 
   @NotNull
-  private int logFetchCoreThreads = 3;
-
-  @NotNull
-  private int logFetchMaxThreads = 25;
+  private int logFetchMaxThreads = 15;
 
   @NotNull
   private int maxDeployIdSize = 50;
@@ -143,13 +140,13 @@ public class SingularityConfiguration extends Configuration {
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @NotNull
-  private long checkReconcileWhenRunningEverySeconds = 30;
+  private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   @NotNull
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
   @NotNull
-  private boolean sandboxDefaultsToTaskId = true;
+  private boolean sandboxDefaultsToTaskId = false;
 
   @NotNull
   private long saveStateEverySeconds = 60;
@@ -262,10 +259,6 @@ public class SingularityConfiguration extends Configuration {
     return loadBalancerUri;
   }
 
-  public int getLogFetchCoreThreads() {
-    return logFetchCoreThreads;
-  }
-
   public int getLogFetchMaxThreads() {
     return logFetchMaxThreads;
   }
@@ -286,12 +279,12 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
-  public long getCheckReconcileWhenRunningEverySeconds() {
-    return checkReconcileWhenRunningEverySeconds;
+  public long getCheckReconcileWhenRunningEveryMillis() {
+    return checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckReconcileWhenRunningEverySeconds(long checkReconcileWhenRunningEverySeconds) {
-    this.checkReconcileWhenRunningEverySeconds = checkReconcileWhenRunningEverySeconds;
+  public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
+    this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
   public long getStartNewReconcileEverySeconds() {
@@ -468,10 +461,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setLoadBalancerUri(String loadBalancerUri) {
     this.loadBalancerUri = loadBalancerUri;
-  }
-
-  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
-    this.logFetchCoreThreads = logFetchCoreThreads;
   }
 
   public void setLogFetchMaxThreads(int logFetchMaxThreads) {

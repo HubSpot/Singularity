@@ -8,8 +8,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.synced_folder "../", "/singularity", type: "nfs"
 
-  config.vm.box = "singularity-develop-0.20.0"
-  config.vm.box_url = "https://vagrantcloud.com/tpetr/boxes/singularity-develop-0.20.0/versions/1/providers/virtualbox.box"
+  config.vm.box = "singularity-develop-0.20.1"
+  config.vm.box_url = "https://vagrantcloud.com/tpetr/boxes/singularity-develop-0.20.1/versions/1/providers/virtualbox.box"
 
   config.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", "1024"]
@@ -30,6 +30,55 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "develop", autostart: false
+
+  config.vm.define "base_image", autostart: false do |build|
+    if !Vagrant.has_plugin?("vagrant-omnibus")
+      raise "Please install vagrant-omnibus via `vagrant plugin install vagrant-ominbus --plugin-version=1.4.1`"
+    end
+
+    if !Vagrant.has_plugin?("vagrant-berkshelf")
+      raise "Please install vagrant-berkshelf 2.0.1 via `vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1`"
+    end
+
+    build.vm.box = "opscode_ubuntu-14.04_provisionerless"
+    build.vm.box_url = "http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box"
+
+    build.berkshelf.enabled = true
+    build.omnibus.chef_version = :latest
+
+    build.vm.provision :shell do |shell|
+      shell.inline = 'test -f $1 || (sudo apt-get update -y && touch $1)'
+      shell.args = '/var/run/apt-get-update'
+    end
+
+    build.vm.provision :chef_solo do |chef|
+      chef.log_level = :debug
+      chef.add_recipe "singularity"
+
+      # You may also specify custom JSON attributes:
+      chef.json = {
+        :mysql => {
+          :server_root_password => "#{mysql_password}",
+          :server_repl_password => "#{mysql_password}",
+          :server_debian_password => "#{mysql_password}",
+          :bind_address => "0.0.0.0",
+          :allow_remote_root => true
+        },
+        :mesos => {
+          :package_version => '0.20.1-1.0.ubuntu1404',
+          :master => {
+            :hostname => config.vm.hostname
+          },
+          :slave => {
+            :hostname => config.vm.hostname
+          }
+        },
+        :docker => {
+          :enabled => true
+        }
+      }
+    end
+  end
   
 end
 

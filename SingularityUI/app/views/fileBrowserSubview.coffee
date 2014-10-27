@@ -18,8 +18,8 @@ class FileBrowserSubview extends View
     render: ->
         # Ensure we have enough space to scroll
         offset = @$el.offset().top
-
-        breadcrumbs = utils.pathToBreadcrumbs @collection.path
+        
+        breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
 
         @$el.html @template
             synced:      @collection.synced
@@ -53,10 +53,7 @@ class FileBrowserSubview extends View
             tableHeight = $table.height()
 
         path = $(event.currentTarget).data 'directory-path'
-        if not @collection.path
-            @collection.path = "#{ @collection.taskId }/#{ path }"
-        else
-            @collection.path = "#{ path }"
+        @collection.path = "#{ path }"
 
         app.router.navigate "#task/#{ @collection.taskId }/files/#{ @collection.path }"
 

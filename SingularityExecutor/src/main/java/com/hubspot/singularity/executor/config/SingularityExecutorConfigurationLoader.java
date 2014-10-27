@@ -51,6 +51,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
 
   public static final String LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS = "executor.local.download.service.timeout.millis";
 
+  public static final String MAX_TASK_THREADS = "executor.max.task.threads";
+
   public SingularityExecutorConfigurationLoader() {
     super("/etc/singularity.executor.properties", Optional.of("singularity-executor.log"));
   }
@@ -85,6 +87,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
 
     properties.put(USE_LOCAL_DOWNLOAD_SERVICE, Boolean.toString(false));
     properties.put(LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(3)));
+
+    properties.put(MAX_TASK_THREADS, "");
   }
 
 }
