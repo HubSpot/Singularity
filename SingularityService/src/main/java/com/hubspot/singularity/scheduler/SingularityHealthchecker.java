@@ -70,16 +70,7 @@ public class SingularityHealthchecker implements Managed {
     MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 
-  public void reEnqueueHealthcheck(SingularityTask task) {
-    if (!taskManager.isActiveTask(task.getTaskId().getId())) {
-      LOG.trace("Task {} is not active, not reEnqueueing healthcheck", task.getTaskId());
-      return;
-    }
-
-    privateEnqueueHealthcheck(task);
-  }
-
-  private void privateEnqueueHealthcheck(SingularityTask task) {
+  public void enqueueHealthcheck(SingularityTask task) {
     ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
 
     ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
@@ -95,7 +86,7 @@ public class SingularityHealthchecker implements Managed {
       return false;
     }
 
-    privateEnqueueHealthcheck(task);
+    enqueueHealthcheck(task);
 
     return true;
   }
