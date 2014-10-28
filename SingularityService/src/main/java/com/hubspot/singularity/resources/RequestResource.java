@@ -61,7 +61,7 @@ public class RequestResource extends AbstractRequestResource {
     this.requestManager = requestManager;
   }
 
-  private class SingularityRequestDeployHolder {
+  private static class SingularityRequestDeployHolder {
 
     private final Optional<SingularityDeploy> activeDeploy;
     private final Optional<SingularityDeploy> pendingDeploy;
