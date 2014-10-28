@@ -67,6 +67,8 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       return;
     }
 
+    LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
+
     if (schedulerLockType == SchedulerLockType.LOCK) {
       mesosScheduler.lock();
     }

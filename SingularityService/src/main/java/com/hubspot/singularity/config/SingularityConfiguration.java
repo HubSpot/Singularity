@@ -64,6 +64,9 @@ public class SingularityConfiguration extends Configuration {
   private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
   @NotNull
+  private long checkSchedulerEverySeconds = 5;
+
+  @NotNull
   private long cleanupEverySeconds = 5;
 
   @NotNull
@@ -209,6 +212,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
+  }
+
+  public long getCheckSchedulerEverySeconds() {
+    return checkSchedulerEverySeconds;
+  }
+
+  public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
+    this.checkSchedulerEverySeconds = checkSchedulerEverySeconds;
   }
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {

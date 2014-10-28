@@ -116,7 +116,7 @@ public class SingularityTaskReconciliation implements Managed {
   }
 
   private void scheduleReconciliationCheck(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
-    LOG.info("Scheduling the {} reconciliation check with {} ids to run in {}", numTimes + 1, remainingTaskIds.size(), JavaUtils.durationFromMillis(configuration.getCheckReconcileWhenRunningEveryMillis()));
+    LOG.info("Scheduling reconciliation check #{} - {} tasks left - waiting {}", numTimes + 1, remainingTaskIds.size(), JavaUtils.durationFromMillis(configuration.getCheckReconcileWhenRunningEveryMillis()));
 
     executorService.schedule(new Runnable() {
 

@@ -105,11 +105,7 @@
                                     {{usernameFromEmail requestDeployState.activeDeploy.user}}
                                 </td>
                                 <td class="visible-lg visible-xl">
-                                    {{#if request.instances}}
-                                        {{ request.instances }}
-                                    {{else}}
-                                        1
-                                    {{/if}}
+                                    {{ request.instances }}
                                 </td>
                             </tr>
                         {{/each}}
