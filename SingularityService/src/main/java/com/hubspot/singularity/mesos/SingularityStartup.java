@@ -74,14 +74,14 @@ class SingularityStartup {
 
     slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
 
-    enqueueHealthAndNewTaskchecks();
+    enqueueHealthAndNewTaskChecks();
 
     taskReconciliation.startReconciliation();
 
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
   }
 
-  private void enqueueHealthAndNewTaskchecks() {
+  private void enqueueHealthAndNewTaskChecks() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTask> activeTasks = taskManager.getActiveTasks();

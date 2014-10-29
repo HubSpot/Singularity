@@ -25,6 +25,8 @@ import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityTask;
@@ -57,18 +59,20 @@ public class SingularityNewTaskChecker implements Managed {
 
   private final ScheduledExecutorService executorService;
 
+  private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort) {
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lbClient = lbClient;
+    this.abort = abort;
 
-    taskIdToCheck = Maps.newConcurrentMap();
-    killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
+    this.taskIdToCheck = Maps.newConcurrentMap();
+    this.killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
 
-    executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
+    this.executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
 
     this.exceptionNotifier = exceptionNotifier;
   }
@@ -164,11 +168,27 @@ public class SingularityNewTaskChecker implements Managed {
         try {
           checkTask(task);
         } catch (Throwable t) {
-          LOG.error("Uncaught throwable in task check for task {}", task, t);
+          LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
           exceptionNotifier.notify(t);
+
+          reEnqueueCheckOrAbort(task);
         }
       }
     };
+  }
+
+  private void reEnqueueCheckOrAbort(SingularityTask task) {
+    try {
+      reEnqueueCheck(task);
+    } catch (Throwable t) {
+      LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
+      exceptionNotifier.notify(t);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+    }
+  }
+
+  private void reEnqueueCheck(SingularityTask task) {
+    enqueueCheckWithDelay(task, configuration.getCheckNewTasksEverySeconds());
   }
 
   private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds) {
@@ -190,29 +210,23 @@ public class SingularityNewTaskChecker implements Managed {
 
     LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), JavaUtils.duration(start));
 
-    boolean reEnqueue = false;
-
     switch (state) {
-      case HEALTHY:
-      case OBSOLETE:
-        break;
       case CHECK_IF_OVERDUE:
         if (isOverdue(task)) {
           taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
-          break;
-        } // otherwise, reEnqueue
+        } else {
+          reEnqueueCheck(task);
+        }
+        break;
       case LB_IN_PROGRESS_CHECK_AGAIN:
-        reEnqueue = true;
+        reEnqueueCheck(task);
         break;
       case UNHEALTHY_KILL_TASK:
         taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
         break;
-    }
-
-    if (reEnqueue) {
-      LOG.debug("Re-enqueueing a check for task {}", task.getTaskId());
-
-      enqueueCheckWithDelay(task, configuration.getCheckNewTasksEverySeconds());
+      case HEALTHY:
+      case OBSOLETE:
+        break;
     }
   }
 
@@ -230,6 +244,7 @@ public class SingularityNewTaskChecker implements Managed {
       case UNKNOWN:
         return CheckTaskState.CHECK_IF_OVERDUE;
       case RUNNING:
+        break;
     }
 
     if (hasHealthcheck(task)) {
