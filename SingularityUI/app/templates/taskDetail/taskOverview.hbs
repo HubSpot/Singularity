@@ -39,7 +39,7 @@
     {{#withLast data.taskUpdates}}
         <div class="well text-muted">
             {{humanizeText taskState}} as of
-            {{timestampFromNow timestamp}} ({{timestampFormatted timestamp}})
+            {{timestampFromNow timestamp}}
             {{#if statusMessage}}
                 &mdash; {{ statusMessage }}
             {{/if}}

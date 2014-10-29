@@ -43,6 +43,10 @@ exports.config =
             slaveHttpPort: 5051
             title: 'Singularity (local dev)'
             navColor: ''
-
+            defaultCpus: 1
+            defaultMemory: 128
+            hideNewDeployButton: "false"
+            hideNewRequestButton: "false"
+            
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

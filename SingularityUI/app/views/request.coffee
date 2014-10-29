@@ -24,7 +24,8 @@ class RequestView extends View
     initialize: ({@requestId}) ->
 
     render: ->
-        @$el.html @template()
+        @$el.html @template
+          config: config
 
         # Attach subview elements
         @$('#header').html           @subviews.header.$el

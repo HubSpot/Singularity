@@ -125,7 +125,10 @@ class NewDeployView extends FormBaseView
                             s3ObjectKey: @valOrNothing '.object-key', $artifact
                             filesize:    parseInt(@valOrNothing '.file-size', $artifact) or undefined
 
-        deployModel = new Deploy deployObject, requestId: @model.id
+        deployWrapper = {}
+        deployWrapper.deploy = deployObject
+        
+        deployModel = new Deploy deployWrapper, requestId: @model.id
         apiRequest = deployModel.save()
 
         @lockdown = true

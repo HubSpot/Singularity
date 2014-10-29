@@ -122,6 +122,7 @@ class RequestsView extends View
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
+            config: config
             requestsFilter: @state
             requestsSubFilter: @subFilter
             searchFilter: @searchFilter
@@ -137,7 +138,7 @@ class RequestsView extends View
             partials.partials.requestsFilter = @templateFilter
 
         @$el.html @templateBase context, partials
-
+          
         if @focusSearchAfterRender
             $searchBox = @$ 'input[type="search"]'
             $searchBox.focus()
