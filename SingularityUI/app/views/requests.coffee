@@ -29,6 +29,7 @@ class RequestsView extends View
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
             'click [data-action="remove"]': 'removeRequest'
+            'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="starToggle"]': 'toggleStar'
             'click [data-action="run-now"]': 'runRequest'
@@ -57,9 +58,8 @@ class RequestsView extends View
                 searchFilter = @searchFilter.toLowerCase().split("@")[0]
                 valuesToSearch = []
                 
-                if request.request.owners
-                  for user in request.request.owners
-                    valuesToSearch.push(user.split("@")[0])
+                for user in request.request.owners ? []
+                  valuesToSearch.push(user.split("@")[0])
                   
                 valuesToSearch.push(request.request.id)
                 valuesToSearch.push(request.requestDeployState?.activeDeploy?.user)
@@ -257,7 +257,15 @@ class RequestsView extends View
         @collection.get(id).promptUnpause =>
             $row.remove()
             @trigger 'refreshrequest'
-
+            
+    scaleRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+        
+        @collection.get(id).promptScale =>
+          $row.addClass 'flash'
+          @trigger 'refreshrequest'
+          
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')

@@ -14,6 +14,7 @@ class RequestView extends View
             'click [data-action="remove"]': 'removeRequest'
             'click [data-action="run-request-now"]': 'runRequest'
             'click [data-action="pause"]': 'pauseRequest'
+            'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="bounce"]': 'bounceRequest'
 
@@ -66,6 +67,10 @@ class RequestView extends View
                 @trigger 'refreshrequest'
             , 2500
 
+    scaleRequest: (e) =>
+        @model.promptScale =>
+            @trigger 'refreshrequest'
+  
     pauseRequest: (e) =>
         @model.promptPause =>
             @trigger 'refreshrequest'

@@ -111,12 +111,12 @@ public class SingularityValidator {
     if (request.isScheduled()) {
       final String originalSchedule = request.getQuartzScheduleSafe();
 
-      check(!request.getQuartzSchedule().isPresent() || !request.getSchedule().isPresent(), "Specify one of schedule or quartzSchedule");
+      check(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
       check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
       check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
-      if (request.getQuartzSchedule().isPresent()) {
+      if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
         check(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
       }
 

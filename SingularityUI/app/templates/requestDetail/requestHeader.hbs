@@ -9,10 +9,11 @@
                 </span>
 
                 <span class="request-type">
-                    {{#if data.daemon}}daemon{{/if}}
+                    {{#if data.daemon}}daemon{{#if data.hasMoreThanOneInstance }} - {{data.instances}} instances{{/if}}{{/if}}
                     {{#if data.onDemand}}on-demand{{/if}}
                     {{#if data.scheduled}}scheduled{{/if}}
                 </span>
+                
             </h4>
 
             <h2>
@@ -38,6 +39,12 @@
                         Run now
                     </a>
                 {{/unless}}
+            {{/if}}
+
+            {{#if data.canBeScaled}}
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale">
+                    Scale
+                </a>
             {{/if}}
 
             {{#unless data.deleted}}
