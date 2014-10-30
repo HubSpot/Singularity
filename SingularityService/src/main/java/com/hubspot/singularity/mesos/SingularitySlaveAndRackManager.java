@@ -78,7 +78,7 @@ class SingularitySlaveAndRackManager {
   }
 
   private String getHost(String hostname) {
-    return getSafeString(hostname.split("\\.")[0]);
+    return getSafeString(hostname);
   }
 
   public String getSlaveHost(Offer offer) {
