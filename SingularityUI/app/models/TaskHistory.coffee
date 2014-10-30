@@ -23,6 +23,15 @@ class TaskHistory extends Model
         
         taskHistory.ports = ports
         
+        isStillRunning = true
+          
+        for taskUpdate in taskHistory.taskUpdates
+          if taskUpdate.taskState in ["TASK_KILLED", "TASK_LOST", "TASK_FAILED", "TASK_FINISHED"]
+            isStillRunning = false
+            break
+            
+        taskHistory.isStillRunning = isStillRunning
+        
         taskHistory
 
     parseResources: (task) ->

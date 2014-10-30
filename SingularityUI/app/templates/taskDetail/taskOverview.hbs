@@ -22,14 +22,10 @@
                 JSON
             </a>
 
-            {{#if data.taskUpdates}}
-                {{#withLast data.taskUpdates}}
-                    {{#ifEqual taskState 'TASK_RUNNING'}}
-                        <a class="btn btn-danger" data-action="remove">
-                            Kill task
-                        </a>
-                    {{/ifEqual}}
-                {{/withLast}}
+            {{#if data.isStillRunning}}
+                <a class="btn btn-danger" data-action="remove">
+                Kill task
+                </a>
             {{/if}}
         </div>
     </div>
