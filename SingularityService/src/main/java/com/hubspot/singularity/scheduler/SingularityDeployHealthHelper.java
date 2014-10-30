@@ -95,7 +95,7 @@ public class SingularityDeployHealthHelper {
         LOG.debug("No health check present for {}", taskId);
         return DeployHealth.WAITING;
       } else if (healthcheckResult.isFailed()) {
-        LOG.debug("Found a failed health check: {}", healthcheckResult);
+        LOG.debug("Found a failed health check for {}: {}", taskId, healthcheckResult);
         return DeployHealth.WAITING;
       }
     }
