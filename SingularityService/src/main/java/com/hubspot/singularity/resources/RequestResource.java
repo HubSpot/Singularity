@@ -7,6 +7,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -29,6 +30,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
@@ -59,6 +61,44 @@ public class RequestResource extends AbstractRequestResource {
     this.requestManager = requestManager;
   }
 
+  private static class SingularityRequestDeployHolder {
+
+    private final Optional<SingularityDeploy> activeDeploy;
+    private final Optional<SingularityDeploy> pendingDeploy;
+
+    public SingularityRequestDeployHolder(Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
+      this.activeDeploy = activeDeploy;
+      this.pendingDeploy = pendingDeploy;
+    }
+
+    public Optional<SingularityDeploy> getActiveDeploy() {
+      return activeDeploy;
+    }
+
+    public Optional<SingularityDeploy> getPendingDeploy() {
+      return pendingDeploy;
+    }
+
+  }
+
+  private SingularityRequestDeployHolder getDeployHolder(String requestId) {
+    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
+
+    Optional<SingularityDeploy> activeDeploy = Optional.absent();
+    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+
+    if (requestDeployState.isPresent()) {
+      if (requestDeployState.get().getActiveDeploy().isPresent()) {
+        activeDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getActiveDeploy().get().getDeployId());
+      }
+      if (requestDeployState.get().getPendingDeploy().isPresent()) {
+        pendingDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getPendingDeploy().get().getDeployId());
+      }
+    }
+
+    return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
+  }
+
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent submit(SingularityRequest request, @QueryParam("user") Optional<String> user) {
@@ -68,21 +108,10 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
-    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+    SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
 
-    if (requestDeployState.isPresent()) {
-      if (requestDeployState.get().getActiveDeploy().isPresent()) {
-        activeDeploy = deployManager.getDeploy(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId());
-      }
-      if (requestDeployState.get().getPendingDeploy().isPresent()) {
-        pendingDeploy = deployManager.getDeploy(request.getId(), requestDeployState.get().getPendingDeploy().get().getDeployId());
-      }
-    }
-
-    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, activeDeploy, pendingDeploy);
+    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
 
     if (!maybeOldRequest.isPresent() && requestManager.getCleanupRequest(request.getId()).isPresent()) {
       throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
@@ -308,6 +337,28 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.deleteRequest(request, user);
 
     return request;
+  }
+
+  @PUT
+  @Path("/request/{requestId}/instances")
+  public SingularityRequest updateInstances(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user, SingularityRequestInstances newInstances) {
+    if (requestId == null || newInstances.getId() == null || !requestId.equals(newInstances.getId())) {
+      throw WebExceptions.badRequest("Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
+    }
+
+    SingularityRequest oldRequest = fetchRequest(requestId);
+    Optional<SingularityRequest> maybeOldRequest = Optional.of(oldRequest);
+
+    SingularityRequestDeployHolder deployHolder = getDeployHolder(newInstances.getId());
+    SingularityRequest newRequest = oldRequest.toBuilder().setInstances(newInstances.getInstances()).build();
+
+    validator.checkSingularityRequest(newRequest, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
+
+    requestManager.update(newRequest, user);
+
+    checkReschedule(newRequest, maybeOldRequest);
+
+    return newRequest;
   }
 
 }
