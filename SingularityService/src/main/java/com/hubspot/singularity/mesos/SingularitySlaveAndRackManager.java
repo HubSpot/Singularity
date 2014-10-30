@@ -130,6 +130,7 @@ class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
+        LOG.trace("Rejecting task {} from slave {} / host {} due to numOnRack {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -137,6 +138,7 @@ class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
         if (numOnSlave > 0) {
+          LOG.trace("Rejecting task {} from slave {} / host {} due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -146,6 +148,7 @@ class SingularitySlaveAndRackManager {
         final boolean isSlaveOk = numOnSlave < numPerSlave;
 
         if (!isSlaveOk) {
+          LOG.trace("Rejecting task {} from slave {} / host {} due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
