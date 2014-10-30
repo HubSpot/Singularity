@@ -22,7 +22,6 @@
                     <td>{{ host }}</td>
                     <td class="hidden-xs" data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
-                        ({{timestampFormatted firstSeenAt}})
                     </td>
                     <td class="actions-column">
                         <a data-slave-id="{{ id }}" data-action="decommission" title="Decommission">

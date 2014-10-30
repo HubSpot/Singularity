@@ -27,15 +27,15 @@
             <div class="row">
                 <div class="col-sm-4 form-group">
                     <label for="cpus">CPUs</label>
-                    <input type="text" id="cpus" placeholder="default: 1" class="form-control">
+                    <input type="text" id="cpus" placeholder="default: {{config.defaultCpus}}" class="form-control">
                 </div>
                 <div class="col-sm-4 form-group">
                     <label for="memory-mb">Memory (MB)</label>
-                    <input type="text" id="memory-mb" placeholder="default: 128" class="form-control">
+                    <input type="text" id="memory-mb" placeholder="default: {{config.defaultMemory}}" class="form-control">
                 </div>
                 <div class="col-sm-4 form-group">
                     <label for="num-ports">Num. ports</label>
-                    <input type="text" id="num-ports" class="form-control" placeholder="default: 3">
+                    <input type="text" id="num-ports" class="form-control" placeholder="default: 0">
                 </div>
             </div>
         </fieldset>

@@ -19,6 +19,7 @@ class FormBaseView extends View
         event.preventDefault() if event
         
         @$el.html @template
+            config: config
             model: @model?.toJSON()
         
         @checkForm()

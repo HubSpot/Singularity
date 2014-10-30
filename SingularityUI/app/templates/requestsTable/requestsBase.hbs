@@ -22,10 +22,12 @@
         </ul>
     </div>
     <div class="col-md-3 hidden-xs hidden-sm">
+        {{#unless config.hideNewRequestButton}}
         <a href="{{appRoot}}/requests/new" class="btn btn-success btn-large pull-right">
             <span class="glyphicon glyphicon-plus"></span>
             New request
         </a>
+        {{/unless}}
     </div>
 </div>
 

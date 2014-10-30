@@ -28,6 +28,7 @@ class SimpleSubview extends View
         return if not @data.synced and @data.isEmpty?()
         
         @$el.html @template
+            config:   config
             data:     @data.toJSON()
             synced:   @data.synced
             expanded: @expanded

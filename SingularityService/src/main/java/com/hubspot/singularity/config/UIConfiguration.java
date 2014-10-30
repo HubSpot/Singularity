@@ -21,6 +21,25 @@ public class UIConfiguration {
   @JsonProperty
   private String baseUrl;
 
+  private boolean hideNewDeployButton = false;
+  private boolean hideNewRequestButton = false;
+
+  public boolean isHideNewDeployButton() {
+    return hideNewDeployButton;
+  }
+
+  public void setHideNewDeployButton(boolean hideNewDeployButton) {
+    this.hideNewDeployButton = hideNewDeployButton;
+  }
+
+  public boolean isHideNewRequestButton() {
+    return hideNewRequestButton;
+  }
+
+  public void setHideNewRequestButton(boolean hideNewRequestButton) {
+    this.hideNewRequestButton = hideNewRequestButton;
+  }
+
   public String getTitle() {
     return title;
   }
