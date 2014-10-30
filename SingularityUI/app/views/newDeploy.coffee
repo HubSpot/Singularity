@@ -53,9 +53,9 @@ class NewDeployView extends FormBaseView
         deployObject.id        = @$('#id').val()
 
         deployObject.resources =
-            cpus:     parseInt(@valOrNothing '#cpus') or 1
-            memoryMb: parseInt(@valOrNothing '#memory-mb') or 128
-            numPorts: parseInt(@valOrNothing '#num-ports') or 3
+            cpus:     parseInt(@valOrNothing '#cpus') or config.defaultCpus
+            memoryMb: parseInt(@valOrNothing '#memory-mb') or config.defaultMemory
+            numPorts: parseInt(@valOrNothing '#num-ports') or 0
 
         deployObject.serviceBasePath = @valOrNothing '#service-base-path'
 
