@@ -173,6 +173,7 @@ public class SingularityMesosScheduler implements Scheduler {
   }
 
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
+    final String slaveHost = offerHolder.getOffer().getHostname();
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
       Resources taskResources = defaultResources;
@@ -191,7 +192,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         LOG.trace("Accepted and built task {}", task);
 
-        LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
+        LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), slaveHost);
 
         taskManager.createTaskAndDeletePendingTask(task);
 
@@ -200,7 +201,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        LOG.trace("Ignoring offer {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
+        LOG.trace("Ignoring offer {} for task {}; matched resources: {}, slave {} match state: {}", offerHolder.getOffer().getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveHost, slaveMatchState);
       }
     }
 
