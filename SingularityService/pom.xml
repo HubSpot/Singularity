@@ -341,19 +341,15 @@
           <apiSources>
             <apiSource>
               <locations>com.hubspot.singularity.resources</locations>
-              <apiVersion>1.0</apiVersion>
-              <basePath>http://example.com</basePath>
+              <apiVersion>${project.version}</apiVersion>
 
               <apiInfo>
                 <title>Singularity REST API</title>
                 <description>Singularity Mesos Framework API</description>
               </apiInfo>
 
-              <outputTemplate>${basedir}/src/main/swagger/strapdown.html.mustache</outputTemplate>
-              <mustacheFileRoot>${basedir}/src/main/swagger/</mustacheFileRoot>
-              <outputPath>${basedir}/target/swagger/document.html</outputPath>
-              <swaggerDirectory>${basedir}/target/swagger-json</swaggerDirectory>
-              <useOutputFlatStructure>false</useOutputFlatStructure>
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs.mustache</outputTemplate>
+              <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
             </apiSource>
           </apiSources>
         </configuration>

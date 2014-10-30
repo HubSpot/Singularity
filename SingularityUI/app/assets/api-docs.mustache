@@ -1,0 +1,151 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en">        <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en">               <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Singularity API Docs</title>
+    <link rel="shortcut icon" href="../static/images/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="../static/css/app.css">
+</head>
+<body>
+    <div id="page" class="container-fluid">
+        <header>
+            <h1>{{apiInfo.title}}</h1>
+        </header>
+
+        <div id="main_container">
+            <div id="api_container">
+                <h3>Resources</h3>
+                {{#apiDocuments}}
+                    <h4>{{resourcePath}}</h4>
+
+                    <div class='content'>
+                        {{{description}}}
+
+
+                        <div id="accordion{{index}}api">
+                            {{#apis}}
+                                {{#operations}}
+                                    <h5><span style="font-weight: bold;">{{httpMethod}} </span><span>{{{path}}}</span>
+
+                                        <div id="notes">{{{summary}}}</div>
+                                    </h5>
+                                    <div>
+                                        <p>{{notes}}</p>
+
+                                        <div id="tabs{{index}}{{apiIndex}}{{opIndex}}">
+
+                                            <ul>
+                                                <li><a href="#tabs{{index}}{{apiIndex}}{{opIndex}}-1">Request Parameters</a>
+                                                </li>
+                                                <li><a href="#tabs{{index}}{{apiIndex}}{{opIndex}}-2">Response Body</a></li>
+                                                <li><a href="#tabs{{index}}{{apiIndex}}{{opIndex}}-3">Response Status Codes</a>
+                                                </li>
+                                                <li><a href="#tabs{{index}}{{apiIndex}}{{opIndex}}-4">Examples</a>
+                                                </li>
+                                            </ul>
+                                            <div id="tabs{{index}}{{apiIndex}}{{opIndex}}-1">
+                                                <ul>
+                                                    {{#parameters}}
+                                                        <li>
+                                                            <h7>{{paramType}}</h7>
+                                                            <table>
+                                                                <tr>
+                                                                    <th>Name</th>
+                                                                    <th>Required</th>
+                                                                    <th>Data Type</th>
+                                                                    <th>Description</th>
+                                                                </tr>
+                                                                {{#paras}}
+                                                                    <tr>
+                                                                        <th>{{name}}</th>
+                                                                        <td>{{#required}}required{{/required}}
+                                                                            {{^required}}optional{{/required}}</td>
+                                                                        <td>{{type}}</td>
+                                                                        <td>{{description}}</td>
+                                                                    </tr>
+                                                                {{/paras}}
+                                                            </table>
+                                                        </li>
+                                                    {{/parameters}}
+                                                </ul>
+                                            </div>
+                                            <div id="tabs{{index}}{{apiIndex}}{{opIndex}}-2">
+                                                <p>{{#responseClass}}<a
+                                                        href="#{{{classLinkName}}}">{{className}}</a>{{/responseClass}}
+                                                    {{^responseClass}}No Content{{/responseClass}}
+                                                </p>
+                                            </div>
+                                            <div id="tabs{{index}}{{apiIndex}}{{opIndex}}-3">
+                                                <table>
+                                                    <tr>
+                                                        <th>Status Code</th>
+                                                        <th>Reason</th>
+                                                    </tr>
+                                                    {{#errorResponses}}
+                                                        <tr>
+                                                            <td>{{code}}</td>
+                                                            <td>{{{message}}}</td>
+                                                        </tr>
+                                                    {{/errorResponses}}
+                                                </table>
+                                            </div>
+                                            <div id="tabs{{index}}{{apiIndex}}{{opIndex}}-4">
+                                                <p>{{#samples}}
+                                                    Sample Request
+
+                                                    <pre>
+                                                    {{{sampleRequest}}}
+                                                    </pre>
+
+                                                    - Sample Response
+
+                                                    <pre>
+                                                    {{{sampleResponse}}}
+                                                    </pre>
+                                                   {{/samples}}
+                                                   {{^samples}}No Samples{{/samples}}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {{/operations}}
+                            {{/apis}}
+                        </div>
+                    </div>
+                {{/apiDocuments}}
+            </div>
+            <h3>Data Types</h3>
+            {{#dataTypes}}
+                <h4><a name="{{name}}">{{name}}</a></h4>
+
+                <div>
+                    <table>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Access</th>
+                        <th>Schema</th>
+                        <th>Notes</th>
+                        {{#items}}
+                            <tr>
+                                <th>{{name}}</th>
+                                <td>{{#linkType}}<a href="#{{{linkType}}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}}</td>
+                                <td>{{required}}</td>
+                                <td>{{access}}</td>
+                                <td>{{{description}}}</td>
+                                <td>{{{notes}}}</td>
+                            </tr>
+                        {{/items}}
+                    </table>
+                </div>
+            {{/dataTypes}}
+        </div>
+    </div>
+    <div style="-webkit-transform: translateZ(0)"></div>
+</body>
+</html>
