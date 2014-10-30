@@ -143,6 +143,7 @@ public class SingularityTaskReconciliation implements Managed {
       }
 
       if (taskStatusHolder.getTaskStatus().isPresent()) {
+        LOG.debug("Re-requesting task status for {}", taskStatusHolder.getTaskId());
         taskStatuses.add(taskStatusHolder.getTaskStatus().get());
       } else {
         TaskStatus.Builder fakeTaskStatusBuilder = TaskStatus.newBuilder()

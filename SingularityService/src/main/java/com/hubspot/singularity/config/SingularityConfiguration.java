@@ -105,6 +105,8 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long healthcheckTimeoutSeconds = 5;
 
+  private String commonHostnameSuffixToOmit;
+
   private String hostname;
 
   @NotNull
@@ -176,6 +178,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCheckDeploysEverySeconds() {
     return checkDeploysEverySeconds;
+  }
+
+  public Optional<String> getCommonHostnameSuffixToOmit() {
+    return Optional.fromNullable(commonHostnameSuffixToOmit);
+  }
+
+  public void setCommonHostnameSuffixToOmit(String commonHostnameSuffixToOmit) {
+    this.commonHostnameSuffixToOmit = commonHostnameSuffixToOmit;
   }
 
   public long getCheckNewTasksEverySeconds() {
