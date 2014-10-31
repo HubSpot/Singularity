@@ -1,6 +1,8 @@
 package com.hubspot.singularity;
 
 
+import com.hubspot.singularity.bundles.AcceptLanguageFilterBundle;
+import com.hubspot.singularity.bundles.CorsBundle;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.db.DataSourceFactory;
@@ -27,6 +29,7 @@ public class SingularityService extends Application<SingularityConfiguration> {
         .build();
     bootstrap.addBundle(guiceBundle);
 
+    bootstrap.addBundle(new AcceptLanguageFilterBundle());
     bootstrap.addBundle(new CorsBundle());
     bootstrap.addBundle(new ViewBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));
