@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -43,6 +44,14 @@ public class SingularityTaskId extends SingularityId {
 
     };
   }
+
+  public static Function<SingularityTaskId, String> TASK_ID_TO_REQUEST_ID = new Function<SingularityTaskId, String>() {
+
+    @Override
+    public String apply(SingularityTaskId input) {
+      return input.getRequestId();
+    }
+  };
 
   public static Predicate<SingularityTaskId> notIn(Collection<SingularityTaskId> exclude) {
     return Predicates.not(Predicates.in(exclude));
