@@ -32,12 +32,12 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   }
 
   public static Optional<SingularityTaskHistoryUpdate> getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
-    return Optional.fromNullable(Iterables.find(updates, new Predicate<SingularityTaskHistoryUpdate>() {
+    return Iterables.tryFind(updates, new Predicate<SingularityTaskHistoryUpdate>() {
       @Override
       public boolean apply(@Nonnull SingularityTaskHistoryUpdate input) {
         return input.getTaskState() == taskState;
       }
-    }));
+    });
   }
 
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {
