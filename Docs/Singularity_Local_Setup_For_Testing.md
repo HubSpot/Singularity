@@ -17,7 +17,7 @@ vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1
 vagrant plugin install vagrant-hostsupdater
 ```
 
-Clone Singularity from *github.com* in you preferred directory and go into the *vagrant* directory inside the cloned project:
+Clone Singularity from *github.com* in your preferred directory and go into the *vagrant* directory inside the cloned project:
 
 ```bash
 cd my_home/tests
