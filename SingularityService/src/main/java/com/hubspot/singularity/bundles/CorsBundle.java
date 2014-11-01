@@ -1,4 +1,4 @@
-package com.hubspot.singularity;
+package com.hubspot.singularity.bundles;
 
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
