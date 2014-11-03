@@ -67,6 +67,7 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
   private static final String DIRECTORY_KEY = "DIRECTORY";
   private static final String TASK_KEY = "TASK";
+  private static final String NOTIFIED_OVERDUE_TO_FINISH_KEY = "NOTIFIED_OVERDUE_TO_FINISH";
 
   private static final String LOAD_BALANCER_PRE_KEY = "LOAD_BALANCER_";
 

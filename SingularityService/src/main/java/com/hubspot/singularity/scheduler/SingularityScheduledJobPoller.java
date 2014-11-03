@@ -79,13 +79,20 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       try {
         cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
       } catch (ParseException e) {
-        LOG.warn("Unable to parse cron for {}", taskId, e);
+        LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
         exceptionNotifier.notify(e);
         continue;
       }
 
       final Date startDate = new Date(taskId.getStartedAt());
       final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
+
+      if (nextRunAtDate == null) {
+        String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
+        LOG.warn(msg);
+        exceptionNotifier.notify(msg);
+        continue;
+      }
 
       final long period = nextRunAtDate.getTime() - taskId.getStartedAt();
       final long overDueBy = start - nextRunAtDate.getTime();
@@ -94,6 +101,8 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
 
       if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
         LOG.info("{} is overdue by {} (period: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, period, configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
+
+
 
         // send mail TODO
       }
