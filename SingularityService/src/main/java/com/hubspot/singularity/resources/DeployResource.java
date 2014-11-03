@@ -39,10 +39,11 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(SingularityService.API_BASE_PATH + "/deploys")
+@Path(SingularityService.API_BASE_PATH + DeployResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity deploys for existing requests.", value=SingularityService.API_BASE_PATH + "/deploys")
+@Api(description="Manages Singularity deploys for existing requests.", value=SingularityService.API_BASE_PATH + DeployResource.PATH)
 public class DeployResource extends AbstractRequestResource {
+  public static final String PATH = "/deploys";
 
   private final DeployManager deployManager;
   private final RequestManager requestManager;

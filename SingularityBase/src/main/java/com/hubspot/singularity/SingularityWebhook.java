@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityWebhook extends SingularityJsonObject {
 
@@ -35,22 +36,27 @@ public class SingularityWebhook extends SingularityJsonObject {
     this.type = type;
   }
 
+  @ApiModelProperty(required=false, value="Unique ID for webhook.")
   public String getId() {
     return id;
   }
 
+  @ApiModelProperty("URI to POST to.")
   public String getUri() {
     return uri;
   }
 
+  @ApiModelProperty(required=false, value="")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @ApiModelProperty(required=false, value="User that created webhook.")
   public Optional<String> getUser() {
     return user;
   }
 
+  @ApiModelProperty("Webhook type (TASK, REQUEST, DEPLOY).")
   public WebhookType getType() {
     return type;
   }

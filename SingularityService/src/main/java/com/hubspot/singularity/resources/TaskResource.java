@@ -36,10 +36,14 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.sun.jersey.api.NotFoundException;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(SingularityService.API_BASE_PATH + "/tasks")
+@Path(TaskResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description="Manages Singularity tasks.", value=TaskResource.PATH)
 public class TaskResource {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
 
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
@@ -57,6 +61,7 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/scheduled")
+  @ApiOperation("Retrieve list of scheduled tasks.")
   public List<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
@@ -66,6 +71,7 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/scheduled/ids")
+  @ApiOperation("Retrieve list of scheduled task IDs.")
   public List<SingularityPendingTaskId> getScheduledTaskIds() {
     return taskManager.getPendingTaskIds();
   }
@@ -81,6 +87,7 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/scheduled/task/{pendingTaskId}")
+  @ApiOperation("Retrieve information about a pending task.")
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
     SingularityPendingTask pendingTask = taskManager.getPendingTask(getTaskIdFromStr(pendingTaskIdStr));
 
@@ -96,6 +103,7 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/scheduled/request/{requestId}")
+  @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
   public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
     final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
 
@@ -103,7 +111,8 @@ public class TaskResource {
   }
 
   @GET
-  @Path("active/slave/{slaveId}")
+  @Path("/active/slave/{slaveId}")
+  @ApiOperation("Retrieve list of active tasks on a specific slave.")
   public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
 
@@ -125,6 +134,7 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/active")
+  @ApiOperation("Retrieve the list of active tasks.")
   public List<SingularityTask> getActiveTasks() {
     return taskManager.getActiveTasks();
   }
@@ -132,6 +142,7 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/cleaning")
+  @ApiOperation("Retrieve the list of cleaning tasks.")
   public List<SingularityTaskCleanup> getCleaningTasks() {
     return taskManager.getCleanupTasks();
   }
@@ -139,12 +150,14 @@ public class TaskResource {
   @GET
   @PropertyFiltering
   @Path("/lbcleanup")
+  @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
   public List<SingularityTaskId> getLbCleanupTasks() {
     return taskManager.getLBCleanupTasks();
   }
 
   @GET
   @Path("/task/{taskId}")
+  @ApiOperation("Retrieve information about a specific active task.")
   public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
 
@@ -157,6 +170,7 @@ public class TaskResource {
 
   @GET
   @Path("/task/{taskId}/statistics")
+  @ApiOperation("Retrieve statistics about a specific active task.")
   public MesosTaskStatisticsObject getTaskStatistics(@PathParam("taskId") String taskId) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
 
@@ -183,6 +197,7 @@ public class TaskResource {
 
   @DELETE
   @Path("/task/{taskId}")
+  @ApiOperation("Kill a specific active task.")
   public SingularityTaskCleanupResult killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
     Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
 
