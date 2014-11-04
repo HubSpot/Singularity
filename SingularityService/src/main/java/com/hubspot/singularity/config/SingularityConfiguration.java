@@ -183,14 +183,6 @@ public class SingularityConfiguration extends Configuration {
     return checkDeploysEverySeconds;
   }
 
-  public Optional<String> getCommonHostnameSuffixToOmit() {
-    return Optional.fromNullable(commonHostnameSuffixToOmit);
-  }
-
-  public void setCommonHostnameSuffixToOmit(String commonHostnameSuffixToOmit) {
-    this.commonHostnameSuffixToOmit = commonHostnameSuffixToOmit;
-  }
-
   public long getCheckNewTasksEverySeconds() {
     return checkNewTasksEverySeconds;
   }
