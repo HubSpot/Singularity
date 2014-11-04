@@ -251,7 +251,7 @@ public class SingularityMesosScheduler implements Scheduler {
     long timestamp = System.currentTimeMillis();
 
     if (status.hasTimestamp()) {
-      timestamp = (long) status.getTimestamp() * 1000;
+      timestamp = (long) (status.getTimestamp() * 1000);
     }
 
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
