@@ -47,7 +47,7 @@ When a task fails, is lost, or killed, Singularity will add it to a queue to ens
 
 Singularity will make a POST request using the LBR ID taskId-REMOVE. It will continue to make GET and POST requests to this LBR ID until it is successfully removed (SUCCESS.)
 
-### Graceful task cleanup (decomissions, bounces)
+### Graceful task cleanup (decommissions, bounces)
 
 Singularity will attempt to gracefully decommission tasks from the LB API when those tasks are being killed from within Singularity.
 
