@@ -152,19 +152,22 @@ public class SingularityConfiguration extends Configuration {
   private boolean sandboxDefaultsToTaskId = false;
 
   @NotNull
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+
+  @NotNull
   private long saveStateEverySeconds = 60;
 
   @NotNull
   private long zookeeperAsyncTimeout = 5000;
 
-  public boolean allowTestResourceCalls() {
-    return allowTestResourceCalls;
-  }
-
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
   private boolean enableCorsFilter = false;
+
+  public boolean allowTestResourceCalls() {
+    return allowTestResourceCalls;
+  }
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -186,6 +189,14 @@ public class SingularityConfiguration extends Configuration {
     return checkNewTasksScheduledThreads;
   }
 
+  public long getCheckReconcileWhenRunningEveryMillis() {
+    return checkReconcileWhenRunningEveryMillis;
+  }
+
+  public long getCheckSchedulerEverySeconds() {
+    return checkSchedulerEverySeconds;
+  }
+
   public long getCheckWebhooksEveryMillis() {
     return checkWebhooksEveryMillis;
   }
@@ -196,6 +207,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCloseWaitSeconds() {
     return closeWaitSeconds;
+  }
+
+  public Optional<String> getCommonHostnameSuffixToOmit() {
+    return Optional.fromNullable(commonHostnameSuffixToOmit);
   }
 
   public long getConsiderTaskHealthyAfterRunningForSeconds() {
@@ -214,16 +229,12 @@ public class SingularityConfiguration extends Configuration {
     return cooldownMinScheduleSeconds;
   }
 
-  public long getCheckSchedulerEverySeconds() {
-    return checkSchedulerEverySeconds;
-  }
-
-  public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
-    this.checkSchedulerEverySeconds = checkSchedulerEverySeconds;
-  }
-
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
+  }
+
+  public SlavePlacement getDefaultSlavePlacement() {
+    return defaultSlavePlacement;
   }
 
   public long getDeltaAfterWhichTasksAreLateMillis() {
@@ -290,22 +301,6 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
-  public long getCheckReconcileWhenRunningEveryMillis() {
-    return checkReconcileWhenRunningEveryMillis;
-  }
-
-  public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
-    this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
-  }
-
-  public long getStartNewReconcileEverySeconds() {
-    return startNewReconcileEverySeconds;
-  }
-
-  public void setStartNewReconcileEverySeconds(long startNewReconcileEverySeconds) {
-    this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
-  }
-
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -322,6 +317,10 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(s3Configuration);
   }
 
+  public long getSandboxHttpTimeoutMillis() {
+    return sandboxHttpTimeoutMillis;
+  }
+
   public long getSaveStateEverySeconds() {
     return saveStateEverySeconds;
   }
@@ -332,6 +331,10 @@ public class SingularityConfiguration extends Configuration {
 
   public Optional<SMTPConfiguration> getSmtpConfiguration() {
     return Optional.fromNullable(smtpConfiguration);
+  }
+
+  public long getStartNewReconcileEverySeconds() {
+    return startNewReconcileEverySeconds;
   }
 
   public UIConfiguration getUiConfiguration() {
@@ -356,6 +359,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isDefaultValueForKillTasksOfPausedRequests() {
     return defaultValueForKillTasksOfPausedRequests;
+  }
+
+  public boolean isEnableCorsFilter() {
+    return enableCorsFilter;
   }
 
   public boolean isSandboxDefaultsToTaskId() {
@@ -390,6 +397,14 @@ public class SingularityConfiguration extends Configuration {
     this.checkNewTasksScheduledThreads = checkNewTasksScheduledThreads;
   }
 
+  public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
+    this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
+  }
+
+  public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
+    this.checkSchedulerEverySeconds = checkSchedulerEverySeconds;
+  }
+
   public void setCheckWebhooksEveryMillis(long checkWebhooksEveryMillis) {
     this.checkWebhooksEveryMillis = checkWebhooksEveryMillis;
   }
@@ -400,6 +415,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCloseWaitSeconds(long closeWaitSeconds) {
     this.closeWaitSeconds = closeWaitSeconds;
+  }
+
+  public void setCommonHostnameSuffixToOmit(String commonHostnameSuffixToOmit) {
+    this.commonHostnameSuffixToOmit = commonHostnameSuffixToOmit;
   }
 
   public void setCompressLargeDataObjects(boolean compressLargeDataObjects) {
@@ -426,6 +445,10 @@ public class SingularityConfiguration extends Configuration {
     this.databaseConfiguration = databaseConfiguration;
   }
 
+  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
+    this.defaultSlavePlacement = defaultSlavePlacement;
+  }
+
   public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
     this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
   }
@@ -436,6 +459,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+
+  public void setEnableCorsFilter(boolean enableCorsFilter) {
+    this.enableCorsFilter = enableCorsFilter;
   }
 
   public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
@@ -514,6 +541,10 @@ public class SingularityConfiguration extends Configuration {
     this.sandboxDefaultsToTaskId = sandboxDefaultsToTaskId;
   }
 
+  public void setSandboxHttpTimeoutMillis(long sandboxHttpTimeoutMillis) {
+    this.sandboxHttpTimeoutMillis = sandboxHttpTimeoutMillis;
+  }
+
   public void setSaveStateEverySeconds(long saveStateEverySeconds) {
     this.saveStateEverySeconds = saveStateEverySeconds;
   }
@@ -526,6 +557,10 @@ public class SingularityConfiguration extends Configuration {
     this.smtpConfiguration = smtpConfiguration;
   }
 
+  public void setStartNewReconcileEverySeconds(long startNewReconcileEverySeconds) {
+    this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
+  }
+
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
   }
@@ -536,22 +571,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
-  }
-
-  public SlavePlacement getDefaultSlavePlacement() {
-    return defaultSlavePlacement;
-  }
-
-  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
-    this.defaultSlavePlacement = defaultSlavePlacement;
-  }
-
-  public boolean isEnableCorsFilter() {
-    return enableCorsFilter;
-  }
-
-  public void setEnableCorsFilter(boolean enableCorsFilter) {
-    this.enableCorsFilter = enableCorsFilter;
   }
 
 }

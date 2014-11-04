@@ -1,8 +1,11 @@
 package com.hubspot.singularity.smtp;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -14,8 +17,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityMainModule;
@@ -31,17 +36,20 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import de.neuland.jade4j.Jade4J;
 import de.neuland.jade4j.template.JadeTemplate;
 
-public class SingularityMailer {
+public class SingularityMailer implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
 
   private final SingularitySmtpSender smtpSender;
   private final SingularityConfiguration configuration;
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
+  private final Optional<ThreadPoolExecutor> mailPreparerExecutorService;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   private final TaskManager taskManager;
 
@@ -62,6 +70,7 @@ public class SingularityMailer {
   public SingularityMailer(SingularitySmtpSender smtpSender, SingularityConfiguration configuration,
       TaskManager taskManager,
       SandboxManager sandboxManager,
+      SingularityExceptionNotifier exceptionNotifier,
       @Named(SingularityMainModule.TASK_COMPLETED_TEMPLATE) JadeTemplate taskCompletedTemplate,
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate) {
@@ -72,25 +81,34 @@ public class SingularityMailer {
     this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
     this.sandboxManager = sandboxManager;
+    this.exceptionNotifier = exceptionNotifier;
     this.adminJoiner = Joiner.on(", ").skipNulls();
 
     this.requestModifiedTemplate = requestModifiedTemplate;
     this.taskCompletedTemplate = taskCompletedTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
+
+    if (maybeSmtpConfiguration.isPresent()) {
+      this.mailPreparerExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d"));;
+    } else {
+      this.mailPreparerExecutorService = Optional.absent();
+    }
   }
 
-  private Optional<String[]> getTaskLogFile(SingularityTaskId taskId, String filename) {
-    final Optional<SingularityTask> task = taskManager.getTask(taskId);
+  @Override
+  public void start() throws Exception {
+  }
 
-    if (!task.isPresent()) {
-      LOG.error("No task found for {}", taskId.getId());
-      return Optional.absent();
+  @Override
+  public void stop() throws Exception {
+    if (mailPreparerExecutorService.isPresent()) {
+      MoreExecutors.shutdownAndAwaitTermination(mailPreparerExecutorService.get(), 1, TimeUnit.SECONDS);
     }
+  }
 
-    final Optional<String> directory = taskManager.getDirectory(taskId);
-
-    if (!directory.isPresent()) {
-      LOG.error("No directory found for task {} to fetch logs", taskId);
+  private Optional<String[]> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {
+    if (!task.isPresent() || !directory.isPresent()) {
+      LOG.warn("Couldn't retrieve {} for {} because task ({}) or directory ({}) wasn't present", filename, taskId, task.isPresent(), directory.isPresent());
       return Optional.absent();
     }
 
@@ -105,7 +123,7 @@ public class SingularityMailer {
     try {
       logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
     } catch (RuntimeException e) {
-      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory, filename, slaveHostname, e);
+      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
       return Optional.absent();
     }
 
@@ -129,15 +147,16 @@ public class SingularityMailer {
   }
 
   private void populateTaskEmailProperties(Builder<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
+    Optional<SingularityTask> task = taskManager.getTask(taskId);
+    Optional<String> directory = taskManager.getDirectory(taskId);
+
     templateProperties.put("singularityTaskLink", getSingularityTaskLink(taskId));
-    templateProperties.put("stdout", getTaskLogFile(taskId, "stdout").or(new String[0]));
-    templateProperties.put("stderr", getTaskLogFile(taskId, "stderr").or(new String[0]));
+    templateProperties.put("stdout", getTaskLogFile(taskId, "stdout", task, directory).or(new String[0]));
+    templateProperties.put("stderr", getTaskLogFile(taskId, "stderr", task, directory).or(new String[0]));
     templateProperties.put("taskId", taskId.getId());
     templateProperties.put("deployId", taskId.getDeployId());
 
-    templateProperties.put("taskDirectory", taskManager.getDirectory(taskId).or("directory missing"));
-
-    Optional<SingularityTask> task = taskManager.getTask(taskId);
+    templateProperties.put("taskDirectory", directory.or("directory missing"));
 
     if (task.isPresent()) {
       templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
@@ -211,12 +230,27 @@ public class SingularityMailer {
     }
   }
 
-  public void sendTaskCompletedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
+  public void sendTaskCompletedMail(final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending task completed mail - no SMTP configuration is present");
       return;
     }
 
+    mailPreparerExecutorService.get().submit(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          prepareTaskCompletedMail(taskId, request, taskState);
+        } catch (Throwable t) {
+          LOG.error("While preparing task completed mail for {}", taskId, t);
+          exceptionNotifier.notify(t);
+        }
+      }
+    });
+  }
+
+  private void prepareTaskCompletedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
     final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
     final Collection<EmailDestination> emailDestination = getEmailDestination(taskState, request, taskHistory);
 
@@ -263,12 +297,27 @@ public class SingularityMailer {
 
   }
 
-  private void sendRequestMail(SingularityRequest request, RequestMailType type, Optional<String> user) {
+  private void sendRequestMail(final SingularityRequest request, final RequestMailType type, final Optional<String> user) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending request mail - no SMTP configuration is present");
       return;
     }
 
+    mailPreparerExecutorService.get().submit(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          prepareRequestMail(request, type, user);
+        } catch (Throwable t) {
+          LOG.error("While preparing request mail for {} / {}", request, type, t);
+          exceptionNotifier.notify(t);
+        }
+      }
+    });
+  }
+
+  private void prepareRequestMail(SingularityRequest request, RequestMailType type, Optional<String> user) {
     final List<EmailDestination> emailDestination = getDestination(type.getEmailType());
 
     if (emailDestination.isEmpty()) {
@@ -306,12 +355,27 @@ public class SingularityMailer {
     sendRequestMail(request, RequestMailType.REMOVED, user);
   }
 
-  public void sendRequestInCooldownMail(SingularityRequest request) {
+  public void sendRequestInCooldownMail(final SingularityRequest request) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending request in cooldown mail - no SMTP configuration is present");
       return;
     }
 
+    mailPreparerExecutorService.get().submit(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          prepareRequestInCooldownMail(request);
+        } catch (Throwable t) {
+          LOG.error("While preparing request in cooldown mail for {}", request, t);
+          exceptionNotifier.notify(t);
+        }
+      }
+    });
+  }
+
+  private void prepareRequestInCooldownMail(SingularityRequest request) {
     final List<EmailDestination> emailDestination = getDestination(EmailType.REQUEST_IN_COOLDOWN);
 
     if (emailDestination.isEmpty()) {
