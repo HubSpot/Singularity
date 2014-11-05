@@ -39,11 +39,11 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(SingularityService.API_BASE_PATH + DeployResource.PATH)
+@Path(DeployResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity deploys for existing requests.", value=SingularityService.API_BASE_PATH + DeployResource.PATH)
+@Api(description="Manages Singularity deploys for existing requests.", value=DeployResource.PATH)
 public class DeployResource extends AbstractRequestResource {
-  public static final String PATH = "/deploys";
+  public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
   private final DeployManager deployManager;
   private final RequestManager requestManager;
@@ -119,9 +119,9 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=200, message="Pending deploy successfully removed.")
   })
   public SingularityRequestParent cancelDeploy(
-      @ApiParam(required=true,  value="The Singularity Request Id from which the deployment is removed.")@PathParam("requestId") String requestId,
+      @ApiParam(required=true,  value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
       @ApiParam(required=true,  value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId,
-      @ApiParam(required=false, value="The user which executes the delete request.")@QueryParam("user") Optional<String> user) {
+      @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
