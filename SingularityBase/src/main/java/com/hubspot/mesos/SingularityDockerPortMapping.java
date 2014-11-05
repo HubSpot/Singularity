@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 
 public class SingularityDockerPortMapping {
   public static final String DEFAULT_PROTOCOL = "tcp";
+  public static final PortMappingType DEFAULT_PORT_MAPPING_TYPE = PortMappingType.LITERAL;
 
   private final Optional<PortMappingType> containerPortType;
   private final Optional<PortMappingType> hostPortType;
