@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -186,11 +187,11 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings().or(Collections.<SingularityDockerPortMapping>emptyList())) {
-        if (portMapping.getContainerPortType().or(SingularityDockerPortMapping.PortMappingType.LITERAL) == SingularityDockerPortMapping.PortMappingType.FROM_OFFER) {
+        if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
           check(portMapping.getContainerPort() > 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
         }
 
-        if (portMapping.getHostPortType().or(SingularityDockerPortMapping.PortMappingType.LITERAL) == SingularityDockerPortMapping.PortMappingType.FROM_OFFER) {
+        if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
           check(portMapping.getHostPort() > 0 && portMapping.getHostPort() < numPorts, String.format("Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1));
         }
       }

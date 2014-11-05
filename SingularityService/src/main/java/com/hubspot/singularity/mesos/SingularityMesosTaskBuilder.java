@@ -143,7 +143,7 @@ class SingularityMesosTaskBuilder {
 
   private Optional<DockerInfo.PortMapping> buildPortMapping(final SingularityDockerPortMapping singularityDockerPortMapping, long[] ports) {
     final int containerPort;
-    switch (singularityDockerPortMapping.getContainerPortType().or(SingularityDockerPortMapping.DEFAULT_PORT_MAPPING_TYPE)) {
+    switch (singularityDockerPortMapping.getContainerPortType()) {
       case LITERAL:
         containerPort = singularityDockerPortMapping.getContainerPort();
         break;
@@ -155,7 +155,7 @@ class SingularityMesosTaskBuilder {
     }
 
     final int hostPort;
-    switch (singularityDockerPortMapping.getHostPortType().or(SingularityDockerPortMapping.DEFAULT_PORT_MAPPING_TYPE)) {
+    switch (singularityDockerPortMapping.getHostPortType()) {
       case LITERAL:
         hostPort = singularityDockerPortMapping.getHostPort();
         break;
@@ -169,7 +169,7 @@ class SingularityMesosTaskBuilder {
     return Optional.of(DockerInfo.PortMapping.newBuilder()
             .setContainerPort(containerPort)
             .setHostPort(hostPort)
-            .setProtocol(singularityDockerPortMapping.getProtocol().or(SingularityDockerPortMapping.DEFAULT_PROTOCOL))
+            .setProtocol(singularityDockerPortMapping.getProtocol())
             .build());
   }
 

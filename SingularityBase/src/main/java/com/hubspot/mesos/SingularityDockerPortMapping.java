@@ -6,28 +6,28 @@ import com.google.common.base.Optional;
 
 public class SingularityDockerPortMapping {
   public static final String DEFAULT_PROTOCOL = "tcp";
-  public static final PortMappingType DEFAULT_PORT_MAPPING_TYPE = PortMappingType.LITERAL;
+  public static final SingularityPortMappingType DEFAULT_PORT_MAPPING_TYPE = SingularityPortMappingType.LITERAL;
 
-  private final Optional<PortMappingType> containerPortType;
-  private final Optional<PortMappingType> hostPortType;
+  private final SingularityPortMappingType containerPortType;
+  private final SingularityPortMappingType hostPortType;
   private final int containerPort;
   private final int hostPort;
-  private final Optional<String> protocol;
+  private final String protocol;
 
   @JsonCreator
-  public SingularityDockerPortMapping(@JsonProperty("containerPortType") Optional<PortMappingType> containerPortType,
+  public SingularityDockerPortMapping(@JsonProperty("containerPortType") Optional<SingularityPortMappingType> containerPortType,
                                       @JsonProperty("containerPort") int containerPort,
-                                      @JsonProperty("hostPortType") Optional<PortMappingType> hostPortType,
+                                      @JsonProperty("hostPortType") Optional<SingularityPortMappingType> hostPortType,
                                       @JsonProperty("hostPort") int hostPort,
                                       @JsonProperty("protocol") Optional<String> protocol) {
-    this.containerPortType = containerPortType;
+    this.containerPortType = containerPortType.or(DEFAULT_PORT_MAPPING_TYPE);
     this.containerPort = containerPort;
-    this.hostPortType = hostPortType;
+    this.hostPortType = hostPortType.or(DEFAULT_PORT_MAPPING_TYPE);
     this.hostPort = hostPort;
-    this.protocol = protocol;
+    this.protocol = protocol.or(DEFAULT_PROTOCOL);
   }
 
-  public Optional<PortMappingType> getContainerPortType() {
+  public SingularityPortMappingType getContainerPortType() {
     return containerPortType;
   }
 
@@ -35,7 +35,7 @@ public class SingularityDockerPortMapping {
     return containerPort;
   }
 
-  public Optional<PortMappingType> getHostPortType() {
+  public SingularityPortMappingType getHostPortType() {
     return hostPortType;
   }
 
@@ -43,13 +43,8 @@ public class SingularityDockerPortMapping {
     return hostPort;
   }
 
-  public Optional<String> getProtocol() {
+  public String getProtocol() {
     return protocol;
-  }
-
-  public static enum PortMappingType {
-    LITERAL,
-    FROM_OFFER
   }
 
   @Override
