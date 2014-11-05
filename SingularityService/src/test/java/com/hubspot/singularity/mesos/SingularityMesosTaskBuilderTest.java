@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mesos.Protos.ContainerInfo.Type;
@@ -25,6 +26,8 @@ import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerNetwork;
+import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -99,7 +102,7 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         Type.DOCKER,
         Optional.of(Collections.singletonList(new SingularityVolume("/container", Optional.of("/host"), Mode.RW))),
-        Optional.of(new SingularityDockerInfo("docker-image")));
+        Optional.of(new SingularityDockerInfo("docker-image", Optional.<SingularityDockerNetwork>absent(), Optional.<List<SingularityDockerPortMapping>>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .setCommand(Optional.of("/bin/echo"))

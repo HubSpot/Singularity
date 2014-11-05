@@ -1,9 +1,11 @@
 package com.hubspot.singularity.data;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.Protos;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -11,6 +13,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -169,7 +173,28 @@ public class SingularityValidator {
 
     check(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
+    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == Protos.ContainerInfo.Type.DOCKER) {
+      checkDocker(deploy);
+    }
+
     check(deployHistoryHelper.isDeployIdAvailable(request.getId(), deploy.getId()), "Can not deploy a deploy that has already been deployed");
+  }
+
+  private void checkDocker(SingularityDeploy deploy) {
+    if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
+      final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
+      final int numPorts = deploy.getResources().get().getNumPorts();
+
+      for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings().or(Collections.<SingularityDockerPortMapping>emptyList())) {
+        if (portMapping.getContainerPortType().or(SingularityDockerPortMapping.PortMappingType.LITERAL) == SingularityDockerPortMapping.PortMappingType.FROM_OFFER) {
+          check(portMapping.getContainerPort() > 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
+        }
+
+        if (portMapping.getHostPortType().or(SingularityDockerPortMapping.PortMappingType.LITERAL) == SingularityDockerPortMapping.PortMappingType.FROM_OFFER) {
+          check(portMapping.getHostPort() > 0 && portMapping.getHostPort() < numPorts, String.format("Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1));
+        }
+      }
+    }
   }
 
   private boolean isValidCronSchedule(String schedule) {
