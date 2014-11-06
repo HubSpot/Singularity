@@ -48,7 +48,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages Singularity requests.", value=RequestResource.PATH)
 public class RequestResource extends AbstractRequestResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/requests/";
+  public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
 
   private final SingularityValidator validator;
 

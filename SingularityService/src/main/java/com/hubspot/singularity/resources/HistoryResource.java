@@ -100,7 +100,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   @ApiOperation("Retrieve the history for a specific deploy.")
-  public SingularityDeployHistory getDeploy(@ApiParam("Request ID for deploy") @PathParam("requestId") String requestId, @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
+  public SingularityDeployHistory getDeploy(@ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
+                                            @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
     return getDeployHistory(requestId, deployId);
   }
 
