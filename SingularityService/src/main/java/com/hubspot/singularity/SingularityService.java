@@ -68,7 +68,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
   }
 
   @Override
-  public void run(final SingularityConfiguration configuration, final Environment environment) throws Exception {}
+  public void run(final T configuration, final Environment environment) throws Exception {}
 
   /**
    * Guice modules used in addition to the modules required by Singularity. This is an extension point when embedding
