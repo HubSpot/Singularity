@@ -90,6 +90,13 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
+    <!-- for jade and jets3t -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
