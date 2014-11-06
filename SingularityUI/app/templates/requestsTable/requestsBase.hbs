@@ -1,6 +1,6 @@
 <div class="row">
-    <div class="col-md-9">
-        <ul class="nav nav-pills table-nav-pills">
+    <div class="col-md-12">
+        <ul class="nav nav-pills table-nav-pills pull-left">
             <li class="{{#ifEqual requestsFilter "all"}}active{{/ifEqual}}">
                 <a href="{{appRoot}}/requests">All</a>
             </li>
@@ -20,13 +20,12 @@
                 <a href="{{appRoot}}/requests/cleaning">Cleaning</a>
             </li>
         </ul>
-    </div>
-    <div class="col-md-3 hidden-xs hidden-sm">
+
         {{#unless config.hideNewRequestButton}}
-        <a href="{{appRoot}}/requests/new" class="btn btn-success btn-large pull-right">
-            <span class="glyphicon glyphicon-plus"></span>
-            New request
-        </a>
+            <a href="{{appRoot}}/requests/new" class="btn btn-success btn-large pull-right hidden-xs">
+                <span class="glyphicon glyphicon-plus"></span>
+                New request
+            </a>
         {{/unless}}
     </div>
 </div>
