@@ -23,10 +23,20 @@ Validates and creates a new pending deploy object for a Request. Requests may on
 
 - Endpoint: **/requests/request/{requestId}/deploy**
 - Method: **POST**
-- Example: http POST localhost:5060/singularity/v1/requests/request/test-singularity-1/deploy @deploy.json
+- Example: http POST localhost:5060/singularity/v1/api/deploys @deploy.json
 - Response: Singularity Request Parent object
 
-deploy.json: `{ "id" : "deploy1", "requestId" : "test-singularity-1", "command" : "sleep 1000" }`
+deploy.json: 
+```json
+{
+  "deploy":
+  {
+    "id" : "deploy1",
+    "requestId" : "test-singularity-1",
+    "command" : "sleep 1000"
+  }
+}
+```
 
 #### Deleting a Request
 
