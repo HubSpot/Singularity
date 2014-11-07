@@ -348,7 +348,8 @@
                 <description>Singularity Mesos Framework API</description>
               </apiInfo>
 
-              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs.mustache</outputTemplate>
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/index.html.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
               <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
             </apiSource>
           </apiSources>
