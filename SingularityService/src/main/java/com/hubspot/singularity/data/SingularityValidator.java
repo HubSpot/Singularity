@@ -186,7 +186,7 @@ public class SingularityValidator {
       final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
       final int numPorts = deploy.getResources().get().getNumPorts();
 
-      for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings().or(Collections.<SingularityDockerPortMapping>emptyList())) {
+      for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
           check(portMapping.getContainerPort() > 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
         }

@@ -183,8 +183,8 @@ class SingularityMesosTaskBuilder {
       final DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder();
       containerBuilder.setDocker(dockerInfoBuilder.setImage(dockerInfo.get().getImage()));
 
-      if (ports.isPresent() && dockerInfo.get().getPortMappings().isPresent()) {
-        for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings().get()) {
+      if (ports.isPresent() && !dockerInfo.get().getPortMappings().isEmpty()) {
+        for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
           final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports.get());
 
           if (maybePortMapping.isPresent()) {
