@@ -54,6 +54,8 @@ class NewRequest extends FormBaseView
                 @alertRequiredField 'schedule'
 
             requestObject.numRetriesOnFailure = retries if retries
+        else if type is 'on-demand'
+            requestObject.daemon = false
 
         return if @invalid
 
@@ -69,7 +71,7 @@ class NewRequest extends FormBaseView
         serverRequest.done  (response) =>
             @lockdown = false
             @alert "Your Request <a href='#{ config.appRoot }/request/#{ response.id }'>#{ response.id }</a> has been created"
-        
+
         serverRequest.error (response) =>
             @postSave()
 

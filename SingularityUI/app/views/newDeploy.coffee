@@ -53,7 +53,7 @@ class NewDeployView extends FormBaseView
         deployObject.id        = @$('#id').val()
 
         deployObject.resources =
-            cpus:     parseInt(@valOrNothing '#cpus') or config.defaultCpus
+            cpus:     parseFloat(@valOrNothing '#cpus') or config.defaultCpus
             memoryMb: parseInt(@valOrNothing '#memory-mb') or config.defaultMemory
             numPorts: parseInt(@valOrNothing '#num-ports') or 0
 
