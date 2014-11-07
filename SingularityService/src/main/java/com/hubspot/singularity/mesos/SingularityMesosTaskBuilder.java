@@ -193,10 +193,7 @@ class SingularityMesosTaskBuilder {
         }
 
         if (dockerInfo.get().getNetwork().isPresent()) {
-          dockerInfoBuilder.setNetwork(dockerInfo.get().getNetwork().get().getNetworkProto());
-        } else if (dockerInfoBuilder.getPortMappingsCount() > 0) {
-          LOG.debug("Task {} has docker port mappings defined, but no docker network set -- defaulting to BRIDGE.", taskId);
-          dockerInfoBuilder.setNetwork(DockerInfo.Network.BRIDGE);
+          dockerInfoBuilder.setNetwork(dockerInfo.get().getNetwork().get());
         }
       }
 

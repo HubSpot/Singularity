@@ -1,5 +1,7 @@
 package com.hubspot.mesos;
 
+import org.apache.mesos.Protos;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -9,12 +11,12 @@ import java.util.List;
 
 public class SingularityDockerInfo {
   private final String image;
-  private final Optional<SingularityDockerNetwork> network;
+  private final Optional<Protos.ContainerInfo.DockerInfo.Network> network;
   private final List<SingularityDockerPortMapping> portMappings;
 
   @JsonCreator
   public SingularityDockerInfo(@JsonProperty("image") String image,
-                               @JsonProperty("network") Optional<SingularityDockerNetwork> network,
+                               @JsonProperty("network") Optional<Protos.ContainerInfo.DockerInfo.Network> network,
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings) {
     this.image = image;
     this.network = network;
@@ -25,7 +27,7 @@ public class SingularityDockerInfo {
     return image;
   }
 
-  public Optional<SingularityDockerNetwork> getNetwork() {
+  public Optional<Protos.ContainerInfo.DockerInfo.Network> getNetwork() {
     return network;
   }
 

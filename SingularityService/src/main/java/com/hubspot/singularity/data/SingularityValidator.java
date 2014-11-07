@@ -186,13 +186,17 @@ public class SingularityValidator {
       final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
       final int numPorts = deploy.getResources().get().getNumPorts();
 
+      if (!dockerInfo.getPortMappings().isEmpty()) {
+        check(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE, "Docker networking type must be BRIDGE if port mappings are set");
+      }
+
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
-          check(portMapping.getContainerPort() > 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
+          check(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
         }
 
         if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
-          check(portMapping.getHostPort() > 0 && portMapping.getHostPort() < numPorts, String.format("Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1));
+          check(portMapping.getHostPort() >= 0 && portMapping.getHostPort() < numPorts, String.format("Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1));
         }
       }
     }
