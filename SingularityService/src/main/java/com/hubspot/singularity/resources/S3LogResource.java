@@ -15,6 +15,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
@@ -47,10 +49,13 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
+import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(SingularityService.API_BASE_PATH + "/logs")
+@Path(S3LogResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description="Manages Singularity task logs stored in S3.", value=S3LogResource.PATH)
 public class S3LogResource extends AbstractHistoryResource {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
 
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
@@ -194,8 +199,9 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("task/{taskId}")
-  public Collection<SingularityS3Log> getS3LogsForTask(@PathParam("taskId") String taskId) throws Exception {
+  @Path("/task/{taskId}")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
+  public Collection<SingularityS3Log> getS3LogsForTask(@ApiParam("The task ID to search for") @PathParam("taskId") String taskId) throws Exception {
     checkS3();
 
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
@@ -210,8 +216,9 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("request/{requestId}")
-  public Collection<SingularityS3Log> getS3LogsForRequest(@PathParam("requestId") String requestId) throws Exception {
+  @Path("/request/{requestId}")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
+  public Collection<SingularityS3Log> getS3LogsForRequest(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId) throws Exception {
     checkS3();
 
     try {
@@ -224,8 +231,10 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("request/{requestId}/deploy/{deployId}")
-  public Collection<SingularityS3Log> getS3LogsForDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) throws Exception {
+  @Path("/request/{requestId}/deploy/{deployId}")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
+  public Collection<SingularityS3Log> getS3LogsForDeploy(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
+                                                         @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId) throws Exception {
     checkS3();
 
     try {

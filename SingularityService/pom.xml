@@ -309,6 +309,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.wordnik</groupId>
+      <artifactId>swagger-annotations</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
@@ -328,6 +333,36 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>com.github.kongchen</groupId>
+        <artifactId>swagger-maven-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <apiSources>
+            <apiSource>
+              <locations>com.hubspot.singularity.resources</locations>
+              <apiVersion>${project.version}</apiVersion>
+
+              <apiInfo>
+                <title>Singularity REST API</title>
+                <description>Singularity Mesos Framework API</description>
+              </apiInfo>
+
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/index.html.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+              <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
+            </apiSource>
+          </apiSources>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>

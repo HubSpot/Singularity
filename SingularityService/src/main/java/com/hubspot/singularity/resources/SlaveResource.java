@@ -16,10 +16,14 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.data.SlaveManager;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(SingularityService.API_BASE_PATH + "/slaves")
+@Path(SlaveResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description="Manages Singularity slaves.", value=SlaveResource.PATH)
 public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/slaves";
 
   private final SlaveManager slaveManager;
 
@@ -37,37 +41,43 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
 
   @GET
   @Path("/active")
+  @ApiOperation("Retrieve the list of active slaves.")
   public List<SingularitySlave> getSlaves() {
     return slaveManager.getActiveObjects();
   }
 
   @GET
   @Path("/dead")
+  @ApiOperation("Retrieve the list of dead slaves.")
   public List<SingularitySlave> getDead() {
     return slaveManager.getDeadObjects();
   }
 
   @GET
   @Path("/decomissioning")
+  @ApiOperation("Retrieve the list of decommissioning slaves.")
   public List<SingularitySlave> getDecomissioning() {
     return slaveManager.getDecomissioningObjects();
   }
 
   @DELETE
   @Path("/slave/{slaveId}/dead")
+  @ApiOperation("Remove a specific dead slave.")
   public void removeDeadSlave(@PathParam("slaveId") String slaveId) {
     super.removeDead(slaveId);
   }
 
   @DELETE
   @Path("/slave/{slaveId}/decomissioning")
+  @ApiOperation("Remove a specific decommissioning slave")
   public void removeDecomissioningSlave(@PathParam("slaveId") String slaveId) {
     super.removeDecomissioning(slaveId);
   }
 
   @POST
   @Path("/slave/{slaveId}/decomission")
-  public void decomissionRack(@PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> user) {
+  @ApiOperation("Decommission a specific slave.")
+  public void decomissionSlave(@PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> user) {
     super.decomission(slaveId, user);
   }
 }

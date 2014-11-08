@@ -24,10 +24,15 @@ import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(SingularityService.API_BASE_PATH + "/history")
+@Path(HistoryResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description="Manages historical data for tasks, requests, and deploys.", value=HistoryResource.PATH)
 public class HistoryResource extends AbstractHistoryResource {
+  public static final String PATH = SingularityService.API_BASE_PATH +  "/history";
 
   private final HistoryManager historyManager;
   private final TaskManager taskManager;
@@ -48,7 +53,8 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/task/{taskId}")
-  public SingularityTaskHistory getHistoryForTask(@PathParam("taskId") String taskId) {
+  @ApiOperation("Retrieve the history for a specific task.")
+  public SingularityTaskHistory getHistoryForTask(@ApiParam("Task ID to look up") @PathParam("taskId") String taskId) {
     SingularityTaskId taskIdObj = getTaskIdObject(taskId);
 
     return getTaskHistory(taskIdObj);
@@ -84,7 +90,8 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/tasks/active")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
+  @ApiOperation("Retrieve the history for all active tasks of a specific request.")
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
     return taskHistoryHelper.getHistoriesFor(activeTaskIds);
@@ -92,13 +99,18 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
-  public SingularityDeployHistory getDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
+  @ApiOperation("Retrieve the history for a specific deploy.")
+  public SingularityDeployHistory getDeploy(@ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
+                                            @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
     return getDeployHistory(requestId, deployId);
   }
 
   @GET
   @Path("/request/{requestId}/tasks")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  @ApiOperation("Retrieve the history for all tasks of a specific request.")
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+                                                                 @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+                                                                 @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
@@ -107,7 +119,10 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/deploys")
-  public List<SingularityDeployHistory> getDeploys(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  @ApiOperation("")
+  public List<SingularityDeployHistory> getDeploys(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+                                                   @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+                                                   @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
@@ -116,7 +131,10 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/requests")
-  public List<SingularityRequestHistory> getRequestHistoryForRequest(@PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  @ApiOperation("")
+  public List<SingularityRequestHistory> getRequestHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+                                                                     @ApiParam("Naximum number of items to return") @QueryParam("count") Integer count,
+                                                                     @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
@@ -125,7 +143,10 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/requests/search")
-  public List<String> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
+  @ApiOperation("Search for requests.")
+  public List<String> getRequestHistoryForRequestLike(@ApiParam("Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
+                                                      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+                                                      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
