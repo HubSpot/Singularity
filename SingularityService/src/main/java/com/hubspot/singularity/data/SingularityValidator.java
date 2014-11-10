@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Singleton;
