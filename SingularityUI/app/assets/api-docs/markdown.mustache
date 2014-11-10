@@ -4,24 +4,16 @@ Version: {{apiVersion}}
 
 Endpoints:
 {{#apiDocuments}}
-- [`{{resourcePath}}`](#{{anchor}}) - {{description}}
+- `{{resourcePath}}` - {{description}}
 {{/apiDocuments}}
 
 Models:
 {{#dataTypes}}
-- [`{{name}}`](#{{anchor}})
+- `{{name}}`
 {{/dataTypes}}
 {{^dataTypes}}
 - *none*
 {{/dataTypes}}
-
-Enums:
-{{#enumTypes}}
-- [`{{name}}`](#{{anchor}})
-{{/enumTypes}}
-{{^enumTypes}}
-- *none*
-{{/enumTypes}}
 
 - - -
 
@@ -101,11 +93,10 @@ Enums:
 <a name="#model-{{name}}"></a>
 ## {{name}}
 
-| type | required | description |
-|------|----------|-------------|
+| name | type | required | description |
+|------|------|----------|-------------|
 {{#items}}
-| {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{^description}}-{{/description}}{{#allowableValue}} Allowable
-        values:{{.}}{{/allowableValue}} |
+| {{name}} | {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{#allowableValue}} Allowable values: {{.}}{{/allowableValue}} |
 {{/items}}
 
 {{/dataTypes}}

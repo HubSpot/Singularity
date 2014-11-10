@@ -56,7 +56,7 @@ public class SingularityWebhook extends SingularityJsonObject {
     return user;
   }
 
-  @ApiModelProperty("Webhook type (TASK, REQUEST, DEPLOY).")
+  @ApiModelProperty("Webhook type.")
   public WebhookType getType() {
     return type;
   }
