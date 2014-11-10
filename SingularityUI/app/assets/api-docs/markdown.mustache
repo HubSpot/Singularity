@@ -1,13 +1,32 @@
-#{{#apiInfo}}{{title}}
+# {{apiInfo.title}}
 
-{{description}}
+Version: {{apiVersion}}
 
-{{/apiInfo}}
+Endpoints:
+{{#apiDocuments}}
+- [`{{resourcePath}}`](#{{anchor}}) - {{description}}
+{{/apiDocuments}}
 
-Api Version: {{apiVersion}}
+Models:
+{{#dataTypes}}
+- [`{{name}}`](#{{anchor}})
+{{/dataTypes}}
+{{^dataTypes}}
+- *none*
+{{/dataTypes}}
+
+Enums:
+{{#enumTypes}}
+- [`{{name}}`](#{{anchor}})
+{{/enumTypes}}
+{{^enumTypes}}
+- *none*
+{{/enumTypes}}
+
+- - -
 
 ## Endpoints
-{{#apiDocuments}}
+{{#apiDocuments}}<a name="#api-{{index}}"></a>
 ### {{resourcePath}}
 {{#description}}
 #### Overview
@@ -30,6 +49,9 @@ Api Version: {{apiVersion}}
 {{#paras}}
 | {{ name }} | {{ required }} | {{ description }} | {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} |
 {{/paras}}
+{{/parameters}}
+{{^parameters}}
+- No parameters
 {{/parameters}}
 
 {{#responseClass}}
@@ -76,8 +98,8 @@ Api Version: {{apiVersion}}
 ## Data Types
 {{#dataTypes}}
 
-
-## <a name="{{name}}">{{name}}</a>
+<a name="#model-{{name}}"></a>
+## {{name}}
 
 | type | required | description |
 |------|----------|-------------|
@@ -89,6 +111,7 @@ Api Version: {{apiVersion}}
 {{/dataTypes}}
 
 {{#enumTypes}}
+<a name="#enum-{{name}}"></a>
 ## {{name}}
 {{#allowableValues}}
 {{.}}
