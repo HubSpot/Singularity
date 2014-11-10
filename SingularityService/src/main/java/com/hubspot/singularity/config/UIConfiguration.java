@@ -24,6 +24,13 @@ public class UIConfiguration {
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
+  /**
+   * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
+   * the UI URI (http://.../singularity/ui/) must be used.
+   */
+  @JsonProperty
+  private boolean redirectRootToUi = true;
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -62,5 +69,13 @@ public class UIConfiguration {
 
   public void setNavColor(String navColor) {
     this.navColor = navColor;
+  }
+
+  public boolean isRedirectRootToUi() {
+    return redirectRootToUi;
+  }
+
+  public void setRedirectRootToUi(boolean redirectRootToUi) {
+    this.redirectRootToUi = redirectRootToUi;
   }
 }

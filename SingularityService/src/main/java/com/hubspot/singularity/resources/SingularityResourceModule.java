@@ -1,10 +1,19 @@
 package com.hubspot.singularity.resources;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
 
 public class SingularityResourceModule extends AbstractModule {
+
+  private final UIConfiguration uiConfiguration;
+
+  public SingularityResourceModule(UIConfiguration uiConfiguration) {
+    this.uiConfiguration = checkNotNull(uiConfiguration, "uiConfiguration is null");
+  }
 
   @Override
   protected void configure() {
@@ -14,7 +23,6 @@ public class SingularityResourceModule extends AbstractModule {
     // not singletons, just in case.
     bind(DeployResource.class);
     bind(HistoryResource.class);
-    bind(IndexResource.class);
     bind(RackResource.class);
     bind(RequestResource.class);
     bind(S3LogResource.class);
@@ -24,5 +32,10 @@ public class SingularityResourceModule extends AbstractModule {
     bind(TaskResource.class);
     bind(TestResource.class);
     bind(WebhookResource.class);
+    bind(UiResource.class);
+
+    if (uiConfiguration.isRedirectRootToUi()) {
+      bind(IndexResource.class);
+    }
   }
 }
