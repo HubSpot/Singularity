@@ -25,22 +25,11 @@ Api Version: {{apiVersion}}
 {{#parameters}}
 **{{paramType}}**
 
-<table border="1">
-    <tr>
-        <th>Parameter</th>
-        <th>Required</th>
-        <th>Description</th>
-        <th>Data Type</th>
-    </tr>
-    {{#paras}}
-    <tr>
-        <th>{{name}}</th>
-        <td>{{required}}</td>
-        <td>{{description}}</td>
-        <td>{{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}}</td>
-    </tr>
-    {{/paras}}
-</table>
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+{{#paras}}
+| {{ name }} | {{ required }} | {{ description }} | {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} |
+{{/paras}}
 {{/parameters}}
 
 {{#responseClass}}
@@ -90,21 +79,12 @@ Api Version: {{apiVersion}}
 
 ## <a name="{{name}}">{{name}}</a>
 
-<table border="1">
-    <tr>
-        <th>type</th>
-        <th>required</th>
-        <th>description</th>
-    </tr>
-    {{#items}}
-    <tr>
-        <td>{{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}}</td>
-        <td>{{#required}}required{{/required}}{{^required}}optional{{/required}}</td>
-        <td>{{#description}}{{{description}}}{{/description}}{{^description}}-{{/description}}{{#allowableValue}} Allowable
-        values:{{.}}{{/allowableValue}}</td>
-    </tr>
-    {{/items}}
-</table>
+| type | required | description |
+|------|----------|-------------|
+{{#items}}
+| {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{^description}}-{{/description}}{{#allowableValue}} Allowable
+        values:{{.}}{{/allowableValue}} |
+{{/items}}
 
 {{/dataTypes}}
 
