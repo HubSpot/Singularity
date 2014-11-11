@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
@@ -117,7 +118,7 @@ public class SingularityS3FormatHelper {
     return getS3KeyPrefixes(s3KeyFormat, DISALLOWED_FOR_REQUEST, start, end);
   }
 
-  private static Collection<String>  getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end) {
+  private static Collection<String> getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end) {
     String trimKeyFormat = trimKeyFormat(s3KeyFormat, disallowedKeys);
 
     int indexOfY = trimKeyFormat.indexOf("%Y");
@@ -142,10 +143,15 @@ public class SingularityS3FormatHelper {
 
     Set<String> keyPrefixes = Sets.newHashSet();
 
-    Calendar calendar = Calendar.getInstance();
+    Calendar calendar = GregorianCalendar.getInstance();
     calendar.setTimeInMillis(start);
 
-    while (calendar.getTimeInMillis() <= end) {
+    calendar.set(Calendar.SECOND, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
+    calendar.set(Calendar.MINUTE, 0);
+    calendar.set(Calendar.HOUR_OF_DAY, 0);
+
+    while (calendar.getTimeInMillis() < end) {
       if (indexOfY > -1) {
         keyBuilder.replace(indexOfY, indexOfY + 4, getYear(calendar.get(Calendar.YEAR)));
       }
@@ -163,8 +169,10 @@ public class SingularityS3FormatHelper {
       if (indexOfD > -1) {
         calendar.add(Calendar.DAY_OF_YEAR, 1);
       } else if (indexOfM > -1) {
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
         calendar.add(Calendar.MONTH, 1);
       } else {
+        calendar.set(Calendar.MONTH, 0);
         calendar.add(Calendar.YEAR, 1);
       }
     }
@@ -176,29 +184,6 @@ public class SingularityS3FormatHelper {
     String keyFormat = getS3KeyFormat(s3KeyFormat, taskId, tag);
 
     return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_TASK, start, end);
-  }
-
-  public static void main(String[] args) {
-    SingularityTaskId taskId = new SingularityTaskId("rid", "did", System.currentTimeMillis(), 1, "host", "rackid");
-    Optional<String> tag = Optional.<String> absent();
-    Calendar c = Calendar.getInstance();
-
-    c.add(Calendar.DAY_OF_YEAR, -1);
-
-    final long now = System.currentTimeMillis();
-
-    System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
-    System.out.println(getS3KeyPrefixes("%Y/%m/%d", taskId, tag, c.getTimeInMillis(), System.currentTimeMillis()));
-
-    System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", "requestId", "deployId", tag, c.getTimeInMillis(), System.currentTimeMillis()));
-
-
-    System.out.println(getS3KeyPrefixes("%requestId/%Y/%m/%taskId_%index-%s%fileext", "rid", c.getTimeInMillis(), System.currentTimeMillis()));
-
-
-
-    System.out.println(System.currentTimeMillis() - now);
-
   }
 
 }
