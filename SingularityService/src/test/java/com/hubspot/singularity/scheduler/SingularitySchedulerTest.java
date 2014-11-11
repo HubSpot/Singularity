@@ -141,9 +141,9 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
         .build();
   }
 
-  public SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, TaskState initialTaskState) {
-    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), 1, "host", "rack");
-    SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), 1, PendingType.IMMEDIATE);
+  public SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {
+    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), instanceNo, "host", "rack");
+    SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), instanceNo, PendingType.IMMEDIATE);
     SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
@@ -252,7 +252,11 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   }
 
   public SingularityTask startTask(SingularityDeploy deploy) {
-    return launchTask(request, deploy, TaskState.TASK_RUNNING);
+    return startTask(deploy, 1);
+  }
+
+  public SingularityTask startTask(SingularityDeploy deploy, int instanceNo) {
+    return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING);
   }
 
   @Test
@@ -345,7 +349,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
     taskManager.createPendingTasks(Arrays.asList(taskOne, taskTwo, taskThree, taskFour));
 
-    launchTask(request, secondDeploy, TaskState.TASK_RUNNING);
+    launchTask(request, secondDeploy, 1, TaskState.TASK_RUNNING);
 
     deployChecker.checkDeploys();
 
@@ -363,7 +367,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     Assert.assertTrue(taskManager.getPendingTasks().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
@@ -413,7 +417,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     createAndSchedulePendingTask(firstDeployId);
 
     requestResource.pause(requestId, Optional.<String> absent(), Optional.of(new SingularityPauseRequest(Optional.of("testuser"), Optional.of(false))));
@@ -435,7 +439,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    SingularityTask firstTask = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     requestResource.deleteRequest(requestId, Optional.<String> absent());
 
@@ -460,7 +464,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     initSecondDeploy();
     deployChecker.checkDeploys();
@@ -609,7 +613,6 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
 
     configuration.setCooldownAfterFailures(2);
-    configuration.setCooldownExpiresAfterMinutes(30);
 
     SingularityTask firstTask = startTask(firstDeploy);
     SingularityTask secondTask = startTask(firstDeploy);
@@ -639,10 +642,9 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initFirstDeploy();
 
     configuration.setCooldownAfterFailures(1);
-    configuration.setCooldownExpiresAfterMinutes(1);
 
     SingularityTask firstTask = startTask(firstDeploy);
-    statusUpdate(firstTask, TaskState.TASK_FAILED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)));
+    statusUpdate(firstTask, TaskState.TASK_FAILED, Optional.of(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5)));
 
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
 
@@ -650,6 +652,45 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     statusUpdate(secondTask, TaskState.TASK_FAILED);
 
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
+  }
+
+  @Test
+  public void testCooldownScalesToInstances() {
+    initRequest();
+    initFirstDeploy();
+
+    configuration.setCooldownAfterFailures(2);
+    configuration.setCooldownAfterPctOfInstancesFail(.51);
+
+    requestManager.activate(request.toBuilder().setInstances(Optional.of(4)).build(), RequestHistoryType.CREATED, Optional.<String> absent());
+
+    SingularityTask task1 = startTask(firstDeploy, 1);
+    SingularityTask task2 = startTask(firstDeploy, 2);
+    SingularityTask task3 = startTask(firstDeploy, 3);
+    SingularityTask task4 = startTask(firstDeploy, 4);
+
+    statusUpdate(task1, TaskState.TASK_FAILED);
+    statusUpdate(task2, TaskState.TASK_FAILED);
+    statusUpdate(task3, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    task1 = startTask(firstDeploy, 1);
+    task2 = startTask(firstDeploy, 2);
+    task3 = startTask(firstDeploy, 3);
+
+    statusUpdate(task1, TaskState.TASK_FAILED);
+    statusUpdate(task2, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+
+    statusUpdate(task3, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
+
+    statusUpdate(task4, TaskState.TASK_FINISHED);
+
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
   }
 
   @Test
@@ -741,7 +782,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     initLoadBalancedRequest();
     initFirstDeploy();
 
-    SingularityTask task = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     saveLoadBalancerState(BaragonRequestState.SUCCESS, task.getTaskId(), LoadBalancerRequestType.ADD);
 
@@ -856,8 +897,8 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     sleep(50);
     Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
 
-    SingularityTask taskOne = launchTask(request, firstDeploy, TaskState.TASK_STARTING);
-    SingularityTask taskTwo = launchTask(request, firstDeploy, TaskState.TASK_RUNNING);
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_STARTING);
+    SingularityTask taskTwo = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
 
     saveLastActiveTaskStatus(taskOne, Optional.<TaskStatus> absent(), -1000);
 
