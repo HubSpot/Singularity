@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
@@ -40,6 +42,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/active")
   @ApiOperation("Retrieve the list of active slaves.")
   public List<SingularitySlave> getSlaves() {
@@ -47,6 +51,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/dead")
   @ApiOperation("Retrieve the list of dead slaves.")
   public List<SingularitySlave> getDead() {
@@ -54,6 +60,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/decomissioning")
   @ApiOperation("Retrieve the list of decommissioning slaves.")
   public List<SingularitySlave> getDecomissioning() {
@@ -61,6 +69,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @DELETE
+  @Timed
+  @ExceptionMetered
   @Path("/slave/{slaveId}/dead")
   @ApiOperation("Remove a specific dead slave.")
   public void removeDeadSlave(@PathParam("slaveId") String slaveId) {
@@ -68,6 +78,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @DELETE
+  @Timed
+  @ExceptionMetered
   @Path("/slave/{slaveId}/decomissioning")
   @ApiOperation("Remove a specific decommissioning slave")
   public void removeDecomissioningSlave(@PathParam("slaveId") String slaveId) {
@@ -75,6 +87,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/slave/{slaveId}/decomission")
   @ApiOperation("Decommission a specific slave.")
   public void decomissionSlave(@PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> user) {
