@@ -4,14 +4,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.primitives.Longs;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.RequestManager;
@@ -20,37 +19,54 @@ import com.hubspot.singularity.data.TaskManager;
 @Singleton
 public class SingularitySchedulerPriority {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerPriority.class);
-
   private final TaskManager taskManager;
-  private final Map<String, Queue<SingularityTaskId>> mostRecentTasksPerRequest;
+  private final Map<String, Long> mostRecentTaskStartPerRequest;
   private final Comparator<SingularityTaskRequest> comparator;
+
+  private static final Comparator<SingularityTaskId> TASK_ID_STARTED_AT_COMPARATOR = new Comparator<SingularityTaskId>() {
+
+    @Override
+    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
+      return Longs.compare(o1.getStartedAt(), o2.getStartedAt());
+    }
+
+  };
 
   @Inject
   public SingularitySchedulerPriority(TaskManager taskManager, RequestManager requestManager) {
     this.taskManager = taskManager;
-    this.mostRecentTasksPerRequest = Maps.newHashMapWithExpectedSize(requestManager.getNumRequests());
+    this.mostRecentTaskStartPerRequest = Maps.newHashMap();
     this.comparator = new Comparator<SingularityTaskRequest>() {
 
       @Override
       public int compare(SingularityTaskRequest o1, SingularityTaskRequest o2) {
-        return 0;
+        final Long request1LastStartedAt = mostRecentTaskStartPerRequest.get(o1.getRequest().getId());
+        final Long request2LastStartedAt = mostRecentTaskStartPerRequest.get(o2.getRequest().getId());
+
+        return Longs.compare(request1LastStartedAt, request2LastStartedAt);
       }
     };
   }
 
   public void sortTaskRequestsInPriorityOrder(final List<SingularityTaskRequest> taskRequests) {
     for (SingularityTaskRequest taskRequest : taskRequests) {
+      if (!mostRecentTaskStartPerRequest.containsKey(taskRequest.getRequest().getId())) {
+        List<SingularityTaskId> taskIds = Lists.newArrayList(taskManager.getTaskIdsForRequest(taskRequest.getRequest().getId()));
+
+        if (!taskIds.isEmpty()) {
+          Collections.sort(taskIds, TASK_ID_STARTED_AT_COMPARATOR);
+          mostRecentTaskStartPerRequest.put(taskRequest.getRequest().getId(), JavaUtils.getFirst(taskIds).get().getStartedAt());
+        } else {
+          mostRecentTaskStartPerRequest.put(taskRequest.getRequest().getId(), 0L);
+        }
+      }
     }
 
     Collections.sort(taskRequests, comparator);
   }
 
-  public void notifyTaskFinished(SingularityTaskId taskId) {
-
-  }
-
   public void notifyTaskLaunched(SingularityTaskId taskId) {
+    mostRecentTaskStartPerRequest.put(taskId.getRequestId(), taskId.getStartedAt());
   }
 
 }

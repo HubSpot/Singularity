@@ -104,6 +104,8 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   @Inject
   private TestingLoadBalancerClient testingLbClient;
   @Inject
+  private SingularitySchedulerPriority schedulerPriority;
+  @Inject
   private SingularityTaskReconciliation taskReconciliation;
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
@@ -142,9 +144,19 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   }
 
   public SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {
-    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), instanceNo, "host", "rack");
-    SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), System.currentTimeMillis(), instanceNo, PendingType.IMMEDIATE);
+    return launchTask(request, deploy, System.currentTimeMillis(), instanceNo, initialTaskState);
+  }
+
+  private SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
+    SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE);
     SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
+
+    return pendingTask;
+  }
+
+  public SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, TaskState initialTaskState) {
+    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, "host", "rack");
+    SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
@@ -194,6 +206,10 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     privateInitRequest(false, true);
   }
 
+  private void saveRequest(SingularityRequest request) {
+    requestManager.activate(request, RequestHistoryType.CREATED, Optional.<String> absent());
+  }
+
   private void privateInitRequest(boolean isLoadBalanced, boolean isScheduled) {
     requestId = "test-request";
 
@@ -206,7 +222,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
     request = bldr.build();
 
-    requestManager.activate(request, RequestHistoryType.CREATED, Optional.<String> absent());
+    saveRequest(request);
   }
 
   public void initRequest() {
@@ -214,17 +230,23 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   }
 
   private String firstDeployId;
-  private SingularityDeployMarker firstDeployMarker;
   private SingularityDeploy firstDeploy;
 
   public void initFirstDeploy() {
     firstDeployId = "firstDeployId";
-    firstDeployMarker =  new SingularityDeployMarker(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent());
-    firstDeploy = new SingularityDeployBuilder(requestId, firstDeployId).setCommand(Optional.of("sleep 100")).build();
 
-    deployManager.saveDeploy(request, firstDeployMarker, firstDeploy);
+    firstDeploy = initDeploy(request, firstDeployId);
+  }
 
-    finishDeploy(firstDeployMarker, firstDeploy);
+  private SingularityDeploy initDeploy(SingularityRequest request, String deployId) {
+    SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deployId, System.currentTimeMillis(), Optional.<String> absent());
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
+
+    deployManager.saveDeploy(request, marker, deploy);
+
+    finishDeploy(marker, deploy);
+
+    return deploy;
   }
 
   private String secondDeployId;
@@ -918,6 +940,52 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     sleep(50);
 
     Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+  }
+
+  private SingularityRequest buildRequest(String requestId) {
+    SingularityRequest request = new SingularityRequestBuilder("request1").build();
+
+    saveRequest(request);
+
+    return request;
+  }
+
+  private SingularityTaskRequest buildTaskRequest(SingularityRequest request, SingularityDeploy deploy, long launchTime) {
+    return new SingularityTaskRequest(request, deploy, buildPendingTask(request, deploy, launchTime, 100));
+  }
+
+  @Test
+  public void testSchedulerPriority() {
+    SingularityRequest request1 = buildRequest("request1");
+    SingularityRequest request2 = buildRequest("request2");
+    SingularityRequest request3 = buildRequest("request3");
+
+    SingularityDeploy deploy1 = initDeploy(request1, "r1d1");
+    SingularityDeploy deploy2 = initDeploy(request1, "r2d2");
+    SingularityDeploy deploy3 = initDeploy(request1, "r3d3");
+
+    launchTask(request1, deploy1, 2, 1, TaskState.TASK_RUNNING);
+    launchTask(request2, deploy2, 1, 1, TaskState.TASK_RUNNING);
+    launchTask(request2, deploy2, 10, 1, TaskState.TASK_RUNNING);
+
+    // r3 should have priority, then r1, then r2
+
+    List<SingularityTaskRequest> requests = Arrays.asList(buildTaskRequest(request1, deploy1, 100), buildTaskRequest(request2, deploy2, 101), buildTaskRequest(request3, deploy3, 95));
+    schedulerPriority.sortTaskRequestsInPriorityOrder(requests);
+
+    Assert.assertTrue(requests.get(0).getRequest().getId().equals(request3.getId()));
+    Assert.assertTrue(requests.get(1).getRequest().getId().equals(request1.getId()));
+    Assert.assertTrue(requests.get(2).getRequest().getId().equals(request2.getId()));
+
+    schedulerPriority.notifyTaskLaunched(new SingularityTaskId(request3.getId(), deploy3.getId(), 500, 1, "host", "rack"));
+
+    requests = Arrays.asList(buildTaskRequest(request1, deploy1, 100), buildTaskRequest(request2, deploy2, 101), buildTaskRequest(request3, deploy3, 95));
+    schedulerPriority.sortTaskRequestsInPriorityOrder(requests);
+
+    Assert.assertTrue(requests.get(0).getRequest().getId().equals(request1.getId()));
+    Assert.assertTrue(requests.get(1).getRequest().getId().equals(request2.getId()));
+    Assert.assertTrue(requests.get(2).getRequest().getId().equals(request3.getId()));
+
   }
 
 }
