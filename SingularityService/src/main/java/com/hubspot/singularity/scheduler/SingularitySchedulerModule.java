@@ -26,6 +26,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityTaskReconciliation.class).in(Scopes.SINGLETON);
+    bind(SingularitySchedulerPriority.class).in(Scopes.SINGLETON);
 
     bind(SingularitySchedulerStateCache.class);
   }

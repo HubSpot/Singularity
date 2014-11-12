@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -43,6 +44,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -232,7 +234,7 @@ public class SingularityScheduler {
       return requestWithState.getState();
     }
 
-    if (cooldown.hasCooldownExpired(deployStatistics, Optional.<Long> absent())) {
+    if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer> absent(), Optional.<Long> absent())) {
       requestManager.exitCooldown(requestWithState.getRequest());
       return RequestState.ACTIVE;
     }
@@ -283,7 +285,6 @@ public class SingularityScheduler {
     }
 
     final List<SingularityTaskRequest> dueTaskRequests = taskRequestManager.getTaskRequests(dueTasks);
-    Collections.sort(dueTaskRequests);
 
     return checkForStaleScheduledTasks(dueTasks, dueTaskRequests);
   }
@@ -431,7 +432,7 @@ public class SingularityScheduler {
       LOG.debug("Not sending a task completed email for task {} because Singularity already processed this update", taskId);
     }
 
-    if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
+    if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
       LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
       requestState = RequestState.SYSTEM_COOLDOWN;
       requestManager.cooldown(request);
@@ -501,22 +502,25 @@ public class SingularityScheduler {
       bldr.setLastTaskState(Optional.of(state));
     }
 
+    final ListMultimap<Integer, Long> instanceSequentialFailureTimestamps = bldr.getInstanceSequentialFailureTimestamps();
+    final List<Long> sequentialFailureTimestamps = instanceSequentialFailureTimestamps.get(taskId.getInstanceNo());
+
     if (!state.isSuccess()) {
-      bldr.setNumFailures(bldr.getNumFailures() + 1);
-      final List<Long> sequentialFailureTimestamps = Lists.newArrayList(bldr.getSequentialFailureTimestamps());
+      if (SingularityTaskHistoryUpdate.getUpdate(taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_CLEANING).isPresent()) {
+        LOG.debug("{} failed with {} after cleaning - ignoring it for cooldown", taskId, state);
+      } else {
 
-      if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
-        sequentialFailureTimestamps.add(timestamp);
-      } else if (timestamp > sequentialFailureTimestamps.get(0)) {
-        sequentialFailureTimestamps.set(0, timestamp);
+        if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
+          sequentialFailureTimestamps.add(timestamp);
+        } else if (timestamp > sequentialFailureTimestamps.get(0)) {
+          sequentialFailureTimestamps.set(0, timestamp);
+        }
+
+        Collections.sort(sequentialFailureTimestamps);
       }
-
-      Collections.sort(sequentialFailureTimestamps);
-
-      bldr.setSequentialFailureTimestamps(sequentialFailureTimestamps);
     } else {
-      bldr.setSequentialFailureTimestamps(Collections.<Long> emptyList());
       bldr.setNumSuccess(bldr.getNumSuccess() + 1);
+      sequentialFailureTimestamps.clear();
     }
 
     if (scheduleResult.isPresent() && scheduleResult.get() == PendingType.RETRY) {
@@ -547,29 +551,6 @@ public class SingularityScheduler {
     LOG.debug("Request {} had {} retries in a row - retrying again (num retries on failure: {})", request.getId(), numRetriesInARow, request.getNumRetriesOnFailure());
 
     return true;
-  }
-
-  private boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
-    if (requestState != RequestState.ACTIVE || request.isOneOff()) {
-      return false;
-    }
-
-    if (configuration.getCooldownAfterFailures() < 1) {
-      return false;
-    }
-
-    final int numSequentialFailures = deployStatistics.getSequentialFailureTimestamps().size() + 1;
-    final boolean failedTooManyTimes = numSequentialFailures >= configuration.getCooldownAfterFailures();
-
-    if (failedTooManyTimes) {
-      LOG.trace("Request {} failed {} times, which is over the cooldown threshold of {}", request.getId(), numSequentialFailures, configuration.getCooldownAfterFailures());
-    }
-
-    if (cooldown.hasCooldownExpired(deployStatistics, Optional.of(failureTimestamp))) {
-      return false;
-    }
-
-    return failedTooManyTimes;
   }
 
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest) {

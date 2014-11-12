@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mesos.Protos;
@@ -72,8 +71,8 @@ public class SingularityMesosTaskBuilderTest {
   public void testShellCommand() {
     final SingularityRequest request = new SingularityRequestBuilder("test").build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-        .setCommand(Optional.of("/bin/echo hi"))
-        .build();
+    .setCommand(Optional.of("/bin/echo hi"))
+    .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, null, taskRequest, resources);
 
@@ -86,9 +85,9 @@ public class SingularityMesosTaskBuilderTest {
   public void testArgumentCommand() {
     final SingularityRequest request = new SingularityRequestBuilder("test").build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-        .setCommand(Optional.of("/bin/echo"))
-        .setArguments(Optional.of(Collections.singletonList("wat")))
-        .build();
+    .setCommand(Optional.of("/bin/echo"))
+    .setArguments(Optional.of(Collections.singletonList("wat")))
+    .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, null, taskRequest, resources);
 
@@ -103,12 +102,12 @@ public class SingularityMesosTaskBuilderTest {
     resources = new Resources(1, 1, 1);
 
     final Protos.Resource portsResource = Protos.Resource.newBuilder()
-            .setName("ports")
-            .setType(Protos.Value.Type.RANGES)
-            .setRanges(Protos.Value.Ranges.newBuilder()
-                    .addRange(Protos.Value.Range.newBuilder()
-                            .setBegin(31000)
-                            .setEnd(31000).build()).build()).build();
+        .setName("ports")
+        .setType(Protos.Value.Type.RANGES)
+        .setRanges(Protos.Value.Ranges.newBuilder()
+            .addRange(Protos.Value.Range.newBuilder()
+                .setBegin(31000)
+                .setEnd(31000).build()).build()).build();
 
     final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
     final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
@@ -119,10 +118,10 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(Collections.singletonList(new SingularityVolume("/container", Optional.of("/host"), Mode.RW))),
         Optional.of(new SingularityDockerInfo("docker-image", Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-        .setContainerInfo(Optional.of(containerInfo))
-        .setCommand(Optional.of("/bin/echo"))
-        .setArguments(Optional.of(Collections.singletonList("wat")))
-        .build();
+    .setContainerInfo(Optional.of(containerInfo))
+    .setCommand(Optional.of("/bin/echo"))
+    .setArguments(Optional.of(Collections.singletonList("wat")))
+    .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, Collections.singletonList(portsResource), taskRequest, resources);
 

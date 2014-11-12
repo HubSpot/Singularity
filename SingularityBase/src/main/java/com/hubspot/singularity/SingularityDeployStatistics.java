@@ -1,13 +1,14 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.hubspot.mesos.JavaUtils;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
 
 public class SingularityDeployStatistics extends SingularityJsonObject {
 
@@ -19,7 +20,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
 
   private final int numSequentialRetries;
 
-  private final List<Long> sequentialFailureTimestamps;
+  private final ListMultimap<Integer, Long> instanceSequentialFailureTimestamps;
 
   private final Optional<Long> lastFinishAt;
   private final Optional<ExtendedTaskState> lastTaskState;
@@ -35,7 +36,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures,
       @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
-      @JsonProperty("sequentialFailureTimestamps") List<Long> sequentialFailureTimestamps) {
+      @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
@@ -43,7 +44,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     this.lastFinishAt = lastFinishAt;
     this.lastTaskState = lastTaskState;
     this.numSequentialRetries = numSequentialRetries;
-    this.sequentialFailureTimestamps = JavaUtils.nonNullImmutable(sequentialFailureTimestamps);
+    this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps == null ?  ImmutableListMultimap.<Integer, Long> of() : ImmutableListMultimap.copyOf(instanceSequentialFailureTimestamps);
   }
 
   public SingularityDeployStatisticsBuilder toBuilder() {
@@ -53,7 +54,7 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     .setNumSequentialRetries(numSequentialRetries)
     .setNumFailures(numFailures)
     .setNumSuccess(numSuccess)
-    .setSequentialFailureTimestamps(sequentialFailureTimestamps);
+    .setInstanceSequentialFailureTimestamps(ArrayListMultimap.create(instanceSequentialFailureTimestamps));
   }
 
   public String getRequestId() {
@@ -84,14 +85,14 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     return numSequentialRetries;
   }
 
-  public List<Long> getSequentialFailureTimestamps() {
-    return sequentialFailureTimestamps;
+  public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
+    return instanceSequentialFailureTimestamps;
   }
 
   @Override
   public String toString() {
-    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries +
-        "sequentialFailureTimestamps=" + sequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries="
+        + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
 
 }
