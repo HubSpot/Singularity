@@ -39,6 +39,8 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ##### Local Testing #####
 
+##### Deployment #####
+
 ----------
 
 ## Reference ##
