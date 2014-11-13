@@ -121,9 +121,6 @@ class LogLines extends Collection
         else if @state.get('moreToFetchAtBeginning') is undefined
             @state.set('moreToFetchAtBeginning', true)
 
-        # console.log "isMovingForward", isMovingForward
-        # console.log "isMovingBackward", isMovingBackward
-
         # Grow the request length (page size) if we are not tailing
         if (@state.get('moreToFetch') and isMovingForward) or (@state.set('moreToFetchAtBeginning') and isMovingBackward)
             @growRequestLength(@_previousParseTimestamp, @_parseTimestamp)
@@ -158,12 +155,10 @@ class LogLines extends Collection
 
         # Only grow the request length if we request quickly in succession
         delta = lastParseTimestamp - previousParseTimestamp
-        # console.log "delta", delta
 
         if delta < 5000 and @state.get('currentRequestLength') <= @maxRequestLength
             newRequestLength = parseInt(@state.get('currentRequestLength') * @requestLengthGrowthFactor, 10)
             newRequestLength = @maxRequestLength if newRequestLength > @maxRequestLength
-            # console.log "newRequestLength", newRequestLength, "(old = #{@state.get('currentRequestLength')})"
 
             @state.set('currentRequestLength', newRequestLength)
 
@@ -172,7 +167,6 @@ class LogLines extends Collection
 
         newRequestLength = parseInt(@state.get('currentRequestLength') / @requestLengthGrowthFactor, 10)
         newRequestLength = @maxRequestLength if newRequestLength < @baseRequestLength
-        # console.log "new smaller requestLength", newRequestLength, "(old = #{@state.get('currentRequestLength')})"
 
         @state.set('currentRequestLength', newRequestLength)
 

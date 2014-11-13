@@ -108,8 +108,6 @@ class TailView extends View
             atBottom = scrollTop >= scrollHeight - contentsHeight
             atTop = scrollTop is 0
 
-            # console.log "atTop = #{atTop}  atBottom = #{atBottom}  (scrollTop = #{scrollTop}, scrollHeight = #{scrollHeight}, contentsHeight = #{contentsHeight})"
-
             if atBottom and not atTop
                 if @collection.state.get('moreToFetch')
                     return if @preventFetch
@@ -189,11 +187,9 @@ class TailView extends View
     showOrHideMoreToFetchSpinners: (state) ->
         if state.changed.moreToFetchAtBeginning?
             @$('.tail-fetching-start').toggle(state.changed.moreToFetchAtBeginning)
-            # console.log "#{if state.changed.moreToFetchAtBeginning then 'show' else 'hid'} fetch start"
 
         if state.changed.moreToFetch?
             @$('.tail-fetching-end').toggle(state.changed.moreToFetch)
-            # console.log "#{if state.changed.moreToFetch then 'show' else 'hid'} fetch end"
 
 
 
