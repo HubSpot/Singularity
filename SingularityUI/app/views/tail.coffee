@@ -125,14 +125,14 @@ class TailView extends View
             @fetchNextTimeout = setTimeout =>
                 @collection.fetchNext().always =>
                     @fetchNextTimeout = undefined
-            , 200
+            , 0
 
     delayedFetchPrevious: ->
         if not @fetchPreviousTimeout
             @fetchPreviousTimeout = setTimeout =>
                 @collection.fetchPrevious().always =>
                     @fetchPreviousTimeout = undefined
-            , 200
+            , 0
 
     afterInitialData: =>
         setTimeout =>
@@ -165,7 +165,11 @@ class TailView extends View
         @$el.removeClass 'tailing'
 
     remove: ->
-        clearInterval @tailInterval
+        @stopTailing()
+
+        clearInterval @fetchNextTimeout
+        clearInterval @fetchPreviousTimeout
+
         @$contents.off 'scroll'
         super
 
