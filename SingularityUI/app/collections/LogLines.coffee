@@ -17,6 +17,13 @@ class LogLines extends Collection
     # there's more to fetch
     moreToFetch: false
 
+    # Store collection state on a model so it can be observed by others (events)
+    state: new Backbone.Model
+        # Did we fetch all `requestLength` last time? If it is it likely means
+        # there's more to fetch
+        moreToFetch: undefined
+        moreToFetchAtBeginning: undefined
+
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
     initialize: (models, {@taskId, @path}) ->
@@ -45,7 +52,7 @@ class LogLines extends Collection
 
     fetchPrevious: ->
         @fetch data:
-            offset: orZero @getMinOffset() - @requestLength
+            offset: orZero @getMinOffset() - @state.get('currentRequestLength')
 
     fetchNext: =>
         @fetch data:
@@ -57,32 +64,55 @@ class LogLines extends Collection
 
     # Overwrite default fetch
     fetch: (params = {}) ->
-        defaultParams = 
+        defaultParams =
             remove: false
-            data: _.extend {@path, length: @requestLength}, params.data
+            data: _.extend {@path, length: @state.get('currentRequestLength')}, params.data
 
         request = super _.extend params, defaultParams
 
         request
 
-    parse: (result) =>
-        offset = result.offset
+    reset: ->
+        # Reset the state too
+        @state.set
+            moreToFetch: undefined
+            moreToFetchAtBeginning: undefined
 
+        super
+
+    parse: (result, options) =>
+        offset = result.offset
         whiteSpace = /^\s*$/
 
         # Return empty list if all we got is white space
         return [] if result.data.match whiteSpace
 
         # We have more stuff to fetch if we got `requestLength` data back
-        @moreToFetch = result.data.length is @requestLength
-        # And (we're going forwards or we're at the start)
-        @moreToFetch = @moreToFetch and (offset >= @getMaxOffset() or @getMinOffset() is 0)
+        # and (we're going forwards or we're at the start)
+        requestedLength = options.data.length
+
+        isMovingForward = offset >= @getMaxOffset()
+        isMovingBackward = offset <= @getMinOffset()
+
+        moreToFetch = result.data.length is requestedLength
+        moreToFetch = moreToFetch and (isMovingForward or @getMinOffset() is 0)
+        @state.set('moreToFetch', moreToFetch)
+
+        # Determine if we still need to fetch more at the top of the file
+        if offset is 0
+            @state.set('moreToFetchAtBeginning', false)
+        else if @state.get('moreToFetchAtBeginning') is undefined
+            @state.set('moreToFetchAtBeginning', true)
+
+        # console.log "isMovingForward", isMovingForward
+        # console.log "isMovingBackward", isMovingBackward
+
 
         # split on newlines
         lines = result.data.split @delimiter
             
         # always omit last element (either it's blank or an incomplete line)
-        lines = _.initial(lines) unless not @moreToFetch
+        lines = _.initial(lines) unless not @state.get('moreToFetch')
 
         # omit the first (incomplete) element unless we're at the beginning of the file
         if offset > 0 and lines.length > 0
