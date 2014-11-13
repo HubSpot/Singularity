@@ -15,7 +15,7 @@ Singularity (Service) is configured by DropWizard via a YAML file referenced on 
     - [Mesos](#mesos)
     - [Thread Pools](#thread-pools)
     - [Operational](#operational)
-- [Mesos configuration](#mesos-configuration)
+- [Mesos Configuration](#mesos-configuration)
  - [Framework](#framework)
  - [Resource Limits](#resource-limits)
  - [Racks](#racks)
