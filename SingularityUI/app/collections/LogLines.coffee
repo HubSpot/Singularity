@@ -114,7 +114,6 @@ class LogLines extends Collection
         isMovingForward = offset >= @getMaxOffset()
         isMovingBackward = offset <= @getMinOffset()
 
-        moreToFetch = result.data.length is requestedLength
         moreToFetch = result.data.length is requestedLength or result.data.length is @serverMax
         moreToFetch = moreToFetch and (isMovingForward or @getMinOffset() is 0)
         @state.set('moreToFetch', moreToFetch)
