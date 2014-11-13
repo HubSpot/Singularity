@@ -10,12 +10,15 @@ class LogLines extends Collection
     comparator: 'offset'
 
     delimiter: /\n/
-    # How much we request at a time
-    requestLength: 30000
 
-    # Did we fetch all `requestLength` last time? If it is it likely means
-    # there's more to fetch
-    moreToFetch: false
+    # How much we request at a time (before growing it)
+    baseRequestLength: 30000
+
+    requestLengthGrowthFactor: 1.75
+    maxRequestLength: @::baseRequestLength * 10
+
+    # Request a larger chunk at start
+    initialRequestLength: @::baseRequestLength * 3
 
     # Store collection state on a model so it can be observed by others (events)
     state: new Backbone.Model
@@ -23,6 +26,10 @@ class LogLines extends Collection
         # there's more to fetch
         moreToFetch: undefined
         moreToFetchAtBeginning: undefined
+
+        currentRequestLength: @::baseRequestLength
+
+
 
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
@@ -34,19 +41,24 @@ class LogLines extends Collection
     getMaxOffset: =>
         if @length > 0 then @last().getEndOffset() else 0
 
+    getStartOffsetOfLastLine: =>
+        # Get the offest of the beginning of the last line, not the end of the last line
+        if @length > 0 then @last().getStartOffset() else 0
+
     fetchInitialData: =>
         # When we request `read` without passing an offset, we get given
         # back just the end offset of the file
         $.ajax
             url: @url()
-            data: {@path, length: @requestLength}
+            data: {@path, length: @baseRequestLength}
         .done (response) =>
-            offset = response.offset - @requestLength
+            offset = response.offset - @baseRequestLength
             offset = orZero offset
 
             request = @fetch data:
                 path: @path
                 offset: offset
+                length: @initialRequestLength
 
             @trigger 'initialdata'
 
@@ -84,8 +96,13 @@ class LogLines extends Collection
         offset = result.offset
         whiteSpace = /^\s*$/
 
+        @_previousParseTimestamp = @_parseTimestamp
+        @_parseTimestamp = (new Date).getTime()
+
         # Return empty list if all we got is white space
-        return [] if result.data.match whiteSpace
+        if result.data.match whiteSpace
+            @shrinkRequestLength()
+            return []
 
         # We have more stuff to fetch if we got `requestLength` data back
         # and (we're going forwards or we're at the start)
@@ -107,10 +124,16 @@ class LogLines extends Collection
         # console.log "isMovingForward", isMovingForward
         # console.log "isMovingBackward", isMovingBackward
 
+        # Grow the request length (page size) if we are not tailing
+        if (@state.get('moreToFetch') and isMovingForward) or (@state.set('moreToFetchAtBeginning') and isMovingBackward)
+            @growRequestLength(@_previousParseTimestamp, @_parseTimestamp)
+        else
+            @shrinkRequestLength()
+
 
         # split on newlines
         lines = result.data.split @delimiter
-            
+
         # always omit last element (either it's blank or an incomplete line)
         lines = _.initial(lines) unless not @state.get('moreToFetch')
 
@@ -129,5 +152,28 @@ class LogLines extends Collection
             offset += data.length + 1
 
             line
+
+    growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
+        return if !previousParseTimestamp? or !lastParseTimestamp?
+
+        # Only grow the request length if we request quickly in succession
+        delta = lastParseTimestamp - previousParseTimestamp
+        # console.log "delta", delta
+
+        if delta < 5000 and @state.get('currentRequestLength') <= @maxRequestLength
+            newRequestLength = parseInt(@state.get('currentRequestLength') * @requestLengthGrowthFactor, 10)
+            newRequestLength = @maxRequestLength if newRequestLength > @maxRequestLength
+            # console.log "newRequestLength", newRequestLength, "(old = #{@state.get('currentRequestLength')})"
+
+            @state.set('currentRequestLength', newRequestLength)
+
+    shrinkRequestLength: ->
+        return if @state.get('currentRequestLength') <= @baseRequestLength
+
+        newRequestLength = parseInt(@state.get('currentRequestLength') / @requestLengthGrowthFactor, 10)
+        newRequestLength = @maxRequestLength if newRequestLength < @baseRequestLength
+        # console.log "new smaller requestLength", newRequestLength, "(old = #{@state.get('currentRequestLength')})"
+
+        @state.set('currentRequestLength', newRequestLength)
 
 module.exports = LogLines
