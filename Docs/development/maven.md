@@ -9,6 +9,6 @@ Steps:
 - `mvn release:clean`
 - `mvn release:prepare`
 - `mvn release:perform`
-- Publish release in GitHub based off of newly created tag (`Singularity-X.Y.Z`). Include the SingularityService jar in the release.
+- [In staging repositories, close and release] (https://oss.sonatype.org/)
 
 If having issues releasing, run `mvn release:rollback` to undo changes.
