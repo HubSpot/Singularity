@@ -1,4 +1,31 @@
-## Singularity Configuration ##
+# Singularity Configuration #
+
+Singularity (Service) is configured by DropWizard via a YAML file referenced on the command line. Top-level configuration elements reside at the root of the configuration file alongside [DropWizard configuration](https://dropwizard.github.io/dropwizard/manual/configuration.html). 
+
+- [Root Configuration](#root-configuration)
+  - [Common Configuration](#common-configuration)
+    - [General](#general)
+    - [Healthchecks and New Task Checks](#healthchecks-and-new-task-checks)
+    - [Limits](#limits)
+    - [Cooldown](#cooldown)
+    - [Load Balancer API](#load-balancer-api)
+    - [User Interface](#user-interface)
+  - [Internal Scheduler Configuration](#internal-scheduler-configuration)
+    - [Pollers](#pollers)
+    - [Mesos](#mesos)
+    - [Thread Pools](#thread-pools)
+    - [Operational](#operational)
+- [Mesos configuration](#mesos-configuration)
+ - [Framework](#framework)
+ - [Resource Limits](#resource-limits)
+ - [Racks](#racks)
+ - [Slaves](#slaves)
+
+## Root Configuration ##
+
+### Common Configuration ###
+
+These are settings that are more likely to be altered.
 
 #### General ####
 | Parameter | Default | Description | Type |
@@ -47,7 +74,9 @@
 | sandboxDefaultsToTaskId | false | If true, the Singularity API will return the sandbox view of root/taskId when queried without a path (Useful when using SingularityExecutor) | boolean |
 | enableCorsFilter | false | If true, provides a Bundle which will enable CORS | boolean | 
 
-## Internal Scheduler Configuration ##
+### Internal Scheduler Configuration ###
+
+These settings are less likely to be changed, but were included in the configuration instead of hardcoding values. 
 
 #### Pollers ####
 | Parameter | Default | Description | Type |
@@ -82,8 +111,45 @@
 | maxHealthcheckResponseBodyBytes | 8192 | Number of bytes to save from healthcheck responses (displayed in UI) | int | 
 | maxQueuedUpdatesPerWebhook | 50 | Max number of updates to queue for a given webhook url, after which some webhooks will not be delivered | int | 
 | zookeeperAsyncTimeout | 5000 | Milliseconds for ZooKeeper timeout. Calls to ZooKeeper which take over this timeout will cause the operations to fail and Singularity to abort | long | 
-| cacheStateForMillis | 30000 (30 seconds) | Amount of time to cache internal state for | long |
+| cacheStateForMillis | 30000 (30 seconds) | Amount of time to cache internal state for when requested over API | long |
 | sandboxHttpTimeoutMillis | 5000 (5 seconds) | Sandbox HTTP calls will timeout after this amount of time (fetching logs for emails / UI)
 | newTaskCheckerBaseDelaySeconds | 1 | Added to the the amount of deploy to wait before checking a new task | long | 
 | allowTestResourceCalls | false | If true, allows calls to be made to the test resource, which can test internal methods | boolean |
+
+## Mesos Configuration ##
+
+These settings should live under the "mesos" field inside the root configuration.
+
+#### Framework ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| master | null | | string |
+| frameworkName | null | | string |
+| frameworkId | null | | string |
+| frameworkFailoverTimeout | 0.0 | | double |
+| checkpoint | false | | boolean |
+
+
+#### Resource Limits ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int | 
+| defaultMemory | 64 | MB of memory to request for a task if none is specified | int |
+| maxNumInstancesPerRequest | 25 | Max instances (tasks) to allow for a request (requests using over this will return a 400) | int |
+| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int | 
+| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int | 
+| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int | 
+| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int | 
+
+#### Racks ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| rackIdAttributeKey | rackid | The Mesos slave attribute to denote a rack | string |
+| defaultRackId | DEFAULT | The rackId to assign to a slave if no rackId attribute value is present | string | 
+
+#### Slaves ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| slaveHttpPort | 5051 | The port to talk to slaves on | int |
+| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) | 
 
