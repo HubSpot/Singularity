@@ -1,6 +1,8 @@
 package com.hubspot.singularity.resources;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -24,6 +26,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -47,10 +50,15 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(SingularityService.API_BASE_PATH + "/logs")
+@Path(S3LogResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description="Manages Singularity task logs stored in S3.", value=S3LogResource.PATH)
 public class S3LogResource extends AbstractHistoryResource {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
 
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
@@ -58,6 +66,15 @@ public class S3LogResource extends AbstractHistoryResource {
   private final Optional<S3Configuration> configuration;
   private final DeployManager deployManager;
   private final RequestHistoryHelper requestHistoryHelper;
+
+  private static final Comparator<SingularityS3Log> LOG_COMPARATOR = new Comparator<SingularityS3Log>() {
+
+    @Override
+    public int compare(SingularityS3Log o1, SingularityS3Log o2) {
+      return Longs.compare(o2.getLastModified(), o1.getLastModified());
+    }
+
+  };
 
   @Inject
   public S3LogResource(HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3, Optional<S3Configuration> configuration) {
@@ -140,13 +157,11 @@ public class S3LogResource extends AbstractHistoryResource {
     return prefixes;
   }
 
-  private Collection<SingularityS3Log> getS3Logs(Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
-    ListeningExecutorService es = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.min(prefixes.size(), configuration.get().getMaxS3Threads()), new ThreadFactoryBuilder().setNameFormat("S3LogFetcher-%d").build()));
-
+  private List<SingularityS3Log> getS3LogsWithExecutorService(ListeningExecutorService executorService, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
     List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
 
     for (final String s3Prefix : prefixes) {
-      futures.add(es.submit(new Callable<S3Object[]>() {
+      futures.add(executorService.submit(new Callable<S3Object[]>() {
 
         @Override
         public S3Object[] call() throws Exception {
@@ -172,7 +187,7 @@ public class S3LogResource extends AbstractHistoryResource {
     final Date expireAt = new Date(System.currentTimeMillis() + configuration.get().getExpireS3LinksAfterMillis());
 
     for (final S3Object s3Object : objects) {
-      logFutures.add(es.submit(new Callable<SingularityS3Log>() {
+      logFutures.add(executorService.submit(new Callable<SingularityS3Log>() {
 
         @Override
         public SingularityS3Log call() throws Exception {
@@ -187,6 +202,19 @@ public class S3LogResource extends AbstractHistoryResource {
     return Futures.allAsList(logFutures).get(configuration.get().getWaitForS3LinksSeconds(), TimeUnit.SECONDS);
   }
 
+  private List<SingularityS3Log> getS3Logs(Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
+    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.min(prefixes.size(), configuration.get().getMaxS3Threads()),
+        new ThreadFactoryBuilder().setNameFormat("S3LogFetcher-%d").build()));
+
+    try {
+      List<SingularityS3Log> logs = Lists.newArrayList(getS3LogsWithExecutorService(executorService, prefixes));
+      Collections.sort(logs, LOG_COMPARATOR);
+      return logs;
+    } finally {
+      executorService.shutdownNow();
+    }
+  }
+
   private void checkS3() {
     if (!s3.isPresent()) {
       throw WebExceptions.notFound("S3 configuration was absent");
@@ -194,8 +222,9 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("task/{taskId}")
-  public Collection<SingularityS3Log> getS3LogsForTask(@PathParam("taskId") String taskId) throws Exception {
+  @Path("/task/{taskId}")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
+  public Collection<SingularityS3Log> getS3LogsForTask(@ApiParam("The task ID to search for") @PathParam("taskId") String taskId) throws Exception {
     checkS3();
 
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
@@ -210,8 +239,9 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("request/{requestId}")
-  public Collection<SingularityS3Log> getS3LogsForRequest(@PathParam("requestId") String requestId) throws Exception {
+  @Path("/request/{requestId}")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
+  public Collection<SingularityS3Log> getS3LogsForRequest(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId) throws Exception {
     checkS3();
 
     try {
@@ -224,8 +254,10 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("request/{requestId}/deploy/{deployId}")
-  public Collection<SingularityS3Log> getS3LogsForDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) throws Exception {
+  @Path("/request/{requestId}/deploy/{deployId}")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
+  public Collection<SingularityS3Log> getS3LogsForDeploy(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
+                                                         @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId) throws Exception {
     checkS3();
 
     try {

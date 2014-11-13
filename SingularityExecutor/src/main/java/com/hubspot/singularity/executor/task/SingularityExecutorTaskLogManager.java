@@ -69,6 +69,13 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
       return;
     }
 
+    final Path tailOfLogPath = taskDefinition.getTaskDirectoryPath().resolve(configuration.getServiceFinishedTailLog());
+
+    if (Files.exists(tailOfLogPath)) {
+      log.debug("{} already existed, skipping tail", tailOfLogPath);
+      return;
+    }
+
     final List<String> cmd = ImmutableList.of(
         "tail",
         "-n",
@@ -76,7 +83,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         taskDefinition.getServiceLogOut());
 
     try {
-      super.runCommand(cmd, Redirect.to(taskDefinition.getTaskDirectoryPath().resolve(configuration.getServiceFinishedTailLog()).toFile()));
+      super.runCommand(cmd, Redirect.to(tailOfLogPath.toFile()));
     } catch (Throwable t) {
       log.error("Failed saving tail of log {} to {}", taskDefinition.getServiceLogOut(), configuration.getServiceFinishedTailLog(), t);
     }
