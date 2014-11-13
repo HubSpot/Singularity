@@ -18,7 +18,7 @@ class LogLines extends Collection
     serverMax: 65536
 
     requestLengthGrowthFactor: 1.75
-    maxRequestLength: @::baseRequestLength * 100
+    maxRequestLength: @::serverMax # @::baseRequestLength * 100
 
     # Request a larger chunk at start
     initialRequestLength: @::baseRequestLength * 3
