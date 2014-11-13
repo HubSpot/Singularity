@@ -113,14 +113,28 @@ class TailView extends View
             if atBottom and not atTop
                 if @collection.state.get('moreToFetch')
                     return if @preventFetch
-                    @collection.fetchNext()
+                    @delayedFetchNext()
                 else
                     @startTailing()
             else
                 @stopTailing()
 
             if atTop and @collection.getMinOffset() isnt 0
-                @collection.fetchPrevious()
+                @delayedFetchPrevious()
+
+    delayedFetchNext: ->
+        if not @fetchNextTimeout
+            @fetchNextTimeout = setTimeout =>
+                @collection.fetchNext().always =>
+                    @fetchNextTimeout = undefined
+            , 200
+
+    delayedFetchPrevious: ->
+        if not @fetchPreviousTimeout
+            @fetchPreviousTimeout = setTimeout =>
+                @collection.fetchPrevious().always =>
+                    @fetchPreviousTimeout = undefined
+            , 200
 
     afterInitialData: =>
         setTimeout =>
