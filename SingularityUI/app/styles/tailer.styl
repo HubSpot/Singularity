@@ -47,7 +47,7 @@
     bottom 0
     right 0
     background #f6f6f6
-    
+
     .line
         font-family Consolas, "Liberation Mono", Courier, monospace
         min-height 1.6em // Show empty lines too
@@ -55,25 +55,34 @@
         padding 0 2em
         white-space pre
 
+// Edge of fetched log content indicators/spinners (start hidden and toggled by Backbone)
+.tail-fetching-start, .tail-fetching-end
+    display: none
+    text-align center
+    font-size 1.5em
+    padding 1em 2em
+    color #AAA
+
+
 // States
 .tailing
-    
+
     .tail-indicator
         display inline-block !important
-        
+
         span
             display inline-block
-        
+
         .page-loader
             display none
 
 .fetching-data
-    
+
     .tail-indicator
         display inline-block !important
-        
+
         span
             display none
-        
+
         .page-loader
             display inline-block
