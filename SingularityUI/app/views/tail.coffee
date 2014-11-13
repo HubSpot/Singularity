@@ -130,17 +130,25 @@ class TailView extends View
         @startTailing()
 
     startTailing: =>
+        return if @isTailing is true
+
+        @isTailing = true
         @scrollToBottom()
 
         clearInterval @tailInterval
         @tailInterval = setInterval =>
-            @collection.fetchNext().done @scrollToBottom
+            @collection.fetchNext().done =>
+                # Only show the newly tail-ed lines if we are still tailing
+                @scrollToBottom() if @isTailing
         , @pollingTimeout
 
         # The class is for CSS stylin' of certain stuff
         @$el.addClass 'tailing'
 
     stopTailing: ->
+        return if @isTailing isnt true
+
+        @isTailing = false
         clearInterval @tailInterval
         @$el.removeClass 'tailing'
 
