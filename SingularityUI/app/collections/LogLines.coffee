@@ -166,7 +166,7 @@ class LogLines extends Collection
         return if @state.get('currentRequestLength') <= @baseRequestLength
 
         newRequestLength = parseInt(@state.get('currentRequestLength') / @requestLengthGrowthFactor, 10)
-        newRequestLength = @maxRequestLength if newRequestLength < @baseRequestLength
+        newRequestLength = @baseRequestLength if newRequestLength < @baseRequestLength
 
         @state.set('currentRequestLength', newRequestLength)
 
