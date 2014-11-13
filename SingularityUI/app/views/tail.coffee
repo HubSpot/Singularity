@@ -125,14 +125,14 @@ class TailView extends View
             @fetchNextTimeout = setTimeout =>
                 @collection.fetchNext().always =>
                     @fetchNextTimeout = undefined
-            , 200
+            , 0
 
     delayedFetchPrevious: ->
         if not @fetchPreviousTimeout
             @fetchPreviousTimeout = setTimeout =>
                 @collection.fetchPrevious().always =>
                     @fetchPreviousTimeout = undefined
-            , 200
+            , 0
 
     afterInitialData: =>
         setTimeout =>
