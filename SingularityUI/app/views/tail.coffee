@@ -158,12 +158,19 @@ class TailView extends View
         super
 
     goToTop: =>
-        @collection.reset()
-        @collection.fetchFromStart().done @scrollToTop
-    
+        if @collection.getMinOffset() is 0
+            @scrollToTop()
+        else
+            @collection.reset()
+            @collection.fetchFromStart().done @scrollToTop
+
     goToBottom: =>
-        @collection.reset()
-        @collection.fetchInitialData()
+        if @collection.state.get('moreToFetch') is true
+            @collection.reset()
+            @collection.fetchInitialData()
+        else
+            @scrollToBottom()
+            @startTailing()
 
     showOrHideMoreToFetchSpinners: (state) ->
         if state.changed.moreToFetchAtBeginning?
