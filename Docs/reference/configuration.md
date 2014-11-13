@@ -1,10 +1,9 @@
 ## Singularity Configuration ##
 
-##### General #####
+#### General ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | allowRequestsWithoutOwners | true | If false, submitting a request without at least one owner will return a 400 | boolean |
-| allowTestResourceCalls | false | If true, allows calls to be made to the test resource, which can test internal methods | boolean |
 | commonHostnameSuffixToOmit | null | If specified, will remove this hostname suffix from all taskIds | string |
 | defaultSlavePlacement | GREEDY | The slavePlacement strategy when not specified in a request. GREEDY uses whatever slaves are available, SEPARATE ensures no 2 instances / tasks of the same request are ever placed on the same slave, and OPTIMISTIC attempts to spread out tasks but may schedule some on the same slave | enum / string [GREEDY, OPTIMISTIC, SEPARATE]
 | defaultValueForKillTasksOfPausedRequests | true | When a task is paused, the API allows for the tasks of that request to optionally not be killed. If that parameter is not set in the pause request, this value is used | boolean |
@@ -13,7 +12,7 @@
 | killNonLongRunningTasksInCleanupAfterSeconds | 86400 (1 day) | Kills scheduled and one-off tasks after this amount of time if they have been scheduled for cleaning (a new deploy succeeds, the underlying slave is decomissioned) | long | 
 | hostname | null | Hostname of this Singularity instance | string |
 
-##### Healthchecks and New Task Checks ######
+#### Healthchecks and New Task Checks ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | considerTaskHealthyAfterRunningForSeconds | 5 | Tasks which make it to TASK_RUNNING and run for at least this long (that are not health-checked) are considered healthy | long | 
@@ -21,13 +20,13 @@
 | healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | long | 
 | killAfterTasksDoNotRunDefaultSeconds | 600 (10 minutes) | Amount of time after which new tasks (that are not part of a deploy) will be killed if they do not enter TASK_RUNNING | long | 
 
-##### Limits #####
+#### Limits ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | maxDeployIdSize | 50 | Deploy ids over this size will cause deploy requests to fail with 400 | int | 
 | maxRequestIdSize | 100 | Request ids over this size will cause new requests to fail with 400 | int | 
 
-##### Cooldown ######
+#### Cooldown ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | cooldownAfterFailures | 3 | The number of sequential failures after which a request is placed into system cooldown (a delay is added to newly scheduled tasks) - set to 0 to disable cooldown | int |
@@ -35,14 +34,14 @@
 | cooldownExpiresAfterMinutes | 15 | The window used to evaluate task failures. Tasks must fail at least cooldownAfterFailures times during this amount of time to enter system cooldown - set to 0 to disable cooldown | long | 
 | cooldownMinScheduleSeconds | 120 | When a request enters cooldown, new tasks are delayed by at least this long | long | 
 
-##### Load Balancer API##### 
+#### Load Balancer API ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | loadBalancerQueryParams | null | Additional query parameters to pass to the Load Balancer API | Map<String, String> | 
 | loadBalancerRequestTimeoutMillis | 2000 | The timeout for making API calls to the Load Balancer API (these will be retried) | long |
 | loadBalancerUri | null | The URI of the Load Balancer API (Baragon) | string |
 
-##### User Interface ######
+#### User Interface ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | sandboxDefaultsToTaskId | false | If true, the Singularity API will return the sandbox view of root/taskId when queried without a path (Useful when using SingularityExecutor) | boolean |
@@ -50,7 +49,7 @@
 
 ## Internal Scheduler Configuration ##
 
-##### Pollers #####
+#### Pollers ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | checkDeploysEverySeconds | 5 | Check the status (health) of pending deploys, promoting them to active or removing them on this interval | long |
@@ -61,21 +60,21 @@
 | persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
 
-##### Mesos #####
+#### Mesos ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | checkReconcileWhenRunningEveryMillis | 30000 (30 seconds) | When reconciling tasks, will re-request task updates on this interval until reconciliation finishes | long |
 | startNewReconcileEverySeconds | 600 (10 minutes) | Starts a new reconciliation cycle (if one is not currently running) on this interval (A relatively costly operation that detects updates Mesos failed to deliver) | long | 
 | askDriverToKillTasksAgainAfterMillis | 300000 (5 minutes) | Amount of time to wait before instruction mesos to kill a task which has been killed by Singularity but is still running | long |
 
-##### Thread pools #####
+#### Thread Pools ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | checkNewTasksScheduledThreads | 3 | Max number of threads to use to check new tasks | int |
 | healthcheckStartThreads | 3 | Max number of threads to use to start healthchecks | int |
 | logFetchMaxThreads | 15 | Max number of threads to use to fetch log directories from Mesos REST API | int | 
 
-##### Operational #####
+#### Operational ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | closeWaitSeconds | 5 | Will wait at least this many seconds when shutting down thread pools | long | 
@@ -86,4 +85,5 @@
 | cacheStateForMillis | 30000 (30 seconds) | Amount of time to cache internal state for | long |
 | sandboxHttpTimeoutMillis | 5000 (5 seconds) | Sandbox HTTP calls will timeout after this amount of time (fetching logs for emails / UI)
 | newTaskCheckerBaseDelaySeconds | 1 | Added to the the amount of deploy to wait before checking a new task | long | 
+| allowTestResourceCalls | false | If true, allows calls to be made to the test resource, which can test internal methods | boolean |
 
