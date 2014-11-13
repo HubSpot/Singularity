@@ -165,7 +165,11 @@ class TailView extends View
         @$el.removeClass 'tailing'
 
     remove: ->
-        clearInterval @tailInterval
+        @stopTailing()
+
+        clearInterval @fetchNextTimeout
+        clearInterval @fetchPreviousTimeout
+
         @$contents.off 'scroll'
         super
 
