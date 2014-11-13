@@ -11,7 +11,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 ### Features###
 
  - [Native Docker Support](Docs/containers.md)
- - [JSON REST API and Java Client](Docs/api.md)
+ - [JSON REST API and Java Client](Docs/reference/api.md)
  - [Rich load balancer integration with Baragon](Docs/baragon.md)
  - [Web Application](Docs/ui.md)
  - [Deployments, automatic rollbacks, and healthchecks](Docs/deployments.md)
@@ -37,9 +37,9 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ### Install ###
 
-##### Local Testing #####
+- [Local Testing with Vagrant](docs/install.md)
 
-##### Deployment #####
+### Deployment ###
 
 ----------
 
@@ -47,12 +47,13 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 #### Deployment ####
 
- - [API](Docs/api.md)
- - [Configuration](Docs/configuration.md)
- - [Custom Executor Components](Docs/components.md)
+ - [API](Docs/reference/api.md)
+ - [Configuration](Docs/reference/configuration.md)
+ - [Custom Executor Components](Docs/details.md#optional-slave-components)
 
 #### Development ####
 
+- [Local Development with Vagrant](Docs/development/vagrant.md)
 - [Hacking on the UI](Docs/development/ui.md)
 - [Understanding the basepom / Maven structure](Docs/development/basepom.md)
 - [Third-party load balancer API design requirements](Docs/development/lbs.md)

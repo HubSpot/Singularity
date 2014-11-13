@@ -45,7 +45,7 @@ Since ZooKeeper is not meant to handle large quantities of data, Singularity can
 In production environments Singularity should be run in high-availability mode by running multiple instances of the Singularity Scheduler component. As depicted in the drawing, only one instance is always active with all the other instances waiting in stand-by mode. While only one instance is registered for receiving resource offers, all instances can process API requests. Singularity uses ZooKeeper to perform leader election and maintain a single leader. Because of the ability for all instances to change state, Singularity internally uses queues which are consumed by the Singularity leader to make calls to Mesos.
 
 #### Singularity UI
-The *Singularity UI* is a single page static web application served from the Singularity Scheduler that uses the Singularity API to present information about deployed items.
+The [*Singularity UI*](ui.md) is a single page static web application served from the Singularity Scheduler that uses the Singularity API to present information about deployed items.
 
 It is a fully-featured application which provides historical as well as active task information. It allows users to view task logs and interact directly with tasks and deploy requests.
 
