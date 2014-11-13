@@ -14,6 +14,9 @@ class LogLines extends Collection
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
 
+    # TODO, hope to get rid of this
+    serverMax: 65536
+
     requestLengthGrowthFactor: 1.75
     maxRequestLength: @::baseRequestLength * 100
 
@@ -112,6 +115,7 @@ class LogLines extends Collection
         isMovingBackward = offset <= @getMinOffset()
 
         moreToFetch = result.data.length is requestedLength
+        moreToFetch = result.data.length is requestedLength or result.data.length is @serverMax
         moreToFetch = moreToFetch and (isMovingForward or @getMinOffset() is 0)
         @state.set('moreToFetch', moreToFetch)
 
