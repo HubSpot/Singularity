@@ -3,6 +3,7 @@ package com.hubspot.singularity.config;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
@@ -50,18 +51,27 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> admins = Collections.emptyList();
 
+  @JsonProperty
+  private int rateLimitAfterNotifications = 5;
+
+  @JsonProperty
+  private long rateLimitPeriodMillis = TimeUnit.MINUTES.toMillis(10);
+
+  @JsonProperty
+  private long rateLimitCooldownMillis = TimeUnit.HOURS.toMillis(1);
+
   @JsonProperty("emails")
   private Map<EmailType, List<EmailDestination>> emailConfiguration = ImmutableMap.<EmailType, List<EmailDestination>>builder()
-      .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
-      .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
-      .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
-      .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
-      .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .build();
+  .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
+  .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
+  .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
+  .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
+  .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+  .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+  .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+  .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+  .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+  .build();
 
   public Map<EmailType, List<EmailDestination>> getEmailConfiguration() {
     return emailConfiguration;
@@ -149,6 +159,30 @@ public class SMTPConfiguration {
 
   public void setAdmins(List<String> admins) {
     this.admins = admins;
+  }
+
+  public int getRateLimitAfterNotifications() {
+    return rateLimitAfterNotifications;
+  }
+
+  public void setRateLimitAfterNotifications(int rateLimitAfterNotifications) {
+    this.rateLimitAfterNotifications = rateLimitAfterNotifications;
+  }
+
+  public long getRateLimitPeriodMillis() {
+    return rateLimitPeriodMillis;
+  }
+
+  public void setRateLimitPeriodMillis(long rateLimitPeriodMillis) {
+    this.rateLimitPeriodMillis = rateLimitPeriodMillis;
+  }
+
+  public long getRateLimitCooldownMillis() {
+    return rateLimitCooldownMillis;
+  }
+
+  public void setRateLimitCooldownMillis(long rateLimitCooldownMillis) {
+    this.rateLimitCooldownMillis = rateLimitCooldownMillis;
   }
 
 }
