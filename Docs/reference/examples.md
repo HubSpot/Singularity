@@ -6,7 +6,7 @@ The services deployed will be a [build](https://github.com/micktwomey/docker-sam
 
 ## Creating the Request
 
-All deployments belong to requests, before you can deploy you need to create a request. A request represents your service, or the scheduled job.
+All deployments belong to requests, before you can deploy you need to create a request. A request represents your service or scheduled job.
 
 Create a [new request](http://vagrant-singularity:7099/singularity/requests/new) and set the following:
 
@@ -84,7 +84,7 @@ Once the task is running you can go to [http://vagrant-singularity:8080/](http:/
 ### Limitations
 
 - Since this container is bound to the ports 8080 and 8081 on the host machine you can't scale it up to more than one per machine.
-- Since singularity isn't allocating the ports you can't use the health check.
+- Since Singularity isn't allocating the ports you can't use the health check.
 
 
 ## Basic Service using Allocated Ports
@@ -93,7 +93,7 @@ Singularity can allocate ports to the service, this allows multiple services to 
 
 When allocating ports Singularity will set PORT0...N environment variables you can use to map your service's ports.
 
-The Dropwizard example exposes a healthcheck on ```http://service:8081/healthcheck```. This can be used by Singularity to determine the healthiness of the service.
+The Dropwizard example exposes a healthcheck on ```http://service:8081/healthcheck```. This can be used by Singularity to determine the healthiness of the service on deploys or when a new task is launched.
 
 The health check uses the first port on the container, so we'll need to map it before the application port.
 
