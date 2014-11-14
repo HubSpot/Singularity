@@ -1,6 +1,6 @@
 # Singularity Deploy Examples
 
-These examples assume you are using the [Vagrant & VirtualBox setup](Singularity_Local_Setup_For_Testing.md).
+These examples assume you have [installed singularity](../install.md).
 
 The services deployed will be a [build](https://github.com/micktwomey/docker-sample-dropwizard-service) of the [Dropwizard getting started example](https://dropwizard.github.io/dropwizard/getting-started.html) and a [simple python service](https://github.com/micktwomey/docker-sample-web-service).
 
@@ -13,6 +13,27 @@ Create a [new request](http://vagrant-singularity:7099/singularity/requests/new)
 - ID: mesos-dropwizard-service
 - Owners: Your email address
 - Type: Service
+
+You can also create the request using a JSON HTTP POST:
+
+```json
+{
+    "id": "mesos-dropwizard-service",
+    "owners": [
+        "mtwomey@example.com"
+    ],
+    "daemon": true,
+    "rackSensitive": false,
+    "loadBalanced": false
+}
+```
+
+You can POST this JSON (saved in request.json) using curl:
+
+```sh
+curl -i -X POST -H "Content-Type: application/json" -d@request.json \
+http://vagrant-singularity:7099/singularity/api/requests
+```
 
 ## Basic Service Using the Mesos Executor
 
@@ -37,7 +58,7 @@ The equivalent JSON which can be used instead of the web UI:
         "command": "java -jar helloworld-1.0-SNAPSHOT.jar server example.yml",
         "resources": {
             "cpus": 0.1,
-            "memoryMb": 128.0,
+            "memoryMb": 128,
             "numPorts": 0
         },
         "uris": [
@@ -98,7 +119,7 @@ Or post the following JSON:
         "command": "java -Ddw.server.applicationConnectors[0].port=$PORT1 -Ddw.server.adminConnectors[0].port=$PORT0 -jar helloworld-1.0-SNAPSHOT.jar server example.yml",
         "resources": {
             "cpus": 0.1,
-            "memoryMb": 128.0,
+            "memoryMb": 128,
             "numPorts": 2
         },
         "uris": [
@@ -147,7 +168,7 @@ The equivalent JSON:
             "type": "DOCKER",
             "docker": {
                 "network": "HOST",
-                "image": "micktwomey/sample-dropwizard-service:1.0",
+                "image": "micktwomey/sample-dropwizard-service:1.0"
             }
         },
         "resources": {
@@ -172,7 +193,7 @@ Unfortunately the Singularity UI doesn't expose the bridge networking details so
 {
     "deploy": {
         "requestId": "mesos-dropwizard-service",
-        "id": "3",
+        "id": "4",
         "containerInfo": {
             "type": "DOCKER",
             "docker": {
@@ -198,7 +219,7 @@ Unfortunately the Singularity UI doesn't expose the bridge networking details so
         },
         "resources": {
             "cpus": 0.1,
-            "memoryMb": 128.0,
+            "memoryMb": 128,
             "numPorts": 2
         },
         "skipHealthchecksOnDeploy": false,
@@ -229,7 +250,7 @@ To deploy this service instead change the Docker image being used:
 {
     "deploy": {
         "requestId": "mesos-dropwizard-service",
-        "id": "4",
+        "id": "5",
         "containerInfo": {
             "type": "DOCKER",
             "docker": {
@@ -255,7 +276,7 @@ To deploy this service instead change the Docker image being used:
         },
         "resources": {
             "cpus": 0.1,
-            "memoryMb": 128.0,
+            "memoryMb": 128,
             "numPorts": 2
         },
         "skipHealthchecksOnDeploy": false,
