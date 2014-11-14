@@ -65,7 +65,7 @@ When you first start, run `npm install` to download all the dependencies. Once t
 
 So far you have SingularityUI with all its dependencies installed. You're able to run SingularityUI and have it served using `brunch watch --server`. What we need now is a running SingularityService to pull information from.
 
-If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Vagrant](Singularity_Local_Setup_For_Testing.md). Once the VM is up and running, the API's root is available at [`http://vagrant-singularity:7099/singularity/api`](http://vagrant-singularity:7099/singularity/api) by default.
+If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Vagrant](vagrant.md). Once the VM is up and running, the API's root is available at [`http://vagrant-singularity:7099/singularity/api`](http://vagrant-singularity:7099/singularity/api) by default.
 
 You might also be running SingularityService locally without a VM. This works too!
 

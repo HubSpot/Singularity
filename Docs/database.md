@@ -16,7 +16,7 @@ database:
 
 ### Schema Changes
 
-Singularity uses the [dropwizard-migrations](http://dropwizard.codahale.com/manual/migrations/) bundle (which in turn uses [liquibase](http://www.liquibase.org/)) for managing and applying database schema changes.
+Singularity uses the [dropwizard-migrations](http://dropwizard.io/manual/migrations) bundle (which in turn uses [liquibase](http://www.liquibase.org/)) for managing and applying database schema changes.
 
 To check the status of your database, run the `db status` task:
 
@@ -38,4 +38,4 @@ INFO  [2013-12-23 18:42:10,239] liquibase: Reading from singularity.DATABASECHAN
 INFO  [2013-12-23 18:42:10,327] liquibase: ChangeSet migrations.sql::1::tpetr ran successfully in 57ms
 ```
 
-More information about `db` tasks can be found in the dropwizard-migrations [docs](http://dropwizard.codahale.com/manual/migrations/), and more information about the migration file syntax can be found in the liquibase [docs](http://www.liquibase.org/documentation/yaml_format.html).
+More information about `db` tasks can be found in the dropwizard-migrations [docs](http://dropwizard.io/manual/migrations), and more information about the migration file syntax can be found in the liquibase [docs](http://www.liquibase.org/documentation/yaml_format.html).
