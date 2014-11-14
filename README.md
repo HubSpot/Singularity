@@ -47,6 +47,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
  - [API](Docs/reference/api.md)
  - [Configuration](Docs/reference/configuration.md)
+ - [Examples](Docs/reference/examples.md)
  - [Custom Executor Components](Docs/details.md#optional-slave-components)
 
 #### Development ####
