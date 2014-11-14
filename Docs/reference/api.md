@@ -3,11 +3,11 @@
 Version: 0.4.0-SNAPSHOT
 
 Endpoints:
-- [`/api/deploys`](#apideploys) - Manages Singularity deploys for existing requests.
+- [`/api/deploys`](#apideploys) - Manages Singularity Deploys for existing requests
 - [`/api/history`](#apihistory) - Manages historical data for tasks, requests, and deploys.
 - [`/api/logs`](#apilogs) - Manages Singularity task logs stored in S3.
 - [`/api/racks`](#apiracks) - Manages Singularity racks.
-- [`/api/requests`](#apirequests) - Manages Singularity requests.
+- [`/api/requests`](#apirequests) - Manages Singularity Requests, the parent object for any deployed task
 - [`/api/sandbox`](#apisandbox) - Provides a proxy to Mesos sandboxes.
 - [`/api/slaves`](#apislaves) - Manages Singularity slaves.
 - [`/api/state`](#apistate) - Provides information about the current state of Singularity.
@@ -19,15 +19,22 @@ Models:
 - [`EmbeddedArtifact`](#embeddedartifact)
 - [`ExecutorData`](#executordata)
 - [`ExternalArtifact`](#externalartifact)
+- [`LoadBalancerRequestId`](#loadbalancerrequestid)
 - [`S3Artifact`](#s3artifact)
 - [`SingularityContainerInfo`](#singularitycontainerinfo)
 - [`SingularityDeploy`](#singularitydeploy)
+- [`SingularityDeployMarker`](#singularitydeploymarker)
 - [`SingularityDeployRequest`](#singularitydeployrequest)
 - [`SingularityDockerInfo`](#singularitydockerinfo)
 - [`SingularityDockerPortMapping`](#singularitydockerportmapping)
-- [`SingularityPauseRequest`](#singularitypauserequest)
+- [`SingularityLoadBalancerUpdate`](#singularityloadbalancerupdate)
+- [`SingularityPendingDeploy`](#singularitypendingdeploy)
+- [`SingularityPendingRequest`](#singularitypendingrequest)
 - [`SingularityRequest`](#singularityrequest)
+- [`SingularityRequestCleanup`](#singularityrequestcleanup)
+- [`SingularityRequestDeployState`](#singularityrequestdeploystate)
 - [`SingularityRequestInstances`](#singularityrequestinstances)
+- [`SingularityRequestParent`](#singularityrequestparent)
 - [`SingularityVolume`](#singularityvolume)
 - [`SingularityWebhook`](#singularitywebhook)
 
@@ -36,11 +43,11 @@ Models:
 ## Endpoints
 ### /api/deploys
 #### Overview
-Manages Singularity deploys for existing requests.
+Manages Singularity Deploys for existing requests
 
 #### **POST** `/api/deploys`
 
-Create a new deployment.
+Start a new deployment for a Request
 
 
 ###### Parameters
@@ -51,21 +58,20 @@ Create a new deployment.
 | body | true |  | <a href="#SingularityDeployRequest">SingularityDeployRequest</a> |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| 200    | Deploy successfully scheduled. | - |
-| 400    | Deploy object is invalid. | - |
-| 409    | A current deploy is in progress. | - |
+| 400    | Deploy object is invalid | - |
+| 409    | A current deploy is in progress. It may be canceled by calling DELETE | - |
 
 
 - - -
 #### **DELETE** `/api/deploys/deploy/{deployId}/request/{requestId}`
 
-Delete a pending deployment from a request.
+Cancel a pending deployment (best effort - the deploy may still succeed or fail)
 
 
 ###### Parameters
@@ -79,30 +85,29 @@ Delete a pending deployment from a request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | The user which executes the delete request. | string |
+| user | false | The user which executes the delete request. | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| 400    | Deploy is not pending or not present. | - |
-| 200    | Pending deploy successfully removed. | - |
+| 400    | Deploy is not in the pending state pending or is not not present | - |
 
 
 - - -
 #### **GET** `/api/deploys/pending`
 
-Retrieve the list of pending deploys.
+Retrieve the list of current pending deploys
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityPendingDeploy]](#SingularityPendingDeploy)
 
 
 ###### Errors
@@ -471,7 +476,7 @@ Decomission a specific active rack.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of person requestin the decommisioning. | string |
+| user | false | Username of person requestin the decommisioning. | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
 [](#)
@@ -509,7 +514,7 @@ Undo the decomission operation on a specific decommissioning rack.
 - - -
 ### /api/requests
 #### Overview
-Manages Singularity requests.
+Manages Singularity Requests, the parent object for any deployed task
 
 #### **POST** `/api/requests`
 
@@ -521,34 +526,35 @@ Create or update a Singularity Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting to create or update. | string |
+| user | false | Username of the person requesting to create or update | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 **body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | The Singularity request to create or update. | <a href="#SingularityRequest">SingularityRequest</a> |
+| body | false | The Singularity request to create or update | <a href="#SingularityRequest">SingularityRequest</a> |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 400    | Request object is invalid | - |
+| 409    | Request object is being cleaned. Try again shortly | - |
 
 
 - - -
 #### **GET** `/api/requests`
 
-Retrieve the list of all requests.
+Retrieve the list of all requests
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRequestParent]](#SingularityRequestParent)
 
 
 ###### Errors
@@ -560,14 +566,14 @@ Retrieve the list of all requests.
 - - -
 #### **GET** `/api/requests/active`
 
-Retrieve the list of active requests.
+Retrieve the list of active requests
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRequestParent]](#SingularityRequestParent)
 
 
 ###### Errors
@@ -579,14 +585,14 @@ Retrieve the list of active requests.
 - - -
 #### **GET** `/api/requests/cooldown`
 
-Retrieve the list of requests in system cooldown.
+Retrieve the list of requests in system cooldown
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRequestParent]](#SingularityRequestParent)
 
 
 ###### Errors
@@ -598,14 +604,14 @@ Retrieve the list of requests in system cooldown.
 - - -
 #### **GET** `/api/requests/finished`
 
-Retreive the list of finished requests.
+Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRequestParent]](#SingularityRequestParent)
 
 
 ###### Errors
@@ -617,14 +623,14 @@ Retreive the list of finished requests.
 - - -
 #### **GET** `/api/requests/paused`
 
-Retrieve the list of paused requests.
+Retrieve the list of paused requests
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRequestParent]](#SingularityRequestParent)
 
 
 ###### Errors
@@ -643,7 +649,7 @@ Retrieve the list of requests being cleaned up
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRequestCleanup]](#SingularityRequestCleanup)
 
 
 ###### Errors
@@ -655,37 +661,14 @@ Retrieve the list of requests being cleaned up
 - - -
 #### **GET** `/api/requests/queued/pending`
 
-Retrieve the list of pending requests.
+Retrieve the list of pending requests
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/request/{requestId}`
-
-Retrieve information about a specific request.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID. | string |
-
-###### Response
-[](#)
+[List[SingularityPendingRequest]](#SingularityPendingRequest)
 
 
 ###### Errors
@@ -697,7 +680,7 @@ Retrieve information about a specific request.
 - - -
 #### **DELETE** `/api/requests/request/{requestId}`
 
-Delete a specific request.
+Delete a specific Request by ID and return the deleted Request
 
 
 ###### Parameters
@@ -710,16 +693,39 @@ Delete a specific request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the delete. | string |
+| user | false | Username of the person requesting the delete | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
-[](#)
+[SingularityRequest](#SingularityRequest)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 404    | No Request with that ID | - |
+
+
+- - -
+#### **GET** `/api/requests/request/{requestId}`
+
+Retrieve a specific Request by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID | string |
+
+###### Response
+[SingularityRequestParent](#SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
 
 
 - - -
@@ -738,10 +744,10 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the bounce | string |
+| user | false | Username of the person requesting the bounce | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
@@ -753,7 +759,7 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 - - -
 #### **PUT** `/api/requests/request/{requestId}/instances`
 
-Scale the number of instances for a specific request.
+Scale the number of instances up or down for a specific Request
 
 
 ###### Parameters
@@ -761,32 +767,33 @@ Scale the number of instances for a specific request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | The request ID to scale. | string |
+| requestId | true | The Request ID to scale | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the scale. | string |
+| user | false | Username of the person requesting the scale | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 **body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Scaling information | <a href="#SingularityRequestInstances">SingularityRequestInstances</a> |
+| body | false | Object to hold number of instances to request | <a href="#SingularityRequestInstances">SingularityRequestInstances</a> |
 
 ###### Response
-[](#)
+[SingularityRequest](#SingularityRequest)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 400    | Posted object did not match Request ID | - |
+| 404    | No Request with that ID | - |
 
 
 - - -
 #### **POST** `/api/requests/request/{requestId}/pause`
 
-Pause a Singularity request.
+Pause a Singularity request, future tasks will not run until it is manually unpaused. API can optionally choose to kill existing tasks
 
 
 ###### Parameters
@@ -794,32 +801,32 @@ Pause a Singularity request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | The request ID to pause. | string |
+| requestId | true | The request ID to pause | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the pause. | string |
+| user | false | Username of the person requesting the pause | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 **body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Additional pause options. | <a href="#SingularityPauseRequest">SingularityPauseRequest</a> |
+| body | false | Pause Request Options | <a href="#UNKNOWN[SingularityPauseRequest]">UNKNOWN[SingularityPauseRequest]</a> |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 409    | Request is already paused or being cleaned | - |
 
 
 - - -
 #### **POST** `/api/requests/request/{requestId}/run`
 
-Schedule a Singularity request for immediate execution.
+Schedule a one-off or scheduled Singularity request for immediate execution.
 
 
 ###### Parameters
@@ -827,12 +834,12 @@ Schedule a Singularity request for immediate execution.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | The request ID to run. | string |
+| requestId | true | The request ID to run | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the execution | string |
+| user | false | Username of the person requesting the execution | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 **body**
 
 | Parameter | Required | Description | Data Type |
@@ -840,19 +847,19 @@ Schedule a Singularity request for immediate execution.
 | body | false | Additional command line arguments to append to the task | string |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 400    | Singularity Request is not scheduled or one-off | - |
 
 
 - - -
 #### **POST** `/api/requests/request/{requestId}/unpause`
 
-Unpause a Singularity request.
+Unpause a Singularity Request, scheduling new tasks immediately
 
 
 ###### Parameters
@@ -860,21 +867,21 @@ Unpause a Singularity request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | The request ID to unpause. | string |
+| requestId | true | The request ID to unpause | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the unpause | string |
+| user | false | Username of the person requesting the unpause | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
-[](#)
+[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 409    | Request is not paused | - |
 
 
 - - -
@@ -926,9 +933,9 @@ Retrieve part of the contents of a file in a specific task&#39;s sandbox.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | path | false | The path to the file to be read | string |
-| grep | false | Optional string to grep for | string |
-| offset | false | Byte offset to start reading from | long |
-| length | false | Maximum number of bytes to read | long |
+| grep | false | Optional string to grep for | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| offset | false | Byte offset to start reading from | <a href="#UNKNOWN[long]">UNKNOWN[long]</a> |
+| length | false | Maximum number of bytes to read | <a href="#UNKNOWN[long]">UNKNOWN[long]</a> |
 
 ###### Response
 [](#)
@@ -1040,7 +1047,7 @@ Decommission a specific slave.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false |  | string |
+| user | false |  | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
 [](#)
@@ -1356,7 +1363,7 @@ Kill a specific active task.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false |  | string |
+| user | false |  | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
 [](#)
@@ -1695,6 +1702,15 @@ Delete a specific webhook.
 | name | string | optional |  |
 
 
+## LoadBalancerRequestId
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| requestType | <a href="#LoadBalancerRequestType">LoadBalancerRequestType</a> | optional |  Allowable values: ADD, REMOVE, DEPLOY |
+| attemptNumber | int | optional |  |
+| id | string | optional |  |
+
+
 ## S3Artifact
 
 | name | type | required | description |
@@ -1746,6 +1762,16 @@ Delete a specific webhook.
 | id | string | required | Singularity deploy id. |
 
 
+## SingularityDeployMarker
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| user | string | optional |  |
+| requestId | string | optional |  |
+| timestamp | long | optional |  |
+| deployId | string | optional |  |
+
+
 ## SingularityDeployRequest
 
 | name | type | required | description |
@@ -1775,12 +1801,37 @@ Delete a specific webhook.
 | hostPortType | <a href="#SingularityPortMappingType">SingularityPortMappingType</a> | optional |  Allowable values: LITERAL, FROM_OFFER |
 
 
-## SingularityPauseRequest
+## SingularityLoadBalancerUpdate
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| loadBalancerState | <a href="#BaragonRequestState">BaragonRequestState</a> | optional |  Allowable values: UNKNOWN, FAILED, WAITING, SUCCESS, CANCELING, CANCELED |
+| loadBalancerRequestId | <a href="#LoadBalancerRequestId">LoadBalancerRequestId</a> | optional |  |
+| uri | string | optional |  |
+| method | <a href="#LoadBalancerMethod">LoadBalancerMethod</a> | optional |  Allowable values: PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL |
+| message | string | optional |  |
+| timestamp | long | optional |  |
+
+
+## SingularityPendingDeploy
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| currentDeployState | <a href="#DeployState">DeployState</a> | optional |  Allowable values: SUCCEEDED, FAILED_INTERNAL_STATE, CANCELING, WAITING, OVERDUE, FAILED, CANCELED |
+| lastLoadBalancerUpdate | <a href="#SingularityLoadBalancerUpdate">SingularityLoadBalancerUpdate</a> | optional |  |
+| deployMarker | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
+
+
+## SingularityPendingRequest
 
 | name | type | required | description |
 |------|------|----------|-------------|
 | user | string | optional |  |
-| killTasks | boolean | optional |  |
+| requestId | string | optional |  |
+| cmdLineArgs | string | optional |  |
+| timestamp | long | optional |  |
+| deployId | string | optional |  |
+| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE |
 
 
 ## SingularityRequest
@@ -1802,12 +1853,44 @@ Delete a specific webhook.
 | id | string | optional |  |
 
 
+## SingularityRequestCleanup
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| requestId | string | optional |  |
+| user | string | optional |  |
+| killTasks | boolean | optional |  |
+| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING |
+| timestamp | long | optional |  |
+
+
+## SingularityRequestDeployState
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| pendingDeploy | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
+| requestId | string | optional |  |
+| activeDeploy | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
+
+
 ## SingularityRequestInstances
 
 | name | type | required | description |
 |------|------|----------|-------------|
 | instances | int | optional |  |
 | id | string | optional |  |
+
+
+## SingularityRequestParent
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| state | <a href="#RequestState">RequestState</a> | optional |  Allowable values: ACTIVE, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE |
+| pendingDeploy | <a href="#SingularityDeploy">SingularityDeploy</a> | optional |  |
+| activeDeploy | <a href="#SingularityDeploy">SingularityDeploy</a> | optional |  |
+| request | <a href="#SingularityRequest">SingularityRequest</a> | optional |  |
+| pendingDeployState | <a href="#SingularityPendingDeploy">SingularityPendingDeploy</a> | optional |  |
+| requestDeployState | <a href="#SingularityRequestDeployState">SingularityRequestDeployState</a> | optional |  |
 
 
 ## SingularityVolume
