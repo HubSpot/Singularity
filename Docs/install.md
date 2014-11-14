@@ -85,9 +85,9 @@ Verify that Singularity is running:
 [http://vagrant-singularity:7092/](http://vagrant-singularity:7092/)
 
 If everything went well you will see the following screen:
-![Singularity UI first run](images/SingularityUI_First_Run.png)
+![Singularity UI first run](../images/SingularityUI_First_Run.png)
 
-Enter your username to let Singularity populate a personalized dashboard and go to [Deploy Examples](Singularity_Deploy_Examples.md) to find out how to deploy some test projects.
+Enter your username to let Singularity populate a personalized dashboard and go to [Deploy Examples](../reference/examples.md) to find out how to deploy some test projects.
 
 At a later time you can update the VM installed packages using the latest *singularity* chef recipe by running:
 ```bash
