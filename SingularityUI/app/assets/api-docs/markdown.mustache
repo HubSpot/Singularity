@@ -4,12 +4,12 @@ Version: {{apiVersion}}
 
 Endpoints:
 {{#apiDocuments}}
-- `{{resourcePath}}` - {{description}}
+- [`{{resourcePath}}`](#{{anchor}}) - {{description}}
 {{/apiDocuments}}
 
 Models:
 {{#dataTypes}}
-- `{{name}}`
+- [`{{name}}`](#{{anchor}})
 {{/dataTypes}}
 {{^dataTypes}}
 - *none*
@@ -18,7 +18,7 @@ Models:
 - - -
 
 ## Endpoints
-{{#apiDocuments}}<a name="#api-{{index}}"></a>
+{{#apiDocuments}}
 ### {{resourcePath}}
 {{#description}}
 #### Overview
@@ -90,7 +90,6 @@ Models:
 ## Data Types
 {{#dataTypes}}
 
-<a name="#model-{{name}}"></a>
 ## {{name}}
 
 | name | type | required | description |

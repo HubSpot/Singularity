@@ -343,7 +343,7 @@
       <plugin>
         <groupId>com.hubspot</groupId>
         <artifactId>swagger-maven-plugin</artifactId>
-        <version>2.3.3-HUBSPOT</version>
+        <version>2.3.4-HUBSPOT</version>
         <configuration>
           <apiSources>
             <apiSource>

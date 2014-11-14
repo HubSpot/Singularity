@@ -3,38 +3,37 @@
 Version: 0.4.0-SNAPSHOT
 
 Endpoints:
-- `/api/deploys` - Manages Singularity deploys for existing requests.
-- `/api/history` - Manages historical data for tasks, requests, and deploys.
-- `/api/logs` - Manages Singularity task logs stored in S3.
-- `/api/racks` - Manages Singularity racks.
-- `/api/requests` - Manages Singularity requests.
-- `/api/sandbox` - Provides a proxy to Mesos sandboxes.
-- `/api/slaves` - Manages Singularity slaves.
-- `/api/state` - Provides information about the current state of Singularity.
-- `/api/tasks` - Manages Singularity tasks.
-- `/api/test` - Misc testing endpoints.
-- `/api/webhooks` - Manages Singularity webhooks.
+- [`/api/deploys`](#apideploys) - Manages Singularity deploys for existing requests.
+- [`/api/history`](#apihistory) - Manages historical data for tasks, requests, and deploys.
+- [`/api/logs`](#apilogs) - Manages Singularity task logs stored in S3.
+- [`/api/racks`](#apiracks) - Manages Singularity racks.
+- [`/api/requests`](#apirequests) - Manages Singularity requests.
+- [`/api/sandbox`](#apisandbox) - Provides a proxy to Mesos sandboxes.
+- [`/api/slaves`](#apislaves) - Manages Singularity slaves.
+- [`/api/state`](#apistate) - Provides information about the current state of Singularity.
+- [`/api/tasks`](#apitasks) - Manages Singularity tasks.
+- [`/api/test`](#apitest) - Misc testing endpoints.
+- [`/api/webhooks`](#apiwebhooks) - Manages Singularity webhooks.
 
 Models:
-- `EmbeddedArtifact`
-- `ExecutorData`
-- `ExternalArtifact`
-- `S3Artifact`
-- `SingularityContainerInfo`
-- `SingularityDeploy`
-- `SingularityDeployRequest`
-- `SingularityDockerInfo`
-- `SingularityDockerPortMapping`
-- `SingularityPauseRequest`
-- `SingularityRequest`
-- `SingularityRequestInstances`
-- `SingularityVolume`
-- `SingularityWebhook`
+- [`EmbeddedArtifact`](#embeddedartifact)
+- [`ExecutorData`](#executordata)
+- [`ExternalArtifact`](#externalartifact)
+- [`S3Artifact`](#s3artifact)
+- [`SingularityContainerInfo`](#singularitycontainerinfo)
+- [`SingularityDeploy`](#singularitydeploy)
+- [`SingularityDeployRequest`](#singularitydeployrequest)
+- [`SingularityDockerInfo`](#singularitydockerinfo)
+- [`SingularityDockerPortMapping`](#singularitydockerportmapping)
+- [`SingularityPauseRequest`](#singularitypauserequest)
+- [`SingularityRequest`](#singularityrequest)
+- [`SingularityRequestInstances`](#singularityrequestinstances)
+- [`SingularityVolume`](#singularityvolume)
+- [`SingularityWebhook`](#singularitywebhook)
 
 - - -
 
 ## Endpoints
-<a name="#api-0"></a>
 ### /api/deploys
 #### Overview
 Manages Singularity deploys for existing requests.
@@ -113,7 +112,6 @@ Retrieve the list of pending deploys.
 
 
 - - -
-<a name="#api-1"></a>
 ### /api/history
 #### Overview
 Manages historical data for tasks, requests, and deploys.
@@ -300,7 +298,6 @@ Retrieve the history for a specific task.
 
 
 - - -
-<a name="#api-2"></a>
 ### /api/logs
 #### Overview
 Manages Singularity task logs stored in S3.
@@ -375,7 +372,6 @@ Retrieve the list of logs stored in S3 for a specific task.
 
 
 - - -
-<a name="#api-3"></a>
 ### /api/racks
 #### Overview
 Manages Singularity racks.
@@ -511,30 +507,10 @@ Undo the decomission operation on a specific decommissioning rack.
 
 
 - - -
-<a name="#api-4"></a>
 ### /api/requests
 #### Overview
 Manages Singularity requests.
 
-#### **GET** `/api/requests`
-
-Retrieve the list of all requests.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **POST** `/api/requests`
 
 Create or update a Singularity Request
@@ -551,6 +527,25 @@ Create or update a Singularity Request
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | body | false | The Singularity request to create or update. | <a href="#SingularityRequest">SingularityRequest</a> |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests`
+
+Retrieve the list of all requests.
+
+
+###### Parameters
+- No parameters
 
 ###### Response
 [](#)
@@ -883,7 +878,6 @@ Unpause a Singularity request.
 
 
 - - -
-<a name="#api-5"></a>
 ### /api/sandbox
 #### Overview
 Provides a proxy to Mesos sandboxes.
@@ -947,7 +941,6 @@ Retrieve part of the contents of a file in a specific task&#39;s sandbox.
 
 
 - - -
-<a name="#api-6"></a>
 ### /api/slaves
 #### Overview
 Manages Singularity slaves.
@@ -1083,7 +1076,6 @@ Remove a specific decommissioning slave
 
 
 - - -
-<a name="#api-7"></a>
 ### /api/state
 #### Overview
 Provides information about the current state of Singularity.
@@ -1158,7 +1150,6 @@ Retrieve the list of under-provisioned request IDs.
 
 
 - - -
-<a name="#api-8"></a>
 ### /api/tasks
 #### Overview
 Manages Singularity tasks.
@@ -1401,7 +1392,6 @@ Retrieve statistics about a specific active task.
 
 
 - - -
-<a name="#api-9"></a>
 ### /api/test
 #### Overview
 Misc testing endpoints.
@@ -1525,7 +1515,6 @@ Stop the Mesos scheduler driver.
 
 
 - - -
-<a name="#api-10"></a>
 ### /api/webhooks
 #### Overview
 Manages Singularity webhooks.
@@ -1667,7 +1656,6 @@ Delete a specific webhook.
 
 ## Data Types
 
-<a name="#model-EmbeddedArtifact"></a>
 ## EmbeddedArtifact
 
 | name | type | required | description |
@@ -1678,7 +1666,6 @@ Delete a specific webhook.
 | content | <a href="#byte">Array[byte]</a> | optional |  |
 
 
-<a name="#model-ExecutorData"></a>
 ## ExecutorData
 
 | name | type | required | description |
@@ -1697,7 +1684,6 @@ Delete a specific webhook.
 | cmd | string | optional |  |
 
 
-<a name="#model-ExternalArtifact"></a>
 ## ExternalArtifact
 
 | name | type | required | description |
@@ -1709,7 +1695,6 @@ Delete a specific webhook.
 | name | string | optional |  |
 
 
-<a name="#model-S3Artifact"></a>
 ## S3Artifact
 
 | name | type | required | description |
@@ -1722,7 +1707,6 @@ Delete a specific webhook.
 | name | string | optional |  |
 
 
-<a name="#model-SingularityContainerInfo"></a>
 ## SingularityContainerInfo
 
 | name | type | required | description |
@@ -1732,7 +1716,6 @@ Delete a specific webhook.
 | docker | <a href="#SingularityDockerInfo">SingularityDockerInfo</a> | optional |  |
 
 
-<a name="#model-SingularityDeploy"></a>
 ## SingularityDeploy
 
 | name | type | required | description |
@@ -1763,7 +1746,6 @@ Delete a specific webhook.
 | id | string | required | Singularity deploy id. |
 
 
-<a name="#model-SingularityDeployRequest"></a>
 ## SingularityDeployRequest
 
 | name | type | required | description |
@@ -1773,7 +1755,6 @@ Delete a specific webhook.
 | user | string | optional | User owning this deploy. |
 
 
-<a name="#model-SingularityDockerInfo"></a>
 ## SingularityDockerInfo
 
 | name | type | required | description |
@@ -1783,7 +1764,6 @@ Delete a specific webhook.
 | image | string | optional |  |
 
 
-<a name="#model-SingularityDockerPortMapping"></a>
 ## SingularityDockerPortMapping
 
 | name | type | required | description |
@@ -1795,7 +1775,6 @@ Delete a specific webhook.
 | hostPortType | <a href="#SingularityPortMappingType">SingularityPortMappingType</a> | optional |  Allowable values: LITERAL, FROM_OFFER |
 
 
-<a name="#model-SingularityPauseRequest"></a>
 ## SingularityPauseRequest
 
 | name | type | required | description |
@@ -1804,7 +1783,6 @@ Delete a specific webhook.
 | killTasks | boolean | optional |  |
 
 
-<a name="#model-SingularityRequest"></a>
 ## SingularityRequest
 
 | name | type | required | description |
@@ -1824,7 +1802,6 @@ Delete a specific webhook.
 | id | string | optional |  |
 
 
-<a name="#model-SingularityRequestInstances"></a>
 ## SingularityRequestInstances
 
 | name | type | required | description |
@@ -1833,7 +1810,6 @@ Delete a specific webhook.
 | id | string | optional |  |
 
 
-<a name="#model-SingularityVolume"></a>
 ## SingularityVolume
 
 | name | type | required | description |
@@ -1843,7 +1819,6 @@ Delete a specific webhook.
 | mode | <a href="#Mode">Mode</a> | optional |  Allowable values: RW, RO |
 
 
-<a name="#model-SingularityWebhook"></a>
 ## SingularityWebhook
 
 | name | type | required | description |
