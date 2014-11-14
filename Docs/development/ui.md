@@ -75,7 +75,11 @@ From this point onwards we're assuming you have a running SingularityService you
 
 ### Cross-domain restrictions
 
-Your browser will not allow cross-domain requests if you're using a remote server (Vagrant included). To get around this we'll use an open-source HubSpot mini-proxy called [vee](https://github.com/HubSpot/vee).
+**If you're using the Vagrant box for your API you can go ahead and skip this section.**
+
+If you're using a different API you should be aware that SingularityService has an `enableCorsFilter` option in its server config. If enabled, cross-domain restrictions won't apply. The Vagrant service has this enabled by default which is why we're not worried about it.
+
+Your browser will not allow cross-domain requests if you're using a server without the CORS filter enabled. To get around this we'll use an open-source HubSpot mini-proxy called [vee](https://github.com/HubSpot/vee).
 
 If you're able to configure your own nginx or Apache server to be used as a proxy, feel free to do it that way if you wish. Otherwise, read on!
 
@@ -121,11 +125,11 @@ If you're confused as to what's going on here, all your requests are being proce
 
 ### Connecting to the API
 
-So far you have SingularityUI being served by Brunch, SingularityService running somewhere, and you have vee directing requests to each of them as required.
+So far you have SingularityUI being served by Brunch, and SingularityService running somewhere. If you have a proxy like vee running too, please replace the ports/URIs that follow with the ones you're using for the proxy.
 
-Open up SingularityUI in your browser by going to [`http://localhost:4001`](http://localhost:4001) (if running through vee) or [`http://localhost:3333`](http://localhost:3333).
+Open up SingularityUI in your browser by going to [`http://localhost:3333`](http://localhost:3333).
 
-You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it `http://localhost:<port>`, where `<port>` is `4001` if running through vee, or your local instance SingularityService port if you're doing it that way.
+You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it your `http://example/singularity/api` URI.
 
 You can change the value of this at any point by typing the following in your JS console:
 

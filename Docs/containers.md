@@ -1,6 +1,8 @@
 ## Container Support
 
-Singularity now has basic support for Mesos containers, as of 0.20.0!  First you need to [set up your Mesos slave](https://mesos.apache.org/documentation/latest/docker-containerizer/) to support containers.  The Singularity deploy object has a `containerInfo` field which mirrors the Mesos `containerInfo` definition.  Here is an example deploy to get you started:
+Singularity supports Mesos containers (DOCKERs).  To use containers, you need make sure [your Mesos slave is configured correctly](https://mesos.apache.org/documentation/latest/docker-containerizer/).  
+
+The Singularity deploy object has a `containerInfo` field which mirrors the Mesos `containerInfo` definition.  Here is an example deploy to get you started:
 
 ```
 {
@@ -11,9 +13,6 @@ Singularity now has basic support for Mesos containers, as of 0.20.0!  First you
     "memoryMb": 128,
     "numPorts": 2
   },
-  "serviceBasePath": "/demo",
-  "healthcheckUri": "/health",
-  "healthcheckTimeoutSeconds": 300,
   "containerInfo": {
     "type": "DOCKER",
     "docker": {
