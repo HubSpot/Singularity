@@ -20,6 +20,9 @@ class TailView extends View
         @listenTo @collection, 'sync',        @renderLines
         @listenTo @collection, 'initialdata', @afterInitialData
 
+        @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
+        @listenTo @collection.state, 'change:moreToFetchAtBeginning', @showOrHideMoreToFetchSpinners
+
         # For the visual loading indicator thing
         @listenTo @collection, 'request', =>
             @$el.addClass 'fetching-data'
@@ -38,6 +41,7 @@ class TailView extends View
         @$el.html @template {@taskId, @filename, breadcrumbs}
 
         @$contents = @$ '.tail-contents'
+        @$linesWrapper = @$contents.children('.lines-wrapper')
 
         # Attach scroll event manually because Backbone is poopy about it
         @$contents.on 'scroll', @handleScroll
@@ -49,12 +53,12 @@ class TailView extends View
     renderLines: ->
         # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
         # Well, or just render them if we're starting fresh
-        $firstLine = @$contents.find '.line:first-child'
-        $lastLine  = @$contents.find '.line:last-child'
+        $firstLine = @$linesWrapper.find '.line:first-child'
+        $lastLine  = @$linesWrapper.find '.line:last-child'
 
         # If starting fresh
         if $firstLine.length is 0
-            @$contents.html @linesTemplate lines: @collection.toJSON()
+            @$linesWrapper.html @linesTemplate lines: @collection.toJSON()
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
             lastLineOffset  = parseInt $lastLine.data 'offset'
@@ -62,15 +66,16 @@ class TailView extends View
             if @collection.getMinOffset() < firstLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') < firstLineOffset
-                @$contents.prepend @linesTemplate lines: _.pluck lines, 'attributes'
+                @$linesWrapper.prepend @linesTemplate lines: _.pluck lines, 'attributes'
+
                 # Gonna need to scroll back to the previous `firstLine` after otherwise
                 # we end up at the top again
                 @$contents.scrollTop $firstLine.offset().top
             # Appending
-            else if @collection.getMaxOffset() > lastLineOffset
+            else if @collection.getStartOffsetOfLastLine() > lastLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') > lastLineOffset
-                @$contents.append @linesTemplate lines: _.pluck lines, 'attributes'
+                @$linesWrapper.append @linesTemplate lines: _.pluck lines, 'attributes'
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
@@ -87,32 +92,47 @@ class TailView extends View
         , 100
 
     # Get rid of all lines. Used when collection is reset
-    dumpContents: -> @$contents.empty()
+    dumpContents: -> @$linesWrapper.empty()
 
     handleScroll: (event) =>
         # `Debounce` on animation requests so we only do this when the
         # browser is ready for it
         if @frameRequest?
             cancelAnimationFrame @frameRequest
+
         @frameRequest = requestAnimationFrame =>
             scrollTop = @$contents.scrollTop()
             scrollHeight = @$contents[0].scrollHeight
-            contentsHeight = @$contents.height()
+            contentsHeight = @$contents.outerHeight()
 
             atBottom = scrollTop >= scrollHeight - contentsHeight
             atTop = scrollTop is 0
 
             if atBottom and not atTop
-                if @collection.moreToFetch
+                if @collection.state.get('moreToFetch')
                     return if @preventFetch
-                    @collection.fetchNext()
+                    @delayedFetchNext()
                 else
                     @startTailing()
             else
                 @stopTailing()
 
             if atTop and @collection.getMinOffset() isnt 0
-                @collection.fetchPrevious()
+                @delayedFetchPrevious()
+
+    delayedFetchNext: ->
+        if not @fetchNextTimeout
+            @fetchNextTimeout = setTimeout =>
+                @collection.fetchNext().always =>
+                    @fetchNextTimeout = undefined
+            , 0
+
+    delayedFetchPrevious: ->
+        if not @fetchPreviousTimeout
+            @fetchPreviousTimeout = setTimeout =>
+                @collection.fetchPrevious().always =>
+                    @fetchPreviousTimeout = undefined
+            , 0
 
     afterInitialData: =>
         setTimeout =>
@@ -122,31 +142,59 @@ class TailView extends View
         @startTailing()
 
     startTailing: =>
+        return if @isTailing is true
+
+        @isTailing = true
         @scrollToBottom()
 
         clearInterval @tailInterval
         @tailInterval = setInterval =>
-            @collection.fetchNext().done @scrollToBottom
+            @collection.fetchNext().done =>
+                # Only show the newly tail-ed lines if we are still tailing
+                @scrollToBottom() if @isTailing
         , @pollingTimeout
 
         # The class is for CSS stylin' of certain stuff
         @$el.addClass 'tailing'
 
     stopTailing: ->
+        return if @isTailing isnt true
+
+        @isTailing = false
         clearInterval @tailInterval
         @$el.removeClass 'tailing'
 
     remove: ->
-        clearInterval @tailInterval
+        @stopTailing()
+
+        clearInterval @fetchNextTimeout
+        clearInterval @fetchPreviousTimeout
+
         @$contents.off 'scroll'
         super
 
     goToTop: =>
-        @collection.reset()
-        @collection.fetchFromStart().done @scrollToTop
-    
+        if @collection.getMinOffset() is 0
+            @scrollToTop()
+        else
+            @collection.reset()
+            @collection.fetchFromStart().done @scrollToTop
+
     goToBottom: =>
-        @collection.reset()
-        @collection.fetchInitialData()
+        if @collection.state.get('moreToFetch') is true
+            @collection.reset()
+            @collection.fetchInitialData()
+        else
+            @scrollToBottom()
+            @startTailing()
+
+    showOrHideMoreToFetchSpinners: (state) ->
+        if state.changed.moreToFetchAtBeginning?
+            @$('.tail-fetching-start').toggle(state.changed.moreToFetchAtBeginning)
+
+        if state.changed.moreToFetch?
+            @$('.tail-fetching-end').toggle(state.changed.moreToFetch)
+
+
 
 module.exports = TailView
