@@ -341,39 +341,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.github.kongchen</groupId>
+        <groupId>com.hubspot</groupId>
         <artifactId>swagger-maven-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-          <apiSources>
-            <apiSource>
-              <locations>com.hubspot.singularity.resources</locations>
-              <apiVersion>${project.version}</apiVersion>
-
-              <apiInfo>
-                <title>Singularity REST API</title>
-                <description>Singularity Mesos Framework API</description>
-              </apiInfo>
-
-              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/index.html.mustache</outputTemplate>
-              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
-              <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
-            </apiSource>
-          </apiSources>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.github.kongchen</groupId>
-        <artifactId>swagger-maven-plugin</artifactId>
-        <version>2.3</version>
+        <version>2.3.3-HUBSPOT</version>
         <configuration>
           <apiSources>
             <apiSource>
@@ -388,6 +358,35 @@
               <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
               <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
               <outputPath>${basedir}/../Docs/reference/api.md</outputPath>
+              <sortApis>true</sortApis>
+            </apiSource>
+            <apiSource>
+              <locations>com.hubspot.singularity.config</locations>
+              <apiVersion>${project.version}</apiVersion>
+
+              <apiInfo>
+                  <title>Singularity Configuration</title>
+                  <description>Singularity Configuration</description>
+              </apiInfo>
+
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+              <outputPath>${basedir}/../Docs/reference/config.md</outputPath>
+              <sortApis>true</sortApis>
+            </apiSource>
+            <apiSource>
+              <locations>com.hubspot.singularity.resources</locations>
+              <apiVersion>${project.version}</apiVersion>
+
+              <apiInfo>
+                  <title>Singularity REST API</title>
+                  <description>Singularity Mesos Framework API</description>
+              </apiInfo>
+
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/index.html.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+              <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
+              <sortApis>true</sortApis>
             </apiSource>
           </apiSources>
         </configuration>
@@ -399,6 +398,35 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+            <dependency>
+                <groupId>com.wordnik</groupId>
+                <artifactId>swagger-jaxrs_2.10</artifactId>
+                <version>1.3.10</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.wordnik</groupId>
+                        <artifactId>swagger-core_2.10</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.wordnik</groupId>
+                <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
+                <version>1.3.10</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.wordnik</groupId>
+                        <artifactId>swagger-core_2.10</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.hubspot</groupId>
+                <artifactId>swagger-core_2.10</artifactId>
+                <version>1.3.11-HUBSPOT-SNAPSHOT</version> <!-- TODO: finish release of HubSpot-flavored swagger -->
+            </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>com.github.eirslett</groupId>

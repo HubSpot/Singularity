@@ -1,13 +1,24 @@
-#{{#apiInfo}}{{title}}
+# {{apiInfo.title}}
 
-{{description}}
+Version: {{apiVersion}}
 
-{{/apiInfo}}
+Endpoints:
+{{#apiDocuments}}
+- `{{resourcePath}}` - {{description}}
+{{/apiDocuments}}
 
-Api Version: {{apiVersion}}
+Models:
+{{#dataTypes}}
+- `{{name}}`
+{{/dataTypes}}
+{{^dataTypes}}
+- *none*
+{{/dataTypes}}
+
+- - -
 
 ## Endpoints
-{{#apiDocuments}}
+{{#apiDocuments}}<a name="#api-{{index}}"></a>
 ### {{resourcePath}}
 {{#description}}
 #### Overview
@@ -30,6 +41,9 @@ Api Version: {{apiVersion}}
 {{#paras}}
 | {{ name }} | {{ required }} | {{ description }} | {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} |
 {{/paras}}
+{{/parameters}}
+{{^parameters}}
+- No parameters
 {{/parameters}}
 
 {{#responseClass}}
@@ -76,19 +90,19 @@ Api Version: {{apiVersion}}
 ## Data Types
 {{#dataTypes}}
 
+<a name="#model-{{name}}"></a>
+## {{name}}
 
-## <a name="{{name}}">{{name}}</a>
-
-| type | required | description |
-|------|----------|-------------|
+| name | type | required | description |
+|------|------|----------|-------------|
 {{#items}}
-| {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{^description}}-{{/description}}{{#allowableValue}} Allowable
-        values:{{.}}{{/allowableValue}} |
+| {{name}} | {{#linkType}}<a href="#{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{#allowableValue}} Allowable values: {{.}}{{/allowableValue}} |
 {{/items}}
 
 {{/dataTypes}}
 
 {{#enumTypes}}
+<a name="#enum-{{name}}"></a>
 ## {{name}}
 {{#allowableValues}}
 {{.}}
