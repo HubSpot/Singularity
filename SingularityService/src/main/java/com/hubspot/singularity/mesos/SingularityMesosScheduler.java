@@ -40,6 +40,7 @@ import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchSt
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
+import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 @Singleton
@@ -55,6 +56,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
@@ -62,12 +64,13 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
 
   @Inject
-  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
+  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularitySchedulerPriority schedulerPriority,
       SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider,
       SingularityHealthchecker healthchecker, DeployManager deployManager, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
+    this.schedulerPriority = schedulerPriority;
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
@@ -116,6 +119,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
+      schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
@@ -199,6 +203,8 @@ public class SingularityMesosScheduler implements Scheduler {
         LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
 
         taskManager.createTaskAndDeletePendingTask(task);
+
+        schedulerPriority.notifyTaskLaunched(task.getTaskId());
 
         stateCache.getActiveTaskIds().add(task.getTaskId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());

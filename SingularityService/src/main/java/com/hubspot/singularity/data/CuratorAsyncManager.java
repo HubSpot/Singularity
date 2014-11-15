@@ -187,7 +187,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     return objects;
   }
 
-
   protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
     try {
       return existsThrows(pathNameForLogs, paths, idTranscoder);

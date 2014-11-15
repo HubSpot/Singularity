@@ -17,28 +17,6 @@ import com.hubspot.singularity.SlavePlacement;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
 
-  @JsonProperty("database")
-  private DataSourceFactory databaseConfiguration;
-
-  @JsonProperty("mesos")
-  private MesosConfiguration mesosConfiguration;
-
-  @JsonProperty("s3")
-  private S3Configuration s3Configuration;
-
-  @JsonProperty("sentry")
-  private SentryConfiguration sentryConfiguration;
-
-  @JsonProperty("smtp")
-  private SMTPConfiguration smtpConfiguration;
-
-  @JsonProperty("ui")
-  @Valid
-  private UIConfiguration uiConfiguration = new UIConfiguration();
-
-  @JsonProperty("zookeeper")
-  private ZooKeeperConfiguration zooKeeperConfiguration;
-
   @NotNull
   private boolean allowRequestsWithoutOwners = true;
 
@@ -61,16 +39,21 @@ public class SingularityConfiguration extends Configuration {
   private int checkNewTasksScheduledThreads = 3;
 
   @NotNull
-  private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
+  private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   @NotNull
   private long checkSchedulerEverySeconds = 5;
+
+  @NotNull
+  private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
   @NotNull
   private long cleanupEverySeconds = 5;
 
   @NotNull
   private long closeWaitSeconds = 5;
+
+  private String commonHostnameSuffixToOmit;
 
   @NotNull
   private boolean compressLargeDataObjects = true;
@@ -79,13 +62,22 @@ public class SingularityConfiguration extends Configuration {
   private long considerTaskHealthyAfterRunningForSeconds = 5;
 
   @NotNull
-  private int cooldownAfterFailures = 5;
+  private int cooldownAfterFailures = 3;
 
   @NotNull
-  private long cooldownExpiresAfterMinutes = 30;
+  private double cooldownAfterPctOfInstancesFail = 1.0;
+
+  @NotNull
+  private long cooldownExpiresAfterMinutes = 15;
 
   @NotNull
   private long cooldownMinScheduleSeconds = 120;
+
+  @JsonProperty("database")
+  private DataSourceFactory databaseConfiguration;
+
+  @NotNull
+  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
   @NotNull
   private boolean defaultValueForKillTasksOfPausedRequests = true;
@@ -96,6 +88,8 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long deployHealthyBySeconds = 120;
 
+  private boolean enableCorsFilter = false;
+
   @NotNull
   private long healthcheckIntervalSeconds = 5;
 
@@ -104,8 +98,6 @@ public class SingularityConfiguration extends Configuration {
 
   @NotNull
   private long healthcheckTimeoutSeconds = 5;
-
-  private String commonHostnameSuffixToOmit;
 
   private String hostname;
 
@@ -138,17 +130,17 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private int maxRequestIdSize = 100;
 
+  @JsonProperty("mesos")
+  private MesosConfiguration mesosConfiguration;
+
   @NotNull
   private int newTaskCheckerBaseDelaySeconds = 1;
 
   @NotNull
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
-  @NotNull
-  private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
-
-  @NotNull
-  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+  @JsonProperty("s3")
+  private S3Configuration s3Configuration;
 
   @NotNull
   private boolean sandboxDefaultsToTaskId = false;
@@ -159,13 +151,24 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private long saveStateEverySeconds = 60;
 
+  @JsonProperty("sentry")
+  private SentryConfiguration sentryConfiguration;
+
+  @JsonProperty("smtp")
+  private SMTPConfiguration smtpConfiguration;
+
+  @NotNull
+  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+
+  @JsonProperty("ui")
+  @Valid
+  private UIConfiguration uiConfiguration = new UIConfiguration();
+
   @NotNull
   private long zookeeperAsyncTimeout = 5000;
 
-  @NotNull
-  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
-
-  private boolean enableCorsFilter = false;
+  @JsonProperty("zookeeper")
+  private ZooKeeperConfiguration zooKeeperConfiguration;
 
   public boolean allowTestResourceCalls() {
     return allowTestResourceCalls;
@@ -221,6 +224,10 @@ public class SingularityConfiguration extends Configuration {
 
   public int getCooldownAfterFailures() {
     return cooldownAfterFailures;
+  }
+
+  public double getCooldownAfterPctOfInstancesFail() {
+    return cooldownAfterPctOfInstancesFail;
   }
 
   public long getCooldownExpiresAfterMinutes() {
@@ -433,6 +440,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCooldownAfterFailures(int cooldownAfterFailures) {
     this.cooldownAfterFailures = cooldownAfterFailures;
+  }
+
+  public void setCooldownAfterPctOfInstancesFail(double cooldownAfterPctOfInstancesFail) {
+    this.cooldownAfterPctOfInstancesFail = cooldownAfterPctOfInstancesFail;
   }
 
   public void setCooldownExpiresAfterMinutes(long cooldownExpiresAfterMinutes) {

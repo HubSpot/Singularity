@@ -87,7 +87,7 @@ public class SingularityCooldownChecker {
       return true;
     }
 
-    if (cooldown.hasCooldownExpired(maybeDeployStatistics.get(), Optional.<Long> absent())) {
+    if (cooldown.hasCooldownExpired(cooldownRequest.getRequest(), maybeDeployStatistics.get(), Optional.<Integer> absent(), Optional.<Long> absent())) {
       return true;
     }
 

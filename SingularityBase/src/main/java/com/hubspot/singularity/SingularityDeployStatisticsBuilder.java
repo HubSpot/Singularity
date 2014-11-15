@@ -1,8 +1,7 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
 import com.google.common.base.Optional;
+import com.google.common.collect.ListMultimap;
 
 public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
 
@@ -14,7 +13,7 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
 
   private int numSequentialRetries;
 
-  private List<Long> sequentialFailureTimestamps;
+  private ListMultimap<Integer, Long> instanceSequentialFailureTimestamps;
 
   private Optional<Long> lastFinishAt;
   private Optional<ExtendedTaskState> lastTaskState;
@@ -28,15 +27,15 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
   }
 
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, sequentialFailureTimestamps);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps);
   }
 
-  public List<Long> getSequentialFailureTimestamps() {
-    return sequentialFailureTimestamps;
+  public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
+    return instanceSequentialFailureTimestamps;
   }
 
-  public SingularityDeployStatisticsBuilder setSequentialFailureTimestamps(List<Long> sequentialFailureTimestamps) {
-    this.sequentialFailureTimestamps = sequentialFailureTimestamps;
+  public SingularityDeployStatisticsBuilder setInstanceSequentialFailureTimestamps(ListMultimap<Integer, Long> instanceSequentialFailureTimestamps) {
+    this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps;
     return this;
   }
 
@@ -95,8 +94,8 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries
-        + ", sequentialFailureTimestamps=" + sequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries="
+        + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
   }
 
 }
