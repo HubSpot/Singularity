@@ -77,6 +77,9 @@ class GlobalSearchView extends View
         if event?
             return if not $(event.target).data('action')? is 'close-global-seach'
 
+            # Don't hide if you click the input box
+            return if $(event.target).is('input')
+
         @$el.parent().removeClass 'global-search-active'
 
     toggle: ->
