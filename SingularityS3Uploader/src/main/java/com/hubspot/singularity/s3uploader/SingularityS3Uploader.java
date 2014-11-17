@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jets3t.service.S3Service;
+import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
@@ -107,6 +108,9 @@ public class SingularityS3Uploader {
         metrics.upload();
         success++;
         Files.delete(file);
+      } catch (S3ServiceException se) {
+        metrics.error();
+        LOG.warn("{} Couldn't upload due to {} ({}) - {}", logIdentifier, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage());
       } catch (Exception e) {
         metrics.error();
         LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
