@@ -13,7 +13,7 @@ Open a command shell and run the following commands to install the required vagr
 
 ```bash
 vagrant plugin install vagrant-omnibus
-vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1
+vagrant plugin install vagrant-berkshelf
 vagrant plugin install vagrant-hostsupdater
 ```
 
