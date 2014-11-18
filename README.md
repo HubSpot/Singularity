@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
+
 ## Overview ##
 
 Singularity is an API and web application for running and scheduling [Apache Mesos](http://mesos.apache.org/) tasks — including long running processes, scheduled jobs, and one-off tasks.
