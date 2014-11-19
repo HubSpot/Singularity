@@ -38,13 +38,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "develop", autostart: false
 
   config.vm.define "base_image", autostart: false do |build|
-    if !Vagrant.has_plugin?("vagrant-omnibus")
-      raise "Please install vagrant-omnibus via `vagrant plugin install vagrant-ominbus --plugin-version=1.4.1`"
-    end
-
-    if !Vagrant.has_plugin?("vagrant-berkshelf")
-      raise "Please install vagrant-berkshelf 2.0.1 via `vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1`"
-    end
+    
 
     build.vm.box = "opscode_ubuntu-14.04_provisionerless"
     build.vm.box_url = "http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box"
