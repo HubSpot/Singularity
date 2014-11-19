@@ -1,5 +1,7 @@
 package com.hubspot.mesos;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
@@ -8,7 +10,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,28 +45,9 @@ public final class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
 
-  public static final String CHARSET_UTF8_STRING = "UTF-8";
-  public static final Charset CHARSET_UTF8 = Charset.forName(CHARSET_UTF8_STRING);
-
-  public static byte[] toBytes(String string) {
-    try {
-      return string.getBytes(CHARSET_UTF8_STRING);
-    } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
-  public static String toString(byte[] bytes) {
-    try {
-      return new String(bytes, CHARSET_UTF8_STRING);
-    } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
   public static String urlEncode(String string) {
     try {
-      return URLEncoder.encode(string, CHARSET_UTF8_STRING);
+      return URLEncoder.encode(string, UTF_8.name());
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }
@@ -73,7 +55,7 @@ public final class JavaUtils {
 
   public static String urlDecode(String string) {
     try {
-      return URLDecoder.decode(string, CHARSET_UTF8_STRING);
+      return URLDecoder.decode(string, UTF_8.name());
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }

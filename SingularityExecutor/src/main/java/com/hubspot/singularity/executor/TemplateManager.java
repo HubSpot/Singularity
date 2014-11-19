@@ -1,5 +1,7 @@
 package com.hubspot.singularity.executor;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,7 +11,6 @@ import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
@@ -45,7 +46,7 @@ public class TemplateManager {
   }
 
   private void writeTemplate(Path path, Template template, Object context) {
-    try (final BufferedWriter writer = Files.newBufferedWriter(path, JavaUtils.CHARSET_UTF8)) {
+    try (final BufferedWriter writer = Files.newBufferedWriter(path, UTF_8)) {
       template.apply(context, writer);
     } catch (Exception e) {
       throw Throwables.propagate(e);
