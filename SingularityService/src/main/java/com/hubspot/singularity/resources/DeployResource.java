@@ -41,7 +41,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 @Path(DeployResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity deploys for existing requests.", value=DeployResource.PATH)
+@Api(description="Manages Singularity Deploys for existing requests", value=DeployResource.PATH, position=2)
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
@@ -61,21 +61,19 @@ public class DeployResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/pending")
-  @ApiOperation("Retrieve the list of pending deploys.")
+  @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
   public List<SingularityPendingDeploy> getPendingDeploys() {
     return deployManager.getPendingDeploys();
   }
 
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
-  @ApiOperation("Create a new deployment.")
+  @ApiOperation(value="Start a new deployment for a Request", response=SingularityRequestParent.class)
   @ApiResponses({
-    @ApiResponse(code=200, message="Deploy successfully scheduled."),
-    @ApiResponse(code=400, message="Deploy object is invalid.", response=Void.class),
-    @ApiResponse(code=409, message="A current deploy is in progress.", response=Void.class),
+    @ApiResponse(code=400, message="Deploy object is invalid"),
+    @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
-  public SingularityRequestParent deploy(
-      @ApiParam(required=true) SingularityDeployRequest deployRequest) {
+  public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
     if (deployRequest.getDeploy() == null || deployRequest.getDeploy().getRequestId() == null) {
       throw WebExceptions.badRequest("DeployRequest must have a deploy object with a non-null requestId");
     }
@@ -113,10 +111,9 @@ public class DeployResource extends AbstractRequestResource {
 
   @DELETE
   @Path("/deploy/{deployId}/request/{requestId}")
-  @ApiOperation(value="Delete a pending deployment from a request.")
+  @ApiOperation(value="Cancel a pending deployment (best effort - the deploy may still succeed or fail)", response=SingularityRequestParent.class)
   @ApiResponses({
-    @ApiResponse(code=400, message="Deploy is not pending or not present.", response=Void.class),
-    @ApiResponse(code=200, message="Pending deploy successfully removed.")
+    @ApiResponse(code=400, message="Deploy is not in the pending state pending or is not not present"),
   })
   public SingularityRequestParent cancelDeploy(
       @ApiParam(required=true,  value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,

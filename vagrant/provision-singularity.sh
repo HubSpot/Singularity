@@ -63,6 +63,9 @@ ui:
   baseUrl: http://vagrant-singularity:7099/singularity
 
 loadBalancerUri: http://vagrant-singularity:8080/baragon/v2/request
+
+enableCorsFilter: true
+
 EOF
 }
 
