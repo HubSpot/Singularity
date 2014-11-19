@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 import org.apache.mesos.Protos;
 
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import com.hubspot.singularity.s3.base.SafeProcessManager;
+import com.hubspot.singularity.runner.base.shared.SafeProcessManager;
 
 public class SingularityExecutorTaskProcessCallable extends SafeProcessManager implements Callable<Integer> {
 

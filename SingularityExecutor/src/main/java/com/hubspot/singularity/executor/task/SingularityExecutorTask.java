@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.ExecutorDriver;
@@ -24,6 +25,8 @@ public class SingularityExecutorTask {
   private final Logger log;
   private final ReentrantLock lock;
   private final AtomicBoolean killed;
+  private final AtomicInteger threadCountAtOverage;
+  private final AtomicBoolean killedAfterThreadOverage;
   private final AtomicBoolean destroyed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
@@ -39,6 +42,8 @@ public class SingularityExecutorTask {
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
     this.destroyed = new AtomicBoolean(false);
+    this.killedAfterThreadOverage = new AtomicBoolean(false);
+    this.threadCountAtOverage = new AtomicInteger(0);
 
     this.taskDefinition = taskDefinition;
 
@@ -90,6 +95,20 @@ public class SingularityExecutorTask {
   public void markKilled() {
     this.killed.set(true);
   }
+
+  public void markKilledDueToThreads(int currentThreads) {
+    this.killedAfterThreadOverage.set(true);
+    this.threadCountAtOverage.set(currentThreads);
+  }
+
+  public boolean wasKilledDueToThreads() {
+    return killedAfterThreadOverage.get();
+  }
+
+  public int getThreadCountAtOverageTime() {
+    return threadCountAtOverage.get();
+  }
+
 
   public void markDestroyed() {
     this.destroyed.set(true);

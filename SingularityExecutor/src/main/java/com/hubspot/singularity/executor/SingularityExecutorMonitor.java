@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -49,18 +50,21 @@ public class SingularityExecutorMonitor {
   private final SingularityExecutorLogging logging;
   private final ExecutorUtils executorUtils;
   private final SingularityExecutorProcessKiller processKiller;
+  private final SingularityExecutorThreadChecker threadChecker;
 
   private final Map<String, SingularityExecutorTask> tasks;
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
 
   @Inject
-  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
     this.processKiller = processKiller;
     this.exitChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorExitChecker-%d").build());
+    this.threadChecker = threadChecker;
+    this.threadChecker.start(this);
 
     this.tasks = Maps.newConcurrentMap();
     this.processBuildingTasks = Maps.newConcurrentMap();
@@ -86,6 +90,8 @@ public class SingularityExecutorMonitor {
   public void shutdown(Optional<ExecutorDriver> driver) {
     LOG.info("Shutdown requested with driver {}", driver);
 
+    threadChecker.getExecutorService().shutdown();
+
     processBuilderPool.shutdown();
 
     runningProcessPool.shutdown();
@@ -98,8 +104,9 @@ public class SingularityExecutorMonitor {
 
     exitChecker.shutdown();
 
-    CountDownLatch latch = new CountDownLatch(3);
+    CountDownLatch latch = new CountDownLatch(4);
 
+    JavaUtils.awaitTerminationWithLatch(latch, "threadChecker", threadChecker.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processBuilder", processBuilderPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "runningProcess", runningProcessPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processKiller", processKiller.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
@@ -185,6 +192,7 @@ public class SingularityExecutorMonitor {
 
   public SubmitState submit(final SingularityExecutorTask task) {
     exitLock.lock();
+
     try {
       final Lock taskLock = task.getLock();
       taskLock.lock();
@@ -223,6 +231,10 @@ public class SingularityExecutorMonitor {
     } finally {
       System.exit(statusCode);
     }
+  }
+
+  public Collection<SingularityExecutorTaskProcessCallable> getRunningTasks() {
+    return processRunningTasks.values();
   }
 
   public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
@@ -409,6 +421,10 @@ public class SingularityExecutorMonitor {
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
           }
+        } else if (task.wasKilledDueToThreads()) {
+          taskState = TaskState.TASK_FAILED;
+
+          message = String.format("Task used %s threads and was killed (max %s)", task.getThreadCountAtOverageTime(), task.getExecutorData().getMaxTaskThreads().get());
         } else if (task.isSuccessExitCode(exitCode)) {
           taskState = TaskState.TASK_FINISHED;
 
