@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -78,7 +79,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     return reader.get().output;
   }
 
-  private class OutputReader extends Thread {
+  private static class OutputReader extends Thread {
 
     private final List<String> output;
     private final InputStream inputStream;
@@ -92,7 +93,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
     @Override
     public void run() {
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
         String line = br.readLine();
         while (line != null) {
           output.add(line);
