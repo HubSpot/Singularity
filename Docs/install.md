@@ -24,13 +24,13 @@ cd Singularity/vagrant
 ls
 ```
 
-Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command: 
+Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command:
 
 ```bash
 vagrant up
 ```
 
-This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then build Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up. 
+This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then build Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up.
 
 During the installation your local machine hosts file is configured with the VM IP (so you can access it as *vagrant-singularity*) and you will be asked to provide your password.
 
@@ -49,12 +49,12 @@ ls /
 
 # type 'quit' to exit zookeper console
 ```
- 
+
 Then verify that the mesos cluster is running and the Mesos UI is accessible at:
 
 [http://vagrant-singularity:5050/](http://vagrant-singularity:5050/)
 
-Verify that mysql server is running: 
+Verify that mysql server is running:
 
 ```bash
 mysql -u root -p
@@ -89,5 +89,5 @@ Enter your username to let Singularity populate a personalized dashboard and go 
 
 At a later time you can update the VM installed packages using the latest *singularity* chef recipe by running:
 ```bash
-vagrant reload --provision 
+vagrant reload --provision
 ```
