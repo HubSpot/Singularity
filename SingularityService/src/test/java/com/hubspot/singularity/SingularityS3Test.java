@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.Collection;
+import java.util.TimeZone;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,6 +12,8 @@ public class SingularityS3Test {
 
   @Test
   public void testS3FormatHelper() throws Exception {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
     SingularityTaskId taskId = new SingularityTaskId("rid", "did", 1, 1, "host", "rack");
 
     long start = 1414610537117l; // Wed, 29 Oct 2014 19:22:17 GMT
@@ -31,11 +34,7 @@ public class SingularityS3Test {
 
     prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%d/%taskId", taskId, Optional.<String> absent(), start, end);
 
-    System.out.println(prefixes);
     Assert.assertTrue(prefixes.size() == 2);
-
-
-
   }
 
 }

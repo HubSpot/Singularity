@@ -87,7 +87,7 @@ public class SingularityValidator {
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
-    check(request.getId() != null, "Id must not be null");
+    check(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
     if (!allowRequestsWithoutOwners) {
       check(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
@@ -156,7 +156,7 @@ public class SingularityValidator {
   }
 
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
-    check(deploy.getId() != null && !deploy.getId().contains("-"), "Id must not be null and can not contain - characters");
+    check(deploy.getId() != null && !deploy.getId().contains("/") && !deploy.getId().contains("-"), "Id must not be null and can not contain / or - characters");
     check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
 

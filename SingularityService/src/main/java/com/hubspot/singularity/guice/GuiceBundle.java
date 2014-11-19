@@ -11,6 +11,7 @@ import io.dropwizard.servlets.tasks.Task;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -251,13 +252,18 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     }
 
     public final Builder<U> modules(final Module... modules) {
-      guiceModules.add(modules);
-      return this;
+      return modules(Arrays.asList(modules));
     }
 
-    @SafeVarargs
-    public final Builder<U> modules(final ConfigurationAwareModule<U>... modules) {
-      configurationAwareModules.add(modules);
+    @SuppressWarnings("unchecked")
+    public final Builder<U> modules(final Iterable<? extends Module> modules) {
+      for (Module module : modules) {
+        if (module instanceof ConfigurationAwareModule<?>) {
+          configurationAwareModules.add((ConfigurationAwareModule<U>) module);
+        }  else {
+          guiceModules.add(module);
+        }
+      }
       return this;
     }
 

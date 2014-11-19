@@ -51,6 +51,7 @@ import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
 import com.hubspot.singularity.smtp.JadeHelper;
+import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.ning.http.client.AsyncHttpClient;
@@ -68,6 +69,7 @@ public class SingularityMainModule implements Module {
   public static final String TASK_COMPLETED_TEMPLATE = "task.completed.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
+  public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
   public static final String HOST_ADDRESS_PROPERTY = "singularity.host.address";
@@ -93,14 +95,13 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
     binder.bind(MesosClient.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
-    binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
-    binder.bind(SingularityMailer.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookSender.class).in(Scopes.SINGLETON);
 
@@ -218,4 +219,12 @@ public class SingularityMainModule implements Module {
   public JadeTemplate getRequestModifiedTemplate() throws IOException {
     return getJadeTemplate("request_modified.jade");
   }
+
+  @Provides
+  @Singleton
+  @Named(RATE_LIMITED_TEMPLATE)
+  public JadeTemplate getRateLimitedTemplate() throws IOException {
+    return getJadeTemplate("rate_limited.jade");
+  }
+
 }
