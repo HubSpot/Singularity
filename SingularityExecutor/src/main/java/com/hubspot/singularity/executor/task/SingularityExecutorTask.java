@@ -76,7 +76,11 @@ public class SingularityExecutorTask {
     return lock;
   }
 
-  public Logger getLog() {
+  public Logger getLogbackLog() {
+    return log;
+  }
+
+  public org.slf4j.Logger getLog() {
     return log;
   }
 
