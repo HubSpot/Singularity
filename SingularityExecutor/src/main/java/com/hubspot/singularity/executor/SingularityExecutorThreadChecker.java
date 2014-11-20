@@ -42,7 +42,7 @@ public class SingularityExecutorThreadChecker {
 
     this.monitor = monitor;
 
-    this.scheduledExecutorService.schedule(new Runnable() {
+    this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
       @Override
       public void run() {
@@ -56,7 +56,7 @@ public class SingularityExecutorThreadChecker {
           LOG.debug("Finished checking threads after {}", JavaUtils.duration(start));
         }
       }
-    }, configuration.getCheckThreadsEveryMillis(), TimeUnit.MILLISECONDS);
+    }, configuration.getCheckThreadsEveryMillis(), configuration.getCheckThreadsEveryMillis(), TimeUnit.MILLISECONDS);
   }
 
   private void checkThreads() {
