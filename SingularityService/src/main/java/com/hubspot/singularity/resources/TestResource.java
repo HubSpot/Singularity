@@ -4,6 +4,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
@@ -17,8 +19,10 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityDriver;
 
-@Path(SingularityService.API_BASE_PATH + "/test")
+@Path(TestResource.PATH)
+@Api(description="Misc testing endpoints.", value=TestResource.PATH)
 public class TestResource {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/test";
 
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;
@@ -41,6 +45,7 @@ public class TestResource {
 
   @POST
   @Path("/scheduler/statusUpdate/{taskId}/{taskState}")
+  @ApiOperation("Force an update for a specific task.")
   public void statusUpdate(@PathParam("taskId") String taskId, @PathParam("taskState") String taskState) {
     checkAllowed();
 
@@ -52,6 +57,7 @@ public class TestResource {
 
   @POST
   @Path("/leader")
+  @ApiOperation("Make this instance of Singularity believe it's elected leader.")
   public void setLeader() {
     checkAllowed();
 
@@ -60,6 +66,7 @@ public class TestResource {
 
   @POST
   @Path("/notleader")
+  @ApiOperation("Make this instanceo of Singularity believe it's lost leadership.")
   public void setNotLeader() {
     checkAllowed();
 
@@ -68,6 +75,7 @@ public class TestResource {
 
   @POST
   @Path("/stop")
+  @ApiOperation("Stop the Mesos scheduler driver.")
   public void stop() throws Exception {
     checkAllowed();
 
@@ -76,6 +84,7 @@ public class TestResource {
 
   @POST
   @Path("/abort")
+  @ApiOperation("Abort the Mesos scheduler driver.")
   public void abort() {
     checkAllowed();
 
@@ -84,6 +93,7 @@ public class TestResource {
 
   @POST
   @Path("/start")
+  @ApiOperation("Start the Mesos scheduler driver.")
   public void start() throws Exception {
     checkAllowed();
 

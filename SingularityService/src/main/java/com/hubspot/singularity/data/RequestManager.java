@@ -126,6 +126,10 @@ public class RequestManager extends CuratorAsyncManager {
     return create(getCleanupPath(cleanupRequest.getRequestId()), cleanupRequest, requestCleanupTranscoder);
   }
 
+  public SingularityCreateResult update(SingularityRequest request, Optional<String> user) {
+    return save(request, getRequest(request.getId()).get().getState(), RequestHistoryType.UPDATED, user);
+  }
+
   private SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, Optional<String> user) {
     saveHistory(new SingularityRequestHistory(System.currentTimeMillis(), user, eventType, request));
 

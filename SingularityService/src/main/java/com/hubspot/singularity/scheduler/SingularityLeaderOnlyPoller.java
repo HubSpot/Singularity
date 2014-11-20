@@ -31,7 +31,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   private final TimeUnit pollTimeUnit;
   private final SchedulerLockType schedulerLockType;
 
-  enum SchedulerLockType {
+  public static enum SchedulerLockType {
     LOCK, NO_LOCK
   }
 
@@ -50,6 +50,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   @Override
   public void start() {
+    if (pollDelay < 1) {
+      LOG.warn("Not running {} due to delay value of {}", getClass().getSimpleName(), pollDelay);
+      return;
+    }
+
     LOG.info("Starting a {} with a {} delay", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
 
     executorService.scheduleWithFixedDelay(new Runnable() {
@@ -66,6 +71,8 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     if (!leaderLatch.hasLeadership() || !mesosScheduler.isRunning()) {
       return;
     }
+
+    LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
 
     if (schedulerLockType == SchedulerLockType.LOCK) {
       mesosScheduler.lock();

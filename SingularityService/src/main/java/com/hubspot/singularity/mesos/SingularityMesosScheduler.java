@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
@@ -39,6 +40,7 @@ import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchSt
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
+import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 @Singleton
@@ -54,6 +56,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
@@ -61,12 +64,13 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
 
   @Inject
-  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
+  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularitySchedulerPriority schedulerPriority,
       SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider,
       SingularityHealthchecker healthchecker, DeployManager deployManager, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
+    this.schedulerPriority = schedulerPriority;
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
@@ -94,6 +98,10 @@ public class SingularityMesosScheduler implements Scheduler {
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
     LOG.info("Received {} offer(s)", offers.size());
 
+    for (Offer offer : offers) {
+      LOG.debug("Received offer from {} ({}) for {} cpu(s), {} memory, and {} ports", offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer), MesosUtils.getNumPorts(offer));
+    }
+
     final long start = System.currentTimeMillis();
 
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
@@ -111,6 +119,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
+      schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
@@ -195,12 +204,14 @@ public class SingularityMesosScheduler implements Scheduler {
 
         taskManager.createTaskAndDeletePendingTask(task);
 
+        schedulerPriority.notifyTaskLaunched(task.getTaskId());
+
         stateCache.getActiveTaskIds().add(task.getTaskId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 
         return Optional.of(task);
       } else {
-        LOG.trace("Ignoring offer {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
+        LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
     }
 
@@ -246,7 +257,7 @@ public class SingularityMesosScheduler implements Scheduler {
     long timestamp = System.currentTimeMillis();
 
     if (status.hasTimestamp()) {
-      timestamp = (long) status.getTimestamp() * 1000;
+      timestamp = (long) (status.getTimestamp() * 1000);
     }
 
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);

@@ -13,6 +13,12 @@ public class IndexView extends View {
   private final String apiRoot;
   private final String navColor;
 
+  private final Integer defaultMemory;
+  private final Integer defaultCpus;
+
+  private final Boolean hideNewDeployButton;
+  private final Boolean hideNewRequestButton;
+
   private final String title;
 
   private final Integer slaveHttpPort;
@@ -29,6 +35,12 @@ public class IndexView extends View {
 
     slaveHttpPort = configuration.getMesosConfiguration().getSlaveHttpPort();
     slaveHttpsPort = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
+
+    defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
+    defaultMemory = configuration.getMesosConfiguration().getDefaultMemory();
+
+    hideNewDeployButton = configuration.getUiConfiguration().isHideNewDeployButton();
+    hideNewRequestButton = configuration.getUiConfiguration().isHideNewRequestButton();
 
     navColor = configuration.getUiConfiguration().getNavColor();
   }
@@ -61,10 +73,27 @@ public class IndexView extends View {
     return slaveHttpsPort;
   }
 
+  public Integer getDefaultMemory() {
+    return defaultMemory;
+  }
+
+  public Integer getDefaultCpus() {
+    return defaultCpus;
+  }
+
+  public Boolean getHideNewDeployButton() {
+    return hideNewDeployButton;
+  }
+
+  public Boolean getHideNewRequestButton() {
+    return hideNewRequestButton;
+  }
+
   @Override
   public String toString() {
-    return "IndexView [appRoot=" + appRoot + ", staticRoot=" + staticRoot + ", apiRoot=" + apiRoot + ", navColor=" + navColor + ", title=" + title + ", slaveHttpPort=" + slaveHttpPort
-        + ", slaveHttpsPort=" + slaveHttpsPort + "]";
+    return "IndexView [appRoot=" + appRoot + ", staticRoot=" + staticRoot + ", apiRoot=" + apiRoot + ", navColor=" + navColor + ", defaultMemory=" + defaultMemory + ", defaultCpus=" + defaultCpus
+        + ", hideNewDeployButton=" + hideNewDeployButton + ", hideNewRequestButton=" + hideNewRequestButton + ", title=" + title + ", slaveHttpPort=" + slaveHttpPort + ", slaveHttpsPort="
+        + slaveHttpsPort + "]";
   }
 
 }

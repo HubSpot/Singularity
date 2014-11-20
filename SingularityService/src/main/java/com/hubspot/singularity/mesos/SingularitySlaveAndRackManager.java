@@ -78,7 +78,12 @@ class SingularitySlaveAndRackManager {
   }
 
   private String getHost(String hostname) {
-    return getSafeString(hostname.split("\\.")[0]);
+    if (configuration.getCommonHostnameSuffixToOmit().isPresent()) {
+      if (hostname.endsWith(configuration.getCommonHostnameSuffixToOmit().get())) {
+        hostname = hostname.substring(0, hostname.length() - configuration.getCommonHostnameSuffixToOmit().get().length());
+      }
+    }
+    return getSafeString(hostname);
   }
 
   public String getSlaveHost(Offer offer) {
@@ -116,6 +121,7 @@ class SingularitySlaveAndRackManager {
     double numOnSlave = 0;
 
     for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
+      // TODO consider using executorIds
       if (taskId.getHost().equals(host)) {
         numOnSlave++;
       }
@@ -130,6 +136,7 @@ class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -137,6 +144,7 @@ class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
         if (numOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -146,6 +154,7 @@ class SingularitySlaveAndRackManager {
         final boolean isSlaveOk = numOnSlave < numPerSlave;
 
         if (!isSlaveOk) {
+          LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
