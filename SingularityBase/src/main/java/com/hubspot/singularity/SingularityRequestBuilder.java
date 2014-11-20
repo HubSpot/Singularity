@@ -36,6 +36,7 @@ public class SingularityRequestBuilder {
     this.scheduleType = Optional.absent();
     this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
     this.daemon = Optional.absent();
+    this.scheduleImmediately = Optional.absent();
     this.instances = Optional.absent();
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
