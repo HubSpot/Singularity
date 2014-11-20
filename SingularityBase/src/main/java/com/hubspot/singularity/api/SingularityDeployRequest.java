@@ -13,8 +13,7 @@ public class SingularityDeployRequest {
   private final SingularityDeploy deploy;
 
   @JsonCreator
-  public SingularityDeployRequest(
-      @JsonProperty("deploy") SingularityDeploy deploy,
+  public SingularityDeployRequest(@JsonProperty("deploy") SingularityDeploy deploy,
       @JsonProperty("user") Optional<String> user,
       @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy) {
     this.deploy = deploy;
@@ -22,17 +21,17 @@ public class SingularityDeployRequest {
     this.unpauseOnSuccessfulDeploy = unpauseOnSuccessfulDeploy;
   }
 
-  @ApiModelProperty(required=false, value="User owning this deploy.")
+  @ApiModelProperty(required = false, value = "User owning this deploy.")
   public Optional<String> getUser() {
     return user;
   }
 
-  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request.")
+  @ApiModelProperty(required = false, value = "If deploy is successful, also unpause the request.")
   public Optional<Boolean> getUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy;
   }
 
-  @ApiModelProperty(required=true, value="The Singularity deploy object")
+  @ApiModelProperty(required = true, value = "The Singularity deploy object")
   public SingularityDeploy getDeploy() {
     return deploy;
   }
@@ -41,5 +40,4 @@ public class SingularityDeployRequest {
   public String toString() {
     return "SingularityDeployRequest [user=" + user + ", unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + "]";
   }
-
 }
