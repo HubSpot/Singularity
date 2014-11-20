@@ -1,24 +1,13 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityRequestWithState extends SingularityJsonObject {
+public class SingularityRequestWithState {
 
   private final SingularityRequest request;
   private final RequestState state;
-
-  public static SingularityRequestWithState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequestWithState.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   public static String getRequestState(Optional<SingularityRequestWithState> maybeRequestWithState) {
     if (maybeRequestWithState.isPresent()) {

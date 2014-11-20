@@ -1,15 +1,15 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
+import static com.hubspot.singularity.JsonHelpers.copyOfList;
+
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityRequest extends SingularityJsonObject {
+public class SingularityRequest {
 
   private final String id;
 
@@ -34,14 +34,6 @@ public class SingularityRequest extends SingularityJsonObject {
 
   public static SingularityRequestBuilder newBuilder(String id) {
     return new SingularityRequestBuilder(id);
-  }
-
-  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequest.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
   }
 
   @JsonCreator

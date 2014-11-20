@@ -1,26 +1,15 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityDeployResult extends SingularityJsonObject {
+public class SingularityDeployResult {
 
   private final DeployState deployState;
   private final Optional<SingularityLoadBalancerUpdate> lbUpdate;
   private final Optional<String> message;
   private final long timestamp;
-
-  public static SingularityDeployResult fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeployResult.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   public SingularityDeployResult(DeployState deployState) {
     this(deployState, Optional.<String> absent(), Optional.<SingularityLoadBalancerUpdate> absent(), System.currentTimeMillis());

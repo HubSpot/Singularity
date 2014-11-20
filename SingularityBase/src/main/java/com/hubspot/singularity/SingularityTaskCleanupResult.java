@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SingularityTaskCleanupResult extends SingularityJsonObject {
+public class SingularityTaskCleanupResult {
 
   private final SingularityCreateResult result;
   private final SingularityTask task;

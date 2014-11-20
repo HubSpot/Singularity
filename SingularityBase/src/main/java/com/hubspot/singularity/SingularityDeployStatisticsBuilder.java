@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 import com.google.common.base.Optional;
 import com.google.common.collect.ListMultimap;
 
-public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
+public class SingularityDeployStatisticsBuilder {
 
   private final String requestId;
   private final String deployId;

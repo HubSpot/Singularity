@@ -72,11 +72,11 @@ public class MetadataManager extends CuratorManager {
   }
 
   public Optional<String> getMailCooldownMarker(String requestId, String emailType) {
-    return getData(getMailRecordCooldownPath(requestId, emailType), StringTranscoder.STRING_TRANSCODER);
+    return getData(getMailRecordCooldownPath(requestId, emailType), StringTranscoder.INSTANCE);
   }
 
   public void cooldownMail(String requestId, String emailType) {
-    create(getMailRecordCooldownPath(requestId, emailType), Long.toString(System.currentTimeMillis()), StringTranscoder.STRING_TRANSCODER);
+    create(getMailRecordCooldownPath(requestId, emailType), Long.toString(System.currentTimeMillis()), StringTranscoder.INSTANCE);
   }
 
   public void removeMailCooldown(String requestId, String emailType) {

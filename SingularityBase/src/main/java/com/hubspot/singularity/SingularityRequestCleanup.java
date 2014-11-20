@@ -1,13 +1,10 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityRequestCleanup extends SingularityJsonObject {
+public class SingularityRequestCleanup {
 
   public enum RequestCleanupType {
     DELETING, PAUSING
@@ -18,14 +15,6 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
   private final Optional<Boolean> killTasks;
   private final long timestamp;
   private final String requestId;
-
-  public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
