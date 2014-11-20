@@ -321,7 +321,7 @@ public class SingularityExecutorMonitor {
 
     task.cleanup(taskState);
 
-    logging.stopTaskLogger(task.getTaskId(), task.getLog());
+    logging.stopTaskLogger(task.getTaskId(), task.getLogbackLog());
 
     checkIdleExecutorShutdown(task.getDriver());
   }
