@@ -97,7 +97,7 @@ public class SingularityExecutorThreadChecker {
 
     List<String> cmd = ImmutableList.of("/bin/sh",
         "-c",
-        String.format("ps huH p %s | wc -l", taskProcess.getCurrentPid().get()));
+        String.format("pstree %s -p | wc -l", taskProcess.getCurrentPid().get()));
 
     List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
 
@@ -105,7 +105,7 @@ public class SingularityExecutorThreadChecker {
       throw new ProcessFailedException("Output from ps was empty");
     }
 
-    return Integer.parseInt(output.get(0)) - 1;
+    return Integer.parseInt(output.get(0));
   }
 
 }
