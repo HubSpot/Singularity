@@ -1,19 +1,20 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
+import static com.hubspot.singularity.JsonHelpers.copyOfList;
+import static com.hubspot.singularity.JsonHelpers.copyOfMap;
+
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
-public class SingularityDeploy extends SingularityJsonObject {
+public class SingularityDeploy {
 
   private final String requestId;
 
@@ -51,14 +52,6 @@ public class SingularityDeploy extends SingularityJsonObject {
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
-  }
-
-  public static SingularityDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeploy.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
   }
 
   @JsonCreator

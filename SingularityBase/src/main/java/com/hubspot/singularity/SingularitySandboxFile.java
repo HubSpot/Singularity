@@ -6,7 +6,7 @@ import com.wordnik.swagger.annotations.ApiModel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @ApiModel(description = "Represents a file in a Mesos sandbox")
-public class SingularitySandboxFile extends SingularityJsonObject {
+public class SingularitySandboxFile {
 
   private final String name;
   private final long mtime;

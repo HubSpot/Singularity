@@ -1,28 +1,18 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityTaskHistory extends SingularityJsonObject {
+public class SingularityTaskHistory {
 
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
   private final Optional<String> directory;
   private final SingularityTask task;
   private final List<SingularityTaskHealthcheckResult> healthcheckResults;
   private final List<SingularityLoadBalancerUpdate> loadBalancerUpdates;
-
-  public static SingularityTaskHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityTaskHistory.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("healthcheckResults") List<SingularityTaskHealthcheckResult> healthcheckResults,
