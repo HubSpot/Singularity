@@ -86,6 +86,7 @@ public class SingularityExecutor implements Executor {
         LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
         break;
       case SUBMITTED:
+        task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
         break;
       }
     } catch (Throwable t) {
