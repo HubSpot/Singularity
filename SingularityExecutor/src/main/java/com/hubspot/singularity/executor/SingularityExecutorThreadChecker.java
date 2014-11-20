@@ -75,15 +75,17 @@ public class SingularityExecutorThreadChecker {
         Thread.currentThread().interrupt();
         return;
       } catch (Throwable t) {
-        LOG.error("While fetching used threads for {}", taskProcess.getTask().getTaskId(), t);
+        taskProcess.getTask().getLog().error("While fetching used threads for {}", taskProcess.getTask().getTaskId(), t);
         continue;
       }
 
       if (usedThreads > maxThreads) {
+        taskProcess.getTask().getLog().info("{} using too many threads: {} (max {})", taskProcess.getTask().getTaskId(), usedThreads, maxThreads);
+
         taskProcess.getTask().markKilledDueToThreads(usedThreads);
         KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
 
-        LOG.info("Requesting kill of {} ({}) due to thread usage {} (max {})", taskProcess.getTask().getTaskId(), killState, usedThreads, maxThreads);
+        taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
       }
     }
   }

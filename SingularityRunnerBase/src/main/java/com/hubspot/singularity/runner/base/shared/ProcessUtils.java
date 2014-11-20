@@ -14,14 +14,14 @@ public class ProcessUtils {
   public static void sendSignal(Signal signal, Logger log, int pid) {
     final long start = System.currentTimeMillis();
 
-    log.info("Signaling {} to process {}", signal, pid);
+    log.info("Signaling {} ({}) to process {}", signal, signal.getCode(), pid);
 
     final String killCmd = String.format("kill -%s %s", signal.getCode(), pid);
 
     try {
       int signalCode = Runtime.getRuntime().exec(killCmd).waitFor();
 
-      log.debug("Kill signal process got exit code {} after {}", signalCode, JavaUtils.duration(start));
+      log.trace("Kill signal process for {} got exit code {} after {}", pid, signalCode, JavaUtils.duration(start));
     } catch (InterruptedException | IOException e) {
       throw Throwables.propagate(e);
     }

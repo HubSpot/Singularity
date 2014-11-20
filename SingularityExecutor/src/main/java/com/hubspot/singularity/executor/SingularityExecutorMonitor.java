@@ -411,7 +411,11 @@ public class SingularityExecutorMonitor {
         TaskState taskState = null;
         String message = null;
 
-        if (task.wasKilled()) {
+        if (task.wasKilledDueToThreads()) {
+          taskState = TaskState.TASK_FAILED;
+
+          message = String.format("Task used %s threads and was killed (max %s)", task.getThreadCountAtOverageTime(), task.getExecutorData().getMaxTaskThreads().get());
+        } else if (task.wasKilled()) {
           taskState = TaskState.TASK_KILLED;
 
           if (!task.wasDestroyed()) {
@@ -421,10 +425,6 @@ public class SingularityExecutorMonitor {
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
           }
-        } else if (task.wasKilledDueToThreads()) {
-          taskState = TaskState.TASK_FAILED;
-
-          message = String.format("Task used %s threads and was killed (max %s)", task.getThreadCountAtOverageTime(), task.getExecutorData().getMaxTaskThreads().get());
         } else if (task.isSuccessExitCode(exitCode)) {
           taskState = TaskState.TASK_FINISHED;
 
