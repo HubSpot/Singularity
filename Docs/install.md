@@ -27,7 +27,7 @@ ls
 Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command:
 
 ```bash
-vagrant up
+vagrant up test
 ```
 
 This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then build Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up.
@@ -45,10 +45,12 @@ sudo /usr/share/zookeeper/bin/zkCli.sh -server localhost:2181
 ls /
 
 # You should see the following listing:
-# [singularity, mesos, zookeeper]
+# [mesos, zookeeper]
 
 # type 'quit' to exit zookeper console
 ```
+
+If this isn't a fresh VM, you may see a `singularity` node in the list too.
 
 Then verify that the mesos cluster is running and the Mesos UI is accessible at:
 
@@ -57,7 +59,7 @@ Then verify that the mesos cluster is running and the Mesos UI is accessible at:
 Verify that mysql server is running:
 
 ```bash
-mysql -u root -p
+mysql -u root -p --host=127.0.0.1
 
 # specify *mesos7mysql* as password
 
