@@ -47,13 +47,6 @@ else
   echo "No deploy-specific profile.d"
 fi
 
-{{#ifPresent maxTaskThreads}}
-echo "Setting max threads via ulimit -u {{{this}}}"
-ulimit -u {{{this}}}
-{{else}}
-echo "No max thread limit to set"
-{{/ifPresent}}
-
 # execute command
 echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1"
 exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1
