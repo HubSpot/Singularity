@@ -66,8 +66,7 @@ public class SingularityValidator {
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
-    check(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
-    check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
+    check(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
     check(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
 
@@ -117,7 +116,6 @@ public class SingularityValidator {
 
       check(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-      check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
       check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
       if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
@@ -135,6 +133,7 @@ public class SingularityValidator {
 
       check(isValidCronSchedule(quartzSchedule), String.format("Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule));
     } else {
+      check(!request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent(), "Non-scheduled requests can not specify a schedule");
       check(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
       check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
     }

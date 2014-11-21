@@ -7,6 +7,7 @@ import com.google.common.base.Optional;
 public class SingularityRequestBuilder {
 
   private final String id;
+  private final RequestType requestType;
 
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
@@ -17,6 +18,8 @@ public class SingularityRequestBuilder {
 
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
 
+  @Deprecated
+  // use requestType
   private Optional<Boolean> daemon;
 
   private Optional<Integer> instances;
@@ -27,24 +30,25 @@ public class SingularityRequestBuilder {
 
   private Optional<Boolean> loadBalanced;
 
-  public SingularityRequestBuilder(String id) {
+  public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = id;
+    this.requestType = requestType;
     this.owners = Optional.absent();
     this.numRetriesOnFailure = Optional.absent();
     this.schedule = Optional.absent();
     this.scheduleType = Optional.absent();
     this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
-    this.daemon = Optional.absent();
     this.instances = Optional.absent();
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
     this.quartzSchedule = Optional.absent();
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
+    this.daemon = Optional.absent();
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity, slavePlacement);
+    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity, slavePlacement);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -87,10 +91,12 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  @Deprecated
   public Optional<Boolean> getDaemon() {
     return daemon;
   }
 
+  @Deprecated
   public SingularityRequestBuilder setDaemon(Optional<Boolean> daemon) {
     this.daemon = daemon;
     return this;
@@ -159,11 +165,15 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public RequestType getRequestType() {
+    return requestType;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule
-        + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances
-        + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+    return "SingularityRequestBuilder [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule
+        + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon
+        + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }

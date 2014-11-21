@@ -35,6 +35,7 @@ import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -213,7 +214,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   private void privateInitRequest(boolean isLoadBalanced, boolean isScheduled) {
     requestId = "test-request";
 
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId)
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, isScheduled ? RequestType.SCHEDULED : RequestType.WORKER)
     .setLoadBalanced(Optional.of(isLoadBalanced));
 
     if (isScheduled) {
@@ -613,8 +614,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   @Test
   public void testOneOffsDontRunByThemselves() {
     requestId = "oneoffRequest";
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId);
-    bldr.setDaemon(Optional.of(Boolean.FALSE));
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     requestResource.submit(bldr.build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
@@ -625,6 +625,13 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
+  }
+
+  @Test
+  public void testRunOnceRunOnlyOnce() {
+    // what if it gets added back to scheduler queue?
+    // are there things that remove from scheduler queue?
+    // i don't think so.
   }
 
   @Test
@@ -943,7 +950,7 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
   }
 
   private SingularityRequest buildRequest(String requestId) {
-    SingularityRequest request = new SingularityRequestBuilder("request1").build();
+    SingularityRequest request = new SingularityRequestBuilder("request1", RequestType.WORKER).build();
 
     saveRequest(request);
 
@@ -985,7 +992,6 @@ public class SingularitySchedulerTest extends SingularityCuratorTestBase {
     Assert.assertTrue(requests.get(0).getRequest().getId().equals(request1.getId()));
     Assert.assertTrue(requests.get(1).getRequest().getId().equals(request2.getId()));
     Assert.assertTrue(requests.get(2).getRequest().getId().equals(request3.getId()));
-
   }
 
 }
