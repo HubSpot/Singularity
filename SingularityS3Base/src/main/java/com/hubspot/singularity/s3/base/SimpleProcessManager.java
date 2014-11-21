@@ -58,7 +58,8 @@ public class SimpleProcessManager extends SafeProcessManager {
       return process.waitFor();
     } catch (InterruptedException ie) {
       getLog().warn("SimpleProcessManager runLoop() for {} caught interrupted exception", command);
-      return runLoop(process, command);
+      Thread.currentThread().interrupt();
+      return 1;
     }
   }
 

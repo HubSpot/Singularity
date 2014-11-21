@@ -163,6 +163,8 @@ public class S3ArtifactDownloader {
       future.cancel(true);
     } catch (InterruptedException ie) {
       log.warn("Chunk {} interrupted", chunk);
+      Thread.currentThread().interrupt();
+      return false;
     } catch (Throwable t) {
       log.error("Error while downloading chunk {}", chunk, t);
     }
