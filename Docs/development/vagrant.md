@@ -13,7 +13,7 @@ Open a command shell and run the following commands to install the required vagr
 
 ```bash
 vagrant plugin install vagrant-omnibus
-vagrant plugin install vagrant-berkshelf --plugin-version=2.0.1
+vagrant plugin install vagrant-berkshelf
 vagrant plugin install vagrant-hostsupdater
 ```
 
@@ -26,7 +26,7 @@ cd Singularity/vagrant
 ls
 ```
 
-Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command: 
+Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command:
 
 ```bash
 vagrant up develop
@@ -34,7 +34,7 @@ vagrant up develop
 
 **if you just run `vagrant up` it will bring up a VM with singularity installed inside the VM which is not what you want when you develop singularity***
 
-This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then install all the required software packages as well as build and install Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up. 
+This command will first setup and then bring up the virtual machine. The first time you run this, you should be patient because it needs to download a basic Linux image and then install all the required software packages as well as build and install Singularity. When this is done the first time, every other time that you run *vagrant up*, it will take only a few seconds to boot the virtual machine up.
 
 During the installation your local machine hosts file is configured with the VM IP (so you can access it as *vagrant-singularity*) and you will be asked to provide your password.
 
@@ -53,12 +53,12 @@ ls /
 
 type 'quit' to exit zookeper console
 ```
- 
+
 Then verify that the mesos cluster is running and the Mesos UI is accessible at:
 
 [http://vagrant-singularity:5050/](http://vagrant-singularity:5050/)
 
-Verify that mysql server is running: 
+Verify that mysql server is running:
 
 ```bash
 mysql -u root -p
@@ -87,13 +87,13 @@ Build singularity with maven:
 mvn clean package
 ```
 
-The mysql database Singularity will use to keep historical data has been already created in the VM but you also need to create the mysql tables required by singularity using the singularity service jar that maven has just built (it uses the liquibase library to perform table migrations): 
+The mysql database Singularity will use to keep historical data has been already created in the VM but you also need to create the mysql tables required by singularity using the singularity service jar that maven has just built (it uses the liquibase library to perform table migrations):
 
 ```bash
 java -jar SingularityService/target/SingularityService-*-SNAPSHOT.jar db migrate ./vagrant_singularity.yaml --migrations ./migrations.sql
 ```
 
-Now you are ready to start Singularity using the provided `vagrant_singularity.yaml` config: 
+Now you are ready to start Singularity using the provided `vagrant_singularity.yaml` config:
 
 ```bash
 java -jar SingularityService/target/SingularityService-*-SNAPSHOT.jar server ./vagrant_singularity.yaml
