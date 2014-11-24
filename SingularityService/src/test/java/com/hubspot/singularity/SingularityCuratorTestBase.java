@@ -1,11 +1,16 @@
 package com.hubspot.singularity;
 
+import java.lang.management.ManagementFactory;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.Before;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 
 public class SingularityCuratorTestBase {
@@ -14,6 +19,9 @@ public class SingularityCuratorTestBase {
   protected CuratorFramework cf;
   @Inject
   protected TestingServer ts;
+  @Inject
+  @Named(MesosClient.HTTP_CLIENT_NAME)
+  private HttpClient httpClient;
 
   private SingularityTestModule singularityTestModule;
 
@@ -30,13 +38,19 @@ public class SingularityCuratorTestBase {
 
     singularityTestModule.stop();
 
+    if (ts != null) {
+      ts.close();
+    }
+
     if (cf != null) {
       cf.close();
     }
 
-    if (ts != null) {
-      ts.close();
+    if (httpClient != null) {
+      httpClient.close();
     }
+
+    System.out.println(ManagementFactory.getThreadMXBean().getThreadCount());
   }
 
 }

@@ -260,7 +260,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
       for (Module module : modules) {
         if (module instanceof ConfigurationAwareModule<?>) {
           configurationAwareModules.add((ConfigurationAwareModule<U>) module);
-        }  else {
+        } else {
           guiceModules.add(module);
         }
       }
