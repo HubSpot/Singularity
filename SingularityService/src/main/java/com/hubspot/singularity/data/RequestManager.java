@@ -26,20 +26,17 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.SingularityPendingRequestTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestCleanupTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestHistoryTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestWithStateTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
 
-  private final SingularityRequestWithStateTranscoder requestTranscoder;
-  private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
-  private final SingularityRequestCleanupTranscoder requestCleanupTranscoder;
-  private final SingularityRequestHistoryTranscoder requestHistoryTranscoder;
+  private final Transcoder<SingularityRequestWithState> requestTranscoder;
+  private final Transcoder<SingularityPendingRequest> pendingRequestTranscoder;
+  private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
+  private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
 
   private final WebhookManager webhookManager;
 
@@ -47,12 +44,12 @@ public class RequestManager extends CuratorAsyncManager {
 
   private static final String NORMAL_PATH_ROOT = REQUEST_ROOT + "/all";
   private static final String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
-  private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
+  private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT + "/cleanup";
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
 
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityRequestCleanupTranscoder requestCleanupTranscoder, SingularityRequestWithStateTranscoder requestTranscoder,
-      SingularityPendingRequestTranscoder pendingRequestTranscoder, SingularityRequestHistoryTranscoder requestHistoryTranscoder) {
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
+      Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.requestTranscoder = requestTranscoder;
@@ -141,11 +138,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult cooldown(SingularityRequest request) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, Optional.<String> absent());
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, Optional.<String>absent());
   }
 
   public SingularityCreateResult finish(SingularityRequest request) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, Optional.<String> absent());
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, Optional.<String>absent());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -170,7 +167,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult exitCooldown(SingularityRequest request) {
-    return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.<String> absent());
+    return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.<String>absent());
   }
 
   public SingularityCreateResult deployToUnpause(SingularityRequest request, Optional<String> user) {

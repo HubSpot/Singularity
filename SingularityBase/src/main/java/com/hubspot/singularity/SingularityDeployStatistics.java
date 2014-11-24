@@ -1,16 +1,13 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
-public class SingularityDeployStatistics extends SingularityJsonObject {
+public class SingularityDeployStatistics {
 
   private final String requestId;
   private final String deployId;
@@ -24,14 +21,6 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
 
   private final Optional<Long> lastFinishAt;
   private final Optional<ExtendedTaskState> lastTaskState;
-
-  public static SingularityDeployStatistics fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeployStatistics.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures,

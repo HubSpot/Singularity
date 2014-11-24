@@ -32,6 +32,7 @@ import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -49,8 +50,8 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @Inject
   public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport,
-      SingularityConfiguration configuration) {
-    super(historyManager, taskManager, deployManager);
+      SingularityConfiguration configuration, final IdTranscoder<SingularityTaskId> singularityTaskIdTranscoder) {
+    super(historyManager, taskManager, deployManager, singularityTaskIdTranscoder);
 
     this.configuration = configuration;
     this.sandboxManager = sandboxManager;

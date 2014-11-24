@@ -37,18 +37,12 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.SingularityKilledTaskIdRecordTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityLoadBalancerUpdateTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityPendingTaskIdTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskCleanupTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskHealthcheckResultTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskIdTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskStatusTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskTranscoder;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -73,25 +67,28 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
   private static final String UPDATES_PATH = "/updates";
 
-  private final SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder;
-  private final SingularityTaskCleanupTranscoder taskCleanupTranscoder;
-  private final SingularityTaskTranscoder taskTranscoder;
-  private final SingularityTaskStatusTranscoder taskStatusTranscoder;
-  private final SingularityTaskIdTranscoder taskIdTranscoder;
-  private final SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder;
-  private final SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder;
-  private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
-  private final SingularityLoadBalancerUpdateTranscoder taskLoadBalancerUpdateTranscoder;
+  private final Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder;
+  private final Transcoder<SingularityTaskCleanup> taskCleanupTranscoder;
+  private final Transcoder<SingularityTask> taskTranscoder;
+  private final Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder;
+  private final Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder;
+  private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
+  private final Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerUpdateTranscoder;
+
+  private final IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder;
+  private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
+
   private final Function<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTaskFunction;
+
   private final WebhookManager webhookManager;
   private final String serverId;
 
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityPendingTaskIdTranscoder pendingTaskIdTranscoder,
-      SingularityTaskIdTranscoder taskIdTranscoder, SingularityLoadBalancerUpdateTranscoder taskLoadBalancerHistoryUpdateTranscoder, SingularityTaskStatusTranscoder taskStatusTranscoder,
-      SingularityTaskHealthcheckResultTranscoder healthcheckResultTranscoder, SingularityTaskTranscoder taskTranscoder, SingularityTaskCleanupTranscoder taskCleanupTranscoder,
-      SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder, SingularityKilledTaskIdRecordTranscoder killedTaskIdRecordTranscoder,
-      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
+      IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
+      Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
+      Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder,
+      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -113,7 +110,7 @@ public class TaskManager extends CuratorAsyncManager {
       public SingularityPendingTask apply(SingularityPendingTaskId input) {
         Optional<String> maybeCmdLineArgs = Optional.absent();
 
-        if ((input.getPendingType() == PendingType.ONEOFF) || (input.getPendingType() == PendingType.IMMEDIATE)) {
+        if (input.getPendingType() == PendingType.ONEOFF || input.getPendingType() == PendingType.IMMEDIATE) {
           maybeCmdLineArgs = getStringData(ZKPaths.makePath(PENDING_PATH_ROOT, input.getId()));
         }
 
@@ -209,7 +206,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Optional<String> getDirectory(SingularityTaskId taskId) {
-    return getData(getDirectoryPath(taskId), StringTranscoder.STRING_TRANSCODER);
+    return getData(getDirectoryPath(taskId), StringTranscoder.INSTANCE);
   }
 
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
@@ -337,7 +334,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("healthchecks_by_ids", paths, healthcheckResultTranscoder);
 
-    return Maps.uniqueIndex(healthcheckResults, healthcheckResultTranscoder);
+    return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder.getTaskIdFunction());
   }
 
   public boolean taskHistoryUpdateExists(SingularityTaskHistoryUpdate taskHistoryUpdate) {
@@ -467,7 +464,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getTaskPath(taskId));
     }
 
-    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder), taskTranscoder);
+    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder), SingularityTaskIdHolder.getTaskIdFunction());
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
@@ -478,12 +475,13 @@ public class TaskManager extends CuratorAsyncManager {
 
     final byte[] data = taskTranscoder.toBytes(task);
 
-    // TODO - right now, for consistency, we double write this. should review this and check for what happens in failure cases
+    // TODO - right now, for consistency, we double write this. should review this and check for
+    // what happens in failure cases
 
     final long now = System.currentTimeMillis();
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.<String> absent()));
-    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus> absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.<String>absent()));
+    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
     curator.create().creatingParentsIfNeeded().forPath(getTaskPath(task.getTaskId()), data);
     curator.create().creatingParentsIfNeeded().forPath(activePath, data);

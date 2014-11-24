@@ -69,7 +69,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     return pendingType;
   }
 
-  public static SingularityPendingTaskId fromString(String string) {
+  public static SingularityPendingTaskId valueOf(String string) {
     String[] splits = null;
 
     try {
@@ -93,8 +93,13 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   }
 
   @Override
-  public String toString() {
+  public String getId() {
     return String.format("%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getNextRunAt(), getInstanceNo(), getPendingType());
+  }
+
+  @Override
+  public String toString() {
+    return getId();
   }
 
   @Override

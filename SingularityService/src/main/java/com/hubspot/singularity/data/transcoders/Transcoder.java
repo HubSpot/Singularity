@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data.transcoders;
 
-import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
+import javax.annotation.Nullable;
 
 public interface Transcoder<T> {
 
-  T transcode(byte[] data) throws SingularityJsonException;
+  T fromBytes(@Nullable byte[] data) throws SingularityTranscoderException;
 
-  byte[] toBytes(T object) throws SingularityJsonException;
+  byte[] toBytes(@Nullable T object) throws SingularityTranscoderException;
 
 }

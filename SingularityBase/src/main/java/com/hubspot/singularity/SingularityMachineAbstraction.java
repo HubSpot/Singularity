@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 import com.google.common.base.Optional;
 
 
-public abstract class SingularityMachineAbstraction extends SingularityJsonObject {
+public abstract class SingularityMachineAbstraction {
 
   private final String id;
   private final long firstSeenAt;
