@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import java.lang.management.ManagementFactory;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.junit.After;
@@ -38,19 +36,18 @@ public class SingularityCuratorTestBase {
 
     singularityTestModule.stop();
 
-    if (ts != null) {
-      ts.close();
-    }
-
     if (cf != null) {
       cf.close();
+    }
+
+    if (ts != null) {
+      ts.close();
     }
 
     if (httpClient != null) {
       httpClient.close();
     }
 
-    System.out.println(ManagementFactory.getThreadMXBean().getThreadCount());
   }
 
 }
