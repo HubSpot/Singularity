@@ -1,10 +1,11 @@
 package com.hubspot.singularity.logwatcher.tailer;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.LogForwarder;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
@@ -126,7 +126,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
     }
 
     if (readAllBytes && (bytesLeft > 0)) {
-      String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
+      String string = new String(byteBuffer.array(), byteBuffer.position() - bytesLeft, byteBuffer.position(), UTF_8);
       logForwarder.forwardMessage(tailMetadata, string);
     }
   }
@@ -160,7 +160,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
   }
 
   private int processByteBufferAndReturnRemainingBytes() {
-    String string = new String(byteBuffer.array(), 0, byteBuffer.position(), JavaUtils.CHARSET_UTF8);
+    String string = new String(byteBuffer.array(), 0, byteBuffer.position(), UTF_8);
 
     LOG.trace("{} had a string with size {}", logfile, string.length());
 
@@ -174,7 +174,7 @@ public class SingularityLogWatcherTailer extends WatchServiceHelper implements C
       nextNewLineIndex = string.indexOf(END_OF_LINE_CHAR, lastNewLineIndex);
     }
 
-    int remainingBytes = string.substring(lastNewLineIndex).getBytes(StandardCharsets.UTF_8).length;
+    int remainingBytes = string.substring(lastNewLineIndex).getBytes(UTF_8).length;
 
     return remainingBytes;
   }

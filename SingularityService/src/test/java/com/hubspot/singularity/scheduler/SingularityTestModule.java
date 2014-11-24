@@ -72,13 +72,13 @@ public class SingularityTestModule implements Module {
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    rootLogger.setLevel(Level.WARN);
+    rootLogger.setLevel(Level.ERROR);
 
     this.ts = new TestingServer();
   }
 
   public Injector getInjector() throws Exception {
-    return Guice.createInjector(Stage.PRODUCTION, dropwizardModule, new SingularityTestModule());
+    return Guice.createInjector(Stage.PRODUCTION, dropwizardModule, this);
   }
 
   public void start() throws Exception {
