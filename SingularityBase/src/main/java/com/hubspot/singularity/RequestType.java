@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 
 public enum RequestType {
 
-  SERVICE(true, true), WORKER(true, true), SCHEDULED(false, false), ON_DEMAND(false, false), RUN_ONCE(false, true);
+  SERVICE(true, true), WORKER(true, true), SCHEDULED(true, false), ON_DEMAND(false, false), RUN_ONCE(false, true);
 
   private final boolean alwaysRunning;
   private final boolean deployable;
