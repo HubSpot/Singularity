@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import io.dropwizard.Application;
@@ -19,7 +18,6 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.singularity.bundles.AcceptLanguageFilterBundle;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.guice.GuiceBundle;
@@ -41,7 +39,6 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
         .build();
     bootstrap.addBundle(guiceBundle);
 
-    bootstrap.addBundle(new AcceptLanguageFilterBundle());
     bootstrap.addBundle(new CorsBundle());
     bootstrap.addBundle(new ViewBundle());
     bootstrap.addBundle(new AssetsBundle("/static/static/", "/static/"));

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.logwatcher.impl;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,7 +113,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     Path storePath = getStorePath(tail);
 
     try {
-      Files.write(storePath, JavaUtils.toBytes(Long.toString(position)), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+      Files.write(storePath, Long.toString(position).getBytes(UTF_8), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
     } catch (IOException e) {
       throw new StoreException("Couldn't write to " + storePath, e);
     }
@@ -130,7 +132,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     }
 
     try {
-      return Optional.of(Long.parseLong(JavaUtils.toString(Files.readAllBytes(storePath))));
+      return Optional.of(Long.parseLong(new String(Files.readAllBytes(storePath), UTF_8)));
     } catch (IOException e) {
       throw new StoreException("Couldn't read " + storePath, e);
     }

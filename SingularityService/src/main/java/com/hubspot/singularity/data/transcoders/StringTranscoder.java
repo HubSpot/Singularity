@@ -1,6 +1,6 @@
 package com.hubspot.singularity.data.transcoders;
 
-import com.hubspot.mesos.JavaUtils;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class StringTranscoder implements Transcoder<String> {
 
@@ -8,12 +8,12 @@ public class StringTranscoder implements Transcoder<String> {
 
   @Override
   public String transcode(byte[] data) {
-    return JavaUtils.toString(data);
+    return new String(data, UTF_8);
   }
 
   @Override
   public byte[] toBytes(String object) {
-    return JavaUtils.toBytes(object);
+    return object.getBytes(UTF_8);
   }
 
 }

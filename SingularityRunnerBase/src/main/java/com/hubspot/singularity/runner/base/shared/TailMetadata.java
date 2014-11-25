@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -8,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.hash.Hashing;
-import com.hubspot.mesos.JavaUtils;
 
 public class TailMetadata {
 
@@ -32,7 +33,7 @@ public class TailMetadata {
   }
 
   private String generateFilenameKey(String filename) {
-    return Hashing.sha256().hashString(filename, JavaUtils.CHARSET_UTF8).toString();
+    return Hashing.sha256().hashString(filename, UTF_8).toString();
   }
 
   @Override
