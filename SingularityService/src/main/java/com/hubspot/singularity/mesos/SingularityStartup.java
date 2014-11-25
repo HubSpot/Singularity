@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -92,6 +93,18 @@ class SingularityStartup {
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
   }
 
+  private Map<SingularityDeployKey, SingularityPendingTaskId> getDeployKeyToPendingTaskId() {
+    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+    final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = Maps.newHashMapWithExpectedSize(pendingTaskIds.size());
+
+    for (SingularityPendingTaskId taskId : pendingTaskIds) {
+      SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
+      deployKeyToPendingTaskId.put(deployKey, taskId);
+    }
+
+    return deployKeyToPendingTaskId;
+  }
+
   /**
    * We need to run this check for the various situations where the scheduler could get in an inconsistent state due
    * to a crash/network failure during series of state transactions.
@@ -102,12 +115,16 @@ class SingularityStartup {
    */
   @VisibleForTesting
   void checkSchedulerForInconsistentState() {
+    final long now = System.currentTimeMillis();
+
+    final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
+
     for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
       switch (requestWithState.getState()) {
         case ACTIVE:
         case SYSTEM_COOLDOWN:
         case DEPLOYING_TO_UNPAUSE:
-          checkActiveRequest(requestWithState.getRequest());
+          checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now);
           break;
         case DELETED:
         case PAUSED:
@@ -117,7 +134,9 @@ class SingularityStartup {
     }
   }
 
-  private void checkActiveRequest(SingularityRequest request) {
+  private void checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
+    final SingularityRequest request = requestWithState.getRequest();
+
     if (request.isOneOff()) {
       return;
     }
@@ -129,7 +148,19 @@ class SingularityStartup {
       return;
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), PendingType.STARTUP));
+    final String activeDeployId = requestDeployState.get().getActiveDeploy().get().getDeployId();
+
+    if (request.isScheduled()) {
+      SingularityDeployKey deployKey = new SingularityDeployKey(request.getId(), activeDeployId);
+      SingularityPendingTaskId pendingTaskId = deployKeyToPendingTaskId.get(deployKey);
+
+      if (pendingTaskId != null && pendingTaskId.getCreatedAt() >= requestWithState.getTimestamp()) {
+        LOG.info("Not rescheduling {} because {} is newer than {}", request.getId(), pendingTaskId, requestWithState.getTimestamp());
+        return;
+      }
+    }
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, PendingType.STARTUP));
   }
 
   private void enqueueHealthAndNewTaskChecks() {

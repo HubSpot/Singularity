@@ -39,8 +39,8 @@ public class SingularityPendingRequest extends SingularityJsonObject {
     }
   }
 
-  public SingularityPendingRequest(String requestId, String deployId, PendingType pendingType) {
-    this(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
+  public SingularityPendingRequest(String requestId, String deployId, long timestamp, PendingType pendingType) {
+    this(requestId, deployId, timestamp, Optional.<String> absent(), Optional.<String> absent(), pendingType);
   }
 
   @JsonCreator

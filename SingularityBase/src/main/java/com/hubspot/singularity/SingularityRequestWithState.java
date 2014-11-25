@@ -11,6 +11,7 @@ public class SingularityRequestWithState extends SingularityJsonObject {
 
   private final SingularityRequest request;
   private final RequestState state;
+  private final long timestamp;
 
   public static SingularityRequestWithState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
     try {
@@ -32,9 +33,14 @@ public class SingularityRequestWithState extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state) {
+  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state, @JsonProperty("timestamp") long timestamp) {
     this.request = request;
     this.state = state;
+    this.timestamp = timestamp;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
   }
 
   public RequestState getState() {
@@ -47,7 +53,7 @@ public class SingularityRequestWithState extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityRequestWithState [request=" + request + ", state=" + state + "]";
+    return "SingularityRequestWithState [request=" + request + ", state=" + state + ", timestamp=" + timestamp + "]";
   }
 
 }

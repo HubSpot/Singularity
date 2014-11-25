@@ -130,14 +130,16 @@ public class RequestResource extends AbstractRequestResource {
       throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
     }
 
-    requestManager.activate(newRequest, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, user);
+    final long now = System.currentTimeMillis();
 
-    checkReschedule(newRequest, maybeOldRequest);
+    requestManager.activate(newRequest, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, user);
+
+    checkReschedule(newRequest, maybeOldRequest, now);
 
     return fillEntireRequest(fetchRequestWithState(request.getId()));
   }
 
-  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest) {
+  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, long timestamp) {
     if (!maybeOldRequest.isPresent()) {
       return;
     }
@@ -146,7 +148,7 @@ public class RequestResource extends AbstractRequestResource {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), PendingType.UPDATED_REQUEST));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, PendingType.UPDATED_REQUEST));
       }
     }
   }
@@ -248,15 +250,17 @@ public class RequestResource extends AbstractRequestResource {
 
     mailer.sendRequestPausedMail(requestWithState.getRequest(), user);
 
-    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), killTasks, requestId));
+    final long now = System.currentTimeMillis();
+
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, now, killTasks, requestId));
 
     if (result != SingularityCreateResult.CREATED) {
       throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s - try again soon", requestId, result);
     }
 
-    requestManager.pause(requestWithState.getRequest(), user);
+    requestManager.pause(requestWithState.getRequest(), now, user);
 
-    return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED));
+    return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED, now));
   }
 
   @POST
@@ -277,13 +281,15 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
-    requestManager.unpause(requestWithState.getRequest(), user);
+    final long now = System.currentTimeMillis();
+
+    requestManager.unpause(requestWithState.getRequest(), now, user);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.UNPAUSED));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, Optional.<String> absent(), user, PendingType.UNPAUSED));
     }
 
-    return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE));
+    return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
   }
 
   @GET
@@ -411,9 +417,11 @@ public class RequestResource extends AbstractRequestResource {
 
     validator.checkSingularityRequest(newRequest, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
 
-    requestManager.update(newRequest, user);
+    final long now = System.currentTimeMillis();
 
-    checkReschedule(newRequest, maybeOldRequest);
+    requestManager.update(newRequest, now, user);
+
+    checkReschedule(newRequest, maybeOldRequest, now);
 
     return newRequest;
   }

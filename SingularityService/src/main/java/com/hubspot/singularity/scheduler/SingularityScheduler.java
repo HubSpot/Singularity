@@ -135,7 +135,7 @@ public class SingularityScheduler {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), PendingType.DECOMISSIONED_SLAVE_OR_RACK));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, PendingType.DECOMISSIONED_SLAVE_OR_RACK));
       } else {
         LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
       }
@@ -235,7 +235,7 @@ public class SingularityScheduler {
     }
 
     if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer> absent(), Optional.<Long> absent())) {
-      requestManager.exitCooldown(requestWithState.getRequest());
+      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis());
       return RequestState.ACTIVE;
     }
 
@@ -366,7 +366,7 @@ public class SingularityScheduler {
         taskManager.createPendingTasks(scheduledTasks);
       } else {
         LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
-        requestManager.finish(request);
+        requestManager.finish(request, System.currentTimeMillis());
       }
 
     } else if (numMissingInstances < 0) {
@@ -435,7 +435,7 @@ public class SingularityScheduler {
     if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
       LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
       requestState = RequestState.SYSTEM_COOLDOWN;
-      requestManager.cooldown(request);
+      requestManager.cooldown(request, System.currentTimeMillis());
       mailer.sendRequestInCooldownMail(request);
     }
 
@@ -450,7 +450,7 @@ public class SingularityScheduler {
         // TODO send not cooldown anymore email
         LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
         requestState = RequestState.ACTIVE;
-        requestManager.exitCooldown(request);
+        requestManager.exitCooldown(request, System.currentTimeMillis());
       }
     } else if (request.isScheduled()) {
       if (state.isFailed()) {
@@ -463,7 +463,7 @@ public class SingularityScheduler {
       }
     }
 
-    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), pendingType);
+    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), System.currentTimeMillis(), pendingType);
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
 
@@ -585,7 +585,7 @@ public class SingularityScheduler {
         nextInstanceNumber++;
       }
 
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()), pendingRequest.getCmdLineArgs()));
 
       nextInstanceNumber++;
     }

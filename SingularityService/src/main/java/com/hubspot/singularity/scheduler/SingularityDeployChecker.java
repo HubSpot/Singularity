@@ -205,16 +205,16 @@ public class SingularityDeployChecker {
     }
 
     if (!request.isDeployable() && !request.isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(), PendingType.NEW_DEPLOY));
     }
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
 
     if (requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
-        requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, pendingDeploy.getDeployMarker().getUser());
+        requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser());
       } else {
-        requestManager.pause(request, pendingDeploy.getDeployMarker().getUser());
+        requestManager.pause(request, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser());
       }
     }
 

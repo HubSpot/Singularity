@@ -58,7 +58,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private static final String LAST_ACTIVE_TASK_STATUSES_PATH_ROOT = TASKS_ROOT + "/statuses";
-  private static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
+  public static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
   private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";

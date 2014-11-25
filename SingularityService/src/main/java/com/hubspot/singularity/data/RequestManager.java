@@ -126,26 +126,26 @@ public class RequestManager extends CuratorAsyncManager {
     return create(getCleanupPath(cleanupRequest.getRequestId()), cleanupRequest, requestCleanupTranscoder);
   }
 
-  public SingularityCreateResult update(SingularityRequest request, Optional<String> user) {
-    return save(request, getRequest(request.getId()).get().getState(), RequestHistoryType.UPDATED, user);
+  public SingularityCreateResult update(SingularityRequest request, long timestamp, Optional<String> user) {
+    return save(request, getRequest(request.getId()).get().getState(), RequestHistoryType.UPDATED, timestamp, user);
   }
 
-  private SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, Optional<String> user) {
-    saveHistory(new SingularityRequestHistory(System.currentTimeMillis(), user, eventType, request));
+  private SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, long timestamp, Optional<String> user) {
+    saveHistory(new SingularityRequestHistory(timestamp, user, eventType, request));
 
-    return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state), requestTranscoder);
+    return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state, timestamp), requestTranscoder);
   }
 
-  public SingularityCreateResult pause(SingularityRequest request, Optional<String> user) {
-    return save(request, RequestState.PAUSED, RequestHistoryType.PAUSED, user);
+  public SingularityCreateResult pause(SingularityRequest request, long timestamp, Optional<String> user) {
+    return save(request, RequestState.PAUSED, RequestHistoryType.PAUSED, timestamp, user);
   }
 
-  public SingularityCreateResult cooldown(SingularityRequest request) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, Optional.<String> absent());
+  public SingularityCreateResult cooldown(SingularityRequest request, long timestamp) {
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.<String> absent());
   }
 
-  public SingularityCreateResult finish(SingularityRequest request) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, Optional.<String> absent());
+  public SingularityCreateResult finish(SingularityRequest request, long timestamp) {
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.<String> absent());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -165,20 +165,20 @@ public class RequestManager extends CuratorAsyncManager {
     return save(path, history, requestHistoryTranscoder);
   }
 
-  public SingularityCreateResult unpause(SingularityRequest request, Optional<String> user) {
-    return activate(request, RequestHistoryType.UNPAUSED, user);
+  public SingularityCreateResult unpause(SingularityRequest request, long timestamp, Optional<String> user) {
+    return activate(request, RequestHistoryType.UNPAUSED, timestamp, user);
   }
 
-  public SingularityCreateResult exitCooldown(SingularityRequest request) {
-    return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.<String> absent());
+  public SingularityCreateResult exitCooldown(SingularityRequest request, long timestamp) {
+    return activate(request, RequestHistoryType.EXITED_COOLDOWN, timestamp, Optional.<String> absent());
   }
 
-  public SingularityCreateResult deployToUnpause(SingularityRequest request, Optional<String> user) {
-    return save(request, RequestState.DEPLOYING_TO_UNPAUSE, RequestHistoryType.DEPLOYED_TO_UNPAUSE, user);
+  public SingularityCreateResult deployToUnpause(SingularityRequest request, long timestamp, Optional<String> user) {
+    return save(request, RequestState.DEPLOYING_TO_UNPAUSE, RequestHistoryType.DEPLOYED_TO_UNPAUSE, timestamp, user);
   }
 
-  public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, Optional<String> user) {
-    return save(request, RequestState.ACTIVE, historyType, user);
+  public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user) {
+    return save(request, RequestState.ACTIVE, historyType, timestamp, user);
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
