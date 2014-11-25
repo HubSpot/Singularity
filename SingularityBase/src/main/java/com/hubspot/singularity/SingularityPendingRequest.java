@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 public class SingularityPendingRequest extends SingularityJsonObject {
 
   public enum PendingType {
-    IMMEDIATE(true), ONEOFF(true), BOUNCE(true), NEW_DEPLOY(false), UNPAUSED(false), RETRY(false), UPDATED_REQUEST(false), DECOMISSIONED_SLAVE_OR_RACK(false), TASK_DONE(false);
+    IMMEDIATE(true), ONEOFF(true), BOUNCE(true), NEW_DEPLOY(false), UNPAUSED(false), RETRY(false), UPDATED_REQUEST(false), DECOMISSIONED_SLAVE_OR_RACK(false), TASK_DONE(false), STARTUP(false);
 
     private final boolean hasPriority;
 

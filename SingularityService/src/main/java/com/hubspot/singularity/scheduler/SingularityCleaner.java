@@ -146,6 +146,16 @@ public class SingularityCleaner {
     }
   }
 
+  private boolean isObsolete(long start, long cleanupRequest) {
+    final long delta = start - cleanupRequest;
+
+    return delta > getObsoleteExpirationTime();
+  }
+
+  private long getObsoleteExpirationTime() {
+    return TimeUnit.SECONDS.toMillis(configuration.getCleanupEverySeconds()) * 3;
+  }
+
   private void drainRequestCleanupQueue() {
     final long start = System.currentTimeMillis();
 
@@ -173,9 +183,14 @@ public class SingularityCleaner {
 
       if (requestCleanup.getCleanupType() == RequestCleanupType.PAUSING) {
         if (SingularityRequestWithState.isActive(requestWithState)) {
-          killScheduledTasks = false;
-          killActiveTasks = false;
-          LOG.info("Ignoring {}, because {} is {}", requestCleanup, requestCleanup.getRequestId(), requestWithState.get().getState());
+          if (isObsolete(start, requestCleanup.getTimestamp())) {
+            killScheduledTasks = false;
+            killActiveTasks = false;
+            LOG.info("Ignoring {}, because {} is {}", requestCleanup, requestCleanup.getRequestId(), requestWithState.get().getState());
+          } else {
+            LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
+            continue;
+          }
         }
       } else if (requestCleanup.getCleanupType() == RequestCleanupType.DELETING) {
         if (requestWithState.isPresent()) {

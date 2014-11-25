@@ -123,7 +123,7 @@ public class SingularityScheduler {
         }
 
         if (rack.getId().equals(activeTaskId.getRackId())) {
-          Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
+          Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
           cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString());
         }
       }
@@ -406,7 +406,7 @@ public class SingularityScheduler {
     return matchesDeployMarker(requestDeployState.get().getPendingDeploy(), deployId);
   }
 
-  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+  private Optional<PendingType> handleCompletedTaskWithStatistics(SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
 
     if (!isRequestActive(maybeRequestWithState)) {
@@ -480,16 +480,16 @@ public class SingularityScheduler {
     return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
   }
 
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+  public void handleCompletedTask(SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
-    if (maybeActiveTask.isPresent()) {
+    if (wasActive) {
       taskManager.deleteActiveTask(taskId.getId());
     }
 
     taskManager.createLBCleanupTask(taskId);
 
-    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache);
+    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache);
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.EXISTED) {
       return;

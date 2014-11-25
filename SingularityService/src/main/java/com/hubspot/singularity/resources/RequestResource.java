@@ -247,13 +247,14 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     mailer.sendRequestPausedMail(requestWithState.getRequest(), user);
-    requestManager.pause(requestWithState.getRequest(), user);
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, System.currentTimeMillis(), killTasks, requestId));
 
     if (result != SingularityCreateResult.CREATED) {
-      throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s", requestId, result);
+      throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s - try again soon", requestId, result);
     }
+
+    requestManager.pause(requestWithState.getRequest(), user);
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED));
   }

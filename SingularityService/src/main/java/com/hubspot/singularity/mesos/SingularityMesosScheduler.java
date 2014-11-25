@@ -11,7 +11,6 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -275,13 +274,19 @@ public class SingularityMesosScheduler implements Scheduler {
       return;
     }
 
-    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
-    Optional<SingularityPendingDeploy> pendingDeploy = null;
+    final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
-    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
-      pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+    if (isActiveTask && !taskState.isDone()) {
+     final SingularityTask task = taskManager.getTask(taskIdObj).get();
+     final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
-      healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);
+     if (taskState == ExtendedTaskState.TASK_RUNNING) {
+       healthchecker.enqueueHealthcheck(task, pendingDeploy);
+     }
+
+     if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+       newTaskChecker.enqueueNewTaskCheck(task);
+     }
     }
 
     final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
@@ -295,16 +300,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
-    } else if (maybeActiveTask.isPresent()) {
-      if (pendingDeploy == null) {
-        pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
-      }
-
-      // TODO do we need a new task check if we have hit TASK_RUNNING?
-      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-        newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
-      }
+      scheduler.handleCompletedTask(taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
