@@ -8,6 +8,7 @@ public class SingularityRequestWithState {
 
   private final SingularityRequest request;
   private final RequestState state;
+  private final long timestamp;
 
   public static String getRequestState(Optional<SingularityRequestWithState> maybeRequestWithState) {
     if (maybeRequestWithState.isPresent()) {
@@ -21,9 +22,14 @@ public class SingularityRequestWithState {
   }
 
   @JsonCreator
-  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state) {
+  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state, @JsonProperty("timestamp") long timestamp) {
     this.request = request;
     this.state = state;
+    this.timestamp = timestamp;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
   }
 
   public RequestState getState() {
@@ -36,7 +42,7 @@ public class SingularityRequestWithState {
 
   @Override
   public String toString() {
-    return "SingularityRequestWithState [request=" + request + ", state=" + state + "]";
+    return "SingularityRequestWithState [request=" + request + ", state=" + state + ", timestamp=" + timestamp + "]";
   }
 
 }

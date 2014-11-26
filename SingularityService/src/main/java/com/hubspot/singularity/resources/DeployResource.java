@@ -89,7 +89,9 @@ public class DeployResource extends AbstractRequestResource {
 
     validator.checkDeploy(request, deployRequest.getDeploy());
 
-    SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deployRequest.getDeploy().getId(), System.currentTimeMillis(), deployRequest.getUser());
+    final long now = System.currentTimeMillis();
+
+    SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deployRequest.getDeploy().getId(), now, deployRequest.getUser());
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING);
 
     if (deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED) {
@@ -99,11 +101,11 @@ public class DeployResource extends AbstractRequestResource {
     deployManager.saveDeploy(request, deployMarker, deployRequest.getDeploy());
 
     if (requestWithState.getState() == RequestState.PAUSED) {
-      requestManager.deployToUnpause(request, deployRequest.getUser());
+      requestManager.deployToUnpause(request, now, deployRequest.getUser());
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), deployRequest.getUser(), PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, Optional.<String> absent(), deployRequest.getUser(), PendingType.NEW_DEPLOY));
     }
 
     return fillEntireRequest(requestWithState);

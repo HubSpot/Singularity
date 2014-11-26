@@ -18,10 +18,17 @@ public class ZkMigrationTest extends SingularityCuratorTestBase {
 
   @Test
   public void testMigrationRunner() {
-    Assert.assertTrue(migrationRunner.checkMigrations() == 1);
+    Assert.assertTrue(migrationRunner.checkMigrations() == 2);
 
-    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("1"));
+    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("2"));
 
     Assert.assertTrue(migrationRunner.checkMigrations() == 0);
   }
+
+  @Test
+  public void testPendingTaskIdMigration() {
+
+  }
+
+
 }

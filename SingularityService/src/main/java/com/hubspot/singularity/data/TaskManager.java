@@ -52,7 +52,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private static final String LAST_ACTIVE_TASK_STATUSES_PATH_ROOT = TASKS_ROOT + "/statuses";
-  private static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
+  public static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
   private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
@@ -267,7 +267,16 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTask> getActiveTasks() {
-    return getAsyncChildren(ACTIVE_PATH_ROOT, taskTranscoder);
+    List<String> children = Lists.transform(getChildrenAsIds(ACTIVE_PATH_ROOT, taskIdTranscoder), new Function<SingularityTaskId, String>() {
+
+      @Override
+      public String apply(SingularityTaskId taskId) {
+        return getTaskPath(taskId);
+      }
+
+    });;
+
+    return getAsync("active_tasks", children, taskTranscoder);
   }
 
   public List<SingularityTaskStatusHolder> getLastActiveTaskStatuses() {
@@ -291,7 +300,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
       if (activeTaskId.getHost().equals(slave.getHost())) {
-        Optional<SingularityTask> maybeTask = getActiveTask(activeTaskId.getId());
+        Optional<SingularityTask> maybeTask = getTask(activeTaskId);
         if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
           tasks.add(maybeTask.get());
         }
@@ -430,12 +439,6 @@ public class TaskManager extends CuratorAsyncManager {
     return pendingTaskIdToPendingTaskFunction.apply(pendingTaskId);
   }
 
-  public Optional<SingularityTask> getActiveTask(String taskId) {
-    final String path = getActivePath(taskId);
-
-    return getData(path, taskTranscoder);
-  }
-
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
     final String path = getTaskPath(taskId);
 
@@ -469,23 +472,15 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
-    final String scheduledPath = getPendingPath(task.getTaskRequest().getPendingTask().getPendingTaskId());
-    final String activePath = getActivePath(task.getTaskId().getId());
-
-    curator.delete().forPath(scheduledPath);
-
-    final byte[] data = taskTranscoder.toBytes(task);
-
-    // TODO - right now, for consistency, we double write this. should review this and check for
-    // what happens in failure cases
+    delete(getPendingPath(task.getTaskRequest().getPendingTask().getPendingTaskId()));
 
     final long now = System.currentTimeMillis();
 
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.<String>absent()));
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
-    curator.create().creatingParentsIfNeeded().forPath(getTaskPath(task.getTaskId()), data);
-    curator.create().creatingParentsIfNeeded().forPath(activePath, data);
+    create(getTaskPath(task.getTaskId()), task, taskTranscoder);
+    create(getActivePath(task.getTaskId().getId()));
   }
 
   public List<SingularityTaskId> getLBCleanupTasks() {
