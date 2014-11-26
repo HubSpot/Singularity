@@ -69,7 +69,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
     byte[] data = curator.getData().forPath(ZKPaths.makePath(TaskManager.PENDING_PATH_ROOT, pendingTaskId));
 
     if (data != null && data.length > 0) {
-      return Optional.of(StringTranscoder.STRING_TRANSCODER.transcode(data));
+      return Optional.of(StringTranscoder.INSTANCE.fromBytes(data));
     }
 
     return Optional.absent();
@@ -78,7 +78,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
   public SingularityPendingTaskId createFrom(String string, long createdAt) {
     if (Character.isDigit(string.charAt(string.length() - 1))) {
       LOG.warn("Not migrating {} - it appears to be migrated already", string);
-      return SingularityPendingTaskId.fromString(string);
+      return SingularityPendingTaskId.valueOf(string);
     }
 
     String[] splits = null;

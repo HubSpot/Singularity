@@ -89,7 +89,7 @@ public class TaskResource {
 
   private SingularityTaskId getTaskIdFromStr(String activeTaskIdStr) {
     try {
-      return SingularityTaskId.fromString(activeTaskIdStr);
+      return SingularityTaskId.valueOf(activeTaskIdStr);
     } catch (InvalidSingularityTaskIdException e) {
       throw WebExceptions.badRequest("%s is not a valid taskId: %s", activeTaskIdStr, e.getMessage());
     }

@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
