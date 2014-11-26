@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -8,7 +10,6 @@ import org.apache.curator.utils.ZKPaths;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
@@ -52,7 +53,7 @@ public class MetadataManager extends CuratorManager {
   }
 
   public void setZkDataVersion(String newVersion) {
-    save(ZK_DATA_VERSION_PATH, Optional.of(JavaUtils.toBytes(newVersion)));
+    save(ZK_DATA_VERSION_PATH, Optional.of(newVersion.getBytes(UTF_8)));
   }
 
   public void saveMailRecord(SingularityRequest request, EmailType emailType) {

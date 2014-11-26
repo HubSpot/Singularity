@@ -1,5 +1,7 @@
 package com.hubspot.singularity.client;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.horizon.HttpClient;
-import com.hubspot.mesos.JavaUtils;
 
 @Singleton
 public class SingularityClientProvider implements Provider<SingularityClient> {
@@ -81,7 +82,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
       for (String leader : leaders) {
         byte[] data = curator.getData().forPath(ZKPaths.makePath(SingularityClusterManager.LEADER_PATH, leader));
 
-        hosts.add(JavaUtils.toString(data));
+        hosts.add(new String(data, UTF_8));
       }
 
       return Joiner.on(",").join(hosts);

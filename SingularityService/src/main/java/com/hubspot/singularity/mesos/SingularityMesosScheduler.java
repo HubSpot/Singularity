@@ -1,5 +1,7 @@
 package com.hubspot.singularity.mesos;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -319,7 +321,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, JavaUtils.toString(data));
+    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, new String(data, UTF_8));
   }
 
   @Override

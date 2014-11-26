@@ -37,6 +37,8 @@
     <basepom.check.skip-license>true</basepom.check.skip-license>
     <basepom.check.fail-extended>true</basepom.check.fail-extended>
 
+    <dep.plugin.surefire.version>2.18</dep.plugin.surefire.version>
+
     <!-- hubspot jackson and dropwizard dep use 2.3.x -->
     <dep.jackson.version>2.3.3</dep.jackson.version>
     <dep.jackson.core.version>${dep.jackson.version}</dep.jackson.core.version>

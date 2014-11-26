@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +21,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -198,7 +199,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void saveTaskDirectory(SingularityTaskId taskId, String directory) {
-    save(getDirectoryPath(taskId), Optional.of(JavaUtils.toBytes(directory)));
+    save(getDirectoryPath(taskId), Optional.of(directory.getBytes(UTF_8)));
   }
 
   public void saveLastActiveTaskStatus(SingularityTaskStatusHolder taskStatus) {
@@ -232,7 +233,7 @@ public class TaskManager extends CuratorAsyncManager {
     Optional<byte[]> data = Optional.absent();
 
     if (task.getMaybeCmdLineArgs().isPresent()) {
-      data = Optional.of(JavaUtils.toBytes(task.getMaybeCmdLineArgs().get()));
+      data = Optional.of(task.getMaybeCmdLineArgs().get().getBytes(UTF_8));
     }
 
     create(pendingPath, data);
