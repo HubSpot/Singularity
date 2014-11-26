@@ -78,8 +78,8 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(PENDING_PATH_ROOT, new SingularityDeployKey(requestId, deployId).getId());
   }
 
-  private String getCleanupPath(String requestId) {
-    return ZKPaths.makePath(CLEANUP_PATH_ROOT, requestId);
+  private String getCleanupPath(String requestId, RequestCleanupType type) {
+    return ZKPaths.makePath(CLEANUP_PATH_ROOT, requestId + "-" + type.name());
   }
 
   public int getSizeOfPendingQueue() {
@@ -106,8 +106,18 @@ public class RequestManager extends CuratorAsyncManager {
     delete(getHistoryPath(history));
   }
 
-  public void deleteCleanRequest(String requestId) {
-    delete(getCleanupPath(requestId));
+  public boolean cleanupRequestExists(String requestId) {
+    for (RequestCleanupType type : RequestCleanupType.values()) {
+      if (checkExists(getCleanupPath(requestId, type)).isPresent()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public void deleteCleanRequest(String requestId, RequestCleanupType type) {
+    delete(getCleanupPath(requestId, type));
   }
 
   public List<String> getAllRequestIds() {
@@ -123,7 +133,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
-    return create(getCleanupPath(cleanupRequest.getRequestId()), cleanupRequest, requestCleanupTranscoder);
+    return create(getCleanupPath(cleanupRequest.getRequestId(), cleanupRequest.getCleanupType()), cleanupRequest, requestCleanupTranscoder);
   }
 
   public SingularityCreateResult update(SingularityRequest request, long timestamp, Optional<String> user) {
@@ -185,10 +195,6 @@ public class RequestManager extends CuratorAsyncManager {
     return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
   }
 
-  public List<String> getCleanupRequestIds() {
-    return getChildren(CLEANUP_PATH_ROOT);
-  }
-
   public List<SingularityRequestCleanup> getCleanupRequests() {
     return getAsyncChildren(CLEANUP_PATH_ROOT, requestCleanupTranscoder);
   }
@@ -246,14 +252,13 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public Optional<SingularityRequestCleanup> getCleanupRequest(String requestId) {
-    return getData(getCleanupPath(requestId), requestCleanupTranscoder);
-  }
-
   public void deleteRequest(SingularityRequest request, Optional<String> user) {
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, System.currentTimeMillis(), Optional.of(Boolean.TRUE), request.getId()));
+    final long now = System.currentTimeMillis();
 
-    saveHistory(new SingularityRequestHistory(System.currentTimeMillis(), user, RequestHistoryType.DELETED, request));
+    // delete it no matter if the delete request already exists.
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent()));
+
+    saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request));
 
     delete(getRequestPath(request.getId()));
   }

@@ -39,6 +39,7 @@ import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -55,15 +56,17 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityValidator validator;
 
   private final SingularityMailer mailer;
+  private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, RequestManager requestManager, SingularityMailer mailer) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer) {
     super(requestManager, deployManager);
 
     this.validator = validator;
     this.mailer = mailer;
+    this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
   }
@@ -126,7 +129,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
 
-    if (!maybeOldRequest.isPresent() && requestManager.getCleanupRequest(request.getId()).isPresent()) {
+    if (!maybeOldRequest.isPresent() && requestManager.cleanupRequestExists(request.getId())) {
       throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
     }
 
@@ -170,7 +173,7 @@ public class RequestResource extends AbstractRequestResource {
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
     if (!maybeDeployId.isPresent()) {
-      throw WebExceptions.conflict("Can not schedule a request (%s) with no deploy", requestId);
+      throw WebExceptions.conflict("Can not schedule/bounce a request (%s) with no deploy", requestId);
     }
 
     return maybeDeployId.get();
@@ -190,7 +193,12 @@ public class RequestResource extends AbstractRequestResource {
 
     checkRequestStateNotPaused(requestWithState, "bounce");
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), Optional.<String> absent(), user, PendingType.BOUNCE));
+    SingularityCreateResult createResult = requestManager.createCleanupRequest(
+        new SingularityRequestCleanup(user, RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
+
+    if (createResult == SingularityCreateResult.EXISTED) {
+      throw WebExceptions.conflict("%s is already bouncing", requestId);
+    }
 
     return fillEntireRequest(requestWithState);
   }
@@ -214,6 +222,10 @@ public class RequestResource extends AbstractRequestResource {
 
     if (requestWithState.getRequest().isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
+
+      if (!taskManager.getActiveTaskIdsForRequest(requestId).isEmpty()) {
+        throw WebExceptions.conflict("Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
+      }
     } else if (requestWithState.getRequest().isOneOff()) {
       pendingType = PendingType.ONEOFF;
     } else {
@@ -248,15 +260,15 @@ public class RequestResource extends AbstractRequestResource {
       killTasks = pauseRequest.get().getKillTasks();
     }
 
-    mailer.sendRequestPausedMail(requestWithState.getRequest(), user);
-
     final long now = System.currentTimeMillis();
 
-    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, now, killTasks, requestId));
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent()));
 
-    if (result != SingularityCreateResult.CREATED) {
-      throw WebExceptions.conflict("A cleanup/pause request for %s failed to create because it was in state %s - try again soon", requestId, result);
+    if (result == SingularityCreateResult.EXISTED) {
+      throw WebExceptions.conflict("%s is already pausing - try again soon", requestId, result);
     }
+
+    mailer.sendRequestPausedMail(requestWithState.getRequest(), user);
 
     requestManager.pause(requestWithState.getRequest(), now, user);
 
@@ -389,8 +401,9 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the delete") @QueryParam("user") Optional<String> user) {
     SingularityRequest request = fetchRequest(requestId);
 
-    mailer.sendRequestRemovedMail(request, user);
     requestManager.deleteRequest(request, user);
+
+    mailer.sendRequestRemovedMail(request, user);
 
     return request;
   }

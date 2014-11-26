@@ -101,6 +101,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeployMarker secondDeployMarker;
   protected SingularityDeploy secondDeploy;
 
+  protected Optional<String> user = Optional.absent();
+
   @After
   public void teardown() throws Exception {
     if (httpClient != null) {

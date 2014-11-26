@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -690,7 +691,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void badPauseExpires() {
     initRequest();
 
-    requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), Optional.<Boolean> absent(), requestId));
+    requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.<String> absent()));
 
     cleaner.drainCleanupQueue();
 
@@ -702,6 +703,52 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     cleaner.drainCleanupQueue();
 
     Assert.assertTrue(requestManager.getCleanupRequests().isEmpty());
+  }
+
+  @Test
+  public void testBounce() {
+    initRequest();
+
+    requestResource.updateInstances(requestId, Optional.<String> absent(), new SingularityRequestInstances(requestId, Optional.of(3)));
+
+    initFirstDeploy();
+
+    SingularityTask taskOne = startTask(firstDeploy, 1);
+    SingularityTask taskTwo = startTask(firstDeploy, 2);
+    SingularityTask taskThree = startTask(firstDeploy, 3);
+
+    requestResource.bounce(requestId, user);
+
+    Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(!requestManager.cleanupRequestExists(requestId));
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 3);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(!requestManager.cleanupRequestExists(requestId));
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 3);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 6);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 3);
+
+    for (SingularityTask task : taskManager.getActiveTasks()) {
+      if (!task.getTaskId().equals(taskOne.getTaskId()) && !task.getTaskId().equals(taskTwo.getTaskId()) && !task.getTaskId().equals(taskThree.getTaskId())) {
+        statusUpdate(task, TaskState.TASK_RUNNING, Optional.of(1L));
+      }
+    }
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().size() == 3);
   }
 
 }

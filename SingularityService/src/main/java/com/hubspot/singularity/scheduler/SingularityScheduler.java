@@ -199,8 +199,6 @@ public class SingularityScheduler {
       Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingRequest.getRequestId());
 
       if (shouldScheduleTasks(pendingRequest, maybeRequest)) {
-        checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
-
         final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
         final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
@@ -208,7 +206,7 @@ public class SingularityScheduler {
 
         int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds);
 
-        if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled()) {
+        if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
           LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
           heldForScheduledActiveTask++;
           continue;
@@ -250,25 +248,6 @@ public class SingularityScheduler {
     Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(pendingRequest.getRequestId());
 
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
-  }
-
-  private void checkForBounceAndAddToCleaningTasks(SingularityPendingRequest pendingRequest, final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
-    if (pendingRequest.getPendingType() != PendingType.BOUNCE) {
-      return;
-    }
-
-    final long now = System.currentTimeMillis();
-
-    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(activeTaskIds, pendingRequest.getRequestId(), pendingRequest.getDeployId(), cleaningTasks);
-
-    for (SingularityTaskId matchingTaskId : matchingTaskIds) {
-      LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
-
-      taskManager.createCleanupTask(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId));
-      cleaningTasks.add(matchingTaskId);
-    }
-
-    LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), pendingRequest.getRequestId(), JavaUtils.duration(now));
   }
 
   public List<SingularityTaskRequest> getDueTasks() {

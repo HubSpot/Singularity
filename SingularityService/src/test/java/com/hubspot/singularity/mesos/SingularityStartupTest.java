@@ -102,6 +102,18 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+
+    boolean caughtException = false;
+
+    try {
+      requestResource.scheduleImmediately(requestId, Optional.<String> absent(), null);
+    } catch (Exception e) {
+      caughtException = true;
+    }
+
+    Assert.assertTrue(caughtException);
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
   }
 
   @Test
