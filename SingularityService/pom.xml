@@ -330,7 +330,6 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>HorizonCore</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
