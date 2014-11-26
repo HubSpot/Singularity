@@ -21,14 +21,12 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
@@ -158,31 +156,10 @@ public class SingularityScheduler {
     }
   }
 
-  private Collection<SingularityPendingRequest> filterPendingRequestsByDeployAndPriority(List<SingularityPendingRequest> pendingRequests) {
-    Map<SingularityDeployKey, SingularityPendingRequest> deployKeyToMostImportantPendingRequest = Maps.newHashMapWithExpectedSize(pendingRequests.size());
-
-    for (SingularityPendingRequest pendingRequest : pendingRequests) {
-      SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-      SingularityPendingRequest existingRequest = deployKeyToMostImportantPendingRequest.get(deployKey);
-      if (existingRequest == null) {
-        deployKeyToMostImportantPendingRequest.put(deployKey, pendingRequest);
-      } else {
-        if (pendingRequest.hasPriority(existingRequest)) {
-          LOG.debug("Dropping pending request {} because {} has priority {}", existingRequest, pendingRequest);
-          deployKeyToMostImportantPendingRequest.put(deployKey, pendingRequest);
-        } else {
-          LOG.debug("Dropping pending request {} because {} has priority {}", pendingRequest, existingRequest);
-        }
-      }
-    }
-
-    return deployKeyToMostImportantPendingRequest.values();
-  }
-
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
-    final Collection<SingularityPendingRequest> pendingRequests = filterPendingRequestsByDeployAndPriority(requestManager.getPendingRequests());
+    final Collection<SingularityPendingRequest> pendingRequests = requestManager.getPendingRequests();
 
     if (pendingRequests.isEmpty()) {
       LOG.trace("Pending queue was empty");

@@ -236,7 +236,11 @@ public class RequestResource extends AbstractRequestResource {
       maybeCmdLineArgs = Optional.of(commandLineArgs);
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
+    SingularityCreateResult result = requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
+
+    if (result == SingularityCreateResult.EXISTED) {
+      throw WebExceptions.conflict("%s is already pending, please try again soon", requestId);
+    }
 
     return fillEntireRequest(requestWithState);
   }
