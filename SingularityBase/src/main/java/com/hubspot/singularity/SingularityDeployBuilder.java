@@ -3,10 +3,13 @@ package com.hubspot.singularity;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityResourceRequest;
 
 public class SingularityDeployBuilder {
 
@@ -24,6 +27,7 @@ public class SingularityDeployBuilder {
   private Optional<String> customExecutorId;
   private Optional<String> customExecutorSource;
   private Optional<Resources> resources;
+  private Optional<List<SingularityResourceRequest>> requestedResources;
 
   private Optional<String> command;
   private Optional<List<String>> arguments;
@@ -55,6 +59,7 @@ public class SingularityDeployBuilder {
     this.customExecutorId = Optional.absent();
     this.customExecutorSource = Optional.absent();
     this.resources = Optional.absent();
+    this.requestedResources = Optional.absent();
     this.command = Optional.absent();
     this.arguments = Optional.absent();
     this.env = Optional.absent();
@@ -72,8 +77,18 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
-        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
+
+    // Prefer using the resource request list over the resources element.
+    Optional<Resources> buildResources = this.resources;
+    Optional<List<SingularityResourceRequest>> buildRequestedResources = this.requestedResources;
+
+    if (buildResources.isPresent()) {
+      buildRequestedResources = Optional.of(resources.get().getAsResourceRequestList());
+      buildResources = Optional.absent();
+    }
+
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, buildResources, buildRequestedResources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri,
+        healthcheckIntervalSeconds, healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
   }
 
   public String getRequestId() {
@@ -176,6 +191,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setResources(Optional<Resources> resources) {
     this.resources = resources;
+    return this;
+  }
+
+  public Optional<List<SingularityResourceRequest>> getRequestedResources() {
+    return requestedResources;
+  }
+
+  public SingularityDeployBuilder setRequestedResources(Optional<List<SingularityResourceRequest>> requestedResources) {
+    this.requestedResources = requestedResources;
     return this;
   }
 
@@ -289,31 +313,6 @@ public class SingularityDeployBuilder {
 
   @Override
   public String toString() {
-    return "SingularityDeployBuilder [" +
-        "requestId='" + requestId + '\'' +
-        ", id='" + id + '\'' +
-        ", version=" + version +
-        ", timestamp=" + timestamp +
-        ", metadata=" + metadata +
-        ", containerInfo=" + containerInfo +
-        ", customExecutorCmd=" + customExecutorCmd +
-        ", customExecutorId=" + customExecutorId +
-        ", customExecutorSource=" + customExecutorSource +
-        ", resources=" + resources +
-        ", command=" + command +
-        ", arguments=" + arguments +
-        ", env=" + env +
-        ", uris=" + uris +
-        ", executorData=" + executorData +
-        ", healthcheckUri=" + healthcheckUri +
-        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-        ", serviceBasePath=" + serviceBasePath +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ", loadBalancerOptions=" + loadBalancerOptions +
-        ']';
+    return ToStringBuilder.reflectionToString(this);
   }
 }

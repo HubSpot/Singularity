@@ -1,12 +1,21 @@
 package com.hubspot.mesos;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
+import javax.annotation.Nonnull;
+
+import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
@@ -16,30 +25,47 @@ import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
 import org.apache.mesos.Protos.Value.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
+import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 
 public final class MesosUtils {
+  private static final Logger LOG = LoggerFactory.getLogger(MesosUtils.class);
 
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
 
-  private MesosUtils() { }
+  public static final ImmutableList<String> STANDARD_RESOURCES = ImmutableList.of(CPUS, MEMORY, PORTS);
 
-  private static double getScalar(Resource r) {
-    return r.getScalar().getValue();
+  private MesosUtils() {
+    throw new AssertionError("Do not instantiate!");
+  }
+
+  private static double getScalar(Resource resource) {
+    checkNotNull(resource, "resource is null");
+    checkState(resource.hasScalar(), "resource %s is not a scalar!", resource);
+
+    return resource.getScalar().getValue();
   }
 
   private static double getScalar(List<Resource> resources, String name) {
-    for (Resource r : resources) {
-      if (r.hasName() && r.getName().equals(name) && r.hasScalar()) {
-        return getScalar(r);
+    checkNotNull(resources, "resources is null");
+    checkNotNull(name, "name is null");
+
+    for (Resource resource : resources) {
+      if (resource.hasName() && resource.getName().equals(name) && resource.hasScalar()) {
+        return getScalar(resource);
       }
     }
 
@@ -56,25 +82,29 @@ public final class MesosUtils {
     return null;
   }
 
-  private static Ranges getRanges(TaskInfo taskInfo, String name) {
-    return getRanges(taskInfo.getResourcesList(), name);
-  }
-
-  private static int getNumRanges(List<Resource> resources, String name) {
+  private static int getRangeCount(Ranges ranges) {
+    checkNotNull(ranges, "ranges is null");
     int totalRanges = 0;
-
-    Ranges ranges = getRanges(resources, name);
-
-    if (ranges == null) {
-      return 0;
-    }
-
     for (Range range : ranges.getRangeList()) {
       long num = range.getEnd() - range.getBegin();
       totalRanges += num;
     }
 
     return totalRanges;
+  }
+
+  private static Ranges getRanges(TaskInfo taskInfo, String name) {
+    return getRanges(taskInfo.getResourcesList(), name);
+  }
+
+  private static int getNumRanges(List<Resource> resources, String name) {
+    Ranges ranges = getRanges(resources, name);
+
+    if (ranges == null) {
+      return 0;
+    }
+
+    return getRangeCount(ranges);
   }
 
   public static Resource getCpuResource(double cpus) {
@@ -85,13 +115,13 @@ public final class MesosUtils {
     return newScalar(MEMORY, memory);
   }
 
-  public static long[] getPorts(Resource portsResource, int numPorts) {
-    long[] ports = new long[numPorts];
+  public static int[] getPorts(Resource portsResource, int numPorts) {
+    int[] ports = new int[numPorts];
     int idx = 0;
 
     for (Range r : portsResource.getRanges().getRangeList()) {
       for (long port = r.getBegin(); port <= r.getEnd(); port++) {
-        ports[idx++] = port;
+        ports[idx++] = Ints.checkedCast(port);
 
         if (idx >= numPorts) {
           return ports;
@@ -124,12 +154,17 @@ public final class MesosUtils {
 
   public static Resource getPortsResource(int numPorts, List<Resource> resources) {
     Ranges ranges = getRanges(resources, PORTS);
-
     Preconditions.checkState(ranges != null, "Ports %s should have existed in resources %s", PORTS, resources);
 
+    Ranges.Builder rangesBldr = buildRangeResource(ranges, numPorts);
+
+    return Resource.newBuilder().setType(Type.RANGES).setName(PORTS).setRanges(rangesBldr).build();
+  }
+
+  public static Ranges.Builder buildRangeResource(Ranges ranges, int resourceCount) {
     Ranges.Builder rangesBldr = Ranges.newBuilder();
 
-    int portsSoFar = 0;
+    int resourcesSoFar = 0;
 
     List<Range> offerRangeList = Lists.newArrayList(ranges.getRangeList());
 
@@ -137,31 +172,25 @@ public final class MesosUtils {
     Collections.shuffle(offerRangeList, random);
 
     for (Range range : offerRangeList) {
-      long rangeStartSelection = Math.max(range.getBegin(), range.getEnd() - (numPorts - portsSoFar + 1));
+      long rangeStartSelection = Math.max(range.getBegin(), range.getEnd() - (resourceCount - resourcesSoFar + 1));
 
       if (rangeStartSelection != range.getBegin()) {
         int rangeDelta = (int) (rangeStartSelection - range.getBegin()) + 1;
         rangeStartSelection = random.nextInt(rangeDelta) + range.getBegin();
       }
 
-      long rangeEndSelection = Math.min(range.getEnd(), rangeStartSelection + (numPorts - portsSoFar - 1));
+      long rangeEndSelection = Math.min(range.getEnd(), rangeStartSelection + (resourceCount - resourcesSoFar - 1));
 
-      rangesBldr.addRange(Range.newBuilder()
-          .setBegin(rangeStartSelection)
-          .setEnd(rangeEndSelection));
+      rangesBldr.addRange(Range.newBuilder().setBegin(rangeStartSelection).setEnd(rangeEndSelection));
 
-      portsSoFar += (rangeEndSelection - rangeStartSelection) + 1;
+      resourcesSoFar += rangeEndSelection - rangeStartSelection + 1;
 
-      if (portsSoFar == numPorts) {
+      if (resourcesSoFar == resourceCount) {
         break;
       }
     }
 
-    return Resource.newBuilder()
-        .setType(Type.RANGES)
-        .setName(PORTS)
-        .setRanges(rangesBldr)
-        .build();
+    return rangesBldr;
   }
 
   private static Resource newScalar(String name, double value) {
@@ -192,22 +221,26 @@ public final class MesosUtils {
     return getNumPorts(offer.getResourcesList());
   }
 
-  public static boolean doesOfferMatchResources(Resources resources, List<Resource> offerResources) {
+  public static boolean doesOfferMatchResources(List<SingularityResourceRequest> requestedResources, List<Resource> offerResources) {
+
     double numCpus = getNumCpus(offerResources);
 
-    if (numCpus < resources.getCpus()) {
+    if (SingularityResourceRequest.hasResource(requestedResources, SingularityResourceRequest.CPU_RESOURCE_NAME)
+        && numCpus < SingularityResourceRequest.findNumberResourceRequest(requestedResources, SingularityResourceRequest.CPU_RESOURCE_NAME, Double.MAX_VALUE).doubleValue()) {
       return false;
     }
 
     double memory = getMemory(offerResources);
 
-    if (memory < resources.getMemoryMb()) {
+    if (SingularityResourceRequest.hasResource(requestedResources, SingularityResourceRequest.MEMORY_RESOURCE_NAME)
+        && memory < SingularityResourceRequest.findNumberResourceRequest(requestedResources, SingularityResourceRequest.MEMORY_RESOURCE_NAME, Double.MAX_VALUE).doubleValue()) {
       return false;
     }
 
     int numPorts = getNumPorts(offerResources);
 
-    if (numPorts < resources.getNumPorts()) {
+    if (SingularityResourceRequest.hasResource(requestedResources, SingularityResourceRequest.PORT_COUNT_RESOURCE_NAME)
+        && numPorts < SingularityResourceRequest.findNumberResourceRequest(requestedResources, SingularityResourceRequest.PORT_COUNT_RESOURCE_NAME, Integer.MAX_VALUE).intValue()) {
       return false;
     }
 
@@ -309,4 +342,58 @@ public final class MesosUtils {
     return remaining;
   }
 
+  public static boolean hasAllResources(List<Resource> resources, Collection<String> resourceNames) {
+    Set<String> allResourceNames = new HashSet<String>(resourceNames);
+    for (Resource resource : resources) {
+      allResourceNames.remove(resource.getName());
+      if (allResourceNames.isEmpty()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static Predicate<? super Resource> getFilterStandardAttributesFunction() {
+    return new Predicate<Resource>() {
+
+      @Override
+      public boolean apply(@Nonnull Resource resource) {
+        return !STANDARD_RESOURCES.contains(resource.getName());
+      }
+    };
+  }
+
+  public static String toString(Resource resource) {
+    checkNotNull(resource, "resource is null");
+    StringBuffer sb = new StringBuffer(resource.getName()).append(": ");
+
+    if (resource.hasRanges()) {
+      sb.append(getRangeCount(resource.getRanges()));
+    } else if (resource.hasScalar()) {
+      sb.append(getScalar(resource));
+    } else if (resource.hasSet()) {
+      sb.append(resource.getSet().getItemList());
+    } else {
+      sb.append("Unknown Resource type");
+    }
+
+    return sb.toString();
+  }
+
+  public static void displayResources(Offer offer) {
+    if (LOG.isDebugEnabled()) {
+      checkNotNull(offer, "offer is null");
+
+      List<Resource> resources = offer.getResourcesList();
+      checkState(hasAllResources(resources, STANDARD_RESOURCES), "Resource List from %s is missing one or more standard resources (%s)", offer.getSlaveId().getValue(), STANDARD_RESOURCES);
+
+      LOG.debug("Offer from {} ({})", offer.getHostname(), offer.getSlaveId().getValue());
+      LOG.debug("Primary Resources: {} CPU(s), {} MB Memory, {} available ports", getScalar(resources, CPUS), getScalar(resources, MEMORY), getNumRanges(resources, PORTS));
+      LOG.debug("Additional Resources:");
+
+      for (Protos.Resource resource : Collections2.filter(resources, MesosUtils.getFilterStandardAttributesFunction())) {
+        LOG.debug("  - {}", toString(resource));
+      }
+    }
+  }
 }

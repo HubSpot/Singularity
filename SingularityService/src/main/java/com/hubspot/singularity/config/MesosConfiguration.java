@@ -3,6 +3,8 @@ package com.hubspot.singularity.config;
 import javax.validation.constraints.NotNull;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.hubspot.mesos.SingularityResourceRequest;
 
 public class MesosConfiguration {
 
@@ -163,5 +165,13 @@ public class MesosConfiguration {
 
   public void setSlaveHttpsPort(Optional<Integer> slaveHttpsPort) {
     this.slaveHttpsPort = slaveHttpsPort;
+  }
+
+  /**
+   * Returns the default configured resources as a {@link SingularityResourceRequest} list.
+   */
+  public ImmutableList<SingularityResourceRequest> getDefaultResources() {
+    return ImmutableList.of(new SingularityResourceRequest(SingularityResourceRequest.CPU_RESOURCE_NAME, defaultCpus),
+      new SingularityResourceRequest(SingularityResourceRequest.MEMORY_RESOURCE_NAME, defaultMemory));
   }
 }

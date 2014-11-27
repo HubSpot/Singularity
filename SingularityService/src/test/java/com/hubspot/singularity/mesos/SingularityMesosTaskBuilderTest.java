@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mesos.Protos;
@@ -15,6 +16,7 @@ import org.apache.mesos.Protos.ContainerInfo.Type;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.Volume.Mode;
 import org.junit.Before;
@@ -24,11 +26,13 @@ import org.mockito.stubbing.Answer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
+import com.hubspot.mesos.SingularityResourceRequest;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -43,7 +47,7 @@ import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 public class SingularityMesosTaskBuilderTest {
   private SingularityMesosTaskBuilder builder;
-  private Resources resources;
+  private List<SingularityResourceRequest> resources;
   private Offer offer;
   private SingularityPendingTask pendingTask;
 
@@ -58,7 +62,7 @@ public class SingularityMesosTaskBuilderTest {
 
     builder = new SingularityMesosTaskBuilder(new ObjectMapper(), rackManager, idGenerator);
 
-    resources = new Resources(1, 1, 0);
+    resources = new Resources(1, 1, 0).getAsResourceRequestList();
     offer = Offer.newBuilder()
         .setSlaveId(SlaveID.newBuilder().setValue("1"))
         .setId(OfferID.newBuilder().setValue("1"))
@@ -71,10 +75,10 @@ public class SingularityMesosTaskBuilderTest {
   public void testShellCommand() {
     final SingularityRequest request = new SingularityRequestBuilder("test").build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-    .setCommand(Optional.of("/bin/echo hi"))
-    .build();
+        .setCommand(Optional.of("/bin/echo hi"))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, null, taskRequest, resources);
+    final SingularityTask task = builder.buildTask(offer, ImmutableList.<Resource>of(), taskRequest, resources);
 
     assertEquals("/bin/echo hi", task.getMesosTask().getCommand().getValue());
     assertEquals(0, task.getMesosTask().getCommand().getArgumentsCount());
@@ -85,11 +89,11 @@ public class SingularityMesosTaskBuilderTest {
   public void testArgumentCommand() {
     final SingularityRequest request = new SingularityRequestBuilder("test").build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-    .setCommand(Optional.of("/bin/echo"))
-    .setArguments(Optional.of(Collections.singletonList("wat")))
-    .build();
+        .setCommand(Optional.of("/bin/echo"))
+        .setArguments(Optional.of(Collections.singletonList("wat")))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, null, taskRequest, resources);
+    final SingularityTask task = builder.buildTask(offer, ImmutableList.<Resource>of(), taskRequest, resources);
 
     assertEquals("/bin/echo", task.getMesosTask().getCommand().getValue());
     assertEquals(1, task.getMesosTask().getCommand().getArgumentsCount());
@@ -99,7 +103,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Test
   public void testDockerTask() {
-    resources = new Resources(1, 1, 1);
+    resources = new Resources(1, 1, 1).getAsResourceRequestList();
 
     final Protos.Resource portsResource = Protos.Resource.newBuilder()
         .setName("ports")
@@ -109,8 +113,10 @@ public class SingularityMesosTaskBuilderTest {
                 .setBegin(31000)
                 .setEnd(31000).build()).build()).build();
 
-    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
-    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityDockerPortMapping literalMapping =
+        new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
+    final SingularityDockerPortMapping offerMapping =
+        new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
 
     final SingularityRequest request = new SingularityRequestBuilder("test").build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
@@ -118,10 +124,10 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(Collections.singletonList(new SingularityVolume("/container", Optional.of("/host"), Mode.RW))),
         Optional.of(new SingularityDockerInfo("docker-image", Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-    .setContainerInfo(Optional.of(containerInfo))
-    .setCommand(Optional.of("/bin/echo"))
-    .setArguments(Optional.of(Collections.singletonList("wat")))
-    .build();
+        .setContainerInfo(Optional.of(containerInfo))
+        .setCommand(Optional.of("/bin/echo"))
+        .setArguments(Optional.of(Collections.singletonList("wat")))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, Collections.singletonList(portsResource), taskRequest, resources);
 

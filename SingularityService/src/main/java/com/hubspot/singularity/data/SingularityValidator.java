@@ -11,10 +11,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
+import com.hubspot.mesos.SingularityResourceRequest;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -38,7 +38,7 @@ public class SingularityValidator {
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final DeployHistoryHelper deployHistoryHelper;
-  private final Resources defaultResources;
+  private final List<SingularityResourceRequest> defaultResources;
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
@@ -49,8 +49,7 @@ public class SingularityValidator {
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
-
-    defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0);
+    this.defaultResources = configuration.getMesosConfiguration().getDefaultResources();
 
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
@@ -73,20 +72,27 @@ public class SingularityValidator {
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
+
+    List<SingularityResourceRequest> resources = deploy.getResourceRequestList().or(defaultResources);
+
+    final double cpusPerInstance = SingularityResourceRequest.findNumberResourceRequest(resources, SingularityResourceRequest.CPU_RESOURCE_NAME, defaultCpus).doubleValue();
+    final double memoryMbPerInstance = SingularityResourceRequest.findNumberResourceRequest(resources, SingularityResourceRequest.MEMORY_RESOURCE_NAME, defaultMemoryMb).doubleValue();
 
     check(cpusPerInstance > 0, "Request must have more than 0 cpus");
     check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
 
     check(cpusPerInstance <= maxCpusPerInstance, String.format("Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance));
-    check(cpusPerInstance * instances <= maxCpusPerRequest, String.format("Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest));
+    check(cpusPerInstance * instances <= maxCpusPerRequest,
+        String.format("Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest));
 
-    check(memoryMbPerInstance <= maxMemoryMbPerInstance, String.format("Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance));
-    check(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, String.format("Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(), memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest));
+    check(memoryMbPerInstance <= maxMemoryMbPerInstance,
+        String.format("Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance));
+    check(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, String.format("Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(),
+        memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest));
   }
 
-  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
+  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
+      Optional<SingularityDeploy> pendingDeploy) {
     check(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
     if (!allowRequestsWithoutOwners) {
@@ -96,7 +102,8 @@ public class SingularityValidator {
     check(request.getId().length() < maxRequestIdSize, String.format("Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId()));
     check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
 
-    check(request.getInstancesSafe() <= maxInstancesPerRequest, String.format("Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest));
+    check(request.getInstancesSafe() <= maxInstancesPerRequest,
+        String.format("Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest));
 
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
@@ -124,7 +131,7 @@ public class SingularityValidator {
         check(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
       }
 
-      if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
+      if (request.getQuartzSchedule().isPresent() || request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ) {
         quartzSchedule = originalSchedule;
       } else {
         check(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
@@ -166,9 +173,9 @@ public class SingularityValidator {
 
     checkForIllegalResources(request, deploy);
 
-    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) ||
-        (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
-            (deploy.getContainerInfo().isPresent())),
+    check(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
+        deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
+        deploy.getContainerInfo().isPresent(),
         "If not using custom executor, specify a command or containerInfo. If using custom executor, specify executorData and customExecutorCmd and no command.");
 
     check(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
@@ -181,17 +188,22 @@ public class SingularityValidator {
   }
 
   private void checkDocker(SingularityDeploy deploy) {
-    if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
+    Optional<List<SingularityResourceRequest>> resources = deploy.getResourceRequestList();
+
+    if (resources.isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
       final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
-      final int numPorts = deploy.getResources().get().getNumPorts();
+
+      int numPorts = SingularityResourceRequest.findNumberResourceRequest(resources.get(), SingularityResourceRequest.PORT_COUNT_RESOURCE_NAME, 0).intValue();
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
-        check(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE, "Docker networking type must be BRIDGE if port mappings are set");
+        check(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE,
+            "Docker networking type must be BRIDGE if port mappings are set");
       }
 
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
-          check(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
+          check(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts,
+              String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
         }
 
         if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
