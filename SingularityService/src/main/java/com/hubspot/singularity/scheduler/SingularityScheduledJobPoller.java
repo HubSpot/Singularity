@@ -94,6 +94,8 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
         mailer.sendTaskOverdueMail(taskId, request.getRequest(), runtime, expectedRuntime.get());
 
         taskManager.saveNotifiedOverdue(taskId);
+      } else {
+        LOG.trace("{} is not overdue yet - runtime {}, expected {}, ({}% < {}%)", taskId, runtime, expectedRuntime.get(), overDuePct, configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
       }
     }
   }
