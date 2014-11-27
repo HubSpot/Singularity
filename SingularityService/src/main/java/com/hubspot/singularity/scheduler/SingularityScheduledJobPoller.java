@@ -13,13 +13,16 @@ import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
@@ -33,16 +36,18 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
 
   private final TaskManager taskManager;
   private final RequestManager requestManager;
+  private final DeployManager deployManager;
   private final SingularityMailer mailer;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityScheduledJobPoller(final LeaderLatch leaderLatch, final SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
-      SingularityConfiguration configuration, SingularityAbort abort, RequestManager requestManager, SingularityMailer mailer) {
-    super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCheckScheduledJobsEveryMillis(), TimeUnit.MILLISECONDS, SchedulerLockType.LOCK);
+      SingularityConfiguration configuration, SingularityAbort abort, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
+    super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCheckScheduledJobsEveryMillis(), TimeUnit.MILLISECONDS, SchedulerLockType.NO_LOCK);
 
     this.taskManager = taskManager;
+    this.deployManager = deployManager;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.requestManager = requestManager;
@@ -70,8 +75,37 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
     for (SingularityTaskId taskId : activeTaskIds) {
       SingularityRequestWithState request = idToRequest.get(taskId.getRequestId());
 
-      if (request == null || !request.getRequest().isScheduled()) {
+      if (request == null || !request.getRequest().isScheduled() || taskManager.hasNotifiedOverdue(taskId)) {
         continue;
+      }
+
+      final long runtime = start - taskId.getStartedAt();
+      final Optional<Long> expectedRuntime = getExpectedRuntime(request, taskId);
+
+      if (!expectedRuntime.isPresent()) {
+        continue;
+      }
+
+      final int overDuePct = (int) (100 * (runtime / (float) expectedRuntime.get()));
+
+      if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
+        LOG.info("{} is overdue by {}% (expectedRunTime: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, expectedRuntime.get(), configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
+
+        mailer.sendTaskOverdueMail(taskId, request.getRequest(), runtime, expectedRuntime.get());
+
+        taskManager.saveNotifiedOverdue(taskId);
+      }
+    }
+  }
+
+  private Optional<Long> getExpectedRuntime(SingularityRequestWithState request, SingularityTaskId taskId) {
+    if (request.getRequest().getScheduledExpectedRuntimeMillis().isPresent()) {
+      return request.getRequest().getScheduledExpectedRuntimeMillis();
+    } else {
+      final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
+
+      if (deployStatistics.isPresent() && deployStatistics.get().getAverageRuntimeMillis().isPresent()) {
+        return deployStatistics.get().getAverageRuntimeMillis();
       }
 
       final CronExpression cronExpression;
@@ -81,7 +115,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       } catch (ParseException e) {
         LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
         exceptionNotifier.notify(e);
-        continue;
+        return Optional.absent();
       }
 
       final Date startDate = new Date(taskId.getStartedAt());
@@ -91,21 +125,11 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
         String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
         LOG.warn(msg);
         exceptionNotifier.notify(msg);
-        continue;
+        return Optional.absent();
       }
 
-      final long period = nextRunAtDate.getTime() - taskId.getStartedAt();
-      final long overDueBy = start - nextRunAtDate.getTime();
-
-      final float overDuePct = (float) overDueBy / (float) period;
-
-      if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
-        LOG.info("{} is overdue by {} (period: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, period, configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
-
-
-
-        // send mail TODO
-      }
+      return Optional.of(nextRunAtDate.getTime() - taskId.getStartedAt());
     }
   }
+
 }

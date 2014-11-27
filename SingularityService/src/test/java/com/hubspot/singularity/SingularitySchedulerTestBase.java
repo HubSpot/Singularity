@@ -42,11 +42,13 @@ import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.scheduler.SingularityCleaner;
 import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
 import com.hubspot.singularity.scheduler.SingularityDeployChecker;
+import com.hubspot.singularity.scheduler.SingularityScheduledJobPoller;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import com.hubspot.singularity.scheduler.TestingLoadBalancerClient;
+import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
@@ -86,6 +88,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularitySchedulerPriority schedulerPriority;
   @Inject
   protected SingularityTaskReconciliation taskReconciliation;
+  @Inject
+  protected SingularityMailer mailer;
+  @Inject
+  protected SingularityScheduledJobPoller scheduledJobPoller;
+
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
   protected String serverId;

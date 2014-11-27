@@ -451,7 +451,21 @@ public class SingularityScheduler {
       return;
     }
 
+    updateDeployStatistics(deployStatistics, taskId, timestamp, state, scheduleResult);
+  }
+
+  private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
+
+    if (bldr.getAverageRuntimeMillis().isPresent()) {
+      long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
+
+      bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
+    } else {
+      bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+    }
+
+    bldr.setNumTasks(bldr.getNumTasks() + 1);
 
     if (!bldr.getLastFinishAt().isPresent() || timestamp > bldr.getLastFinishAt().get()) {
       bldr.setLastFinishAt(Optional.of(timestamp));

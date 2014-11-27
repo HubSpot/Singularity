@@ -171,8 +171,7 @@ public class SingularityTestModule implements Module {
 
   @Provides
   @Singleton
-  public SingularityConfiguration getTestingConfiguration(final TestingServer ts)
-  {
+  public SingularityConfiguration getTestingConfiguration(final TestingServer ts) {
     SingularityConfiguration config = new SingularityConfiguration();
     config.setLoadBalancerUri("test");
 
@@ -189,4 +188,5 @@ public class SingularityTestModule implements Module {
     config.setZooKeeperConfiguration(zookeeperConfiguration);
     return config;
   }
+
 }

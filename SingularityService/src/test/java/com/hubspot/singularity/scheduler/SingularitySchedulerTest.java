@@ -10,6 +10,8 @@ import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -18,6 +20,7 @@ import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -749,6 +752,72 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
     Assert.assertTrue(taskManager.getKilledTaskIdRecords().size() == 3);
+  }
+
+  @Test
+  public void testScheduledNotification() {
+    schedule = "0 0 * * * ?"; // run every hour
+    initScheduledRequest();
+    initFirstDeploy();
+
+    configuration.setWarnIfScheduledJobIsRunningForAtLeastMillis(Long.MAX_VALUE);
+    configuration.setWarnIfScheduledJobIsRunningPastNextRunPct(200);
+
+    final long now = System.currentTimeMillis();
+
+    SingularityTask firstTask = launchTask(request, firstDeploy, now - TimeUnit.HOURS.toMillis(3), 1, TaskState.TASK_RUNNING);
+
+    scheduledJobPoller.runActionOnPoll();
+
+    Mockito.verify(mailer, Mockito.times(0)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+
+    configuration.setWarnIfScheduledJobIsRunningForAtLeastMillis(TimeUnit.HOURS.toMillis(1));
+
+    scheduledJobPoller.runActionOnPoll();
+
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+
+    scheduledJobPoller.runActionOnPoll();
+
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+
+    statusUpdate(firstTask, TaskState.TASK_FINISHED);
+
+    Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId);
+
+    long oldAvg = deployStatistics.get().getAverageRuntimeMillis().get();
+
+    Assert.assertTrue(deployStatistics.get().getNumTasks() == 1);
+    Assert.assertTrue(deployStatistics.get().getAverageRuntimeMillis().get() > 1 && deployStatistics.get().getAverageRuntimeMillis().get() < TimeUnit.DAYS.toMillis(1));
+
+    configuration.setWarnIfScheduledJobIsRunningForAtLeastMillis(1);
+
+    SingularityTask secondTask = launchTask(request, firstDeploy, now - 500, 1, TaskState.TASK_RUNNING);
+
+    scheduledJobPoller.runActionOnPoll();
+
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+
+    statusUpdate(secondTask, TaskState.TASK_FINISHED);
+
+    deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId);
+
+    Assert.assertTrue(deployStatistics.get().getNumTasks() == 2);
+    Assert.assertTrue(deployStatistics.get().getAverageRuntimeMillis().get() > 1 && deployStatistics.get().getAverageRuntimeMillis().get() < oldAvg);
+
+    saveRequest(request.toBuilder().setScheduledExpectedRuntimeMillis(Optional.of(1L)).build());
+
+    SingularityTask thirdTask = launchTask(request, firstDeploy, now - 500, 1, TaskState.TASK_RUNNING);
+
+    scheduledJobPoller.runActionOnPoll();
+
+    Mockito.verify(mailer, Mockito.times(2)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+
+    taskManager.deleteTaskHistory(thirdTask.getTaskId());
+
+    scheduledJobPoller.runActionOnPoll();
+
+    Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
   }
 
 }

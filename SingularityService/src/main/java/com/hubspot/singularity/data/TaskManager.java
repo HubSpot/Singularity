@@ -149,6 +149,10 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getHistoryPath(taskId), DIRECTORY_KEY);
   }
 
+  private String getNotifiedOverduePath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), NOTIFIED_OVERDUE_TO_FINISH_KEY);
+  }
+
   private String getUpdatesPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), UPDATES_PATH);
   }
@@ -430,6 +434,14 @@ public class TaskManager extends CuratorAsyncManager {
     if (lbHistory.isPresent()) {
       loadBalancerUpdates.add(lbHistory.get());
     }
+  }
+
+  public boolean hasNotifiedOverdue(SingularityTaskId taskId) {
+    return checkExists(getNotifiedOverduePath(taskId)).isPresent();
+  }
+
+  public void saveNotifiedOverdue(SingularityTaskId taskId) {
+    save(getNotifiedOverduePath(taskId), Optional.<byte[]> absent());
   }
 
   public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {

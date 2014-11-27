@@ -8,6 +8,8 @@ public class SingularityDeployStatisticsBuilder {
   private final String requestId;
   private final String deployId;
 
+  private int numTasks;
+
   private int numSuccess;
   private int numFailures;
 
@@ -18,16 +20,19 @@ public class SingularityDeployStatisticsBuilder {
   private Optional<Long> lastFinishAt;
   private Optional<ExtendedTaskState> lastTaskState;
 
+  private Optional<Long> averageRuntimeMillis;
+
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
     this.deployId = deployId;
 
     this.lastFinishAt = Optional.absent();
     this.lastTaskState = Optional.absent();
+    this.averageRuntimeMillis = Optional.absent();
   }
 
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps, numTasks, averageRuntimeMillis);
   }
 
   public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
@@ -88,14 +93,35 @@ public class SingularityDeployStatisticsBuilder {
     return requestId;
   }
 
+  public int getNumTasks() {
+    return numTasks;
+  }
+
+  public SingularityDeployStatisticsBuilder setNumTasks(int numTasks) {
+    this.numTasks = numTasks;
+    return this;
+  }
+
+  public Optional<Long> getAverageRuntimeMillis() {
+    return averageRuntimeMillis;
+  }
+
+  public SingularityDeployStatisticsBuilder setAverageRuntimeMillis(Optional<Long> averageRuntimeMillis) {
+    this.averageRuntimeMillis = averageRuntimeMillis;
+    return this;
+  }
+
   public String getDeployId() {
     return deployId;
   }
 
   @Override
   public String toString() {
-    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries="
-        + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numTasks=" + numTasks + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures
+        + ", numSequentialRetries=" + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState="
+        + lastTaskState + ", averageRuntimeMillis=" + averageRuntimeMillis + "]";
   }
+
+
 
 }

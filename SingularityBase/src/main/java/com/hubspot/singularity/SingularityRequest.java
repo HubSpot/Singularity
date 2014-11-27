@@ -21,6 +21,7 @@ public class SingularityRequest {
   private final Optional<ScheduleType> scheduleType;
 
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
+  private final Optional<Long> scheduledExpectedRuntimeMillis;
 
   private final Optional<Boolean> daemon;
 
@@ -42,7 +43,7 @@ public class SingularityRequest {
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement) {
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -56,6 +57,7 @@ public class SingularityRequest {
     this.quartzSchedule = quartzSchedule;
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
+    this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -71,7 +73,8 @@ public class SingularityRequest {
     .setScheduleType(scheduleType)
     .setQuartzSchedule(quartzSchedule)
     .setRackAffinity(copyOfList(rackAffinity))
-    .setSlavePlacement(slavePlacement);
+    .setSlavePlacement(slavePlacement)
+    .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis);
   }
 
   public String getId() {
@@ -124,6 +127,10 @@ public class SingularityRequest {
 
   public Optional<SlavePlacement> getSlavePlacement() {
     return slavePlacement;
+  }
+
+  public Optional<Long> getScheduledExpectedRuntimeMillis() {
+    return scheduledExpectedRuntimeMillis;
   }
 
   @JsonIgnore
@@ -183,8 +190,8 @@ public class SingularityRequest {
   @Override
   public String toString() {
     return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType="
-        + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
-        + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", daemon="
+        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }
