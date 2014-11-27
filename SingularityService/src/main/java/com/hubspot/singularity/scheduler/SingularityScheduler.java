@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -182,7 +183,7 @@ public class SingularityScheduler {
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
-    final Collection<SingularityPendingRequest> pendingRequests = filterPendingRequestsByDeployAndPriority(requestManager.getPendingRequests());
+    final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(filterPendingRequestsByDeployAndPriority(requestManager.getPendingRequests()));
 
     if (pendingRequests.isEmpty()) {
       LOG.trace("Pending queue was empty");

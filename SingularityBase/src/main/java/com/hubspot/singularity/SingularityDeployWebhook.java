@@ -1,13 +1,10 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityDeployWebhook extends SingularityJsonObject {
+public class SingularityDeployWebhook {
 
   public enum DeployEventType {
     STARTING, FINISHED;
@@ -17,14 +14,6 @@ public class SingularityDeployWebhook extends SingularityJsonObject {
   private final Optional<SingularityDeploy> deploy;
   private final DeployEventType eventType;
   private final Optional<SingularityDeployResult> deployResult;
-
-  public static SingularityDeployWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeployWebhook.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityDeployWebhook(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("eventType") DeployEventType eventType, @JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult) {

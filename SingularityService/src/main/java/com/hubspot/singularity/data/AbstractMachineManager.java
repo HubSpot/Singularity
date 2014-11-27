@@ -8,7 +8,6 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -26,13 +25,11 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private static final String DECOMISSIONING_PATH = "decomissioning";
   private static final String DEAD_PATH = "dead";
 
-  private final ObjectMapper objectMapper;
   private final Transcoder<T> transcoder;
 
-  public AbstractMachineManager(CuratorFramework curator, long zkAsyncTimeout, ObjectMapper objectMapper, Transcoder<T> transcoder) {
+  public AbstractMachineManager(CuratorFramework curator, long zkAsyncTimeout, Transcoder<T> transcoder) {
     super(curator, zkAsyncTimeout);
 
-    this.objectMapper = objectMapper;
     this.transcoder = transcoder;
   }
 
@@ -131,9 +128,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public void markAsDead(String objectId) {
-    Optional<T> activeObject = getActiveObject(objectId);
+    Optional<T> objectHolder = getActiveObject(objectId);
 
-    if (!activeObject.isPresent()) {
+    if (!objectHolder.isPresent()) {
       LOG.warn(String.format("Marking an object %s as dead - but it wasn't active", objectId));
       return;
     }
@@ -142,10 +139,12 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       LOG.warn(String.format("Deleting active object at %s failed", getActivePath(objectId)));
     }
 
-    activeObject.get().setState(SingularityMachineState.DEAD);
-    activeObject.get().setDeadAt(Optional.of(System.currentTimeMillis()));
+    T object = objectHolder.get();
 
-    if (create(getDeadPath(objectId), Optional.of(activeObject.get().getAsBytes(objectMapper))) != SingularityCreateResult.CREATED) {
+    object.setState(SingularityMachineState.DEAD);
+    object.setDeadAt(Optional.of(System.currentTimeMillis()));
+
+    if (create(getDeadPath(objectId), Optional.of(transcoder.toBytes(object))) != SingularityCreateResult.CREATED) {
       LOG.warn(String.format("Creating dead object at %s failed", getDeadPath(objectId)));
     }
   }
@@ -153,7 +152,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private void mark(T object, String path, SingularityMachineState state) {
     object.setState(state);
 
-    final byte[] data = object.getAsBytes(objectMapper);
+    final byte[] data = transcoder.toBytes(object);
 
     try {
       curator.setData().forPath(path, data);
@@ -182,9 +181,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public DecomissionResult decomission(String objectId, Optional<String> user) {
-    Optional<T> object = getActiveObject(objectId);
+    Optional<T> objectHolder = getActiveObject(objectId);
 
-    if (!object.isPresent()) {
+    if (!objectHolder.isPresent()) {
       if (isDecomissioning(objectId)) {
         return DecomissionResult.FAILURE_ALREADY_DECOMISSIONING;
       } else if (isDead(objectId)) {
@@ -193,11 +192,13 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       return DecomissionResult.FAILURE_NOT_FOUND;
     }
 
-    object.get().setState(SingularityMachineState.DECOMISSIONING);
-    object.get().setDecomissioningAt(Optional.of(System.currentTimeMillis()));
-    object.get().setDecomissioningBy(user);
+    final T object = objectHolder.get();
 
-    create(getDecomissioningPath(objectId), Optional.of(object.get().getAsBytes(objectMapper)));
+    object.setState(SingularityMachineState.DECOMISSIONING);
+    object.setDecomissioningAt(Optional.of(System.currentTimeMillis()));
+    object.setDecomissioningBy(user);
+
+    create(getDecomissioningPath(objectId), Optional.of(transcoder.toBytes(object)));
 
     delete(getActivePath(objectId));
 
@@ -228,7 +229,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public SingularityCreateResult save(T object) {
-    return create(getActivePath(object.getId()), Optional.of(object.getAsBytes(objectMapper)));
+    return create(getActivePath(object.getId()), Optional.of(transcoder.toBytes(object)));
   }
 
 }

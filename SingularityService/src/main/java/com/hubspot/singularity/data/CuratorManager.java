@@ -162,7 +162,7 @@ public abstract class CuratorManager {
         return Optional.absent();
       }
 
-      return Optional.of(transcoder.transcode(data));
+      return Optional.of(transcoder.fromBytes(data));
     } catch (NoNodeException nne) {
       return Optional.absent();
     } catch (Throwable t) {
@@ -175,7 +175,7 @@ public abstract class CuratorManager {
   }
 
   protected Optional<String> getStringData(String path) {
-    return getData(path, StringTranscoder.STRING_TRANSCODER);
+    return getData(path, StringTranscoder.INSTANCE);
   }
 
 }

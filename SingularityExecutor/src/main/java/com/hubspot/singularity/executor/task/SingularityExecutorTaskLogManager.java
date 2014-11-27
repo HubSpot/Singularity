@@ -162,7 +162,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   }
 
   private SingularityTaskId getSingularityTaskId() {
-    return SingularityTaskId.fromString(taskDefinition.getTaskId());
+    return SingularityTaskId.valueOf(taskDefinition.getTaskId());
   }
 
   public Path getLogrotateConfPath() {
