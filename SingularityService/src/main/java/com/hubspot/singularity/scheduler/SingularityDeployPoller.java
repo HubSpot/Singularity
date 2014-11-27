@@ -1,19 +1,19 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.hubspot.singularity.mesos.SingularityMesosModule;
 
 @Singleton
 public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
@@ -23,10 +23,11 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
   private final SingularityDeployChecker deployChecker;
 
   @Inject
-  public SingularityDeployPoller(final LeaderLatch leaderLatch, final SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularityAbort abort) {
-      super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.LOCK);
+  SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
 
     this.deployChecker = deployChecker;
+    this.lockHolder = Optional.of(lock);
   }
 
   @Override
