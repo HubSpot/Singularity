@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
@@ -14,7 +16,7 @@ public class SingularityRequestWithState {
   public static Function<SingularityRequestWithState, String> REQUEST_STATE_TO_REQUEST_ID = new Function<SingularityRequestWithState, String>() {
 
     @Override
-    public String apply(SingularityRequestWithState input) {
+    public String apply(@Nonnull SingularityRequestWithState input) {
       return input.getRequest().getId();
     }
 

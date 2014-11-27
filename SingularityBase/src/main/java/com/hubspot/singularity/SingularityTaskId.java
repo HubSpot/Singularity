@@ -48,7 +48,7 @@ public class SingularityTaskId extends SingularityId {
   public static Function<SingularityTaskId, String> TASK_ID_TO_REQUEST_ID = new Function<SingularityTaskId, String>() {
 
     @Override
-    public String apply(SingularityTaskId input) {
+    public String apply(@Nonnull SingularityTaskId input) {
       return input.getRequestId();
     }
   };
