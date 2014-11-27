@@ -14,6 +14,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -107,6 +109,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Create or update a Singularity Request", response=SingularityRequestParent.class)
   @ApiResponses({
@@ -175,6 +179,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}/bounce")
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
@@ -194,6 +200,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}/run")
   @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate execution.", response=SingularityRequestParent.class)
   @ApiResponses({
@@ -228,6 +236,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}/pause")
   @ApiOperation(value="Pause a Singularity request, future tasks will not run until it is manually unpaused. API can optionally choose to kill existing tasks", response=SingularityRequestParent.class)
   @ApiResponses({
@@ -259,6 +269,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}/unpause")
   @ApiOperation(value="Unpause a Singularity Request, scheduling new tasks immediately", response=SingularityRequestParent.class)
   @ApiResponses({
@@ -286,6 +298,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @Path("/active")
   @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
@@ -312,6 +326,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @Path("/paused")
   @ApiOperation(value="Retrieve the list of paused requests", response=SingularityRequestParent.class, responseContainer="List")
@@ -320,6 +336,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @Path("/cooldown")
   @ApiOperation(value="Retrieve the list of requests in system cooldown", response=SingularityRequestParent.class, responseContainer="List")
@@ -328,6 +346,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @Path("/finished")
   @ApiOperation(value="Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)", response=SingularityRequestParent.class, responseContainer="List")
@@ -336,6 +356,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @ApiOperation(value="Retrieve the list of all requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getRequests() {
@@ -343,6 +365,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @Path("/queued/pending")
   @ApiOperation(value="Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
@@ -351,6 +375,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @PropertyFiltering
   @Path("/queued/cleanup")
   @ApiOperation(value="Retrieve the list of requests being cleaned up", response=SingularityRequestCleanup.class, responseContainer="List")
@@ -359,6 +385,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}")
   @ApiOperation(value="Retrieve a specific Request by ID", response=SingularityRequestParent.class)
   @ApiResponses({
@@ -373,6 +401,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @DELETE
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}")
   @ApiOperation(value="Delete a specific Request by ID and return the deleted Request", response=SingularityRequest.class)
   @ApiResponses({
@@ -389,6 +419,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @PUT
+  @Timed
+  @ExceptionMetered
   @Path("/request/{requestId}/instances")
   @ApiOperation(value="Scale the number of instances up or down for a specific Request", response=SingularityRequest.class)
   @ApiResponses({

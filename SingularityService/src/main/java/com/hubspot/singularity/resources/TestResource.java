@@ -6,10 +6,13 @@ import javax.ws.rs.PathParam;
 
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
+
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -44,6 +47,8 @@ public class TestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/scheduler/statusUpdate/{taskId}/{taskState}")
   @ApiOperation("Force an update for a specific task.")
   public void statusUpdate(@PathParam("taskId") String taskId, @PathParam("taskState") String taskState) {
@@ -56,6 +61,8 @@ public class TestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/leader")
   @ApiOperation("Make this instance of Singularity believe it's elected leader.")
   public void setLeader() {
@@ -65,8 +72,10 @@ public class TestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/notleader")
-  @ApiOperation("Make this instanceo of Singularity believe it's lost leadership.")
+  @ApiOperation("Make this instance of Singularity believe it's lost leadership.")
   public void setNotLeader() {
     checkAllowed();
 
@@ -74,6 +83,8 @@ public class TestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/stop")
   @ApiOperation("Stop the Mesos scheduler driver.")
   public void stop() throws Exception {
@@ -83,6 +94,8 @@ public class TestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/abort")
   @ApiOperation("Abort the Mesos scheduler driver.")
   public void abort() {
@@ -92,6 +105,8 @@ public class TestResource {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/start")
   @ApiOperation("Start the Mesos scheduler driver.")
   public void start() throws Exception {
@@ -99,5 +114,4 @@ public class TestResource {
 
     managed.start();
   }
-
 }

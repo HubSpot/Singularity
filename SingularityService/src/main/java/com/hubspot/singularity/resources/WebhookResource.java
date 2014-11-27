@@ -10,6 +10,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -37,18 +39,24 @@ public class WebhookResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @ApiOperation("Retrieve a list of active webhooks.")
   public List<SingularityWebhook> getActiveWebhooks() {
     return webhookManager.getActiveWebhooks();
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @ApiOperation("Add a new webhook.")
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
     return webhookManager.addWebhook(webhook);
   }
 
   @DELETE
+  @Timed
+  @ExceptionMetered
   @Path("/{webhookId}")
   @ApiOperation("Delete a specific webhook.")
   public SingularityDeleteResult deleteWebhook(@PathParam("webhookId") String webhookId) {
@@ -56,6 +64,8 @@ public class WebhookResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/deploy/{webhookId}")
   @ApiOperation("Retrieve a list of queued deploy updates for a specific webhook.")
   public List<SingularityDeployWebhook> getQueuedDeployUpdates(@PathParam("webhookId") String webhookId) {
@@ -63,6 +73,8 @@ public class WebhookResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/request/{webhookId}")
   @ApiOperation("Retrieve a list of queued request updates for a specific webhook.")
   public List<SingularityRequestHistory> getQueuedRequestUpdates(@PathParam("webhookId") String webhookId) {
@@ -70,10 +82,11 @@ public class WebhookResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/task/{webhookId}")
   @ApiOperation("Retrieve a list of queued task updates for a specific webhook.")
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@PathParam("webhookId") String webhookId) {
     return webhookManager.getQueuedTaskUpdatesForHook(JavaUtils.urlEncode(webhookId));
   }
-
 }

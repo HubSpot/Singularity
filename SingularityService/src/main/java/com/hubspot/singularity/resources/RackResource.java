@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRack;
@@ -40,6 +42,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/active")
   @ApiOperation("Retrieve the list of active racks. A rack is active if it has one or more active slaves associated with it.")
   public List<SingularityRack> getRacks() {
@@ -47,6 +51,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/dead")
   @ApiOperation("Retrieve the list of dead racks. A rack is dead if it has zero active slaves.")
   public List<SingularityRack> getDead() {
@@ -54,6 +60,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/decomissioning")
   @ApiOperation("Retrieve the list of decommissioning racks.")
   public List<SingularityRack> getDecomissioning() {
@@ -61,6 +69,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @DELETE
+  @Timed
+  @ExceptionMetered
   @Path("/rack/{rackId}/dead")
   @ApiOperation("Remove a dead rack.")
   public void removeDeadRack(@ApiParam("Dead rack ID.") @PathParam("rackId") String rackId) {
@@ -68,6 +78,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @DELETE
+  @Timed
+  @ExceptionMetered
   @Path("/rack/{rackId}/decomissioning")
   @ApiOperation("Undo the decomission operation on a specific decommissioning rack.")
   public void removeDecomissioningRack(@ApiParam("Decommissioned rack ID.") @PathParam("rackId") String rackId) {
@@ -75,6 +87,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @POST
+  @Timed
+  @ExceptionMetered
   @Path("/rack/{rackId}/decomission")
   @ApiOperation("Decomission a specific active rack.")
   public void decomissionRack(@ApiParam("Active rack ID.") @PathParam("rackId") String rackId,

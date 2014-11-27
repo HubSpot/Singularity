@@ -12,6 +12,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -81,6 +83,8 @@ public class SandboxResource extends AbstractHistoryResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/{taskId}/browse")
   @ApiOperation("Retrieve information about a specific task's sandbox.")
   public SingularitySandbox browse(@ApiParam("The task ID to browse") @PathParam("taskId") String taskId,
@@ -112,6 +116,8 @@ public class SandboxResource extends AbstractHistoryResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   @Path("/{taskId}/read")
   @ApiOperation("Retrieve part of the contents of a file in a specific task's sandbox.")
   public MesosFileChunkObject read(@ApiParam("The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
