@@ -29,13 +29,8 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.SingularityDeployKeyTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityDeployMarkerTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityDeployStateTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityDeployStatisticsTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityDeployTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityPendingDeployTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestDeployStateTranscoder;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
@@ -43,13 +38,14 @@ public class DeployManager extends CuratorAsyncManager {
   private static final Logger LOG = LoggerFactory.getLogger(DeployManager.class);
 
   private final WebhookManager webhookManager;
-  private final SingularityDeployTranscoder deployTranscoder;
-  private final SingularityPendingDeployTranscoder pendingDeployTranscoder;
-  private final SingularityDeployMarkerTranscoder deployMarkerTranscoder;
-  private final SingularityRequestDeployStateTranscoder requestDeployStateTranscoder;
-  private final SingularityDeployStatisticsTranscoder deployStatisticsTranscoder;
-  private final SingularityDeployStateTranscoder deployStateTranscoder;
-  private final SingularityDeployKeyTranscoder deployKeyTranscoder;
+  private final Transcoder<SingularityDeploy> deployTranscoder;
+  private final Transcoder<SingularityPendingDeploy> pendingDeployTranscoder;
+  private final Transcoder<SingularityDeployMarker> deployMarkerTranscoder;
+  private final Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder;
+  private final Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder;
+  private final Transcoder<SingularityDeployResult> deployStateTranscoder;
+
+  private final IdTranscoder<SingularityDeployKey> deployKeyTranscoder;
 
   private static final String DEPLOY_ROOT = "/deploys";
 
@@ -67,9 +63,9 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
   @Inject
-  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityDeployTranscoder deployTranscoder, SingularityRequestDeployStateTranscoder requestDeployStateTranscoder,
-      SingularityPendingDeployTranscoder pendingDeployTranscoder, SingularityDeployMarkerTranscoder deployMarkerTranscoder, SingularityDeployStatisticsTranscoder deployStatisticsTranscoder, SingularityDeployStateTranscoder deployStateTranscoder,
-      SingularityDeployKeyTranscoder deployKeyTranscoder) {
+  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, Transcoder<SingularityDeploy> deployTranscoder,
+      Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
+      Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.webhookManager = webhookManager;
@@ -186,7 +182,7 @@ public class DeployManager extends CuratorAsyncManager {
       LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));
     }
 
-    webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult> absent()));
+    webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>absent()));
 
     create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
 
@@ -219,7 +215,7 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
 
     if (!loadEntireHistory) {
-      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics >absent()));
+      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeployStatistics>absent()));
     }
 
     Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
@@ -242,7 +238,7 @@ public class DeployManager extends CuratorAsyncManager {
   public Optional<String> getInUseDeployId(String requestId) {
     Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
 
-    if (!deployState.isPresent() || (!deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent())) {
+    if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent()) {
       return Optional.absent();
     }
 
@@ -314,5 +310,4 @@ public class DeployManager extends CuratorAsyncManager {
   public Optional<SingularityDeployResult> getDeployResult(String requestId, String deployId) {
     return getData(getDeployResultPath(requestId, deployId), deployStateTranscoder);
   }
-
 }

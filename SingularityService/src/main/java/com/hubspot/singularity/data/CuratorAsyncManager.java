@@ -20,6 +20,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityId;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.data.transcoders.Transcoders;
 
 public abstract class CuratorAsyncManager extends CuratorManager {
 
@@ -70,7 +71,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           return;
         }
 
-        objects.add(transcoder.transcode(event.getData()));
+        objects.add(transcoder.fromBytes(event.getData()));
 
         latch.countDown();
       }
@@ -118,7 +119,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           return;
         }
 
-        objects.addAll(Lists.transform(event.getChildren(), idTranscoder));
+        objects.addAll(Lists.transform(event.getChildren(), Transcoders.getFromStringFunction(idTranscoder)));
 
         latch.countDown();
       }
@@ -146,7 +147,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   }
 
   protected <T extends SingularityId> List<T> getChildrenAsIds(final String rootPath, final IdTranscoder<T> idTranscoder) {
-    return Lists.transform(getChildren(rootPath), idTranscoder);
+    return Lists.transform(getChildren(rootPath), Transcoders.getFromStringFunction(idTranscoder));
   }
 
   private <T extends SingularityId> List<T> existsThrows(final String pathNameforLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) throws Exception {
@@ -168,7 +169,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           return;
         }
 
-        objects.add(idTranscoder.apply(ZKPaths.getNodeFromPath(event.getPath())));
+        objects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
 
         latch.countDown();
       }
@@ -186,7 +187,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     return objects;
   }
-
 
   protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
     try {

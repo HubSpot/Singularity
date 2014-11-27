@@ -6,6 +6,9 @@ import org.junit.After;
 import org.junit.Before;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 
 public class SingularityCuratorTestBase {
@@ -14,6 +17,9 @@ public class SingularityCuratorTestBase {
   protected CuratorFramework cf;
   @Inject
   protected TestingServer ts;
+  @Inject
+  @Named(MesosClient.HTTP_CLIENT_NAME)
+  private HttpClient httpClient;
 
   private SingularityTestModule singularityTestModule;
 
@@ -27,7 +33,6 @@ public class SingularityCuratorTestBase {
 
   @After
   public final void curatorTeardown() throws Exception {
-
     singularityTestModule.stop();
 
     if (cf != null) {
@@ -37,6 +42,11 @@ public class SingularityCuratorTestBase {
     if (ts != null) {
       ts.close();
     }
+
+    if (httpClient != null) {
+      httpClient.close();
+    }
   }
+
 
 }

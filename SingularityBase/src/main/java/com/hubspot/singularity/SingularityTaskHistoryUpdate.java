@@ -1,12 +1,9 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -19,25 +16,17 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   private final ExtendedTaskState taskState;
   private final Optional<String> statusMessage;
 
-  public static SingularityTaskHistoryUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityTaskHistoryUpdate.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
-
   public enum SimplifiedTaskState {
     UNKNOWN, WAITING, RUNNING, DONE
   }
 
   public static Optional<SingularityTaskHistoryUpdate> getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
-    return Optional.fromNullable(Iterables.find(updates, new Predicate<SingularityTaskHistoryUpdate>() {
+    return Iterables.tryFind(updates, new Predicate<SingularityTaskHistoryUpdate>() {
       @Override
       public boolean apply(@Nonnull SingularityTaskHistoryUpdate input) {
         return input.getTaskState() == taskState;
       }
-    }));
+    });
   }
 
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {

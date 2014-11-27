@@ -1,39 +1,30 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityRequestCleanup extends SingularityJsonObject {
+public class SingularityRequestCleanup {
 
   public enum RequestCleanupType {
-    DELETING, PAUSING
+    DELETING, PAUSING, BOUNCE;
   }
 
   private final Optional<String> user;
   private final RequestCleanupType cleanupType;
   private final Optional<Boolean> killTasks;
+  private final Optional<String> deployId;
   private final long timestamp;
   private final String requestId;
 
-  public static SingularityRequestCleanup fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequestCleanup.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
-
   @JsonCreator
   public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("killTasks") Optional<Boolean> killTasks, @JsonProperty("requestId") String requestId) {
+      @JsonProperty("killTasks") Optional<Boolean> killTasks, @JsonProperty("requestId") String requestId, @JsonProperty("deployId") Optional<String> deployId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.requestId = requestId;
+    this.deployId = deployId;
     this.killTasks = killTasks;
   }
 
@@ -57,9 +48,14 @@ public class SingularityRequestCleanup extends SingularityJsonObject {
     return timestamp;
   }
 
+  public Optional<String> getDeployId() {
+    return deployId;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", killTasks=" + killTasks + ", timestamp=" + timestamp + ", requestId=" + requestId + "]";
+    return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", killTasks=" + killTasks + ", deployId=" + deployId + ", timestamp=" + timestamp + ", requestId=" + requestId
+        + "]";
   }
 
 }

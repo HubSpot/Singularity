@@ -4,14 +4,7 @@ import java.util.Objects;
 
 public abstract class SingularityId {
 
-  private String id;
-
-  public String getId() {
-    if (this.id == null) {
-      this.id = toString();
-    }
-    return this.id;
-  }
+  public abstract String getId();
 
   @Override
   public int hashCode() {
@@ -32,5 +25,4 @@ public abstract class SingularityId {
     SingularityId other = (SingularityId) obj;
     return Objects.equals(getId(), other.getId());
   }
-
 }

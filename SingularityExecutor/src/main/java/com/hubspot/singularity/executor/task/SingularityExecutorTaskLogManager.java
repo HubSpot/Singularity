@@ -16,8 +16,8 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
-import com.hubspot.singularity.s3.base.SimpleProcessManager;
 
 public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
 
@@ -69,6 +69,13 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
       return;
     }
 
+    final Path tailOfLogPath = taskDefinition.getTaskDirectoryPath().resolve(configuration.getServiceFinishedTailLog());
+
+    if (Files.exists(tailOfLogPath)) {
+      log.debug("{} already existed, skipping tail", tailOfLogPath);
+      return;
+    }
+
     final List<String> cmd = ImmutableList.of(
         "tail",
         "-n",
@@ -76,7 +83,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         taskDefinition.getServiceLogOut());
 
     try {
-      super.runCommand(cmd, Redirect.to(taskDefinition.getTaskDirectoryPath().resolve(configuration.getServiceFinishedTailLog()).toFile()));
+      super.runCommand(cmd, Redirect.to(tailOfLogPath.toFile()));
     } catch (Throwable t) {
       log.error("Failed saving tail of log {} to {}", taskDefinition.getServiceLogOut(), configuration.getServiceFinishedTailLog(), t);
     }
@@ -155,7 +162,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   }
 
   private SingularityTaskId getSingularityTaskId() {
-    return SingularityTaskId.fromString(taskDefinition.getTaskId());
+    return SingularityTaskId.valueOf(taskDefinition.getTaskId());
   }
 
   public Path getLogrotateConfPath() {

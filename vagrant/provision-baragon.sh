@@ -93,8 +93,7 @@ templates:
       {{/if}}
 
       location {{{service.options.nginxLocationModifier}}} {{{service.serviceBasePath}}} {
-          proxy_pass_header Server;
-          proxy_redirect off;
+          proxy_set_header Host vagrant-singularity;
           proxy_pass http://baragon_{{{service.serviceId}}};
           proxy_connect_timeout {{firstOf service.options.nginxProxyConnectTimeout 55}};
           proxy_read_timeout {{firstOf service.options.nginxProxyReadTimeout 60}};

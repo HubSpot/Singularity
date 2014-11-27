@@ -1,17 +1,15 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
-public class SingularityRequestWithState extends SingularityJsonObject {
+public class SingularityRequestWithState {
 
   private final SingularityRequest request;
   private final RequestState state;
+  private final long timestamp;
 
   public static Function<SingularityRequestWithState, String> REQUEST_STATE_TO_REQUEST_ID = new Function<SingularityRequestWithState, String>() {
 
@@ -21,14 +19,6 @@ public class SingularityRequestWithState extends SingularityJsonObject {
     }
 
   };
-
-  public static SingularityRequestWithState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequestWithState.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   public static String getRequestState(Optional<SingularityRequestWithState> maybeRequestWithState) {
     if (maybeRequestWithState.isPresent()) {
@@ -42,9 +32,14 @@ public class SingularityRequestWithState extends SingularityJsonObject {
   }
 
   @JsonCreator
-  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state) {
+  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state, @JsonProperty("timestamp") long timestamp) {
     this.request = request;
     this.state = state;
+    this.timestamp = timestamp;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
   }
 
   public RequestState getState() {
@@ -57,7 +52,7 @@ public class SingularityRequestWithState extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityRequestWithState [request=" + request + ", state=" + state + "]";
+    return "SingularityRequestWithState [request=" + request + ", state=" + state + ", timestamp=" + timestamp + "]";
   }
 
 }

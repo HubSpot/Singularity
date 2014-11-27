@@ -33,10 +33,17 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(SingularityService.API_BASE_PATH + "/deploys")
+@Path(DeployResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description="Manages Singularity Deploys for existing requests", value=DeployResource.PATH, position=2)
 public class DeployResource extends AbstractRequestResource {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
   private final DeployManager deployManager;
   private final RequestManager requestManager;
@@ -54,13 +61,19 @@ public class DeployResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/pending")
+  @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
   public List<SingularityPendingDeploy> getPendingDeploys() {
     return deployManager.getPendingDeploys();
   }
 
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent deploy(SingularityDeployRequest deployRequest) {
+  @ApiOperation(value="Start a new deployment for a Request", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=400, message="Deploy object is invalid"),
+    @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
+  })
+  public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
     if (deployRequest.getDeploy() == null || deployRequest.getDeploy().getRequestId() == null) {
       throw WebExceptions.badRequest("DeployRequest must have a deploy object with a non-null requestId");
     }
@@ -76,7 +89,9 @@ public class DeployResource extends AbstractRequestResource {
 
     validator.checkDeploy(request, deployRequest.getDeploy());
 
-    SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deployRequest.getDeploy().getId(), System.currentTimeMillis(), deployRequest.getUser());
+    final long now = System.currentTimeMillis();
+
+    SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deployRequest.getDeploy().getId(), now, deployRequest.getUser());
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING);
 
     if (deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED) {
@@ -86,11 +101,11 @@ public class DeployResource extends AbstractRequestResource {
     deployManager.saveDeploy(request, deployMarker, deployRequest.getDeploy());
 
     if (requestWithState.getState() == RequestState.PAUSED) {
-      requestManager.deployToUnpause(request, deployRequest.getUser());
+      requestManager.deployToUnpause(request, now, deployRequest.getUser());
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), System.currentTimeMillis(), Optional.<String> absent(), deployRequest.getUser(), PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, Optional.<String> absent(), deployRequest.getUser(), PendingType.NEW_DEPLOY));
     }
 
     return fillEntireRequest(requestWithState);
@@ -98,7 +113,14 @@ public class DeployResource extends AbstractRequestResource {
 
   @DELETE
   @Path("/deploy/{deployId}/request/{requestId}")
-  public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId, @QueryParam("user") Optional<String> user) {
+  @ApiOperation(value="Cancel a pending deployment (best effort - the deploy may still succeed or fail)", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=400, message="Deploy is not in the pending state pending or is not not present"),
+  })
+  public SingularityRequestParent cancelDeploy(
+      @ApiParam(required=true,  value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
+      @ApiParam(required=true,  value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId,
+      @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
@@ -111,5 +133,4 @@ public class DeployResource extends AbstractRequestResource {
 
     return fillEntireRequest(requestWithState);
   }
-
 }

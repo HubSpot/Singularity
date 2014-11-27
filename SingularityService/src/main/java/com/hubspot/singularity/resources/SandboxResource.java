@@ -32,11 +32,17 @@ import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(SingularityService.API_BASE_PATH + "/sandbox")
+@Path(SandboxResource.PATH)
 @Produces({MediaType.APPLICATION_JSON})
+@Api(description="Provides a proxy to Mesos sandboxes.", value=SandboxResource.PATH)
 public class SandboxResource extends AbstractHistoryResource {
+  public static final String PATH = SingularityService.API_BASE_PATH + "/sandbox";
 
   private final SandboxManager sandboxManager;
   private final SingularityLogSupport logSupport;
@@ -44,8 +50,8 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @Inject
   public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport,
-      SingularityConfiguration configuration) {
-    super(historyManager, taskManager, deployManager);
+      SingularityConfiguration configuration, final IdTranscoder<SingularityTaskId> singularityTaskIdTranscoder) {
+    super(historyManager, taskManager, deployManager, singularityTaskIdTranscoder);
 
     this.configuration = configuration;
     this.sandboxManager = sandboxManager;
@@ -77,7 +83,9 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/browse")
-  public SingularitySandbox browse(@PathParam("taskId") String taskId, @QueryParam("path") String path) {
+  @ApiOperation("Retrieve information about a specific task's sandbox.")
+  public SingularitySandbox browse(@ApiParam("The task ID to browse") @PathParam("taskId") String taskId,
+                                   @ApiParam("The path to browse from") @QueryParam("path") String path) {
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId);
 
@@ -106,8 +114,12 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String path, @QueryParam("grep") Optional<String> grep, @QueryParam("offset") Optional<Long> offset,
-      @QueryParam("length") Optional<Long> length) {
+  @ApiOperation("Retrieve part of the contents of a file in a specific task's sandbox.")
+  public MesosFileChunkObject read(@ApiParam("The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
+                                   @ApiParam("The path to the file to be read") @QueryParam("path") String path,
+                                   @ApiParam("Optional string to grep for") @QueryParam("grep") Optional<String> grep,
+                                   @ApiParam("Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
+                                   @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
     final SingularityTaskHistory history = checkHistory(taskId);
 
     final String slaveHostname = history.getTask().getOffer().getHostname();

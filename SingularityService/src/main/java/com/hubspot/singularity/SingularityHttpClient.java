@@ -6,8 +6,8 @@ import javax.inject.Inject;
 
 import com.ning.http.client.AsyncHttpClient;
 
-public class SingularityHttpClient extends AsyncHttpClient implements Managed
-{
+public class SingularityHttpClient extends AsyncHttpClient implements Managed {
+
   @Inject
   public SingularityHttpClient() {}
 
@@ -18,4 +18,5 @@ public class SingularityHttpClient extends AsyncHttpClient implements Managed
   public void stop() {
     close();
   }
+
 }

@@ -20,6 +20,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfiguration;
+import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 
 public class SingularityOOMKiller {
 
@@ -92,9 +93,14 @@ public class SingularityOOMKiller {
       double useRatio = getOverageRatio(oomTaskMonitor);
 
       if (useRatio > oomKillerConfiguration.getKillProcessDirectlyThresholdRatio()) {
-        for (String pid : cgroupProcLocator.getPids(executor.getContainer())) {
-          processKiller.killNow(pid);
-          metrics.getOomHardKillsMeter().mark();
+        try {
+          for (String pid : cgroupProcLocator.getPids(executor.getContainer())) {
+            processKiller.killNow(pid);
+            metrics.getOomHardKillsMeter().mark();
+          }
+        } catch (InterruptedException | ProcessFailedException e) {
+          LOG.warn("Couldn't find pids for {}", executor.getContainer(), e);
+          continue;
         }
       } else {
         for (MesosTaskObject task : executor.getCompletedTasks()) {

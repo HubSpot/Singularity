@@ -44,7 +44,7 @@ public class SingularitySmtpSender implements Managed {
     this.exceptionNotifier = exceptionNotifier;
 
     if (maybeSmtpConfiguration.isPresent()) {
-      this.mailSenderExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailer-%d"));;
+      this.mailSenderExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularitySMTPSender-%d"));;
     } else {
       this.mailSenderExecutorService = Optional.absent();
     }

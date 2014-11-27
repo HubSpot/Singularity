@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorData;
@@ -34,6 +35,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -75,7 +77,7 @@ class SingularityMesosTaskBuilder {
 
     final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
     if (containerInfo.isPresent()) {
-      prepareContainerInfo(bldr, containerInfo.get());
+      prepareContainerInfo(taskId, bldr, containerInfo.get(), ports);
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
@@ -113,6 +115,11 @@ class SingularityMesosTaskBuilder {
         .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
         .build());
 
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("ESTIMATED_INSTANCE_COUNT")
+        .setValue(Integer.toString(task.getRequest().getInstancesSafe()))
+        .build());
+
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
       envBldr.addVariables(Variable.newBuilder()
           .setName(envEntry.getKey())
@@ -139,13 +146,63 @@ class SingularityMesosTaskBuilder {
     commandBuilder.setEnvironment(envBldr.build());
   }
 
-  private void prepareContainerInfo(final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo) {
+  private Optional<DockerInfo.PortMapping> buildPortMapping(final SingularityDockerPortMapping singularityDockerPortMapping, long[] ports) {
+    final int containerPort;
+    switch (singularityDockerPortMapping.getContainerPortType()) {
+      case LITERAL:
+        containerPort = singularityDockerPortMapping.getContainerPort();
+        break;
+      case FROM_OFFER:
+        containerPort = Ints.checkedCast(ports[singularityDockerPortMapping.getContainerPort()]);
+        break;
+      default:
+        return Optional.absent();
+    }
+
+    final int hostPort;
+    switch (singularityDockerPortMapping.getHostPortType()) {
+      case LITERAL:
+        hostPort = singularityDockerPortMapping.getHostPort();
+        break;
+      case FROM_OFFER:
+        hostPort = Ints.checkedCast(ports[singularityDockerPortMapping.getHostPort()]);
+        break;
+      default:
+        return Optional.absent();
+    }
+
+    return Optional.of(DockerInfo.PortMapping.newBuilder()
+            .setContainerPort(containerPort)
+            .setHostPort(hostPort)
+            .setProtocol(singularityDockerPortMapping.getProtocol())
+            .build());
+  }
+
+  private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
     containerBuilder.setType(containerInfo.getType());
 
     final Optional<SingularityDockerInfo> dockerInfo = containerInfo.getDocker();
+
     if (dockerInfo.isPresent()) {
-      containerBuilder.setDocker(DockerInfo.newBuilder().setImage(dockerInfo.get().getImage()));
+      final DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder();
+      containerBuilder.setDocker(dockerInfoBuilder.setImage(dockerInfo.get().getImage()));
+
+      if (ports.isPresent() && !dockerInfo.get().getPortMappings().isEmpty()) {
+        for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
+          final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports.get());
+
+          if (maybePortMapping.isPresent()) {
+            dockerInfoBuilder.addPortMappings(maybePortMapping.get());
+          }
+        }
+
+        if (dockerInfo.get().getNetwork().isPresent()) {
+          dockerInfoBuilder.setNetwork(dockerInfo.get().getNetwork().get());
+        }
+      }
+
+      containerBuilder.setDocker(dockerInfoBuilder);
     }
 
     for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {

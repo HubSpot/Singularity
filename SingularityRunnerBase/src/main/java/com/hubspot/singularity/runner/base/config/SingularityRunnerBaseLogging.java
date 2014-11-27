@@ -43,7 +43,7 @@ public class SingularityRunnerBaseLogging {
   }
 
   public void printProperties(Logger rootLogger) {
-    rootLogger.debug("Loaded {} properties", properties.size());
+    rootLogger.info("Loaded {} properties", properties.size());
 
     List<String> strKeys = Lists.newArrayListWithCapacity(properties.size());
     for (Object object : properties.keySet()) {
@@ -52,7 +52,7 @@ public class SingularityRunnerBaseLogging {
     Collections.sort(strKeys);
 
     for (String key : strKeys) {
-      rootLogger.debug("  {} -> {}", key, properties.get(key));
+      rootLogger.info("  {} -> {}", key, properties.get(key));
     }
   }
 

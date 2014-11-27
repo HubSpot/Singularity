@@ -42,9 +42,6 @@ public class SingularityConfiguration extends Configuration {
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   @NotNull
-  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
-
-  @NotNull
   private long checkSchedulerEverySeconds = 5;
 
   @NotNull
@@ -65,10 +62,13 @@ public class SingularityConfiguration extends Configuration {
   private long considerTaskHealthyAfterRunningForSeconds = 5;
 
   @NotNull
-  private int cooldownAfterFailures = 5;
+  private int cooldownAfterFailures = 3;
 
   @NotNull
-  private long cooldownExpiresAfterMinutes = 30;
+  private double cooldownAfterPctOfInstancesFail = 1.0;
+
+  @NotNull
+  private long cooldownExpiresAfterMinutes = 15;
 
   @NotNull
   private long cooldownMinScheduleSeconds = 120;
@@ -146,6 +146,9 @@ public class SingularityConfiguration extends Configuration {
   private boolean sandboxDefaultsToTaskId = false;
 
   @NotNull
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+
+  @NotNull
   private long saveStateEverySeconds = 60;
 
   @JsonProperty("sentry")
@@ -201,10 +204,6 @@ public class SingularityConfiguration extends Configuration {
     return checkReconcileWhenRunningEveryMillis;
   }
 
-  public long getCheckScheduledJobsEveryMillis() {
-    return checkScheduledJobsEveryMillis;
-  }
-
   public long getCheckSchedulerEverySeconds() {
     return checkSchedulerEverySeconds;
   }
@@ -231,6 +230,10 @@ public class SingularityConfiguration extends Configuration {
 
   public int getCooldownAfterFailures() {
     return cooldownAfterFailures;
+  }
+
+  public double getCooldownAfterPctOfInstancesFail() {
+    return cooldownAfterPctOfInstancesFail;
   }
 
   public long getCooldownExpiresAfterMinutes() {
@@ -329,6 +332,10 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(s3Configuration);
   }
 
+  public long getSandboxHttpTimeoutMillis() {
+    return sandboxHttpTimeoutMillis;
+  }
+
   public long getSaveStateEverySeconds() {
     return saveStateEverySeconds;
   }
@@ -417,10 +424,6 @@ public class SingularityConfiguration extends Configuration {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
-    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
-  }
-
   public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
     this.checkSchedulerEverySeconds = checkSchedulerEverySeconds;
   }
@@ -451,6 +454,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCooldownAfterFailures(int cooldownAfterFailures) {
     this.cooldownAfterFailures = cooldownAfterFailures;
+  }
+
+  public void setCooldownAfterPctOfInstancesFail(double cooldownAfterPctOfInstancesFail) {
+    this.cooldownAfterPctOfInstancesFail = cooldownAfterPctOfInstancesFail;
   }
 
   public void setCooldownExpiresAfterMinutes(long cooldownExpiresAfterMinutes) {
@@ -561,6 +568,10 @@ public class SingularityConfiguration extends Configuration {
     this.sandboxDefaultsToTaskId = sandboxDefaultsToTaskId;
   }
 
+  public void setSandboxHttpTimeoutMillis(long sandboxHttpTimeoutMillis) {
+    this.sandboxHttpTimeoutMillis = sandboxHttpTimeoutMillis;
+  }
+
   public void setSaveStateEverySeconds(long saveStateEverySeconds) {
     this.saveStateEverySeconds = saveStateEverySeconds;
   }
@@ -588,6 +599,7 @@ public class SingularityConfiguration extends Configuration {
   public void setWarnIfScheduledJobIsRunningPastNextRunPct(float warnIfScheduledJobIsRunningPastNextRunPct) {
     this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
+
 
   public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
     this.zookeeperAsyncTimeout = zookeeperAsyncTimeout;

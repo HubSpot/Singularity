@@ -58,7 +58,7 @@ public class SingularityCooldownChecker {
 
   private boolean checkCooldown(SingularityRequestWithState cooldownRequest) {
     if (shouldExitCooldown(cooldownRequest)) {
-      requestManager.exitCooldown(cooldownRequest.getRequest());
+      requestManager.exitCooldown(cooldownRequest.getRequest(), System.currentTimeMillis());
       return true;
     }
 
@@ -87,7 +87,7 @@ public class SingularityCooldownChecker {
       return true;
     }
 
-    if (cooldown.hasCooldownExpired(maybeDeployStatistics.get(), Optional.<Long> absent())) {
+    if (cooldown.hasCooldownExpired(cooldownRequest.getRequest(), maybeDeployStatistics.get(), Optional.<Integer> absent(), Optional.<Long> absent())) {
       return true;
     }
 

@@ -63,12 +63,15 @@ ui:
   baseUrl: http://vagrant-singularity:7099/singularity
 
 loadBalancerUri: http://vagrant-singularity:8080/baragon/v2/request
+
+enableCorsFilter: true
+
 EOF
 }
 
 function build_singularity {
   cd /singularity
-  sudo -u vagrant HOME=/home/vagrant mvn clean package
+  sudo -u vagrant HOME=/home/vagrant mvn clean package -DskipTests
 }
 
 function install_singularity {

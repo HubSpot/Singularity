@@ -100,7 +100,7 @@ public class SingularityTaskId extends SingularityId {
     return instanceNo;
   }
 
-  public static SingularityTaskId fromString(String string) throws InvalidSingularityTaskIdException {
+  public static SingularityTaskId valueOf(String string) throws InvalidSingularityTaskIdException {
     String[] splits = null;
 
     try {
@@ -124,8 +124,12 @@ public class SingularityTaskId extends SingularityId {
   }
 
   @Override
-  public String toString() {
+  public String getId() {
     return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getStartedAt(), getInstanceNo(), getHost(), getRackId());
   }
 
+  @Override
+  public String toString() {
+    return getId();
+  }
 }
