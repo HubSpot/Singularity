@@ -152,6 +152,11 @@ public class SingularityValidator {
       check(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
 
+
+    if (request.getScheduleImmediately().isPresent()) {
+      check(request.isOneOff(), "non-one-off requests cannot use the scheduleImmediately flag");
+    }
+
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 

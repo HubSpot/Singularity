@@ -56,6 +56,7 @@ class NewRequest extends FormBaseView
             requestObject.numRetriesOnFailure = retries if retries
         else if type is 'on-demand'
             requestObject.daemon = false
+            requestObject.scheduleImmediately = @$('#schedule-immediately-on-demand').is ':checked'
 
         return if @invalid
 

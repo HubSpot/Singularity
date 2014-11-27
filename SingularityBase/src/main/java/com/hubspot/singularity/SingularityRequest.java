@@ -23,6 +23,7 @@ public class SingularityRequest extends SingularityJsonObject {
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
 
   private final Optional<Boolean> daemon;
+  private final Optional<Boolean> scheduleImmediately;
 
   private final Optional<Integer> instances;
 
@@ -50,7 +51,7 @@ public class SingularityRequest extends SingularityJsonObject {
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement) {
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduleImmediately") Optional<Boolean> scheduleImmediately) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -64,6 +65,7 @@ public class SingularityRequest extends SingularityJsonObject {
     this.quartzSchedule = quartzSchedule;
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
+    this.scheduleImmediately = scheduleImmediately;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -79,7 +81,8 @@ public class SingularityRequest extends SingularityJsonObject {
     .setScheduleType(scheduleType)
     .setQuartzSchedule(quartzSchedule)
     .setRackAffinity(copyOfList(rackAffinity))
-    .setSlavePlacement(slavePlacement);
+    .setSlavePlacement(slavePlacement)
+    .setScheduleImmediately(scheduleImmediately);
   }
 
   public String getId() {
@@ -134,6 +137,10 @@ public class SingularityRequest extends SingularityJsonObject {
     return slavePlacement;
   }
 
+  public Optional<Boolean> getScheduleImmediately() {
+    return scheduleImmediately;
+  }
+
   @JsonIgnore
   public int getInstancesSafe() {
     return getInstances().or(1);
@@ -170,7 +177,7 @@ public class SingularityRequest extends SingularityJsonObject {
 
   @JsonIgnore
   public boolean isDeployable() {
-    return !isScheduled() && !isOneOff();
+    return !isScheduled() && (!isOneOff() || isScheduleImmediately());
   }
 
   @JsonIgnore
@@ -188,11 +195,16 @@ public class SingularityRequest extends SingularityJsonObject {
     return scheduleType.or(ScheduleType.CRON);
   }
 
+  @JsonIgnore
+  public boolean isScheduleImmediately() {
+    return scheduleImmediately.or(Boolean.FALSE);
+  }
+
   @Override
   public String toString() {
     return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType="
         + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
-        + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + ", scheduleImmediately=" + scheduleImmediately + "]";
   }
 
 }

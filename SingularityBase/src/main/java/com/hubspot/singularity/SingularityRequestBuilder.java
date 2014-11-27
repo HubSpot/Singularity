@@ -18,6 +18,7 @@ public class SingularityRequestBuilder {
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
 
   private Optional<Boolean> daemon;
+  private Optional<Boolean> scheduleImmediately;
 
   private Optional<Integer> instances;
 
@@ -35,6 +36,7 @@ public class SingularityRequestBuilder {
     this.scheduleType = Optional.absent();
     this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
     this.daemon = Optional.absent();
+    this.scheduleImmediately = Optional.absent();
     this.instances = Optional.absent();
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
@@ -44,7 +46,7 @@ public class SingularityRequestBuilder {
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity, slavePlacement);
+    return new SingularityRequest(id, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, rackAffinity, slavePlacement, scheduleImmediately);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -159,11 +161,20 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Boolean> getScheduleImmediately() {
+    return scheduleImmediately;
+  }
+
+  public SingularityRequestBuilder setScheduleImmediately(Optional<Boolean> scheduleImmediately) {
+    this.scheduleImmediately = scheduleImmediately;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule
         + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances
-        + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + ", scheduleImmediately=" + scheduleImmediately + "]";
   }
 
 }
