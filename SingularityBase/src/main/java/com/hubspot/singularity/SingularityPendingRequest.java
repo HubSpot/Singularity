@@ -1,27 +1,13 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityPendingRequest extends SingularityJsonObject {
+public class SingularityPendingRequest {
 
   public enum PendingType {
-    IMMEDIATE(true), ONEOFF(true), BOUNCE(true), NEW_DEPLOY(false), UNPAUSED(false), RETRY(false), UPDATED_REQUEST(false), DECOMISSIONED_SLAVE_OR_RACK(false), TASK_DONE(false);
-
-    private final boolean hasPriority;
-
-    private PendingType(boolean hasPriority) {
-      this.hasPriority = hasPriority;
-    }
-
-    public boolean hasPriority() {
-      return hasPriority;
-    }
-
+    IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP;
   }
 
   private final String requestId;
@@ -31,16 +17,8 @@ public class SingularityPendingRequest extends SingularityJsonObject {
   private final Optional<String> user;
   private final Optional<String> cmdLineArgs;
 
-  public static SingularityPendingRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityPendingRequest.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
-
-  public SingularityPendingRequest(String requestId, String deployId, PendingType pendingType) {
-    this(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), pendingType);
+  public SingularityPendingRequest(String requestId, String deployId, long timestamp, PendingType pendingType) {
+    this(requestId, deployId, timestamp, Optional.<String> absent(), Optional.<String> absent(), pendingType);
   }
 
   @JsonCreator
@@ -75,18 +53,6 @@ public class SingularityPendingRequest extends SingularityJsonObject {
 
   public PendingType getPendingType() {
     return pendingType;
-  }
-
-  public boolean hasPriority(SingularityPendingRequest otherRequest) {
-    if (pendingType.hasPriority == otherRequest.pendingType.hasPriority) {
-      if (timestamp > otherRequest.timestamp) {
-        return true;
-      }
-    } else if (pendingType.hasPriority) {
-      return true;
-    }
-
-    return false;
   }
 
   @Override

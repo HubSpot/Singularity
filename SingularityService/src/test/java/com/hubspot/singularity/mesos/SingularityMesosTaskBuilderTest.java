@@ -50,7 +50,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 0, PendingType.IMMEDIATE), Optional.<String>absent());
+    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 0, PendingType.IMMEDIATE, 0), Optional.<String>absent());
 
     final SingularitySlaveAndRackManager rackManager = mock(SingularitySlaveAndRackManager.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);

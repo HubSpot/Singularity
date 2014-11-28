@@ -33,7 +33,6 @@ public class SingularityCuratorTestBase {
 
   @After
   public final void curatorTeardown() throws Exception {
-
     singularityTestModule.stop();
 
     if (cf != null) {
@@ -47,7 +46,7 @@ public class SingularityCuratorTestBase {
     if (httpClient != null) {
       httpClient.close();
     }
-
   }
+
 
 }

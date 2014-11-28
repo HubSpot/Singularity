@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.s3.base.SimpleProcessManager;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 
 public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
 

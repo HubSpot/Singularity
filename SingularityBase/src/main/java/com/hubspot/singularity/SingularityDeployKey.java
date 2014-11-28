@@ -68,7 +68,7 @@ public class SingularityDeployKey extends SingularityId {
     return deployId;
   }
 
-  public static SingularityDeployKey fromString(String string) {
+  public static SingularityDeployKey valueOf(String string) {
     final String[] splits = JavaUtils.reverseSplit(string, 2, "-");
 
     final String requestId = splits[0];
@@ -78,8 +78,12 @@ public class SingularityDeployKey extends SingularityId {
   }
 
   @Override
-  public String toString() {
+  public String getId() {
     return String.format("%s-%s", getRequestId(), getDeployId());
   }
 
+  @Override
+  public String toString() {
+    return getId();
+  }
 }

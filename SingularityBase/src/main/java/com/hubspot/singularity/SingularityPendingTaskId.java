@@ -14,6 +14,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   private final String requestId;
   private final String deployId;
   private final long nextRunAt;
+  private final long createdAt;
   private final int instanceNo;
   private final PendingType pendingType;
 
@@ -39,12 +40,13 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     };
   }
 
-
   @JsonCreator
-  public SingularityPendingTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long nextRunAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("pendingType") PendingType pendingType) {
+  public SingularityPendingTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long nextRunAt,
+      @JsonProperty("instanceNo") int instanceNo, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("createdAt") long createdAt) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.nextRunAt = nextRunAt;
+    this.createdAt = createdAt;
     this.instanceNo = instanceNo;
     this.pendingType = pendingType;
   }
@@ -65,15 +67,19 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     return instanceNo;
   }
 
+  public long getCreatedAt() {
+    return createdAt;
+  }
+
   public PendingType getPendingType() {
     return pendingType;
   }
 
-  public static SingularityPendingTaskId fromString(String string) {
+  public static SingularityPendingTaskId valueOf(String string) {
     String[] splits = null;
 
     try {
-      splits = JavaUtils.reverseSplit(string, 5, "-");
+      splits = JavaUtils.reverseSplit(string, 6, "-");
     } catch (IllegalStateException ise) {
       throw new InvalidSingularityTaskIdException(String.format("PendingTaskId %s was invalid (%s)", string, ise.getMessage()));
     }
@@ -84,8 +90,9 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
       final long nextRunAt = Long.parseLong(splits[2]);
       final int instanceNo = Integer.parseInt(splits[3]);
       final PendingType pendingType = PendingType.valueOf(splits[4]);
+      final long createdAt = Long.parseLong(splits[5]);
 
-      return new SingularityPendingTaskId(requestId, deployId, nextRunAt, instanceNo, pendingType);
+      return new SingularityPendingTaskId(requestId, deployId, nextRunAt, instanceNo, pendingType, createdAt);
     } catch (IllegalArgumentException e) {
       throw new InvalidSingularityTaskIdException(String.format("PendingTaskId %s had an invalid parameter (%s)", string, e.getMessage()));
     }
@@ -93,8 +100,13 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   }
 
   @Override
+  public String getId() {
+   return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getNextRunAt(), getInstanceNo(), getPendingType(), getCreatedAt());
+   }
+
+  @Override
   public String toString() {
-    return String.format("%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getNextRunAt(), getInstanceNo(), getPendingType());
+    return getId();
   }
 
   @Override
@@ -104,6 +116,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
         .compare(this.getRequestId(), o.getRequestId())
         .compare(this.getDeployId(), o.getDeployId())
         .compare(this.getInstanceNo(), o.getInstanceNo())
+        .compare(this.getCreatedAt(), o.getCreatedAt())
         .compare(this.getPendingType(), o.getPendingType())
         .result();
   }

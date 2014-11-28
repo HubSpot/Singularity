@@ -1,7 +1,6 @@
-package com.hubspot.singularity.s3.base;
+package com.hubspot.singularity.runner.base.shared;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -13,7 +12,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.runner.base.shared.Signal;
 
 public abstract class SafeProcessManager {
 
@@ -82,7 +80,7 @@ public abstract class SafeProcessManager {
 
       process = builder.start();
 
-      currentProcessPid = Optional.of(getUnixPID(process));
+      currentProcessPid = Optional.of(ProcessUtils.getUnixPID(process));
       currentProcess = Optional.of(process);
       currentProcessCmd = Optional.of(cmd);
 
@@ -118,35 +116,8 @@ public abstract class SafeProcessManager {
     }
   }
 
-  private int getUnixPID(Process process) {
-    Preconditions.checkArgument(process.getClass().getName().equals("java.lang.UNIXProcess"));
-
-    Class<?> clazz = process.getClass();
-
-    try {
-      Field field = clazz.getDeclaredField("pid");
-      field.setAccessible(true);
-      Object pidObject = field.get(process);
-      return (Integer) pidObject;
-    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
-  private void sendSignal(Signal signal) {
-    final long start = System.currentTimeMillis();
-
-    log.info("Signaling {} to process {}", signal, getCurrentProcessToString());
-
-    final String killCmd = String.format("kill -%s %s", signal.getCode(), currentProcessPid.get());
-
-    try {
-      int signalCode = Runtime.getRuntime().exec(killCmd).waitFor();
-
-      log.debug("Kill signal process got exit code {} after {}", signalCode, JavaUtils.duration(start));
-    } catch (InterruptedException | IOException e) {
-      throw Throwables.propagate(e);
-    }
+  public Optional<Integer> getCurrentPid() {
+    return currentProcessPid;
   }
 
   public String getCurrentProcessToString() {
@@ -158,7 +129,7 @@ public abstract class SafeProcessManager {
 
     try {
       if (currentProcessPid.isPresent()) {
-        sendSignal(Signal.SIGTERM);
+        ProcessUtils.sendSignal(Signal.SIGTERM, log, currentProcessPid.get());
       }
     } finally {
       this.processLock.unlock();
@@ -170,7 +141,7 @@ public abstract class SafeProcessManager {
 
     try {
       if (currentProcess.isPresent()) {
-        sendSignal(Signal.SIGKILL);
+        ProcessUtils.sendSignal(Signal.SIGKILL, log, currentProcessPid.get());
       }
     } finally {
       this.processLock.unlock();

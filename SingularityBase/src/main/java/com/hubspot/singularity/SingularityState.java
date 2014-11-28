@@ -1,13 +1,11 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityState extends SingularityJsonObject {
+public class SingularityState {
 
   private final int activeTasks;
   private final int pausedRequests;
@@ -45,14 +43,6 @@ public class SingularityState extends SingularityJsonObject {
 
   private final int overProvisionedRequests;
   private final int underProvisionedRequests;
-
-  public static SingularityState fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityState.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,

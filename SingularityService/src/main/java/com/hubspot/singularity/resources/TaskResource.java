@@ -35,6 +35,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.sun.jersey.api.NotFoundException;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -49,13 +50,15 @@ public class TaskResource {
   private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
+  private final IdTranscoder<SingularityPendingTaskId> singularityPendingTaskIdTranscoder;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, IdTranscoder<SingularityPendingTaskId> singularityPendingTaskIdTranscoder) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
+    this.singularityPendingTaskIdTranscoder = singularityPendingTaskIdTranscoder;
   }
 
   @GET
@@ -76,11 +79,19 @@ public class TaskResource {
     return taskManager.getPendingTaskIds();
   }
 
-  private SingularityPendingTaskId getTaskIdFromStr(String pendingTaskIdStr) {
+  private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
     try {
-      return SingularityPendingTaskId.fromString(pendingTaskIdStr);
+      return singularityPendingTaskIdTranscoder.fromString(pendingTaskIdStr);
     } catch (InvalidSingularityTaskIdException e) {
-      throw WebExceptions.badRequest("%s is not a valid pending task id: %s", pendingTaskIdStr, e.getMessage());
+      throw WebExceptions.badRequest("%s is not a valid pendingTaskId: %s", pendingTaskIdStr, e.getMessage());
+    }
+  }
+
+  private SingularityTaskId getTaskIdFromStr(String activeTaskIdStr) {
+    try {
+      return SingularityTaskId.valueOf(activeTaskIdStr);
+    } catch (InvalidSingularityTaskIdException e) {
+      throw WebExceptions.badRequest("%s is not a valid taskId: %s", activeTaskIdStr, e.getMessage());
     }
   }
 
@@ -89,7 +100,7 @@ public class TaskResource {
   @Path("/scheduled/task/{pendingTaskId}")
   @ApiOperation("Retrieve information about a pending task.")
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
-    SingularityPendingTask pendingTask = taskManager.getPendingTask(getTaskIdFromStr(pendingTaskIdStr));
+    SingularityPendingTask pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
 
     List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask));
 
@@ -155,13 +166,12 @@ public class TaskResource {
     return taskManager.getLBCleanupTasks();
   }
 
-  @GET
-  @Path("/task/{taskId}")
-  @ApiOperation("Retrieve information about a specific active task.")
-  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
-    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
+  private SingularityTask checkActiveTask(String taskId) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
-    if (!task.isPresent()) {
+    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+
+    if (!task.isPresent() || !taskManager.isActiveTask(taskId)) {
       throw new NotFoundException(String.format("No active task with id %s", taskId));
     }
 
@@ -169,47 +179,46 @@ public class TaskResource {
   }
 
   @GET
+  @Path("/task/{taskId}")
+  @ApiOperation("Retrieve information about a specific active task.")
+  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
+    return checkActiveTask(taskId);
+  }
+
+  @GET
   @Path("/task/{taskId}/statistics")
   @ApiOperation("Retrieve statistics about a specific active task.")
   public MesosTaskStatisticsObject getTaskStatistics(@PathParam("taskId") String taskId) {
-    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
-
-    if (!task.isPresent()) {
-      throw new NotFoundException(String.format("No active task found in Singularity with id %s", taskId));
-    }
+    SingularityTask task = checkActiveTask(taskId);
 
     String executorIdToMatch = null;
 
-    if (task.get().getMesosTask().getExecutor().hasExecutorId()) {
-      executorIdToMatch = task.get().getMesosTask().getExecutor().getExecutorId().getValue();
+    if (task.getMesosTask().getExecutor().hasExecutorId()) {
+      executorIdToMatch = task.getMesosTask().getExecutor().getExecutorId().getValue();
     } else {
       executorIdToMatch = taskId;
     }
 
-    for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.get().getOffer().getHostname())) {
+    for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.getOffer().getHostname())) {
       if (taskMonitor.getExecutorId().equals(executorIdToMatch)) {
         return taskMonitor.getStatistics();
       }
     }
 
-    throw new NotFoundException(String.format("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.get().getOffer().getHostname()));
+    throw new NotFoundException(String.format("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.getOffer().getHostname()));
   }
 
   @DELETE
   @Path("/task/{taskId}")
   @ApiOperation("Kill a specific active task.")
   public SingularityTaskCleanupResult killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user) {
-    Optional<SingularityTask> task = taskManager.getActiveTask(taskId);
+    SingularityTask task = checkActiveTask(taskId);
 
-    if (!task.isPresent()) {
-      throw new NotFoundException(String.format("Couldn't find active task with id %s", taskId));
-    }
-
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.get().getTaskId());
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId());
 
     final SingularityCreateResult result = taskManager.createCleanupTask(taskCleanup);
 
-    return new SingularityTaskCleanupResult(result, task.get());
+    return new SingularityTaskCleanupResult(result, task);
   }
 
 }

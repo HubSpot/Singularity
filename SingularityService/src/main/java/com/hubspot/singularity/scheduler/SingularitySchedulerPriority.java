@@ -27,7 +27,7 @@ public class SingularitySchedulerPriority {
 
     @Override
     public int compare(SingularityTaskId o1, SingularityTaskId o2) {
-      return Longs.compare(o1.getStartedAt(), o2.getStartedAt());
+      return Longs.compare(o2.getStartedAt(), o1.getStartedAt());
     }
 
   };

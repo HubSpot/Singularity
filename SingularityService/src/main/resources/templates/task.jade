@@ -24,7 +24,7 @@ html
         div(style="padding-bottom: 20px")
           div(style="border-top: 10px solid #df4210; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
             h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ requestId }
-            h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has #{ status }
+            h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") #{ status }
             a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityTaskLink }") View task
 
         //- Status
@@ -43,23 +43,32 @@ html
               | The task was killed by either Singularity, the OOM killer, or user action.
             if taskStateFailed
               | The task failed with a non-zero exit code. Consider investigating to see if there is an application level error.
+            if taskStateRunning
+              | The task has been running for #{ runTime }. Consider checking whether this task is running correctly.
+              ul
+                li This is a one-time notification about this task.
+                li It was expected to run again at #{ expectedNextRunTime }. 
+                li This can be configured on a per-request basis with scheduledExpectedRuntimeMillis, otherwise it is calculated based on the schedule or historical average.
+                li The warning threshold is #{ warningThreshold } of expectedNextRunTime. (part of global configuration.)
           if requestScheduled
-            if taskWillRetry
-              p Singularity will retry the task #{ numRetries } times before it resumes on its normal schedule.
-            if !taskWillRetry
-              p Singularity will run the task again on its normal schedule.
+            if !taskStateRunning
+              if taskWillRetry
+                p Singularity will retry the task #{ numRetries } times before it resumes on its normal schedule.
+              if !taskWillRetry
+                p Singularity will run the task again on its normal schedule.
           if requestOneOff
             p Singularity will not run your task again unless manually instructed.
           else if !requestScheduled
             p Singularity will continue to restart your task immediately.
           if !taskStateFinished
-            if !taskRan
-              p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
-            else
-              if taskStateFailed
-                p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
-              if taskStateLost
-                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
+            if !taskStateRunning
+              if !taskRan
+                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
+              else
+                if taskStateFailed
+                  p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
+                if taskStateLost
+                  p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
 
         //- History
         div(style="padding-bottom: 20px")

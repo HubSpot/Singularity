@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityRequestInstances extends SingularityJsonObject {
+public class SingularityRequestInstances {
 
   private final String id;
   private final Optional<Integer> instances;
@@ -27,5 +27,4 @@ public class SingularityRequestInstances extends SingularityJsonObject {
   public String toString() {
     return "SingularityRequestInstances [id=" + id + ", instances=" + instances + "]";
   }
-
 }
