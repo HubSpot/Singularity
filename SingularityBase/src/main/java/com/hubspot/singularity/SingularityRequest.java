@@ -169,6 +169,11 @@ public class SingularityRequest {
 
   @JsonIgnore
   public boolean isLongRunning() {
+    return requestType.isLongRunning();
+  }
+
+  @JsonIgnore
+  public boolean isAlwaysRunning() {
     return requestType.isAlwaysRunning();
   }
 
