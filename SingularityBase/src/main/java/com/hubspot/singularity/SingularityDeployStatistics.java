@@ -1,19 +1,18 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
-public class SingularityDeployStatistics extends SingularityJsonObject {
+public class SingularityDeployStatistics {
 
   private final String requestId;
   private final String deployId;
+
+  private final int numTasks;
 
   private final int numSuccess;
   private final int numFailures;
@@ -25,18 +24,12 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
   private final Optional<Long> lastFinishAt;
   private final Optional<ExtendedTaskState> lastTaskState;
 
-  public static SingularityDeployStatistics fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeployStatistics.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
+  private final Optional<Long> averageRuntimeMillis;
 
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures,
       @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
-      @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps) {
+      @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps, @JsonProperty("numTasks") int numTasks, @JsonProperty("averageRuntimeMillis")  Optional<Long> averageRuntimeMillis) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
@@ -44,6 +37,8 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     this.lastFinishAt = lastFinishAt;
     this.lastTaskState = lastTaskState;
     this.numSequentialRetries = numSequentialRetries;
+    this.numTasks = numTasks;
+    this.averageRuntimeMillis = averageRuntimeMillis;
     this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps == null ?  ImmutableListMultimap.<Integer, Long> of() : ImmutableListMultimap.copyOf(instanceSequentialFailureTimestamps);
   }
 
@@ -54,7 +49,17 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
     .setNumSequentialRetries(numSequentialRetries)
     .setNumFailures(numFailures)
     .setNumSuccess(numSuccess)
+    .setNumTasks(numTasks)
+    .setAverageRuntimeMillis(averageRuntimeMillis)
     .setInstanceSequentialFailureTimestamps(ArrayListMultimap.create(instanceSequentialFailureTimestamps));
+  }
+
+  public int getNumTasks() {
+    return numTasks;
+  }
+
+  public Optional<Long> getAverageRuntimeMillis() {
+    return averageRuntimeMillis;
   }
 
   public String getRequestId() {
@@ -91,8 +96,9 @@ public class SingularityDeployStatistics extends SingularityJsonObject {
 
   @Override
   public String toString() {
-    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries="
-        + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numTasks=" + numTasks + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures
+        + ", numSequentialRetries=" + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState="
+        + lastTaskState + ", averageRuntimeMillis=" + averageRuntimeMillis + "]";
   }
 
 }

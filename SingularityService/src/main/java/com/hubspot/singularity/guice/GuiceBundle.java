@@ -2,7 +2,6 @@ package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-
 import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
@@ -141,8 +140,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     environment.servlets().addFilter("Guice Filter", GuiceFilter.class).addMappingForUrlPatterns(null, false, environment.getApplicationContext().getContextPath() + "*");
   }
 
-  private static <T> void addJerseyBindings(Environment environment, Injector injector, String propertyName, Class<T> clazz)
-  {
+  private static <T> void addJerseyBindings(Environment environment, Injector injector, String propertyName, Class<T> clazz) {
     TypeToken<Set<T>> setToken = new TypeToken<Set<T>>() {}.where(new TypeParameter<T>() {}, clazz);
 
     @SuppressWarnings("unchecked")

@@ -1,23 +1,12 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityTaskWebhook extends SingularityJsonObject {
+public class SingularityTaskWebhook {
 
   private final SingularityTask task;
   private final SingularityTaskHistoryUpdate taskUpdate;
-
-  public static SingularityTaskWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) throws SingularityJsonException {
-    try {
-      return objectMapper.readValue(bytes, SingularityTaskWebhook.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityTaskWebhook(@JsonProperty("task") SingularityTask task, @JsonProperty("taskUpdate") SingularityTaskHistoryUpdate taskUpdate) {

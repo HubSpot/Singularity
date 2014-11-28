@@ -1,15 +1,12 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
-public class SingularityWebhook extends SingularityJsonObject {
+public class SingularityWebhook {
 
   private final String uri;
   private final WebhookType type;
@@ -18,14 +15,6 @@ public class SingularityWebhook extends SingularityJsonObject {
   private final long timestamp;
 
   private final String id;
-
-  public static SingularityWebhook fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityWebhook.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("user") Optional<String> user, @JsonProperty("type") WebhookType type) {

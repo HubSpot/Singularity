@@ -13,6 +13,9 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String HARD_KILL_AFTER_MILLIS = "executor.hard.kill.after.millis";
   public static final String NUM_CORE_KILL_THREADS = "executor.num.core.kill.threads";
 
+  public static final String NUM_CORE_THREAD_CHECK_THREADS = "executor.num.core.thread.check.threads";
+  public static final String CHECK_THREADS_EVERY_MILLIS = "executor.check.threads.every.millis";
+
   public static final String MAX_TASK_MESSAGE_LENGTH = "executor.status.update.max.task.message.length";
 
   public static final String IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS = "executor.idle.shutdown.after.millis";
@@ -65,6 +68,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
     properties.put(TASK_SERVICE_LOG_PATH, "service.log");
     properties.put(HARD_KILL_AFTER_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(3)));
     properties.put(NUM_CORE_KILL_THREADS, "1");
+    properties.put(NUM_CORE_THREAD_CHECK_THREADS, "1");
+    properties.put(CHECK_THREADS_EVERY_MILLIS, Long.toString(TimeUnit.SECONDS.toMillis(5)));
     properties.put(MAX_TASK_MESSAGE_LENGTH, "80");
     properties.put(SHUTDOWN_TIMEOUT_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(5)));
     properties.put(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS, Long.toString(TimeUnit.SECONDS.toMillis(30)));

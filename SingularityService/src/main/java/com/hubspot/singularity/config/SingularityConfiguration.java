@@ -42,6 +42,9 @@ public class SingularityConfiguration extends Configuration {
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   @NotNull
+  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
+
+  @NotNull
   private long checkSchedulerEverySeconds = 5;
 
   @NotNull
@@ -165,6 +168,12 @@ public class SingularityConfiguration extends Configuration {
   private UIConfiguration uiConfiguration = new UIConfiguration();
 
   @NotNull
+  private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
+
+  @NotNull
+  private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
+
+  @NotNull
   private long zookeeperAsyncTimeout = 5000;
 
   @JsonProperty("zookeeper")
@@ -196,6 +205,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCheckReconcileWhenRunningEveryMillis() {
     return checkReconcileWhenRunningEveryMillis;
+  }
+
+  public long getCheckScheduledJobsEveryMillis() {
+    return checkScheduledJobsEveryMillis;
   }
 
   public long getCheckSchedulerEverySeconds() {
@@ -350,6 +363,14 @@ public class SingularityConfiguration extends Configuration {
     return uiConfiguration;
   }
 
+  public long getWarnIfScheduledJobIsRunningForAtLeastMillis() {
+    return warnIfScheduledJobIsRunningForAtLeastMillis;
+  }
+
+  public int getWarnIfScheduledJobIsRunningPastNextRunPct() {
+    return warnIfScheduledJobIsRunningPastNextRunPct;
+  }
+
   public long getZookeeperAsyncTimeout() {
     return zookeeperAsyncTimeout;
   }
@@ -408,6 +429,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
+  }
+
+  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
+    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
   }
 
   public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
@@ -576,6 +601,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
+  }
+
+  public void setWarnIfScheduledJobIsRunningForAtLeastMillis(long warnIfScheduledJobIsRunningForAtLeastMillis) {
+    this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
+  }
+
+  public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
+    this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
 
   public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {

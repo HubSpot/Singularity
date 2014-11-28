@@ -1,15 +1,13 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
-public class SingularityDeployMarker extends SingularityJsonObject implements Comparable<SingularityDeployMarker> {
+public class SingularityDeployMarker implements Comparable<SingularityDeployMarker> {
 
   private final String requestId;
 
@@ -17,14 +15,6 @@ public class SingularityDeployMarker extends SingularityJsonObject implements Co
 
   private final long timestamp;
   private final Optional<String> user;
-
-  public static SingularityDeployMarker fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeployMarker.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityDeployMarker(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user) {

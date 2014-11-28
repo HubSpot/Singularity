@@ -22,6 +22,8 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
 public class ArtifactManager extends SimpleProcessManager {
@@ -178,7 +180,7 @@ public class ArtifactManager extends SimpleProcessManager {
         "-nv",
         "--no-check-certificate");
 
-    runCommand(command);
+    runCommandAndThrowRuntimeException(command);
   }
 
   public void copy(Path source, Path destination) {
@@ -201,7 +203,15 @@ public class ArtifactManager extends SimpleProcessManager {
         "-C",
         destination.toString());
 
-    runCommand(command);
+    runCommandAndThrowRuntimeException(command);
+  }
+
+  private void runCommandAndThrowRuntimeException(List<String> command) {
+    try {
+      super.runCommand(command);
+    } catch (InterruptedException | ProcessFailedException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   private String calculateMd5sum(Path path) {

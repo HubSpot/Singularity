@@ -1,45 +1,56 @@
 package com.hubspot.singularity.data.transcoders;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import javax.annotation.Nullable;
+
+import org.iq80.snappy.CorruptionException;
 import org.iq80.snappy.Snappy;
 
-import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 public abstract class CompressingTranscoder<T> implements Transcoder<T> {
 
-  private final SingularityConfiguration configuration;
+  private final boolean compressLargeDataObjects;
 
-  @Inject
-  public CompressingTranscoder(SingularityConfiguration configuration) {
-    this.configuration = configuration;
+  protected CompressingTranscoder(SingularityConfiguration configuration) {
+    checkNotNull(configuration, "configuration is null");
+    this.compressLargeDataObjects = configuration.isCompressLargeDataObjects();
   }
 
-  private byte[] getMaybeCompressedBytes(byte[] bytes) {
-    if (configuration.isCompressLargeDataObjects()) {
-      return Snappy.compress(bytes);
-    }
-    return bytes;
-  }
+  protected abstract T actualFromBytes(byte[] data) throws SingularityTranscoderException;
 
-  protected abstract T actualTranscode(byte[] data);
-  protected abstract byte[] actualToBytes(T object);
+  protected abstract byte[] actualToBytes(T object) throws SingularityTranscoderException;
 
   @Override
-  public T transcode(byte[] data) throws SingularityJsonException {
-    return actualTranscode(getMaybeUncompressedBytes(data));
+  public final T fromBytes(@Nullable byte[] data) throws SingularityTranscoderException {
+    return actualFromBytes(getMaybeUncompressedBytes(data));
   }
 
   @Override
-  public byte[] toBytes(T object) throws SingularityJsonException {
+  public final byte[] toBytes(@Nullable T object) throws SingularityTranscoderException {
     return getMaybeCompressedBytes(actualToBytes(object));
   }
 
-  private byte[] getMaybeUncompressedBytes(byte[] bytes) {
-    if (configuration.isCompressLargeDataObjects()) {
-      return Snappy.uncompress(bytes, 0, bytes.length);
+  private byte[] getMaybeCompressedBytes(@Nullable byte[] bytes) throws SingularityTranscoderException {
+
+    if (bytes == null || bytes.length == 0) {
+      return bytes;
     }
-    return bytes;
+
+    return compressLargeDataObjects ? Snappy.compress(bytes) : bytes;
   }
 
+  private byte[] getMaybeUncompressedBytes(@Nullable byte[] bytes) throws SingularityTranscoderException {
+
+    if (bytes == null || bytes.length == 0) {
+      return bytes;
+    }
+
+    try {
+      return compressLargeDataObjects ? Snappy.uncompress(bytes, 0, bytes.length) : bytes;
+    } catch (CorruptionException ce) {
+      throw new SingularityTranscoderException(ce);
+    }
+  }
 }
