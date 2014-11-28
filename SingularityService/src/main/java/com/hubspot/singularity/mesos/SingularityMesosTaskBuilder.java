@@ -115,6 +115,11 @@ class SingularityMesosTaskBuilder {
         .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
         .build());
 
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("ESTIMATED_INSTANCE_COUNT")
+        .setValue(Integer.toString(task.getRequest().getInstancesSafe()))
+        .build());
+
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
       envBldr.addVariables(Variable.newBuilder()
           .setName(envEntry.getKey())
