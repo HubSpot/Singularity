@@ -25,6 +25,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
@@ -148,6 +149,8 @@ public class SingularityMailer implements Managed {
     templateProperties.put("requestId", request.getId());
     templateProperties.put("singularityRequestLink", getSingularityRequestLink(request));
 
+    templateProperties.put("requestAlwaysRunning", request.isAlwaysRunning());
+    templateProperties.put("requestRunOnce", request.getRequestType() == RequestType.RUN_ONCE);
     templateProperties.put("requestScheduled", request.isScheduled());
     templateProperties.put("requestOneOff", request.isOneOff());
 

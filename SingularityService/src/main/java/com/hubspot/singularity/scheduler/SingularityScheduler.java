@@ -395,7 +395,7 @@ public class SingularityScheduler {
       mailer.sendRequestInCooldownMail(request);
     }
 
-    if (request.isOneOff()) {
+    if (!request.isAlwaysRunning()) {
       return Optional.absent();
     }
 

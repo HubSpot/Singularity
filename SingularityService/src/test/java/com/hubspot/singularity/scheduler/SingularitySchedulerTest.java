@@ -369,9 +369,12 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRunOnceRunOnlyOnce() {
-    // what if it gets added back to scheduler queue?
-    // are there things that remove from scheduler queue?
-    // i don't think so.
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
+    request = bldr.build();
+    saveRequest(request);
+
+    // TODO
+
   }
 
   @Test
@@ -580,7 +583,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testUnpauseoOnDeploy() {
+  public void testUnpauseOnDeploy() {
     initRequest();
     initFirstDeploy();
 

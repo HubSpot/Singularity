@@ -182,7 +182,7 @@ public class StateManager extends CuratorManager {
           break;
       }
 
-      if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {
+      if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isAlwaysRunning()) {
         final int instances = requestWithState.getRequest().getInstancesSafe();
 
         final Long numActualInstances = numInstances.get(requestWithState.getRequest().getId());
