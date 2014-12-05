@@ -102,59 +102,31 @@ class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
 
+  private void setEnv(Environment.Builder envBldr, String key, String value) {
+    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value));
+  }
+
   private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
 
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("INSTANCE_NO")
-        .setValue(Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()))
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("SINGULARITY_REQUEST_ID")
-        .setValue(taskId.getRequestId())
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("SINGULARITY_DEPLOY_ID")
-        .setValue(taskId.getDeployId())
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("TASK_HOST")
-        .setValue(taskId.getHost())
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("TASK_REQUEST_ID")
-        .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("ESTIMATED_INSTANCE_COUNT")
-        .setValue(Integer.toString(task.getRequest().getInstancesSafe()))
-        .build());
+    setEnv(envBldr, "INSTANCE_NO", Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()));
+    setEnv(envBldr, "SINGULARITY_REQUEST_ID", taskId.getRequestId());
+    setEnv(envBldr, "SINGULARITY_DEPLOY_ID", taskId.getDeployId());
+    setEnv(envBldr, "TASK_HOST", taskId.getHost());
+    setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
+    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", Integer.toString(task.getRequest().getInstancesSafe()));
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      envBldr.addVariables(Variable.newBuilder()
-          .setName(envEntry.getKey())
-          .setValue(envEntry.getValue())
-          .build());
+      setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
     }
 
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
-          envBldr.addVariables(Variable.newBuilder()
-              .setName("PORT")
-              .setValue(Long.toString(ports.get()[portNum]))
-              .build());
+          setEnv(envBldr, "PORT", Long.toString(ports.get()[portNum]));
         }
 
-        envBldr.addVariables(Variable.newBuilder()
-            .setName(String.format("PORT%s", portNum))
-            .setValue(Long.toString(ports.get()[portNum]))
-            .build());
+        setEnv(envBldr, String.format("PORT%s", portNum), Long.toString(ports.get()[portNum]));
       }
     }
 
