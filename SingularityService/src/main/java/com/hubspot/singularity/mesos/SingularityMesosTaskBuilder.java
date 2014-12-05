@@ -102,12 +102,27 @@ class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
 
-  private void prepareEnvironment(final SingularityTaskRequest task, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
+  private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
 
     envBldr.addVariables(Variable.newBuilder()
         .setName("INSTANCE_NO")
         .setValue(Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()))
+        .build());
+
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("SINGULARITY_REQUEST_ID")
+        .setValue(taskId.getRequestId())
+        .build());
+
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("SINGULARITY_DEPLOY_ID")
+        .setValue(taskId.getDeployId())
+        .build());
+
+    envBldr.addVariables(Variable.newBuilder()
+        .setName("TASK_HOST")
+        .setValue(taskId.getHost())
         .build());
 
     envBldr.addVariables(Variable.newBuilder()
@@ -221,7 +236,7 @@ class SingularityMesosTaskBuilder {
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
-    prepareEnvironment(task, commandBuilder, ports);
+    prepareEnvironment(task, taskId, commandBuilder, ports);
 
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
@@ -293,7 +308,7 @@ class SingularityMesosTaskBuilder {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
 
-    prepareEnvironment(task, commandBldr, ports);
+    prepareEnvironment(task, taskId, commandBldr, ports);
 
     bldr.setCommand(commandBldr);
   }
