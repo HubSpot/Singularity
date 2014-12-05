@@ -102,19 +102,22 @@ class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
 
-  private void setEnv(Environment.Builder envBldr, String key, String value) {
-    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value));
+  private void setEnv(Environment.Builder envBldr, String key, Object value) {
+    if (value == null) {
+      return;
+    }
+    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
   }
 
   private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
 
-    setEnv(envBldr, "INSTANCE_NO", Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()));
+    setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
     setEnv(envBldr, "SINGULARITY_REQUEST_ID", taskId.getRequestId());
     setEnv(envBldr, "SINGULARITY_DEPLOY_ID", taskId.getDeployId());
     setEnv(envBldr, "TASK_HOST", taskId.getHost());
     setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
-    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", Integer.toString(task.getRequest().getInstancesSafe()));
+    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
       setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
@@ -123,10 +126,10 @@ class SingularityMesosTaskBuilder {
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
-          setEnv(envBldr, "PORT", Long.toString(ports.get()[portNum]));
+          setEnv(envBldr, "PORT", ports.get()[portNum]);
         }
 
-        setEnv(envBldr, String.format("PORT%s", portNum), Long.toString(ports.get()[portNum]));
+        setEnv(envBldr, String.format("PORT%s", portNum), ports.get()[portNum]);
       }
     }
 
