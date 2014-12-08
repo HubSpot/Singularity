@@ -1,5 +1,6 @@
 package com.hubspot.singularity.hooks;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -23,7 +23,6 @@ import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
@@ -165,8 +164,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       }
 
       return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, requestBuilder.build(), BaragonRequestState.FAILED);
-    } catch (JsonProcessingException e) {
-      throw new SingularityJsonException(e);
+    } catch (IOException e) {
+      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(e.getMessage()), System.currentTimeMillis(), LoadBalancerMethod.ENQUEUE, Optional.of(loadBalancerUri));
     }
   }
 

@@ -66,7 +66,7 @@ public class SingularityMainModule implements Module {
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
 
-  public static final String TASK_COMPLETED_TEMPLATE = "task.completed.template";
+  public static final String TASK_TEMPLATE = "task.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
@@ -201,9 +201,9 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  @Named(TASK_COMPLETED_TEMPLATE)
-  public JadeTemplate getTaskCompletedTemplate() throws IOException {
-    return getJadeTemplate("task_completed.jade");
+  @Named(TASK_TEMPLATE)
+  public JadeTemplate getTaskTemplate() throws IOException {
+    return getJadeTemplate("task.jade");
   }
 
   @Provides

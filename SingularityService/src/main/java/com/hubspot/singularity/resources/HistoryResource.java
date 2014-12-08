@@ -24,6 +24,7 @@ import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -41,8 +42,9 @@ public class HistoryResource extends AbstractHistoryResource {
   private final RequestHistoryHelper requestHistoryHelper;
 
   @Inject
-  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper, RequestHistoryHelper requestHistoryHelper) {
-    super(historyManager, taskManager, deployManager);
+  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
+      RequestHistoryHelper requestHistoryHelper, final IdTranscoder<SingularityTaskId> singularityTaskIdTranscoder) {
+    super(historyManager, taskManager, deployManager, singularityTaskIdTranscoder);
 
     this.taskManager = taskManager;
     this.requestHistoryHelper = requestHistoryHelper;

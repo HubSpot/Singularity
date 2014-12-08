@@ -8,7 +8,7 @@ import com.wordnik.swagger.annotations.ApiModel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @ApiModel( description = "Represents the path to a specific task's Mesos sandbox" )
-public class SingularitySandbox extends SingularityJsonObject {
+public class SingularitySandbox {
 
   private final List<SingularitySandboxFile> files;
   private final String fullPathToRoot;
@@ -47,6 +47,4 @@ public class SingularitySandbox extends SingularityJsonObject {
   public String toString() {
     return "SingularitySandbox [files=" + files + ", fullPathToRoot=" + fullPathToRoot + ", currentDirectory=" + currentDirectory + ", slaveHostname=" + slaveHostname + "]";
   }
-
-
 }

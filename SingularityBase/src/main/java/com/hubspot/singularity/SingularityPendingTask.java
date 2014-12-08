@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
-public class SingularityPendingTask extends SingularityJsonObject {
+public class SingularityPendingTask {
 
   private final SingularityPendingTaskId taskId;
   private final Optional<String> maybeCmdLineArgs;

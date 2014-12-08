@@ -18,6 +18,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -55,7 +56,7 @@ public class SingularityMailer implements Managed {
 
   private final TaskManager taskManager;
 
-  private final JadeTemplate taskCompletedTemplate;
+  private final JadeTemplate taskTemplate;
   private final JadeTemplate requestInCooldownTemplate;
   private final JadeTemplate requestModifiedTemplate;
   private final JadeTemplate rateLimitedTemplate;
@@ -76,7 +77,7 @@ public class SingularityMailer implements Managed {
       SandboxManager sandboxManager,
       MetadataManager metadataManager,
       SingularityExceptionNotifier exceptionNotifier,
-      @Named(SingularityMainModule.TASK_COMPLETED_TEMPLATE) JadeTemplate taskCompletedTemplate,
+      @Named(SingularityMainModule.TASK_TEMPLATE) JadeTemplate taskTemplate,
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
       @Named(SingularityMainModule.RATE_LIMITED_TEMPLATE) JadeTemplate rateLimitedTemplate) {
@@ -92,7 +93,7 @@ public class SingularityMailer implements Managed {
     this.adminJoiner = Joiner.on(", ").skipNulls();
 
     this.requestModifiedTemplate = requestModifiedTemplate;
-    this.taskCompletedTemplate = taskCompletedTemplate;
+    this.taskTemplate = taskTemplate;
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.rateLimitedTemplate = rateLimitedTemplate;
 
@@ -143,7 +144,7 @@ public class SingularityMailer implements Managed {
     }
   }
 
-  private void populateRequestEmailProperties(Builder<String, Object> templateProperties, SingularityRequest request) {
+  private void populateRequestEmailProperties(Map<String, Object> templateProperties, SingularityRequest request) {
     templateProperties.put("requestId", request.getId());
     templateProperties.put("singularityRequestLink", getSingularityRequestLink(request));
 
@@ -154,7 +155,7 @@ public class SingularityMailer implements Managed {
     templateProperties.put("numRetries", request.getNumRetriesOnFailure().or(0));
   }
 
-  private void populateTaskEmailProperties(Builder<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
+  private void populateTaskEmailProperties(Map<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
     Optional<SingularityTask> task = taskManager.getTask(taskId);
     Optional<String> directory = taskManager.getDirectory(taskId);
 
@@ -172,11 +173,12 @@ public class SingularityMailer implements Managed {
 
     boolean needsBeenPrefix = taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_KILLED;
 
-    templateProperties.put("status", String.format("%s%s", needsBeenPrefix ? "been " : "", taskState.getDisplayName()));
+    templateProperties.put("status", String.format("%s%s", needsBeenPrefix ? "has been " : "has ", taskState.getDisplayName()));
     templateProperties.put("taskStateLost", taskState == ExtendedTaskState.TASK_LOST);
     templateProperties.put("taskStateFailed", taskState == ExtendedTaskState.TASK_FAILED);
     templateProperties.put("taskStateFinished", taskState == ExtendedTaskState.TASK_FINISHED);
     templateProperties.put("taskStateKilled", taskState == ExtendedTaskState.TASK_KILLED);
+    templateProperties.put("taskStateRunning", taskState == ExtendedTaskState.TASK_RUNNING);
 
     templateProperties.put("taskUpdates", JadeHelper.getJadeTaskHistory(taskHistory));
     templateProperties.put("taskRan", didTaskRun(taskHistory));
@@ -230,6 +232,18 @@ public class SingularityMailer implements Managed {
     }
   }
 
+  public void sendTaskOverdueMail(final SingularityTaskId taskId, final SingularityRequest request, final long runTime, final long expectedRuntime) {
+    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
+
+    templateProperties.put("runTime", DurationFormatUtils.formatDurationHMS(runTime));
+    templateProperties.put("expectedRunTime", DurationFormatUtils.formatDurationHMS(expectedRuntime));
+    templateProperties.put("warningThreshold", String.format("%s%%", configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()));
+
+    templateProperties.put("status", "is overdue to finish");
+
+    prepareTaskMail(taskId, request, EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, templateProperties.build(), taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_RUNNING);
+  }
+
   public void sendTaskCompletedMail(final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending task completed mail - no SMTP configuration is present");
@@ -250,6 +264,31 @@ public class SingularityMailer implements Managed {
     });
   }
 
+  private void prepareTaskMail(SingularityTaskId taskId, SingularityRequest request, EmailType emailType, Map<String, Object> extraProperties,
+      Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
+
+    final Collection<EmailDestination> emailDestination = getDestination(emailType);
+
+    if (emailDestination.isEmpty()) {
+      LOG.debug("Not configured to send task mail for {}", emailType);
+      return;
+    }
+
+    final Map<String, Object> templateProperties = Maps.newHashMap();
+    populateRequestEmailProperties(templateProperties, request);
+    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState);
+    templateProperties.putAll(extraProperties);
+
+    final String subject = getSubjectForTaskHistory(taskId, taskState, emailType, taskHistory);
+
+    final String adminEmails = adminJoiner.join(maybeSmtpConfiguration.get().getAdmins());
+    templateProperties.put("adminEmails", adminEmails);
+
+    final String body = Jade4J.render(taskTemplate, templateProperties);
+
+    queueMail(emailDestination, request, emailType, subject, body);
+  }
+
   private void prepareTaskCompletedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
     final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
     final Optional<EmailType> emailType = getEmailType(taskState, request, taskHistory);
@@ -259,25 +298,7 @@ public class SingularityMailer implements Managed {
       return;
     }
 
-    final Collection<EmailDestination> emailDestination = getDestination(emailType.get());
-
-    if (emailDestination.isEmpty()) {
-      LOG.debug("Not configured to send task completed mail for {}", taskState);
-      return;
-    }
-
-    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
-    populateRequestEmailProperties(templateProperties, request);
-    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState);
-
-    final String subject = getSubjectForTaskHistory(taskId, taskState, taskHistory);
-
-    final String adminEmails = adminJoiner.join(maybeSmtpConfiguration.get().getAdmins());
-    templateProperties.put("adminEmails", adminEmails);
-
-    final String body = Jade4J.render(taskCompletedTemplate, templateProperties.build());
-
-    queueMail(emailDestination, request, emailType.get(), subject, body);
+    prepareTaskMail(taskId, request, emailType.get(), Collections.<String, Object> emptyMap(), taskHistory, taskState);
   }
 
   private List<EmailDestination> getDestination(EmailType type) {
@@ -333,7 +354,7 @@ public class SingularityMailer implements Managed {
     }
 
     final String subject = String.format("Request %s has been %s — Singularity", request.getId(), type.name().toLowerCase());
-    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
+    final Map<String, Object> templateProperties = Maps.newHashMap();
     populateRequestEmailProperties(templateProperties, request);
 
     templateProperties.put("requestPaused", type == RequestMailType.PAUSED);
@@ -345,7 +366,7 @@ public class SingularityMailer implements Managed {
       templateProperties.put("user", user.get());
     }
 
-    final String body = Jade4J.render(requestModifiedTemplate, templateProperties.build());
+    final String body = Jade4J.render(requestModifiedTemplate, templateProperties);
 
     queueMail(emailDestination, request, type.getEmailType(), subject, body);
   }
@@ -390,7 +411,7 @@ public class SingularityMailer implements Managed {
       return;
     }
 
-    final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
+    final Map<String, Object> templateProperties = Maps.newHashMap();
     populateRequestEmailProperties(templateProperties, request);
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
@@ -399,7 +420,7 @@ public class SingularityMailer implements Managed {
     templateProperties.put("cooldownDelayFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())));
     templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
 
-    final String body = Jade4J.render(requestInCooldownTemplate, templateProperties.build());
+    final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
 
     queueMail(emailDestination, request, EmailType.REQUEST_IN_COOLDOWN, subject, body);
   }
@@ -407,10 +428,14 @@ public class SingularityMailer implements Managed {
   private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
     SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return (simplifiedTaskState == SimplifiedTaskState.DONE) || (simplifiedTaskState == SimplifiedTaskState.RUNNING);
+    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
   }
 
-  private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, Collection<SingularityTaskHistoryUpdate> history) {
+  private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, EmailType type, Collection<SingularityTaskHistoryUpdate> history) {
+    if (type == EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
+      return String.format("Task is overdue to finish (%s)", taskId.toString());
+    }
+
     if (!didTaskRun(history)) {
       return String.format("Task never started and was %s (%s)", state.getDisplayName(), taskId.toString());
     }

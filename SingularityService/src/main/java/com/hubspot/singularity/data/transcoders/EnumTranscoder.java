@@ -2,19 +2,20 @@ package com.hubspot.singularity.data.transcoders;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.hubspot.singularity.SingularityJsonObject.SingularityJsonException;
+import javax.annotation.Nullable;
 
 public abstract class EnumTranscoder<T extends Enum<T>> implements Transcoder<T> {
+  private static final byte[] EMPTY_BYTES = new byte[0];
 
   @Override
-  public T transcode(byte[] data) throws SingularityJsonException {
-    return fromString(new String(data, UTF_8));
+  public T fromBytes(@Nullable byte[] data) throws SingularityTranscoderException {
+    return fromString(data == null ? null : new String(data, UTF_8));
   }
 
-  protected abstract T fromString(String string);
+  protected abstract T fromString(@Nullable String string);
 
   @Override
-  public byte[] toBytes(T object) throws SingularityJsonException {
-    return object.name().getBytes(UTF_8);
+  public byte[] toBytes(@Nullable T object) throws SingularityTranscoderException {
+    return object == null ? EMPTY_BYTES : object.name().getBytes(UTF_8);
   }
 }
