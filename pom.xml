@@ -37,6 +37,8 @@
     <basepom.check.skip-license>true</basepom.check.skip-license>
     <basepom.check.fail-extended>true</basepom.check.fail-extended>
 
+    <basepom.test.timeout>120</basepom.test.timeout>
+
     <dep.plugin.surefire.version>2.18</dep.plugin.surefire.version>
 
     <!-- hubspot jackson and dropwizard dep use 2.3.x -->
@@ -560,8 +562,6 @@
         <project.jdk7.home>${env.JAVA_HOME}</project.jdk7.home>
         <basepom.test.reuse-vm>false</basepom.test.reuse-vm>
         <basepom.test.fork-count>1</basepom.test.fork-count>
-        <!-- travis is actually pretty slow. -->
-        <basepom.test.timeout>120</basepom.test.timeout>
       </properties>
     </profile>
     <profile>
