@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -14,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -59,7 +60,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-    final List<String> requestIdsToLookup = Lists.newArrayListWithCapacity(activeTaskIds.size());
+    final Set<String> requestIdsToLookup = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
 
     for (SingularityTaskId taskId : activeTaskIds) {
       if (start - taskId.getStartedAt() < configuration.getWarnIfScheduledJobIsRunningForAtLeastMillis()) {
