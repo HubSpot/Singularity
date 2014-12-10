@@ -17,10 +17,15 @@ def exit(reason):
   sys.exit(1)
 
 def main(args):
+  check_dest(args)
   all_logs = []
   all_logs += download_s3_logs(args)
   all_logs += download_live_logs(args)
   grep_files(args, all_logs)
+
+def check_dest(args):
+  if not os.path.exists(args.dest):
+    os.makedirs(args.dest)
 
 def entrypoint():
   conf_parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
@@ -29,7 +34,7 @@ def entrypoint():
   conf_file = args.conf_file if args.conf_file else DEFAULT_CONF_FILE
   config = ConfigParser.SafeConfigParser()
 
-  defaults = { "num_parallel_fetches" : 5, "chunk_size" : 8192, "dest" : os.getcwd(), "task_count" : 1 }
+  defaults = { "num_parallel_fetches" : 5, "chunk_size" : 8192, "dest" : "~/.logfetch_cache", "task_count" : 1 }
 
   try:
     config.readfp(FakeSectionHead(open(conf_file)))
