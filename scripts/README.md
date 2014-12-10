@@ -3,6 +3,11 @@ Singularity Log Fetcher
 
 This log fetcher uses singularity endpoints to find and download log files relevant to a certain, request, task, or deploy. The log fetcher will download (and unzip if needed) all log files for the specified input and search them using grep. 
 
+##Installation
+```
+./install.sh
+```
+
 ##Configuration
 - Configuration can either be read from a file, or from command line arguments.
 - An example configuration files lives in this directory at .logfetch.example
@@ -17,7 +22,7 @@ This log fetcher uses singularity endpoints to find and download log files relev
 |-r , --requestId|REquestId to fetch logs for|
 |--task-count|Number of recent tasks (belonging to a request) to fetch live logs (on machine not s3)|1|
 |-d , --deployId|DeployId to fetch logs for (Must also specify requestId when using this option)|
-|--dest|Destination folder for downloaded log files, default is current working directory|current working directory|
+|--dest|Destination folder for downloaded log files, default is current working directory|~/.logfetch_cache|
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk_size|Chunk size for writing responses to file system|8192
 |-s, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
@@ -30,12 +35,12 @@ When the -g option is set, the log fetcher will grep the downloaded files for th
 
 ##Example Usage
 - Search logs for a request
-  - `python log_fetcher.py -r 'My_Jobs_Id' -g 'Regex_here'`
+  - `logfetch -r 'My_Jobs_Id' -g 'Regex_here'`
 - Search logs for a specific deploy
-  - `python log_fetcher.py -r 'My_Jobs_Id' -d '1_2_3' -g 'Regex_here'`
+  - `logfetch -r 'My_Jobs_Id' -d '1_2_3' -g 'Regex_here'`
 - Search logs for a specific task
-  - `python log_fetcher.py -t 'My_Task_id' -g 'Regex_here'`
+  - `logfetch -t 'My_Task_id' -g 'Regex_here'`
 - Specify your own configuration file
-  - `python log_fetcher.py -c /etc/my_conf_file -t 'My_Task_id' -g 'Regex_here'`
+  - `logfetch -c /etc/my_conf_file -t 'My_Task_id' -g 'Regex_here'`
 - Don't search, just download logs
-  - `python log_fetcher.py -r 'My_Jobs_Id'`
+  - `logfetch -r 'My_Jobs_Id'`
