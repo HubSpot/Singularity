@@ -6,6 +6,7 @@ import grequests
 import requests
 import gzip
 from glob import glob
+from termcolor import colored
 
 TASK_FORMAT = '/task/{0}'
 DEPLOY_FORMAT = '/request/{0}/deploy/{1}'
@@ -22,7 +23,7 @@ DOWNLOAD_FILE_FORMAT = '{0}/sandbox/{1}/download'
 ERROR_STATUS_FORMAT = 'Singularity responded with an invalid status code ({0})'
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 
-GREP_COMMAND_FORMAT = 'grep -r \'{0}\' {1}'
+GREP_COMMAND_FORMAT = 'xargs -n {0} grep \'{1}\' < {2}'
 
 DEFAULT_CONF_FILE = os.path.expanduser('~/.logfetch')
 
@@ -38,33 +39,44 @@ class FakeSectionHead(object):
     else: return self.fp.readline()
 
 def exit(reason):
-  print reason
+  print colored(reason, 'red')
   sys.exit(1)
 
 def main(parser, args):
-  download_s3_logs(args)
-  download_live_logs(args)
-  grep_files(args)
+  all_logs = []
+  all_logs += download_s3_logs(args)
+  all_logs += download_live_logs(args)
+  grep_files(args, all_logs)
 
-def grep_files(args):
+def grep_files(args, all_logs):
   if args.grep:
-    grep_command = GREP_COMMAND_FORMAT.format(args.grep, args.dest)
-    print 'Running "{0}" this might take a minute'.format(grep_command)
+    greplist_filename = '{0}/.greplist'.format(args.dest)
+    create_greplist(args, all_logs, greplist_filename)
+    grep_command = GREP_COMMAND_FORMAT.format(len(all_logs), args.grep, greplist_filename)
+    print colored('Running "{0}" this might take a minute'.format(grep_command), 'blue')
     print os.popen(grep_command).read()
-    print 'Finished grep, exiting'
+    remove_greplist(greplist_filename)
+    print colored('Finished grep, exiting', 'green')
+
+def create_greplist(args, all_logs, greplist_filename):
+  greplist_file = open(greplist_filename, 'wb')
+  for log in all_logs:
+    greplist_file.write('{0}\n'.format(log))
+  greplist_file.close()
+
+def remove_greplist(greplist_filename):
+  if os.path.isfile(greplist_filename):
+    os.remove(greplist_filename)
 
 def download_live_logs(args):
   tasks = tasks_to_check(args)
-  download_service_logs(args, tasks)
-
-
-def download_service_logs(args, tasks):
   async_requests = []
   zipped_files = []
-  print 'Removing old service.log files'
+  all_logs = []
+  print colored('Removing old service.log files', 'blue')
   for f in glob('{0}/*service.log'.format(args.dest)):
     os.remove(f)
-  print 'Downloading current live log files'
+  print colored('Downloading current live log files', 'blue')
   for task in tasks:
     uri = DOWNLOAD_FILE_FORMAT.format(base_uri(args), task)
     service_log = '{0}-service.log'.format(task)
@@ -75,12 +87,14 @@ def download_service_logs(args, tasks):
         params={'path' : '{0}/service.log'.format(task)}
       )
     )
+    all_logs.append('{0}/{1}'.format(args.dest, service_log))
     async_requests.append(
       grequests.AsyncRequest('GET',uri ,
         callback=generate_callback(uri, args.dest, tail_log, args.chunk_size),
         params={'path' : '{0}/tail_of_finished_service.log'.format(task)}
       )
     )
+    all_logs.append('{0}/{1}'.format(args.dest, service_log))
     for log_file in logs_folder_files(args, task):
       logfile_name = '{0}-{1}'.format(task, log_file)
       async_requests.append(
@@ -91,9 +105,11 @@ def download_service_logs(args, tasks):
       )
       if logfile_name.endswith('.gz'):
         zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
+      all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
 
   grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   unpack_logs(zipped_files)
+  return all_logs
 
 def tasks_to_check(args):
   if args.taskId:
@@ -119,11 +135,13 @@ def logs_folder_files(args, task):
 
 
 def download_s3_logs(args):
-  print 'Checking for S3 log files'
+  print colored('Checking for S3 log files', 'blue')
   logs = get_json_response(singularity_s3logs_uri(args))
   async_requests = []
+  all_logs = []
   for log_file in logs:
     filename = log_file['key'][log_file['key'].rfind('/') + 1:]
+    all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
     if not (os.path.isfile('{0}/{1}'.format(args.dest, filename)) or os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))):
         async_requests.append(
             grequests.AsyncRequest('GET', log_file['getUrl'],
@@ -133,9 +151,10 @@ def download_s3_logs(args):
   grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   zipped_files = ['{0}/{1}'.format(args.dest, log_file['key'][log_file['key'].rfind('/') + 1:]) for log_file in logs]
   unpack_logs(zipped_files)
+  print colored('All S3 logs up to date', 'blue')
+  return all_logs
 
 def unpack_logs(logs):
-  unzipped_files = []
   for zipped_file in logs:
     if os.path.isfile(zipped_file):
       file_in = gzip.open(zipped_file, 'rb')
@@ -145,9 +164,7 @@ def unpack_logs(logs):
       file_out.close()
       file_in.close
       os.remove(zipped_file)
-      print('Unpacked {0}'.format(zipped_file))
-      unzipped_files.append(unzipped)
-  return unzipped_files
+      print colored('Unpacked {0}'.format(zipped_file), 'green')
 
 def base_uri(args):
   if not args.singularity_uri_base:
@@ -176,7 +193,7 @@ def generate_callback(request, destination, filename, chunk_size):
     with open(path, 'wb') as f:
       for chunk in response.iter_content(chunk_size):
         f.write(chunk)
-    print 'finished downloading {0}'.format(path)
+    print colored('finished downloading {0}'.format(path), 'green')
 
   return callback
 
@@ -218,5 +235,10 @@ if __name__ == "__main__":
   parser.add_argument("-g", "--grep", help="Regex to grep for (normal grep syntax)", metavar='grep')
 
   args = parser.parse_args(remaining_argv)
+
+  if args.deployId and not args.requestId:
+    exit("Must specify requestId (-r) when specifying deployId")
+  elif not args.requestId and not args.deployId and not args.taskId:
+    exit('Must specify one of\n - taskId\n - requestId and deployId\n - requestId')
 
   main(parser, args)
