@@ -11,6 +11,10 @@ from grep import grep_files
 
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 DEFAULT_CONF_FILE = os.path.expanduser('~/.logfetch')
+DEFAULT_PARALLEL_FETCHES = 5
+DEFAULT_CHUNK_SIZE = 8192
+DEFAULT_DEST = "~/.logfetch_cache"
+DEFAULT_TASK_COUNT = 1
 
 def exit(reason):
   print colored(reason, 'red')
@@ -34,7 +38,12 @@ def entrypoint():
   conf_file = args.conf_file if args.conf_file else DEFAULT_CONF_FILE
   config = ConfigParser.SafeConfigParser()
 
-  defaults = { "num_parallel_fetches" : 5, "chunk_size" : 8192, "dest" : "~/.logfetch_cache", "task_count" : 1 }
+  defaults = {
+    "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
+    "chunk_size" : DEFAULT_CHUNK_SIZE,
+    "dest" : DEFAULT_DEST,
+    "task_count" : DEFAULT_TASK_COUNT
+  }
 
   try:
     config.readfp(FakeSectionHead(open(conf_file)))
