@@ -1,16 +1,15 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAbort;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.hubspot.singularity.mesos.SingularityMesosModule;
 
 @Singleton
 public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
@@ -18,10 +17,11 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
   private final SingularityCooldownChecker checker;
 
   @Inject
-  public SingularityCooldownPoller(LeaderLatch leaderLatch, SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityCooldownChecker checker, SingularityAbort abort) {
-      super(leaderLatch, mesosScheduler, exceptionNotifier, abort, TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, SchedulerLockType.LOCK);
+  SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS);
 
     this.checker = checker;
+    this.lockHolder = Optional.of(lock);
   }
 
   @Override

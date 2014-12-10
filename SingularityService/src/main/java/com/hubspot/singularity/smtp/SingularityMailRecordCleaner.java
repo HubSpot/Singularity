@@ -2,7 +2,6 @@ package com.hubspot.singularity.smtp;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,12 +9,9 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.data.MetadataManager;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 public class SingularityMailRecordCleaner extends SingularityLeaderOnlyPoller {
@@ -26,8 +22,8 @@ public class SingularityMailRecordCleaner extends SingularityLeaderOnlyPoller {
   private final Optional<SMTPConfiguration> smtpConfiguration;
 
   @Inject
-  public SingularityMailRecordCleaner(LeaderLatch leaderLatch, Optional<SMTPConfiguration> smtpConfiguration, SingularityMesosSchedulerDelegator mesosScheduler, MetadataManager metadataManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort) {
-    super(leaderLatch, mesosScheduler, exceptionNotifier, abort, smtpConfiguration.isPresent() ? Math.max(smtpConfiguration.get().getRateLimitCooldownMillis(), smtpConfiguration.get().getRateLimitPeriodMillis()) : 0, TimeUnit.MILLISECONDS, SchedulerLockType.NO_LOCK);
+  SingularityMailRecordCleaner(Optional<SMTPConfiguration> smtpConfiguration, MetadataManager metadataManager) {
+    super(smtpConfiguration.isPresent() ? Math.max(smtpConfiguration.get().getRateLimitCooldownMillis(), smtpConfiguration.get().getRateLimitPeriodMillis()) : 0, TimeUnit.MILLISECONDS);
 
     this.metadataManager = metadataManager;
     this.smtpConfiguration = smtpConfiguration;
