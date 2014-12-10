@@ -28,3 +28,6 @@ SingularityUI/.vee
 
 scripts/*.log
 scripts/*.gz
+scripts/logfetch.egg-info
+scripts/build
+scripts/dist
