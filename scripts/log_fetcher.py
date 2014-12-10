@@ -44,10 +44,14 @@ def exit(reason):
 def main(parser, args):
   download_s3_logs(args)
   download_live_logs(args)
-  grep_command = GREP_COMMAND_FORMAT.format(args.grep, args.dest)
-  print 'Running "{0}" this might take a minute'.format(grep_command)
-  print os.popen(grep_command).read()
-  print 'Finished grep, exiting'
+  grep_files(args)
+
+def grep_files(args):
+  if args.grep:
+    grep_command = GREP_COMMAND_FORMAT.format(args.grep, args.dest)
+    print 'Running "{0}" this might take a minute'.format(grep_command)
+    print os.popen(grep_command).read()
+    print 'Finished grep, exiting'
 
 def download_live_logs(args):
   tasks = tasks_to_check(args)
@@ -58,7 +62,7 @@ def download_service_logs(args, tasks):
   async_requests = []
   zipped_files = []
   print 'Removing old service.log files'
-  for f in glob('{0}/*-service.log'.format(args.dest)):
+  for f in glob('{0}/*service.log'.format(args.dest)):
     os.remove(f)
   print 'Downloading current live log files'
   for task in tasks:
@@ -99,7 +103,7 @@ def tasks_to_check(args):
 
 def tasks_for_request(args):
   if args.requestId and args.deployId:
-      tasks = [task for task in all_tasks_for_request(args) if task["taskId"]["deployId"] == args.deployId]
+      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if task["taskId"]["deployId"] == args.deployId]
   else:
     tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args)[0:args.task_count]]
   return tasks
