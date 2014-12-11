@@ -9,7 +9,7 @@ requirements = [
 ]
 
 setup(
-    name='logfetch',
+    name='singularity-logfetch',
     version='0.0.1',
     description='Singularity log fetching and searching',
     author='singularity-users@googlegroups.com',
