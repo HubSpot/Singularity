@@ -9,25 +9,22 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.transcoders.IdTranscoder;
 
 public abstract class AbstractHistoryResource {
 
   private final HistoryManager historyManager;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
-  private final IdTranscoder<SingularityTaskId> singularityTaskIdTranscoder;
 
-  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, final IdTranscoder<SingularityTaskId> singularityTaskIdTranscoder) {
+  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager) {
     this.historyManager = historyManager;
     this.taskManager = taskManager;
     this.deployManager = deployManager;
-    this.singularityTaskIdTranscoder = singularityTaskIdTranscoder;
   }
 
   protected SingularityTaskId getTaskIdObject(String taskId) {
     try {
-      return singularityTaskIdTranscoder.fromString(taskId);
+      return SingularityTaskId.valueOf(taskId);
     } catch (InvalidSingularityTaskIdException e) {
       throw WebExceptions.badRequest("%s is not a valid task id: %s", taskId, e.getMessage());
     }
