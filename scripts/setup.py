@@ -12,7 +12,7 @@ setup(
     name='logfetch',
     version='0.0.1',
     description='Singularity log fetching and searching',
-    author='Hubspot PaaS',
+    author='singularity-users@googlegroups.com',
     url='https://github.com/HubSpot/Singularity',
     packages=find_packages(),
     include_package_data=True,
