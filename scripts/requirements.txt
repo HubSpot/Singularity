@@ -1,5 +1,0 @@
-argparse
-ConfigParser
-grequests
-requests
-termcolor

@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 requirements = [
-  'argparse',
-  'ConfigParser',
-  'grequests',
-  'requests',
-  'termcolor'
+  'argparse==1.2.2',
+  'ConfigParser==3.5.0b2',
+  'grequests==0.2.0',
+  'requests==2.5.0',
+  'termcolor==1.1.0'
 ]
 
 setup(
