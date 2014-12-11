@@ -1,4 +1,5 @@
 import os
+import sys
 import grequests
 from termcolor import colored
 
@@ -12,7 +13,7 @@ REQUEST_FORMAT = '/request/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
 
 def download_s3_logs(args):
-  print colored('Checking for S3 log files', 'blue')
+  sys.stderr.write(colored('Checking for S3 log files', 'blue') + '\n')
   logs = get_json_response(singularity_s3logs_uri(args))
   async_requests = []
   all_logs = []
@@ -28,7 +29,7 @@ def download_s3_logs(args):
   grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   zipped_files = ['{0}/{1}'.format(args.dest, log_file['key'][log_file['key'].rfind('/') + 1:]) for log_file in logs]
   logfetch_base.unpack_logs(zipped_files)
-  print colored('All S3 logs up to date', 'blue')
+  sys.stderr.write(colored('All S3 logs up to date', 'blue') + '\n')
   return all_logs
 
 

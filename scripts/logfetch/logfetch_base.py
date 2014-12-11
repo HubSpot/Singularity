@@ -1,5 +1,5 @@
-import requests
 import os
+import sys
 import gzip
 from termcolor import colored
 
@@ -15,7 +15,7 @@ def unpack_logs(logs):
       file_out.close()
       file_in.close
       os.remove(zipped_file)
-      print colored('Unpacked {0}'.format(zipped_file), 'green')
+      sys.stderr.write(colored('Unpacked {0}'.format(zipped_file), 'green') + '\n')
 
 def base_uri(args):
   if not args.singularity_uri_base:

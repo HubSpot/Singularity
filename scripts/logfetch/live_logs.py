@@ -1,4 +1,5 @@
 import os
+import sys
 import grequests
 from glob import glob
 from termcolor import colored
@@ -16,10 +17,10 @@ def download_live_logs(args):
   async_requests = []
   zipped_files = []
   all_logs = []
-  print colored('Removing old service.log files', 'blue')
+  sys.stderr.write(colored('Removing old service.log files', 'blue') + '\n')
   for f in glob('{0}/*service.log'.format(args.dest)):
     os.remove(f)
-  print colored('Downloading current live log files', 'blue')
+  sys.stderr.write(colored('Downloading current live log files', 'blue') + '\n')
   for task in tasks:
     uri = DOWNLOAD_FILE_FORMAT.format(logfetch_base.base_uri(args), task)
     service_log = '{0}-service.log'.format(task)

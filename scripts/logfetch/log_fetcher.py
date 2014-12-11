@@ -13,11 +13,11 @@ CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 DEFAULT_CONF_FILE = os.path.expanduser('~/.logfetch')
 DEFAULT_PARALLEL_FETCHES = 5
 DEFAULT_CHUNK_SIZE = 8192
-DEFAULT_DEST = "~/.logfetch_cache"
+DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
 DEFAULT_TASK_COUNT = 1
 
 def exit(reason):
-  print colored(reason, 'red')
+  sys.stderr.write(colored(reason, 'red') + '\n')
   sys.exit(1)
 
 def main(args):
@@ -46,10 +46,10 @@ def entrypoint():
   }
 
   try:
-    config.readfp(FakeSectionHead(open(conf_file)))
+    config.readfp(FakeSectionHead(open(os.path.expanduser(conf_file))))
     defaults.update(dict(config.items("Defaults")))
   except Exception, err:
-    print CONF_READ_ERR_FORMAT.format(conf_file, err)
+    sys.stderr.write(CONF_READ_ERR_FORMAT.format(conf_file, err) + '\n')
 
   parser = argparse.ArgumentParser(parents=[conf_parser], description="Fetch log files from Singularity. One can specify either a TaskId, RequestId and DeployId, or RequestId",
           prog="log_fetcher")
@@ -71,5 +71,7 @@ def entrypoint():
     exit("Must specify requestId (-r) when specifying deployId")
   elif not args.requestId and not args.deployId and not args.taskId:
     exit('Must specify one of\n - taskId\n - requestId and deployId\n - requestId')
+
+  args.dest = os.path.expanduser(args.dest)
 
   main(args)

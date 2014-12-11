@@ -1,5 +1,5 @@
 singularity_uri_base: localhost:8080/singularity/v2/api
-dest: '~/singularity_logs'
+dest: ~/.logfetch_cache
 num_parallel_fetches: 5
 check_size: 8192
 task_count: 1
