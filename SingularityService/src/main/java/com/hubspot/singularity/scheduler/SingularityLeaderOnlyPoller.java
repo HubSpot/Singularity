@@ -30,6 +30,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   private final ScheduledExecutorService executorService;
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
+  private final boolean enabled;
 
   private LeaderLatch leaderLatch;
   private SingularityExceptionNotifier exceptionNotifier;
@@ -39,8 +40,13 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   protected Optional<Lock> lockHolder = Optional.absent();
 
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
+    this(pollDelay, pollTimeUnit, true);
+  }
+
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, boolean enabled) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
+    this.enabled = enabled;
 
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
   }
@@ -56,9 +62,13 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     this.mesosScheduler = checkNotNull(mesosScheduler, "mesosScheduler is null");
   }
 
-
   @Override
   public void start() {
+    if (!enabled) {
+      LOG.info("{} is not enabled, skipping.", getClass().getSimpleName());
+      return;
+    }
+
     if (pollDelay < 1) {
       LOG.warn("Not running {} due to delay value of {}", getClass().getSimpleName(), pollDelay);
       return;
@@ -77,7 +87,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   }
 
   private void runActionIfLeaderAndMesosIsRunning() {
-    if (!leaderLatch.hasLeadership() || !mesosScheduler.isRunning()) {
+    final boolean leadership = leaderLatch.hasLeadership();
+    final boolean schedulerRunning = mesosScheduler.isRunning();
+
+    if (!leadership || !schedulerRunning) {
+      LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership, schedulerRunning);
       return;
     }
 
