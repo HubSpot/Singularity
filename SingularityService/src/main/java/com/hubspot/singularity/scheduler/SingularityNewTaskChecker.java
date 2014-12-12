@@ -1,10 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -18,9 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -29,6 +25,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
@@ -46,7 +43,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
  * b/c we will use a queue to kill them.
  */
 @Singleton
-public class SingularityNewTaskChecker implements Managed {
+public class SingularityNewTaskChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityNewTaskChecker.class);
 
@@ -63,7 +60,8 @@ public class SingularityNewTaskChecker implements Managed {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort) {
+  public SingularityNewTaskChecker(@Named(SingularityMainModule.NEW_TASK_THREADPOOL_NAME) ScheduledExecutorService executorService,
+      SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort) {
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lbClient = lbClient;
@@ -72,18 +70,9 @@ public class SingularityNewTaskChecker implements Managed {
     this.taskIdToCheck = Maps.newConcurrentMap();
     this.killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
 
-    this.executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
+    this.executorService = executorService;
 
     this.exceptionNotifier = exceptionNotifier;
-  }
-
-  @Override
-  public void start() {
-  }
-
-  @Override
-  public void stop() {
-    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 
   private boolean hasHealthcheck(SingularityTask task) {

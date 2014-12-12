@@ -17,7 +17,7 @@ public class SingularityServiceModule extends ConfigurationAwareModule<Singulari
 
   @Override
   protected void configure(Binder binder, SingularityConfiguration configuration) {
-    binder.install(new SingularityMainModule());
+    binder.install(new SingularityMainModule(configuration));
     binder.install(new SingularityDataModule());
     binder.install(new SingularitySchedulerModule());
     binder.install(new SingularityResourceModule());
