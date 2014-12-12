@@ -557,12 +557,8 @@ public class TaskManager extends CuratorAsyncManager {
     delete(getCleanupPath(taskId));
   }
 
-  public void deleteTaskHistory(SingularityTaskId taskId) {
-    try {
-      curator.delete().deletingChildrenIfNeeded().forPath(getHistoryPath(taskId));
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
+  public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
+    return delete(getHistoryPath(taskId));
   }
 
 }
