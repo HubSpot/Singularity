@@ -19,7 +19,7 @@ def unpack_logs(logs):
 
 def base_uri(args):
   if not args.singularity_uri_base:
-    exit("Specify a base uri for Singularity")
+    exit("Specify a base uri for Singularity (-u)")
   uri_prefix = "" if args.singularity_uri_base.startswith(("http://", "https://")) else "http://"
   uri = BASE_URI_FORMAT.format(uri_prefix, args.singularity_uri_base)
   return uri

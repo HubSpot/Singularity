@@ -78,7 +78,7 @@ def entrypoint():
   if args.deployId and not args.requestId:
     exit("Must specify requestId (-r) when specifying deployId")
   elif not args.requestId and not args.deployId and not args.taskId:
-    exit('Must specify one of\n - taskId\n - requestId and deployId\n - requestId')
+    exit('Must specify one of\n -t taskId\n -r requestId and -d deployId\n -r requestId')
 
   args.dest = os.path.expanduser(args.dest)
 
