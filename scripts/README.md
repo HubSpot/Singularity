@@ -5,7 +5,7 @@ This log fetcher uses singularity endpoints to find and download log files relev
 
 ##Installation
 ```
-./install.sh
+pip install singularity-logfetch
 ```
 
 ##Configuration
@@ -26,8 +26,9 @@ This log fetcher uses singularity endpoints to find and download log files relev
 |--dest|Destination folder for downloaded log files, default is current working directory|~/.logfetch_cache|
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk_size|Chunk size for writing responses to file system|8192
-|-s, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
-|--days|Number of days to search for logs (eg. 7, search the last 7 days of logs) blank for all logs available|7
+|-u, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
+|-s , --start-days|Search for logs no older than this many days|7
+|-e , --end-days|Search for logs no newer than this many days| None (today)
 |-g, --grep|Grep string for searching log files|
 
 ##Grep and Log Files

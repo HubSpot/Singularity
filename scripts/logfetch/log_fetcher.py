@@ -26,7 +26,8 @@ def main(args):
   check_dest(args)
   all_logs = []
   all_logs += download_s3_logs(args)
-  all_logs += download_live_logs(args)
+  if args.end_days and not args.end_days > 0:
+    all_logs += download_live_logs(args)
   grep_files(args, all_logs)
 
 def check_dest(args):
@@ -47,7 +48,7 @@ def entrypoint():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "days" : DEFAULT_DAYS
+    "start_days" : DEFAULT_DAYS
   }
 
   try:
@@ -67,8 +68,9 @@ def entrypoint():
   parser.add_argument("--dest", help="Destination directory", metavar="DIR")
   parser.add_argument("-n", "--num-parallel-fetches", help="Number of fetches to make at once", type=int, metavar="INT")
   parser.add_argument("-cs", "--chunk-size", help="Chunk size for writing from response to filesystem", type=int, metavar="INT")
-  parser.add_argument("-s", "--singularity-uri-base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)", metavar="URI")
-  parser.add_argument("--days", help="Number of days in the past to search for logs (eg. 7 -> search the last 7 days of logs)", metavar="days")
+  parser.add_argument("-u", "--singularity-uri-base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)", metavar="URI")
+  parser.add_argument("-s", "--start-days", help="Search for logs no older than this many days", type=int, metavar="start_days")
+  parser.add_argument("-e", "--end-days", help="Search for logs no new than this many days (defaults to None/today)", type=int, metavar="end_days")
   parser.add_argument("-g", "--grep", help="Regex to grep for (normal grep syntax)", metavar='grep')
 
   args = parser.parse_args(remaining_argv)

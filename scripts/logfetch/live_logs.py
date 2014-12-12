@@ -74,5 +74,9 @@ def all_tasks_for_request(args):
 
 def logs_folder_files(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  files = get_json_response(uri, {'path' : '{0}/logs'.format(task)})
-  return [f['path'].rsplit('/')[-1] for f in files]
+  files_json = get_json_response(uri, {'path' : '{0}/logs'.format(task)})
+  if 'files' in files_json:
+    files = files_json['files']
+    return [f['name'] for f in files]
+  else:
+    return [f['path'].rsplit('/')[-1] for f in files_json]
