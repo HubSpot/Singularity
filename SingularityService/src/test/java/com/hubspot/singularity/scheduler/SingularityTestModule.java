@@ -103,7 +103,7 @@ public class SingularityTestModule implements Module {
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
 
-    mainBinder.install(Modules.override(new SingularityMainModule())
+    mainBinder.install(Modules.override(new SingularityMainModule(configuration))
         .with(new Module() {
 
           @Override

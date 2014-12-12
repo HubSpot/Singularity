@@ -135,6 +135,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long zookeeperAsyncTimeout = 5000;
 
+  private int coreThreadpoolSize = 8;
+
   private long threadpoolShutdownDelayInSeconds = 1;
 
   private int listenerThreadpoolSize = 3;
@@ -364,6 +366,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isSandboxDefaultsToTaskId() {
     return sandboxDefaultsToTaskId;
+  }
+
+  public int getCoreThreadpoolSize() {
+    return coreThreadpoolSize;
   }
 
   public int getListenerThreadpoolSize() {
@@ -596,6 +602,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public void setCoreThreadpoolSize(int coreThreadpoolSize) {
+    this.coreThreadpoolSize = coreThreadpoolSize;
   }
 
   public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
