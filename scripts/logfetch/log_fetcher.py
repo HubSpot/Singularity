@@ -71,7 +71,7 @@ def entrypoint():
   parser.add_argument("-u", "--singularity-uri-base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)", metavar="URI")
   parser.add_argument("-s", "--start-days", help="Search for logs no older than this many days", type=int, metavar="start_days")
   parser.add_argument("-e", "--end-days", help="Search for logs no new than this many days (defaults to None/today)", type=int, metavar="end_days")
-  parser.add_argument("-g", "--grep", help="Regex to grep for (normal grep syntax)", metavar='grep')
+  parser.add_argument("-g", "--grep", help="Regex to grep for (normal grep syntax) or a full grep command", metavar='grep')
 
   args = parser.parse_args(remaining_argv)
 

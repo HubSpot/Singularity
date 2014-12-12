@@ -40,12 +40,12 @@ def download_s3_logs(args):
 def in_date_range(args, filename):
   timedelta = datetime.utcnow() - time_from_filename(filename)
   if args.end_days:
-    if timedelta.days < args.start_days or timedelta.days > args.end_days:
+    if timedelta.days > args.start_days or timedelta.days <= args.end_days:
       return False
     else:
       return True
   else:
-    if timedelta.days >= args.start_days:
+    if timedelta.days > args.start_days:
       return False
     else:
       return True
