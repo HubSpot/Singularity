@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 
@@ -61,25 +62,25 @@ public class SMTPConfiguration {
   private long rateLimitCooldownMillis = TimeUnit.HOURS.toMillis(1);
 
   @JsonProperty("emails")
-  private Map<EmailType, List<EmailDestination>> emailConfiguration = ImmutableMap.<EmailType, List<EmailDestination>>builder()
-  .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
-  .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
-  .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
-  .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
-  .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-  .put(EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-  .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-  .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-  .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-  .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-  .build();
+  private Map<EmailType, List<EmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<EmailType, List<EmailDestination>>builder()
+      .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
+      .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
+      .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
+      .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
+      .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .build());
 
   public Map<EmailType, List<EmailDestination>> getEmailConfiguration() {
     return emailConfiguration;
   }
 
   public void setEmailConfiguration(Map<EmailType, List<EmailDestination>> emailConfiguration) {
-    this.emailConfiguration = emailConfiguration;
+    this.emailConfiguration.putAll(emailConfiguration);
   }
 
   public int getTaskLogLength() {
