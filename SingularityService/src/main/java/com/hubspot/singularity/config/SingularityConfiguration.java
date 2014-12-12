@@ -17,63 +17,44 @@ import com.hubspot.singularity.SlavePlacement;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
 
-  @NotNull
   private boolean allowRequestsWithoutOwners = true;
 
-  @NotNull
   private boolean allowTestResourceCalls = false;
 
-  @NotNull
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
 
-  @NotNull
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
 
-  @NotNull
   private long checkDeploysEverySeconds = 5;
 
-  @NotNull
   private long checkNewTasksEverySeconds = 5;
 
-  @NotNull
   private int checkNewTasksScheduledThreads = 3;
 
-  @NotNull
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  @NotNull
   private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
 
-  @NotNull
   private long checkSchedulerEverySeconds = 5;
 
-  @NotNull
   private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
-  @NotNull
   private long cleanupEverySeconds = 5;
 
-  @NotNull
   private long closeWaitSeconds = 5;
 
   private String commonHostnameSuffixToOmit;
 
-  @NotNull
   private boolean compressLargeDataObjects = true;
 
-  @NotNull
   private long considerTaskHealthyAfterRunningForSeconds = 5;
 
-  @NotNull
   private int cooldownAfterFailures = 3;
 
-  @NotNull
   private double cooldownAfterPctOfInstancesFail = 1.0;
 
-  @NotNull
   private long cooldownExpiresAfterMinutes = 15;
 
-  @NotNull
   private long cooldownMinScheduleSeconds = 120;
 
   @JsonProperty("database")
@@ -82,76 +63,58 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
-  @NotNull
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
-  @NotNull
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
 
-  @NotNull
   private long deployHealthyBySeconds = 120;
 
   private boolean enableCorsFilter = false;
 
-  @NotNull
   private long healthcheckIntervalSeconds = 5;
 
-  @NotNull
   private int healthcheckStartThreads = 3;
 
-  @NotNull
   private long healthcheckTimeoutSeconds = 5;
 
   private String hostname;
 
-  @NotNull
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
 
-  @NotNull
   private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(24);
 
   @JsonProperty("loadBalancerQueryParams")
   private Map<String, String> loadBalancerQueryParams;
 
-  @NotNull
   private long loadBalancerRequestTimeoutMillis = 2000;
 
   private String loadBalancerUri;
 
-  @NotNull
   private int logFetchMaxThreads = 15;
 
-  @NotNull
   private int maxDeployIdSize = 50;
 
-  @NotNull
   private int maxHealthcheckResponseBodyBytes = 8192;
 
-  @NotNull
   private int maxQueuedUpdatesPerWebhook = 50;
 
-  @NotNull
   private int maxRequestIdSize = 100;
 
   @JsonProperty("mesos")
+  @Valid
   private MesosConfiguration mesosConfiguration;
 
-  @NotNull
   private int newTaskCheckerBaseDelaySeconds = 1;
 
-  @NotNull
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
-  @NotNull
   private boolean sandboxDefaultsToTaskId = false;
 
-  @NotNull
   private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
 
-  @NotNull
   private long saveStateEverySeconds = 60;
 
   @JsonProperty("sentry")
@@ -160,23 +123,20 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("smtp")
   private SMTPConfiguration smtpConfiguration;
 
-  @NotNull
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
   @JsonProperty("ui")
   @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
 
-  @NotNull
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
-  @NotNull
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
-  @NotNull
   private long zookeeperAsyncTimeout = 5000;
 
   @JsonProperty("zookeeper")
+  @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
 
   public boolean allowTestResourceCalls() {
