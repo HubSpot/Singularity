@@ -15,7 +15,7 @@ DEFAULT_CONF_FILE = 'default'
 DEFAULT_PARALLEL_FETCHES = 5
 DEFAULT_CHUNK_SIZE = 8192
 DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
-DEFAULT_TASK_COUNT = 1
+DEFAULT_TASK_COUNT = 10
 DEFAULT_DAYS = 7
 
 def exit(reason):
