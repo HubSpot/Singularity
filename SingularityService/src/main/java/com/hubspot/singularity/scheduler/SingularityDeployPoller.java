@@ -24,10 +24,9 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
+    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, Optional.of(lock));
 
     this.deployChecker = deployChecker;
-    this.lockHolder = Optional.of(lock);
   }
 
   @Override

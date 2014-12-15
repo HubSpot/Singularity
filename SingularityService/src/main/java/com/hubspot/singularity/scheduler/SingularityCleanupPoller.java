@@ -18,10 +18,9 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS);
+    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, Optional.of(lock));
 
     this.cleaner = cleaner;
-    this.lockHolder = Optional.of(lock);
   }
 
   @Override

@@ -27,11 +27,10 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   @Inject
   SingularitySchedulerPoller(Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityScheduler scheduler,
       SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS);
+    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, Optional.of(lock));
 
     this.stateCacheProvider = stateCacheProvider;
     this.scheduler = scheduler;
-    this.lockHolder = Optional.of(lock);
   }
 
   @Override
@@ -43,6 +42,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     scheduler.checkForDecomissions(stateCache);
     scheduler.drainPendingQueue(stateCache);
 
-    LOG.info("Processed decomissions and pending queue in {}", JavaUtils.duration(start));
+    LOG.debug("Processed decomissions and pending queue in {}", JavaUtils.duration(start));
   }
+
 }

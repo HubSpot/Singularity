@@ -16,11 +16,12 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
-public class SingularityTaskHistoryPersister {
+public class SingularityTaskHistoryPersister extends SingularityHistoryPersister {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
 
@@ -29,13 +30,16 @@ public class SingularityTaskHistoryPersister {
   private final HistoryManager historyManager;
 
   @Inject
-  public SingularityTaskHistoryPersister(TaskManager taskManager, DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager, DeployManager deployManager, HistoryManager historyManager) {
+    super(configuration);
+
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
   }
 
-  public void checkInactiveTaskIds() {
+  @Override
+  public void runActionOnPoll() {
     LOG.info("Checking inactive task ids for task history persistance");
 
     final long start = System.currentTimeMillis();
