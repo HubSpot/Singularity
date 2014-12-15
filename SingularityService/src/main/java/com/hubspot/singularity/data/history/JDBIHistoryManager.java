@@ -49,8 +49,8 @@ public class JDBIHistoryManager implements HistoryManager {
         new Date(deployHistory.getDeployMarker().getTimestamp()),
         deployHistory.getDeployMarker().getUser().orNull(),
         deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
-        deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
-        deployHistoryTranscoder.toBytes(deployHistory));
+            deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
+                deployHistoryTranscoder.toBytes(deployHistory));
   }
 
   @Override
@@ -104,7 +104,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
     byte[] historyBytes = history.getTaskHistoryForTask(taskId);
 
-    if (historyBytes == null) {
+    if (historyBytes == null || historyBytes.length == 0) {
       return Optional.absent();
     }
 

@@ -1,20 +1,20 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.hubspot.singularity.mesos.SingularityMesosModule;
 
 @Singleton
 public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
@@ -25,12 +25,13 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
 
   @Inject
-  public SingularitySchedulerPoller(final LeaderLatch leaderLatch, final SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier,
-      SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityAbort abort, Provider<SingularitySchedulerStateCache> stateCacheProvider) {
-    super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, SchedulerLockType.LOCK);
+  SingularitySchedulerPoller(Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityScheduler scheduler,
+      SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS);
 
     this.stateCacheProvider = stateCacheProvider;
     this.scheduler = scheduler;
+    this.lockHolder = Optional.of(lock);
   }
 
   @Override
@@ -44,5 +45,4 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
 
     LOG.info("Processed decomissions and pending queue in {}", JavaUtils.duration(start));
   }
-
 }
