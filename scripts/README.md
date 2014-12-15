@@ -5,7 +5,7 @@ This log fetcher uses singularity endpoints to find and download log files relev
 
 ##Installation
 ```
-./install.sh
+pip install singularity-logfetch
 ```
 
 ##Configuration
@@ -26,14 +26,16 @@ This log fetcher uses singularity endpoints to find and download log files relev
 |--dest|Destination folder for downloaded log files, default is current working directory|~/.logfetch_cache|
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk_size|Chunk size for writing responses to file system|8192
-|-s, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
-|--days|Number of days to search for logs (eg. 7, search the last 7 days of logs) blank for all logs available|7
+|-u, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
+|-s , --start-days|Search for logs no older than this many days|7
+|-e , --end-days|Search for logs no newer than this many days| None (today)
 |-g, --grep|Grep string for searching log files|
 
 ##Grep and Log Files
 When the -g option is set, the log fetcher will grep the downloaded files for the provided regex.
-- Syntax is the same as regular grep
-- The command being executed is `grep -r (your input regex) (your destination directory)`
+
+- you can pass in a full grep command (including options) to run or just the grep regex
+- the default command will just be `grep (your regex)` if a full grep command is not supplied
 
 ##Example Usage
 - Specify a configuration file AND folder to use
