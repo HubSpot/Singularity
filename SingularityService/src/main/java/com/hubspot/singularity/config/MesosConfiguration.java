@@ -6,6 +6,8 @@ import com.google.common.base.Optional;
 
 public class MesosConfiguration {
 
+  private boolean useNativeCode = true;
+
   @NotNull
   private String master;
   @NotNull
@@ -36,6 +38,14 @@ public class MesosConfiguration {
   private int maxNumCpusPerRequest = 900;
   private int maxMemoryMbPerInstance = 24000;
   private int maxMemoryMbPerRequest = 450000;
+
+  public boolean isUseNativeCode() {
+    return useNativeCode;
+  }
+
+  public void setUseNativeCode(boolean useNativeCode) {
+    this.useNativeCode = useNativeCode;
+  }
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;

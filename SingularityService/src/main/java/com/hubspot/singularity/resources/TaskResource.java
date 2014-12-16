@@ -35,7 +35,6 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
-import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.sun.jersey.api.NotFoundException;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -50,15 +49,13 @@ public class TaskResource {
   private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
-  private final IdTranscoder<SingularityPendingTaskId> singularityPendingTaskIdTranscoder;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, IdTranscoder<SingularityPendingTaskId> singularityPendingTaskIdTranscoder) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
-    this.singularityPendingTaskIdTranscoder = singularityPendingTaskIdTranscoder;
   }
 
   @GET
@@ -81,7 +78,7 @@ public class TaskResource {
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
     try {
-      return singularityPendingTaskIdTranscoder.fromString(pendingTaskIdStr);
+      return SingularityPendingTaskId.valueOf(pendingTaskIdStr);
     } catch (InvalidSingularityTaskIdException e) {
       throw WebExceptions.badRequest("%s is not a valid pendingTaskId: %s", pendingTaskIdStr, e.getMessage());
     }

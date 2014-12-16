@@ -1,17 +1,22 @@
 package com.hubspot.singularity.scheduler;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -22,34 +27,48 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderOnlyPoller.class);
 
-  private final LeaderLatch leaderLatch;
-  private final SingularityMesosSchedulerDelegator mesosScheduler;
-  private final SingularityExceptionNotifier exceptionNotifier;
   private final ScheduledExecutorService executorService;
-  private final SingularityAbort abort;
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
-  private final SchedulerLockType schedulerLockType;
+  private final boolean enabled;
 
-  public static enum SchedulerLockType {
-    LOCK, NO_LOCK
+  private LeaderLatch leaderLatch;
+  private SingularityExceptionNotifier exceptionNotifier;
+  private SingularityAbort abort;
+  private SingularityMesosSchedulerDelegator mesosScheduler;
+
+  protected Optional<Lock> lockHolder = Optional.absent();
+
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
+    this(pollDelay, pollTimeUnit, true);
   }
 
-  protected SingularityLeaderOnlyPoller(LeaderLatch leaderLatch, SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
-      long pollDelay, TimeUnit pollTimeUnit, SchedulerLockType schedulerLockType) {
-    this.leaderLatch = leaderLatch;
-    this.mesosScheduler = mesosScheduler;
-    this.exceptionNotifier = exceptionNotifier;
-    this.abort = abort;
-    this.schedulerLockType = schedulerLockType;
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, boolean enabled) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
+    this.enabled = enabled;
 
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
   }
 
+  @Inject
+  void injectPollerDependencies(LeaderLatch leaderLatch,
+      SingularityExceptionNotifier exceptionNotifier,
+      SingularityAbort abort,
+      SingularityMesosSchedulerDelegator mesosScheduler) {
+    this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
+    this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
+    this.abort = checkNotNull(abort, "abort is null");
+    this.mesosScheduler = checkNotNull(mesosScheduler, "mesosScheduler is null");
+  }
+
   @Override
   public void start() {
+    if (!enabled) {
+      LOG.info("{} is not enabled, skipping.", getClass().getSimpleName());
+      return;
+    }
+
     if (pollDelay < 1) {
       LOG.warn("Not running {} due to delay value of {}", getClass().getSimpleName(), pollDelay);
       return;
@@ -68,14 +87,18 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   }
 
   private void runActionIfLeaderAndMesosIsRunning() {
-    if (!leaderLatch.hasLeadership() || !mesosScheduler.isRunning()) {
+    final boolean leadership = leaderLatch.hasLeadership();
+    final boolean schedulerRunning = mesosScheduler.isRunning();
+
+    if (!leadership || !schedulerRunning) {
+      LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership, schedulerRunning);
       return;
     }
 
     LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
 
-    if (schedulerLockType == SchedulerLockType.LOCK) {
-      mesosScheduler.lock();
+    if (lockHolder.isPresent()) {
+      lockHolder.get().lock();
     }
 
     try {
@@ -85,8 +108,8 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       exceptionNotifier.notify(t);
       abort.abort(AbortReason.UNRECOVERABLE_ERROR);
     } finally {
-      if (schedulerLockType == SchedulerLockType.LOCK) {
-        mesosScheduler.release();
+      if (lockHolder.isPresent()) {
+        lockHolder.get().unlock();
       }
     }
   }
