@@ -31,7 +31,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityCloseable;
 import com.hubspot.singularity.SingularityCloser;
@@ -46,7 +45,6 @@ import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
@@ -70,9 +68,6 @@ public class SingularityMailer implements SingularityCloseable {
   private final JadeTemplate requestInCooldownTemplate;
   private final JadeTemplate requestModifiedTemplate;
 
-  private final AsyncHttpClient asyncHttpClient;
-  private final ObjectMapper objectMapper;
-
   private final Optional<String> uiHostnameAndPath;
 
   private final Joiner adminJoiner;
@@ -91,8 +86,6 @@ public class SingularityMailer implements SingularityCloseable {
     this.configuration = configuration;
     this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
-    this.asyncHttpClient = asyncHttpClient;
-    this.objectMapper = objectMapper;
     this.adminJoiner = Joiner.on(", ").skipNulls();
 
     if (maybeSmtpConfiguration.isPresent()) {
@@ -136,46 +129,6 @@ public class SingularityMailer implements SingularityCloseable {
     return String.format("[to: %s, subject: %s]", toList, subject);
   }
 
-  private Optional<String[]> getTaskLogFile(SingularityTaskId taskId, String filename) {
-    final Optional<SingularityTask> task = taskManager.getTask(taskId);
-
-    if (!task.isPresent()) {
-      LOG.error("No task found for {}", taskId.getId());
-      return Optional.absent();
-    }
-
-    final Optional<String> directory = taskManager.getDirectory(taskId);
-
-    if (!directory.isPresent()) {
-      LOG.error("No directory found for task {} to fetch logs", taskId);
-      return Optional.absent();
-    }
-
-    final String slaveHostname = task.get().getOffer().getHostname();
-
-    final String fullPath = String.format("%s/%s", directory.get(), filename);
-
-    final Long logLength = Long.valueOf(maybeSmtpConfiguration.get().getTaskLogLength());
-
-    final SandboxManager sandboxManager = new SandboxManager(asyncHttpClient, objectMapper);
-
-    final Optional<MesosFileChunkObject> logChunkObject;
-
-    try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
-    } catch (RuntimeException e) {
-      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory, filename, slaveHostname,  e);
-      return Optional.absent();
-    }
-
-    if (logChunkObject.isPresent()) {
-      return Optional.of(logChunkObject.get().getData().split("[\r\n]+"));
-    } else {
-      LOG.error("Singularity mailer failed to get {} log for {} task ", filename, taskId.getId());
-      return Optional.absent();
-    }
-  }
-
   private void populateRequestEmailProperties(Builder<String, Object> templateProperties, SingularityRequest request) {
     templateProperties.put("requestId", request.getId());
     templateProperties.put("singularityRequestLink", getSingularityRequestLink(request));
@@ -189,8 +142,6 @@ public class SingularityMailer implements SingularityCloseable {
 
   private void populateTaskEmailProperties(Builder<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
     templateProperties.put("singularityTaskLink", getSingularityTaskLink(taskId));
-    templateProperties.put("stdout", getTaskLogFile(taskId, "stdout").or(new String[0]));
-    templateProperties.put("stderr", getTaskLogFile(taskId, "stderr").or(new String[0]));
     templateProperties.put("taskId", taskId.getId());
     templateProperties.put("deployId", taskId.getDeployId());
 
