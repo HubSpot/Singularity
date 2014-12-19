@@ -109,6 +109,18 @@ public class RequestResource extends AbstractRequestResource {
     return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
   }
 
+  private void checkRequestNotCleaning(String requestId) {
+    if (requestManager.cleanupRequestExists(requestId)) {
+      throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", requestId);
+    }
+  }
+
+  private void checkRequestIdPresent(SingularityRequest request) {
+    if (request.getId() == null) {
+      throw WebExceptions.badRequest("Request must have an id");
+    }
+  }
+
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Create or update a Singularity Request", response=SingularityRequestParent.class)
@@ -118,9 +130,8 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequestParent submit(@ApiParam("The Singularity request to create or update") SingularityRequest request,
       @ApiParam("Username of the person requesting to create or update") @QueryParam("user") Optional<String> user) {
-    if (request.getId() == null) {
-      throw WebExceptions.badRequest("Request must have an id");
-    }
+    checkRequestIdPresent(request);
+    checkRequestNotCleaning(request.getId());
 
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
@@ -425,6 +436,7 @@ public class RequestResource extends AbstractRequestResource {
     if (requestId == null || newInstances.getId() == null || !requestId.equals(newInstances.getId())) {
       throw WebExceptions.badRequest("Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
     }
+    checkRequestNotCleaning(requestId);
 
     SingularityRequest oldRequest = fetchRequest(requestId);
     Optional<SingularityRequest> maybeOldRequest = Optional.of(oldRequest);
