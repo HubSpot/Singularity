@@ -309,6 +309,8 @@ public class SingularityMesosScheduler implements Scheduler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
+      // TODO check decomission state of slack/rack to cycle to fully decomissioned.
+
       scheduler.handleCompletedTask(taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     }
 

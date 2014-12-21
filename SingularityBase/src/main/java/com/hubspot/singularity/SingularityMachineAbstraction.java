@@ -16,7 +16,7 @@ public abstract class SingularityMachineAbstraction {
   private SingularityMachineState state;
 
   public enum SingularityMachineState {
-    ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD,
+    ACTIVE, STARTING_DECOMISSION, DECOMISSIONING, DECOMISSIONED, DEAD,
   }
 
   public SingularityMachineAbstraction(String id) {
@@ -80,6 +80,5 @@ public abstract class SingularityMachineAbstraction {
   public void setState(SingularityMachineState state) {
     this.state = state;
   }
-
 
 }

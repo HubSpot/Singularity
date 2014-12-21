@@ -131,12 +131,12 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     Optional<T> objectHolder = getActiveObject(objectId);
 
     if (!objectHolder.isPresent()) {
-      LOG.warn(String.format("Marking an object %s as dead - but it wasn't active", objectId));
+      LOG.warn("Marking an object {} as dead - but it wasn't active", objectId);
       return;
     }
 
-    if (delete(getActivePath(objectId)) != SingularityDeleteResult.DELETED) {
-      LOG.warn(String.format("Deleting active object at %s failed", getActivePath(objectId)));
+    if (deleteActive(objectId) != SingularityDeleteResult.DELETED) {
+      LOG.warn("Deleting active object {} failed", objectId);
     }
 
     T object = objectHolder.get();
@@ -144,8 +144,8 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     object.setState(SingularityMachineState.DEAD);
     object.setDeadAt(Optional.of(System.currentTimeMillis()));
 
-    if (create(getDeadPath(objectId), Optional.of(transcoder.toBytes(object))) != SingularityCreateResult.CREATED) {
-      LOG.warn(String.format("Creating dead object at %s failed", getDeadPath(objectId)));
+    if (create(getDeadPath(objectId), object, transcoder) != SingularityCreateResult.CREATED) {
+      LOG.warn("Creating dead object {} failed", objectId);
     }
   }
 
@@ -157,7 +157,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     try {
       curator.setData().forPath(path, data);
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Unexpected no node exception while storing decomissioned state for %s on path %s", object, path));
+      LOG.warn("Unexpected no node exception while storing decomissioned state for {}", object);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
@@ -194,15 +194,19 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     final T object = objectHolder.get();
 
-    object.setState(SingularityMachineState.DECOMISSIONING);
+    object.setState(SingularityMachineState.STARTING_DECOMISSION);
     object.setDecomissioningAt(Optional.of(System.currentTimeMillis()));
     object.setDecomissioningBy(user);
 
     create(getDecomissioningPath(objectId), Optional.of(transcoder.toBytes(object)));
 
-    delete(getActivePath(objectId));
+    deleteActive(objectId);
 
     return DecomissionResult.SUCCESS_DECOMISSIONING;
+  }
+
+  public SingularityDeleteResult deleteActive(String objectId) {
+    return delete(getActivePath(objectId));
   }
 
   public boolean isActive(String objectId) {
@@ -222,7 +226,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     for (String active : getActive()) {
       numCleared += 1;
-      delete(getActivePath(active));
+      deleteActive(active);
     }
 
     return numCleared;

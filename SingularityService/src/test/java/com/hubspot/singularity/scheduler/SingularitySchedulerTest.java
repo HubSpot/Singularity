@@ -820,4 +820,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
   }
 
+  @Test
+  public void testDecomission() {
+// TODO
+
+  }
+
 }

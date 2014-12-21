@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -176,7 +177,7 @@ class SingularitySlaveAndRackManager {
   public void slaveLost(SlaveID slaveIdObj) {
     final String slaveId = slaveIdObj.getValue();
 
-    if (isSlaveDead(slaveId) || isSlaveDecomissioning(slaveId) || !isSlaveActive(slaveId)) {
+    if (slaveManager.isDead(slaveId) || slaveManager.isDecomissioning(slaveId) || !slaveManager.isActive(slaveId)) {
       return;
     }
 
@@ -215,17 +216,19 @@ class SingularitySlaveAndRackManager {
     int slaves = 0;
     int racks = 0;
 
-    for (MesosMasterSlaveObject slave : state.getSlaves()) {
-      Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey));
-      String slaveId = slave.getId();
+    for (MesosMasterSlaveObject slaveJsonObject : state.getSlaves()) {
+      Optional<String> maybeRackId = Optional.fromNullable(slaveJsonObject.getAttributes().get(rackIdAttributeKey));
+      String slaveId = slaveJsonObject.getId();
       String rackId = getSafeString(maybeRackId.or(defaultRackId));
-      String host = getHost(slave.getHostname());
+      String host = getHost(slaveJsonObject.getHostname());
 
-      if (checkSlave(slaveId, host, rackId).saveResult == SaveResult.NEW) {
+      SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);
+
+      if (check(slave, slaveManager) == CheckResult.NEW) {
         slaves++;
       }
 
-      if (checkRack(rackId).saveResult == SaveResult.NEW) {
+      if (check(new SingularityRack(rackId), rackManager) == CheckResult.NEW) {
         racks++;
       }
     }
@@ -247,90 +250,29 @@ class SingularitySlaveAndRackManager {
     return string.replace("-", "_");
   }
 
-  private SaveResultHolder checkRack(String rackId) {
-    if (isRackActive(rackId)) {
-      return ALREADY_ACTIVE_HOLDER;
-    }
-
-    if (isRackDecomissioning(rackId)) {
-      return DECOMISSIONING_HOLDER;
-    }
-
-    if (isRackDead(rackId)) {
-      rackManager.removeDead(rackId);
-    }
-
-    SingularityRack newRack = new SingularityRack(rackId);
-
-    rackManager.save(newRack);
-
-    return new SaveResultHolder(Optional.of((SingularityMachineAbstraction) newRack), SaveResult.NEW);
-  }
-
-  private static class SaveResultHolder {
-    private final Optional<SingularityMachineAbstraction> newObject;
-    private final SaveResult saveResult;
-
-    public SaveResultHolder(SaveResult saveResult) {
-      this(Optional.<SingularityMachineAbstraction> absent(), saveResult);
-    }
-
-    public SaveResultHolder(Optional<SingularityMachineAbstraction> newObject, SaveResult saveResult) {
-      this.newObject = newObject;
-      this.saveResult = saveResult;
-    }
-
-  }
-
-  private static final SaveResultHolder DECOMISSIONING_HOLDER = new SaveResultHolder(SaveResult.DECOMISSIONING);
-  private static final SaveResultHolder ALREADY_ACTIVE_HOLDER = new SaveResultHolder(SaveResult.ALREADY_ACTIVE);
-
-  private enum SaveResult {
+  private enum CheckResult {
     NEW, DECOMISSIONING, ALREADY_ACTIVE;
   }
 
-  private SaveResultHolder checkSlave(String slaveId, String host, String rackId) {
-    if (isSlaveActive(slaveId)) {
-      return ALREADY_ACTIVE_HOLDER;
+  private <T extends SingularityMachineAbstraction> CheckResult check(T object, AbstractMachineManager<T> manager) {
+    if (manager.isDecomissioning(object.getId())) {
+      if (manager.isActive(object.getId())) {
+        manager.deleteActive(object.getId());
+      }
+      return CheckResult.DECOMISSIONING;
     }
 
-    if (isSlaveDecomissioning(slaveId)) {
-      return DECOMISSIONING_HOLDER;
+    if (manager.isDead(object.getId())) {
+      manager.removeDead(object.getId());
     }
 
-    if (isSlaveDead(slaveId)) {
-      slaveManager.removeDead(slaveId);
+    if (manager.isActive(object.getId())) {
+      return CheckResult.ALREADY_ACTIVE;
     }
 
-    SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId);
+    manager.save(object);
 
-    slaveManager.save(newSlave);
-
-    return new SaveResultHolder(Optional.of((SingularityMachineAbstraction) newSlave), SaveResult.NEW);
-  }
-
-  private boolean isRackActive(String rackId) {
-    return rackManager.isActive(rackId);
-  }
-
-  private boolean isRackDead(String rackId) {
-    return rackManager.isDead(rackId);
-  }
-
-  private boolean isRackDecomissioning(String rackId) {
-    return rackManager.isDecomissioning(rackId);
-  }
-
-  private boolean isSlaveActive(String slaveId) {
-    return slaveManager.isActive(slaveId);
-  }
-
-  private boolean isSlaveDecomissioning(String slaveId) {
-    return slaveManager.isDecomissioning(slaveId);
-  }
-
-  private boolean isSlaveDead(String slaveId) {
-    return slaveManager.isDead(slaveId);
+    return CheckResult.NEW;
   }
 
   public void checkOffer(Offer offer) {
@@ -338,16 +280,16 @@ class SingularitySlaveAndRackManager {
     final String rackId = getRackId(offer);
     final String host = getSlaveHost(offer);
 
-    SaveResultHolder slaveHolder = checkSlave(slaveId, host, rackId);
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);
 
-    if (slaveHolder.saveResult == SaveResult.NEW) {
-      LOG.info("Offer revealed a new slave {}", slaveHolder.newObject.get());
+    if (check(slave, slaveManager) == CheckResult.NEW) {
+      LOG.info("Offer revealed a new slave {}", slave);
     }
 
-    SaveResultHolder rackHolder = checkRack(rackId);
+    final SingularityRack rack = new SingularityRack(rackId);
 
-    if (rackHolder.saveResult == SaveResult.NEW) {
-      LOG.info("Offer revealed a new rack {}", rackHolder.newObject.get());
+    if (check(rack, rackManager) == CheckResult.NEW) {
+      LOG.info("Offer revealed a new rack {}", rack);
     }
   }
 
