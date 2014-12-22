@@ -11,11 +11,16 @@ class NewDeployView extends FormBaseView
         external: require '../templates/artifactForms/external'
         s3:       require '../templates/artifactForms/s3'
 
+    portMapTemplate:
+        require '../templates/dockerForms/portMap'
+
     events: ->
         _.extend super,
-            'click #executor-type button':       'changeExecutor'
-            'click #artifact-button-row button': 'addArtifact'
-            'click .remove-button':              'removeArtifact'
+            'click #executor-type button':          'changeExecutor'
+            'click #artifact-button-row button':    'addArtifact'
+            'click .remove-button':                 'removeArtifact'
+            'click #docker-port-button-row button': 'addPortMap'
+            'click .remove-port-button':            'removePortMap'
 
     changeExecutor: (event) ->
         event.preventDefault()
@@ -41,6 +46,17 @@ class NewDeployView extends FormBaseView
     removeArtifact: (event) ->
         event.preventDefault()
         $(event.currentTarget).parent().remove()
+
+    addPortMap: (event) ->
+        event.preventDefault()
+        $container = @$ '#docker-port-mappings'
+        $container.append @portMapTemplate
+            timestamp: +moment()
+
+    removePortMap: (event) ->
+        event.preventDefault()
+        $(event.currentTarget).parent().remove()
+
 
     submit: ->
         event.preventDefault()
@@ -82,6 +98,18 @@ class NewDeployView extends FormBaseView
             deployObject.containerInfo.type = 'DOCKER'
             deployObject.containerInfo.docker = {}
             deployObject.containerInfo.docker.image = @$('#docker').val()
+            deployObject.containerInfo.docker.network = @$('#dockernetwork').val()
+            $dockerPorts = $('.docker-port')
+            if $dockerPorts.length
+                for $dockerPort in $dockerPorts
+                    $dockerPort = $ $dockerPort
+                    deployObject.containerInfo.portMappings = [] unless deployObject.containerInfo.portMappings
+                    deployObject.containerInfo.portMappings.push
+                        containerPortType: @valOrNothing '.cont-port-type', $dockerPort
+                        containerPort:     @valOrNothing '.cont-port', $dockerPort
+                        hostPortType:      @valOrNothing '.host-port-type', $dockerPort
+                        hostPort:          @valOrNothing '.host-port', $dockerPort
+                        protocol:          @valOrNothing '.protocol', $dockerPort
         else
             deployObject.customExecutorCmd = @valOrNothing '#custom-executor-command'
             deployObject.executorData = {}
@@ -132,7 +160,7 @@ class NewDeployView extends FormBaseView
 
         deployWrapper = {}
         deployWrapper.deploy = deployObject
-        
+
         deployModel = new Deploy deployWrapper, requestId: @model.id
         apiRequest = deployModel.save()
 
@@ -144,7 +172,7 @@ class NewDeployView extends FormBaseView
 
             app.caughtError()
             @alert "There was a problem: #{ response.responseText }", false
-        
+
         apiRequest.done =>
             @lockdown = false
             @postSave()
