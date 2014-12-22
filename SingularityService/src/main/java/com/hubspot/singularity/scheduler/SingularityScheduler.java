@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -104,7 +105,7 @@ public class SingularityScheduler {
 
     final List<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
 
-    final List<SingularitySlave> slaves = slaveManager.getDecomissioningObjectsFiltered(stateCache.getDecomissioningSlaves());
+    final List<SingularitySlave> slaves = slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION);
 
     for (SingularitySlave slave : slaves) {
       for (SingularityTask activeTask : taskManager.getTasksOnSlave(activeTaskIds, slave)) {
@@ -112,7 +113,7 @@ public class SingularityScheduler {
       }
     }
 
-    final List<SingularityRack> racks = rackManager.getDecomissioningObjectsFiltered(stateCache.getDecomissioningRacks());
+    final List<SingularityRack> racks = rackManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION);
 
     for (SingularityRack rack : racks) {
       for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -140,13 +141,11 @@ public class SingularityScheduler {
     }
 
     for (SingularitySlave slave : slaves) {
-      LOG.debug("Marking slave {} as decomissioned", slave);
-      slaveManager.markAsDecomissioned(slave);
+      slaveManager.changeState(slave.getId(), MachineState.DECOMISSIONING, slave.getCurrentState().getUser());
     }
 
     for (SingularityRack rack : racks) {
-      LOG.debug("Marking rack {} as decomissioned", rack);
-      rackManager.markAsDecomissioned(rack);
+      rackManager.changeState(rack.getId(), MachineState.DECOMISSIONING, rack.getCurrentState().getUser());
     }
 
     if (slaves.isEmpty() && racks.isEmpty() && requestIdsToReschedule.isEmpty() && matchingTaskIds.isEmpty()) {

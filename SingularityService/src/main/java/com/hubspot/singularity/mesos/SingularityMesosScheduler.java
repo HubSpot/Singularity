@@ -285,16 +285,16 @@ public class SingularityMesosScheduler implements Scheduler {
     final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
     if (isActiveTask && !taskState.isDone()) {
-     final SingularityTask task = taskManager.getTask(taskIdObj).get();
-     final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      final SingularityTask task = taskManager.getTask(taskIdObj).get();
+      final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
-     if (taskState == ExtendedTaskState.TASK_RUNNING) {
-       healthchecker.enqueueHealthcheck(task, pendingDeploy);
-     }
+      if (taskState == ExtendedTaskState.TASK_RUNNING) {
+        healthchecker.enqueueHealthcheck(task, pendingDeploy);
+      }
 
-     if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-       newTaskChecker.enqueueNewTaskCheck(task);
-     }
+      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+        newTaskChecker.enqueueNewTaskCheck(task);
+      }
     }
 
     final SingularityTaskHistoryUpdate taskUpdate =

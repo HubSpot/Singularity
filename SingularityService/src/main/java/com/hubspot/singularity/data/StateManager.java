@@ -23,9 +23,11 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -209,13 +211,57 @@ public class StateManager extends CuratorManager {
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
     final int cleaningRequests = requestManager.getSizeOfCleanupQueue();
 
-    final int activeRacks = rackManager.getNumActive();
-    final int deadRacks = rackManager.getNumDead();
-    final int decomissioningRacks = rackManager.getNumDecomissioning();
+    List<SingularityRack> racks = rackManager.getObjects();
 
-    final int activeSlaves = slaveManager.getNumActive();
-    final int deadSlaves = slaveManager.getNumDead();
-    final int decomissioningSlaves = slaveManager.getNumDecomissioning();
+    int activeRacks = 0;
+    int deadRacks = 0;
+    int decomissioningRacks = 0;
+    int unknownRacks = 0;
+
+    for (SingularityRack rack : racks) {
+      switch (rack.getCurrentState().getState()) {
+        case ACTIVE:
+          activeRacks++;
+          break;
+        case DEAD:
+          deadRacks++;
+          break;
+        case MISSING_ON_STARTUP:
+          unknownRacks++;
+          break;
+        case DECOMISSIONED:
+        case STARTING_DECOMISSION:
+        case DECOMISSIONING:
+          decomissioningRacks++;
+          break;
+      }
+    }
+
+    List<SingularitySlave> slaves = slaveManager.getObjects();
+
+    int activeSlaves = 0;
+    int deadSlaves = 0;
+    int decomissioningSlaves = 0;
+    int unknownSlaves = 0;
+
+    for (SingularitySlave slave : slaves) {
+      switch (slave.getCurrentState().getState()) {
+        case ACTIVE:
+          activeSlaves++;
+          break;
+        case DEAD:
+          deadSlaves++;
+          break;
+        case MISSING_ON_STARTUP:
+          unknownSlaves++;
+          break;
+        case DECOMISSIONED:
+        case STARTING_DECOMISSION:
+        case DECOMISSIONING:
+          decomissioningSlaves++;
+          break;
+      }
+    }
 
     final List<SingularityHostState> states = getHostStates();
 
@@ -234,7 +280,7 @@ public class StateManager extends CuratorManager {
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves,
         deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests);
+        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves);
   }
 
 }

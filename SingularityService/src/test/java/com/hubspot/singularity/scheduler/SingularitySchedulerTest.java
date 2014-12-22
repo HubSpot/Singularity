@@ -573,7 +573,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testUnpauseoOnDeploy() {
+  public void testUnpauseOnDeploy() {
     initRequest();
     initFirstDeploy();
 
@@ -615,7 +615,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+    RequestState requestState = requestManager.getRequest(requestId).get().getState();
+
+    Assert.assertTrue(requestState == RequestState.ACTIVE);
   }
 
   @Test

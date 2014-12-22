@@ -26,10 +26,12 @@ public class SingularityState {
   private final int activeSlaves;
   private final int deadSlaves;
   private final int decomissioningSlaves;
+  private final int unknownSlaves;
 
   private final int activeRacks;
   private final int deadRacks;
   private final int decomissioningRacks;
+  private final int unknownRacks;
 
   private final long oldestDeploy;
   private final int numDeploys;
@@ -52,8 +54,8 @@ public class SingularityState {
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
-      @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests
-      ) {
+      @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
+      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -66,6 +68,8 @@ public class SingularityState {
     this.activeSlaves = activeSlaves;
     this.deadRacks = deadRacks;
     this.deadSlaves = deadSlaves;
+    this.unknownSlaves = unknownSlaves;
+    this.unknownRacks = unknownRacks;
     this.decomissioningRacks = decomissioningRacks;
     this.decomissioningSlaves = decomissioningSlaves;
     this.cleaningTasks = cleaningTasks;
@@ -195,14 +199,23 @@ public class SingularityState {
     return underProvisionedRequests;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks + ", lateTasks="
-        + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests="
-        + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves=" + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
-        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt=" + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds="
-        + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + "]";
+  public int getUnknownSlaves() {
+    return unknownSlaves;
   }
 
+  public int getUnknownRacks() {
+    return unknownRacks;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests
+        + ", scheduledTasks=" + scheduledTasks + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks
+        + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves="
+        + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
+        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
+        + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
+        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + "]";
+  }
 
 }

@@ -186,6 +186,8 @@ public class SingularityTestModule implements Module {
     zookeeperConfiguration.setQuorum(ts.getConnectString());
 
     config.setZooKeeperConfiguration(zookeeperConfiguration);
+    config.setConsiderTaskHealthyAfterRunningForSeconds(0);
+
     return config;
   }
 
