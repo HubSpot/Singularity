@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.junit.Assert;
@@ -18,6 +19,7 @@ import com.google.common.collect.Sets;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -823,9 +825,60 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDecomission() {
-// TODO
+  public void testBasicSlaveAndRackState() {
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave2", "host2", Optional.of("rack2"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
+
+    Assert.assertTrue(slaveManager.getHistory("slave1").size() == 1);
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().equals(slaveManager.getHistory("slave1").get(0)));
+
+    sms.slaveLost(driver, SlaveID.newBuilder().setValue("slave1").build());
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 1);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 1);
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.DEAD) == 1);
+
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DEAD);
+    Assert.assertTrue(rackManager.getObject("rack1").get().getCurrentState().getState() == MachineState.DEAD);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave3", "host3", Optional.of("rack1"))));
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
+
+    Assert.assertTrue(rackManager.getHistory("rack1").size() == 3);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 3);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+
+    sms.slaveLost(driver, SlaveID.newBuilder().setValue("slave1").build());
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
+    Assert.assertTrue(slaveManager.getHistory("slave1").size() == 4);
+
+    sms.slaveLost(driver, SlaveID.newBuilder().setValue("slave1").build());
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
+    Assert.assertTrue(slaveManager.getHistory("slave1").size() == 4);
+  }
+
+  @Test
+  public void testDecomissioning() {
 
   }
+
 
 }

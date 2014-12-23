@@ -20,7 +20,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   @Override
-  public String getRoot() {
+  protected String getRoot() {
     return SLAVE_ROOT;
   }
 

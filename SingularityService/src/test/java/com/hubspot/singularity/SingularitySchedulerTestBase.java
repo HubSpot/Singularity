@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
@@ -14,6 +15,7 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Protos.Value.Scalar;
+import org.apache.mesos.Protos.Value.Text;
 import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
 import org.junit.After;
@@ -33,7 +35,9 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
@@ -63,6 +67,10 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected DeployManager deployManager;
   @Inject
   protected TaskManager taskManager;
+  @Inject
+  protected SlaveManager slaveManager;
+  @Inject
+  protected RackManager rackManager;
   @Inject
   protected SchedulerDriverSupplier driverSupplier;
   protected SchedulerDriver driver;
@@ -123,10 +131,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory) {
-    return createOffer(cpus, memory, "slave1", "host1");
+    return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host) {
+    return createOffer(cpus, memory, slave, host, Optional.<String> absent());
+  }
+
+  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack) {
     SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
@@ -137,6 +149,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setFrameworkId(frameworkId)
         .setSlaveId(slaveId)
         .setHostname(host)
+        .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
         .build();

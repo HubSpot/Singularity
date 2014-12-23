@@ -34,7 +34,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     this.historyTranscoder = historyTranscoder;
   }
 
-  public abstract String getRoot();
+  protected abstract String getRoot();
 
   private String getHistoryPath(String objectId) {
     return ZKPaths.makePath(getObjectPath(objectId), HISTORY_PATH);
@@ -98,7 +98,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getData(getObjectPath(objectId), transcoder);
   }
 
-  public List<T> getObjects(String root) {
+  protected List<T> getObjects(String root) {
     return getAsyncChildren(root, transcoder);
   }
 
