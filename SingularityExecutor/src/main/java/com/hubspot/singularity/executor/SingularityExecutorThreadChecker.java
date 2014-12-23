@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.NOPLogger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -95,7 +96,7 @@ public class SingularityExecutorThreadChecker {
   }
 
   private int getNumUsedThreads(SingularityExecutorTaskProcessCallable taskProcess) throws InterruptedException, ProcessFailedException {
-    SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(taskProcess.getLog());
+    SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
 
     List<String> cmd = ImmutableList.of("/bin/sh",
         "-c",
