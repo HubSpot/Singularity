@@ -113,7 +113,7 @@ public abstract class SafeProcessManager {
     try {
       if (currentProcessCmd.isPresent() && currentProcessStart.isPresent()) {
         if (exitCode.isPresent()) {
-          log.debug("Process {} exited with {} after {}", currentProcessCmd.get(), exitCode, JavaUtils.duration(currentProcessStart.get()));
+          log.debug("Process {} exited with {} after {}", currentProcessCmd.get(), exitCode.get(), JavaUtils.duration(currentProcessStart.get()));
         } else {
           log.debug("Process {} abandoned after {}", currentProcessCmd.get(), JavaUtils.duration(currentProcessStart.get()));
         }
