@@ -3,7 +3,6 @@ package com.hubspot.singularity;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
@@ -143,7 +142,7 @@ public class SingularityS3FormatHelper {
 
     Set<String> keyPrefixes = Sets.newHashSet();
 
-    Calendar calendar = GregorianCalendar.getInstance();
+    Calendar calendar = Calendar.getInstance();
     calendar.setTimeInMillis(start);
 
     calendar.set(Calendar.SECOND, 0);
