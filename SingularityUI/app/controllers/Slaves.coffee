@@ -8,29 +8,25 @@ SimpleSubview = require '../views/simpleSubview'
 class SlavesController extends Controller
 
     templates:
-        activeSlaves:         require '../templates/slaves/active'
-        deadSlaves:           require '../templates/slaves/dead'
-        decomissioningSlaves: require '../templates/slaves/decomissioning'
+        slaves:         require '../templates/slaves/slaves'
 
     initialize: ->
         app.showPageLoader()
 
-        @collections.activeSlaves         = new Slaves [], slaveType: 'active'
-        @collections.deadSlaves           = new Slaves [], slaveType: 'dead'
-        @collections.decomissioningSlaves = new Slaves [], slaveType: 'decomissioning'
+        @collections.activeSlaves         = new Slaves [], slaveStates: ['ACTIVE']
+        @collections.decomSlaves          = new Slaves [], slaveStates: ['DECOMMISSIONING', 'STARTING_DECOMISSION', 'DECOMISSIONED']
+        @collections.inactiveSlaves       = new Slaves [], slaveStates: ['DEAD', 'MISSING_ON_STARTUP']
 
         # Subviews for the tables
         @subviews.activeSlaves         = new SimpleSubview
             collection: @collections.activeSlaves
-            template:   @templates.activeSlaves
-
-        @subviews.deadSlaves           = new SimpleSubview
-            collection: @collections.deadSlaves
-            template:   @templates.deadSlaves
-
-        @subviews.decomissioningSlaves = new SimpleSubview
-            collection: @collections.decomissioningSlaves
-            template:   @templates.decomissioningSlaves
+            template:   @templates.slaves
+        @subviews.decomSlaves         = new SimpleSubview
+            collection: @collections.decomSlaves
+            template:   @templates.slaves
+        @subviews.inactiveSlaves         = new SimpleSubview
+            collection: @collections.inactiveSlaves
+            template:   @templates.slaves
 
         @setView new SlavesView
             subviews: @subviews
@@ -41,7 +37,7 @@ class SlavesController extends Controller
 
     refresh: ->
         @collections.activeSlaves.fetch()
-        @collections.deadSlaves.fetch()
-        @collections.decomissioningSlaves.fetch()
+        @collections.decomSlaves.fetch()
+        @collections.inactiveSlaves.fetch()
 
 module.exports = SlavesController

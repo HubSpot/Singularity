@@ -1,11 +1,10 @@
-<div class="page-header">
-    <h1>Active</h1>
-</div>
-{{#if data.length}}
+{{#if data.length }}
+  {{#if data.[0].id}}
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Current State</th>
                 <th>Uptime</th>
                 <th data-sortable="false"></th>
             </tr>
@@ -14,11 +13,12 @@
             {{#each data}}
                 <tr>
                     <td>{{ id }}</td>
+                    <td>{{ state }}</td>
                     <td data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
                     </td>
                     <td class="actions-column">
-                        <a data-rack-id="{{ id }}" data-action="decomission" title="Decommission">
+                        <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Decommission/Remove">
                             <span class="glyphicon glyphicon-remove"></span>
                         </a>
                     </td>
@@ -26,6 +26,9 @@
             {{/each}}
         </tbody>
     </table>
+  {{else}}
+    <div class="empty-table-message"><p>No racks</p></div>
+  {{/if}}
 {{else}}
-    <div class="empty-table-message"><p>No active racks</p></div>
+    <div class="empty-table-message"><p>No racks</p></div>
 {{/if}}

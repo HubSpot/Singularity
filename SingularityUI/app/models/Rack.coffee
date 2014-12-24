@@ -4,6 +4,6 @@ class Rack extends ServerItem
 
     type: 'rack'
 
-    url: => "#{ config.apiRoot }/racks/rack/#{ @get('id') }"
+    url: => "#{ config.apiRoot }/rack/#{ @get('id') }"
 
 module.exports = Rack

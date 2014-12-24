@@ -6,13 +6,12 @@ class Racks extends Collection
 
     model: Rack
 
-    url: => "#{ config.apiRoot }/racks/#{ @rackType }"
+    url: => "#{ config.apiRoot }/racks"
 
-    initialize: (models, { @rackType }) =>
+    initialize: (models, { @rackStates }) =>
 
     parse: (racks) ->
         _.map racks, (rack) =>
-            rack.rackType = @rackType
-            rack
+            rack if rack.currentState.state in @rackStates
 
 module.exports = Racks

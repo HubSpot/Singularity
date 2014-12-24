@@ -4,10 +4,10 @@ Model = require './model'
 class ServerItem extends Model
 
     removeTemplates:
-        DEAD: require '../templates/vex/serverRemoveDead'
+        DEAD:           require '../templates/vex/serverRemoveDead'
         DECOMISSIONING: require '../templates/vex/serverRemoveDecomissioned'
-        DECOMISSIONED: require '../templates/vex/serverRemoveDecomissioned'
-    decomissionTemplate: require '../templates/vex/serverDecomission'
+        DECOMISSIONED:  require '../templates/vex/serverRemoveDecomissioned'
+        ACTIVE:         require '../templates/vex/serverDecomission'
 
     parse: (item) =>
         if item.firstSeenAt?
@@ -17,37 +17,27 @@ class ServerItem extends Model
                 item.uptime = item.deadAt - item.firstSeenAt
             else
                 item.uptime = moment() - item.firstSeenAt
-
+        if item.currentState?
+            item.state = item.currentState.state
         item
 
-    decomission: =>
-        $.ajax
-            url: "#{ @url() }/decomission?user=#{ app.getUsername() }"
-            type: "POST"
-
     destroy: =>
-        state = @get('state')
-        state = if state is 'DECOMISSIONED' then 'DECOMISSIONING' else state
-
-        unless state?
-            return new Error 'Need to know the state of a server item to remove it.'
-            
-            unless state in ['DECOMISSIONING', 'DEAD']
-                return new Error "Can only remove dead & decommissioning slaves."
         $.ajax
-            url: "#{ @url() }/#{ state.toLowerCase() }?user=#{ app.getUsername() }"
+            url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
 
-    # 
+    #
     # promptX pops up a user confirmation and then does what you asked of it if they approve
     #
-    promptRemove: (callback) =>
-        vex.dialog.confirm
-            message: @removeTemplates[@get 'state'] {@id, @type}
 
+    promptRemove: (callback) =>
+        state = @get 'state'
+        text = if state is 'ACTIVE' then 'Decommission' else 'Remove'
+        vex.dialog.confirm
+            message: @removeTemplates[state] {@id, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
-                    text: 'Remove',
+                    text: text,
                     className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
                 vex.dialog.buttons.NO
             ]
@@ -55,20 +45,5 @@ class ServerItem extends Model
             callback: (confirmed) =>
                 return unless confirmed
                 @destroy().done callback
-
-    promptDecommission: (callback) =>
-        vex.dialog.confirm
-            message: @decomissionTemplate {@id, @type}
-
-            buttons: [
-                $.extend {}, vex.dialog.buttons.YES,
-                    text: 'Decommission',
-                    className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
-                vex.dialog.buttons.NO
-            ]
-
-            callback: (data) =>
-                return if data is false
-                @decomission().done callback
 
 module.exports = ServerItem

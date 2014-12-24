@@ -1,11 +1,10 @@
-<div class="page-header">
-    <h1>Active</h1>
-</div>
 {{#if data.length}}
+  {{#if data.[0].id}}
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>ID</th>
+                <th>State</th>
                 <th>Rack</th>
                 <th>Host</th>
                 <th class="hidden-xs">Uptime</th>
@@ -18,13 +17,14 @@
                     <td>
                         <a href="{{appRoot}}/tasks/active/{{ host }}">{{ id }}</a>
                     </td>
+                    <td>{{ state }}</td>
                     <td>{{ rackId }}</td>
                     <td>{{ host }}</td>
                     <td class="hidden-xs" data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
                     </td>
                     <td class="actions-column">
-                        <a data-slave-id="{{ id }}" data-action="decommission" title="Decommission">
+                        <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Decommission/Remove">
                             <span class="glyphicon glyphicon-remove"></span>
                         </a>
                     </td>
@@ -32,6 +32,9 @@
             {{/each}}
         </tbody>
     </table>
+  {{else}}
+    <div class="empty-table-message"><p>No slaves</p></div>
+  {{/if}}
 {{else}}
-    <div class="empty-table-message"><p>No active slaves</p></div>
+    <div class="empty-table-message"><p>No slaves</p></div>
 {{/if}}

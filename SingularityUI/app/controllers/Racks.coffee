@@ -8,29 +8,25 @@ SimpleSubview = require '../views/simpleSubview'
 class RacksController extends Controller
 
     templates:
-        activeRacks:         require '../templates/racks/active'
-        deadRacks:           require '../templates/racks/dead'
-        decomissioningRacks: require '../templates/racks/decomissioning'
+        racks:         require '../templates/racks/racks'
 
     initialize: ->
         app.showPageLoader()
 
-        @collections.activeRacks         = new Racks [], rackType: 'active'
-        @collections.deadRacks           = new Racks [], rackType: 'dead'
-        @collections.decomissioningRacks = new Racks [], rackType: 'decomissioning'
+        @collections.activeRacks     = new Racks [], rackStates: ['ACTIVE']
+        @collections.decomRacks      = new Racks [], rackStates: ['DECOMMISSIONING', 'STARTING_DECOMISSION', 'DECOMISSIONED']
+        @collections.inactiveRacks   = new Racks [], rackStates: ['DEAD', 'MISSING_ON_STARTUP']
 
         # Subviews for the tables
         @subviews.activeRacks         = new SimpleSubview
             collection: @collections.activeRacks
-            template:   @templates.activeRacks
-
-        @subviews.deadRacks           = new SimpleSubview
-            collection: @collections.deadRacks
-            template:   @templates.deadRacks
-
-        @subviews.decomissioningRacks = new SimpleSubview
-            collection: @collections.decomissioningRacks
-            template:   @templates.decomissioningRacks
+            template:   @templates.racks
+        @subviews.decomRacks          = new SimpleSubview
+            collection: @collections.decomRacks
+            template:   @templates.racks
+        @subviews.inactiveRacks       = new SimpleSubview
+            collection: @collections.inactiveRacks
+            template:   @templates.racks
 
         @setView new RacksView
             subviews:   @subviews
@@ -41,7 +37,7 @@ class RacksController extends Controller
 
     refresh: ->
         @collections.activeRacks.fetch()
-        @collections.deadRacks.fetch()
-        @collections.decomissioningRacks.fetch()
+        @collections.decomRacks.fetch()
+        @collections.inactiveRacks.fetch()
 
 module.exports = RacksController

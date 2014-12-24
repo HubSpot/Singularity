@@ -9,28 +9,22 @@ class SlavesView extends View
     events: =>
         _.extend super,
             'click [data-action="remove"]': 'removeSlave'
-            'click [data-action="decommission"]': 'decommissionSlave'
 
     render: ->
         @$el.html @template()
 
-        @$('#active').html         @subviews.activeSlaves.$el
-        @$('#dead').html           @subviews.deadSlaves.$el
-        @$('#decomissioning').html @subviews.decomissioningSlaves.$el
-
-    decommissionSlave: (event) =>
-        $target = $(event.currentTarget)
-
-        slaveModel = new Slave id: $target.data 'slave-id'
-        slaveModel.promptDecommission => @trigger 'refreshrequest'
+        @$('#active').html           @subviews.activeSlaves.$el
+        @$('#decommissioning').html  @subviews.decomSlaves.$el
+        @$('#inactive').html         @subviews.inactiveSlaves.$el
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)
-
+        state = $target.data 'state'
         slaveModel = new Slave
-            id: $target.data 'slave-id'
-            state: $target.data 'state'
+            id:    $target.data 'slave-id'
+            state: state
+
         slaveModel.promptRemove => @trigger 'refreshrequest'
-            
+
 
 module.exports = SlavesView
