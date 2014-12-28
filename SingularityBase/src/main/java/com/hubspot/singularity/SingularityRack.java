@@ -19,4 +19,9 @@ public class SingularityRack extends SingularityMachineAbstraction<SingularityRa
     return new SingularityRack(getId(), getFirstSeenAt(), newState);
   }
 
+  @Override
+  public String toString() {
+    return "SingularityRack [getId()=" + getId() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getCurrentState()=" + getCurrentState() + "]";
+  }
+
 }

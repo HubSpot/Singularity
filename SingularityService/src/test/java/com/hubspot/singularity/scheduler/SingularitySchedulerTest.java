@@ -40,6 +40,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
@@ -873,10 +874,76 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
     Assert.assertTrue(slaveManager.getHistory("slave1").size() == 4);
+
+    slaveManager.delete("slave1");
+
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 0);
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(slaveManager.getHistory("slave1").isEmpty());
   }
 
   @Test
   public void testDecomissioning() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave3", "host3", Optional.of("rack2"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave4", "host4", Optional.of("rack2"))));
+
+    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 4);
+
+    Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size() == 1);
+    Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size() == 1);
+    Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave3").get()).isEmpty());
+    Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave4").get()).isEmpty());
+
+    Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMISSION, Optional.of("user1")));
+    Assert.assertEquals(StateChangeResult.FAILURE_ALREADY_AT_STATE, slaveManager.changeState("slave1", MachineState.STARTING_DECOMISSION, Optional.of("user1")));
+    Assert.assertEquals(StateChangeResult.FAILURE_NOT_FOUND, slaveManager.changeState("slave9231", MachineState.STARTING_DECOMISSION, Optional.of("user1")));
+
+    Assert.assertEquals(MachineState.STARTING_DECOMISSION, slaveManager.getObject("slave1").get().getCurrentState().getState());
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+
+    Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size() == 1);
+
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DECOMISSIONING);
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DECOMISSIONING);
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    // all task should have moved.
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size() == 3);
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().size() == 1);
+
+    // kill the task
+    statusUpdate(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).get(0), TaskState.TASK_KILLED);
+
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DECOMISSIONED);
+    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
+
+    // TOOD test stop decomissioning / test rack decomissions
+
+
 
   }
 

@@ -21,7 +21,7 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
   @JsonCreator
   public SingularitySlave(@JsonProperty("slaveId") String slaveId, @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState,
       @JsonProperty("host") String host, @JsonProperty("rackId") String rackId) {
-    super(rackId, firstSeenAt, currentState);
+    super(slaveId, firstSeenAt, currentState);
     this.host = host;
     this.rackId = rackId;
   }
@@ -39,6 +39,11 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
   @ApiModelProperty("Slave rack ID")
   public String getRackId() {
     return rackId;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularitySlave [host=" + host + ", rackId=" + rackId + ", getId()=" + getId() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getCurrentState()=" + getCurrentState() + "]";
   }
 
 }

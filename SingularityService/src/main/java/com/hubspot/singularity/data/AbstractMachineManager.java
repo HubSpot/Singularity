@@ -123,12 +123,11 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public StateChangeResult changeState(T object, MachineState newState, Optional<String> user) {
-
     if (object.getCurrentState().getState() == newState) {
       return StateChangeResult.FAILURE_ALREADY_AT_STATE;
     }
 
-    if (newState == MachineState.STARTING_DECOMISSION && !object.getCurrentState().getState().isDecomissioning()) {
+    if (newState == MachineState.STARTING_DECOMISSION && object.getCurrentState().getState().isDecomissioning()) {
       return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
     }
 
@@ -147,7 +146,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public SingularityCreateResult save(T object) {
-    return create(getObjectPath(object.getId()), object, transcoder);
+    return save(getObjectPath(object.getId()), object, transcoder);
   }
 
 }
