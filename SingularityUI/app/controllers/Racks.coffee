@@ -13,19 +13,11 @@ class RacksController extends Controller
     initialize: ->
         app.showPageLoader()
 
-        @collections.activeRacks     = new Racks [], rackStates: ['ACTIVE']
-        @collections.decomRacks      = new Racks [], rackStates: ['DECOMMISSIONING', 'STARTING_DECOMISSION', 'DECOMISSIONED']
-        @collections.inactiveRacks   = new Racks [], rackStates: ['DEAD', 'MISSING_ON_STARTUP']
+        @collections.racks     = new Racks []
 
         # Subviews for the tables
-        @subviews.activeRacks         = new SimpleSubview
-            collection: @collections.activeRacks
-            template:   @templates.racks
-        @subviews.decomRacks          = new SimpleSubview
-            collection: @collections.decomRacks
-            template:   @templates.racks
-        @subviews.inactiveRacks       = new SimpleSubview
-            collection: @collections.inactiveRacks
+        @subviews.racks         = new SimpleSubview
+            collection: @collections.racks
             template:   @templates.racks
 
         @setView new RacksView
@@ -36,8 +28,6 @@ class RacksController extends Controller
         @refresh()
 
     refresh: ->
-        @collections.activeRacks.fetch()
-        @collections.decomRacks.fetch()
-        @collections.inactiveRacks.fetch()
+        @collections.racks.fetch()
 
 module.exports = RacksController

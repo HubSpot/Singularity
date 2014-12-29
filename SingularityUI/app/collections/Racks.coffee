@@ -8,10 +8,10 @@ class Racks extends Collection
 
     url: => "#{ config.apiRoot }/racks"
 
-    initialize: (models, { @rackStates }) =>
+    initialize: (models) =>
 
     parse: (racks) ->
         _.map racks, (rack) =>
-            rack if rack.currentState.state in @rackStates
+            rack
 
 module.exports = Racks

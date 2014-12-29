@@ -4,10 +4,12 @@ Model = require './model'
 class ServerItem extends Model
 
     removeTemplates:
-        DEAD:           require '../templates/vex/serverRemoveDead'
-        DECOMISSIONING: require '../templates/vex/serverRemoveDecomissioned'
-        DECOMISSIONED:  require '../templates/vex/serverRemoveDecomissioned'
-        ACTIVE:         require '../templates/vex/serverDecomission'
+        DEAD:                 require '../templates/vex/serverRemoveDead'
+        MISSING_ON_STARTUP:   require '../templates/vex/serverRemoveDead'
+        STARTING_DECOMMISSION: require '../templates/vex/serverRemoveDecomissioned'
+        DECOMMISSIONING:       require '../templates/vex/serverRemoveDecomissioned'
+        DECOMMISSIONED:        require '../templates/vex/serverRemoveDecomissioned'
+        ACTIVE:               require '../templates/vex/serverDecomission'
 
     parse: (item) =>
         if item.firstSeenAt?

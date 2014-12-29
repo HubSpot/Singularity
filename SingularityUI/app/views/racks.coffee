@@ -13,9 +13,7 @@ class RacksView extends View
     render: ->
         @$el.html @template()
 
-        @$('#active').html           @subviews.activeRacks.$el
-        @$('#decommissioning').html  @subviews.decomRacks.$el
-        @$('#inactive-racks').html   @subviews.inactiveRacks.$el
+        @$('#racks').html  @subviews.racks.$el
 
     removeRack: (event) ->
         $target = $(event.target)

@@ -13,9 +13,7 @@ class SlavesView extends View
     render: ->
         @$el.html @template()
 
-        @$('#active').html           @subviews.activeSlaves.$el
-        @$('#decommissioning').html  @subviews.decomSlaves.$el
-        @$('#inactive').html         @subviews.inactiveSlaves.$el
+        @$('#slaves').html           @subviews.slaves.$el
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)
