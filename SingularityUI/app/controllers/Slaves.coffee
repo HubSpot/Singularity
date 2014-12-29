@@ -7,21 +7,11 @@ SimpleSubview = require '../views/simpleSubview'
 
 class SlavesController extends Controller
 
-    templates:
-        slaves:         require '../templates/slaves/slaves'
-
     initialize: ->
         app.showPageLoader()
-
         @collections.slaves         = new Slaves []
-
-        # Subviews for the tables
-        @subviews.slaves         = new SimpleSubview
-            collection: @collections.slaves
-            template:   @templates.slaves
-
         @setView new SlavesView
-            subviews: @subviews
+            collection: @collections.slaves
 
         app.showView @view
 

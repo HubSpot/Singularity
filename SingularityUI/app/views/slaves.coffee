@@ -1,19 +1,47 @@
 View = require './view'
 
 Slave = require '../models/Slave'
+Slaves = require '../collections/Slaves'
 
 class SlavesView extends View
 
     template: require '../templates/slaves/base'
+    slaveTemplate: require '../templates/slaves/slave'
+
+    initialize: ->
+        for eventName in ['sync', 'add', 'remove', 'change']
+            @listenTo @collection, eventName, @render
+
+        @listenTo @collection, 'reset', =>
+            @$el.empty()
 
     events: =>
         _.extend super,
             'click [data-action="remove"]': 'removeSlave'
 
     render: ->
+        return if not @collection.synced and @collection.isEmpty?()
         @$el.html @template()
 
-        @$('#slaves').html           @subviews.slaves.$el
+        active = new Slaves(
+            @collection.filter (model) ->
+              model.get('state') in ['ACTIVE']
+        )
+        decommission = new Slaves(
+            @collection.filter (model) ->
+              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
+        )
+        inactive = new Slaves(
+            @collection.filter (model) ->
+              model.get('state') in ['DEAD', 'MISSING_ON_STARTUP']
+        )
+
+        @$('#active').html @slaveTemplate
+            data:     active.toJSON()
+        @$('#decommission').html @slaveTemplate
+            data:     decommission.toJSON()
+        @$('#inactive').html @slaveTemplate
+            data:     inactive.toJSON()
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)

@@ -7,21 +7,11 @@ SimpleSubview = require '../views/simpleSubview'
 
 class RacksController extends Controller
 
-    templates:
-        racks:         require '../templates/racks/racks'
-
     initialize: ->
         app.showPageLoader()
-
         @collections.racks     = new Racks []
-
-        # Subviews for the tables
-        @subviews.racks         = new SimpleSubview
-            collection: @collections.racks
-            template:   @templates.racks
-
         @setView new RacksView
-            subviews:   @subviews
+            collection: @collections.racks
 
         app.showView @view
 
