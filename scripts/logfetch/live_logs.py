@@ -80,7 +80,7 @@ def all_tasks_for_request(args):
   elif len(active_tasks) == 0:
     return historical_tasks
   else:
-      return active_tasks + [h for h in historical_tasks if is_in_date_range(args, int(str(h['updatedAt'])[0:-3]))]
+    return active_tasks + [h for h in historical_tasks if is_in_date_range(args, int(str(h['updatedAt'])[0:-3]))]
 
 def is_in_date_range(args, timestamp):
   timedelta = datetime.utcnow() - datetime.utcfromtimestamp(timestamp)
