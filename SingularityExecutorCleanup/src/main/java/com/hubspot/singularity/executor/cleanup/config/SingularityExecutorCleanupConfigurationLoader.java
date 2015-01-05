@@ -22,7 +22,7 @@ public class SingularityExecutorCleanupConfigurationLoader extends SingularityCo
     properties.put(SAFE_MODE_WONT_RUN_WITH_NO_TASKS, Boolean.toString(true));
 
     properties.put(EXECUTOR_CLEANUP_RESULTS_SUFFIX, ".cleanup.json");
-    properties.put(EXECUTOR_CLEANUP_CLEANUP_APP_DIRECTORY_OF_FAILED_TASKS_AFTER_MILLIS, TimeUnit.DAYS.toMillis(1));
+    properties.put(EXECUTOR_CLEANUP_CLEANUP_APP_DIRECTORY_OF_FAILED_TASKS_AFTER_MILLIS, Long.toString(TimeUnit.DAYS.toMillis(1)));
   }
 
 }

@@ -279,7 +279,7 @@ public class TaskManager extends CuratorAsyncManager {
         return getTaskPath(taskId);
       }
 
-    });;
+    });
 
     return getAsync("active_tasks", children, taskTranscoder);
   }

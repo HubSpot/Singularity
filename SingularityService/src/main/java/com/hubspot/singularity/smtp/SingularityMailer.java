@@ -98,7 +98,7 @@ public class SingularityMailer implements Managed {
     this.rateLimitedTemplate = rateLimitedTemplate;
 
     if (maybeSmtpConfiguration.isPresent()) {
-      this.mailPreparerExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d"));;
+      this.mailPreparerExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d"));
     } else {
       this.mailPreparerExecutorService = Optional.absent();
     }
