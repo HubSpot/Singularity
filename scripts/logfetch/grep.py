@@ -3,7 +3,7 @@ import sys
 from termcolor import colored
 
 GREP_COMMAND_FORMAT = 'xargs -n {0} {1} < {2}'
-DEFAULT_GREP_COMMAND = 'grep --color=always \'{1}\''
+DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
 
 def grep_files(args, all_logs):
   if args.grep:

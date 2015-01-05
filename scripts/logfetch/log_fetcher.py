@@ -26,8 +26,7 @@ def main(args):
   check_dest(args)
   all_logs = []
   all_logs += download_s3_logs(args)
-  if not (args.end_days and args.end_days > 0):
-    all_logs += download_live_logs(args)
+  all_logs += download_live_logs(args)
   grep_files(args, all_logs)
 
 def check_dest(args):
