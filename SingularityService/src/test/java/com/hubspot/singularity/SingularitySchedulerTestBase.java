@@ -42,7 +42,9 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.scheduler.SingularityCleaner;
 import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
 import com.hubspot.singularity.scheduler.SingularityDeployChecker;
@@ -78,6 +80,10 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityScheduler scheduler;
   @Inject
   protected SingularityDeployChecker deployChecker;
+  @Inject
+  protected RackResource rackResource;
+  @Inject
+  protected SlaveResource slaveResource;
   @Inject
   protected RequestResource requestResource;
   @Inject

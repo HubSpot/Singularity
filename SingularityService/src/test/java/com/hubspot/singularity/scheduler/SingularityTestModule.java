@@ -59,7 +59,9 @@ import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -167,6 +169,8 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
+    mainBinder.bind(SlaveResource.class);
+    mainBinder.bind(RackResource.class);
   }
 
   @Provides
