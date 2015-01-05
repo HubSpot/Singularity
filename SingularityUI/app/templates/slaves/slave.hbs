@@ -7,6 +7,9 @@
                 <th>Rack</th>
                 <th>Host</th>
                 <th class="hidden-xs">Uptime</th>
+                {{#ifInSubFilter data.[0].state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                    <th>Triggered By</th>
+                {{/ifInSubFilter}}
                 <th data-sortable="false"></th>
             </tr>
         </thead>
@@ -22,6 +25,9 @@
                     <td class="hidden-xs" data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
                     </td>
+                    {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                        <td>{{ user }}</td>
+                    {{/ifInSubFilter}}
                     <td class="actions-column">
                         <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Decommission/Remove">
                             <span class="glyphicon glyphicon-remove"></span>
