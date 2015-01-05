@@ -11,6 +11,9 @@ class ServerItem extends Model
         DECOMMISSIONED:        require '../templates/vex/serverRemoveDecomissioned'
         ACTIVE:                require '../templates/vex/serverDecomission'
 
+    reactivateTemplate:
+        require '../templates/vex/slaveReactivate'
+
     parse: (item) =>
         if item.firstSeenAt?
             if item.decomissioningAt?
@@ -27,6 +30,11 @@ class ServerItem extends Model
         $.ajax
             url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+
+    reactivate: =>
+        $.ajax
+            url: "#{ @url()}/activate?user=#{ app.getUsername()}"
+            type: "POST"
 
     #
     # promptX pops up a user confirmation and then does what you asked of it if they approve
@@ -47,5 +55,21 @@ class ServerItem extends Model
             callback: (confirmed) =>
                 return unless confirmed
                 @destroy().done callback
+
+    promptReactivate: (callback) =>
+        state = @get 'state'
+        vex.dialog.confirm
+            message: @reactivateTemplate {@id}
+            buttons: [
+                $.extend {}, vex.dialog.buttons.YES,
+                    text: 'Reactivate',
+                    className: 'vex-dialog-button-primary'
+                vex.dialog.buttons.NO
+            ]
+
+            callback: (confirmed) =>
+                return unless confirmed
+                @destroy().done callback
+
 
 module.exports = ServerItem

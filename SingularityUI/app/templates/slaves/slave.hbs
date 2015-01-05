@@ -32,6 +32,11 @@
                         <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Decommission/Remove">
                             <span class="glyphicon glyphicon-remove"></span>
                         </a>
+                    {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                            <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
+                                Reactivate
+                            </a>
+                    {{/ifInSubFilter}}
                     </td>
                 </tr>
             {{/each}}
