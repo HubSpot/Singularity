@@ -65,9 +65,9 @@ def tasks_to_check(args):
 
 def tasks_for_request(args):
   if args.requestId and args.deployId:
-      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if (task["taskId"]["deployId"] == args.deployId and task_in_date_range(args, task))]
+      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if (task["taskId"]["deployId"] == args.deployId)]
   else:
-      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if task_in_date_range(args, task)][0:args.task_count]
+      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args)][0:args.task_count]
   return tasks
 
 def all_tasks_for_request(args):
@@ -80,10 +80,10 @@ def all_tasks_for_request(args):
   elif len(active_tasks) == 0:
     return historical_tasks
   else:
-    return active_tasks + historical_tasks
+      return active_tasks + [h for h in historical_tasks if is_in_date_range(args, int(str(h['updatedAt'])[0:-3]))]
 
-def task_in_date_range(args, task):
-  timedelta = datetime.utcnow() - datetime.utcfromtimestamp(int(str(task['updatedAt'])[0:-3]))
+def is_in_date_range(args, timestamp):
+  timedelta = datetime.utcnow() - datetime.utcfromtimestamp(timestamp)
   if args.end_days:
     if timedelta.days > args.start_days or timedelta.days <= args.end_days:
       return False
@@ -101,6 +101,6 @@ def logs_folder_files(args, task):
   files_json = get_json_response(uri, {'path' : '{0}/logs'.format(task)})
   if 'files' in files_json:
     files = files_json['files']
-    return [f['name'] for f in files]
+    return [f['name'] for f in files if is_in_date_range(args, f['mtime'])]
   else:
-    return [f['path'].rsplit('/')[-1] for f in files_json]
+    return [f['path'].rsplit('/')[-1] for f in files_json if is_in_date_range(args, f['mtime'])]
