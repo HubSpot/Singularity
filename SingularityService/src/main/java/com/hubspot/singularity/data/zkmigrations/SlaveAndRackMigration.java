@@ -3,6 +3,7 @@ package com.hubspot.singularity.data.zkmigrations;
 import javax.inject.Singleton;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.KeeperException.NoNodeException;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -22,8 +23,12 @@ public class SlaveAndRackMigration extends ZkDataMigration {
   @Override
   public void applyMigration() {
     try {
-      curator.delete().deletingChildrenIfNeeded().forPath("/slaves");
-      curator.delete().deletingChildrenIfNeeded().forPath("/racks");
+      try {
+        curator.delete().deletingChildrenIfNeeded().forPath("/slaves");
+      } catch (NoNodeException nee) {}
+      try {
+        curator.delete().deletingChildrenIfNeeded().forPath("/racks");
+      } catch (NoNodeException nee) {}
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
