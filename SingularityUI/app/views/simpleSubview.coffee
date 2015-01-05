@@ -20,18 +20,19 @@ class SimpleSubview extends View
 
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @data, eventName, @render
-            
+
         @listenTo @data, 'reset', =>
             @$el.empty()
 
     render: ->
         return if not @data.synced and @data.isEmpty?()
-        
+
         @$el.html @template
-            config:   config
-            data:     @data.toJSON()
-            synced:   @data.synced
-            expanded: @expanded
+            config:    config
+            data:      @data.toJSON()
+            synced:    @data.synced
+            expanded:  @expanded
+            modelData: @model?.toJSON()
 
         @$('.actions-column a[title]').tooltip()
 

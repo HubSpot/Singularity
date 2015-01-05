@@ -65,6 +65,7 @@ class RequestDetailController extends Controller
             template:   @templates.activeTasks
 
         @subviews.scheduledTasks = new SimpleSubview
+            model:      @models.request
             collection: @collections.scheduledTasks
             template:   @templates.scheduledTasks
 
