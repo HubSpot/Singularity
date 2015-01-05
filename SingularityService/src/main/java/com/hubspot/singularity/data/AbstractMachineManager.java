@@ -135,17 +135,28 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     LOG.debug("{} changing state from {} to {} by {}", object.getId(), object.getCurrentState().getState(), newState, user);
 
-    save(object.changeState(newStateUpdate));
-    // TODO save hsitory
+    saveObject(object.changeState(newStateUpdate));
 
     return StateChangeResult.SUCCESS;
   }
 
-  public SingularityDeleteResult delete(String objectId) {
+  private String getHistoryUpdatePath(SingularityMachineStateHistoryUpdate historyUpdate) {
+    final String historyChildPath = String.format("%s-%s", historyUpdate.getState().name(), historyUpdate.getTimestamp());
+
+    return ZKPaths.makePath(getHistoryPath(historyUpdate.getObjectId()), historyChildPath);
+  }
+
+  private SingularityCreateResult saveHistoryUpdate(SingularityMachineStateHistoryUpdate historyUpdate) {
+    return create(getHistoryUpdatePath(historyUpdate), historyUpdate, historyTranscoder);
+  }
+
+  public SingularityDeleteResult deleteObject(String objectId) {
     return delete(getObjectPath(objectId));
   }
 
-  public SingularityCreateResult save(T object) {
+  public SingularityCreateResult saveObject(T object) {
+    saveHistoryUpdate(object.getCurrentState());
+
     return save(getObjectPath(object.getId()), object, transcoder);
   }
 

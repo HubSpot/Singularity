@@ -831,7 +831,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave2", "host2", Optional.of("rack2"))));
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
 
-    Assert.assertTrue(slaveManager.getHistory("slave1").size() == 1);
+    Assert.assertEquals(1, slaveManager.getHistory("slave1").size());
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
     Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
 
@@ -875,7 +875,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
     Assert.assertTrue(slaveManager.getHistory("slave1").size() == 4);
 
-    slaveManager.delete("slave1");
+    slaveManager.deleteObject("slave1");
 
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 0);
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
@@ -927,6 +927,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get())) {
+      statusUpdate(task, TaskState.TASK_RUNNING);
+    }
 
     // all task should have moved.
 

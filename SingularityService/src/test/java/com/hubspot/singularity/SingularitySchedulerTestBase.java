@@ -204,6 +204,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(task.getMesosTask().getTaskId())
+        .setSlaveId(task.getOffer().getSlaveId())
         .setState(state);
 
     if (timestamp.isPresent()) {
