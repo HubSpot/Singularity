@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.basepom</groupId>
     <artifactId>basepom-standard-oss</artifactId>
-    <version>6</version>
+    <version>8</version>
   </parent>
 
   <groupId>com.hubspot</groupId>
@@ -35,16 +35,16 @@
     <project.jdk7.home>${env.JAVA7_HOME}</project.jdk7.home>
     <project.build.targetJdk>1.7</project.build.targetJdk>
     <basepom.check.skip-license>true</basepom.check.skip-license>
-    <basepom.check.fail-extended>true</basepom.check.fail-extended>
 
     <basepom.test.timeout>120</basepom.test.timeout>
-
-    <dep.plugin.surefire.version>2.18</dep.plugin.surefire.version>
 
     <!-- hubspot jackson and dropwizard dep use 2.3.x -->
     <dep.jackson.version>2.3.3</dep.jackson.version>
     <dep.jackson.core.version>${dep.jackson.version}</dep.jackson.core.version>
     <dep.jackson.databind.version>${dep.jackson.version}</dep.jackson.databind.version>
+
+    <!-- guava 18.0 is problematic, keep 17 for a while -->
+    <dep.guava.version>17.0</dep.guava.version>
 
     <!-- dropwizard uses jetty 9.0.x -->
     <dep.jetty.version>9.0.7.v20131107</dep.jetty.version>
@@ -539,26 +539,6 @@
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
           <version>0.0.16</version>
-        </plugin>
-        <plugin>
-          <groupId>com.ning.maven.plugins</groupId>
-          <artifactId>maven-duplicate-finder-plugin</artifactId>
-          <version>1.0.7</version>
-          <configuration>
-            <ignoredResources>
-              <ignoredResource>.*\.build\.json</ignoredResource>
-              <ignoredResource>.*\.html</ignoredResource>
-              <ignoredResource>META-INF/.*</ignoredResource>
-              <ignoredResource>about_files/.*</ignoredResource>
-              <ignoredResource>plugin\.properties</ignoredResource>
-              <ignoredResource>plugin\.xml</ignoredResource>
-              <ignoredResource>.*\.java</ignoredResource>
-              <ignoredResource>log4j\.xml</ignoredResource>
-              <ignoredResource>log4j\.properties</ignoredResource>
-              <ignoredResource>logback\.xml</ignoredResource>
-              <ignoredResource>logback\.properties</ignoredResource>
-            </ignoredResources>
-          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
