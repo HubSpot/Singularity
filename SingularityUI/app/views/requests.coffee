@@ -208,7 +208,8 @@ class RequestsView extends View
 
         $currentlySortedHeading = @$ "[data-sorted=true]"
         $currentlySortedHeading.removeAttr "data-sorted"
-        $currentlySortedHeading.find('span').remove()
+        $currentlySortedHeading.find("span.glyphicon-chevron-up").remove()
+        $currentlySortedHeading.find("span.glyphicon-chevron-down").remove()
 
         if newSortAttribute is @sortAttribute and @sortAscending?
             @sortAscending = not @sortAscending
