@@ -16,6 +16,8 @@ class RequestsView extends View
         pending:  require '../templates/requestsTable/requestsPendingBody'
         cleaning: require '../templates/requestsTable/requestsCleaningBody'
 
+    quartzTemplate: require '../templates/vex/quartzInfo'
+
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
@@ -33,6 +35,7 @@ class RequestsView extends View
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="starToggle"]': 'toggleStar'
             'click [data-action="run-now"]': 'runRequest'
+            'click [data-action="show-quartz"]': 'showQuartz'
             'click [data-filter]': 'changeFilters'
 
             'change input[type="search"]': 'searchChange'
@@ -57,16 +60,16 @@ class RequestsView extends View
             requests = _.filter requests, (request) =>
                 searchFilter = @searchFilter.toLowerCase().split("@")[0]
                 valuesToSearch = []
-                
+
                 for user in request.request.owners ? []
                   valuesToSearch.push(user.split("@")[0])
-                  
+
                 valuesToSearch.push(request.request.id)
                 valuesToSearch.push(request.requestDeployState?.activeDeploy?.user)
-                
+
                 searchTarget = valuesToSearch.join("")
                 searchTarget.toLowerCase().indexOf(searchFilter) isnt -1
-        
+
         # Only show requests that match the clicky filters
         if @state in @haveSubfilter and @subFilter isnt 'all'
             requests = _.filter requests, (request) =>
@@ -257,15 +260,15 @@ class RequestsView extends View
         @collection.get(id).promptUnpause =>
             $row.remove()
             @trigger 'refreshrequest'
-            
+
     scaleRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
-        
+
         @collection.get(id).promptScale =>
           $row.addClass 'flash'
           @trigger 'refreshrequest'
-          
+
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
@@ -273,13 +276,13 @@ class RequestsView extends View
         @collection.get(id).promptRun =>
             $row.addClass 'flash'
             setTimeout (=> $row.removeClass 'flash'), 500
-                        
+
     toggleStar: (e) ->
         $target = $(e.currentTarget)
         $row = $target.parents 'tr'
 
         id = $row.data 'request-id'
-        
+
         @collection.toggleStar id
 
         starred = $target.attr('data-starred') is "true"
@@ -323,5 +326,9 @@ class RequestsView extends View
         if @searchFilter isnt previousSearchFilter
             @updateUrl()
             @renderTable()
+
+    showQuartz: (event) =>
+        vex.dialog.alert
+            message: @quartzTemplate
 
 module.exports = RequestsView
