@@ -17,7 +17,8 @@ class RacksView extends View
 
     events: =>
         _.extend super,
-            'click [data-action="remove"]': 'removeRack'
+            'click [data-action="remove"]':       'removeRack'
+            'click [data-action="decommission"]': 'decommissionRack'
 
     render: ->
         return if not @collection.synced and @collection.isEmpty?()
@@ -45,11 +46,21 @@ class RacksView extends View
 
     removeRack: (event) ->
         $target = $(event.target)
+        console.log($target.data 'rack-id')
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
             state: state
 
         rackModel.promptRemove => @trigger 'refreshrequest'
+
+    decommissionRack: (event) ->
+        $target = $(event.target)
+        state = $target.data 'state'
+        rackModel = new Rack
+            id:    $target.data 'rack-id'
+            state: state
+
+        rackModel.promptDecommission => @trigger 'refreshrequest'
 
 module.exports = RacksView

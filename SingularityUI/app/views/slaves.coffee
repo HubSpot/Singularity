@@ -17,8 +17,9 @@ class SlavesView extends View
 
     events: =>
         _.extend super,
-            'click [data-action="remove"]':      'removeSlave'
-            'click [data-action="reactivate"]':  'reactivateSlave'
+            'click [data-action="remove"]':       'removeSlave'
+            'click [data-action="decommission"]': 'decommissionSlave'
+            'click [data-action="reactivate"]':   'reactivateSlave'
 
     render: ->
         return if not @collection.synced and @collection.isEmpty?()
@@ -52,6 +53,15 @@ class SlavesView extends View
             state: state
 
         slaveModel.promptRemove => @trigger 'refreshrequest'
+
+    decommissionSlave: (event) =>
+        $target = $(event.currentTarget)
+        state = $target.data 'state'
+        slaveModel = new Slave
+            id:    $target.data 'slave-id'
+            state: state
+
+        slaveModel.promptDecommission => @trigger 'refreshrequest'
 
     reactivateSlave: (event) =>
         $target = $(event.currentTarget)

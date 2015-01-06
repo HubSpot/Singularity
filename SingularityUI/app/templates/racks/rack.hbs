@@ -24,7 +24,10 @@
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
                     <td class="actions-column">
-                        <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Decommission/Remove">
+                        <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="decommission" title="Decommission">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                        <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Remove">
                             <span class="glyphicon glyphicon-remove"></span>
                         </a>
                     </td>

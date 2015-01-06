@@ -26,10 +26,15 @@ class ServerItem extends Model
             item.state = item.currentState.state
         item
 
-    destroy: =>
+    remove: =>
         $.ajax
             url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+
+    decommission: =>
+        $.ajax
+            url: "#{ @url() }/decomission?user=#{ app.getUsername() }"
+            type: "POST"
 
     reactivate: =>
         $.ajax
@@ -42,19 +47,34 @@ class ServerItem extends Model
 
     promptRemove: (callback) =>
         state = @get 'state'
-        text = if state is 'ACTIVE' then 'Decommission' else 'Remove'
         vex.dialog.confirm
             message: @removeTemplates[state] {@id, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
-                    text: text,
+                    text: 'Remove',
                     className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
                 vex.dialog.buttons.NO
             ]
 
             callback: (confirmed) =>
                 return unless confirmed
-                @destroy().done callback
+                @remove().done callback
+
+    promptDecommission: (callback) =>
+        state = @get 'state'
+        vex.dialog.confirm
+            message: @removeTemplates[state] {@id, @type}
+            buttons: [
+                $.extend {}, vex.dialog.buttons.YES,
+                    text: 'Decommission',
+                    className: 'vex-dialog-button-primary'
+                vex.dialog.buttons.NO
+            ]
+
+            callback: (confirmed) =>
+                return unless confirmed
+                @decommission().done callback
+
 
     promptReactivate: (callback) =>
         state = @get 'state'
@@ -69,7 +89,7 @@ class ServerItem extends Model
 
             callback: (confirmed) =>
                 return unless confirmed
-                @destroy().done callback
+                @remove().done callback
 
 
 module.exports = ServerItem
