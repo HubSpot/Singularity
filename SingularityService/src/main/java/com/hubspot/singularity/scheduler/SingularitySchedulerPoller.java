@@ -8,7 +8,6 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -27,7 +26,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   @Inject
   SingularitySchedulerPoller(Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityScheduler scheduler,
       SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, Optional.of(lock));
+    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock);
 
     this.stateCacheProvider = stateCacheProvider;
     this.scheduler = scheduler;

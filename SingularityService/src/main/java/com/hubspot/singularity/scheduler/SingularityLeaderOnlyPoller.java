@@ -40,7 +40,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     this(pollDelay, pollTimeUnit, Optional.<Lock> absent());
   }
 
-  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Optional<Lock> lockHolder) {
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Lock lock) {
+    this(pollDelay, pollTimeUnit, Optional.of(lock));
+  }
+
+  private SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Optional<Lock> lockHolder) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
     this.lockHolder = lockHolder;
