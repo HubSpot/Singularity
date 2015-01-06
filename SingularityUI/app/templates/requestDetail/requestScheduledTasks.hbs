@@ -26,7 +26,7 @@
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
                     </td>
                     <td class="hidden-xs actions-column">
-                        {{#unless ../modelData.attributes.daemon}}
+                        {{#unless ../request.attributes.daemon}}
                             <a data-action="run-now" title="Run now">
                                 <span class="glyphicon glyphicon-flash"></span>
                             </a>
