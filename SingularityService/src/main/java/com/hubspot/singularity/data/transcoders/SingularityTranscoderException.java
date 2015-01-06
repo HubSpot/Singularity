@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.transcoders;
 import static java.lang.String.format;
 
 public final class SingularityTranscoderException extends RuntimeException {
+  private static final long serialVersionUID = 1L;
+
   public SingularityTranscoderException() {
     super();
   }
