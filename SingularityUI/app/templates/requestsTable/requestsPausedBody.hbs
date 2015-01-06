@@ -46,7 +46,15 @@
 
                         {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
-                                {{ request.schedule }}
+                                {{#if request.quartzSchedule}}
+                                    {{ request.quartzSchedule }}
+                                {{else}}
+                                    {{#ifEqual request.scheduleType "quartz"}}
+                                        {{ request.schedule }}
+                                    {{else}}
+                                        {{ request.schedule }} {{ request.scheduleType }}
+                                    {{/ifEqual}}
+                                {{/if}}
                             </td>
                         {{/ifInSubFilter}}
 

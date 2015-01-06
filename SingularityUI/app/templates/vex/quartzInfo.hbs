@@ -86,63 +86,47 @@
 │ └───────────── min (0 - 59)
 └─────────────── seconds
 -->
+<h3>Special Characters</h3>
 <table class="table-condensed">
     <tbody>
         <tr>
-            <th>Field Name</th>
-            <th></th>
-            <th>Allowed Values</th>
-            <th></th>
-            <th>Allowed Special Characters</th>
+            <th>Character</th>
+            <th>Function</th>
         </tr>
         <tr>
-            <td>Seconds</td>
-            <td>
-            </td><td>0-59</td>
-            <td>
-            </td><td>, - * /</td>
+            <td>*</td>
+            <td>All values</td>
         </tr>
         <tr>
-            <td>Minutes</td>
-            <td>
-            </td><td>0-59</td>
-            <td>
-            </td><td>, - * /</td>
+            <td>?</td>
+            <td>No specific value (day of month/day of week)</td>
         </tr>
         <tr>
-            <td>Hours</td>
-            <td>
-            </td><td>0-23</td>
-            <td>
-            </td><td>, - * /</td>
+            <td>-</td>
+            <td>Used to specify ranges (10-12)</td>
         </tr>
         <tr>
-            <td>Day-of-month</td>
-            <td>
-            </td><td>1-31</td>
-            <td>
-            </td><td>, - * ? / L W</td>
+            <td>,</td>
+            <td>Specify additional values (MON,WED,FRI)</td>
         </tr>
         <tr>
-            <td>Month</td>
-            <td>
-            </td><td>1-12 or JAN-DEC</td>
-            <td>
-            </td><td>, - * /</td>
+            <td>/</td>
+            <td>Specify increments (S/N every Nth value of a set starting from value S)</td>
         </tr>
         <tr>
-            <td>Day-of-Week</td>
+            <td>L</td>
             <td>
-            </td><td>0-7 or SUN-SAT (0 or 7 is SUN)</td>
-            <td>
-            </td><td>, - * ? / L #</td>
+                <li>last day of week (7), or if used with a value last n day of month (ex. 6L - last friday of month)</li>
+                <li>last day of the month, can also specify with an offset (ex. L-3)</li>
+            </td>
         </tr>
         <tr>
-            <td>Year (Optional)</td>
-            <td>
-            </td><td>empty, 1970-2199</td>
-            <td>
-            </td><td>, - * /</td>
+            <td>W</td>
+            <td>Weekday (15W, nearest weekday to 15th of the month) only for day of month</td>
+        </tr>
+        <tr>
+            <td>#</td>
+            <td>Nth XXX day of the month (6#3 - third friday of the month) only for day of week</td>
         </tr>
     </tbody>
 </table>
