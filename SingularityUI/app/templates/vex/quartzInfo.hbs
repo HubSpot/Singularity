@@ -1,0 +1,148 @@
+<h2>Quartz Schedule Format</h2>
+<table class="table-condensed">
+    <thead>
+        <th>*</th>
+        <th>*</th>
+        <th>*</th>
+        <th>*</th>
+        <th>*</th>
+        <th>*</th>
+        <th>(year optional)</th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>┬</td>
+            <td>┬</td>
+            <td>┬</td>
+            <td>┬</td>
+            <td>┬</td>
+            <td>┬</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>│</td>
+            <td>│</td>
+            <td>│</td>
+            <td>│</td>
+            <td>│</td>
+            <td>└</td>
+            <td> day of week (0 - 7, or use names)</td>
+        </tr>
+        <tr>
+            <td>│</td>
+            <td>│</td>
+            <td>│</td>
+            <td>│</td>
+            <td>└</td>
+            <td>─ </td>
+            <td> month (1 - 12)</td>
+        </tr>
+        <tr>
+            <td>│</td>
+            <td>│</td>
+            <td>│</td>
+            <td>└</td>
+            <td>─ </td>
+            <td>─ </td>
+            <td> day of month (1 - 31)</td>
+        </tr>
+        <tr>
+            <td>│</td>
+            <td>│</td>
+            <td>└</td>
+            <td>─ </td>
+            <td>─ </td>
+            <td>─ </td>
+            <td> hour (0 - 23)</td>
+        </tr>
+        <tr>
+            <td>│</td>
+            <td>└</td>
+            <td>─ </td>
+            <td>─ </td>
+            <td>─ </td>
+            <td>─ </td>
+            <td> min (0 - 59)</td>
+        </tr>
+        <tr>
+            <td>└</td>
+            <td>─ </td>
+            <td>─ </td>
+            <td>─ </td>
+            <td>─ </td>
+            <td>─ </td>
+            <td> seconds</td>
+        </tr>
+    </tbody>
+</table>
+
+<!--
+* * * * * *   (year optional)
+┬ ┬ ┬ ┬ ┬ ┬
+│ │ │ │ │ └───── day of week (0 - 7, or use names)
+│ │ │ │ └─────── month (1 - 12)
+│ │ │ └───────── day of month (1 - 31)
+│ │ └─────────── hour (0 - 23)
+│ └───────────── min (0 - 59)
+└─────────────── seconds
+-->
+<table class="table-condensed">
+    <tbody>
+        <tr>
+            <th>Field Name</th>
+            <th></th>
+            <th>Allowed Values</th>
+            <th></th>
+            <th>Allowed Special Characters</th>
+        </tr>
+        <tr>
+            <td>Seconds</td>
+            <td>
+            </td><td>0-59</td>
+            <td>
+            </td><td>, - * /</td>
+        </tr>
+        <tr>
+            <td>Minutes</td>
+            <td>
+            </td><td>0-59</td>
+            <td>
+            </td><td>, - * /</td>
+        </tr>
+        <tr>
+            <td>Hours</td>
+            <td>
+            </td><td>0-23</td>
+            <td>
+            </td><td>, - * /</td>
+        </tr>
+        <tr>
+            <td>Day-of-month</td>
+            <td>
+            </td><td>1-31</td>
+            <td>
+            </td><td>, - * ? / L W</td>
+        </tr>
+        <tr>
+            <td>Month</td>
+            <td>
+            </td><td>1-12 or JAN-DEC</td>
+            <td>
+            </td><td>, - * /</td>
+        </tr>
+        <tr>
+            <td>Day-of-Week</td>
+            <td>
+            </td><td>0-7 or SUN-SAT (0 or 7 is SUN)</td>
+            <td>
+            </td><td>, - * ? / L #</td>
+        </tr>
+        <tr>
+            <td>Year (Optional)</td>
+            <td>
+            </td><td>empty, 1970-2199</td>
+            <td>
+            </td><td>, - * /</td>
+        </tr>
+    </tbody>
+</table>
