@@ -199,6 +199,7 @@ class RequestsView extends View
             $tableBody.append $contents
 
         @$('.actions-column a[title]').tooltip()
+        @$('.schedule-header span[title]').tooltip()
 
     sortTable: (event) =>
         @isSorted = true
