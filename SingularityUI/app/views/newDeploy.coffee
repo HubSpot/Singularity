@@ -103,8 +103,8 @@ class NewDeployView extends FormBaseView
             if $dockerPorts.length
                 for $dockerPort in $dockerPorts
                     $dockerPort = $ $dockerPort
-                    deployObject.containerInfo.portMappings = [] unless deployObject.containerInfo.portMappings
-                    deployObject.containerInfo.portMappings.push
+                    deployObject.containerInfo.docker.portMappings = [] unless deployObject.containerInfo.portMappings
+                    deployObject.containerInfo.docker.portMappings.push
                         containerPortType: @valOrNothing '.cont-port-type', $dockerPort
                         containerPort:     @valOrNothing '.cont-port', $dockerPort
                         hostPortType:      @valOrNothing '.host-port-type', $dockerPort
