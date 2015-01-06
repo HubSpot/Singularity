@@ -26,9 +26,11 @@
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
                     </td>
                     <td class="hidden-xs actions-column">
-                        <a data-action="run-now" title="Run now">
-                            <span class="glyphicon glyphicon-flash"></span>
-                        </a>
+                        {{#unless ../request.attributes.daemon}}
+                            <a data-action="run-now" title="Run now">
+                                <span class="glyphicon glyphicon-flash"></span>
+                            </a>
+                        {{/unless}}
                         <a data-action="viewJSON" title="JSON">
                             { }
                         </a>
