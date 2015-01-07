@@ -34,7 +34,7 @@
                     <td class="actions-column">
                         {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                             <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
-                                <span class="glyphicon glyphicon-new-window"
+                                <span class="glyphicon glyphicon-new-window"></span>
                             </a>
                         {{/ifInSubFilter}}
                         {{#ifInSubFilter state 'ACTIVE'}}

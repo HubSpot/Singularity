@@ -24,6 +24,11 @@
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
                     <td class="actions-column">
+                        {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                            <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
+                                <span class="glyphicon glyphicon-new-window"></span>
+                            </a>
+                        {{/ifInSubFilter}}
                         <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="decommission" title="Decommission">
                             <span class="glyphicon glyphicon-trash"></span>
                         </a>

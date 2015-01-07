@@ -89,7 +89,7 @@ class ServerItem extends Model
 
             callback: (confirmed) =>
                 return unless confirmed
-                @remove().done callback
+                @reactivate().done callback
 
 
 module.exports = ServerItem

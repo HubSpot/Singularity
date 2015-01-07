@@ -19,6 +19,7 @@ class RacksView extends View
         _.extend super,
             'click [data-action="remove"]':       'removeRack'
             'click [data-action="decommission"]': 'decommissionRack'
+            'click [data-action="reactivate"]':   'reactivateRack'
 
     render: ->
         return if not @collection.synced and @collection.isEmpty?()
@@ -62,5 +63,15 @@ class RacksView extends View
             state: state
 
         rackModel.promptDecommission => @trigger 'refreshrequest'
+
+    reactivateRack: (event) =>
+        $target = $(event.target)
+        state = $target.data 'state'
+        rackModel = new Rack
+            id:    $target.data 'rack-id'
+            state: state
+
+        rackModel.promptReactivate => @trigger 'refreshrequest'
+
 
 module.exports = RacksView
