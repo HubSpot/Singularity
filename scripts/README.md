@@ -39,16 +39,38 @@ When the -g option is set, the log fetcher will grep the downloaded files for th
 
 ##Example Usage
 - Specify a configuration file AND folder to use
-  - `logfetch -r ‘My_Jobs_Id’ -c somefile -f ~/.somefolder` (uses ~/.somefolder/somefile as config file)
+
+`logfetch -r ‘My_Jobs_Id’ -c somefile -f ~/.somefolder` (uses ~/.somefolder/somefile as config file)
+
 - Specify a configuration file in the default directory
-  - `logfetch -r ‘My_Jobs_Id’ -c somefile` (uses ~/.logfetch/somefile as config file)
+
+`logfetch -r ‘My_Jobs_Id’ -c somefile` (uses ~/.logfetch/somefile as config file)
+
 - Search logs for a request
-  - `logfetch -r 'My_Jobs_Id' -g 'Regex_here'`
+
+`logfetch -r 'My_Jobs_Id' -g 'Regex_here'`
+
 - Search logs for a specific deploy
-  - `logfetch -r 'My_Jobs_Id' -d '1_2_3' -g 'Regex_here'`
+
+`logfetch -r 'My_Jobs_Id' -d '1_2_3' -g 'Regex_here'`
+
 - Search logs for a specific task
-  - `logfetch -t 'My_Task_id' -g 'Regex_here'`
+
+`logfetch -t 'My_Task_id' -g 'Regex_here'`
+
 - Specify your own configuration file
-  - `logfetch -c /etc/my_conf_file -t 'My_Task_id' -g 'Regex_here'`
+
+`logfetch -c /etc/my_conf_file -t 'My_Task_id' -g 'Regex_here'`
+
 - Don't search, just download logs
-  - `logfetch -r 'My_Jobs_Id'`
+
+`logfetch -r 'My_Jobs_Id'`
+
+##Tailing Logs
+You can tail live log files by providing the --tail option with the path to the log file. For example, to tail the service.log file for all tasks for a request named MyRequest, you would use the command:
+
+`logfetch -r ‘MyRequest’ --tail ‘service.log’`
+
+- The path for the log file is relative to the base path for that task’s sandbox. ie. to tail a file in (sandbox path)/logs/access.log, the argument to --tail would be ‘logs/access.log’
+
+You can also provide the -g option which will provide the grep string to the singularity api and search the results. You cannot provide a full grep command as in some of the above examples, just a string to match on
