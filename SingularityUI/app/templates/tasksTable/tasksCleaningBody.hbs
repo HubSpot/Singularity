@@ -10,6 +10,9 @@
                         Cleanup type
                     </th>
                     <th class="hidden-xs">
+                        {{! Warnings Column }}
+                    </th>
+                    <th class="hidden-xs">
                         {{! Actions column }}
                     </th>
                 </tr>
@@ -26,6 +29,13 @@
                     </td>
                     <td>
                         {{humanizeText cleanupType}}
+                    </td>
+                    <td>
+                        {{#if pendingTask.pendingTaskId}}
+                            {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
+                                <span class="label label-danger">OVERDUE</span>
+                            {{/ifTimestampInPast}}
+                        {{/if}}
                     </td>
                     <td class="actions-column hidden-xs">
                         <a data-task-id="{{ taskId.id }}" data-action="viewJSON" title="JSON">
