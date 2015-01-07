@@ -1,16 +1,15 @@
-import os
 import sys
 import logfetch_base
 import requests
 import time
 import threading
-from singularity_request import get_json_response
 
 
 TAIL_LOG_FORMAT = '{0}/sandbox/{1}/read'
 READ_INTERVAL = 5
+THREAD_TIMEOUT = 100000
 
-def tail_logs(args):
+def start_tail(args):
   if args.requestId:
     sys.stderr.write('Fetching tasks\n')
     tasks = [str(t) for t in logfetch_base.tasks_for_request(args)]
@@ -24,12 +23,14 @@ def tail_logs(args):
     threads = []
     for task in tasks:
       thread = LogStreamer(args, task)
-      threads += [thread]
+      threads.append(thread)
       thread.start()
-    while True: # main thread needs something to do so it doesn't kill the others
-      time.sleep(1)
+    for t in threads:
+      t.join(THREAD_TIMEOUT) #Need a timeout otherwise can't be killed by ctrl+c
+      if not t.isAlive:
+        break
   except KeyboardInterrupt:
-    sys.stdout.write('Stopping tail')
+    sys.stderr.write('Stopping tail')
     sys.exit(0)
 
 class LogStreamer(threading.Thread):
@@ -44,7 +45,7 @@ class LogStreamer(threading.Thread):
 
   def stream_log_for_task(self, args, task):
     uri = TAIL_LOG_FORMAT.format(logfetch_base.base_uri(args), task)
-    path = '{0}/{1}'.format(task, args.tail)
+    path = '{0}/{1}'.format(task, args.logfile)
     keep_trying = True
     try:
       offset = self.get_initial_offset(uri, path)
