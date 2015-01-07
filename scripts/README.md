@@ -67,10 +67,12 @@ When the -g option is set, the log fetcher will grep the downloaded files for th
 `logfetch -r 'My_Jobs_Id'`
 
 ##Tailing Logs
-You can tail live log files by providing the --tail option with the path to the log file. For example, to tail the service.log file for all tasks for a request named MyRequest, you would use the command:
+You can tail live log files byusing logtail. Just provude the request, task, or request and deploy along with a log file path.
 
-`logfetch -r ‘MyRequest’ --tail ‘service.log’`
+For example, to tail the service.log file for all tasks for a request named MyRequest, you would use the command:
 
-- The path for the log file is relative to the base path for that task’s sandbox. ie. to tail a file in (sandbox path)/logs/access.log, the argument to --tail would be ‘logs/access.log’
+`logtail -r ‘MyRequest’ -l ‘service.log’`
+
+- The path for the log file is relative to the base path for that task’s sandbox. ie. to tail a file in (sandbox path)/logs/access.log, the argument to -l would be ‘logs/access.log’
 
 You can also provide the -g option which will provide the grep string to the singularity api and search the results. You cannot provide a full grep command as in some of the above examples, just a string to match on
