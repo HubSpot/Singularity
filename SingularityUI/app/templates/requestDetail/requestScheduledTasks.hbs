@@ -12,6 +12,9 @@
                     Next run
                 </th>
                 <th class="hidden-xs">
+                    {{! Warnings Column }}
+                </th>
+                <th class="hidden-xs">
                     {{! Actions }}
                 </th>
             </tr>
@@ -24,6 +27,11 @@
                     </td>
                     <td data-value="{{ pendingTask.pendingTaskId.nextRunAt }}">
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
+                    </td>
+                    <td>
+                        {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
+                            <span class="btn btn-block btn-small btn-danger disabled">OVERDUE!</span>
+                        {{/ifTimestampInPast}}
                     </td>
                     <td class="hidden-xs actions-column">
                         {{#unless ../request.attributes.daemon}}
