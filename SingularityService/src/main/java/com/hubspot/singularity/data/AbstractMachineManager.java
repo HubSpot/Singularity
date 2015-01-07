@@ -34,7 +34,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     this.historyTranscoder = historyTranscoder;
   }
 
-  public abstract String getRoot();
+  protected abstract String getRoot();
 
   private String getHistoryPath(String objectId) {
     return ZKPaths.makePath(getObjectPath(objectId), HISTORY_PATH);
@@ -98,7 +98,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getData(getObjectPath(objectId), transcoder);
   }
 
-  public List<T> getObjects(String root) {
+  protected List<T> getObjects(String root) {
     return getAsyncChildren(root, transcoder);
   }
 
@@ -123,12 +123,11 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public StateChangeResult changeState(T object, MachineState newState, Optional<String> user) {
-
     if (object.getCurrentState().getState() == newState) {
       return StateChangeResult.FAILURE_ALREADY_AT_STATE;
     }
 
-    if (newState == MachineState.STARTING_DECOMISSION && !object.getCurrentState().getState().isDecomissioning()) {
+    if (newState == MachineState.STARTING_DECOMISSION && object.getCurrentState().getState().isDecomissioning()) {
       return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
     }
 
@@ -136,18 +135,29 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     LOG.debug("{} changing state from {} to {} by {}", object.getId(), object.getCurrentState().getState(), newState, user);
 
-    save(object.changeState(newStateUpdate));
-    // TODO save hsitory
+    saveObject(object.changeState(newStateUpdate));
 
     return StateChangeResult.SUCCESS;
   }
 
-  public SingularityDeleteResult delete(String objectId) {
+  private String getHistoryUpdatePath(SingularityMachineStateHistoryUpdate historyUpdate) {
+    final String historyChildPath = String.format("%s-%s", historyUpdate.getState().name(), historyUpdate.getTimestamp());
+
+    return ZKPaths.makePath(getHistoryPath(historyUpdate.getObjectId()), historyChildPath);
+  }
+
+  private SingularityCreateResult saveHistoryUpdate(SingularityMachineStateHistoryUpdate historyUpdate) {
+    return create(getHistoryUpdatePath(historyUpdate), historyUpdate, historyTranscoder);
+  }
+
+  public SingularityDeleteResult deleteObject(String objectId) {
     return delete(getObjectPath(objectId));
   }
 
-  public SingularityCreateResult save(T object) {
-    return create(getObjectPath(object.getId()), object, transcoder);
+  public SingularityCreateResult saveObject(T object) {
+    saveHistoryUpdate(object.getCurrentState());
+
+    return save(getObjectPath(object.getId()), object, transcoder);
   }
 
 }

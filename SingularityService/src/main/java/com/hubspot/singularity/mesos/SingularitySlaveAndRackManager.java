@@ -22,6 +22,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
@@ -32,6 +33,7 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 class SingularitySlaveAndRackManager {
@@ -43,20 +45,24 @@ class SingularitySlaveAndRackManager {
 
   private final SingularityConfiguration configuration;
 
+  private final SingularityExceptionNotifier exceptionNotifier;
   private final RackManager rackManager;
   private final SlaveManager slaveManager;
+  private final TaskManager taskManager;
 
   @Inject
-  SingularitySlaveAndRackManager(SingularityConfiguration configuration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
 
     MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
 
+    this.exceptionNotifier = exceptionNotifier;
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
 
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
+    this.taskManager = taskManager;
   }
 
   public enum SlaveMatchState {
@@ -268,7 +274,7 @@ class SingularitySlaveAndRackManager {
     Optional<T> existingObject = manager.getObject(object.getId());
 
     if (!existingObject.isPresent()) {
-      manager.save(object);
+      manager.saveObject(object);
 
       return CheckResult.NEW;
     }
@@ -307,6 +313,61 @@ class SingularitySlaveAndRackManager {
     if (check(rack, rackManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new rack {}", rack);
     }
+  }
+
+  public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
+    Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
+
+    if (!slave.isPresent()) {
+      final String message = String.format("Couldn't find slave with id %s for task %s", slaveId, taskId);
+      LOG.warn(message);
+      exceptionNotifier.notify(message);
+      return;
+    }
+
+    if (slave.get().getCurrentState().getState() == MachineState.DECOMISSIONING) {
+      if (!hasTaskLeftOnSlave(taskId, slaveId, stateCache)) {
+        slaveManager.changeState(slave.get(), MachineState.DECOMISSIONED, slave.get().getCurrentState().getUser());
+      }
+    }
+
+    Optional<SingularityRack> rack = rackManager.getObject(taskId.getRackId());
+
+    if (!rack.isPresent()) {
+      final String message = String.format("Couldn't find rack with id %s for task %s", taskId.getRackId(), taskId);
+      LOG.warn(message);
+      exceptionNotifier.notify(message);
+      return;
+    }
+
+    if (rack.get().getCurrentState().getState() == MachineState.DECOMISSIONING) {
+      if (!hasTaskLeftOnRack(taskId, stateCache)) {
+        rackManager.changeState(rack.get(), MachineState.DECOMISSIONED, rack.get().getCurrentState().getUser());
+      }
+    }
+  }
+
+  private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularitySchedulerStateCache stateCache) {
+    for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
+      if (!activeTaskId.equals(taskId) && activeTaskId.getRackId().equals(taskId.getRackId())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
+    for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
+      if (!activeTaskId.equals(taskId) && activeTaskId.getHost().equals(taskId.getHost())) {
+        Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
+        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+          return true;
+        }
+      };
+    }
+
+    return false;
   }
 
 }

@@ -57,7 +57,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @DELETE
   @Path("/rack/{rackId}")
-  @ApiOperation("Remove a known rack, this operation will cancel decomissioning of racks")
+  @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
   public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
     super.remove(rackId);
   }
@@ -68,6 +68,14 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
                               @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
     super.decomission(rackId, user);
+  }
+
+  @POST
+  @Path("/rack/{rackId}/activate")
+  @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
+  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
+                              @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
+    super.activate(rackId, user);
   }
 
 }

@@ -20,7 +20,7 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
   }
 
   @Override
-  public String getRoot() {
+  protected String getRoot() {
     return RACK_ROOT;
   }
 

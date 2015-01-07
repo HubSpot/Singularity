@@ -58,7 +58,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
 
   @DELETE
   @Path("/slave/{slaveId}")
-  @ApiOperation("Remove a known slave, this operation will cancel decomissioning of the slave")
+  @ApiOperation("Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")
   public void removeSlave(@ApiParam("Active SlaveId") @PathParam("slaveId") String slaveId) {
     super.remove(slaveId);
   }
@@ -71,5 +71,12 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
     super.decomission(slaveId, user);
   }
 
+  @POST
+  @Path("/slave/{slaveId}/activate")
+  @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
+  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
+                              @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
+    super.activate(slaveId, user);
+  }
 
 }
