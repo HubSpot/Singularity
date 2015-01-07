@@ -7,6 +7,7 @@ from termcolor import colored
 from fake_section_head import FakeSectionHead
 from live_logs import download_live_logs
 from s3_logs import download_s3_logs
+from tail import tail_logs
 from grep import grep_files
 
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
@@ -24,10 +25,13 @@ def exit(reason):
 
 def main(args):
   check_dest(args)
-  all_logs = []
-  all_logs += download_s3_logs(args)
-  all_logs += download_live_logs(args)
-  grep_files(args, all_logs)
+  if args.tail:
+    tail_logs(args)
+  else:
+    all_logs = []
+    all_logs += download_s3_logs(args)
+    all_logs += download_live_logs(args)
+    grep_files(args, all_logs)
 
 def check_dest(args):
   if not os.path.exists(args.dest):
@@ -70,7 +74,8 @@ def entrypoint():
   parser.add_argument("-u", "--singularity-uri-base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)", metavar="URI")
   parser.add_argument("-s", "--start-days", help="Search for logs no older than this many days", type=int, metavar="start_days")
   parser.add_argument("-e", "--end-days", help="Search for logs no new than this many days (defaults to None/today)", type=int, metavar="end_days")
-  parser.add_argument("-g", "--grep", help="Regex to grep for (normal grep syntax) or a full grep command", metavar='grep')
+  parser.add_argument("-g", "--grep", help="Regex to grep for (normal grep syntax) or a full grep command(cannot use full command with --tail)", metavar='grep')
+  parser.add_argument("--tail", help="Logfile name to tail, if this is set, no downloads will happen", metavar="tail")
 
   args = parser.parse_args(remaining_argv)
 
