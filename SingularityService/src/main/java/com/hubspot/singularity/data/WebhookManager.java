@@ -30,11 +30,11 @@ public class WebhookManager extends CuratorAsyncManager {
   private final Transcoder<SingularityWebhook> webhookTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
-  private final Transcoder<SingularityDeployWebhook> deployWebhookTranscoder;
+  private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
 
   @Inject
   public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, Transcoder<SingularityWebhook> webhookTranscoder,
-      Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployWebhook> deployWebhookTranscoder) {
+      Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployUpdate> deployWebhookTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
     this.webhookTranscoder = webhookTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
@@ -65,7 +65,7 @@ public class WebhookManager extends CuratorAsyncManager {
     return requestUpdate.getRequest().getId() + "-" + requestUpdate.getEventType().name() + "-" + requestUpdate.getCreatedAt();
   }
 
-  private String getDeployUpdateId(SingularityDeployWebhook deployUpdate) {
+  private String getDeployUpdateId(SingularityDeployUpdate deployUpdate) {
     return SingularityDeployKey.fromDeployMarker(deployUpdate.getDeployMarker()) + "-" + deployUpdate.getEventType().name();
   }
 
@@ -85,7 +85,7 @@ public class WebhookManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.TASK), getTaskHistoryUpdateId(taskUpdate));
   }
 
-  private String getEnqueuePathForDeployUpdate(String webhookId, SingularityDeployWebhook deployUpdate) {
+  private String getEnqueuePathForDeployUpdate(String webhookId, SingularityDeployUpdate deployUpdate) {
     return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.DEPLOY), getDeployUpdateId(deployUpdate));
   }
 
@@ -107,7 +107,7 @@ public class WebhookManager extends CuratorAsyncManager {
     return delete(path);
   }
 
-  public SingularityDeleteResult deleteDeployUpdate(SingularityWebhook webhook, SingularityDeployWebhook deployUpdate) {
+  public SingularityDeleteResult deleteDeployUpdate(SingularityWebhook webhook, SingularityDeployUpdate deployUpdate) {
     final String path = getEnqueuePathForDeployUpdate(webhook.getId(), deployUpdate);
 
     return delete(path);
@@ -119,7 +119,7 @@ public class WebhookManager extends CuratorAsyncManager {
     return delete(path);
   }
 
-  public List<SingularityDeployWebhook> getQueuedDeployUpdatesForHook(String webhookId) {
+  public List<SingularityDeployUpdate> getQueuedDeployUpdatesForHook(String webhookId) {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.DEPLOY), deployWebhookTranscoder);
   }
 

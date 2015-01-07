@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityDeployWebhook {
+public class SingularityDeployUpdate {
 
   public enum DeployEventType {
     STARTING, FINISHED;
@@ -16,7 +16,7 @@ public class SingularityDeployWebhook {
   private final Optional<SingularityDeployResult> deployResult;
 
   @JsonCreator
-  public SingularityDeployWebhook(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("eventType") DeployEventType eventType, @JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult) {
+  public SingularityDeployUpdate(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("eventType") DeployEventType eventType, @JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult) {
     this.deployMarker = deployMarker;
     this.deploy = deploy;
     this.eventType = eventType;
