@@ -29,10 +29,13 @@ def base_uri(args):
   return uri
 
 def tasks_for_request(args):
+  print args
   if args.requestId and args.deployId:
       tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if (task["taskId"]["deployId"] == args.deployId)]
   else:
-      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args)][0:args.task_count]
+      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args)]
+      if hasattr(args, 'task_count'):
+        tasks = tasks[0:args.task_count]
   return tasks
 
 def all_tasks_for_request(args):
