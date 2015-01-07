@@ -1,23 +1,17 @@
 package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.inject.name.Names.named;
-
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.server.SimpleServerFactory;
 
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -36,7 +30,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.net.HostAndPort;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -179,38 +172,6 @@ public class SingularityMainModule implements Module {
     }
 
 
-  }
-
-  public static class SingularityManagedScheduledExecutorServiceProvider implements Provider<ScheduledExecutorService>, Managed {
-
-    private final AtomicBoolean stopped = new AtomicBoolean();
-    private ScheduledExecutorService service;
-
-    private final long timeoutInSeconds;
-
-    SingularityManagedScheduledExecutorServiceProvider(final int poolSize, final long timeoutInSeconds, final String name) {
-      this.service = Executors.newScheduledThreadPool(poolSize, new ThreadFactoryBuilder().setNameFormat(name + "-pool-%d").setDaemon(true).build());
-      this.timeoutInSeconds = timeoutInSeconds;
-    }
-
-    @Override
-    public synchronized ScheduledExecutorService get() {
-      checkState(!stopped.get(), "already stopped");
-      return service;
-    }
-
-    @Override
-    public void start() throws Exception {
-      // Ignored
-    }
-
-    @Override
-    public void stop() throws Exception {
-      if (!stopped.getAndSet(true)) {
-        service.shutdown();
-        service.awaitTermination(timeoutInSeconds, TimeUnit.SECONDS);
-      }
-    }
   }
 
   @Provides
