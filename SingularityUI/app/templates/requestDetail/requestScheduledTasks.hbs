@@ -25,7 +25,7 @@
                     <td data-value="{{ pendingTask.pendingTaskId.nextRunAt }}">
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
                         {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
-                            <span class="label label-danger">OVERDUE!</span>
+                            <span class="label label-danger">OVERDUE</span>
                         {{/ifTimestampInPast}}
                     </td>
                     <td class="hidden-xs actions-column">
