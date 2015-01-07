@@ -31,7 +31,7 @@ class SlavesView extends View
         )
         decommission = new Slaves(
             @collection.filter (model) ->
-              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
+              model.get('state') in ['DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
         )
         inactive = new Slaves(
             @collection.filter (model) ->
