@@ -12,16 +12,17 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityDeployWebhook;
+import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
-public class WebhookManager extends CuratorAsyncManager {
+public class WebhookManager extends CuratorAsyncManager implements SingularityEventListener {
 
   private static final String ROOT_PATH = "/hooks";
   private static final String QUEUES_PATH = ROOT_PATH + "/queues";
@@ -133,7 +134,8 @@ public class WebhookManager extends CuratorAsyncManager {
 
   // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not
   // immediately make some webhooks)
-  public void enqueueRequestUpdate(SingularityRequestHistory requestUpdate) {
+  @Override
+  public void requestHistoryEvent(SingularityRequestHistory requestUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.REQUEST)) {
       final String enqueuePath = getEnqueuePathForRequestUpdate(webhook.getId(), requestUpdate);
 
@@ -141,7 +143,8 @@ public class WebhookManager extends CuratorAsyncManager {
     }
   }
 
-  public void enqueueTaskUpdate(SingularityTaskHistoryUpdate taskUpdate) {
+  @Override
+  public void taskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.TASK)) {
       final String enqueuePath = getEnqueuePathForTaskUpdate(webhook.getId(), taskUpdate);
 
@@ -149,7 +152,8 @@ public class WebhookManager extends CuratorAsyncManager {
     }
   }
 
-  public void enqueueDeployUpdate(SingularityDeployWebhook deployUpdate) {
+  @Override
+  public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.DEPLOY)) {
       final String enqueuePath = getEnqueuePathForDeployUpdate(webhook.getId(), deployUpdate);
 
