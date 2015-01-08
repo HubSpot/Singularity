@@ -82,10 +82,16 @@ class TaskDetailController extends Controller
         app.showView @view
 
     refresh: ->
-        @models.task.fetch().error =>
-            # If this 404s the task doesn't exist
-            app.caughtError()
-            app.router.notFound()
+        @models.task.fetch
+            error: =>
+                # If this 404s the task doesn't exist
+                app.caughtError()
+                app.router.notFound()
+
+            success: (model)=>
+                console.dir(model.attributes.slave)
+                model.attributes.slave.fetch().error =>
+                    app.caughtError()
 
         @models.resourceUsage?.fetch().error =>
             # If this 404s there's nothing to get so don't bother

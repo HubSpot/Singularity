@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.4.0-SNAPSHOT
+Version: 0.4.1-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#apideploys) - Manages Singularity Deploys for existing requests
@@ -678,6 +678,29 @@ Retrieve the list of pending requests
 
 
 - - -
+#### **GET** `/api/requests/request/{requestId}`
+
+Retrieve a specific Request by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID | string |
+
+###### Response
+[SingularityRequestParent](#SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
 #### **DELETE** `/api/requests/request/{requestId}`
 
 Delete a specific Request by ID and return the deleted Request
@@ -697,29 +720,6 @@ Delete a specific Request by ID and return the deleted Request
 
 ###### Response
 [SingularityRequest](#SingularityRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **GET** `/api/requests/request/{requestId}`
-
-Retrieve a specific Request by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID | string |
-
-###### Response
-[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
@@ -1727,7 +1727,7 @@ Delete a specific webhook.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER |
+| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER, MESOS |
 | volumes | <a href="#SingularityVolume">Array[SingularityVolume]</a> | optional |  |
 | docker | <a href="#SingularityDockerInfo">SingularityDockerInfo</a> | optional |  |
 
@@ -1785,6 +1785,7 @@ Delete a specific webhook.
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| privileged | boolean | optional |  |
 | network | <a href="#Network">Network</a> | optional |  |
 | portMappings | <a href="#SingularityDockerPortMapping">Array[SingularityDockerPortMapping]</a> | optional |  |
 | image | string | optional |  |
@@ -1831,7 +1832,7 @@ Delete a specific webhook.
 | cmdLineArgs | string | optional |  |
 | timestamp | long | optional |  |
 | deployId | string | optional |  |
-| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE |
+| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP |
 
 
 ## SingularityRequest
@@ -1845,8 +1846,9 @@ Delete a specific webhook.
 | rackSensitive | boolean | optional |  |
 | owners | Array[string] | optional |  |
 | quartzSchedule | string | optional |  |
-| numRetriesOnFailure | int | optional |  |
+| scheduledExpectedRuntimeMillis | long | optional |  |
 | loadBalanced | boolean | optional |  |
+| numRetriesOnFailure | int | optional |  |
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | <a href="#ScheduleType">ScheduleType</a> | optional |  |
@@ -1860,8 +1862,9 @@ Delete a specific webhook.
 | requestId | string | optional |  |
 | user | string | optional |  |
 | killTasks | boolean | optional |  |
-| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING |
+| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING, BOUNCE |
 | timestamp | long | optional |  |
+| deployId | string | optional |  |
 
 
 ## SingularityRequestDeployState

@@ -13,6 +13,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.data.RackManager;
@@ -40,46 +42,40 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @GET
-  @Path("/active")
-  @ApiOperation("Retrieve the list of active racks. A rack is active if it has one or more active slaves associated with it.")
-  public List<SingularityRack> getRacks() {
-    return rackManager.getActiveObjects();
+  @Path("/")
+  @ApiOperation("Retrieve the list of all known racks, optionally filtering by a particular state")
+  public List<SingularityRack> getRacks(@ApiParam("Optionally specify a particular state to filter racks by") @QueryParam("state") Optional<MachineState> filterState) {
+    return rackManager.getObjectsFiltered(filterState);
   }
 
   @GET
-  @Path("/dead")
-  @ApiOperation("Retrieve the list of dead racks. A rack is dead if it has zero active slaves.")
-  public List<SingularityRack> getDead() {
-    return rackManager.getDeadObjects();
-  }
-
-  @GET
-  @Path("/decomissioning")
-  @ApiOperation("Retrieve the list of decommissioning racks.")
-  public List<SingularityRack> getDecomissioning() {
-    return rackManager.getDecomissioningObjects();
+  @Path("/rack/{rackId}")
+  @ApiOperation("Retrieve the history of a given rack")
+  public List<SingularityMachineStateHistoryUpdate> getRackHistory(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
+    return rackManager.getHistory(rackId);
   }
 
   @DELETE
-  @Path("/rack/{rackId}/dead")
-  @ApiOperation("Remove a dead rack.")
-  public void removeDeadRack(@ApiParam("Dead rack ID.") @PathParam("rackId") String rackId) {
-    super.removeDead(rackId);
-  }
-
-  @DELETE
-  @Path("/rack/{rackId}/decomissioning")
-  @ApiOperation("Undo the decomission operation on a specific decommissioning rack.")
-  public void removeDecomissioningRack(@ApiParam("Decommissioned rack ID.") @PathParam("rackId") String rackId) {
-    super.removeDecomissioning(rackId);
+  @Path("/rack/{rackId}")
+  @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
+  public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
+    super.remove(rackId);
   }
 
   @POST
   @Path("/rack/{rackId}/decomission")
-  @ApiOperation("Decomission a specific active rack.")
-  public void decomissionRack(@ApiParam("Active rack ID.") @PathParam("rackId") String rackId,
-                              @ApiParam("Username of person requestin the decommisioning.") @QueryParam("user") Optional<String> user) {
+  @ApiOperation("Begin decomissioning a specific active rack")
+  public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
+                              @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
     super.decomission(rackId, user);
+  }
+
+  @POST
+  @Path("/rack/{rackId}/activate")
+  @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
+  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
+                              @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
+    super.activate(rackId, user);
   }
 
 }

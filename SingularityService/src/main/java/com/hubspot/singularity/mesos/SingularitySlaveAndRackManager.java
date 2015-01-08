@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Singleton;
 
@@ -13,22 +14,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 class SingularitySlaveAndRackManager {
@@ -40,20 +45,24 @@ class SingularitySlaveAndRackManager {
 
   private final SingularityConfiguration configuration;
 
+  private final SingularityExceptionNotifier exceptionNotifier;
   private final RackManager rackManager;
   private final SlaveManager slaveManager;
+  private final TaskManager taskManager;
 
   @Inject
-  SingularitySlaveAndRackManager(SingularityConfiguration configuration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
 
     MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
 
+    this.exceptionNotifier = exceptionNotifier;
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
 
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
+    this.taskManager = taskManager;
   }
 
   public enum SlaveMatchState {
@@ -95,11 +104,11 @@ class SingularitySlaveAndRackManager {
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();
 
-    if (stateCache.isSlaveDecomissioning(slaveId)) {
+    if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecomissioning()) {
       return SlaveMatchState.SLAVE_DECOMISSIONING;
     }
 
-    if (stateCache.isRackDecomissioning(rackId)) {
+    if (stateCache.getRack(rackId).get().getCurrentState().getState().isDecomissioning()) {
       return SlaveMatchState.RACK_DECOMISSIONING;
     }
 
@@ -164,26 +173,13 @@ class SingularitySlaveAndRackManager {
     return SlaveMatchState.OK;
   }
 
-  private void clearRacksAndSlaves() {
-    final long start = System.currentTimeMillis();
-
-    int racksCleared = rackManager.clearActive();
-    int slavesCleared = slaveManager.clearActive();
-
-    LOG.info("Cleared {} racks and {} slaves in {}", racksCleared, slavesCleared, JavaUtils.duration(start));
-  }
-
   public void slaveLost(SlaveID slaveIdObj) {
     final String slaveId = slaveIdObj.getValue();
 
-    if (isSlaveDead(slaveId) || isSlaveDecomissioning(slaveId) || !isSlaveActive(slaveId)) {
-      return;
-    }
-
-    Optional<SingularitySlave> slave = slaveManager.getActiveObject(slaveId);
+    Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
     if (slave.isPresent()) {
-      slaveManager.markAsDead(slaveId);
+      slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.<String> absent());
 
       checkRackAfterSlaveLoss(slave.get());
     } else {
@@ -192,7 +188,7 @@ class SingularitySlaveAndRackManager {
   }
 
   private void checkRackAfterSlaveLoss(SingularitySlave lostSlave) {
-    List<SingularitySlave> slaves = slaveManager.getActiveObjects();
+    List<SingularitySlave> slaves = slaveManager.getObjectsFiltered(MachineState.ACTIVE);
 
     int numInRack = 0;
 
@@ -205,32 +201,55 @@ class SingularitySlaveAndRackManager {
     LOG.info("Found {} slaves left in rack {}", numInRack, lostSlave.getRackId());
 
     if (numInRack == 0) {
-      rackManager.markAsDead(lostSlave.getRackId());
+      rackManager.changeState(lostSlave.getRackId(), MachineState.DEAD, Optional.<String> absent());
     }
   }
 
   public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state) {
-    clearRacksAndSlaves();
+    Map<String, SingularitySlave> activeSlavesById = slaveManager.getObjectsByIdForState(MachineState.ACTIVE);
+    Map<String, SingularityRack> activeRacksById = rackManager.getObjectsByIdForState(MachineState.ACTIVE);
+
+    Map<String, SingularityRack> remainingActiveRacks = Maps.newHashMap(activeRacksById);
 
     int slaves = 0;
     int racks = 0;
 
-    for (MesosMasterSlaveObject slave : state.getSlaves()) {
-      Optional<String> maybeRackId = Optional.fromNullable(slave.getAttributes().get(rackIdAttributeKey));
-      String slaveId = slave.getId();
+    for (MesosMasterSlaveObject slaveJsonObject : state.getSlaves()) {
+      Optional<String> maybeRackId = Optional.fromNullable(slaveJsonObject.getAttributes().get(rackIdAttributeKey));
+      String slaveId = slaveJsonObject.getId();
       String rackId = getSafeString(maybeRackId.or(defaultRackId));
-      String host = getHost(slave.getHostname());
+      String host = getHost(slaveJsonObject.getHostname());
 
-      if (checkSlave(slaveId, host, rackId).saveResult == SaveResult.NEW) {
-        slaves++;
+      if (activeSlavesById.containsKey(slaveId)) {
+        activeSlavesById.remove(slaveId);
+      } else {
+        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId);
+
+        if (check(newSlave, slaveManager) == CheckResult.NEW) {
+          slaves++;
+        }
       }
 
-      if (checkRack(rackId).saveResult == SaveResult.NEW) {
-        racks++;
+      if (activeRacksById.containsKey(rackId)) {
+        remainingActiveRacks.remove(rackId);
+      } else {
+        SingularityRack rack = new SingularityRack(rackId);
+
+        if (check(rack, rackManager) == CheckResult.NEW) {
+          racks++;
+        }
       }
     }
 
-    LOG.info("Found {} racks and {} slaves", racks, slaves);
+    for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
+      slaveManager.changeState(leftOverSlave, MachineState.MISSING_ON_STARTUP, Optional.<String> absent());
+    }
+
+    for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
+      rackManager.changeState(leftOverRack, MachineState.MISSING_ON_STARTUP, Optional.<String> absent());
+    }
+
+    LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
   }
 
   public String getRackId(Offer offer) {
@@ -247,90 +266,35 @@ class SingularitySlaveAndRackManager {
     return string.replace("-", "_");
   }
 
-  private SaveResultHolder checkRack(String rackId) {
-    if (isRackActive(rackId)) {
-      return ALREADY_ACTIVE_HOLDER;
-    }
-
-    if (isRackDecomissioning(rackId)) {
-      return DECOMISSIONING_HOLDER;
-    }
-
-    if (isRackDead(rackId)) {
-      rackManager.removeDead(rackId);
-    }
-
-    SingularityRack newRack = new SingularityRack(rackId);
-
-    rackManager.save(newRack);
-
-    return new SaveResultHolder(Optional.of((SingularityMachineAbstraction) newRack), SaveResult.NEW);
-  }
-
-  private static class SaveResultHolder {
-    private final Optional<SingularityMachineAbstraction> newObject;
-    private final SaveResult saveResult;
-
-    public SaveResultHolder(SaveResult saveResult) {
-      this(Optional.<SingularityMachineAbstraction> absent(), saveResult);
-    }
-
-    public SaveResultHolder(Optional<SingularityMachineAbstraction> newObject, SaveResult saveResult) {
-      this.newObject = newObject;
-      this.saveResult = saveResult;
-    }
-
-  }
-
-  private static final SaveResultHolder DECOMISSIONING_HOLDER = new SaveResultHolder(SaveResult.DECOMISSIONING);
-  private static final SaveResultHolder ALREADY_ACTIVE_HOLDER = new SaveResultHolder(SaveResult.ALREADY_ACTIVE);
-
-  private enum SaveResult {
+  private enum CheckResult {
     NEW, DECOMISSIONING, ALREADY_ACTIVE;
   }
 
-  private SaveResultHolder checkSlave(String slaveId, String host, String rackId) {
-    if (isSlaveActive(slaveId)) {
-      return ALREADY_ACTIVE_HOLDER;
+  private <T extends SingularityMachineAbstraction<T>> CheckResult check(T object, AbstractMachineManager<T> manager) {
+    Optional<T> existingObject = manager.getObject(object.getId());
+
+    if (!existingObject.isPresent()) {
+      manager.saveObject(object);
+
+      return CheckResult.NEW;
     }
 
-    if (isSlaveDecomissioning(slaveId)) {
-      return DECOMISSIONING_HOLDER;
+    MachineState currentState = existingObject.get().getCurrentState().getState();
+
+    switch (currentState) {
+      case ACTIVE:
+        return CheckResult.ALREADY_ACTIVE;
+      case DEAD:
+      case MISSING_ON_STARTUP:
+        manager.changeState(object.getId(), MachineState.ACTIVE, Optional.<String> absent());
+        return CheckResult.NEW;
+      case DECOMISSIONED:
+      case DECOMISSIONING:
+      case STARTING_DECOMISSION:
+        return CheckResult.DECOMISSIONING;
     }
 
-    if (isSlaveDead(slaveId)) {
-      slaveManager.removeDead(slaveId);
-    }
-
-    SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId);
-
-    slaveManager.save(newSlave);
-
-    return new SaveResultHolder(Optional.of((SingularityMachineAbstraction) newSlave), SaveResult.NEW);
-  }
-
-  private boolean isRackActive(String rackId) {
-    return rackManager.isActive(rackId);
-  }
-
-  private boolean isRackDead(String rackId) {
-    return rackManager.isDead(rackId);
-  }
-
-  private boolean isRackDecomissioning(String rackId) {
-    return rackManager.isDecomissioning(rackId);
-  }
-
-  private boolean isSlaveActive(String slaveId) {
-    return slaveManager.isActive(slaveId);
-  }
-
-  private boolean isSlaveDecomissioning(String slaveId) {
-    return slaveManager.isDecomissioning(slaveId);
-  }
-
-  private boolean isSlaveDead(String slaveId) {
-    return slaveManager.isDead(slaveId);
+    throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
   public void checkOffer(Offer offer) {
@@ -338,17 +302,72 @@ class SingularitySlaveAndRackManager {
     final String rackId = getRackId(offer);
     final String host = getSlaveHost(offer);
 
-    SaveResultHolder slaveHolder = checkSlave(slaveId, host, rackId);
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);
 
-    if (slaveHolder.saveResult == SaveResult.NEW) {
-      LOG.info("Offer revealed a new slave {}", slaveHolder.newObject.get());
+    if (check(slave, slaveManager) == CheckResult.NEW) {
+      LOG.info("Offer revealed a new slave {}", slave);
     }
 
-    SaveResultHolder rackHolder = checkRack(rackId);
+    final SingularityRack rack = new SingularityRack(rackId);
 
-    if (rackHolder.saveResult == SaveResult.NEW) {
-      LOG.info("Offer revealed a new rack {}", rackHolder.newObject.get());
+    if (check(rack, rackManager) == CheckResult.NEW) {
+      LOG.info("Offer revealed a new rack {}", rack);
     }
+  }
+
+  public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
+    Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
+
+    if (!slave.isPresent()) {
+      final String message = String.format("Couldn't find slave with id %s for task %s", slaveId, taskId);
+      LOG.warn(message);
+      exceptionNotifier.notify(message);
+      return;
+    }
+
+    if (slave.get().getCurrentState().getState() == MachineState.DECOMISSIONING) {
+      if (!hasTaskLeftOnSlave(taskId, slaveId, stateCache)) {
+        slaveManager.changeState(slave.get(), MachineState.DECOMISSIONED, slave.get().getCurrentState().getUser());
+      }
+    }
+
+    Optional<SingularityRack> rack = rackManager.getObject(taskId.getRackId());
+
+    if (!rack.isPresent()) {
+      final String message = String.format("Couldn't find rack with id %s for task %s", taskId.getRackId(), taskId);
+      LOG.warn(message);
+      exceptionNotifier.notify(message);
+      return;
+    }
+
+    if (rack.get().getCurrentState().getState() == MachineState.DECOMISSIONING) {
+      if (!hasTaskLeftOnRack(taskId, stateCache)) {
+        rackManager.changeState(rack.get(), MachineState.DECOMISSIONED, rack.get().getCurrentState().getUser());
+      }
+    }
+  }
+
+  private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularitySchedulerStateCache stateCache) {
+    for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
+      if (!activeTaskId.equals(taskId) && activeTaskId.getRackId().equals(taskId.getRackId())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
+    for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
+      if (!activeTaskId.equals(taskId) && activeTaskId.getHost().equals(taskId.getHost())) {
+        Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
+        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+          return true;
+        }
+      };
+    }
+
+    return false;
   }
 
 }

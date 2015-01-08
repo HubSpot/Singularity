@@ -2,25 +2,26 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
-public class SingularityRack extends SingularityMachineAbstraction {
+public class SingularityRack extends SingularityMachineAbstraction<SingularityRack> {
 
   public SingularityRack(String rackId) {
     super(rackId);
   }
 
   @JsonCreator
-  public SingularityRack(@JsonProperty("rackId") String rackId, @JsonProperty("state") SingularityMachineState state,
-      @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("decomissioningBy") Optional<String> decomissioningBy, @JsonProperty("decomissioningAt") Optional<Long> decomissioningAt,
-      @JsonProperty("decomissionedAt") Optional<Long> decomissionedAt, @JsonProperty("deadAt") Optional<Long> deadAt) {
-    super(rackId, state, firstSeenAt, decomissioningBy, decomissioningAt, decomissionedAt, deadAt);
+  public SingularityRack(@JsonProperty("rackId") String rackId, @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState) {
+    super(rackId, firstSeenAt, currentState);
+  }
+
+  @Override
+  public SingularityRack changeState(SingularityMachineStateHistoryUpdate newState) {
+    return new SingularityRack(getId(), getFirstSeenAt(), newState);
   }
 
   @Override
   public String toString() {
-    return "SingularityRack [getDecomissioningBy()=" + getDecomissioningBy() + ", getDecomissioningAt()=" + getDecomissioningAt() + ", getId()=" + getId() + ", getDeadAt()=" + getDeadAt() + ", getDecomissionedAt()=" + getDecomissionedAt()
-        + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getState()=" + getState() + "]";
+    return "SingularityRack [getId()=" + getId() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getCurrentState()=" + getCurrentState() + "]";
   }
 
 }

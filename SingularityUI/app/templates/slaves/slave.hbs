@@ -1,0 +1,55 @@
+{{#if data.length}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>State</th>
+                <th>Rack</th>
+                <th>Host</th>
+                <th class="hidden-xs">Uptime</th>
+                {{#ifInSubFilter data.[0].state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                    <th>Decommissioned By</th>
+                {{/ifInSubFilter}}
+                {{#ifInSubFilter data.[0].state 'ACTIVE'}}
+                    <th>Activated By</th>
+                {{/ifInSubFilter}}
+                <th data-sortable="false"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+                <tr>
+                    <td>
+                        <a href="{{appRoot}}/tasks/active/{{ host }}">{{ id }}</a>
+                    </td>
+                    <td>{{ state }}</td>
+                    <td>{{ rackId }}</td>
+                    <td>{{ host }}</td>
+                    <td class="hidden-xs" data-value="{{ uptime }}">
+                        {{timestampDuration uptime}}
+                    </td>
+                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                        <td>{{ user }}</td>
+                    {{/ifInSubFilter}}
+                    <td class="actions-column">
+                        {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                            <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
+                                <span class="glyphicon glyphicon-new-window"></span>
+                            </a>
+                        {{/ifInSubFilter}}
+                        {{#ifInSubFilter state 'ACTIVE'}}
+                            <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="decommission" title="Decommission">
+                                <span class="glyphicon glyphicon-trash"></span>
+                            </a>
+                        {{/ifInSubFilter}}
+                        <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="remove" title="Remove">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </a>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <div class="empty-table-message"><p>No slaves</p></div>
+{{/if}}
