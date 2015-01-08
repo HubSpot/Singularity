@@ -7,4 +7,7 @@ class Slave extends ServerItem
 
     url: => "#{ config.apiRoot }/slaves/slave/#{ @get('id') }"
 
+    parse: (slave) ->
+        slave[0]
+
 module.exports = Slave

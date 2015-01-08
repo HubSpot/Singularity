@@ -2,18 +2,30 @@
 <header class='detail-header'>
     <div class="row">
         {{! Left side }}
-        <div class="col-md-8">
+        <div class="col-md-12">
             {{#with data.task.taskRequest}}
                 <h5>
                     Request
                     <a href="{{appRoot}}/request/{{ request.id }}">
                         {{ request.id }}
                     </a>
+
                 </h5>
             {{/with}}
-            <h2>
+        </div>
+    </div>
+    <div class="row">
+        {{#if data.decommissioning}}
+            <div class="col-md-1">
+                <span class='label label-warning'>DECOMMISSIONING</span>
+            </div>
+            <div class="col-md-7">
+        {{else}}
+            <div class="col-md-8">
+        {{/if}}
+            <h3>
                 {{ data.task.taskId.id }}
-            </h2>
+            </h3>
         </div>
 
         {{! Right side, buttons }}
@@ -29,6 +41,7 @@
             {{/if}}
         </div>
     </div>
+
 </header>
 
 {{#if data.taskUpdates}}
