@@ -11,10 +11,12 @@
                     </a>
                 </h5>
             {{/with}}
-            <h2>
+            <h3>
+                {{#if data.decommissioning }}
+                    <span class='label label-warning'>DECOMMISSIONING</span>
+                {{/if}}
                 {{ data.task.taskId.id }}
-                {{extraRenderData}}
-            </h2>
+            </h3>
         </div>
 
         {{! Right side, buttons }}

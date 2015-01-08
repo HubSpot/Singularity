@@ -88,11 +88,6 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 app.router.notFound()
 
-            success: (model)=>
-                console.dir(model.attributes.slave)
-                model.attributes.slave.fetch().error =>
-                    app.caughtError()
-
         @models.resourceUsage?.fetch().error =>
             # If this 404s there's nothing to get so don't bother
             app.caughtError()

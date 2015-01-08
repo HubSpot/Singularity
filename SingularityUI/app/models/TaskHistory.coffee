@@ -36,7 +36,12 @@ class TaskHistory extends Model
         if taskHistory.task.offer?
             taskHistory.slaveId = taskHistory.task.offer.slaveId.value
             taskHistory.slave = new Slave id: taskHistory.slaveId
-
+            taskHistory.slave.fetch
+                async: false
+                error: =>
+                    app.caughtError()
+            if taskHistory.slave.attributes.state in ['DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+                taskHistory.decommissioning = true
         taskHistory
 
     parseResources: (task) ->
