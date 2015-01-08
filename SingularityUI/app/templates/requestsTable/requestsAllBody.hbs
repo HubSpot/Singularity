@@ -27,11 +27,8 @@
 
                     {{#ifInSubFilter 'scheduled' requestsSubFilter}}
                         <th data-sort-attribute="request.schedule" class="visible-lg visible-xl schedule-header">
-                            <span title="All schedules are in quartz format unless specified otherwise, click the ? icon for more info">
+                            <span id="schedule">
                                 Schedule
-                                <a data-action="show-quartz">
-                                    <span class='glyphicon glyphicon-question-sign'></span>
-                                </a>
                             </span>
                         </th>
 

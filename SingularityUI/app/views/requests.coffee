@@ -199,7 +199,42 @@ class RequestsView extends View
             $tableBody.append $contents
 
         @$('.actions-column a[title]').tooltip()
-        @$('.schedule-header span[title]').tooltip()
+        @$('.schedule-header span#schedule').popover({
+            animation: false,
+            placement : 'auto',
+            trigger: 'hover',
+            delay: {hide: 400},
+            container: 'span#schedule',
+            html: true,
+            content: "All schedules are in <a data-action='show-quartz'>quartz format</a> unless otherwise specified.",
+            template: '<div class="popover" role="tooltip"><div class="popover-content"></div></div>'
+        }).on
+            show: (e) ->
+                @showPopover(e)
+            hide: (e) ->
+                @hidePopover(e)
+
+    hidePopover: (e) ->
+        $this = $(this)
+        if $this.data("forceHidePopover")
+            $this.data "forceHidePopover", false
+            return true
+        e.stopImmediatePropagation()
+        clearTimeout $this.data("popoverTO")
+        $this.data "hoveringPopover", false
+        $this.data "waitingForPopoverTO", true
+        $this.data "popoverTO", setTimeout(->
+            unless $this.data("hoveringPopover")
+                $this.data "forceHidePopover", true
+                $this.data "waitingForPopoverTO", false
+                $this.popover "hide"
+        , 1500)
+        false
+
+    showPopover: (e) ->
+        $this = $(this)
+        $this.data "hoveringPopover", true
+        e.stopImmediatePropagation()  if $this.data("waitingForPopoverTO")
 
     sortTable: (event) =>
         @isSorted = true
