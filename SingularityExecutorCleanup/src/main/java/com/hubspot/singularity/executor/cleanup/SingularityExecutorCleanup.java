@@ -11,15 +11,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.horizon.HttpRequest;
+import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.client.SingularityClientException;
+import com.hubspot.singularity.client.SingularityClientModule;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -35,19 +40,23 @@ public class SingularityExecutorCleanup {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
 
+  public static final String LOCAL_SLAVE_STATE_URL_FORMAT = "http://%s:5051/slave(1)/state.json";
+
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
+  private final HttpClient httpClient;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager) {
+  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
     this.singularityClient = singularityClient;
     this.templateManager = templateManager;
+    this.httpClient = httpClient;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -58,9 +67,9 @@ public class SingularityExecutorCleanup {
 
     try {
       runningTaskIds = getRunningTaskIds();
-    } catch (SingularityClientException sce) {
-      LOG.error("While fetching running tasks from singularity", sce);
-      statisticsBldr.setErrorMessage(sce.getMessage());
+    } catch (Exception e) {
+      LOG.error("While fetching running tasks from singularity", e);
+      statisticsBldr.setErrorMessage(e.getMessage());
       return statisticsBldr.build();
     }
 
@@ -129,16 +138,23 @@ public class SingularityExecutorCleanup {
     return statisticsBldr.build();
   }
 
-  private Collection<SingularityTask> getActiveTasksOnSlave() {
+  private String getLocalSlaveID() {
     try {
-      return singularityClient.getActiveTasks(JavaUtils.getHostAddress());
-    } catch (SocketException e) {
-      throw Throwables.propagate(e);
+      final HttpRequest request = HttpRequest.newBuilder().setUrl(String.format(LOCAL_SLAVE_STATE_URL_FORMAT, JavaUtils.getHostAddress())).build();
+      final HttpResponse response = httpClient.execute(request);
+
+      if (response.isSuccess()) {
+        return response.getAs(MesosSlaveStateObject.class).getId();
+      } else {
+        throw new RuntimeException(String.format("Failed to get local Slave ID -- HTTP %d: %s", response.getStatusCode(), response.getAsString()));
+      }
+    } catch (SocketException se) {
+      throw new RuntimeException("Failed to get host address", se);
     }
   }
 
   private Set<String> getRunningTaskIds() {
-    final Collection<SingularityTask> activeTasks = getActiveTasksOnSlave();
+    final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(getLocalSlaveID());
 
     final Set<String> runningTaskIds = Sets.newHashSet();
 
