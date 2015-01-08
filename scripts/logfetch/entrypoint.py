@@ -96,7 +96,7 @@ def tail():
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
 
-  defaults = {"start_days" : DEFAULT_DAYS}
+  defaults = {}
 
   try:
     config.readfp(FakeSectionHead(open(os.path.expanduser(conf_file))))
@@ -112,8 +112,6 @@ def tail():
   parser.add_argument("-r", "--requestId", help="RequestId of request to fetch logs for", metavar="requestId")
   parser.add_argument("-d", "--deployId", help="DeployId of task to fetch logs for", metavar="deployId")
   parser.add_argument("-u", "--singularity-uri-base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)", metavar="URI")
-  parser.add_argument("-s", "--start-days", help="Search for logs no older than this many days", type=int, metavar="start_days")
-  parser.add_argument("-e", "--end-days", help="Search for logs no new than this many days (defaults to None/today)", type=int, metavar="end_days")
   parser.add_argument("-g", "--grep", help="String to grep for", metavar='grep')
   parser.add_argument("-l", "--logfile", help="Logfile path/name to tail (ie 'logs/access.log')", metavar="logfile")
 

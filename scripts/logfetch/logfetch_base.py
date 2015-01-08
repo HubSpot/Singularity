@@ -29,7 +29,6 @@ def base_uri(args):
   return uri
 
 def tasks_for_request(args):
-  print args
   if args.requestId and args.deployId:
       tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if (task["taskId"]["deployId"] == args.deployId)]
   else:
@@ -39,16 +38,19 @@ def tasks_for_request(args):
   return tasks
 
 def all_tasks_for_request(args):
-  uri = '{0}{1}'.format(base_uri(args), REQUEST_TASKS_FORMAT.format(args.requestId))
-  historical_tasks = get_json_response(uri)
   uri = '{0}{1}'.format(base_uri(args), ACTIVE_TASKS_FORMAT.format(args.requestId))
   active_tasks = get_json_response(uri)
-  if len(historical_tasks) == 0:
-    return active_tasks
-  elif len(active_tasks) == 0:
-    return historical_tasks
+  if hasattr(args, 'start_days'):
+    uri = '{0}{1}'.format(base_uri(args), REQUEST_TASKS_FORMAT.format(args.requestId))
+    historical_tasks = get_json_response(uri)
+    if len(historical_tasks) == 0:
+      return active_tasks
+    elif len(active_tasks) == 0:
+      return historical_tasks
+    else:
+      return active_tasks + [h for h in historical_tasks if is_in_date_range(args, int(str(h['updatedAt'])[0:-3]))]
   else:
-    return active_tasks + [h for h in historical_tasks if is_in_date_range(args, int(str(h['updatedAt'])[0:-3]))]
+    return active_tasks
 
 def is_in_date_range(args, timestamp):
   timedelta = datetime.utcnow() - datetime.utcfromtimestamp(timestamp)
