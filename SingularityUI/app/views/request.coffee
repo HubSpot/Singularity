@@ -70,7 +70,7 @@ class RequestView extends View
     scaleRequest: (e) =>
         @model.promptScale =>
             @trigger 'refreshrequest'
-  
+
     pauseRequest: (e) =>
         @model.promptPause =>
             @trigger 'refreshrequest'
@@ -78,7 +78,7 @@ class RequestView extends View
     unpauseRequest: (e) =>
         @model.promptUnpause =>
             @trigger 'refreshrequest'
-    
+
     bounceRequest: (e) =>
         @model.promptBounce =>
             @trigger 'refreshrequest'

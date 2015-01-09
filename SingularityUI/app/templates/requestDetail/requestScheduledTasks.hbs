@@ -24,11 +24,16 @@
                     </td>
                     <td data-value="{{ pendingTask.pendingTaskId.nextRunAt }}">
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
+                        {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
+                            <span class="label label-danger">OVERDUE</span>
+                        {{/ifTimestampInPast}}
                     </td>
                     <td class="hidden-xs actions-column">
-                        <a data-action="run-now" title="Run now">
-                            <span class="glyphicon glyphicon-flash"></span>
-                        </a>
+                        {{#unless ../request.attributes.daemon}}
+                            <a data-action="run-now" title="Run now">
+                                <span class="glyphicon glyphicon-flash"></span>
+                            </a>
+                        {{/unless}}
                         <a data-action="viewJSON" title="JSON">
                             { }
                         </a>
