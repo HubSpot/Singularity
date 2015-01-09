@@ -42,6 +42,11 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityMesosClient</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>HorizonCore</artifactId>
     </dependency>
 
