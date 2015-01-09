@@ -27,9 +27,19 @@ class Request extends Model
         data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
         data.daemon = not data.scheduled and not data.onDemand
 
+        if data.scheduled
+            data.deployableType = 'Scheduled Job'
+        else if data.onDemand
+            data.deployableType = 'On Demand'
+        else
+            if data.request.loadBalanced? and data.request.loadBalanced
+                data.deployableType = 'Web Service'
+            else
+                data.deployableType = 'Worker'
+
         data.instances = data.request.instances or 1
         data.hasMoreThanOneInstance = data.instances > 1
-          
+
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
 

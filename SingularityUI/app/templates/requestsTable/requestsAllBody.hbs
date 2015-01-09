@@ -12,6 +12,9 @@
                     <th data-sort-attribute="state">
                         State
                     </th>
+                    <th data-sort-attribute="request.deployableType">
+                        Type
+                    </th>
                     <th data-sort-attribute="request.instances" class="visible-lg visible-xl">
                         Instances
                     </th>
@@ -53,6 +56,9 @@
                         </td>
                         <td>
                             {{humanizeText state}}
+                        </td>
+                        <td>
+                            {{deployableType}}
                         </td>
                         <td class="visible-lg visible-xl centered">
                             {{ request.instances }}
