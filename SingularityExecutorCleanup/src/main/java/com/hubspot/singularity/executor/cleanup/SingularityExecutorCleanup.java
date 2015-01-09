@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -18,6 +19,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -40,23 +42,21 @@ public class SingularityExecutorCleanup {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
 
-  public static final String LOCAL_SLAVE_STATE_URL_FORMAT = "http://%s:5051/slave(1)/state.json";
-
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
-  private final HttpClient httpClient;
+  private final MesosClient mesosClient;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
+  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
     this.singularityClient = singularityClient;
     this.templateManager = templateManager;
-    this.httpClient = httpClient;
+    this.mesosClient = mesosClient;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -138,31 +138,22 @@ public class SingularityExecutorCleanup {
     return statisticsBldr.build();
   }
 
-  private String getLocalSlaveID() {
-    try {
-      final HttpRequest request = HttpRequest.newBuilder().setUrl(String.format(LOCAL_SLAVE_STATE_URL_FORMAT, JavaUtils.getHostAddress())).build();
-      final HttpResponse response = httpClient.execute(request);
-
-      if (response.isSuccess()) {
-        return response.getAs(MesosSlaveStateObject.class).getId();
-      } else {
-        throw new RuntimeException(String.format("Failed to get local Slave ID -- HTTP %d: %s", response.getStatusCode(), response.getAsString()));
-      }
-    } catch (SocketException se) {
-      throw new RuntimeException("Failed to get host address", se);
-    }
-  }
-
   private Set<String> getRunningTaskIds() {
-    final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(getLocalSlaveID());
+    try {
+      final String slaveId = mesosClient.getSlaveState(mesosClient.getSlaveUri(JavaUtils.getHostAddress())).getId();
 
-    final Set<String> runningTaskIds = Sets.newHashSet();
+      final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(slaveId);
 
-    for (SingularityTask task : activeTasks) {
-      runningTaskIds.add(task.getTaskId().getId());
+      final Set<String> runningTaskIds = Sets.newHashSet();
+
+      for (SingularityTask task : activeTasks) {
+        runningTaskIds.add(task.getTaskId().getId());
+      }
+
+      return runningTaskIds;
+    } catch (SocketException se) {
+      throw Throwables.propagate(se);
     }
-
-    return runningTaskIds;
   }
 
   private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
