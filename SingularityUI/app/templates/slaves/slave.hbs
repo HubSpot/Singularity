@@ -7,7 +7,7 @@
                 <th>Rack</th>
                 <th>Host</th>
                 <th class="hidden-xs">Uptime</th>
-                {{#ifInSubFilter data.[0].state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                {{#ifInSubFilter data.[0].state 'DECOMISSIONING,DECOMMISSIONING,DECOMMISSIONED,DECOMISSIONED,STARTING_DECOMMISSION,STARTING_DECOMISSION'}}
                     <th>Decommissioned By</th>
                 {{/ifInSubFilter}}
                 {{#ifInSubFilter data.[0].state 'ACTIVE'}}
@@ -28,11 +28,11 @@
                     <td class="hidden-xs" data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
                     </td>
-                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                    {{#ifInSubFilter state 'ACTIVE,DECOMISSIONING,DECOMMISSIONING,DECOMMISSIONED,DECOMISSIONED,STARTING_DECOMMISSION,STARTING_DECOMISSION'}}
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
                     <td class="actions-column">
-                        {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                        {{#ifInSubFilter state 'DECOMISSIONING,DECOMMISSIONING,DECOMMISSIONED,DECOMISSIONED,STARTING_DECOMMISSION,STARTING_DECOMISSION'}}
                             <a data-slave-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
                                 <span class="glyphicon glyphicon-new-window"></span>
                             </a>

@@ -31,7 +31,7 @@ class RacksView extends View
         )
         decommission = new Racks(
             @collection.filter (model) ->
-              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
+              model.get('state') in ['DECOMMISSIONING','DECOMISSIONING', 'DECOMMISSIONED','DECOMISSIONED', 'STARTING_DECOMMISSION', 'STARTING_DECOMISSION']
         )
         inactive = new Racks(
             @collection.filter (model) ->
@@ -46,8 +46,7 @@ class RacksView extends View
             data:     inactive.toJSON()
 
     removeRack: (event) ->
-        $target = $(event.target)
-        console.log($target.data 'rack-id')
+        $target = $(event.currentTarget)
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
@@ -56,7 +55,7 @@ class RacksView extends View
         rackModel.promptRemove => @trigger 'refreshrequest'
 
     decommissionRack: (event) ->
-        $target = $(event.target)
+        $target = $(event.currentTarget)
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
@@ -65,7 +64,7 @@ class RacksView extends View
         rackModel.promptDecommission => @trigger 'refreshrequest'
 
     reactivateRack: (event) =>
-        $target = $(event.target)
+        $target = $(event.currentTarget)
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
