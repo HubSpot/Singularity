@@ -21,6 +21,7 @@ import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -38,6 +39,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
@@ -373,8 +375,24 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     request = bldr.build();
     saveRequest(request);
 
-    // TODO
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
 
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    resourceOffers();
+
+    Assert.assertTrue(deployManager.getRequestDeployState(requestId).get().getActiveDeploy().isPresent());
+    Assert.assertTrue(!deployManager.getRequestDeployState(requestId).get().getPendingDeploy().isPresent());
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
   }
 
   @Test
