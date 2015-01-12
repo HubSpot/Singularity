@@ -65,8 +65,10 @@ class RequestDetailController extends Controller
             template:   @templates.activeTasks
 
         @subviews.scheduledTasks = new SimpleSubview
-            collection: @collections.scheduledTasks
-            template:   @templates.scheduledTasks
+            collection:      @collections.scheduledTasks
+            template:        @templates.scheduledTasks
+            extraRenderData: (subView) =>
+                { request: @models.request.toJSON() }
 
         @subviews.taskHistory = new ExpandableTableSubview
             collection: @collections.taskHistory

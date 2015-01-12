@@ -12,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
@@ -87,9 +88,9 @@ public class SingularityTaskHistoryPersister {
       LOG.warn("Inactive task {} did not have a task to persist", inactiveTaskId);
     }
 
-    taskManager.deleteTaskHistory(inactiveTaskId);
+    SingularityDeleteResult deleteResult = taskManager.deleteTaskHistory(inactiveTaskId);
 
-    LOG.debug("Moved task history for {} from ZK to History in {}", inactiveTaskId, JavaUtils.duration(start));
+    LOG.debug("Moved task history for {} from ZK to History in (delete result: {}) in {}", inactiveTaskId, deleteResult, JavaUtils.duration(start));
 
     return true;
   }

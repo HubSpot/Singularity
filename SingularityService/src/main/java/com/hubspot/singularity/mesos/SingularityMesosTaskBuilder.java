@@ -102,44 +102,33 @@ class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
 
-  private void prepareEnvironment(final SingularityTaskRequest task, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
+  private void setEnv(Environment.Builder envBldr, String key, Object value) {
+    if (value == null) {
+      return;
+    }
+    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
+  }
+
+  private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
 
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("INSTANCE_NO")
-        .setValue(Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()))
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("TASK_REQUEST_ID")
-        .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("ESTIMATED_INSTANCE_COUNT")
-        .setValue(Integer.toString(task.getRequest().getInstancesSafe()))
-        .build());
+    setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
+    setEnv(envBldr, "TASK_HOST", taskId.getHost());
+    setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
+    setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
+    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      envBldr.addVariables(Variable.newBuilder()
-          .setName(envEntry.getKey())
-          .setValue(envEntry.getValue())
-          .build());
+      setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
     }
 
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
-          envBldr.addVariables(Variable.newBuilder()
-              .setName("PORT")
-              .setValue(Long.toString(ports.get()[portNum]))
-              .build());
+          setEnv(envBldr, "PORT", ports.get()[portNum]);
         }
 
-        envBldr.addVariables(Variable.newBuilder()
-            .setName(String.format("PORT%s", portNum))
-            .setValue(Long.toString(ports.get()[portNum]))
-            .build());
+        setEnv(envBldr, String.format("PORT%s", portNum), ports.get()[portNum]);
       }
     }
 
@@ -186,7 +175,7 @@ class SingularityMesosTaskBuilder {
 
     if (dockerInfo.isPresent()) {
       final DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder();
-      containerBuilder.setDocker(dockerInfoBuilder.setImage(dockerInfo.get().getImage()));
+      dockerInfoBuilder.setImage(dockerInfo.get().getImage());
 
       if (ports.isPresent() && !dockerInfo.get().getPortMappings().isEmpty()) {
         for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
@@ -201,6 +190,8 @@ class SingularityMesosTaskBuilder {
           dockerInfoBuilder.setNetwork(dockerInfo.get().getNetwork().get());
         }
       }
+
+      dockerInfoBuilder.setPrivileged(dockerInfo.get().isPrivileged());
 
       containerBuilder.setDocker(dockerInfoBuilder);
     }
@@ -221,7 +212,7 @@ class SingularityMesosTaskBuilder {
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
-    prepareEnvironment(task, commandBuilder, ports);
+    prepareEnvironment(task, taskId, commandBuilder, ports);
 
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
@@ -293,7 +284,7 @@ class SingularityMesosTaskBuilder {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
 
-    prepareEnvironment(task, commandBldr, ports);
+    prepareEnvironment(task, taskId, commandBldr, ports);
 
     bldr.setCommand(commandBldr);
   }

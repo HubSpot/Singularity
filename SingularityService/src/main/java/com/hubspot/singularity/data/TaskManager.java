@@ -279,7 +279,7 @@ public class TaskManager extends CuratorAsyncManager {
         return getTaskPath(taskId);
       }
 
-    });;
+    });
 
     return getAsync("active_tasks", children, taskTranscoder);
   }
@@ -363,9 +363,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public boolean isActiveTask(String taskId) {
-    final String path = getActivePath(taskId);
-
-    return exists(path);
+    return exists(getActivePath(taskId));
   }
 
   public List<SingularityTaskId> getTaskIdsForRequest(String requestId) {
@@ -557,12 +555,8 @@ public class TaskManager extends CuratorAsyncManager {
     delete(getCleanupPath(taskId));
   }
 
-  public void deleteTaskHistory(SingularityTaskId taskId) {
-    try {
-      curator.delete().deletingChildrenIfNeeded().forPath(getHistoryPath(taskId));
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
+  public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
+    return delete(getHistoryPath(taskId));
   }
 
 }

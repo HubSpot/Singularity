@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "../", "/singularity", type: "nfs"
 
   config.vm.box = "singularity-develop-0.20.1"
-  config.vm.box_url = "https://vagrantcloud.com/tpetr/boxes/singularity-develop-0.20.1/versions/1/providers/virtualbox.box"
+  config.vm.box_url = "https://hubspot-vagrant-boxes.s3.amazonaws.com/singularity-develop-0.20.1"
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--memory", "1024"]

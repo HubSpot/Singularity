@@ -25,3 +25,10 @@ SingularityUI/app/env.coffee
 .vagrant
 vagrant/Berksfile.lock
 SingularityUI/.vee
+
+scripts/*.log
+scripts/*.gz
+scripts/singularity_logfetch.egg-info
+scripts/build
+scripts/dist
+scripts/.venv

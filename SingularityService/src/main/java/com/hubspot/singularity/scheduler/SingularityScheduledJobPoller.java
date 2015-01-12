@@ -4,20 +4,19 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -25,7 +24,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -42,9 +40,10 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityScheduledJobPoller(final LeaderLatch leaderLatch, final SingularityMesosSchedulerDelegator mesosScheduler, SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
-      SingularityConfiguration configuration, SingularityAbort abort, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
-    super(leaderLatch, mesosScheduler, exceptionNotifier, abort, configuration.getCheckScheduledJobsEveryMillis(), TimeUnit.MILLISECONDS, SchedulerLockType.NO_LOCK);
+  public SingularityScheduledJobPoller(SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
+      SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
+
+    super(configuration.getCheckScheduledJobsEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.taskManager = taskManager;
     this.deployManager = deployManager;
@@ -59,7 +58,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-    final List<String> requestIdsToLookup = Lists.newArrayListWithCapacity(activeTaskIds.size());
+    final Set<String> requestIdsToLookup = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
 
     for (SingularityTaskId taskId : activeTaskIds) {
       if (start - taskId.getStartedAt() < configuration.getWarnIfScheduledJobIsRunningForAtLeastMillis()) {

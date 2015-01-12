@@ -36,6 +36,15 @@ Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     timeObject = moment timestamp
     "#{timeObject.fromNow()} (#{ timeObject.format 'lll'})"
 
+Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
+    return options.inverse @ if not timestamp
+    timeObject = moment timestamp
+    now = moment()
+    if timeObject.isBefore(now)
+        options.fn @
+    else
+        options.inverse @
+
 # 12345 => 12 seconds
 Handlebars.registerHelper 'timestampDuration', (timestamp) ->
     return '' if not timestamp
