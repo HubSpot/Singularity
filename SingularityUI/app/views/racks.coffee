@@ -45,6 +45,8 @@ class RacksView extends View
         @$('#inactive').html @rackTemplate
             data:     inactive.toJSON()
 
+        @$('.actions-column a[title]').tooltip()
+
     removeRack: (event) ->
         $target = $(event.currentTarget)
         state = $target.data 'state'

@@ -45,6 +45,8 @@ class SlavesView extends View
         @$('#inactive').html @slaveTemplate
             data:     inactive.toJSON()
 
+        @$('.actions-column a[title]').tooltip()
+
     removeSlave: (event) =>
         $target = $(event.currentTarget)
         state = $target.data 'state'
