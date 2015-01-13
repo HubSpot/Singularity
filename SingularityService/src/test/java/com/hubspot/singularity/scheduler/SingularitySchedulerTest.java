@@ -896,6 +896,14 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave3", "host3", Optional.of("rack2"))));
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave4", "host4", Optional.of("rack2"))));
 
+
+    for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get())) {
+      statusUpdate(task, TaskState.TASK_RUNNING);
+    }
+    for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get())) {
+      statusUpdate(task, TaskState.TASK_RUNNING);
+    }
+
     Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 4);
 
@@ -941,7 +949,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave4").get()).size() == 1);
     Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave3").get()).size() == 1);
-    Assert.assertTrue(taskManager.getKilledTaskIdRecords().size() == 1);
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
 
     // kill the task
     statusUpdate(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).get(0), TaskState.TASK_KILLED);
@@ -989,6 +997,18 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(rackManager.getObject("rack2").get().getCurrentState().getState() == MachineState.DECOMISSIONED);
 
+  }
+
+  @Test
+  public void testEmptyDecomissioning() {
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+
+    Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMISSION, Optional.of("user1")));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+
+    Assert.assertEquals(MachineState.DECOMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
   }
 
 

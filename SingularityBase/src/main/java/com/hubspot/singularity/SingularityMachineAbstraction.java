@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.google.common.base.Optional;
 
 public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
@@ -20,6 +22,34 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
 
   public String getId() {
     return id;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(id);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    @SuppressWarnings("unchecked")
+    SingularityMachineAbstraction<T> other = (SingularityMachineAbstraction<T>) obj;
+    if (id == null) {
+      if (other.id != null) {
+        return false;
+      }
+    } else if (!id.equals(other.id)) {
+      return false;
+    }
+    return true;
   }
 
   public long getFirstSeenAt() {

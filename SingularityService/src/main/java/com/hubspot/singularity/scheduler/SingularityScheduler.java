@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -31,6 +33,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
+import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -47,6 +50,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -97,6 +101,14 @@ public class SingularityScheduler {
     taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
   }
 
+  private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
+    Map<T, MachineState> map = Maps.newHashMapWithExpectedSize(objects.size());
+    for (T object : objects) {
+      map.put(object, MachineState.DECOMISSIONING);
+    }
+    return map;
+  }
+
   public void checkForDecomissions(SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
@@ -105,18 +117,31 @@ public class SingularityScheduler {
 
     final List<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
 
-    final List<SingularitySlave> slaves = slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION);
+    final Map<SingularitySlave, MachineState> slaves = getDefaultMap(slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION));
 
-    for (SingularitySlave slave : slaves) {
+    for (SingularitySlave slave : slaves.keySet()) {
+      boolean foundTask = false;
+
       for (SingularityTask activeTask : taskManager.getTasksOnSlave(activeTaskIds, slave)) {
         cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, activeTask, slave.toString());
+        foundTask = true;
+      }
+
+      if (!foundTask) {
+        slaves.put(slave, MachineState.DECOMISSIONED);
       }
     }
 
-    final List<SingularityRack> racks = rackManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION);
+    final Map<SingularityRack, MachineState> racks = getDefaultMap(rackManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION));
 
-    for (SingularityRack rack : racks) {
+    for (SingularityRack rack : racks.keySet()) {
+      boolean foundTask = false;
+
       for (SingularityTaskId activeTaskId : activeTaskIds) {
+        if (rack.getId().equals(activeTaskId.getRackId())) {
+          foundTask = true;
+        }
+
         if (matchingTaskIds.contains(activeTaskId)) {
           continue;
         }
@@ -125,6 +150,10 @@ public class SingularityScheduler {
           Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
           cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString());
         }
+      }
+
+      if (!foundTask) {
+        racks.put(rack, MachineState.DECOMISSIONED);
       }
     }
 
@@ -140,18 +169,19 @@ public class SingularityScheduler {
       }
     }
 
-    for (SingularitySlave slave : slaves) {
-      slaveManager.changeState(slave.getId(), MachineState.DECOMISSIONING, slave.getCurrentState().getUser());
-    }
-
-    for (SingularityRack rack : racks) {
-      rackManager.changeState(rack.getId(), MachineState.DECOMISSIONING, rack.getCurrentState().getUser());
-    }
+    changeState(slaves, slaveManager);
+    changeState(racks, rackManager);
 
     if (slaves.isEmpty() && racks.isEmpty() && requestIdsToReschedule.isEmpty() && matchingTaskIds.isEmpty()) {
       LOG.trace("Decomission check found nothing");
     } else {
       LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
+    }
+  }
+
+  private <T extends SingularityMachineAbstraction<T>> void changeState(Map<T, MachineState> map, AbstractMachineManager<T> manager) {
+    for (Entry<T, MachineState> entry : map.entrySet()) {
+      manager.changeState(entry.getKey().getId(), entry.getValue(), entry.getKey().getCurrentState().getUser());
     }
   }
 
