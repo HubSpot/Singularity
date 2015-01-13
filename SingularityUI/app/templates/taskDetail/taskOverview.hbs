@@ -15,18 +15,16 @@
         </div>
     </div>
     <div class="row">
-        {{#if data.decommissioning}}
-            <div class="col-md-1">
-                <span class='label label-warning'>DECOMMISSIONING</span>
-            </div>
-            <div class="col-md-7">
-        {{else}}
-            <div class="col-md-8">
-        {{/if}}
+        <div class="col-md-7">
             <h3>
                 {{ data.task.taskId.id }}
             </h3>
         </div>
+        {{#if data.decommissioning}}
+            <div class="col-md-1">
+                <span class='label label-warning'>DECOM</span>
+            </div>
+        {{/if}}
 
         {{! Right side, buttons }}
         <div class="col-md-4 button-container">
