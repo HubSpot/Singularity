@@ -12,10 +12,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 
 @Singleton
-public class SingularityRequestHistoryPersister {
+public class SingularityRequestHistoryPersister extends SingularityHistoryPersister {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityRequestHistoryPersister.class);
 
@@ -23,12 +24,15 @@ public class SingularityRequestHistoryPersister {
   private final HistoryManager historyManager;
 
   @Inject
-  public SingularityRequestHistoryPersister(RequestManager requestManager, HistoryManager historyManager) {
+  public SingularityRequestHistoryPersister(SingularityConfiguration configuration, RequestManager requestManager, HistoryManager historyManager) {
+    super(configuration);
+
     this.requestManager = requestManager;
     this.historyManager = historyManager;
   }
 
-  public void checkRequestHistory() {
+  @Override
+  public void runActionOnPoll() {
     LOG.info("Checking request history for persistence");
 
     final long start = System.currentTimeMillis();

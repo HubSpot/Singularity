@@ -5,7 +5,6 @@ import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -18,10 +17,9 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS);
+    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, lock);
 
     this.cleaner = cleaner;
-    this.lockHolder = Optional.of(lock);
   }
 
   @Override

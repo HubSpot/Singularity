@@ -5,7 +5,6 @@ import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -18,10 +17,9 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS);
+    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, lock);
 
     this.checker = checker;
-    this.lockHolder = Optional.of(lock);
   }
 
   @Override
