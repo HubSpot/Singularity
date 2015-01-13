@@ -71,7 +71,7 @@ public class SingularityClient {
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
-  private static final String TASKS_GET_ACTIVE_PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
+  private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
@@ -506,10 +506,10 @@ public class SingularityClient {
     return getCollection(requestUri, "active tasks", TASKS_COLLECTION);
   }
 
-  public Collection<SingularityTask> getActiveTasks(final String host) {
-    final String requestUri = String.format(TASKS_GET_ACTIVE_PER_HOST_FORMAT, getHost(), contextPath, host);
+  public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
+    final String requestUri = String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getHost(), contextPath, slaveId);
 
-    return getCollection(requestUri, String.format("active tasks on %s", host), TASKS_COLLECTION);
+    return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASKS_COLLECTION);
   }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<String> user) {
