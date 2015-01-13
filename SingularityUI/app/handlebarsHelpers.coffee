@@ -34,7 +34,7 @@ Handlebars.registerHelper 'withLast', (list, options) ->
 Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    timeObject.fromNow()
+    "#{timeObject.fromNow()} (#{ timeObject.format 'lll'})"
 
 # 12345 => 12 seconds
 Handlebars.registerHelper 'timestampDuration', (timestamp) ->

@@ -12,7 +12,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.Response;
 
 @Singleton
@@ -20,13 +22,15 @@ public class SandboxManager {
 
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
+  private final SingularityConfiguration configuration;
 
   private static final TypeReference<Collection<MesosFileObject>> MESOS_FILE_OBJECTS = new TypeReference<Collection<MesosFileObject>>() {};
 
   @Inject
-  public SandboxManager(AsyncHttpClient asyncHttpClient, ObjectMapper objectMapper) {
+  public SandboxManager(AsyncHttpClient asyncHttpClient, SingularityConfiguration configuration, ObjectMapper objectMapper) {
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
+    this.configuration = configuration;
   }
 
   @SuppressWarnings("serial")
@@ -58,10 +62,15 @@ public class SandboxManager {
     }
   }
 
+  @SuppressWarnings("deprecation")
   public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) throws SlaveNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read.json", slaveHostname))
           .addQueryParameter("path", fullPath);
+
+      PerRequestConfig timeoutConfig = new PerRequestConfig();
+      timeoutConfig.setRequestTimeoutInMs((int) configuration.getSandboxHttpTimeoutMillis());
+      builder.setPerRequestConfig(timeoutConfig);
 
       if (offset.isPresent()) {
         builder.addQueryParameter("offset", offset.get().toString());

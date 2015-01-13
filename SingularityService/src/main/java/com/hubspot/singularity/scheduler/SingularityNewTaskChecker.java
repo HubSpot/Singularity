@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -8,20 +10,23 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
+import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityTask;
@@ -40,13 +45,13 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
  * Since we are making changes to these tasks, either killing them or blessing them, we don't have to do it actually as part of a lock.
  * b/c we will use a queue to kill them.
  */
-public class SingularityNewTaskChecker implements SingularityCloseable {
+@Singleton
+public class SingularityNewTaskChecker implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityNewTaskChecker.class);
 
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
-  private final SingularityCloser closer;
   private final LoadBalancerClient lbClient;
   private final long killAfterUnhealthyMillis;
 
@@ -54,26 +59,31 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
 
   private final ScheduledExecutorService executorService;
 
+  private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityNewTaskChecker(SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort) {
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lbClient = lbClient;
-    this.closer = closer;
+    this.abort = abort;
 
-    taskIdToCheck = Maps.newConcurrentMap();
-    killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
+    this.taskIdToCheck = Maps.newConcurrentMap();
+    this.killAfterUnhealthyMillis = TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
 
-    executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
+    this.executorService = Executors.newScheduledThreadPool(configuration.getCheckNewTasksScheduledThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityNewTaskChecker-%d").build());
 
     this.exceptionNotifier = exceptionNotifier;
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public void start() {
+  }
+
+  @Override
+  public void stop() {
+    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 
   private boolean hasHealthcheck(SingularityTask task) {
@@ -158,11 +168,27 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
         try {
           checkTask(task);
         } catch (Throwable t) {
-          LOG.error("Uncaught throwable in task check for task {}", task, t);
+          LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
           exceptionNotifier.notify(t);
+
+          reEnqueueCheckOrAbort(task);
         }
       }
     };
+  }
+
+  private void reEnqueueCheckOrAbort(SingularityTask task) {
+    try {
+      reEnqueueCheck(task);
+    } catch (Throwable t) {
+      LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
+      exceptionNotifier.notify(t);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+    }
+  }
+
+  private void reEnqueueCheck(SingularityTask task) {
+    enqueueCheckWithDelay(task, configuration.getCheckNewTasksEverySeconds());
   }
 
   private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds) {
@@ -184,29 +210,23 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
 
     LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), JavaUtils.duration(start));
 
-    boolean reEnqueue = false;
-
     switch (state) {
-      case HEALTHY:
-      case OBSOLETE:
-        break;
       case CHECK_IF_OVERDUE:
         if (isOverdue(task)) {
           taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
-          break;
-        } // otherwise, reEnqueue
+        } else {
+          reEnqueueCheck(task);
+        }
+        break;
       case LB_IN_PROGRESS_CHECK_AGAIN:
-        reEnqueue = true;
+        reEnqueueCheck(task);
         break;
       case UNHEALTHY_KILL_TASK:
         taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
         break;
-    }
-
-    if (reEnqueue) {
-      LOG.debug("Re-enqueueing a check for task {}", task.getTaskId());
-
-      enqueueCheckWithDelay(task, configuration.getCheckNewTasksEverySeconds());
+      case HEALTHY:
+      case OBSOLETE:
+        break;
     }
   }
 
@@ -224,6 +244,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
       case UNKNOWN:
         return CheckTaskState.CHECK_IF_OVERDUE;
       case RUNNING:
+        break;
     }
 
     if (hasHealthcheck(task)) {
@@ -246,7 +267,7 @@ public class SingularityNewTaskChecker implements SingularityCloseable {
     Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     SingularityLoadBalancerUpdate newLbUpdate = null;
 
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD);
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.<Integer> absent());
 
     if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD,

@@ -1,6 +1,7 @@
 Model = require './model'
 
 pauseTemplate = require '../templates/vex/requestPause'
+scaleTemplate = require '../templates/vex/requestScale'
 unpauseTemplate = require '../templates/vex/requestUnpause'
 runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
@@ -26,12 +27,16 @@ class Request extends Model
         data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
         data.daemon = not data.scheduled and not data.onDemand
 
+        data.instances = data.request.instances or 1
+        data.hasMoreThanOneInstance = data.instances > 1
+          
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
 
         data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
         data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and data.hasActiveDeploy
         data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
+        data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.daemon
 
         data
 
@@ -67,6 +72,15 @@ class Request extends Model
 
         $.ajax options
         
+    scale: (confirmedOrPromptData) =>
+        $.ajax
+          url: "#{ @url() }/instances?user=#{ app.getUsername() }"
+          type: "PUT"
+          contentType: 'application/json'
+          data:         JSON.stringify
+              id:      @get "id"
+              instances: confirmedOrPromptData
+          
     bounce: =>
         $.ajax
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
@@ -89,6 +103,19 @@ class Request extends Model
                 return unless confirmed
                 killTasks = not $('.vex #kill-tasks').is ':checked'
                 @pause(killTasks).done callback
+
+    promptScale: (callback) =>
+        vex.dialog.prompt
+            message: scaleTemplate 
+                id: @get "id"
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
+                vex.dialog.buttons.NO
+            ]
+            placeholder: @get 'instances'
+            callback: (data) =>
+                return if data is false
+                @scale(data).done callback
 
     promptUnpause: (callback) =>
         vex.dialog.confirm

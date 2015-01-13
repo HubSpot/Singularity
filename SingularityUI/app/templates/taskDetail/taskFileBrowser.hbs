@@ -31,18 +31,18 @@
         <tbody>
             {{#each files}}
                 <tr>
-                    <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ shortPath }}">
+                    <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ name }}">
                         {{#if isDirectory}}
-                            <a data-directory-path="{{ requestPath }}" href="{{appRoot}}/task/{{ taskId }}/files/{{ shortPath }}">
-                                <span class="glyphicon glyphicon-folder-open"></span>{{ shortPath }}/
+                            <a data-directory-path="{{ uiPath }}" href="{{appRoot}}/task/{{ taskId }}/files/{{ uiPath }}">
+                                <span class="glyphicon glyphicon-folder-open"></span>{{ name }}/
                             </a>
                         {{else}}
                             {{#if isTailable}}
-                                <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ requestPath }}">
-                                    <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
+                                <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ uiPath }}">
+                                    <span class="glyphicon glyphicon-file"></span>{{ name }}
                                 </a>
                             {{else}}
-                                <span class="glyphicon glyphicon-file"></span>{{ shortPath }}
+                                <span class="glyphicon glyphicon-file"></span>{{ name }}
                             {{/if}}
                         {{/if}}
                     </td>

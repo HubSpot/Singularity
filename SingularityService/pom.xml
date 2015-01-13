@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.3.9-SNAPSHOT</version>
+    <version>0.4.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -24,11 +23,6 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot.dropwizard</groupId>
-      <artifactId>dropwizard-guice</artifactId>
     </dependency>
 
     <dependency>
@@ -52,6 +46,16 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-servlet</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-multibindings</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
@@ -59,6 +63,11 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
     </dependency>
 
     <dependency>
@@ -81,6 +90,13 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
+    <!-- for jade and jets3t -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -94,6 +110,11 @@
     <dependency>
       <groupId>org.apache.mesos</groupId>
       <artifactId>mesos</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.groupon.mesos</groupId>
+      <artifactId>jesos</artifactId>
     </dependency>
 
     <dependency>
@@ -114,18 +135,16 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <!-- clashes with ning async-http-client -->
-      <exclusions>
-        <exclusion>
-          <artifactId>netty</artifactId>
-          <groupId>org.jboss.netty</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlets</artifactId>
     </dependency>
 
     <dependency>
@@ -136,6 +155,11 @@
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-servlets</artifactId>
     </dependency>
 
     <dependency>
@@ -196,13 +220,12 @@
 
     <dependency>
       <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-servlets</artifactId>
+      <artifactId>metrics-core</artifactId>
     </dependency>
 
     <dependency>
       <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-healthchecks</artifactId>
-      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -219,7 +242,7 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
@@ -238,6 +261,11 @@
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-servlet</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-guice</artifactId>
     </dependency>
 
     <dependency>
@@ -288,9 +316,24 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.wordnik</groupId>
+      <artifactId>swagger-annotations</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>HorizonCore</artifactId>
     </dependency>
 
     <dependency>
@@ -306,20 +349,101 @@
   </dependencies>
 
   <build>
-    <resources>
-      <resource>
-        <directory>${project.basedir}/src/main/resources</directory>
-      </resource>
-      <resource>
-        <directory>${project.basedir}/target/generated-resources</directory>
-      </resource>
-    </resources>
     <plugins>
+      <plugin>
+        <groupId>com.hubspot</groupId>
+        <artifactId>swagger-maven-plugin</artifactId>
+        <version>2.3.4-HUBSPOT</version>
+        <configuration>
+          <apiSources>
+            <apiSource>
+              <locations>com.hubspot.singularity.resources</locations>
+              <apiVersion>${project.version}</apiVersion>
+
+              <apiInfo>
+                <title>Singularity REST API</title>
+                <description>Singularity Mesos Framework API</description>
+              </apiInfo>
+
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+              <outputPath>${basedir}/../Docs/reference/api.md</outputPath>
+              <sortApis>true</sortApis>
+            </apiSource>
+            <apiSource>
+              <locations>com.hubspot.singularity.config</locations>
+              <apiVersion>${project.version}</apiVersion>
+
+              <apiInfo>
+                <title>Singularity Configuration</title>
+                <description>Singularity Configuration</description>
+              </apiInfo>
+
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+              <outputPath>${basedir}/../Docs/reference/config.md</outputPath>
+              <sortApis>true</sortApis>
+            </apiSource>
+            <apiSource>
+              <locations>com.hubspot.singularity.resources</locations>
+              <apiVersion>${project.version}</apiVersion>
+
+              <apiInfo>
+                <title>Singularity REST API</title>
+                <description>Singularity Mesos Framework API</description>
+              </apiInfo>
+
+              <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/index.html.mustache</outputTemplate>
+              <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+              <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
+              <sortApis>true</sortApis>
+            </apiSource>
+          </apiSources>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jaxrs_2.10</artifactId>
+            <version>1.3.10</version>
+            <exclusions>
+              <exclusion>
+                <groupId>com.wordnik</groupId>
+                <artifactId>swagger-core_2.10</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
+            <version>1.3.10</version>
+            <exclusions>
+              <exclusion>
+                <groupId>com.wordnik</groupId>
+                <artifactId>swagger-core_2.10</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.hubspot</groupId>
+            <artifactId>swagger-core_2.10</artifactId>
+            <version>1.3.11-HUBSPOT-SNAPSHOT</version> <!-- TODO: finish release of HubSpot-flavored swagger -->
+          </dependency>
+        </dependencies>
+      </plugin>
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <configuration>
           <workingDirectory>../SingularityUI</workingDirectory>
+          <nodeDownloadRoot>https://hubspot-boxen-public.s3.amazonaws.com/nodejs/</nodeDownloadRoot>
         </configuration>
         <executions>
           <execution>
@@ -368,7 +492,7 @@
     <pluginManagement>
       <plugins>
         <!--This plugin's configuration is used to store Eclipse m2e settings 
-            only. It has no influence on the Maven build itself. -->
+          only. It has no influence on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>
@@ -387,7 +511,33 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.github.kongchen</groupId>
+                    <artifactId>swagger-maven-plugin</artifactId>
+                    <versionRange>[2.3,)</versionRange>
+                    <goals>
+                      <goal>generate</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.hubspot</groupId>
+                    <artifactId>swagger-maven-plugin</artifactId>
+                    <versionRange>[2.3.4-HUBSPOT,)</versionRange>
+                    <goals>
+                      <goal>generate</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -399,7 +549,7 @@
   </build>
 </project>
 
-<!-- Local Variables:     -->
-<!-- mode: nxml           -->
+<!-- Local Variables: -->
+<!-- mode: nxml -->
 <!-- nxml-child-indent: 2 -->
-<!-- End:                 -->
+<!-- End: -->

@@ -40,8 +40,13 @@ exports.config =
             staticRoot: "#{ @config.server.base }/static"
             appRoot: @config.server.base
             apiRoot: ''
-            mesosLogsPort: 5051
+            slaveHttpPort: 5051
             title: 'Singularity (local dev)'
-
+            navColor: ''
+            defaultCpus: 1
+            defaultMemory: 128
+            hideNewDeployButton: "false"
+            hideNewRequestButton: "false"
+            
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

@@ -21,7 +21,19 @@ class DashboardView extends View
         starredRequests = _.pluck starredRequests, 'attributes'
 
         # Count up the Requests for the clicky boxes
-        userRequests = @collection.where {deployUser}
+        userRequests = @collection.filter (model) ->
+          request = model.get('request')
+          deployUserTrimmed = deployUser.split("@")[0]
+          
+          if not request.owners
+            return false
+            
+          for owner in request.owners
+            ownerTrimmed = owner.split("@")[0]
+            if deployUserTrimmed == ownerTrimmed
+              return true
+          
+          return false
         userRequestTotals =
             all: userRequests.length
             daemon:    0

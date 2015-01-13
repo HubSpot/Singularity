@@ -1,5 +1,7 @@
 package com.hubspot.singularity.executor;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -9,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
 import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
@@ -86,6 +87,7 @@ public class SingularityExecutor implements Executor {
         LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
         break;
       case SUBMITTED:
+        task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
         break;
       }
     } catch (Throwable t) {
@@ -125,7 +127,7 @@ public class SingularityExecutor implements Executor {
 
   @Override
   public void frameworkMessage(ExecutorDriver executorDriver, byte[] bytes) {
-    LOG.info("Received framework message: {}", JavaUtils.toString(bytes));
+    LOG.info("Received framework message: {}", new String(bytes, UTF_8));
   }
 
   /**

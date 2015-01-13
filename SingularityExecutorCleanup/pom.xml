@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.3.9-SNAPSHOT</version>
+    <version>0.4.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityExecutorCleanup</artifactId>
@@ -37,7 +37,17 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityClient</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>HorizonCore</artifactId>
     </dependency>
 
     <dependency>
@@ -61,10 +71,6 @@
       <scope>runtime</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.mesos</groupId>
-      <artifactId>mesos</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
@@ -74,7 +80,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <!-- turn off Werror, because Antlr annotation processor logs a warning with JDK 7 -->
-          <compilerArguments combine.self="override"/>
+          <compilerArguments combine.self="override" />
         </configuration>
       </plugin>
     </plugins>

@@ -1,12 +1,16 @@
 package com.hubspot.singularity.mesos;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -17,26 +21,31 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
+import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
+@Singleton
 public class SingularityMesosScheduler implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
@@ -49,16 +58,24 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
+  private final String serverId;
+  private final SchedulerDriverSupplier schedulerDriverSupplier;
+
+  private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
   @Inject
-  public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityNewTaskChecker newTaskChecker,
-      SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager) {
-    defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
+  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
+      SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
+      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder) {
+    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
+    this.schedulerPriority = schedulerPriority;
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
@@ -66,21 +83,31 @@ public class SingularityMesosScheduler implements Scheduler {
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
     this.healthchecker = healthchecker;
+    this.serverId = serverId;
+    this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.taskIdTranscoder = taskIdTranscoder;
   }
 
   @Override
   public void registered(SchedulerDriver driver, Protos.FrameworkID frameworkId, Protos.MasterInfo masterInfo) {
     LOG.info("Registered driver {}, with frameworkId {} and master {}", driver, frameworkId, masterInfo);
+    schedulerDriverSupplier.setSchedulerDriver(driver);
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, Protos.MasterInfo masterInfo) {
     LOG.info("Reregistered driver {}, with master {}", driver, masterInfo);
+    schedulerDriverSupplier.setSchedulerDriver(driver);
   }
 
   @Override
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
     LOG.info("Received {} offer(s)", offers.size());
+
+    for (Offer offer : offers) {
+      LOG.debug("Received offer from {} ({}) for {} cpu(s), {} memory, and {} ports", offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
+          MesosUtils.getNumPorts(offer));
+    }
 
     final long start = System.currentTimeMillis();
 
@@ -99,6 +126,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
+      schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
@@ -183,12 +211,15 @@ public class SingularityMesosScheduler implements Scheduler {
 
         taskManager.createTaskAndDeletePendingTask(task);
 
+        schedulerPriority.notifyTaskLaunched(task.getTaskId());
+
         stateCache.getActiveTaskIds().add(task.getTaskId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 
         return Optional.of(task);
       } else {
-        LOG.trace("Ignoring offer {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
+        LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest
+            .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
     }
 
@@ -200,6 +231,33 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info("Offer {} rescinded", offerId);
   }
 
+
+  /**
+   * 1- we have a previous update, and this is a duplicate of it (ignore) 2- we don't have a
+   * previous update, 2 cases: a - this task has already been destroyed (we can ignore it then) b -
+   * we've never heard of this task (very unlikely since we first write a status into zk before we
+   * launch a task)
+   */
+  private boolean isDuplicateOrIgnorableStatusUpdate(Optional<SingularityTaskStatusHolder> previousTaskStatusHolder, final SingularityTaskStatusHolder newTaskStatusHolder) {
+    if (!previousTaskStatusHolder.isPresent()) {
+      return true;
+    }
+
+    if (!previousTaskStatusHolder.get().getTaskStatus().isPresent()) { // this is our launch state
+      return false;
+    }
+
+    return previousTaskStatusHolder.get().getTaskStatus().get().getState() == newTaskStatusHolder.getTaskStatus().get().getState();
+  }
+
+  private void saveNewTaskStatusHolder(SingularityTaskId taskIdObj, SingularityTaskStatusHolder newTaskStatusHolder, ExtendedTaskState taskState) {
+    if (taskState.isDone()) {
+      taskManager.deleteLastActiveTaskStatus(taskIdObj);
+    } else {
+      taskManager.saveLastActiveTaskStatus(newTaskStatusHolder);
+    }
+  }
+
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     final String taskId = status.getTaskId().getValue();
@@ -207,32 +265,40 @@ public class SingularityMesosScheduler implements Scheduler {
     long timestamp = System.currentTimeMillis();
 
     if (status.hasTimestamp()) {
-      timestamp = (long) status.getTimestamp() * 1000;
+      timestamp = (long) (status.getTimestamp() * 1000);
     }
 
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
-    final SingularityTaskId taskIdObj = SingularityTaskId.fromString(taskId);
-    final Optional<SingularityTask> maybeActiveTask = taskManager.getActiveTask(taskId);
+    final SingularityTaskId taskIdObj = taskIdTranscoder.fromString(taskId);
+
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId, Optional.<String>absent());
+    final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
 
-    Optional<SingularityPendingDeploy> pendingDeploy = null;
-
-    if (maybeActiveTask.isPresent() && status.getState() == TaskState.TASK_RUNNING) {
-      pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
-
-      healthchecker.enqueueHealthcheck(maybeActiveTask.get(), pendingDeploy);
+    if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
+      LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
+      saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+      return;
     }
 
-    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String> absent());
+    final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
-    if (taskState.isDone() && !maybeActiveTask.isPresent() && !taskManager.taskHistoryUpdateExists(taskUpdate)) {
-      if (SingularityTaskHistoryUpdate.getCurrentState(taskManager.getTaskHistoryUpdates(taskIdObj)) == SimplifiedTaskState.DONE) {
-        LOG.info("Ignoring taskUpdate {} because task {} is already done from a different update", status.getState(), taskIdObj);
-        return;
-      }
+    if (isActiveTask && !taskState.isDone()) {
+     final SingularityTask task = taskManager.getTask(taskIdObj).get();
+     final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+
+     if (taskState == ExtendedTaskState.TASK_RUNNING) {
+       healthchecker.enqueueHealthcheck(task, pendingDeploy);
+     }
+
+     if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+       newTaskChecker.enqueueNewTaskCheck(task);
+     }
     }
 
+    final SingularityTaskHistoryUpdate taskUpdate =
+        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String>absent());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);
@@ -243,31 +309,20 @@ public class SingularityMesosScheduler implements Scheduler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      scheduler.handleCompletedTask(maybeActiveTask, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
-
-      taskManager.deleteLastActiveTaskStatus(taskIdObj);
-    } else {
-      if (maybeActiveTask.isPresent()) {
-        if (pendingDeploy == null) {
-          pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
-        }
-
-        if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-          newTaskChecker.enqueueNewTaskCheck(maybeActiveTask.get());
-        }
-      }
-
-      taskManager.saveLastActiveTaskStatus(taskIdObj, status);
+      scheduler.handleCompletedTask(taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
     }
+
+    saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
   }
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, JavaUtils.toString(data));
+    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, new String(data, UTF_8));
   }
 
   @Override
   public void disconnected(SchedulerDriver driver) {
+    schedulerDriverSupplier.setSchedulerDriver(null);
     LOG.warn("Scheduler/Driver disconnected");
   }
 

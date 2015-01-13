@@ -26,20 +26,17 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.SingularityPendingRequestTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestCleanupTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestHistoryTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestWithStateTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
 
-  private final SingularityRequestWithStateTranscoder requestTranscoder;
-  private final SingularityPendingRequestTranscoder pendingRequestTranscoder;
-  private final SingularityRequestCleanupTranscoder requestCleanupTranscoder;
-  private final SingularityRequestHistoryTranscoder requestHistoryTranscoder;
+  private final Transcoder<SingularityRequestWithState> requestTranscoder;
+  private final Transcoder<SingularityPendingRequest> pendingRequestTranscoder;
+  private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
+  private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
 
   private final WebhookManager webhookManager;
 
@@ -47,12 +44,12 @@ public class RequestManager extends CuratorAsyncManager {
 
   private static final String NORMAL_PATH_ROOT = REQUEST_ROOT + "/all";
   private static final String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
-  private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT +  "/cleanup";
+  private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT + "/cleanup";
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
 
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, SingularityRequestCleanupTranscoder requestCleanupTranscoder, SingularityRequestWithStateTranscoder requestTranscoder,
-      SingularityPendingRequestTranscoder pendingRequestTranscoder, SingularityRequestHistoryTranscoder requestHistoryTranscoder) {
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
+      Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.requestTranscoder = requestTranscoder;
@@ -78,8 +75,8 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(PENDING_PATH_ROOT, new SingularityDeployKey(requestId, deployId).getId());
   }
 
-  private String getCleanupPath(String requestId) {
-    return ZKPaths.makePath(CLEANUP_PATH_ROOT, requestId);
+  private String getCleanupPath(String requestId, RequestCleanupType type) {
+    return ZKPaths.makePath(CLEANUP_PATH_ROOT, requestId + "-" + type.name());
   }
 
   public int getSizeOfPendingQueue() {
@@ -106,8 +103,18 @@ public class RequestManager extends CuratorAsyncManager {
     delete(getHistoryPath(history));
   }
 
-  public void deleteCleanRequest(String requestId) {
-    delete(getCleanupPath(requestId));
+  public boolean cleanupRequestExists(String requestId) {
+    for (RequestCleanupType type : RequestCleanupType.values()) {
+      if (checkExists(getCleanupPath(requestId, type)).isPresent()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public void deleteCleanRequest(String requestId, RequestCleanupType type) {
+    delete(getCleanupPath(requestId, type));
   }
 
   public List<String> getAllRequestIds() {
@@ -123,25 +130,29 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult createCleanupRequest(SingularityRequestCleanup cleanupRequest) {
-    return create(getCleanupPath(cleanupRequest.getRequestId()), cleanupRequest, requestCleanupTranscoder);
+    return create(getCleanupPath(cleanupRequest.getRequestId(), cleanupRequest.getCleanupType()), cleanupRequest, requestCleanupTranscoder);
   }
 
-  private SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, Optional<String> user) {
-    saveHistory(new SingularityRequestHistory(System.currentTimeMillis(), user, eventType, request));
-
-    return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state), requestTranscoder);
+  public SingularityCreateResult update(SingularityRequest request, long timestamp, Optional<String> user) {
+    return save(request, getRequest(request.getId()).get().getState(), RequestHistoryType.UPDATED, timestamp, user);
   }
 
-  public SingularityCreateResult pause(SingularityRequest request, Optional<String> user) {
-    return save(request, RequestState.PAUSED, RequestHistoryType.PAUSED, user);
+  private SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, long timestamp, Optional<String> user) {
+    saveHistory(new SingularityRequestHistory(timestamp, user, eventType, request));
+
+    return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state, timestamp), requestTranscoder);
   }
 
-  public SingularityCreateResult cooldown(SingularityRequest request) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, Optional.<String> absent());
+  public SingularityCreateResult pause(SingularityRequest request, long timestamp, Optional<String> user) {
+    return save(request, RequestState.PAUSED, RequestHistoryType.PAUSED, timestamp, user);
   }
 
-  public SingularityCreateResult finish(SingularityRequest request) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, Optional.<String> absent());
+  public SingularityCreateResult cooldown(SingularityRequest request, long timestamp) {
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.<String> absent());
+  }
+
+  public SingularityCreateResult finish(SingularityRequest request, long timestamp) {
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.<String> absent());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -161,28 +172,24 @@ public class RequestManager extends CuratorAsyncManager {
     return save(path, history, requestHistoryTranscoder);
   }
 
-  public SingularityCreateResult unpause(SingularityRequest request, Optional<String> user) {
-    return activate(request, RequestHistoryType.UNPAUSED, user);
+  public SingularityCreateResult unpause(SingularityRequest request, long timestamp, Optional<String> user) {
+    return activate(request, RequestHistoryType.UNPAUSED, timestamp, user);
   }
 
-  public SingularityCreateResult exitCooldown(SingularityRequest request) {
-    return activate(request, RequestHistoryType.EXITED_COOLDOWN, Optional.<String> absent());
+  public SingularityCreateResult exitCooldown(SingularityRequest request, long timestamp) {
+    return activate(request, RequestHistoryType.EXITED_COOLDOWN, timestamp, Optional.<String> absent());
   }
 
-  public SingularityCreateResult deployToUnpause(SingularityRequest request, Optional<String> user) {
-    return save(request, RequestState.DEPLOYING_TO_UNPAUSE, RequestHistoryType.DEPLOYED_TO_UNPAUSE, user);
+  public SingularityCreateResult deployToUnpause(SingularityRequest request, long timestamp, Optional<String> user) {
+    return save(request, RequestState.DEPLOYING_TO_UNPAUSE, RequestHistoryType.DEPLOYED_TO_UNPAUSE, timestamp, user);
   }
 
-  public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, Optional<String> user) {
-    return save(request, RequestState.ACTIVE, historyType, user);
+  public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user) {
+    return save(request, RequestState.ACTIVE, historyType, timestamp, user);
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
     return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
-  }
-
-  public List<String> getCleanupRequestIds() {
-    return getChildren(CLEANUP_PATH_ROOT);
   }
 
   public List<SingularityRequestCleanup> getCleanupRequests() {
@@ -242,14 +249,13 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public Optional<SingularityRequestCleanup> getCleanupRequest(String requestId) {
-    return getData(getCleanupPath(requestId), requestCleanupTranscoder);
-  }
-
   public void deleteRequest(SingularityRequest request, Optional<String> user) {
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, System.currentTimeMillis(), Optional.of(Boolean.TRUE), request.getId()));
+    final long now = System.currentTimeMillis();
 
-    saveHistory(new SingularityRequestHistory(System.currentTimeMillis(), user, RequestHistoryType.DELETED, request));
+    // delete it no matter if the delete request already exists.
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent()));
+
+    saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request));
 
     delete(getRequestPath(request.getId()));
   }

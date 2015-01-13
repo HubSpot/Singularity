@@ -1,24 +1,16 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModel;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
+@ApiModel(description = "Represents Singularity's view of a Mesos slave")
 public class SingularitySlave extends SingularityMachineAbstraction {
 
   private final String host;
   private final String rackId;
-
-  public static SingularitySlave fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularitySlave.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   public SingularitySlave(String slaveId, String host, String rackId) {
     super(slaveId);
@@ -35,10 +27,12 @@ public class SingularitySlave extends SingularityMachineAbstraction {
     this.rackId = rackId;
   }
 
+  @ApiModelProperty("Slave hostname")
   public String getHost() {
     return host;
   }
 
+  @ApiModelProperty("Slave rack ID")
   public String getRackId() {
     return rackId;
   }

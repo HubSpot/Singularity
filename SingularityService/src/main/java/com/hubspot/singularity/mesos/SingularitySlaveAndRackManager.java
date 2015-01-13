@@ -3,6 +3,8 @@ package com.hubspot.singularity.mesos;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.Offer;
@@ -28,7 +30,8 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
-public class SingularitySlaveAndRackManager {
+@Singleton
+class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
@@ -41,8 +44,10 @@ public class SingularitySlaveAndRackManager {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularitySlaveAndRackManager(SingularityConfiguration configuration, MesosConfiguration mesosConfiguration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularityConfiguration configuration, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
+
+    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
@@ -73,7 +78,12 @@ public class SingularitySlaveAndRackManager {
   }
 
   private String getHost(String hostname) {
-    return getSafeString(hostname.split("\\.")[0]);
+    if (configuration.getCommonHostnameSuffixToOmit().isPresent()) {
+      if (hostname.endsWith(configuration.getCommonHostnameSuffixToOmit().get())) {
+        hostname = hostname.substring(0, hostname.length() - configuration.getCommonHostnameSuffixToOmit().get().length());
+      }
+    }
+    return getSafeString(hostname);
   }
 
   public String getSlaveHost(Offer offer) {
@@ -111,6 +121,7 @@ public class SingularitySlaveAndRackManager {
     double numOnSlave = 0;
 
     for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
+      // TODO consider using executorIds
       if (taskId.getHost().equals(host)) {
         numOnSlave++;
       }
@@ -125,6 +136,7 @@ public class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -132,6 +144,7 @@ public class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
         if (numOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -141,6 +154,7 @@ public class SingularitySlaveAndRackManager {
         final boolean isSlaveOk = numOnSlave < numPerSlave;
 
         if (!isSlaveOk) {
+          LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;

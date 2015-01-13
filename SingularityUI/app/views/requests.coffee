@@ -29,6 +29,7 @@ class RequestsView extends View
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
             'click [data-action="remove"]': 'removeRequest'
+            'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="starToggle"]': 'toggleStar'
             'click [data-action="run-now"]': 'runRequest'
@@ -54,8 +55,17 @@ class RequestsView extends View
         # Only show requests that match the search query
         if @searchFilter
             requests = _.filter requests, (request) =>
-                searchTarget = "#{ request.request.id }#{ request.requestDeployState?.activeDeploy?.user }"
-                searchTarget.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
+                searchFilter = @searchFilter.toLowerCase().split("@")[0]
+                valuesToSearch = []
+                
+                for user in request.request.owners ? []
+                  valuesToSearch.push(user.split("@")[0])
+                  
+                valuesToSearch.push(request.request.id)
+                valuesToSearch.push(request.requestDeployState?.activeDeploy?.user)
+                
+                searchTarget = valuesToSearch.join("")
+                searchTarget.toLowerCase().indexOf(searchFilter) isnt -1
         
         # Only show requests that match the clicky filters
         if @state in @haveSubfilter and @subFilter isnt 'all'
@@ -112,6 +122,7 @@ class RequestsView extends View
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
+            config: config
             requestsFilter: @state
             requestsSubFilter: @subFilter
             searchFilter: @searchFilter
@@ -127,7 +138,7 @@ class RequestsView extends View
             partials.partials.requestsFilter = @templateFilter
 
         @$el.html @templateBase context, partials
-
+          
         if @focusSearchAfterRender
             $searchBox = @$ 'input[type="search"]'
             $searchBox.focus()
@@ -246,7 +257,15 @@ class RequestsView extends View
         @collection.get(id).promptUnpause =>
             $row.remove()
             @trigger 'refreshrequest'
-
+            
+    scaleRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+        
+        @collection.get(id).promptScale =>
+          $row.addClass 'flash'
+          @trigger 'refreshrequest'
+          
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')

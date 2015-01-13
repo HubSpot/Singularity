@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -68,14 +69,31 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       taskManager.saveHealthcheckResult(result);
 
       if (result.isFailed()) {
-        healthchecker.reEnqueueHealthcheck(task);
+        if (!taskManager.isActiveTask(task.getTaskId().getId())) {
+          LOG.trace("Task {} is not active, not re-enqueueing healthcheck", task.getTaskId());
+          return;
+        }
+
+        healthchecker.enqueueHealthcheck(task);
       } else {
         newTaskChecker.runNewTaskCheckImmediately(task);
       }
     } catch (Throwable t) {
-      LOG.error("Aborting, caught throwable while saving health check result {}", result, t);
+      LOG.error("Caught throwable while saving health check result {}, will re-enqueue", result, t);
       exceptionNotifier.notify(t);
-      abort.abort();
+
+      reEnqueueOrAbort(task);
+    }
+  }
+
+  private void reEnqueueOrAbort(SingularityTask task) {
+    try {
+      healthchecker.enqueueHealthcheck(task);
+    } catch (Throwable t) {
+      LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
+      exceptionNotifier.notify(t);
+
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
     }
   }
 

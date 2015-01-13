@@ -2,6 +2,8 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 
+@Singleton
 public class SingularityCooldownChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCooldownChecker.class);
@@ -55,7 +58,7 @@ public class SingularityCooldownChecker {
 
   private boolean checkCooldown(SingularityRequestWithState cooldownRequest) {
     if (shouldExitCooldown(cooldownRequest)) {
-      requestManager.exitCooldown(cooldownRequest.getRequest());
+      requestManager.exitCooldown(cooldownRequest.getRequest(), System.currentTimeMillis());
       return true;
     }
 
@@ -84,7 +87,7 @@ public class SingularityCooldownChecker {
       return true;
     }
 
-    if (cooldown.hasCooldownExpired(maybeDeployStatistics.get(), Optional.<Long> absent())) {
+    if (cooldown.hasCooldownExpired(cooldownRequest.getRequest(), maybeDeployStatistics.get(), Optional.<Integer> absent(), Optional.<Long> absent())) {
       return true;
     }
 

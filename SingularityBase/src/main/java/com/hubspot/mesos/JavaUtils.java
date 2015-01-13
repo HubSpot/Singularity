@@ -1,5 +1,7 @@
 package com.hubspot.mesos;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
@@ -8,7 +10,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -35,34 +38,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 
 public final class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
 
-  public static final String CHARSET_UTF8_STRING = "UTF-8";
-  public static final Charset CHARSET_UTF8 = Charset.forName(CHARSET_UTF8_STRING);
-
-  public static byte[] toBytes(String string) {
-    try {
-      return string.getBytes(CHARSET_UTF8_STRING);
-    } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
-  public static String toString(byte[] bytes) {
-    try {
-      return new String(bytes, CHARSET_UTF8_STRING);
-    } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
   public static String urlEncode(String string) {
     try {
-      return URLEncoder.encode(string, CHARSET_UTF8_STRING);
+      return URLEncoder.encode(string, UTF_8.name());
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }
@@ -70,7 +55,7 @@ public final class JavaUtils {
 
   public static String urlDecode(String string) {
     try {
-      return URLDecoder.decode(string, CHARSET_UTF8_STRING);
+      return URLDecoder.decode(string, UTF_8.name());
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }
@@ -126,15 +111,15 @@ public final class JavaUtils {
     throw new RuntimeException("Couldn't deduce host address");
   }
 
-  public static String getHostName() {
+  public static Optional<String> getHostName() {
     try {
       InetAddress addr = InetAddress.getLocalHost();
 
       String hostname = addr.getHostName();
 
-      return hostname;
+      return Optional.fromNullable(hostname);
     } catch (Throwable t) {
-      return null;
+      return Optional.absent();
     }
   }
 
@@ -214,6 +199,12 @@ public final class JavaUtils {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());
     return mapper;
+  }
+
+  public static ThreadPoolExecutor newFixedTimingOutThreadPool(int maxThreads, long timeoutMillis, String nameFormat) {
+    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(maxThreads, maxThreads, timeoutMillis, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat(nameFormat).build());
+    threadPoolExecutor.allowCoreThreadTimeOut(true);
+    return threadPoolExecutor;
   }
 
 }

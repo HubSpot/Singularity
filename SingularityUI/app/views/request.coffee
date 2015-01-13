@@ -14,6 +14,7 @@ class RequestView extends View
             'click [data-action="remove"]': 'removeRequest'
             'click [data-action="run-request-now"]': 'runRequest'
             'click [data-action="pause"]': 'pauseRequest'
+            'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="bounce"]': 'bounceRequest'
 
@@ -24,7 +25,8 @@ class RequestView extends View
     initialize: ({@requestId}) ->
 
     render: ->
-        @$el.html @template()
+        @$el.html @template
+          config: config
 
         # Attach subview elements
         @$('#header').html           @subviews.header.$el
@@ -65,6 +67,10 @@ class RequestView extends View
                 @trigger 'refreshrequest'
             , 2500
 
+    scaleRequest: (e) =>
+        @model.promptScale =>
+            @trigger 'refreshrequest'
+
     pauseRequest: (e) =>
         @model.promptPause =>
             @trigger 'refreshrequest'
@@ -72,7 +78,7 @@ class RequestView extends View
     unpauseRequest: (e) =>
         @model.promptUnpause =>
             @trigger 'refreshrequest'
-    
+
     bounceRequest: (e) =>
         @model.promptBounce =>
             @trigger 'refreshrequest'

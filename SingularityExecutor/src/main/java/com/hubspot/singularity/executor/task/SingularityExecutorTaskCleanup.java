@@ -10,9 +10,9 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.s3.base.SimpleProcessManager;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 
-public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
+public class SingularityExecutorTaskCleanup {
 
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorTaskLogManager taskLogManager;
@@ -20,7 +20,6 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
   private final Logger log;
 
   public SingularityExecutorTaskCleanup(SingularityExecutorTaskLogManager taskLogManager, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, Logger log) {
-    super(log);
     this.configuration = configuration;
     this.taskLogManager = taskLogManager;
     this.taskDefinition = taskDefinition;
@@ -80,7 +79,8 @@ public class SingularityExecutorTaskCleanup extends SimpleProcessManager {
           pathToDelete
       );
 
-      super.runCommand(cmd);
+      new SimpleProcessManager(log).runCommand(cmd);
+
       return true;
     } catch (Throwable t) {
       log.error("While deleting directory {}", pathToDelete, t);

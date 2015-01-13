@@ -1,17 +1,20 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
+import static com.hubspot.singularity.JsonHelpers.copyOfList;
+import static com.hubspot.singularity.JsonHelpers.copyOfMap;
+
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
-public class SingularityDeploy extends SingularityJsonObject {
+public class SingularityDeploy {
 
   private final String requestId;
 
@@ -21,12 +24,15 @@ public class SingularityDeploy extends SingularityJsonObject {
   private final Optional<Long> timestamp;
   private final Optional<Map<String, String>> metadata;
 
+  private final Optional<SingularityContainerInfo> containerInfo;
+
   private final Optional<String> customExecutorCmd;
   private final Optional<String> customExecutorId;
   private final Optional<String> customExecutorSource;
   private final Optional<Resources> resources;
 
   private final Optional<String> command;
+  private final Optional<List<String>> arguments;
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
@@ -48,25 +54,38 @@ public class SingularityDeploy extends SingularityJsonObject {
     return new SingularityDeployBuilder(requestId, id);
   }
 
-  public static SingularityDeploy fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityDeploy.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
-
   @JsonCreator
-  public SingularityDeploy(@JsonProperty("requestId") String requestId, @JsonProperty("id") String id, @JsonProperty("command") Optional<String> command, @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,  @JsonProperty("customExecutorId") Optional<String> customExecutorId,
-      @JsonProperty("customExecutorSource") Optional<String> customExecutorSource, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("env") Optional<Map<String, String>> env, @JsonProperty("uris") Optional<List<String>> uris, @JsonProperty("metadata") Optional<Map<String, String>> metadata,
-      @JsonProperty("executorData") Optional<ExecutorData> executorData, @JsonProperty("version") Optional<String> version, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
-      @JsonProperty("healthcheckUri") Optional<String> healthcheckUri, @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds, @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
-      @JsonProperty("serviceBasePath") Optional<String> serviceBasePath, @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups, @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
-      @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions, @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy) {
+  public SingularityDeploy(@JsonProperty("requestId") String requestId,
+      @JsonProperty("id") String id,
+      @JsonProperty("command") Optional<String> command,
+      @JsonProperty("arguments") Optional<List<String>> arguments,
+      @JsonProperty("containerInfo") Optional<SingularityContainerInfo> containerInfo,
+      @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,
+      @JsonProperty("customExecutorId") Optional<String> customExecutorId,
+      @JsonProperty("customExecutorSource") Optional<String> customExecutorSource,
+      @JsonProperty("resources") Optional<Resources> resources,
+      @JsonProperty("env") Optional<Map<String, String>> env,
+      @JsonProperty("uris") Optional<List<String>> uris,
+      @JsonProperty("metadata") Optional<Map<String, String>> metadata,
+      @JsonProperty("executorData") Optional<ExecutorData> executorData,
+      @JsonProperty("version") Optional<String> version,
+      @JsonProperty("timestamp") Optional<Long> timestamp,
+      @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
+      @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
+      @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
+      @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
+      @JsonProperty("serviceBasePath") Optional<String> serviceBasePath,
+      @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups,
+      @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
+      @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
+      @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy) {
     this.requestId = requestId;
 
     this.command = command;
+    this.arguments = arguments;
     this.resources = resources;
+
+    this.containerInfo = containerInfo;
 
     this.customExecutorCmd = customExecutorCmd;
     this.customExecutorId = customExecutorId;
@@ -97,7 +116,9 @@ public class SingularityDeploy extends SingularityJsonObject {
   public SingularityDeployBuilder toBuilder() {
     return new SingularityDeployBuilder(requestId, id)
     .setCommand(command)
+    .setArguments(copyOfList(arguments))
     .setResources(resources)
+    .setContainerInfo(containerInfo)
     .setCustomExecutorCmd(customExecutorCmd)
     .setCustomExecutorId(customExecutorId)
     .setCustomExecutorSource(customExecutorSource)
@@ -121,88 +142,120 @@ public class SingularityDeploy extends SingularityJsonObject {
     .setExecutorData(executorData);
   }
 
+  @ApiModelProperty(required=false, value="Number of seconds that singularity waits for this service to become healthy.")
   public Optional<Long> getDeployHealthTimeoutSeconds() {
     return deployHealthTimeoutSeconds;
   }
 
+  @ApiModelProperty(required=true, value="Singularity Request Id which is associated with this deploy.")
   public String getRequestId() {
     return requestId;
   }
 
+  @ApiModelProperty(required=true, value="Singularity deploy id.")
   public String getId() {
     return id;
   }
 
+  @ApiModelProperty(required=false, value="Deploy version")
   public Optional<String> getVersion() {
     return version;
   }
 
+  @ApiModelProperty(required=false, value="Deploy timestamp.")
   public Optional<Long> getTimestamp() {
     return timestamp;
   }
 
+  @ApiModelProperty(required=false, value="Map of metadata key/value pairs associated with the deployment.")
   public Optional<Map<String, String>> getMetadata() {
     return metadata;
   }
 
+  @ApiModelProperty(required=false, value="Container information for deployment into a container.", dataType="SingularityContainerInfo")
+  public Optional<SingularityContainerInfo> getContainerInfo() {
+    return containerInfo;
+  }
+
+  @ApiModelProperty(required=false, value="Custom Mesos executor", dataType= "string")
   public Optional<String> getCustomExecutorCmd() {
     return customExecutorCmd;
   }
 
+  @ApiModelProperty(required=false, value="Custom Mesos executor id.")
   public Optional<String> getCustomExecutorId() {
     return customExecutorId;
   }
 
+  @ApiModelProperty(required=false, value="Custom Mesos executor source.")
   public Optional<String> getCustomExecutorSource() { return customExecutorSource; }
 
+  @ApiModelProperty(required=false, value="Resources required for this deploy.", dataType="com.hubspot.mesos.Resources")
   public Optional<Resources> getResources() {
     return resources;
   }
 
+  @ApiModelProperty(required=false, value="Command to execute for this deployment.")
   public Optional<String> getCommand() {
     return command;
   }
 
+  @ApiModelProperty(required=false, value="Command arguments.")
+  public Optional<List<String>> getArguments() {
+    return arguments;
+  }
+
+  @ApiModelProperty(required=false, value="Map of environment variable definitions.")
   public Optional<Map<String, String>> getEnv() {
     return env;
   }
 
+  @ApiModelProperty(required=false, value="List of URIs to download before executing the deploy command.")
   public Optional<List<String>> getUris() {
     return uris;
   }
 
+  @ApiModelProperty(required=false, value="Executor specific information")
   public Optional<ExecutorData> getExecutorData() {
     return executorData;
   }
 
+  @ApiModelProperty(required=false, value="Deployment Healthcheck URI.")
   public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
   }
 
+  @ApiModelProperty(required=false, value="Health check interval in seconds.")
   public Optional<Long> getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
+  @ApiModelProperty(required=false, value="Health check timeout in seconds.")
   public Optional<Long> getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
 
+  @ApiModelProperty(required=false, value="The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API.")
   public Optional<String> getServiceBasePath() {
     return serviceBasePath;
   }
 
+  @ApiModelProperty(required=false, value="Number of seconds that a service must be healthy to consider the deployment to be successful.")
   public Optional<Long> getConsiderHealthyAfterRunningForSeconds() {
     return considerHealthyAfterRunningForSeconds;
   }
 
+  @ApiModelProperty(required=false, value="List of load balancer groups associated with this deployment.")
   public Optional<List<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
   }
 
+  @ApiModelProperty(required=false, value="Map (Key/Value) of options for the load balancer.")
   public Optional<Map<String, Object>> getLoadBalancerOptions() {
     return loadBalancerOptions;
   }
 
+  @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
   }
@@ -215,11 +268,13 @@ public class SingularityDeploy extends SingularityJsonObject {
         ", version=" + version +
         ", timestamp=" + timestamp +
         ", metadata=" + metadata +
+        ", containerInfo=" + containerInfo +
         ", customExecutorCmd=" + customExecutorCmd +
         ", customExecutorId=" + customExecutorId +
         ", customExecutorSource=" + customExecutorSource +
         ", resources=" + resources +
         ", command=" + command +
+        ", arguments=" + arguments +
         ", env=" + env +
         ", uris=" + uris +
         ", executorData=" + executorData +

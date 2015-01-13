@@ -2,9 +2,12 @@ package com.hubspot.singularity.client;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+
+import javax.inject.Provider;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -39,6 +42,7 @@ import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 
@@ -67,7 +71,7 @@ public class SingularityClient {
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
-  private static final String TASKS_GET_ACTIVE_PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
+  private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
@@ -110,24 +114,35 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityDeployWebhook>> DEPLOY_UPDATES_COLLECTION = new TypeReference<Collection<SingularityDeployWebhook>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
+  private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
 
   private final Random random;
-  private final String[] hosts;
+  private final Provider<List<String>> hostsProvider;
   private final String contextPath;
 
   private final HttpClient httpClient;
 
   @Inject
+  @Deprecated
   public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
+    this(contextPath, httpClient, Arrays.asList(hosts.split(",")));
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts) {
+    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)));
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
-    this.hosts = hosts.split(",");
+    this.hostsProvider = hostsProvider;
     this.random = new Random();
   }
 
   private String getHost() {
-    return hosts[random.nextInt(hosts.length)];
+    final List<String> hosts = hostsProvider.get();
+    return hosts.get(random.nextInt(hosts.size()));
   }
 
   private void checkResponse(String type, HttpResponse response) {
@@ -211,18 +226,17 @@ public class SingularityClient {
 
     HttpResponse response = httpClient.execute(request.build());
 
-    if (response.isSuccess()) {
-      LOG.info("Deleted {} ({}) from Singularity in %sms", type, id, System.currentTimeMillis() - start);
+    if (response.getStatusCode() == 404) {
+      LOG.info("{} ({}) was not found", type, id);
+      return Optional.absent();
+    }
 
-      if (clazz.isPresent()) {
-        return Optional.of(response.getAs(clazz.get()));
-      }
-    } else {
-      try {
-        LOG.warn("Failed to delete {} {} - ({})", type, id, response.getAsString());
-      } catch (Exception e) {
-        LOG.warn("Failed to delete {} {}, and couldn't read response", type, id, e);
-      }
+    checkResponse(type, response);
+
+    LOG.info("Deleted {} ({}) from Singularity in %sms", type, id, System.currentTimeMillis() - start);
+
+    if (clazz.isPresent()) {
+      return Optional.of(response.getAs(clazz.get()));
     }
 
     return Optional.absent();
@@ -317,7 +331,8 @@ public class SingularityClient {
    * Delete a singularity request that is active.
    * If the deletion is successful the deleted singularity request is returned.
    * If the request to be deleted is not found {code Optional.absent()} is returned
-   * If the singularity request to be deleted is paused the deletion will fail ({code Optional.absent()} will be returned)
+   * If an error occurs during deletion an exception is returned
+   * If the singularity request to be deleted is paused the deletion will fail with an exception
    * If you want to delete a paused singularity request use the provided {@link SingularityClient#deletePausedSingularityRequest}
    *
    * @param requestId
@@ -375,8 +390,8 @@ public class SingularityClient {
   }
 
   private SingularityRequestParent getAndLogRequestAndDeployStatus(SingularityRequestParent singularityRequestParent) {
-    String activeDeployId = (singularityRequestParent.getActiveDeploy().isPresent()) ? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy";
-    String pendingDeployId = (singularityRequestParent.getPendingDeploy().isPresent()) ? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy";
+    String activeDeployId = singularityRequestParent.getActiveDeploy().isPresent() ? singularityRequestParent.getActiveDeploy().get().getId() : "No Active Deploy";
+    String pendingDeployId = singularityRequestParent.getPendingDeploy().isPresent() ? singularityRequestParent.getPendingDeploy().get().getId() : "No Pending deploy";
     LOG.info("Deploy status: Singularity request {} -> pending deploy: '{}', active deploy: '{}'", singularityRequestParent.getRequest().getId(), pendingDeployId, activeDeployId);
 
     return singularityRequestParent;
@@ -491,10 +506,10 @@ public class SingularityClient {
     return getCollection(requestUri, "active tasks", TASKS_COLLECTION);
   }
 
-  public Collection<SingularityTask> getActiveTasks(final String host) {
-    final String requestUri = String.format(TASKS_GET_ACTIVE_PER_HOST_FORMAT, getHost(), contextPath, host);
+  public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
+    final String requestUri = String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getHost(), contextPath, slaveId);
 
-    return getCollection(requestUri, String.format("active tasks on %s", host), TASKS_COLLECTION);
+    return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASKS_COLLECTION);
   }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<String> user) {
@@ -507,10 +522,10 @@ public class SingularityClient {
   // SCHEDULED TASKS
   //
 
-  public Collection<SingularityTask> getScheduledTasks() {
+  public Collection<SingularityTaskRequest> getScheduledTasks() {
     final String requestUri = String.format(TASKS_GET_SCHEDULED_FORMAT, getHost(), contextPath);
 
-    return getCollection(requestUri, "scheduled tasks", TASKS_COLLECTION);
+    return getCollection(requestUri, "scheduled tasks", TASKS_REQUEST_COLLECTION);
   }
 
   //

@@ -1,13 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
 
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -16,16 +17,16 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
@@ -41,6 +42,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -52,6 +54,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
+@Singleton
 public class SingularityScheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
@@ -118,7 +121,7 @@ public class SingularityScheduler {
         }
 
         if (rack.getId().equals(activeTaskId.getRackId())) {
-          Optional<SingularityTask> maybeTask = taskManager.getActiveTask(activeTaskId.getId());
+          Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
           cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString());
         }
       }
@@ -130,7 +133,7 @@ public class SingularityScheduler {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), PendingType.DECOMISSIONED_SLAVE_OR_RACK));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, PendingType.DECOMISSIONED_SLAVE_OR_RACK));
       } else {
         LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
       }
@@ -153,31 +156,10 @@ public class SingularityScheduler {
     }
   }
 
-  private Collection<SingularityPendingRequest> filterPendingRequestsByDeployAndPriority(List<SingularityPendingRequest> pendingRequests) {
-    Map<SingularityDeployKey, SingularityPendingRequest> deployKeyToMostImportantPendingRequest = Maps.newHashMapWithExpectedSize(pendingRequests.size());
-
-    for (SingularityPendingRequest pendingRequest : pendingRequests) {
-      SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-      SingularityPendingRequest existingRequest = deployKeyToMostImportantPendingRequest.get(deployKey);
-      if (existingRequest == null) {
-        deployKeyToMostImportantPendingRequest.put(deployKey, pendingRequest);
-      } else {
-        if (pendingRequest.hasPriority(existingRequest)) {
-          LOG.debug("Dropping pending request {} because {} has priority {}", existingRequest, pendingRequest);
-          deployKeyToMostImportantPendingRequest.put(deployKey, pendingRequest);
-        } else {
-          LOG.debug("Dropping pending request {} because {} has priority {}", pendingRequest, existingRequest);
-        }
-      }
-    }
-
-    return deployKeyToMostImportantPendingRequest.values();
-  }
-
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
-    final Collection<SingularityPendingRequest> pendingRequests = filterPendingRequestsByDeployAndPriority(requestManager.getPendingRequests());
+    final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 
     if (pendingRequests.isEmpty()) {
       LOG.trace("Pending queue was empty");
@@ -194,8 +176,6 @@ public class SingularityScheduler {
       Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingRequest.getRequestId());
 
       if (shouldScheduleTasks(pendingRequest, maybeRequest)) {
-        checkForBounceAndAddToCleaningTasks(pendingRequest, stateCache.getActiveTaskIds(), stateCache.getCleaningTasks());
-
         final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
         final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
@@ -203,7 +183,7 @@ public class SingularityScheduler {
 
         int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds);
 
-        if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled()) {
+        if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
           LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
           heldForScheduledActiveTask++;
           continue;
@@ -229,8 +209,8 @@ public class SingularityScheduler {
       return requestWithState.getState();
     }
 
-    if (cooldown.hasCooldownExpired(deployStatistics, Optional.<Long> absent())) {
-      requestManager.exitCooldown(requestWithState.getRequest());
+    if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer> absent(), Optional.<Long> absent())) {
+      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis());
       return RequestState.ACTIVE;
     }
 
@@ -247,25 +227,6 @@ public class SingularityScheduler {
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
   }
 
-  private void checkForBounceAndAddToCleaningTasks(SingularityPendingRequest pendingRequest, final List<SingularityTaskId> activeTaskIds, final List<SingularityTaskId> cleaningTasks) {
-    if (pendingRequest.getPendingType() != PendingType.BOUNCE) {
-      return;
-    }
-
-    final long now = System.currentTimeMillis();
-
-    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(activeTaskIds, pendingRequest.getRequestId(), pendingRequest.getDeployId(), cleaningTasks);
-
-    for (SingularityTaskId matchingTaskId : matchingTaskIds) {
-      LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
-
-      taskManager.createCleanupTask(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId));
-      cleaningTasks.add(matchingTaskId);
-    }
-
-    LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), pendingRequest.getRequestId(), JavaUtils.duration(now));
-  }
-
   public List<SingularityTaskRequest> getDueTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
@@ -280,7 +241,6 @@ public class SingularityScheduler {
     }
 
     final List<SingularityTaskRequest> dueTaskRequests = taskRequestManager.getTaskRequests(dueTasks);
-    Collections.sort(dueTaskRequests);
 
     return checkForStaleScheduledTasks(dueTasks, dueTaskRequests);
   }
@@ -362,7 +322,7 @@ public class SingularityScheduler {
         taskManager.createPendingTasks(scheduledTasks);
       } else {
         LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
-        requestManager.finish(request);
+        requestManager.finish(request, System.currentTimeMillis());
       }
 
     } else if (numMissingInstances < 0) {
@@ -402,7 +362,7 @@ public class SingularityScheduler {
     return matchesDeployMarker(requestDeployState.get().getPendingDeploy(), deployId);
   }
 
-  private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+  private Optional<PendingType> handleCompletedTaskWithStatistics(SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
 
     if (!isRequestActive(maybeRequestWithState)) {
@@ -416,7 +376,7 @@ public class SingularityScheduler {
     final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
     if (!isDeployInUse(requestDeployState, taskId.getDeployId(), true)) {
-      LOG.debug("Task {} completed, but it didn't match active deploy state - ignoring", taskId.getId(), requestDeployState);
+      LOG.debug("Task {} completed, but it didn't match active deploy state {} - ignoring", taskId.getId(), requestDeployState);
       return Optional.absent();
     }
 
@@ -428,10 +388,10 @@ public class SingularityScheduler {
       LOG.debug("Not sending a task completed email for task {} because Singularity already processed this update", taskId);
     }
 
-    if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
+    if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
       LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
       requestState = RequestState.SYSTEM_COOLDOWN;
-      requestManager.cooldown(request);
+      requestManager.cooldown(request, System.currentTimeMillis());
       mailer.sendRequestInCooldownMail(request);
     }
 
@@ -446,7 +406,7 @@ public class SingularityScheduler {
         // TODO send not cooldown anymore email
         LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
         requestState = RequestState.ACTIVE;
-        requestManager.exitCooldown(request);
+        requestManager.exitCooldown(request, System.currentTimeMillis());
       }
     } else if (request.isScheduled()) {
       if (state.isFailed()) {
@@ -459,7 +419,7 @@ public class SingularityScheduler {
       }
     }
 
-    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), pendingType);
+    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), System.currentTimeMillis(), pendingType);
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
 
@@ -476,44 +436,61 @@ public class SingularityScheduler {
     return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
   }
 
-  public void handleCompletedTask(Optional<SingularityTask> maybeActiveTask, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+  public void handleCompletedTask(SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
-    if (maybeActiveTask.isPresent()) {
+    if (wasActive) {
       taskManager.deleteActiveTask(taskId.getId());
     }
 
     taskManager.createLBCleanupTask(taskId);
 
-    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(maybeActiveTask, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache);
+    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache);
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.EXISTED) {
       return;
     }
 
+    updateDeployStatistics(deployStatistics, taskId, timestamp, state, scheduleResult);
+  }
+
+  private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
+
+    if (bldr.getAverageRuntimeMillis().isPresent()) {
+      long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
+
+      bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
+    } else {
+      bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+    }
+
+    bldr.setNumTasks(bldr.getNumTasks() + 1);
 
     if (!bldr.getLastFinishAt().isPresent() || timestamp > bldr.getLastFinishAt().get()) {
       bldr.setLastFinishAt(Optional.of(timestamp));
       bldr.setLastTaskState(Optional.of(state));
     }
 
+    final ListMultimap<Integer, Long> instanceSequentialFailureTimestamps = bldr.getInstanceSequentialFailureTimestamps();
+    final List<Long> sequentialFailureTimestamps = instanceSequentialFailureTimestamps.get(taskId.getInstanceNo());
+
     if (!state.isSuccess()) {
-      bldr.setNumFailures(bldr.getNumFailures() + 1);
-      final List<Long> sequentialFailureTimestamps = Lists.newArrayList(bldr.getSequentialFailureTimestamps());
+      if (SingularityTaskHistoryUpdate.getUpdate(taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_CLEANING).isPresent()) {
+        LOG.debug("{} failed with {} after cleaning - ignoring it for cooldown", taskId, state);
+      } else {
 
-      if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
-        sequentialFailureTimestamps.add(timestamp);
-      } else if (timestamp > sequentialFailureTimestamps.get(0)) {
-        sequentialFailureTimestamps.set(0, timestamp);
+        if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
+          sequentialFailureTimestamps.add(timestamp);
+        } else if (timestamp > sequentialFailureTimestamps.get(0)) {
+          sequentialFailureTimestamps.set(0, timestamp);
+        }
+
+        Collections.sort(sequentialFailureTimestamps);
       }
-
-      Collections.sort(sequentialFailureTimestamps);
-
-      bldr.setSequentialFailureTimestamps(sequentialFailureTimestamps);
     } else {
-      bldr.setSequentialFailureTimestamps(Collections.<Long> emptyList());
       bldr.setNumSuccess(bldr.getNumSuccess() + 1);
+      sequentialFailureTimestamps.clear();
     }
 
     if (scheduleResult.isPresent() && scheduleResult.get() == PendingType.RETRY) {
@@ -544,29 +521,6 @@ public class SingularityScheduler {
     LOG.debug("Request {} had {} retries in a row - retrying again (num retries on failure: {})", request.getId(), numRetriesInARow, request.getNumRetriesOnFailure());
 
     return true;
-  }
-
-  private boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
-    if (requestState != RequestState.ACTIVE || request.isOneOff()) {
-      return false;
-    }
-
-    if (configuration.getCooldownAfterFailures() < 1) {
-      return false;
-    }
-
-    final int numSequentialFailures = deployStatistics.getSequentialFailureTimestamps().size() + 1;
-    final boolean failedTooManyTimes = numSequentialFailures >= configuration.getCooldownAfterFailures();
-
-    if (failedTooManyTimes) {
-      LOG.trace("Request {} failed {} times, which is over the cooldown threshold of {}", request.getId(), numSequentialFailures, configuration.getCooldownAfterFailures());
-    }
-
-    if (cooldown.hasCooldownExpired(deployStatistics, Optional.of(failureTimestamp))) {
-      return false;
-    }
-
-    return failedTooManyTimes;
   }
 
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest) {
@@ -601,7 +555,7 @@ public class SingularityScheduler {
         nextInstanceNumber++;
       }
 
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType()), pendingRequest.getCmdLineArgs()));
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()), pendingRequest.getCmdLineArgs()));
 
       nextInstanceNumber++;
     }

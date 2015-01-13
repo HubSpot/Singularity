@@ -1,15 +1,12 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 
-public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
+public class SingularityLoadBalancerUpdate {
 
   private final BaragonRequestState loadBalancerState;
   private final Optional<String> message;
@@ -17,14 +14,6 @@ public class SingularityLoadBalancerUpdate extends SingularityJsonObject {
   private final Optional<String> uri;
   private final LoadBalancerMethod method;
   private final LoadBalancerRequestId loadBalancerRequestId;
-
-  public static SingularityLoadBalancerUpdate fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityLoadBalancerUpdate.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   public enum LoadBalancerMethod {
     PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL;

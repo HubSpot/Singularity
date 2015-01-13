@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +40,7 @@ public class JsonObjectFileHelper {
       T object = objectMapper.readValue(bytes, clazz);
       return Optional.of(object);
     } catch (IOException e) {
-      log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), JavaUtils.toString(bytes), e);
+      log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), new String(bytes, UTF_8), e);
     }
 
     return Optional.absent();

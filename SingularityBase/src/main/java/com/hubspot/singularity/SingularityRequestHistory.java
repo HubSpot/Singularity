@@ -1,16 +1,13 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
-public class SingularityRequestHistory extends SingularityJsonObject implements Comparable<SingularityRequestHistory> {
+public class SingularityRequestHistory implements Comparable<SingularityRequestHistory> {
 
   private final long createdAt;
   private final Optional<String> user;
@@ -19,14 +16,6 @@ public class SingularityRequestHistory extends SingularityJsonObject implements 
 
   public enum RequestHistoryType {
     CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE;
-  }
-
-  public static SingularityRequestHistory fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequestHistory.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
   }
 
   @JsonCreator

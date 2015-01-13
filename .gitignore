@@ -13,7 +13,7 @@ JavaConsole.java
 .idea
 *.pyc
 __pycache__
-local_singularity.yml
+local_singularity*yml
 qa_singularity.yml
 Docs/_build
 SingularityUI/npm-debug.log
@@ -25,3 +25,9 @@ SingularityUI/app/env.coffee
 .vagrant
 vagrant/Berksfile.lock
 SingularityUI/.vee
+
+scripts/*.log
+scripts/*.gz
+scripts/singularity_logfetch.egg-info
+scripts/build
+scripts/dist

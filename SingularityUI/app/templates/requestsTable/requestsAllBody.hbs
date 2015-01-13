@@ -55,11 +55,7 @@
                             {{humanizeText state}}
                         </td>
                         <td class="visible-lg visible-xl centered">
-                            {{#if request.instances}}
-                                {{ request.instances }}
-                            {{else}}
-                                1
-                            {{/if}}
+                            {{ request.instances }}
                         </td>
                         <td class="visible-lg visible-xl">
                             {{ requestDeployState.activeDeploy.deployId }}
@@ -88,6 +84,9 @@
                                     <span class="glyphicon glyphicon-flash"></span>
                                 </a>
                             {{/if}}
+                            <a data-request-id="{{ request.id }}" data-action="scale" title="Scale">
+                                <span class="glyphicon glyphicon-signal"></span>
+                            </a>
                             <a data-request-id="{{ request.id }}" data-action="remove" title="Remove">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>

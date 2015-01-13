@@ -1,15 +1,15 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
+import static com.hubspot.singularity.JsonHelpers.copyOfList;
+
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
-public class SingularityRequest extends SingularityJsonObject {
+public class SingularityRequest {
 
   private final String id;
 
@@ -21,6 +21,7 @@ public class SingularityRequest extends SingularityJsonObject {
   private final Optional<ScheduleType> scheduleType;
 
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
+  private final Optional<Long> scheduledExpectedRuntimeMillis;
 
   private final Optional<Boolean> daemon;
 
@@ -36,21 +37,13 @@ public class SingularityRequest extends SingularityJsonObject {
     return new SingularityRequestBuilder(id);
   }
 
-  public static SingularityRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityRequest.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
-
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
       @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement) {
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -64,6 +57,7 @@ public class SingularityRequest extends SingularityJsonObject {
     this.quartzSchedule = quartzSchedule;
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
+    this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -77,8 +71,10 @@ public class SingularityRequest extends SingularityJsonObject {
     .setSchedule(schedule)
     .setKillOldNonLongRunningTasksAfterMillis(killOldNonLongRunningTasksAfterMillis)
     .setScheduleType(scheduleType)
+    .setQuartzSchedule(quartzSchedule)
     .setRackAffinity(copyOfList(rackAffinity))
-    .setSlavePlacement(slavePlacement);
+    .setSlavePlacement(slavePlacement)
+    .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis);
   }
 
   public String getId() {
@@ -131,6 +127,10 @@ public class SingularityRequest extends SingularityJsonObject {
 
   public Optional<SlavePlacement> getSlavePlacement() {
     return slavePlacement;
+  }
+
+  public Optional<Long> getScheduledExpectedRuntimeMillis() {
+    return scheduledExpectedRuntimeMillis;
   }
 
   @JsonIgnore
@@ -190,8 +190,8 @@ public class SingularityRequest extends SingularityJsonObject {
   @Override
   public String toString() {
     return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType="
-        + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive
-        + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", daemon="
+        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }

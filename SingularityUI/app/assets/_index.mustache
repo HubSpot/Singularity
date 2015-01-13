@@ -10,15 +10,26 @@
     <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css">
+    {{#navColor}}
+    <style>
+        .navbar-default {
+            background-color: {{{navColor}}};
+        }
+    </style>
+    {{/navColor}}
     <script>
         window.config = {
             appRoot: "{{{appRoot}}}",
             apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
             title: "{{{title}}}",
-            mesosLogPort: {{{mesosLogsPort}}},
-            {{#mesosLogsPortHttps}}
-            mesosLogsPortHttps: {{{mesosLogsPortHttps}}}
-            {{/mesosLogsPortHttps}}
+            hideNewDeployButton: {{{hideNewDeployButton}}},
+            hideNewRequestButton: {{{hideNewRequestButton}}},
+            defaultCpus: {{{defaultCpus}}},
+            defaultMemory: {{{defaultMemory}}},
+            slaveHttpPort: {{{slaveHttpPort}}},
+            {{#slaveHttpsPort}}
+            slaveHttpsPort: {{{slaveHttpsPort}}}
+            {{/slaveHttpsPort}}
         };
     </script>
     <script src="{{{staticRoot}}}/js/app.js"></script>

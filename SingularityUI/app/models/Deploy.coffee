@@ -7,10 +7,11 @@ class Deploy extends Model
         if @deployId
             return "#{ config.apiRoot }/history/request/#{ @requestId }/deploy/#{ @deployId }"
         else
-            return "#{ config.apiRoot }/requests/request/#{ @requestId }/deploy"
+            return "#{ config.apiRoot }/deploys"
 
     isNew: -> true
 
-    initialize: (attrs, {@requestId, @deployId}) ->
+    initialize: (deployWrapper, {@requestId, @deployId}) ->
+      
 
 module.exports = Deploy

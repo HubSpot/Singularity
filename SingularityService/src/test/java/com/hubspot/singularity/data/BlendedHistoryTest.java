@@ -7,18 +7,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.test.TestingServer;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 
 import com.google.common.base.Optional;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
+import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -26,33 +21,14 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
-import com.hubspot.singularity.scheduler.SingularityTestModule;
 
-public class BlendedHistoryTest {
+public class BlendedHistoryTest extends SingularityCuratorTestBase {
 
-  @Inject
-  private CuratorFramework cf;
-  @Inject
-  private TestingServer ts;
   @Inject
   private RequestManager requestManager;
 
-  @Before
-  public void setup() {
-    Injector i = Guice.createInjector(new SingularityTestModule());
-
-    i.injectMembers(this);
-  }
-
-  @After
-  public void teardown() throws Exception {
-    cf.close();
-    ts.close();
-  }
-
-  @SuppressWarnings("unchecked")
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
-    when(hm.getRequestHistory(Matchers.anyString(), (Optional<OrderDirection>) Matchers.any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
+    when(hm.getRequestHistory(Matchers.anyString(), Matchers.<Optional<OrderDirection>>any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
   }
 
   private SingularityRequest request;
@@ -124,8 +100,4 @@ public class BlendedHistoryTest {
     Assert.assertTrue(rhh.getFirstHistory(rid).get().getCreatedAt() == 1);
     Assert.assertTrue(rhh.getLastHistory(rid).get().getCreatedAt() == 120);
   }
-
-
-
 }
-

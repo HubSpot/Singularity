@@ -1,9 +1,10 @@
 package com.hubspot.singularity.smtp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public final class JadeHelper {
 
     @Override
     public Reader getReader(String name) throws IOException {
-      return new InputStreamReader(ClassLoader.getSystemResourceAsStream(name), StandardCharsets.UTF_8);
+      return new InputStreamReader(ClassLoader.getSystemResourceAsStream(name), UTF_8);
     }
 
     @Override

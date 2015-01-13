@@ -4,27 +4,19 @@
 
 <div class="row">
     <ul class="list-unstyled horizontal-description-list">
-        {{#if data.task.name }}
+        {{#if data.task.taskId.id }}
             <li class="col-md-4">
                 <div>
-                    <h4>Task Name</h4>
-                    <p>{{ data.task.name }}</p>
+                    <h4>Task ID</h4>
+                    <p>{{ data.task.taskId.id }}</p>
                 </div>
             </li>
-            {{/if}}
-            {{#if data.task.mesosTask.executor.executorId.value }}
+        {{/if}}
+        {{#if data.directory }}
             <li class="col-md-4">
                 <div>
                     <h4>Directory</h4>
                     <p>{{ data.directory }}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.task.id }}
-            <li class="col-md-4">
-                <div>
-                    <h4>Task ID</h4>
-                    <p>{{ data.task.id }}</p>
                 </div>
             </li>
         {{/if}}
@@ -44,11 +36,11 @@
                 </div>
             </li>
         {{/if}}
-        {{#if data.task.taskRequest.request.executorData.ports }}
+        {{#if data.ports }}
             <li class="col-md-4">
                 <div>
-                    <h4>Task request ports</h4>
-                    <p>{{ data.task.taskRequest.request.executorData.ports }}</p>
+                    <h4>Ports</h4>
+                    <p>{{ data.ports }}</p>
                 </div>
             </li>
         {{/if}}

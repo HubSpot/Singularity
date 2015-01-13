@@ -65,8 +65,10 @@ class RequestDetailController extends Controller
             template:   @templates.activeTasks
 
         @subviews.scheduledTasks = new SimpleSubview
-            collection: @collections.scheduledTasks
-            template:   @templates.scheduledTasks
+            collection:      @collections.scheduledTasks
+            template:        @templates.scheduledTasks
+            extraRenderData: (subView) =>
+                { request: @models.request.toJSON() }
 
         @subviews.taskHistory = new ExpandableTableSubview
             collection: @collections.taskHistory
@@ -85,7 +87,7 @@ class RequestDetailController extends Controller
         #
         @models.request.on 'sync', =>
             activeDeploy = @models.request.get 'activeDeploy'
-            if activeDeploy?.id?
+            if activeDeploy?.id? and not @models.activeDeployStats.deployId
                 @models.activeDeployStats.deployId = activeDeploy.id
                 @models.activeDeployStats.fetch()
 

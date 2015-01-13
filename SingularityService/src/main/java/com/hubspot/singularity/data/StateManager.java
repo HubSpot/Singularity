@@ -4,14 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -27,8 +29,9 @@ import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.SingularityStateTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
+@Singleton
 public class StateManager extends CuratorManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
@@ -36,43 +39,44 @@ public class StateManager extends CuratorManager {
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "STATE";
 
-  private final ObjectMapper objectMapper;
-
   private final RequestManager requestManager;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
-  private final SingularityStateTranscoder stateTranscoder;
+  private final Transcoder<SingularityState> stateTranscoder;
+  private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
 
   @Inject
-  public StateManager(CuratorFramework curator, ObjectMapper objectMapper, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, SingularityStateTranscoder stateTranscoder,
-      SingularityConfiguration singularityConfiguration) {
-    super(curator);
+  public StateManager(CuratorFramework curatorFramework, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager,
+      Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration) {
+    super(curatorFramework);
 
-    this.objectMapper = objectMapper;
     this.requestManager = requestManager;
     this.taskManager = taskManager;
     this.stateTranscoder = stateTranscoder;
+    this.hostStateTranscoder = hostStateTranscoder;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
   }
 
-  public void save(SingularityHostState hostState) {
+  public void save(SingularityHostState hostState) throws InterruptedException {
     final String path = ZKPaths.makePath(ROOT_PATH, hostState.getHostname());
-    final byte[] data = hostState.getAsBytes(objectMapper);
+    final byte[] data = hostStateTranscoder.toBytes(hostState);
 
-    try {
-      if (exists(path)) {
-        curator.setData().forPath(path, data);
-      } else {
-        curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
+    if (curator.getState() == CuratorFrameworkState.STARTED) {
+      try {
+        if (exists(path)) {
+          curator.setData().forPath(path, data);
+        } else {
+          curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
+        }
+      } catch (Throwable t) {
+        throw Throwables.propagate(t);
       }
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
     }
   }
 
@@ -85,7 +89,7 @@ public class StateManager extends CuratorManager {
       try {
         byte[] bytes = curator.getData().forPath(ZKPaths.makePath(ROOT_PATH, child));
 
-        states.add(SingularityHostState.fromBytes(bytes, objectMapper));
+        states.add(hostStateTranscoder.fromBytes(bytes));
       } catch (NoNodeException nne) {
       } catch (Exception e) {
         throw Throwables.propagate(e);
@@ -161,19 +165,21 @@ public class StateManager extends CuratorManager {
 
     for (SingularityRequestWithState requestWithState : requests) {
       switch (requestWithState.getState()) {
-      case ACTIVE:
-        numActiveRequests++;
-        break;
-      case FINISHED:
-        numFinishedRequests++;
-        break;
-      case PAUSED:
-        numPausedRequests++;
-        break;
-      case SYSTEM_COOLDOWN:
-        cooldownRequests++;
-        break;
-      default:
+        case DEPLOYING_TO_UNPAUSE:
+        case ACTIVE:
+          numActiveRequests++;
+          break;
+        case FINISHED:
+          numFinishedRequests++;
+          break;
+        case PAUSED:
+          numPausedRequests++;
+          break;
+        case SYSTEM_COOLDOWN:
+          cooldownRequests++;
+          break;
+        case DELETED:
+          break;
       }
 
       if (requestWithState.getState().isRunnable() && !requestWithState.getRequest().isOneOff()) {
@@ -226,9 +232,9 @@ public class StateManager extends CuratorManager {
     }
 
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves,
-        deadSlaves, decomissioningSlaves, activeRacks, deadRacks,  decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
+        deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests);
+        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests);
   }
 
 }

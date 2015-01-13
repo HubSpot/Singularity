@@ -6,6 +6,7 @@ import io.dropwizard.db.DataSourceFactory;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,14 +17,105 @@ import com.hubspot.singularity.SlavePlacement;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
 
+  private boolean allowRequestsWithoutOwners = true;
+
+  private boolean allowTestResourceCalls = false;
+
+  private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
+
+  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
+
+  private long checkDeploysEverySeconds = 5;
+
+  private long checkNewTasksEverySeconds = 5;
+
+  private int checkNewTasksScheduledThreads = 3;
+
+  private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
+
+  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
+
+  private long checkSchedulerEverySeconds = 5;
+
+  private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
+
+  private long cleanupEverySeconds = 5;
+
+  private long closeWaitSeconds = 5;
+
+  private String commonHostnameSuffixToOmit;
+
+  private boolean compressLargeDataObjects = true;
+
+  private long considerTaskHealthyAfterRunningForSeconds = 5;
+
+  private int cooldownAfterFailures = 3;
+
+  private double cooldownAfterPctOfInstancesFail = 1.0;
+
+  private long cooldownExpiresAfterMinutes = 15;
+
+  private long cooldownMinScheduleSeconds = 120;
+
   @JsonProperty("database")
   private DataSourceFactory databaseConfiguration;
 
+  @NotNull
+  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
+
+  private boolean defaultValueForKillTasksOfPausedRequests = true;
+
+  private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
+
+  private long deployHealthyBySeconds = 120;
+
+  private boolean enableCorsFilter = false;
+
+  private long healthcheckIntervalSeconds = 5;
+
+  private int healthcheckStartThreads = 3;
+
+  private long healthcheckTimeoutSeconds = 5;
+
+  private String hostname;
+
+  private long killAfterTasksDoNotRunDefaultSeconds = 600;
+
+  private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(24);
+
+  @JsonProperty("loadBalancerQueryParams")
+  private Map<String, String> loadBalancerQueryParams;
+
+  private long loadBalancerRequestTimeoutMillis = 2000;
+
+  private String loadBalancerUri;
+
+  private int logFetchMaxThreads = 15;
+
+  private int maxDeployIdSize = 50;
+
+  private int maxHealthcheckResponseBodyBytes = 8192;
+
+  private int maxQueuedUpdatesPerWebhook = 50;
+
+  private int maxRequestIdSize = 100;
+
   @JsonProperty("mesos")
+  @Valid
   private MesosConfiguration mesosConfiguration;
+
+  private int newTaskCheckerBaseDelaySeconds = 1;
+
+  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
+
+  private boolean sandboxDefaultsToTaskId = false;
+
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+
+  private long saveStateEverySeconds = 60;
 
   @JsonProperty("sentry")
   private SentryConfiguration sentryConfiguration;
@@ -31,133 +123,25 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("smtp")
   private SMTPConfiguration smtpConfiguration;
 
+  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+
   @JsonProperty("ui")
+  @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
 
-  @JsonProperty("zookeeper")
-  private ZooKeeperConfiguration zooKeeperConfiguration;
+  private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
-  @NotNull
-  private boolean allowRequestsWithoutOwners = true;
+  private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
-  @NotNull
-  private boolean allowTestResourceCalls = false;
-
-  @NotNull
-  private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
-
-  @NotNull
-  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
-
-  @NotNull
-  private long checkDeploysEverySeconds = 5;
-
-  @NotNull
-  private long checkNewTasksEverySeconds = 5;
-
-  @NotNull
-  private int checkNewTasksScheduledThreads = 3;
-
-  @NotNull
-  private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
-
-  @NotNull
-  private long cleanupEverySeconds = 5;
-
-  @NotNull
-  private long closeWaitSeconds = 5;
-
-  @NotNull
-  private boolean compressLargeDataObjects = true;
-
-  @NotNull
-  private long considerTaskHealthyAfterRunningForSeconds = 5;
-
-  @NotNull
-  private int cooldownAfterFailures = 5;
-
-  @NotNull
-  private long cooldownExpiresAfterMinutes = 30;
-
-  @NotNull
-  private long cooldownMinScheduleSeconds = 120;
-
-  @NotNull
-  private boolean defaultValueForKillTasksOfPausedRequests = true;
-
-  @NotNull
-  private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
-
-  @NotNull
-  private long deployHealthyBySeconds = 120;
-
-  @NotNull
-  private long healthcheckIntervalSeconds = 5;
-
-  @NotNull
-  private int healthcheckStartThreads = 3;
-
-  @NotNull
-  private long healthcheckTimeoutSeconds = 5;
-
-  private String hostname;
-
-  @NotNull
-  private long killAfterTasksDoNotRunDefaultSeconds = 600;
-
-  @NotNull
-  private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(24);
-
-  @JsonProperty("loadBalancerQueryParams")
-  private Map<String, String> loadBalancerQueryParams;
-
-  @NotNull
-  private long loadBalancerRequestTimeoutMillis = 2000;
-
-  private String loadBalancerUri;
-
-  @NotNull
-  private int logFetchCoreThreads = 3;
-
-  @NotNull
-  private int logFetchMaxThreads = 25;
-
-  @NotNull
-  private int maxDeployIdSize = 50;
-
-  @NotNull
-  private int maxHealthcheckResponseBodyBytes = 8192;
-
-  @NotNull
-  private int maxQueuedUpdatesPerWebhook = 50;
-
-  @NotNull
-  private int maxRequestIdSize = 100;
-
-  @NotNull
-  private int newTaskCheckerBaseDelaySeconds = 1;
-
-  @NotNull
-  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
-
-  @NotNull
-  private long reconcileTasksEveryMillis = TimeUnit.SECONDS.toMillis(30);
-
-  @NotNull
-  private boolean sandboxDefaultsToTaskId = true;
-
-  @NotNull
-  private long saveStateEverySeconds = 60;
-
-  @NotNull
   private long zookeeperAsyncTimeout = 5000;
+
+  @JsonProperty("zookeeper")
+  @Valid
+  private ZooKeeperConfiguration zooKeeperConfiguration;
 
   public boolean allowTestResourceCalls() {
     return allowTestResourceCalls;
   }
-
-  @NotNull
-  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -179,6 +163,18 @@ public class SingularityConfiguration extends Configuration {
     return checkNewTasksScheduledThreads;
   }
 
+  public long getCheckReconcileWhenRunningEveryMillis() {
+    return checkReconcileWhenRunningEveryMillis;
+  }
+
+  public long getCheckScheduledJobsEveryMillis() {
+    return checkScheduledJobsEveryMillis;
+  }
+
+  public long getCheckSchedulerEverySeconds() {
+    return checkSchedulerEverySeconds;
+  }
+
   public long getCheckWebhooksEveryMillis() {
     return checkWebhooksEveryMillis;
   }
@@ -191,12 +187,20 @@ public class SingularityConfiguration extends Configuration {
     return closeWaitSeconds;
   }
 
+  public Optional<String> getCommonHostnameSuffixToOmit() {
+    return Optional.fromNullable(commonHostnameSuffixToOmit);
+  }
+
   public long getConsiderTaskHealthyAfterRunningForSeconds() {
     return considerTaskHealthyAfterRunningForSeconds;
   }
 
   public int getCooldownAfterFailures() {
     return cooldownAfterFailures;
+  }
+
+  public double getCooldownAfterPctOfInstancesFail() {
+    return cooldownAfterPctOfInstancesFail;
   }
 
   public long getCooldownExpiresAfterMinutes() {
@@ -209,6 +213,10 @@ public class SingularityConfiguration extends Configuration {
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
+  }
+
+  public SlavePlacement getDefaultSlavePlacement() {
+    return defaultSlavePlacement;
   }
 
   public long getDeltaAfterWhichTasksAreLateMillis() {
@@ -255,10 +263,6 @@ public class SingularityConfiguration extends Configuration {
     return loadBalancerUri;
   }
 
-  public int getLogFetchCoreThreads() {
-    return logFetchCoreThreads;
-  }
-
   public int getLogFetchMaxThreads() {
     return logFetchMaxThreads;
   }
@@ -279,14 +283,6 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
-  public long getReconcileTasksEveryMillis() {
-    return reconcileTasksEveryMillis;
-  }
-
-  public void setReconcileTasksEveryMillis(long reconcileTasksEveryMillis) {
-    this.reconcileTasksEveryMillis = reconcileTasksEveryMillis;
-  }
-
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -303,6 +299,10 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(s3Configuration);
   }
 
+  public long getSandboxHttpTimeoutMillis() {
+    return sandboxHttpTimeoutMillis;
+  }
+
   public long getSaveStateEverySeconds() {
     return saveStateEverySeconds;
   }
@@ -315,8 +315,20 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(smtpConfiguration);
   }
 
+  public long getStartNewReconcileEverySeconds() {
+    return startNewReconcileEverySeconds;
+  }
+
   public UIConfiguration getUiConfiguration() {
     return uiConfiguration;
+  }
+
+  public long getWarnIfScheduledJobIsRunningForAtLeastMillis() {
+    return warnIfScheduledJobIsRunningForAtLeastMillis;
+  }
+
+  public int getWarnIfScheduledJobIsRunningPastNextRunPct() {
+    return warnIfScheduledJobIsRunningPastNextRunPct;
   }
 
   public long getZookeeperAsyncTimeout() {
@@ -337,6 +349,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isDefaultValueForKillTasksOfPausedRequests() {
     return defaultValueForKillTasksOfPausedRequests;
+  }
+
+  public boolean isEnableCorsFilter() {
+    return enableCorsFilter;
   }
 
   public boolean isSandboxDefaultsToTaskId() {
@@ -371,6 +387,18 @@ public class SingularityConfiguration extends Configuration {
     this.checkNewTasksScheduledThreads = checkNewTasksScheduledThreads;
   }
 
+  public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
+    this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
+  }
+
+  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
+    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
+  }
+
+  public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
+    this.checkSchedulerEverySeconds = checkSchedulerEverySeconds;
+  }
+
   public void setCheckWebhooksEveryMillis(long checkWebhooksEveryMillis) {
     this.checkWebhooksEveryMillis = checkWebhooksEveryMillis;
   }
@@ -381,6 +409,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCloseWaitSeconds(long closeWaitSeconds) {
     this.closeWaitSeconds = closeWaitSeconds;
+  }
+
+  public void setCommonHostnameSuffixToOmit(String commonHostnameSuffixToOmit) {
+    this.commonHostnameSuffixToOmit = commonHostnameSuffixToOmit;
   }
 
   public void setCompressLargeDataObjects(boolean compressLargeDataObjects) {
@@ -395,6 +427,10 @@ public class SingularityConfiguration extends Configuration {
     this.cooldownAfterFailures = cooldownAfterFailures;
   }
 
+  public void setCooldownAfterPctOfInstancesFail(double cooldownAfterPctOfInstancesFail) {
+    this.cooldownAfterPctOfInstancesFail = cooldownAfterPctOfInstancesFail;
+  }
+
   public void setCooldownExpiresAfterMinutes(long cooldownExpiresAfterMinutes) {
     this.cooldownExpiresAfterMinutes = cooldownExpiresAfterMinutes;
   }
@@ -407,6 +443,10 @@ public class SingularityConfiguration extends Configuration {
     this.databaseConfiguration = databaseConfiguration;
   }
 
+  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
+    this.defaultSlavePlacement = defaultSlavePlacement;
+  }
+
   public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
     this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
   }
@@ -417,6 +457,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+
+  public void setEnableCorsFilter(boolean enableCorsFilter) {
+    this.enableCorsFilter = enableCorsFilter;
   }
 
   public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
@@ -453,10 +497,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setLoadBalancerUri(String loadBalancerUri) {
     this.loadBalancerUri = loadBalancerUri;
-  }
-
-  public void setLogFetchCoreThreads(int logFetchCoreThreads) {
-    this.logFetchCoreThreads = logFetchCoreThreads;
   }
 
   public void setLogFetchMaxThreads(int logFetchMaxThreads) {
@@ -499,6 +539,10 @@ public class SingularityConfiguration extends Configuration {
     this.sandboxDefaultsToTaskId = sandboxDefaultsToTaskId;
   }
 
+  public void setSandboxHttpTimeoutMillis(long sandboxHttpTimeoutMillis) {
+    this.sandboxHttpTimeoutMillis = sandboxHttpTimeoutMillis;
+  }
+
   public void setSaveStateEverySeconds(long saveStateEverySeconds) {
     this.saveStateEverySeconds = saveStateEverySeconds;
   }
@@ -511,8 +555,20 @@ public class SingularityConfiguration extends Configuration {
     this.smtpConfiguration = smtpConfiguration;
   }
 
+  public void setStartNewReconcileEverySeconds(long startNewReconcileEverySeconds) {
+    this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
+  }
+
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
+  }
+
+  public void setWarnIfScheduledJobIsRunningForAtLeastMillis(long warnIfScheduledJobIsRunningForAtLeastMillis) {
+    this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
+  }
+
+  public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
+    this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
 
   public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
@@ -521,14 +577,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
-  }
-
-  public SlavePlacement getDefaultSlavePlacement() {
-    return defaultSlavePlacement;
-  }
-
-  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
-    this.defaultSlavePlacement = defaultSlavePlacement;
   }
 
 }

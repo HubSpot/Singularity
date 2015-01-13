@@ -1,30 +1,37 @@
 package com.hubspot.singularity.mesos;
 
+import java.io.IOException;
+
+import javax.inject.Singleton;
+
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Scheduler;
+import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.groupon.mesos.JesosSchedulerDriver;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 
+@Singleton
 public class SingularityDriver {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
 
   private final Protos.FrameworkInfo frameworkInfo;
   private final SingularityMesosSchedulerDelegator scheduler;
-  private final MesosSchedulerDriver driver;
+  private final SchedulerDriver driver;
 
   @Inject
-  public SingularityDriver(SingularityMesosSchedulerDelegator scheduler, MesosConfiguration configuration) {
+  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final MesosConfiguration configuration) throws IOException {
     this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
@@ -34,7 +41,12 @@ public class SingularityDriver {
         .build();
 
     this.scheduler = scheduler;
-    this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
+
+    if (configuration.isUseNativeCode()) {
+        this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
+    } else {
+        this.driver = new JesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
+    }
   }
 
   @VisibleForTesting
@@ -42,7 +54,7 @@ public class SingularityDriver {
     return scheduler;
   }
 
-  public MasterInfo getMaster() {
+  public Optional<MasterInfo> getMaster() {
     return scheduler.getMaster();
   }
 

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 
+@Singleton
 public class SingularityDeployChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployChecker.class);
@@ -202,16 +205,17 @@ public class SingularityDeployChecker {
     }
 
     if (!request.isDeployable() && !request.isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), PendingType.NEW_DEPLOY));
+      // TODO should this override? What if someone has mucked with the pending queue for this deploy ?
+      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(), PendingType.NEW_DEPLOY));
     }
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
 
     if (requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
-        requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, pendingDeploy.getDeployMarker().getUser());
+        requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser());
       } else {
-        requestManager.pause(request, pendingDeploy.getDeployMarker().getUser());
+        requestManager.pause(request, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser());
       }
     }
 
@@ -339,7 +343,7 @@ public class SingularityDeployChecker {
   }
 
   private LoadBalancerRequestId getLoadBalancerRequestId(SingularityDeployMarker deployMarker) {
-    return new LoadBalancerRequestId(String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId()), LoadBalancerRequestType.DEPLOY);
+    return new LoadBalancerRequestId(String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId()), LoadBalancerRequestType.DEPLOY, Optional.<Integer> absent());
   }
 
   private SingularityDeployResult getDeployResult(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy, final SingularityDeployKey deployKey,
@@ -390,17 +394,30 @@ public class SingularityDeployChecker {
     }
 
     if ((deployActiveTasks.size() < request.getInstancesSafe()) || !deploy.isPresent()) {
-      return checkOverdue(deploy, isDeployOverdue);
+      String message = null;
+
+      if (deploy.isPresent()) {
+        message = String.format("Deploy was only able to launch %s out of a required %s tasks in %s: it is likely not enough resources or slaves are available and eligible", deployActiveTasks.size(), request.getInstancesSafe(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
+      }
+
+      return checkOverdue(deploy, isDeployOverdue, message);
     }
 
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, deployActiveTasks, true);
 
     switch (deployHealth) {
       case WAITING:
-        return checkOverdue(deploy, isDeployOverdue);
+        String message = null;
+
+        if (deploy.isPresent()) {
+          message = String.format("Deploy was able to launch %s tasks, but not all of them became healthy within %s", deployActiveTasks.size(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
+        }
+
+        return checkOverdue(deploy, isDeployOverdue, message);
       case HEALTHY:
         if (request.isLoadBalanced()) {
-          // don't check overdue here because we want to give it a chance to enqueue the load balancer request. the next check will determine its fate.
+          // don't check overdue here because we want to give it a chance to enqueue the load
+          // balancer request. the next check will determine its fate.
           return enqueueSwitchLoadBalancer(request, deploy.get(), pendingDeploy, deployActiveTasks, otherActiveTasks);
         } else {
           return new SingularityDeployResult(DeployState.SUCCEEDED);
@@ -411,9 +428,9 @@ public class SingularityDeployChecker {
     return new SingularityDeployResult(DeployState.FAILED, "At least one task for this deploy failed");
   }
 
-  private SingularityDeployResult checkOverdue(Optional<SingularityDeploy> deploy, boolean isOverdue) {
+  private SingularityDeployResult checkOverdue(Optional<SingularityDeploy> deploy, boolean isOverdue, String message) {
     if (deploy.isPresent() && isOverdue) {
-      return new SingularityDeployResult(DeployState.OVERDUE, String.format("Deploy did not become healthy after %s", JavaUtils.durationFromMillis(getAllowedMillis(deploy.get()))));
+      return new SingularityDeployResult(DeployState.OVERDUE, message);
     } else {
       return new SingularityDeployResult(DeployState.WAITING);
     }

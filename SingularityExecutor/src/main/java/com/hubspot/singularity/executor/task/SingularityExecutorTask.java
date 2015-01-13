@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.ExecutorDriver;
@@ -10,7 +11,6 @@ import org.apache.mesos.Protos.TaskState;
 import ch.qos.logback.classic.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -25,6 +25,8 @@ public class SingularityExecutorTask {
   private final Logger log;
   private final ReentrantLock lock;
   private final AtomicBoolean killed;
+  private final AtomicInteger threadCountAtOverage;
+  private final AtomicBoolean killedAfterThreadOverage;
   private final AtomicBoolean destroyed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
@@ -40,6 +42,8 @@ public class SingularityExecutorTask {
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
     this.destroyed = new AtomicBoolean(false);
+    this.killedAfterThreadOverage = new AtomicBoolean(false);
+    this.threadCountAtOverage = new AtomicInteger(0);
 
     this.taskDefinition = taskDefinition;
 
@@ -72,7 +76,11 @@ public class SingularityExecutorTask {
     return lock;
   }
 
-  public Logger getLog() {
+  public Logger getLogbackLog() {
+    return log;
+  }
+
+  public org.slf4j.Logger getLog() {
     return log;
   }
 
@@ -91,6 +99,20 @@ public class SingularityExecutorTask {
   public void markKilled() {
     this.killed.set(true);
   }
+
+  public void markKilledDueToThreads(int currentThreads) {
+    this.killedAfterThreadOverage.set(true);
+    this.threadCountAtOverage.set(currentThreads);
+  }
+
+  public boolean wasKilledDueToThreads() {
+    return killedAfterThreadOverage.get();
+  }
+
+  public int getThreadCountAtOverageTime() {
+    return threadCountAtOverage.get();
+  }
+
 
   public void markDestroyed() {
     this.destroyed.set(true);
@@ -118,11 +140,7 @@ public class SingularityExecutorTask {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-        .add("taskId", getTaskId())
-        .add("killed", killed.get())
-        .add("taskInfo", taskInfo)
-        .toString();
+    return "SingularityExecutorTask [taskInfo=" + taskInfo + ", killed=" + killed + ", getTaskId()=" + getTaskId() + "]";
   }
 
 }

@@ -77,16 +77,16 @@ public class SingularityExecutorArtifactFetcher {
       if (executorConfiguration.isUseLocalDownloadService() && !executorData.getS3Artifacts().isEmpty()) {
         final long start = System.currentTimeMillis();
 
-        task.getLog().info("Fetching {} s3 artifacts from local downlaod service", executorData.getS3Artifacts().size());
+        task.getLog().info("Fetching {} (S3) artifacts from local download service", executorData.getS3Artifacts().size());
 
         try {
           downloadFilesFromLocalDownloadService(executorData.getS3Artifacts(), task);
 
           fetchS3ArtifactsLocally = false;
 
-          task.getLog().info("Fetched {} artifacts from local download service in {}", executorData.getS3Artifacts().size(), JavaUtils.duration(start));
+          task.getLog().info("Fetched {} (S3) artifacts from local download service in {}", executorData.getS3Artifacts().size(), JavaUtils.duration(start));
         } catch (Throwable t) {
-          task.getLog().error("Failed downloading from local download service - falling back to in-task fetch", t);
+          task.getLog().error("Failed downloading S3 artifacts from local download service - falling back to in-task fetch", t);
         }
       }
 

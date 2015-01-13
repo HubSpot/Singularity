@@ -3,6 +3,7 @@ package com.hubspot.singularity.config;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 
@@ -22,24 +24,19 @@ public class SMTPConfiguration {
   private String password;
 
   @JsonProperty
-  private Integer taskLogLength = 512;
+  private int taskLogLength = 512;
 
   @NotNull
   @JsonProperty
   private String host = "localhost";
 
   @JsonProperty
-  private Integer port;
+  private Integer port = 25; // SMTP
 
   @JsonProperty
   @NotNull
   private String from = "singularity-no-reply@example.com";
 
-  @NotNull
-  @JsonProperty
-  private int mailThreads = 1;
-
-  @NotNull
   @JsonProperty
   private int mailMaxThreads = 3;
 
@@ -55,31 +52,42 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> admins = Collections.emptyList();
 
+  @JsonProperty
+  private int rateLimitAfterNotifications = 5;
+
+  @JsonProperty
+  private long rateLimitPeriodMillis = TimeUnit.MINUTES.toMillis(10);
+
+  @JsonProperty
+  private long rateLimitCooldownMillis = TimeUnit.HOURS.toMillis(1);
+
   @JsonProperty("emails")
-  private Map<EmailType, List<EmailDestination>> emailConfiguration = ImmutableMap.<EmailType, List<EmailDestination>>builder()
+  private Map<EmailType, List<EmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<EmailType, List<EmailDestination>>builder()
       .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
       .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
       .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
       .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
+      .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .build();
+      .build());
 
   public Map<EmailType, List<EmailDestination>> getEmailConfiguration() {
     return emailConfiguration;
   }
 
   public void setEmailConfiguration(Map<EmailType, List<EmailDestination>> emailConfiguration) {
-    this.emailConfiguration = emailConfiguration;
+    this.emailConfiguration.putAll(emailConfiguration);
   }
 
   public int getTaskLogLength() {
     return taskLogLength;
   }
 
-  public void setTaskLogLength(Integer length) {
+  public void setTaskLogLength(int length) {
     taskLogLength = length;
   }
 
@@ -89,14 +97,6 @@ public class SMTPConfiguration {
 
   public void setUsername(String username) {
     this.username = username;
-  }
-
-  public int getMailThreads() {
-    return mailThreads;
-  }
-
-  public void setMailThreads(int mailThreads) {
-    this.mailThreads = mailThreads;
   }
 
   public int getMailMaxThreads() {
@@ -123,11 +123,11 @@ public class SMTPConfiguration {
     this.host = host;
   }
 
-  public Optional<Integer> getPort() {
-    return Optional.fromNullable(port);
+  public int getPort() {
+    return port;
   }
 
-  public void setPort(Integer port) {
+  public void setPort(int port) {
     this.port = port;
   }
 
@@ -161,6 +161,30 @@ public class SMTPConfiguration {
 
   public void setAdmins(List<String> admins) {
     this.admins = admins;
+  }
+
+  public int getRateLimitAfterNotifications() {
+    return rateLimitAfterNotifications;
+  }
+
+  public void setRateLimitAfterNotifications(int rateLimitAfterNotifications) {
+    this.rateLimitAfterNotifications = rateLimitAfterNotifications;
+  }
+
+  public long getRateLimitPeriodMillis() {
+    return rateLimitPeriodMillis;
+  }
+
+  public void setRateLimitPeriodMillis(long rateLimitPeriodMillis) {
+    this.rateLimitPeriodMillis = rateLimitPeriodMillis;
+  }
+
+  public long getRateLimitCooldownMillis() {
+    return rateLimitCooldownMillis;
+  }
+
+  public void setRateLimitCooldownMillis(long rateLimitCooldownMillis) {
+    this.rateLimitCooldownMillis = rateLimitCooldownMillis;
   }
 
 }

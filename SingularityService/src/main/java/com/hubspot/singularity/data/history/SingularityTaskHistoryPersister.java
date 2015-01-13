@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,13 +12,16 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 
-public class SingularityTaskHistoryPersister {
+@Singleton
+public class SingularityTaskHistoryPersister extends SingularityHistoryPersister {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
 
@@ -25,13 +30,16 @@ public class SingularityTaskHistoryPersister {
   private final HistoryManager historyManager;
 
   @Inject
-  public SingularityTaskHistoryPersister(TaskManager taskManager, DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager, DeployManager deployManager, HistoryManager historyManager) {
+    super(configuration);
+
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
   }
 
-  public void checkInactiveTaskIds() {
+  @Override
+  public void runActionOnPoll() {
     LOG.info("Checking inactive task ids for task history persistance");
 
     final long start = System.currentTimeMillis();
@@ -84,9 +92,9 @@ public class SingularityTaskHistoryPersister {
       LOG.warn("Inactive task {} did not have a task to persist", inactiveTaskId);
     }
 
-    taskManager.deleteTaskHistory(inactiveTaskId);
+    SingularityDeleteResult deleteResult = taskManager.deleteTaskHistory(inactiveTaskId);
 
-    LOG.debug("Moved task history for {} from ZK to History in {}", inactiveTaskId, JavaUtils.duration(start));
+    LOG.debug("Moved task history for {} from ZK to History in (delete result: {}) in {}", inactiveTaskId, deleteResult, JavaUtils.duration(start));
 
     return true;
   }

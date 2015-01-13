@@ -4,9 +4,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.inject.Singleton;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
+import org.apache.mesos.Protos.ContainerInfo;
+import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
 import org.apache.mesos.Protos.Environment;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
@@ -14,6 +18,7 @@ import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.Volume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,18 +26,24 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExecutorDataBuilder;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
-public class SingularityMesosTaskBuilder {
+@Singleton
+class SingularityMesosTaskBuilder {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
@@ -41,7 +52,7 @@ public class SingularityMesosTaskBuilder {
   private final ExecutorIdGenerator idGenerator;
 
   @Inject
-  public SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
     this.slaveAndRackManager = slaveAndRackManager;
     this.idGenerator = idGenerator;
@@ -62,6 +73,11 @@ public class SingularityMesosTaskBuilder {
     if (desiredTaskResources.getNumPorts() > 0) {
       portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources));
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
+    }
+
+    final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
+    if (containerInfo.isPresent()) {
+      prepareContainerInfo(taskId, bldr, containerInfo.get(), ports);
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
@@ -86,49 +102,117 @@ public class SingularityMesosTaskBuilder {
     return new SingularityTask(taskRequest, taskId, offer, task);
   }
 
-  private void prepareEnvironment(final SingularityTaskRequest task, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
+  private void setEnv(Environment.Builder envBldr, String key, Object value) {
+    if (value == null) {
+      return;
+    }
+    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
+  }
+
+  private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
 
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("INSTANCE_NO")
-        .setValue(Integer.toString(task.getPendingTask().getPendingTaskId().getInstanceNo()))
-        .build());
-
-    envBldr.addVariables(Variable.newBuilder()
-        .setName("TASK_REQUEST_ID")
-        .setValue(task.getPendingTask().getPendingTaskId().getRequestId())
-        .build());
+    setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
+    setEnv(envBldr, "TASK_HOST", taskId.getHost());
+    setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
+    setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
+    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      envBldr.addVariables(Variable.newBuilder()
-          .setName(envEntry.getKey())
-          .setValue(envEntry.getValue())
-          .build());
+      setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
     }
 
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
-          envBldr.addVariables(Variable.newBuilder()
-              .setName("PORT")
-              .setValue(Long.toString(ports.get()[portNum]))
-              .build());
+          setEnv(envBldr, "PORT", ports.get()[portNum]);
         }
 
-        envBldr.addVariables(Variable.newBuilder()
-            .setName(String.format("PORT%s", portNum))
-            .setValue(Long.toString(ports.get()[portNum]))
-            .build());
+        setEnv(envBldr, String.format("PORT%s", portNum), ports.get()[portNum]);
       }
     }
 
     commandBuilder.setEnvironment(envBldr.build());
   }
 
+  private Optional<DockerInfo.PortMapping> buildPortMapping(final SingularityDockerPortMapping singularityDockerPortMapping, long[] ports) {
+    final int containerPort;
+    switch (singularityDockerPortMapping.getContainerPortType()) {
+      case LITERAL:
+        containerPort = singularityDockerPortMapping.getContainerPort();
+        break;
+      case FROM_OFFER:
+        containerPort = Ints.checkedCast(ports[singularityDockerPortMapping.getContainerPort()]);
+        break;
+      default:
+        return Optional.absent();
+    }
+
+    final int hostPort;
+    switch (singularityDockerPortMapping.getHostPortType()) {
+      case LITERAL:
+        hostPort = singularityDockerPortMapping.getHostPort();
+        break;
+      case FROM_OFFER:
+        hostPort = Ints.checkedCast(ports[singularityDockerPortMapping.getHostPort()]);
+        break;
+      default:
+        return Optional.absent();
+    }
+
+    return Optional.of(DockerInfo.PortMapping.newBuilder()
+            .setContainerPort(containerPort)
+            .setHostPort(hostPort)
+            .setProtocol(singularityDockerPortMapping.getProtocol())
+            .build());
+  }
+
+  private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
+    ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
+    containerBuilder.setType(containerInfo.getType());
+
+    final Optional<SingularityDockerInfo> dockerInfo = containerInfo.getDocker();
+
+    if (dockerInfo.isPresent()) {
+      final DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder();
+      dockerInfoBuilder.setImage(dockerInfo.get().getImage());
+
+      if (ports.isPresent() && !dockerInfo.get().getPortMappings().isEmpty()) {
+        for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
+          final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports.get());
+
+          if (maybePortMapping.isPresent()) {
+            dockerInfoBuilder.addPortMappings(maybePortMapping.get());
+          }
+        }
+
+        if (dockerInfo.get().getNetwork().isPresent()) {
+          dockerInfoBuilder.setNetwork(dockerInfo.get().getNetwork().get());
+        }
+      }
+
+      dockerInfoBuilder.setPrivileged(dockerInfo.get().isPrivileged());
+
+      containerBuilder.setDocker(dockerInfoBuilder);
+    }
+
+    for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
+      final Volume.Builder volumeBuilder = Volume.newBuilder();
+      volumeBuilder.setContainerPath(volumeInfo.getContainerPath());
+      if (volumeInfo.getHostPath().isPresent()) {
+        volumeBuilder.setHostPath(volumeInfo.getHostPath().get());
+      }
+      volumeBuilder.setMode(volumeInfo.getMode());
+      containerBuilder.addVolumes(volumeBuilder);
+    }
+
+    bldr.setContainer(containerBuilder);
+  }
+
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
-    prepareEnvironment(task, commandBuilder, ports);
+    prepareEnvironment(task, taskId, commandBuilder, ports);
 
     bldr.setExecutor(
         ExecutorInfo.newBuilder()
@@ -181,13 +265,26 @@ public class SingularityMesosTaskBuilder {
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
-    commandBldr.setValue(getCommand(taskId, task));
+    if (task.getDeploy().getCommand().isPresent()) {
+      commandBldr.setValue(getCommand(taskId, task));
+    }
+
+    if (task.getDeploy().getArguments().isPresent()) {
+      commandBldr.addAllArguments(task.getDeploy().getArguments().get());
+    }
+
+    if (task.getDeploy().getArguments().isPresent() ||
+        // Hopefully temporary workaround for
+        // http://www.mail-archive.com/user@mesos.apache.org/msg01449.html
+        task.getDeploy().getContainerInfo().isPresent()) {
+      commandBldr.setShell(false);
+    }
 
     for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
 
-    prepareEnvironment(task, commandBldr, ports);
+    prepareEnvironment(task, taskId, commandBldr, ports);
 
     bldr.setCommand(commandBldr);
   }

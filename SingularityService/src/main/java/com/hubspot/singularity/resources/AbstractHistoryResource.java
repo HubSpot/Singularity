@@ -24,7 +24,7 @@ public abstract class AbstractHistoryResource {
 
   protected SingularityTaskId getTaskIdObject(String taskId) {
     try {
-      return SingularityTaskId.fromString(taskId);
+      return SingularityTaskId.valueOf(taskId);
     } catch (InvalidSingularityTaskIdException e) {
       throw WebExceptions.badRequest("%s is not a valid task id: %s", taskId, e.getMessage());
     }

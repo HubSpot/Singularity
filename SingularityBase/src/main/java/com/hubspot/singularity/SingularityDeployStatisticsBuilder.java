@@ -1,23 +1,26 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
 import com.google.common.base.Optional;
+import com.google.common.collect.ListMultimap;
 
-public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
+public class SingularityDeployStatisticsBuilder {
 
   private final String requestId;
   private final String deployId;
+
+  private int numTasks;
 
   private int numSuccess;
   private int numFailures;
 
   private int numSequentialRetries;
 
-  private List<Long> sequentialFailureTimestamps;
+  private ListMultimap<Integer, Long> instanceSequentialFailureTimestamps;
 
   private Optional<Long> lastFinishAt;
   private Optional<ExtendedTaskState> lastTaskState;
+
+  private Optional<Long> averageRuntimeMillis;
 
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
@@ -25,18 +28,19 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
 
     this.lastFinishAt = Optional.absent();
     this.lastTaskState = Optional.absent();
+    this.averageRuntimeMillis = Optional.absent();
   }
 
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, sequentialFailureTimestamps);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps, numTasks, averageRuntimeMillis);
   }
 
-  public List<Long> getSequentialFailureTimestamps() {
-    return sequentialFailureTimestamps;
+  public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
+    return instanceSequentialFailureTimestamps;
   }
 
-  public SingularityDeployStatisticsBuilder setSequentialFailureTimestamps(List<Long> sequentialFailureTimestamps) {
-    this.sequentialFailureTimestamps = sequentialFailureTimestamps;
+  public SingularityDeployStatisticsBuilder setInstanceSequentialFailureTimestamps(ListMultimap<Integer, Long> instanceSequentialFailureTimestamps) {
+    this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps;
     return this;
   }
 
@@ -89,14 +93,35 @@ public class SingularityDeployStatisticsBuilder extends SingularityJsonObject {
     return requestId;
   }
 
+  public int getNumTasks() {
+    return numTasks;
+  }
+
+  public SingularityDeployStatisticsBuilder setNumTasks(int numTasks) {
+    this.numTasks = numTasks;
+    return this;
+  }
+
+  public Optional<Long> getAverageRuntimeMillis() {
+    return averageRuntimeMillis;
+  }
+
+  public SingularityDeployStatisticsBuilder setAverageRuntimeMillis(Optional<Long> averageRuntimeMillis) {
+    this.averageRuntimeMillis = averageRuntimeMillis;
+    return this;
+  }
+
   public String getDeployId() {
     return deployId;
   }
 
   @Override
   public String toString() {
-    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures + ", numSequentialRetries=" + numSequentialRetries
-        + ", sequentialFailureTimestamps=" + sequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState=" + lastTaskState + "]";
+    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numTasks=" + numTasks + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures
+        + ", numSequentialRetries=" + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState="
+        + lastTaskState + ", averageRuntimeMillis=" + averageRuntimeMillis + "]";
   }
+
+
 
 }

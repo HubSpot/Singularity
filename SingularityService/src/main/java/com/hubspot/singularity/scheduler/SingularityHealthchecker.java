@@ -1,10 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
+import io.dropwizard.lifecycle.Managed;
+
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -12,11 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityCloseable;
-import com.hubspot.singularity.SingularityCloser;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -27,7 +30,8 @@ import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
 @SuppressWarnings("deprecation")
-public class SingularityHealthchecker implements SingularityCloseable {
+@Singleton
+public class SingularityHealthchecker implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -40,18 +44,16 @@ public class SingularityHealthchecker implements SingularityCloseable {
   private final Map<String, ScheduledFuture<?>> taskIdToHealthcheck;
 
   private final ScheduledExecutorService executorService;
-  private final SingularityCloser closer;
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityCloser closer, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
     this.abort = abort;
-    this.closer = closer;
     this.exceptionNotifier = exceptionNotifier;
 
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
@@ -60,20 +62,15 @@ public class SingularityHealthchecker implements SingularityCloseable {
   }
 
   @Override
-  public void close() {
-    closer.shutdown(getClass().getName(), executorService, 1);
+  public void start() {
   }
 
-  public void reEnqueueHealthcheck(SingularityTask task) {
-    if (!taskManager.isActiveTask(task.getTaskId().getId())) {
-      LOG.trace("Task {} is not active, not reEnqueueing healthcheck", task.getTaskId());
-      return;
-    }
-
-    privateEnqueueHealthcheck(task);
+  @Override
+  public void stop() {
+    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 
-  private void privateEnqueueHealthcheck(SingularityTask task) {
+  public void enqueueHealthcheck(SingularityTask task) {
     ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
 
     ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
@@ -89,7 +86,7 @@ public class SingularityHealthchecker implements SingularityCloseable {
       return false;
     }
 
-    privateEnqueueHealthcheck(task);
+    enqueueHealthcheck(task);
 
     return true;
   }

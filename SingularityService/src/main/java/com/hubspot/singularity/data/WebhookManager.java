@@ -18,10 +18,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.SingularityDeployWebhookTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityRequestHistoryTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityTaskHistoryUpdateTranscoder;
-import com.hubspot.singularity.data.transcoders.SingularityWebhookTranscoder;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
 @Singleton
 public class WebhookManager extends CuratorAsyncManager {
@@ -30,14 +27,14 @@ public class WebhookManager extends CuratorAsyncManager {
   private static final String QUEUES_PATH = ROOT_PATH + "/queues";
   private static final String ACTIVE_PATH = ROOT_PATH + "/active";
 
-  private final SingularityWebhookTranscoder webhookTranscoder;
-  private final SingularityRequestHistoryTranscoder requestHistoryTranscoder;
-  private final SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder;
-  private final SingularityDeployWebhookTranscoder deployWebhookTranscoder;
+  private final Transcoder<SingularityWebhook> webhookTranscoder;
+  private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
+  private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
+  private final Transcoder<SingularityDeployWebhook> deployWebhookTranscoder;
 
   @Inject
-  public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityWebhookTranscoder webhookTranscoder,
-      SingularityRequestHistoryTranscoder requestHistoryTranscoder, SingularityTaskHistoryUpdateTranscoder taskHistoryUpdateTranscoder, SingularityDeployWebhookTranscoder deployWebhookTranscoder) {
+  public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, Transcoder<SingularityWebhook> webhookTranscoder,
+      Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployWebhook> deployWebhookTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
     this.webhookTranscoder = webhookTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
@@ -134,7 +131,8 @@ public class WebhookManager extends CuratorAsyncManager {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.REQUEST), requestHistoryTranscoder);
   }
 
-  //TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not immediately make some webhooks)
+  // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not
+  // immediately make some webhooks)
   public void enqueueRequestUpdate(SingularityRequestHistory requestUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.REQUEST)) {
       final String enqueuePath = getEnqueuePathForRequestUpdate(webhook.getId(), requestUpdate);

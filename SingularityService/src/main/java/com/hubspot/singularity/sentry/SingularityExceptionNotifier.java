@@ -1,5 +1,13 @@
 package com.hubspot.singularity.sentry;
 
+import javax.inject.Singleton;
+
+import net.kencochrane.raven.Raven;
+import net.kencochrane.raven.RavenFactory;
+import net.kencochrane.raven.event.Event;
+import net.kencochrane.raven.event.EventBuilder;
+import net.kencochrane.raven.event.interfaces.ExceptionInterface;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,11 +16,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SentryConfiguration;
 
-import net.kencochrane.raven.Raven;
-import net.kencochrane.raven.event.Event;
-import net.kencochrane.raven.event.EventBuilder;
-import net.kencochrane.raven.event.interfaces.ExceptionInterface;
-
+@Singleton
 public class SingularityExceptionNotifier {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExceptionNotifier.class);
 
@@ -20,9 +24,13 @@ public class SingularityExceptionNotifier {
   private final Optional<SentryConfiguration> sentryConfiguration;
 
   @Inject
-  public SingularityExceptionNotifier(Optional<Raven> raven, Optional<SentryConfiguration> sentryConfiguration) {
-    this.raven = raven;
+  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration) {
     this.sentryConfiguration = sentryConfiguration;
+    if (sentryConfiguration.isPresent()) {
+      this.raven = Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
+    } else {
+      this.raven = Optional.absent();
+    }
   }
 
   private String getPrefix() {

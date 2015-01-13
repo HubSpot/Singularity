@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +14,11 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 
-public class SingularityDeployHistoryPersister {
+@Singleton
+public class SingularityDeployHistoryPersister extends SingularityHistoryPersister {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployHistoryPersister.class);
 
@@ -22,12 +26,15 @@ public class SingularityDeployHistoryPersister {
   private final HistoryManager historyManager;
 
   @Inject
-  public SingularityDeployHistoryPersister(DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityDeployHistoryPersister(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
+    super(configuration);
+
     this.deployManager = deployManager;
     this.historyManager = historyManager;
   }
 
-  public void checkInactiveDeploys() {
+  @Override
+  public void runActionOnPoll() {
     LOG.info("Checking inactive deploys for deploy history persistance");
 
     final long start = System.currentTimeMillis();

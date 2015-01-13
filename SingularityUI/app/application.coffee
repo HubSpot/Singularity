@@ -110,6 +110,10 @@ class Application
                 Messenger().error
                     message:   "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
                     hideAFter: 20
+            else if jqxhr.status is 0
+                Messenger().error
+                    message:   "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through Brunch, this might be your browser blocking cross-domain requests.</p>"
+                    hideAfter: 20
             else
                 console.log jqxhr.responseText
                 try
@@ -118,14 +122,14 @@ class Application
                     serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
-                    
+
                 Messenger().error
                     message:   "<p>An uncaught error occurred with your request. The server said:</p><pre>#{ serverMessage }</pre><p>The error has been saved to your JS console.</p>"
                     hideAfter: 20
 
                 console.error jqxhr
                 throw new Error "AJAX Error"
-              
+
     # Usually called by Controllers when they're initialized. Loader is overwritten by views
     showPageLoader: ->
         @$page.html "<div class='page-loader centered cushy'></div>"

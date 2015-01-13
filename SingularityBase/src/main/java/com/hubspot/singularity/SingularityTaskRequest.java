@@ -1,25 +1,15 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SingularityTaskRequest extends SingularityJsonObject implements Comparable<SingularityTaskRequest> {
+public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
   private final SingularityDeploy deploy;
   private final SingularityPendingTask pendingTask;
-
-  public static SingularityTaskRequest fromBytes(byte[] bytes, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(bytes, SingularityTaskRequest.class);
-    } catch (IOException e) {
-      throw new SingularityJsonException(e);
-    }
-  }
 
   @JsonCreator
   public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("deploy") SingularityDeploy deploy, @JsonProperty("pendingTask") SingularityPendingTask pendingTask) {

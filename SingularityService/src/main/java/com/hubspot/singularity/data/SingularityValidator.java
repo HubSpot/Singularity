@@ -2,6 +2,9 @@ package com.hubspot.singularity.data;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
+import org.apache.mesos.Protos;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -9,6 +12,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -16,6 +22,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
+@Singleton
 public class SingularityValidator {
 
   private static final Joiner JOINER = Joiner.on(" ");
@@ -80,7 +87,7 @@ public class SingularityValidator {
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
-    check(request.getId() != null, "Id must not be null");
+    check(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
     if (!allowRequestsWithoutOwners) {
       check(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
@@ -108,12 +115,12 @@ public class SingularityValidator {
     if (request.isScheduled()) {
       final String originalSchedule = request.getQuartzScheduleSafe();
 
-      check(!request.getQuartzSchedule().isPresent() || !request.getSchedule().isPresent(), "Specify one of schedule or quartzSchedule");
+      check(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
       check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
       check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
-      if (request.getQuartzSchedule().isPresent()) {
+      if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
         check(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
       }
 
@@ -149,7 +156,7 @@ public class SingularityValidator {
   }
 
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
-    check(deploy.getId() != null && !deploy.getId().contains("-"), "Id must not be null and can not contain - characters");
+    check(deploy.getId() != null && !deploy.getId().contains("/") && !deploy.getId().contains("-"), "Id must not be null and can not contain / or - characters");
     check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
     check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
 
@@ -159,10 +166,39 @@ public class SingularityValidator {
 
     checkForIllegalResources(request, deploy);
 
-    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) || (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent()),
-        "If not using custom executor, specify a command. If using custom executor, specify executorData and customExecutorCmd and no command.");
+    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) ||
+        (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
+            (deploy.getContainerInfo().isPresent())),
+        "If not using custom executor, specify a command or containerInfo. If using custom executor, specify executorData and customExecutorCmd and no command.");
+
+    check(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
+
+    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == Protos.ContainerInfo.Type.DOCKER) {
+      checkDocker(deploy);
+    }
 
     check(deployHistoryHelper.isDeployIdAvailable(request.getId(), deploy.getId()), "Can not deploy a deploy that has already been deployed");
+  }
+
+  private void checkDocker(SingularityDeploy deploy) {
+    if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
+      final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
+      final int numPorts = deploy.getResources().get().getNumPorts();
+
+      if (!dockerInfo.getPortMappings().isEmpty()) {
+        check(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE, "Docker networking type must be BRIDGE if port mappings are set");
+      }
+
+      for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
+        if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
+          check(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
+        }
+
+        if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
+          check(portMapping.getHostPort() >= 0 && portMapping.getHostPort() < numPorts, String.format("Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1));
+        }
+      }
+    }
   }
 
   private boolean isValidCronSchedule(String schedule) {
