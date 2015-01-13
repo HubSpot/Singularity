@@ -40,8 +40,10 @@ class TaskHistory extends Model
                 async: false
                 error: =>
                     app.caughtError()
-            if taskHistory.slave.attributes.state in ['DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+            if taskHistory.slave.attributes.state in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
                 taskHistory.decommissioning = true
+            else if taskHistory.slave.attributes.state is not 'ACTIVE'
+                taskHistory.slaveMissing = true
         taskHistory
 
     parseResources: (task) ->

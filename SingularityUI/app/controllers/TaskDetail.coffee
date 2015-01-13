@@ -51,6 +51,7 @@ class TaskDetailController extends Controller
 
         @subviews.fileBrowser = new FileBrowserSubview
             collection:      @collections.files
+            model:           @models.task
             # If we've been given a path we want the files, so scroll directly to it
             scrollWhenReady: @filePath isnt null
 
