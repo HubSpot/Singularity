@@ -31,7 +31,7 @@ class SlavesView extends View
         )
         decommission = new Slaves(
             @collection.filter (model) ->
-              model.get('state') in ['DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+              model.get('state') in ['DECOMMISSIONING','DECOMISSIONING', 'DECOMMISSIONED','DECOMISSIONED', 'STARTING_DECOMMISSION', 'STARTING_DECOMISSION']
         )
         inactive = new Slaves(
             @collection.filter (model) ->
@@ -44,6 +44,8 @@ class SlavesView extends View
             data:     decommission.toJSON()
         @$('#inactive').html @slaveTemplate
             data:     inactive.toJSON()
+
+        @$('.actions-column a[title]').tooltip()
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)

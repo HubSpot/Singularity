@@ -6,10 +6,16 @@ class ServerItem extends Model
     removeTemplates:
         DEAD:                  require '../templates/vex/serverRemoveDead'
         MISSING_ON_STARTUP:    require '../templates/vex/serverRemoveDead'
+        STARTING_DECOMISSION:  require '../templates/vex/serverRemoveDecomissioned'
         STARTING_DECOMMISSION: require '../templates/vex/serverRemoveDecomissioned'
         DECOMMISSIONING:       require '../templates/vex/serverRemoveDecomissioned'
+        DECOMISSIONING:        require '../templates/vex/serverRemoveDecomissioned'
         DECOMMISSIONED:        require '../templates/vex/serverRemoveDecomissioned'
+        DECOMISSIONED:         require '../templates/vex/serverRemoveDecomissioned'
         ACTIVE:                require '../templates/vex/serverDecomission'
+
+    decommissionTemplate:
+        require '../templates/vex/serverDecomission'
 
     reactivateTemplate:
         require '../templates/vex/slaveReactivate'
@@ -63,7 +69,7 @@ class ServerItem extends Model
     promptDecommission: (callback) =>
         state = @get 'state'
         vex.dialog.confirm
-            message: @removeTemplates[state] {@id, @type}
+            message: @decommissionTemplate {@id, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Decommission',
@@ -79,7 +85,7 @@ class ServerItem extends Model
     promptReactivate: (callback) =>
         state = @get 'state'
         vex.dialog.confirm
-            message: @reactivateTemplate {@id}
+            message: @reactivateTemplate {@id, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Reactivate',
