@@ -49,11 +49,13 @@ public abstract class CuratorManager {
       Stat stat = curator.checkExists().forPath(path);
       return Optional.fromNullable(stat);
     } catch (NoNodeException nne) {
+      return Optional.absent();
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
+      return Optional.absent();
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
-
-    return Optional.absent();
   }
 
   protected boolean exists(String path) {
