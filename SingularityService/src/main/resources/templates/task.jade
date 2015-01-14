@@ -106,21 +106,13 @@ html
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Files
           dl(style="margin-bottom: 0")
-            dt(style="font-weight: bold; margin: 0 0 9px") Standard output
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px 0 14px; border-radius: 3px")
-              if stdout
-                pre(style="white-space: pre; margin: 0")
-                  code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
-                    for line in stdout
-                      div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
-              else
-                | No stdout available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
-            dt(style="font-weight: bold; margin: 0 0 9px") Standard error
-            dd(style="background: #eee; display: block; margin: 0; padding: 10px 14px 0 14px; border-radius: 3px")
-              if stdout
-                pre(style="white-space: pre; margin: 0")
-                  code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
-                    for line in stderr
-                      div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
-              else
-                | No stderr available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
+            for logTail, logName in logTails
+              dt(style="font-weight: bold; margin: 0 0 9px") #{ logName }
+              dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px 0 14px; border-radius: 3px")
+                if logTail
+                  pre(style="white-space: pre; margin: 0")
+                    code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
+                      for line in logTail
+                        div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
+                else
+                  | #{ logName } not available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.

@@ -160,8 +160,13 @@ public class SingularityMailer implements Managed {
     Optional<String> directory = taskManager.getDirectory(taskId);
 
     templateProperties.put("singularityTaskLink", getSingularityTaskLink(taskId));
-    templateProperties.put("stdout", getTaskLogFile(taskId, "stdout", task, directory).or(new String[0]));
-    templateProperties.put("stderr", getTaskLogFile(taskId, "stderr", task, directory).or(new String[0]));
+
+    Map<String, String[]> logTails = Maps.newHashMap();
+    for (String file : maybeSmtpConfiguration.get().getTaskEmailTailFiles()) {
+      logTails.put(file, getTaskLogFile(taskId, file, task, directory).or(new String[0]));
+    }
+    templateProperties.put("logTails", logTails);
+
     templateProperties.put("taskId", taskId.getId());
     templateProperties.put("deployId", taskId.getDeployId());
 
