@@ -4,6 +4,7 @@ import io.dropwizard.lifecycle.Managed;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -161,7 +162,7 @@ public class SingularityMailer implements Managed {
 
     templateProperties.put("singularityTaskLink", getSingularityTaskLink(taskId));
 
-    Map<String, String[]> logTails = Maps.newHashMap();
+    LinkedHashMap<String, String[]> logTails = new LinkedHashMap<>();
     for (String file : maybeSmtpConfiguration.get().getTaskEmailTailFiles()) {
       logTails.put(file, getTaskLogFile(taskId, file, task, directory).or(new String[0]));
     }
