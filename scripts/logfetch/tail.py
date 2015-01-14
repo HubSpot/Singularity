@@ -15,10 +15,11 @@ def start_tail(args):
     tasks = [str(t) for t in logfetch_base.tasks_for_request(args)]
   else:
     tasks = [args.taskId]
-  sys.stderr.write(colored('Tailing logs for tasks:\n', 'green'))
-  for t in tasks:
-    sys.stderr.write(colored('{0}\n'.format(t), 'blue'))
-  sys.stderr.write('ctrl+c to exit\n')
+  if args.verbose:
+    sys.stderr.write(colored('Tailing logs for tasks:\n', 'green'))
+    for t in tasks:
+      sys.stderr.write(colored('{0}\n'.format(t), 'blue'))
+  sys.stderr.write(colored('ctrl+c to exit\n', 'cyan'))
   try:
     threads = []
     for task in tasks:
@@ -30,7 +31,7 @@ def start_tail(args):
       if not t.isAlive:
         break
   except KeyboardInterrupt:
-    sys.stderr.write('Stopping tail')
+    sys.stderr.write(colored('Stopping tail', 'cyan'))
     sys.exit(0)
 
 class LogStreamer(threading.Thread):
