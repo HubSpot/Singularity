@@ -81,27 +81,31 @@ mysql> show databases;
 type 'exit' to exit mysql client console
 ```
 
+Now exit the virtual machine again.
+
 Build singularity with maven:
 
 ```bash
+# drop back to the root folder of the distribution
+cd ..
 mvn clean package
 ```
 
 The mysql database Singularity will use to keep historical data has been already created in the VM but you also need to create the mysql tables required by singularity using the singularity service jar that maven has just built (it uses the liquibase library to perform table migrations):
 
 ```bash
-java -jar SingularityService/target/SingularityService-*-SNAPSHOT.jar db migrate ./vagrant_singularity.yaml --migrations ./migrations.sql
+java -jar SingularityService/target/SingularityService-*-SNAPSHOT-shaded.jar db migrate ./vagrant/vagrant_singularity.yaml --migrations ./mysql/migrations.sql
 ```
 
 Now you are ready to start Singularity using the provided `vagrant_singularity.yaml` config:
 
 ```bash
-java -jar SingularityService/target/SingularityService-*-SNAPSHOT.jar server ./vagrant_singularity.yaml
+java -jar SingularityService/target/SingularityService-*-SNAPSHOT-shaded.jar server ./vagrant/vagrant_singularity.yaml
 ```
 
 Verify that Singularity is running:
 
-[http://localhost:7092/](http://localhost:7092/)
+[http://localhost:7099/](http://localhost:7099/)
 
 If everything went well you will see the following screen:
 ![Singularity UI first run](../images/SingularityUI_First_Run.png)
