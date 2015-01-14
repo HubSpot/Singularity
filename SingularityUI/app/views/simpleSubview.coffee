@@ -17,21 +17,23 @@ class SimpleSubview extends View
 
     initialize: ({@template}) ->
         @data = if @collection? then @collection else @model
+        @vars = if @vars? then @vars else {}
 
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @data, eventName, @render
-            
+
         @listenTo @data, 'reset', =>
             @$el.empty()
 
     render: ->
         return if not @data.synced and @data.isEmpty?()
-        
+
         @$el.html @template
             config:   config
             data:     @data.toJSON()
             synced:   @data.synced
             expanded: @expanded
+            vars:     @vars
 
         @$('.actions-column a[title]').tooltip()
 
