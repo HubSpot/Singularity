@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.4.0-SNAPSHOT
+Version: 0.4.1-GRPN-5-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#apideploys) - Manages Singularity Deploys for existing requests
@@ -16,27 +16,85 @@ Endpoints:
 - [`/api/webhooks`](#apiwebhooks) - Manages Singularity webhooks.
 
 Models:
+- [`ByteString`](#bytestring)
+- [`CommandInfo`](#commandinfo)
+- [`CommandInfoOrBuilder`](#commandinfoorbuilder)
+- [`ContainerInfo`](#containerinfo)
+- [`ContainerInfoOrBuilder`](#containerinfoorbuilder)
+- [`Descriptor`](#descriptor)
+- [`DockerInfo`](#dockerinfo)
+- [`DockerInfoOrBuilder`](#dockerinfoorbuilder)
 - [`EmbeddedArtifact`](#embeddedartifact)
+- [`Environment`](#environment)
+- [`EnvironmentOrBuilder`](#environmentorbuilder)
 - [`ExecutorData`](#executordata)
+- [`ExecutorID`](#executorid)
+- [`ExecutorIDOrBuilder`](#executoridorbuilder)
+- [`ExecutorInfo`](#executorinfo)
+- [`ExecutorInfoOrBuilder`](#executorinfoorbuilder)
 - [`ExternalArtifact`](#externalartifact)
+- [`FileDescriptor`](#filedescriptor)
+- [`FileOptions`](#fileoptions)
+- [`FrameworkID`](#frameworkid)
+- [`FrameworkIDOrBuilder`](#frameworkidorbuilder)
+- [`HTTP`](#http)
+- [`HTTPOrBuilder`](#httporbuilder)
+- [`HealthCheck`](#healthcheck)
+- [`HealthCheckOrBuilder`](#healthcheckorbuilder)
 - [`LoadBalancerRequestId`](#loadbalancerrequestid)
+- [`MesosFileChunkObject`](#mesosfilechunkobject)
+- [`MesosTaskStatisticsObject`](#mesostaskstatisticsobject)
+- [`MessageOptions`](#messageoptions)
+- [`Offer`](#offer)
+- [`OfferID`](#offerid)
+- [`OfferIDOrBuilder`](#offeridorbuilder)
 - [`S3Artifact`](#s3artifact)
 - [`SingularityContainerInfo`](#singularitycontainerinfo)
 - [`SingularityDeploy`](#singularitydeploy)
+- [`SingularityDeployHistory`](#singularitydeployhistory)
 - [`SingularityDeployMarker`](#singularitydeploymarker)
 - [`SingularityDeployRequest`](#singularitydeployrequest)
+- [`SingularityDeployResult`](#singularitydeployresult)
+- [`SingularityDeployStatistics`](#singularitydeploystatistics)
+- [`SingularityDeployUpdate`](#singularitydeployupdate)
 - [`SingularityDockerInfo`](#singularitydockerinfo)
 - [`SingularityDockerPortMapping`](#singularitydockerportmapping)
+- [`SingularityHostState`](#singularityhoststate)
 - [`SingularityLoadBalancerUpdate`](#singularityloadbalancerupdate)
+- [`SingularityPauseRequest`](#singularitypauserequest)
 - [`SingularityPendingDeploy`](#singularitypendingdeploy)
 - [`SingularityPendingRequest`](#singularitypendingrequest)
+- [`SingularityPendingTask`](#singularitypendingtask)
+- [`SingularityPendingTaskId`](#singularitypendingtaskid)
+- [`SingularityRack`](#singularityrack)
 - [`SingularityRequest`](#singularityrequest)
 - [`SingularityRequestCleanup`](#singularityrequestcleanup)
 - [`SingularityRequestDeployState`](#singularityrequestdeploystate)
+- [`SingularityRequestHistory`](#singularityrequesthistory)
 - [`SingularityRequestInstances`](#singularityrequestinstances)
 - [`SingularityRequestParent`](#singularityrequestparent)
+- [`SingularityResourceRequest`](#singularityresourcerequest)
+- [`SingularitySandbox`](#singularitysandbox)
+- [`SingularitySandboxFile`](#singularitysandboxfile)
+- [`SingularitySlave`](#singularityslave)
+- [`SingularityState`](#singularitystate)
+- [`SingularityTask`](#singularitytask)
+- [`SingularityTaskCleanup`](#singularitytaskcleanup)
+- [`SingularityTaskCleanupResult`](#singularitytaskcleanupresult)
+- [`SingularityTaskHealthcheckResult`](#singularitytaskhealthcheckresult)
+- [`SingularityTaskHistory`](#singularitytaskhistory)
+- [`SingularityTaskHistoryUpdate`](#singularitytaskhistoryupdate)
+- [`SingularityTaskId`](#singularitytaskid)
+- [`SingularityTaskIdHistory`](#singularitytaskidhistory)
+- [`SingularityTaskRequest`](#singularitytaskrequest)
 - [`SingularityVolume`](#singularityvolume)
 - [`SingularityWebhook`](#singularitywebhook)
+- [`SlaveID`](#slaveid)
+- [`SlaveIDOrBuilder`](#slaveidorbuilder)
+- [`TaskID`](#taskid)
+- [`TaskIDOrBuilder`](#taskidorbuilder)
+- [`TaskInfo`](#taskinfo)
+- [`UnknownFieldSet`](#unknownfieldset)
 
 - - -
 
@@ -85,7 +143,7 @@ Cancel a pending deployment (best effort - the deploy may still succeed or fail)
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | The user which executes the delete request. | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | The user which executes the delete request. | string |
 
 ###### Response
 [SingularityRequestParent](#SingularityRequestParent)
@@ -135,7 +193,7 @@ Retrieve the history for a specific deploy.
 | deployId | true | Deploy ID | string |
 
 ###### Response
-[](#)
+[SingularityDeployHistory](#SingularityDeployHistory)
 
 
 ###### Errors
@@ -164,7 +222,7 @@ Retrieve the history for a specific deploy.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[](#)
+[List[SingularityDeployHistory]](#SingularityDeployHistory)
 
 
 ###### Errors
@@ -193,7 +251,7 @@ Retrieve the history for a specific deploy.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[](#)
+[List[SingularityRequestHistory]](#SingularityRequestHistory)
 
 
 ###### Errors
@@ -222,7 +280,7 @@ Retrieve the history for all tasks of a specific request.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[](#)
+[List[SingularityTaskIdHistory]](#SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -245,7 +303,7 @@ Retrieve the history for all active tasks of a specific request.
 | requestId | true | Request ID to look up | string |
 
 ###### Response
-[](#)
+[List[SingularityTaskIdHistory]](#SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -270,7 +328,7 @@ Search for requests.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[](#)
+[List[string]](#)
 
 
 ###### Errors
@@ -293,7 +351,7 @@ Retrieve the history for a specific task.
 | taskId | true | Task ID to look up | string |
 
 ###### Response
-[](#)
+[SingularityTaskHistory](#SingularityTaskHistory)
 
 
 ###### Errors
@@ -320,7 +378,7 @@ Retrieve the list of logs stored in S3 for a specific request.
 | requestId | true | The request ID to search for | string |
 
 ###### Response
-[](#)
+[List[SingularityS3Log]](#SingularityS3Log)
 
 
 ###### Errors
@@ -344,7 +402,7 @@ Retrieve the list of logs stored in S3 for a specific deploy.
 | deployId | true | The deploy ID to search for | string |
 
 ###### Response
-[](#)
+[List[SingularityS3Log]](#SingularityS3Log)
 
 
 ###### Errors
@@ -367,7 +425,7 @@ Retrieve the list of logs stored in S3 for a specific task.
 | taskId | true | The task ID to search for | string |
 
 ###### Response
-[](#)
+[List[SingularityS3Log]](#SingularityS3Log)
 
 
 ###### Errors
@@ -390,7 +448,7 @@ Retrieve the list of active racks. A rack is active if it has one or more active
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRack]](#SingularityRack)
 
 
 ###### Errors
@@ -409,7 +467,7 @@ Retrieve the list of dead racks. A rack is dead if it has zero active slaves.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRack]](#SingularityRack)
 
 
 ###### Errors
@@ -428,7 +486,7 @@ Retrieve the list of decommissioning racks.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityRack]](#SingularityRack)
 
 
 ###### Errors
@@ -476,7 +534,7 @@ Decomission a specific active rack.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of person requestin the decommisioning. | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of person requestin the decommisioning. | string |
 
 ###### Response
 [](#)
@@ -516,35 +574,6 @@ Undo the decomission operation on a specific decommissioning rack.
 #### Overview
 Manages Singularity Requests, the parent object for any deployed task
 
-#### **POST** `/api/requests`
-
-Create or update a Singularity Request
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting to create or update | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | The Singularity request to create or update | <a href="#SingularityRequest">SingularityRequest</a> |
-
-###### Response
-[SingularityRequestParent](#SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Request object is invalid | - |
-| 409    | Request object is being cleaned. Try again shortly | - |
-
-
-- - -
 #### **GET** `/api/requests`
 
 Retrieve the list of all requests
@@ -561,6 +590,35 @@ Retrieve the list of all requests
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | - | - | - |
+
+
+- - -
+#### **POST** `/api/requests`
+
+Create or update a Singularity Request
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | Username of the person requesting to create or update | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | The Singularity request to create or update | <a href="#SingularityRequest">SingularityRequest</a> |
+
+###### Response
+[SingularityRequestParent](#SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Request object is invalid | - |
+| 409    | Request object is being cleaned. Try again shortly | - |
 
 
 - - -
@@ -678,6 +736,29 @@ Retrieve the list of pending requests
 
 
 - - -
+#### **GET** `/api/requests/request/{requestId}`
+
+Retrieve a specific Request by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID | string |
+
+###### Response
+[SingularityRequestParent](#SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
 #### **DELETE** `/api/requests/request/{requestId}`
 
 Delete a specific Request by ID and return the deleted Request
@@ -693,33 +774,10 @@ Delete a specific Request by ID and return the deleted Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the delete | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of the person requesting the delete | string |
 
 ###### Response
 [SingularityRequest](#SingularityRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **GET** `/api/requests/request/{requestId}`
-
-Retrieve a specific Request by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID | string |
-
-###### Response
-[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
@@ -744,7 +802,7 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the bounce | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of the person requesting the bounce | string |
 
 ###### Response
 [SingularityRequestParent](#SingularityRequestParent)
@@ -772,7 +830,7 @@ Scale the number of instances up or down for a specific Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the scale | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of the person requesting the scale | string |
 **body**
 
 | Parameter | Required | Description | Data Type |
@@ -806,12 +864,12 @@ Pause a Singularity request, future tasks will not run until it is manually unpa
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the pause | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of the person requesting the pause | string |
 **body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Pause Request Options | <a href="#UNKNOWN[SingularityPauseRequest]">UNKNOWN[SingularityPauseRequest]</a> |
+| body | false | Pause Request Options | <a href="#SingularityPauseRequest">SingularityPauseRequest</a> |
 
 ###### Response
 [SingularityRequestParent](#SingularityRequestParent)
@@ -839,7 +897,7 @@ Schedule a one-off or scheduled Singularity request for immediate execution.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the execution | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of the person requesting the execution | string |
 **body**
 
 | Parameter | Required | Description | Data Type |
@@ -872,7 +930,7 @@ Unpause a Singularity Request, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of the person requesting the unpause | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false | Username of the person requesting the unpause | string |
 
 ###### Response
 [SingularityRequestParent](#SingularityRequestParent)
@@ -907,7 +965,7 @@ Retrieve information about a specific task&#39;s sandbox.
 | path | false | The path to browse from | string |
 
 ###### Response
-[](#)
+[SingularitySandbox](#SingularitySandbox)
 
 
 ###### Errors
@@ -933,12 +991,12 @@ Retrieve part of the contents of a file in a specific task&#39;s sandbox.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | path | false | The path to the file to be read | string |
-| grep | false | Optional string to grep for | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
-| offset | false | Byte offset to start reading from | <a href="#UNKNOWN[long]">UNKNOWN[long]</a> |
-| length | false | Maximum number of bytes to read | <a href="#UNKNOWN[long]">UNKNOWN[long]</a> |
+| grep | false | Optional string to grep for | string |
+| offset | false | Byte offset to start reading from | long |
+| length | false | Maximum number of bytes to read | long |
 
 ###### Response
-[](#)
+[MesosFileChunkObject](#MesosFileChunkObject)
 
 
 ###### Errors
@@ -961,7 +1019,7 @@ Retrieve the list of active slaves.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularitySlave]](#SingularitySlave)
 
 
 ###### Errors
@@ -980,7 +1038,7 @@ Retrieve the list of dead slaves.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularitySlave]](#SingularitySlave)
 
 
 ###### Errors
@@ -999,7 +1057,7 @@ Retrieve the list of decommissioning slaves.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularitySlave]](#SingularitySlave)
 
 
 ###### Errors
@@ -1047,7 +1105,7 @@ Decommission a specific slave.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false |  | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false |  | string |
 
 ###### Response
 [](#)
@@ -1101,7 +1159,7 @@ Retrieve information about the current state of Singularity.
 | includeRequestIds | false |  | boolean |
 
 ###### Response
-[](#)
+[SingularityState](#SingularityState)
 
 
 ###### Errors
@@ -1124,7 +1182,7 @@ Retrieve the list of over-provisioned request IDs.
 | skipCache | false |  | boolean |
 
 ###### Response
-[](#)
+[List[string]](#)
 
 
 ###### Errors
@@ -1147,7 +1205,7 @@ Retrieve the list of under-provisioned request IDs.
 | skipCache | false |  | boolean |
 
 ###### Response
-[](#)
+[List[string]](#)
 
 
 ###### Errors
@@ -1170,7 +1228,7 @@ Retrieve the list of active tasks.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityTask]](#SingularityTask)
 
 
 ###### Errors
@@ -1193,7 +1251,7 @@ Retrieve list of active tasks on a specific slave.
 | slaveId | true |  | string |
 
 ###### Response
-[](#)
+[List[SingularityTask]](#SingularityTask)
 
 
 ###### Errors
@@ -1212,7 +1270,7 @@ Retrieve the list of cleaning tasks.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityTaskCleanup]](#SingularityTaskCleanup)
 
 
 ###### Errors
@@ -1231,7 +1289,7 @@ Retrieve the list of tasks being cleaned from load balancers.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityTaskId]](#SingularityTaskId)
 
 
 ###### Errors
@@ -1250,7 +1308,7 @@ Retrieve list of scheduled tasks.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityTaskRequest]](#SingularityTaskRequest)
 
 
 ###### Errors
@@ -1269,7 +1327,7 @@ Retrieve list of scheduled task IDs.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityPendingTaskId]](#SingularityPendingTaskId)
 
 
 ###### Errors
@@ -1292,7 +1350,7 @@ Retrieve list of scheduled tasks for a specific request.
 | requestId | true |  | string |
 
 ###### Response
-[](#)
+[List[SingularityTaskRequest]](#SingularityTaskRequest)
 
 
 ###### Errors
@@ -1315,30 +1373,7 @@ Retrieve information about a pending task.
 | pendingTaskId | true |  | string |
 
 ###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[](#)
+[SingularityTaskRequest](#SingularityTaskRequest)
 
 
 ###### Errors
@@ -1363,10 +1398,33 @@ Kill a specific active task.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false |  | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| user | false |  | string |
 
 ###### Response
-[](#)
+[SingularityTaskCleanupResult](#SingularityTaskCleanupResult)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#SingularityTask)
 
 
 ###### Errors
@@ -1389,7 +1447,7 @@ Retrieve statistics about a specific active task.
 | taskId | true |  | string |
 
 ###### Response
-[](#)
+[MesosTaskStatisticsObject](#MesosTaskStatisticsObject)
 
 
 ###### Errors
@@ -1443,7 +1501,7 @@ Make this instance of Singularity believe it&#39;s elected leader.
 - - -
 #### **POST** `/api/test/notleader`
 
-Make this instanceo of Singularity believe it&#39;s lost leadership.
+Make this instance of Singularity believe it&#39;s lost leadership.
 
 
 ###### Parameters
@@ -1535,7 +1593,7 @@ Retrieve a list of active webhooks.
 - No parameters
 
 ###### Response
-[](#)
+[List[SingularityWebhook]](#SingularityWebhook)
 
 
 ###### Errors
@@ -1558,7 +1616,7 @@ Add a new webhook.
 | body | false |  | <a href="#SingularityWebhook">SingularityWebhook</a> |
 
 ###### Response
-[](#)
+[string](#)
 
 
 ###### Errors
@@ -1581,7 +1639,7 @@ Retrieve a list of queued deploy updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[](#)
+[List[SingularityDeployUpdate]](#SingularityDeployUpdate)
 
 
 ###### Errors
@@ -1604,7 +1662,7 @@ Retrieve a list of queued request updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[](#)
+[List[SingularityRequestHistory]](#SingularityRequestHistory)
 
 
 ###### Errors
@@ -1627,7 +1685,7 @@ Retrieve a list of queued task updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[](#)
+[List[SingularityTaskHistoryUpdate]](#SingularityTaskHistoryUpdate)
 
 
 ###### Errors
@@ -1650,7 +1708,7 @@ Delete a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[](#)
+[string](#)
 
 
 ###### Errors
@@ -1663,6 +1721,154 @@ Delete a specific webhook.
 
 ## Data Types
 
+## ByteString
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| validUtf8 | boolean | optional |  |
+| empty | boolean | optional |  |
+
+
+## CommandInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#CommandInfo">CommandInfo</a> | optional |  |
+| urisOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]">List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;</a> | optional |  |
+| urisCount | int | optional |  |
+| argumentsCount | int | optional |  |
+| argumentsList | Array[string] | optional |  |
+| containerOrBuilder | <a href="#ContainerInfoOrBuilder">ContainerInfoOrBuilder</a> | optional |  |
+| container | <a href="#ContainerInfo">ContainerInfo</a> | optional |  |
+| user | string | optional |  |
+| value | string | optional |  |
+| initialized | boolean | optional |  |
+| environment | <a href="#Environment">Environment</a> | optional |  |
+| userBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| shell | boolean | optional |  |
+| serializedSize | int | optional |  |
+| urisList | <a href="#List[URI]">List[URI]</a> | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| environmentOrBuilder | <a href="#EnvironmentOrBuilder">EnvironmentOrBuilder</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## CommandInfoOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| urisOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]">List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]</a> | optional |  |
+| argumentsCount | int | optional |  |
+| urisCount | int | optional |  |
+| argumentsList | Array[string] | optional |  |
+| containerOrBuilder | <a href="#ContainerInfoOrBuilder">ContainerInfoOrBuilder</a> | optional |  |
+| container | <a href="#ContainerInfo">ContainerInfo</a> | optional |  |
+| user | string | optional |  |
+| value | string | optional |  |
+| environment | <a href="#Environment">Environment</a> | optional |  |
+| userBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| shell | boolean | optional |  |
+| urisList | <a href="#List[URI]">List[URI]</a> | optional |  |
+| environmentOrBuilder | <a href="#EnvironmentOrBuilder">EnvironmentOrBuilder</a> | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+
+
+## ContainerInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#ContainerInfo">ContainerInfo</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;</a> | optional |  |
+| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER, MESOS |
+| hostname | string | optional |  |
+| dockerOrBuilder | <a href="#DockerInfoOrBuilder">DockerInfoOrBuilder</a> | optional |  |
+| initialized | boolean | optional |  |
+| volumesCount | int | optional |  |
+| serializedSize | int | optional |  |
+| volumesList | <a href="#List[Volume]">List[Volume]</a> | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| hostnameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| volumesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$VolumeOrBuilder]">List[? extends org.apache.mesos.Protos$VolumeOrBuilder]</a> | optional |  |
+| docker | <a href="#DockerInfo">DockerInfo</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## ContainerInfoOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER, MESOS |
+| hostname | string | optional |  |
+| dockerOrBuilder | <a href="#DockerInfoOrBuilder">DockerInfoOrBuilder</a> | optional |  |
+| volumesCount | int | optional |  |
+| volumesList | <a href="#List[Volume]">List[Volume]</a> | optional |  |
+| hostnameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| docker | <a href="#DockerInfo">DockerInfo</a> | optional |  |
+| volumesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$VolumeOrBuilder]">List[? extends org.apache.mesos.Protos$VolumeOrBuilder]</a> | optional |  |
+
+
+## Descriptor
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| enumTypes | <a href="#List[EnumDescriptor]">List[EnumDescriptor]</a> | optional |  |
+| fullName | string | optional |  |
+| containingType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| file | <a href="#FileDescriptor">FileDescriptor</a> | optional |  |
+| extensions | <a href="#List[FieldDescriptor]">List[FieldDescriptor]</a> | optional |  |
+| options | <a href="#MessageOptions">MessageOptions</a> | optional |  |
+| fields | <a href="#List[FieldDescriptor]">List[FieldDescriptor]</a> | optional |  |
+| name | string | optional |  |
+| index | int | optional |  |
+| nestedTypes | <a href="#List[Descriptor]">List[Descriptor]</a> | optional |  |
+
+
+## DockerInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#DockerInfo">DockerInfo</a> | optional |  |
+| portMappingsOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ContainerInfo$DockerInfo$PortMappingOrBuilder]">List[? extends org.apache.mesos.Protos$ContainerInfo$DockerInfo$PortMappingOrBuilder]</a> | optional |  |
+| parametersList | <a href="#List[Parameter]">List[Parameter]</a> | optional |  |
+| parametersOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ParameterOrBuilder]">List[? extends org.apache.mesos.Protos$ParameterOrBuilder]</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo$DockerInfo&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo$DockerInfo&gt;</a> | optional |  |
+| imageBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| initialized | boolean | optional |  |
+| privileged | boolean | optional |  |
+| portMappingsCount | int | optional |  |
+| parametersCount | int | optional |  |
+| serializedSize | int | optional |  |
+| network | <a href="#Network">Network</a> | optional |  Allowable values: HOST, BRIDGE, NONE |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| portMappingsList | <a href="#List[PortMapping]">List[PortMapping]</a> | optional |  |
+| image | string | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## DockerInfoOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| portMappingsOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ContainerInfo$DockerInfo$PortMappingOrBuilder]">List[? extends org.apache.mesos.Protos$ContainerInfo$DockerInfo$PortMappingOrBuilder]</a> | optional |  |
+| parametersOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ParameterOrBuilder]">List[? extends org.apache.mesos.Protos$ParameterOrBuilder]</a> | optional |  |
+| parametersList | <a href="#List[Parameter]">List[Parameter]</a> | optional |  |
+| imageBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| privileged | boolean | optional |  |
+| parametersCount | int | optional |  |
+| portMappingsCount | int | optional |  |
+| network | <a href="#Network">Network</a> | optional |  Allowable values: HOST, BRIDGE, NONE |
+| portMappingsList | <a href="#List[PortMapping]">List[PortMapping]</a> | optional |  |
+| image | string | optional |  |
+
+
 ## EmbeddedArtifact
 
 | name | type | required | description |
@@ -1671,6 +1877,32 @@ Delete a specific webhook.
 | filename | string | optional |  |
 | name | string | optional |  |
 | content | <a href="#byte">Array[byte]</a> | optional |  |
+
+
+## Environment
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#Environment">Environment</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Environment&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Environment&gt;</a> | optional |  |
+| initialized | boolean | optional |  |
+| variablesCount | int | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| variablesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$Environment$VariableOrBuilder]">List[? extends org.apache.mesos.Protos$Environment$VariableOrBuilder]</a> | optional |  |
+| variablesList | <a href="#List[Variable]">List[Variable]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| initializationErrorString | string | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+
+
+## EnvironmentOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| variablesCount | int | optional |  |
+| variablesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$Environment$VariableOrBuilder]">List[? extends org.apache.mesos.Protos$Environment$VariableOrBuilder]</a> | optional |  |
+| variablesList | <a href="#List[Variable]">List[Variable]</a> | optional |  |
 
 
 ## ExecutorData
@@ -1691,6 +1923,82 @@ Delete a specific webhook.
 | cmd | string | optional |  |
 
 
+## ExecutorID
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#ExecutorID">ExecutorID</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ExecutorID&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ExecutorID&gt;</a> | optional |  |
+| value | string | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| initializationErrorString | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+
+
+## ExecutorIDOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| value | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+
+
+## ExecutorInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| commandOrBuilder | <a href="#CommandInfoOrBuilder">CommandInfoOrBuilder</a> | optional |  |
+| defaultInstanceForType | <a href="#ExecutorInfo">ExecutorInfo</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ExecutorInfo&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ExecutorInfo&gt;</a> | optional |  |
+| resourcesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ResourceOrBuilder]">List[? extends org.apache.mesos.Protos$ResourceOrBuilder]</a> | optional |  |
+| data | <a href="#ByteString">ByteString</a> | optional |  |
+| source | string | optional |  |
+| containerOrBuilder | <a href="#ContainerInfoOrBuilder">ContainerInfoOrBuilder</a> | optional |  |
+| container | <a href="#ContainerInfo">ContainerInfo</a> | optional |  |
+| executorId | <a href="#ExecutorID">ExecutorID</a> | optional |  |
+| initialized | boolean | optional |  |
+| name | string | optional |  |
+| nameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| sourceBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| frameworkId | <a href="#FrameworkID">FrameworkID</a> | optional |  |
+| command | <a href="#CommandInfo">CommandInfo</a> | optional |  |
+| frameworkIdOrBuilder | <a href="#FrameworkIDOrBuilder">FrameworkIDOrBuilder</a> | optional |  |
+| executorIdOrBuilder | <a href="#ExecutorIDOrBuilder">ExecutorIDOrBuilder</a> | optional |  |
+| serializedSize | int | optional |  |
+| resourcesList | <a href="#List[Resource]">List[Resource]</a> | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| resourcesCount | int | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## ExecutorInfoOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| commandOrBuilder | <a href="#CommandInfoOrBuilder">CommandInfoOrBuilder</a> | optional |  |
+| resourcesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ResourceOrBuilder]">List[? extends org.apache.mesos.Protos$ResourceOrBuilder]</a> | optional |  |
+| data | <a href="#ByteString">ByteString</a> | optional |  |
+| source | string | optional |  |
+| containerOrBuilder | <a href="#ContainerInfoOrBuilder">ContainerInfoOrBuilder</a> | optional |  |
+| container | <a href="#ContainerInfo">ContainerInfo</a> | optional |  |
+| executorId | <a href="#ExecutorID">ExecutorID</a> | optional |  |
+| name | string | optional |  |
+| nameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| sourceBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| frameworkId | <a href="#FrameworkID">FrameworkID</a> | optional |  |
+| command | <a href="#CommandInfo">CommandInfo</a> | optional |  |
+| frameworkIdOrBuilder | <a href="#FrameworkIDOrBuilder">FrameworkIDOrBuilder</a> | optional |  |
+| executorIdOrBuilder | <a href="#ExecutorIDOrBuilder">ExecutorIDOrBuilder</a> | optional |  |
+| resourcesList | <a href="#List[Resource]">List[Resource]</a> | optional |  |
+| resourcesCount | int | optional |  |
+
+
 ## ExternalArtifact
 
 | name | type | required | description |
@@ -1702,6 +2010,142 @@ Delete a specific webhook.
 | name | string | optional |  |
 
 
+## FileDescriptor
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| enumTypes | <a href="#List[EnumDescriptor]">List[EnumDescriptor]</a> | optional |  |
+| publicDependencies | <a href="#List[FileDescriptor]">List[FileDescriptor]</a> | optional |  |
+| extensions | <a href="#List[FieldDescriptor]">List[FieldDescriptor]</a> | optional |  |
+| services | <a href="#List[ServiceDescriptor]">List[ServiceDescriptor]</a> | optional |  |
+| options | <a href="#FileOptions">FileOptions</a> | optional |  |
+| messageTypes | <a href="#List[Descriptor]">List[Descriptor]</a> | optional |  |
+| name | string | optional |  |
+| dependencies | <a href="#List[FileDescriptor]">List[FileDescriptor]</a> | optional |  |
+| package | string | optional |  |
+
+
+## FileOptions
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#FileOptions">FileOptions</a> | optional |  |
+| javaMultipleFiles | boolean | optional |  |
+| optimizeFor | <a href="#OptimizeMode">OptimizeMode</a> | optional |  Allowable values: SPEED, CODE_SIZE, LITE_RUNTIME |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$FileOptions&gt;">com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$FileOptions&gt;</a> | optional |  |
+| javaPackageBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| goPackageBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| uninterpretedOptionCount | int | optional |  |
+| javaGenericServices | boolean | optional |  |
+| javaOuterClassnameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| initialized | boolean | optional |  |
+| javaOuterClassname | string | optional |  |
+| serializedSize | int | optional |  |
+| pyGenericServices | boolean | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| uninterpretedOptionList | <a href="#List[UninterpretedOption]">List[UninterpretedOption]</a> | optional |  |
+| javaPackage | string | optional |  |
+| goPackage | string | optional |  |
+| uninterpretedOptionOrBuilderList | <a href="#List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]">List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| javaGenerateEqualsAndHash | boolean | optional |  |
+| initializationErrorString | string | optional |  |
+| ccGenericServices | boolean | optional |  |
+
+
+## FrameworkID
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#FrameworkID">FrameworkID</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$FrameworkID&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$FrameworkID&gt;</a> | optional |  |
+| value | string | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| initializationErrorString | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+
+
+## FrameworkIDOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| value | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+
+
+## HTTP
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#HTTP">HTTP</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck$HTTP&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck$HTTP&gt;</a> | optional |  |
+| pathBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
+| statusesCount | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| path | string | optional |  |
+| port | int | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| statusesList | Array[int] | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## HTTPOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| pathBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| statusesCount | int | optional |  |
+| port | int | optional |  |
+| path | string | optional |  |
+| statusesList | Array[int] | optional |  |
+
+
+## HealthCheck
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#HealthCheck">HealthCheck</a> | optional |  |
+| commandOrBuilder | <a href="#CommandInfoOrBuilder">CommandInfoOrBuilder</a> | optional |  |
+| gracePeriodSeconds | double | optional |  |
+| httpOrBuilder | <a href="#HTTPOrBuilder">HTTPOrBuilder</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;</a> | optional |  |
+| consecutiveFailures | int | optional |  |
+| intervalSeconds | double | optional |  |
+| initialized | boolean | optional |  |
+| command | <a href="#CommandInfo">CommandInfo</a> | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| timeoutSeconds | double | optional |  |
+| http | <a href="#HTTP">HTTP</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| delaySeconds | double | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## HealthCheckOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| gracePeriodSeconds | double | optional |  |
+| commandOrBuilder | <a href="#CommandInfoOrBuilder">CommandInfoOrBuilder</a> | optional |  |
+| httpOrBuilder | <a href="#HTTPOrBuilder">HTTPOrBuilder</a> | optional |  |
+| consecutiveFailures | int | optional |  |
+| intervalSeconds | double | optional |  |
+| command | <a href="#CommandInfo">CommandInfo</a> | optional |  |
+| timeoutSeconds | double | optional |  |
+| http | <a href="#HTTP">HTTP</a> | optional |  |
+| delaySeconds | double | optional |  |
+
+
 ## LoadBalancerRequestId
 
 | name | type | required | description |
@@ -1709,6 +2153,106 @@ Delete a specific webhook.
 | requestType | <a href="#LoadBalancerRequestType">LoadBalancerRequestType</a> | optional |  Allowable values: ADD, REMOVE, DEPLOY |
 | attemptNumber | int | optional |  |
 | id | string | optional |  |
+
+
+## MesosFileChunkObject
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| data | string | optional |  |
+| offset | long | optional |  |
+
+
+## MesosTaskStatisticsObject
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| memFileBytes | long | optional |  |
+| memLimitBytes | long | optional |  |
+| cpusThrottledTimeSecs | float | optional |  |
+| cpusSystemTimeSecs | float | optional |  |
+| memRssBytes | long | optional |  |
+| memAnonBytes | long | optional |  |
+| memMappedFileBytes | long | optional |  |
+| cpusLimit | int | optional |  |
+| timestamp | double | optional |  |
+| cpusNrPeriods | int | optional |  |
+| cpusUserTimeSecs | float | optional |  |
+| cpusNrThrottled | int | optional |  |
+
+
+## MessageOptions
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#MessageOptions">MessageOptions</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$MessageOptions&gt;">com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$MessageOptions&gt;</a> | optional |  |
+| uninterpretedOptionCount | int | optional |  |
+| initialized | boolean | optional |  |
+| noStandardDescriptorAccessor | boolean | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| messageSetWireFormat | boolean | optional |  |
+| uninterpretedOptionList | <a href="#List[UninterpretedOption]">List[UninterpretedOption]</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| uninterpretedOptionOrBuilderList | <a href="#List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]">List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]</a> | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## Offer
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#Offer">Offer</a> | optional |  |
+| executorIdsOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ExecutorIDOrBuilder]">List[? extends org.apache.mesos.Protos$ExecutorIDOrBuilder]</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Offer&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Offer&gt;</a> | optional |  |
+| slaveIdOrBuilder | <a href="#SlaveIDOrBuilder">SlaveIDOrBuilder</a> | optional |  |
+| executorIdsCount | int | optional |  |
+| resourcesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ResourceOrBuilder]">List[? extends org.apache.mesos.Protos$ResourceOrBuilder]</a> | optional |  |
+| executorIdsList | <a href="#List[ExecutorID]">List[ExecutorID]</a> | optional |  |
+| hostname | string | optional |  |
+| attributesCount | int | optional |  |
+| initialized | boolean | optional |  |
+| attributesList | <a href="#List[Attribute]">List[Attribute]</a> | optional |  |
+| idOrBuilder | <a href="#OfferIDOrBuilder">OfferIDOrBuilder</a> | optional |  |
+| frameworkId | <a href="#FrameworkID">FrameworkID</a> | optional |  |
+| frameworkIdOrBuilder | <a href="#FrameworkIDOrBuilder">FrameworkIDOrBuilder</a> | optional |  |
+| serializedSize | int | optional |  |
+| resourcesList | <a href="#List[Resource]">List[Resource]</a> | optional |  |
+| slaveId | <a href="#SlaveID">SlaveID</a> | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| hostnameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| attributesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$AttributeOrBuilder]">List[? extends org.apache.mesos.Protos$AttributeOrBuilder]</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| resourcesCount | int | optional |  |
+| id | <a href="#OfferID">OfferID</a> | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## OfferID
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#OfferID">OfferID</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$OfferID&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$OfferID&gt;</a> | optional |  |
+| value | string | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| initializationErrorString | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+
+
+## OfferIDOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| value | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
 
 
 ## S3Artifact
@@ -1727,7 +2271,7 @@ Delete a specific webhook.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER |
+| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER, MESOS |
 | volumes | <a href="#SingularityVolume">Array[SingularityVolume]</a> | optional |  |
 | docker | <a href="#SingularityDockerInfo">SingularityDockerInfo</a> | optional |  |
 
@@ -1742,24 +2286,36 @@ Delete a specific webhook.
 | containerInfo | <a href="#SingularityContainerInfo">SingularityContainerInfo</a> | optional | Container information for deployment into a container. |
 | arguments | Array[string] | optional | Command arguments. |
 | serviceBasePath | string | optional | The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API. |
-| metadata | <a href="#Map[string,string]">Map[string,string]</a> | optional | Map of metadata key/value pairs associated with the deployment. |
 | customExecutorSource | string | optional | Custom Mesos executor source. |
+| metadata | <a href="#Map[string,string]">Map[string,string]</a> | optional | Map of metadata key/value pairs associated with the deployment. |
 | healthcheckTimeoutSeconds | long | optional | Health check timeout in seconds. |
 | healthcheckUri | string | optional | Deployment Healthcheck URI. |
 | requestId | string | required | Singularity Request Id which is associated with this deploy. |
 | loadBalancerGroups | Array[string] | optional | List of load balancer groups associated with this deployment. |
 | skipHealthchecksOnDeploy | boolean | optional | Allows skipping of health checks when deploying. |
 | healthcheckIntervalSeconds | long | optional | Health check interval in seconds. |
-| executorData | <a href="#ExecutorData">ExecutorData</a> | optional | Executor specific information |
 | command | string | optional | Command to execute for this deployment. |
-| considerHealthyAfterRunningForSeconds | long | optional | Number of seconds that a service must be healthy to consider the deployment to be successful. |
+| requestedResources | <a href="#SingularityResourceRequest">Array[SingularityResourceRequest]</a> | optional | Resources required for this deploy. |
+| executorData | <a href="#ExecutorData">ExecutorData</a> | optional | Executor specific information |
 | timestamp | long | optional | Deploy timestamp. |
+| considerHealthyAfterRunningForSeconds | long | optional | Number of seconds that a service must be healthy to consider the deployment to be successful. |
 | loadBalancerOptions | <a href="#Map[string,Object]">Map[string,Object]</a> | optional | Map (Key/Value) of options for the load balancer. |
+| requestedAttributes | <a href="#Map[string,string]">Map[string,string]</a> | optional | Attributes required for this deploy. |
 | customExecutorCmd | string | optional | Custom Mesos executor |
 | env | <a href="#Map[string,string]">Map[string,string]</a> | optional | Map of environment variable definitions. |
 | version | string | optional | Deploy version |
-| deployHealthTimeoutSeconds | long | optional | Number of seconds that singularity waits for this service to become healthy. |
 | id | string | required | Singularity deploy id. |
+| deployHealthTimeoutSeconds | long | optional | Number of seconds that singularity waits for this service to become healthy. |
+
+
+## SingularityDeployHistory
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| deploy | <a href="#SingularityDeploy">SingularityDeploy</a> | optional |  |
+| deployStatistics | <a href="#SingularityDeployStatistics">SingularityDeployStatistics</a> | optional |  |
+| deployResult | <a href="#SingularityDeployResult">SingularityDeployResult</a> | optional |  |
+| deployMarker | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
 
 
 ## SingularityDeployMarker
@@ -1781,10 +2337,47 @@ Delete a specific webhook.
 | user | string | optional | User owning this deploy. |
 
 
+## SingularityDeployResult
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| lbUpdate | <a href="#SingularityLoadBalancerUpdate">SingularityLoadBalancerUpdate</a> | optional |  |
+| deployState | <a href="#DeployState">DeployState</a> | optional |  Allowable values: SUCCEEDED, FAILED_INTERNAL_STATE, CANCELING, WAITING, OVERDUE, FAILED, CANCELED |
+| message | string | optional |  |
+| timestamp | long | optional |  |
+
+
+## SingularityDeployStatistics
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| lastTaskState | <a href="#ExtendedTaskState">ExtendedTaskState</a> | optional |  |
+| numFailures | int | optional |  |
+| numTasks | int | optional |  |
+| averageRuntimeMillis | long | optional |  |
+| lastFinishAt | long | optional |  |
+| requestId | string | optional |  |
+| deployId | string | optional |  |
+| numSequentialRetries | int | optional |  |
+| numSuccess | int | optional |  |
+| instanceSequentialFailureTimestamps | <a href="#com.google.common.collect.ListMultimap&lt;java.lang.Integer, java.lang.Long&gt;">com.google.common.collect.ListMultimap&lt;java.lang.Integer, java.lang.Long&gt;</a> | optional |  |
+
+
+## SingularityDeployUpdate
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| deploy | <a href="#SingularityDeploy">SingularityDeploy</a> | optional |  |
+| deployResult | <a href="#SingularityDeployResult">SingularityDeployResult</a> | optional |  |
+| eventType | <a href="#DeployEventType">DeployEventType</a> | optional |  Allowable values: STARTING, FINISHED |
+| deployMarker | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
+
+
 ## SingularityDockerInfo
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| privileged | boolean | optional |  |
 | network | <a href="#Network">Network</a> | optional |  |
 | portMappings | <a href="#SingularityDockerPortMapping">Array[SingularityDockerPortMapping]</a> | optional |  |
 | image | string | optional |  |
@@ -1801,6 +2394,19 @@ Delete a specific webhook.
 | hostPortType | <a href="#SingularityPortMappingType">SingularityPortMappingType</a> | optional |  Allowable values: LITERAL, FROM_OFFER |
 
 
+## SingularityHostState
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| hostAddress | string | optional |  |
+| hostname | string | optional |  |
+| driverStatus | string | optional |  |
+| master | boolean | optional |  |
+| mesosMaster | string | optional |  |
+| uptime | long | optional |  |
+| millisSinceLastOffer | long | optional |  |
+
+
 ## SingularityLoadBalancerUpdate
 
 | name | type | required | description |
@@ -1811,6 +2417,14 @@ Delete a specific webhook.
 | method | <a href="#LoadBalancerMethod">LoadBalancerMethod</a> | optional |  Allowable values: PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL |
 | message | string | optional |  |
 | timestamp | long | optional |  |
+
+
+## SingularityPauseRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| user | string | optional |  |
+| killTasks | boolean | optional |  |
 
 
 ## SingularityPendingDeploy
@@ -1831,7 +2445,41 @@ Delete a specific webhook.
 | cmdLineArgs | string | optional |  |
 | timestamp | long | optional |  |
 | deployId | string | optional |  |
-| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE |
+| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP |
+
+
+## SingularityPendingTask
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| pendingTaskId | <a href="#SingularityPendingTaskId">SingularityPendingTaskId</a> | optional |  |
+| maybeCmdLineArgs | string | optional |  |
+
+
+## SingularityPendingTaskId
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| nextRunAt | long | optional |  |
+| requestId | string | optional |  |
+| deployId | string | optional |  |
+| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP |
+| instanceNo | int | optional |  |
+| createdAt | long | optional |  |
+| id | string | optional |  |
+
+
+## SingularityRack
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| deadAt | long | optional |  |
+| decomissionedAt | long | optional |  |
+| state | <a href="#SingularityMachineState">SingularityMachineState</a> | optional |  Allowable values: ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD |
+| decomissioningBy | string | optional |  |
+| decomissioningAt | long | optional |  |
+| firstSeenAt | long | optional |  |
+| id | string | optional |  |
 
 
 ## SingularityRequest
@@ -1845,8 +2493,9 @@ Delete a specific webhook.
 | rackSensitive | boolean | optional |  |
 | owners | Array[string] | optional |  |
 | quartzSchedule | string | optional |  |
-| numRetriesOnFailure | int | optional |  |
+| scheduledExpectedRuntimeMillis | long | optional |  |
 | loadBalanced | boolean | optional |  |
+| numRetriesOnFailure | int | optional |  |
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | <a href="#ScheduleType">ScheduleType</a> | optional |  |
@@ -1860,8 +2509,9 @@ Delete a specific webhook.
 | requestId | string | optional |  |
 | user | string | optional |  |
 | killTasks | boolean | optional |  |
-| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING |
+| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING, BOUNCE |
 | timestamp | long | optional |  |
+| deployId | string | optional |  |
 
 
 ## SingularityRequestDeployState
@@ -1871,6 +2521,16 @@ Delete a specific webhook.
 | pendingDeploy | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
 | requestId | string | optional |  |
 | activeDeploy | <a href="#SingularityDeployMarker">SingularityDeployMarker</a> | optional |  |
+
+
+## SingularityRequestHistory
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| user | string | optional |  |
+| request | <a href="#SingularityRequest">SingularityRequest</a> | optional |  |
+| eventType | <a href="#RequestHistoryType">RequestHistoryType</a> | optional |  Allowable values: CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE |
+| createdAt | long | optional |  |
 
 
 ## SingularityRequestInstances
@@ -1893,6 +2553,175 @@ Delete a specific webhook.
 | requestDeployState | <a href="#SingularityRequestDeployState">SingularityRequestDeployState</a> | optional |  |
 
 
+## SingularityResourceRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| value | <a href="#Object">Object</a> | optional |  |
+| name | string | optional |  |
+
+
+## SingularitySandbox
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| slaveHostname | string | optional | Hostname of tasks's slave |
+| files | <a href="#SingularitySandboxFile">Array[SingularitySandboxFile]</a> | optional | List of files inside sandbox |
+| currentDirectory | string | optional | Current directory |
+| fullPathToRoot | string | optional | Full path to the root of the Mesos task sandbox |
+
+
+## SingularitySandboxFile
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| size | long | optional | File size (in bytes) |
+| mode | string | optional | File mode |
+| mtime | long | optional | Last modified time |
+| name | string | optional | Filename |
+
+
+## SingularitySlave
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| deadAt | long | optional |  |
+| decomissionedAt | long | optional |  |
+| state | <a href="#SingularityMachineState">SingularityMachineState</a> | optional |  Allowable values: ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD |
+| host | string | optional | Slave hostname |
+| decomissioningBy | string | optional |  |
+| decomissioningAt | long | optional |  |
+| rackId | string | optional | Slave rack ID |
+| firstSeenAt | long | optional |  |
+| id | string | optional |  |
+
+
+## SingularityState
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| activeRacks | int | optional |  |
+| decomissioningRacks | int | optional |  |
+| activeSlaves | int | optional |  |
+| generatedAt | long | optional |  |
+| pausedRequests | int | optional |  |
+| activeTasks | int | optional |  |
+| lbCleanupTasks | int | optional |  |
+| overProvisionedRequestIds | Array[string] | optional |  |
+| cleaningRequests | int | optional |  |
+| deadSlaves | int | optional |  |
+| lateTasks | int | optional |  |
+| overProvisionedRequests | int | optional |  |
+| numDeploys | int | optional |  |
+| cleaningTasks | int | optional |  |
+| activeRequests | int | optional |  |
+| futureTasks | int | optional |  |
+| finishedRequests | int | optional |  |
+| deadRacks | int | optional |  |
+| pendingRequests | int | optional |  |
+| maxTaskLag | long | optional |  |
+| cooldownRequests | int | optional |  |
+| hostStates | <a href="#SingularityHostState">Array[SingularityHostState]</a> | optional |  |
+| allRequests | int | optional |  |
+| underProvisionedRequests | int | optional |  |
+| decomissioningSlaves | int | optional |  |
+| oldestDeploy | long | optional |  |
+| scheduledTasks | int | optional |  |
+| underProvisionedRequestIds | Array[string] | optional |  |
+
+
+## SingularityTask
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | <a href="#SingularityTaskId">SingularityTaskId</a> | optional |  |
+| taskRequest | <a href="#SingularityTaskRequest">SingularityTaskRequest</a> | optional |  |
+| offer | <a href="#Offer">Offer</a> | optional |  |
+| mesosTask | <a href="#TaskInfo">TaskInfo</a> | optional |  |
+
+
+## SingularityTaskCleanup
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | <a href="#SingularityTaskId">SingularityTaskId</a> | optional |  |
+| user | string | optional |  |
+| cleanupType | <a href="#TaskCleanupType">TaskCleanupType</a> | optional |  Allowable values: USER_REQUESTED, DECOMISSIONING, SCALING_DOWN, BOUNCING, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK |
+| timestamp | long | optional |  |
+
+
+## SingularityTaskCleanupResult
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| result | <a href="#SingularityCreateResult">SingularityCreateResult</a> | optional |  Allowable values: CREATED, EXISTED |
+| task | <a href="#SingularityTask">SingularityTask</a> | optional |  |
+
+
+## SingularityTaskHealthcheckResult
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | <a href="#SingularityTaskId">SingularityTaskId</a> | optional |  |
+| durationMillis | long | optional |  |
+| errorMessage | string | optional |  |
+| statusCode | int | optional |  |
+| timestamp | long | optional |  |
+| responseBody | string | optional |  |
+
+
+## SingularityTaskHistory
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| directory | string | optional |  |
+| task | <a href="#SingularityTask">SingularityTask</a> | optional |  |
+| healthcheckResults | <a href="#SingularityTaskHealthcheckResult">Array[SingularityTaskHealthcheckResult]</a> | optional |  |
+| loadBalancerUpdates | <a href="#SingularityLoadBalancerUpdate">Array[SingularityLoadBalancerUpdate]</a> | optional |  |
+| taskUpdates | <a href="#SingularityTaskHistoryUpdate">Array[SingularityTaskHistoryUpdate]</a> | optional |  |
+
+
+## SingularityTaskHistoryUpdate
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | <a href="#SingularityTaskId">SingularityTaskId</a> | optional |  |
+| statusMessage | string | optional |  |
+| taskState | <a href="#ExtendedTaskState">ExtendedTaskState</a> | optional |  Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN |
+| timestamp | long | optional |  |
+
+
+## SingularityTaskId
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| requestId | string | optional |  |
+| host | string | optional |  |
+| deployId | string | optional |  |
+| rackId | string | optional |  |
+| instanceNo | int | optional |  |
+| startedAt | long | optional |  |
+| id | string | optional |  |
+
+
+## SingularityTaskIdHistory
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | <a href="#SingularityTaskId">SingularityTaskId</a> | optional |  |
+| updatedAt | long | optional |  |
+| lastTaskState | <a href="#ExtendedTaskState">ExtendedTaskState</a> | optional |  |
+
+
+## SingularityTaskRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| deploy | <a href="#SingularityDeploy">SingularityDeploy</a> | optional |  |
+| request | <a href="#SingularityRequest">SingularityRequest</a> | optional |  |
+| pendingTask | <a href="#SingularityPendingTask">SingularityPendingTask</a> | optional |  |
+
+
 ## SingularityVolume
 
 | name | type | required | description |
@@ -1911,5 +2740,96 @@ Delete a specific webhook.
 | user | string | optional | User that created webhook. |
 | timestamp | long | optional |  |
 | id | string | optional | Unique ID for webhook. |
+
+
+## SlaveID
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#SlaveID">SlaveID</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$SlaveID&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$SlaveID&gt;</a> | optional |  |
+| value | string | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| initializationErrorString | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+
+
+## SlaveIDOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| value | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+
+
+## TaskID
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#TaskID">TaskID</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskID&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskID&gt;</a> | optional |  |
+| value | string | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| initializationErrorString | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+
+
+## TaskIDOrBuilder
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| value | string | optional |  |
+| valueBytes | <a href="#ByteString">ByteString</a> | optional |  |
+
+
+## TaskInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| commandOrBuilder | <a href="#CommandInfoOrBuilder">CommandInfoOrBuilder</a> | optional |  |
+| defaultInstanceForType | <a href="#TaskInfo">TaskInfo</a> | optional |  |
+| taskIdOrBuilder | <a href="#TaskIDOrBuilder">TaskIDOrBuilder</a> | optional |  |
+| taskId | <a href="#TaskID">TaskID</a> | optional |  |
+| parserForType | <a href="#com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;">com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;</a> | optional |  |
+| slaveIdOrBuilder | <a href="#SlaveIDOrBuilder">SlaveIDOrBuilder</a> | optional |  |
+| resourcesOrBuilderList | <a href="#List[? extends org.apache.mesos.Protos$ResourceOrBuilder]">List[? extends org.apache.mesos.Protos$ResourceOrBuilder]</a> | optional |  |
+| data | <a href="#ByteString">ByteString</a> | optional |  |
+| executor | <a href="#ExecutorInfo">ExecutorInfo</a> | optional |  |
+| containerOrBuilder | <a href="#ContainerInfoOrBuilder">ContainerInfoOrBuilder</a> | optional |  |
+| executorOrBuilder | <a href="#ExecutorInfoOrBuilder">ExecutorInfoOrBuilder</a> | optional |  |
+| container | <a href="#ContainerInfo">ContainerInfo</a> | optional |  |
+| healthCheckOrBuilder | <a href="#HealthCheckOrBuilder">HealthCheckOrBuilder</a> | optional |  |
+| initialized | boolean | optional |  |
+| name | string | optional |  |
+| nameBytes | <a href="#ByteString">ByteString</a> | optional |  |
+| command | <a href="#CommandInfo">CommandInfo</a> | optional |  |
+| healthCheck | <a href="#HealthCheck">HealthCheck</a> | optional |  |
+| serializedSize | int | optional |  |
+| resourcesList | <a href="#List[Resource]">List[Resource]</a> | optional |  |
+| slaveId | <a href="#SlaveID">SlaveID</a> | optional |  |
+| allFields | <a href="#Map[FieldDescriptor,Object]">Map[FieldDescriptor,Object]</a> | optional |  |
+| descriptorForType | <a href="#Descriptor">Descriptor</a> | optional |  |
+| unknownFields | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| resourcesCount | int | optional |  |
+| initializationErrorString | string | optional |  |
+
+
+## UnknownFieldSet
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| defaultInstanceForType | <a href="#UnknownFieldSet">UnknownFieldSet</a> | optional |  |
+| serializedSizeAsMessageSet | int | optional |  |
+| parserForType | <a href="#Parser">Parser</a> | optional |  |
+| initialized | boolean | optional |  |
+| serializedSize | int | optional |  |
 
 
