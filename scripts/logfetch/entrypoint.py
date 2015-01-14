@@ -96,7 +96,7 @@ def tail():
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
 
-  defaults = {}
+  defaults = {'verbose': False}
 
   try:
     config.readfp(FakeSectionHead(open(os.path.expanduser(conf_file))))
@@ -114,6 +114,7 @@ def tail():
   parser.add_argument("-u", "--singularity-uri-base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)", metavar="URI")
   parser.add_argument("-g", "--grep", help="String to grep for", metavar='grep')
   parser.add_argument("-l", "--logfile", help="Logfile path/name to tail (ie 'logs/access.log')", metavar="logfile")
+  parser.add_argument("-v", "--verbose", help="more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
