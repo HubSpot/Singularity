@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.client.SingularityClientModule;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
@@ -27,7 +28,7 @@ public class SingularityExecutorCleanupRunner {
     final long start = System.currentTimeMillis();
 
     try {
-      final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityExecutorConfigurationLoader(), new SingularityExecutorCleanupConfigurationLoader()), new SingularityExecutorModule(), new SingularityClientModule());
+      final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityExecutorConfigurationLoader(), new SingularityExecutorCleanupConfigurationLoader()), new SingularityExecutorModule(), new SingularityClientModule(), new SingularityMesosClientModule());
       final SingularityExecutorCleanupRunner runner = injector.getInstance(SingularityExecutorCleanupRunner.class);
 
       LOG.info("Starting cleanup");

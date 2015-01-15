@@ -8,7 +8,6 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -24,10 +23,9 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
+    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, lock);
 
     this.deployChecker = deployChecker;
-    this.lockHolder = Optional.of(lock);
   }
 
   @Override

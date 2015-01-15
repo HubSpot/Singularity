@@ -10,7 +10,7 @@ requirements = [
 
 setup(
     name='singularity-logfetch',
-    version='0.0.4',
+    version='0.0.6',
     description='Singularity log fetching and searching',
     author="HubSpot",
     author_email='singularity-users@googlegroups.com',
@@ -20,6 +20,9 @@ setup(
     install_requires=requirements,
     zip_safe=False,
     entry_points={
-        'console_scripts':['logfetch=logfetch.log_fetcher:entrypoint'],
+        'console_scripts':[
+            'logfetch=logfetch.entrypoint:fetch',
+            'logtail=logfetch.entrypoint:tail'
+        ],
     }
 )
