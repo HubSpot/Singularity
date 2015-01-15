@@ -70,8 +70,8 @@ class SingularitySlaveAndRackManager {
     NOT_RACK_OR_SLAVE_PARTICULAR(true),
     RACK_SATURATED(false),
     SLAVE_SATURATED(false),
-    SLAVE_DECOMISSIONING(false),
-    RACK_DECOMISSIONING(false),
+    SLAVE_DECOMMISSIONING(false),
+    RACK_DECOMMISSIONING(false),
     RACK_AFFINITY_NOT_MATCHING(false);
 
     private final boolean isMatchAllowed;
@@ -104,12 +104,12 @@ class SingularitySlaveAndRackManager {
     final String rackId = getRackId(offer);
     final String slaveId = offer.getSlaveId().getValue();
 
-    if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecomissioning()) {
-      return SlaveMatchState.SLAVE_DECOMISSIONING;
+    if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecommissioning()) {
+      return SlaveMatchState.SLAVE_DECOMMISSIONING;
     }
 
-    if (stateCache.getRack(rackId).get().getCurrentState().getState().isDecomissioning()) {
-      return SlaveMatchState.RACK_DECOMISSIONING;
+    if (stateCache.getRack(rackId).get().getCurrentState().getState().isDecommissioning()) {
+      return SlaveMatchState.RACK_DECOMMISSIONING;
     }
 
     if (!taskRequest.getRequest().getRackAffinity().or(Collections.<String> emptyList()).isEmpty()) {
@@ -267,7 +267,7 @@ class SingularitySlaveAndRackManager {
   }
 
   private enum CheckResult {
-    NEW, DECOMISSIONING, ALREADY_ACTIVE;
+    NEW, DECOMMISSIONING, ALREADY_ACTIVE;
   }
 
   private <T extends SingularityMachineAbstraction<T>> CheckResult check(T object, AbstractMachineManager<T> manager) {
@@ -288,10 +288,10 @@ class SingularitySlaveAndRackManager {
       case MISSING_ON_STARTUP:
         manager.changeState(object.getId(), MachineState.ACTIVE, Optional.<String> absent());
         return CheckResult.NEW;
-      case DECOMISSIONED:
-      case DECOMISSIONING:
-      case STARTING_DECOMISSION:
-        return CheckResult.DECOMISSIONING;
+      case DECOMMISSIONED:
+      case DECOMMISSIONING:
+      case STARTING_DECOMMISSION:
+        return CheckResult.DECOMMISSIONING;
     }
 
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
@@ -325,9 +325,9 @@ class SingularitySlaveAndRackManager {
       return;
     }
 
-    if (slave.get().getCurrentState().getState() == MachineState.DECOMISSIONING) {
+    if (slave.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
       if (!hasTaskLeftOnSlave(taskId, slaveId, stateCache)) {
-        slaveManager.changeState(slave.get(), MachineState.DECOMISSIONED, slave.get().getCurrentState().getUser());
+        slaveManager.changeState(slave.get(), MachineState.DECOMMISSIONED, slave.get().getCurrentState().getUser());
       }
     }
 
@@ -340,9 +340,9 @@ class SingularitySlaveAndRackManager {
       return;
     }
 
-    if (rack.get().getCurrentState().getState() == MachineState.DECOMISSIONING) {
+    if (rack.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
       if (!hasTaskLeftOnRack(taskId, stateCache)) {
-        rackManager.changeState(rack.get(), MachineState.DECOMISSIONED, rack.get().getCurrentState().getUser());
+        rackManager.changeState(rack.get(), MachineState.DECOMMISSIONED, rack.get().getCurrentState().getUser());
       }
     }
   }

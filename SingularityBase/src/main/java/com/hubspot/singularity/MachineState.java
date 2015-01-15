@@ -2,16 +2,16 @@ package com.hubspot.singularity;
 
 public enum MachineState {
 
-  MISSING_ON_STARTUP(false), ACTIVE(false), STARTING_DECOMISSION(true), DECOMISSIONING(true), DECOMISSIONED(true), DEAD(false);
+  MISSING_ON_STARTUP(false), ACTIVE(false), STARTING_DECOMMISSION(true), DECOMMISSIONING(true), DECOMMISSIONED(true), DEAD(false);
 
-  private final boolean isDecomissioning;
+  private final boolean isDecommissioning;
 
-  private MachineState(boolean isDecomissioning) {
-    this.isDecomissioning = isDecomissioning;
+  private MachineState(boolean isDecommissioning) {
+    this.isDecommissioning = isDecommissioning;
   }
 
-  public boolean isDecomissioning() {
-    return isDecomissioning;
+  public boolean isDecommissioning() {
+    return isDecommissioning;
   }
 
 

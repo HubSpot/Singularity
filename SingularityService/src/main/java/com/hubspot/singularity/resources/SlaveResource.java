@@ -65,17 +65,25 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
 
   @POST
   @Path("/slave/{slaveId}/decomission")
-  @ApiOperation("Begin decomissioning a specific active slave")
+  @Deprecated
   public void decomissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-                              @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
-    super.decomission(slaveId, user);
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
+    super.decommission(slaveId, user);
+  }
+
+  @POST
+  @Path("/slave/{slaveId}/decommission")
+  @ApiOperation("Begin decommissioning a specific active slave")
+  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
+    super.decommission(slaveId, user);
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-                              @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
+      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
     super.activate(slaveId, user);
   }
 

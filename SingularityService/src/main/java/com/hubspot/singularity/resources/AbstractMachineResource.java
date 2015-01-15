@@ -40,8 +40,8 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   }
 
-  protected void decomission(String objectId, Optional<String> user) {
-    changeState(objectId, MachineState.STARTING_DECOMISSION, user);
+  protected void decommission(String objectId, Optional<String> user) {
+    changeState(objectId, MachineState.STARTING_DECOMMISSION, user);
   }
 
   protected void activate(String objectId, Optional<String> user) {

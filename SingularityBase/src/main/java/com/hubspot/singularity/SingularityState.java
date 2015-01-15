@@ -25,12 +25,12 @@ public class SingularityState {
 
   private final int activeSlaves;
   private final int deadSlaves;
-  private final int decomissioningSlaves;
+  private final int decommissioningSlaves;
   private final int unknownSlaves;
 
   private final int activeRacks;
   private final int deadRacks;
-  private final int decomissioningRacks;
+  private final int decommissioningRacks;
   private final int unknownRacks;
 
   private final long oldestDeploy;
@@ -50,7 +50,7 @@ public class SingularityState {
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
       @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
-      @JsonProperty("decomissioningSlaves") int decomissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decomissioningRacks") int decomissioningRacks,
+      @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
@@ -70,8 +70,8 @@ public class SingularityState {
     this.deadSlaves = deadSlaves;
     this.unknownSlaves = unknownSlaves;
     this.unknownRacks = unknownRacks;
-    this.decomissioningRacks = decomissioningRacks;
-    this.decomissioningSlaves = decomissioningSlaves;
+    this.decommissioningRacks = decommissioningRacks;
+    this.decommissioningSlaves = decommissioningSlaves;
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
@@ -123,8 +123,13 @@ public class SingularityState {
     return deadSlaves;
   }
 
+  public int getDecommissioningSlaves() {
+    return decommissioningSlaves;
+  }
+
+  @Deprecated
   public int getDecomissioningSlaves() {
-    return decomissioningSlaves;
+    return decommissioningSlaves;
   }
 
   public int getActiveRacks() {
@@ -135,8 +140,13 @@ public class SingularityState {
     return deadRacks;
   }
 
+  @Deprecated
   public int getDecomissioningRacks() {
-    return decomissioningRacks;
+    return decommissioningRacks;
+  }
+
+  public int getDecommissioningRacks() {
+    return decommissioningRacks;
   }
 
   public int getActiveTasks() {
@@ -212,8 +222,8 @@ public class SingularityState {
     return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests
         + ", scheduledTasks=" + scheduledTasks + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks
         + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves="
-        + activeSlaves + ", deadSlaves=" + deadSlaves + ", decomissioningSlaves=" + decomissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
-        + deadRacks + ", decomissioningRacks=" + decomissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
+        + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
+        + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
         + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
         + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + "]";
   }

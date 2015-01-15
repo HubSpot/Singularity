@@ -64,17 +64,25 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @POST
   @Path("/rack/{rackId}/decomission")
-  @ApiOperation("Begin decomissioning a specific active rack")
+  @Deprecated
   public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
-                              @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
-    super.decomission(rackId, user);
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
+    super.decommission(rackId, user);
+  }
+
+  @POST
+  @Path("/rack/{rackId}/decommission")
+  @ApiOperation("Begin decommissioning a specific active rack")
+  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
+    super.decommission(rackId, user);
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
-                              @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
+      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
     super.activate(rackId, user);
   }
 

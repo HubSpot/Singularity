@@ -104,7 +104,7 @@ public class SingularityScheduler {
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
     Map<T, MachineState> map = Maps.newHashMapWithExpectedSize(objects.size());
     for (T object : objects) {
-      map.put(object, MachineState.DECOMISSIONING);
+      map.put(object, MachineState.DECOMMISSIONING);
     }
     return map;
   }
@@ -117,7 +117,7 @@ public class SingularityScheduler {
 
     final List<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
 
-    final Map<SingularitySlave, MachineState> slaves = getDefaultMap(slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION));
+    final Map<SingularitySlave, MachineState> slaves = getDefaultMap(slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION));
 
     for (SingularitySlave slave : slaves.keySet()) {
       boolean foundTask = false;
@@ -128,11 +128,11 @@ public class SingularityScheduler {
       }
 
       if (!foundTask) {
-        slaves.put(slave, MachineState.DECOMISSIONED);
+        slaves.put(slave, MachineState.DECOMMISSIONED);
       }
     }
 
-    final Map<SingularityRack, MachineState> racks = getDefaultMap(rackManager.getObjectsFiltered(MachineState.STARTING_DECOMISSION));
+    final Map<SingularityRack, MachineState> racks = getDefaultMap(rackManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION));
 
     for (SingularityRack rack : racks.keySet()) {
       boolean foundTask = false;
@@ -153,7 +153,7 @@ public class SingularityScheduler {
       }
 
       if (!foundTask) {
-        racks.put(rack, MachineState.DECOMISSIONED);
+        racks.put(rack, MachineState.DECOMMISSIONED);
       }
     }
 
