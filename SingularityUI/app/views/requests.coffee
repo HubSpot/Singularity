@@ -206,8 +206,8 @@ class RequestsView extends View
             delay: {hide: 400},
             container: 'span#schedule',
             html: true,
-            content: "<p>All schedules are in <a data-action='show-quartz'>quartz format</a> unless otherwise specified.<p>",
-            template: '<div class="popover" role="tooltip"><div class="popover-content"></div></div>'
+            content: "<p>All schedules are in <a data-action='show-quartz'>quartz format</a> unless otherwise specified.</p>",
+            template: '<div class="popover table-header-popover" role="tooltip"><div class="popover-content"></div></div>'
         }).on
             show: (e) ->
                 @showPopover(e)
