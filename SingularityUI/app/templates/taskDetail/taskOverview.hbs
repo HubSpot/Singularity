@@ -2,19 +2,29 @@
 <header class='detail-header'>
     <div class="row">
         {{! Left side }}
-        <div class="col-md-8">
+        <div class="col-md-12">
             {{#with data.task.taskRequest}}
                 <h5>
                     Request
                     <a href="{{appRoot}}/request/{{ request.id }}">
                         {{ request.id }}
                     </a>
+
                 </h5>
             {{/with}}
-            <h2>
-                {{ data.task.taskId.id }}
-            </h2>
         </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7">
+            <h3>
+                {{ data.task.taskId.id }}
+            </h3>
+        </div>
+        {{#if data.decommissioning}}
+            <div class="col-md-1">
+                <span class='label label-warning'>DECOM</span>
+            </div>
+        {{/if}}
 
         {{! Right side, buttons }}
         <div class="col-md-4 button-container">
@@ -29,6 +39,7 @@
             {{/if}}
         </div>
     </div>
+
 </header>
 
 {{#if data.taskUpdates}}

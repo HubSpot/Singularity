@@ -5,13 +5,12 @@ class Slaves extends Collection
 
     model: Slave
 
-    url: => "#{ config.apiRoot }/slaves/#{ @slaveType }"
+    url: => "#{ config.apiRoot }/slaves"
 
-    initialize: (models, { @slaveType }) =>
+    initialize: (models) =>
 
     parse: (slaves) ->
         _.map slaves, (slave) =>
-            slave.slaveType = @slaveType
             slave
 
 module.exports = Slaves

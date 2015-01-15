@@ -122,15 +122,7 @@ public class TaskResource {
   @Path("/active/slave/{slaveId}")
   @ApiOperation("Retrieve list of active tasks on a specific slave.")
   public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
-
-    if (!maybeSlave.isPresent()) {
-      maybeSlave = slaveManager.getDecomissioning(slaveId);
-    }
-
-    if (!maybeSlave.isPresent()) {
-      maybeSlave = slaveManager.getDeadObject(slaveId);
-    }
+    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     if (!maybeSlave.isPresent()) {
       throw new NotFoundException(String.format("Couldn't find a slave in any state with id %s", slaveId));
