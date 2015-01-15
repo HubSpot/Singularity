@@ -1,5 +1,6 @@
 package com.hubspot.singularity.smtp;
 
+import com.hubspot.mesos.MesosUtils;
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.Collection;
@@ -164,6 +165,8 @@ public class SingularityMailer implements Managed {
 
     LinkedHashMap<String, String[]> logTails = new LinkedHashMap<>();
     for (String file : maybeSmtpConfiguration.get().getTaskEmailTailFiles()) {
+      // To enable support for tailing the service.log file, replace instances of $MESOS_TASK_ID.
+      file = file.replaceAll("\\$MESOS_TASK_ID", MesosUtils.getTaskDirectoryPath(taskId.getId()).toString());
       logTails.put(file, getTaskLogFile(taskId, file, task, directory).or(new String[0]));
     }
     templateProperties.put("logTails", logTails);
