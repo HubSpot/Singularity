@@ -31,7 +31,7 @@ class RacksView extends View
         )
         decommission = new Racks(
             @collection.filter (model) ->
-              model.get('state') in ['DECOMMISSIONING','DECOMISSIONING', 'DECOMMISSIONED','DECOMISSIONED', 'STARTING_DECOMMISSION', 'STARTING_DECOMISSION']
+              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
         )
         inactive = new Racks(
             @collection.filter (model) ->

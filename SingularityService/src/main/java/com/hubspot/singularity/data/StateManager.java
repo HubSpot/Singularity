@@ -215,7 +215,7 @@ public class StateManager extends CuratorManager {
 
     int activeRacks = 0;
     int deadRacks = 0;
-    int decomissioningRacks = 0;
+    int decommissioningRacks = 0;
     int unknownRacks = 0;
 
     for (SingularityRack rack : racks) {
@@ -229,10 +229,10 @@ public class StateManager extends CuratorManager {
         case MISSING_ON_STARTUP:
           unknownRacks++;
           break;
-        case DECOMISSIONED:
-        case STARTING_DECOMISSION:
-        case DECOMISSIONING:
-          decomissioningRacks++;
+        case DECOMMISSIONED:
+        case STARTING_DECOMMISSION:
+        case DECOMMISSIONING:
+          decommissioningRacks++;
           break;
       }
     }
@@ -241,7 +241,7 @@ public class StateManager extends CuratorManager {
 
     int activeSlaves = 0;
     int deadSlaves = 0;
-    int decomissioningSlaves = 0;
+    int decommissioningSlaves = 0;
     int unknownSlaves = 0;
 
     for (SingularitySlave slave : slaves) {
@@ -255,10 +255,10 @@ public class StateManager extends CuratorManager {
         case MISSING_ON_STARTUP:
           unknownSlaves++;
           break;
-        case DECOMISSIONED:
-        case STARTING_DECOMISSION:
-        case DECOMISSIONING:
-          decomissioningSlaves++;
+        case DECOMMISSIONED:
+        case STARTING_DECOMMISSION:
+        case DECOMMISSIONING:
+          decommissioningSlaves++;
           break;
       }
     }
@@ -278,9 +278,9 @@ public class StateManager extends CuratorManager {
     }
 
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves,
-        deadSlaves, decomissioningSlaves, activeRacks, deadRacks, decomissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
+        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves);
   }
 
 }

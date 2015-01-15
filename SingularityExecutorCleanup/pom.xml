@@ -41,6 +41,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityMesosClient</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
     </dependency>

@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.concurrent.Executors;
@@ -30,23 +29,25 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   private final ScheduledExecutorService executorService;
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
-  private final boolean enabled;
+  private final Optional<Lock> lockHolder;
 
   private LeaderLatch leaderLatch;
   private SingularityExceptionNotifier exceptionNotifier;
   private SingularityAbort abort;
   private SingularityMesosSchedulerDelegator mesosScheduler;
 
-  protected Optional<Lock> lockHolder = Optional.absent();
-
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
-    this(pollDelay, pollTimeUnit, true);
+    this(pollDelay, pollTimeUnit, Optional.<Lock> absent());
   }
 
-  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, boolean enabled) {
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Lock lock) {
+    this(pollDelay, pollTimeUnit, Optional.of(lock));
+  }
+
+  private SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Optional<Lock> lockHolder) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
-    this.enabled = enabled;
+    this.lockHolder = lockHolder;
 
     this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
   }
@@ -64,8 +65,8 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   @Override
   public void start() {
-    if (!enabled) {
-      LOG.info("{} is not enabled, skipping.", getClass().getSimpleName());
+    if (!isEnabled()) {
+      LOG.info("{} is not enabled, not starting.", getClass().getSimpleName());
       return;
     }
 
@@ -90,12 +91,15 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     final boolean leadership = leaderLatch.hasLeadership();
     final boolean schedulerRunning = mesosScheduler.isRunning();
 
-    if (!leadership || !schedulerRunning) {
-      LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership, schedulerRunning);
+    if (!leadership || !schedulerRunning || !isEnabled()) {
+      LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {}, enabled: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership,
+          schedulerRunning, isEnabled());
       return;
     }
 
     LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
+
+    final long start = System.currentTimeMillis();
 
     if (lockHolder.isPresent()) {
       lockHolder.get().lock();
@@ -104,14 +108,26 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     try {
       runActionOnPoll();
     } catch (Throwable t) {
-      LOG.error("Caught an exception while running {} -- aborting", getClass().getSimpleName(), t);
+      LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
       exceptionNotifier.notify(t);
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+      if (abortsOnError()) {
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+      }
     } finally {
       if (lockHolder.isPresent()) {
         lockHolder.get().unlock();
       }
+
+      LOG.debug("Ran {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
     }
+  }
+
+  protected boolean isEnabled() {
+    return true;
+  }
+
+  protected boolean abortsOnError() {
+    return true;
   }
 
   public abstract void runActionOnPoll();

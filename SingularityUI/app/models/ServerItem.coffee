@@ -39,7 +39,7 @@ class ServerItem extends Model
 
     decommission: =>
         $.ajax
-            url: "#{ @url() }/decomission?user=#{ app.getUsername() }"
+            url: "#{ @url() }/decommission?user=#{ app.getUsername() }"
             type: "POST"
 
     reactivate: =>
