@@ -5,7 +5,7 @@
                 <th>ID</th>
                 <th>Current State</th>
                 <th>Uptime</th>
-                {{#ifInSubFilter data.[0].state 'DECOMISSIONING,DECOMMISSIONING,DECOMMISSIONED,DECOMISSIONED,STARTING_DECOMMISSION,STARTING_DECOMISSION'}}
+                {{#ifInSubFilter data.[0].state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                     <th>Decommissioned By</th>
                 {{/ifInSubFilter}}
                 {{#ifInSubFilter data.[0].state 'ACTIVE'}}
@@ -20,11 +20,11 @@
                     <td>{{ id }}</td>
                     <td>{{ state }}</td>
                     <td data-value="{{ uptime }}">{{timestampDuration uptime}}</td>
-                    {{#ifInSubFilter state 'ACTIVE,DECOMISSIONING,DECOMMISSIONING,DECOMMISSIONED,DECOMISSIONED,STARTING_DECOMMISSION,STARTING_DECOMISSION'}}
+                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
                     <td class="actions-column">
-                        {{#ifInSubFilter state 'DECOMISSIONING,DECOMMISSIONING,DECOMMISSIONED,DECOMISSIONED,STARTING_DECOMMISSION,STARTING_DECOMISSION'}}
+                        {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                             <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
                                 <span class="glyphicon glyphicon-new-window"></span>
                             </a>
