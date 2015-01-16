@@ -1,85 +1,65 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.google.common.base.Optional;
 
-
-public abstract class SingularityMachineAbstraction {
+public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
 
   private final String id;
   private final long firstSeenAt;
-
-  private Optional<String> decomissioningBy;
-  private Optional<Long> decomissioningAt;
-  private Optional<Long> decomissionedAt;
-  private Optional<Long> deadAt;
-
-  private SingularityMachineState state;
-
-  public enum SingularityMachineState {
-    ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD,
-  }
+  private final SingularityMachineStateHistoryUpdate currentState;
 
   public SingularityMachineAbstraction(String id) {
-    this(id, SingularityMachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent());
+    this(id, System.currentTimeMillis(), new SingularityMachineStateHistoryUpdate(id, MachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent()));
   }
 
-  public SingularityMachineAbstraction(String id, SingularityMachineState state, long firstSeenAt, Optional<String> decomissioningBy, Optional<Long> decomissioningAt, Optional<Long> decomissionedAt, Optional<Long> deadAt) {
+  public SingularityMachineAbstraction(String id, long firstSeenAt, SingularityMachineStateHistoryUpdate currentState) {
     this.id = id;
-    this.state = state;
+    this.currentState = currentState;
     this.firstSeenAt = firstSeenAt;
-    this.deadAt = deadAt;
-    this.decomissioningBy = decomissioningBy;
-    this.decomissioningAt = decomissioningAt;
-    this.decomissionedAt = decomissionedAt;
-  }
-
-  public Optional<String> getDecomissioningBy() {
-    return decomissioningBy;
-  }
-
-  public void setDecomissioningBy(Optional<String> decomissioningBy) {
-    this.decomissioningBy = decomissioningBy;
-  }
-
-  public Optional<Long> getDecomissioningAt() {
-    return decomissioningAt;
-  }
-
-  public void setDecomissioningAt(Optional<Long> decomissioningAt) {
-    this.decomissioningAt = decomissioningAt;
   }
 
   public String getId() {
     return id;
   }
 
-  public Optional<Long> getDeadAt() {
-    return deadAt;
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(id);
   }
 
-  public void setDeadAt(Optional<Long> deadAt) {
-    this.deadAt = deadAt;
-  }
-
-  public Optional<Long> getDecomissionedAt() {
-    return decomissionedAt;
-  }
-
-  public void setDecomissionedAt(Optional<Long> decomissionedAt) {
-    this.decomissionedAt = decomissionedAt;
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    @SuppressWarnings("unchecked")
+    SingularityMachineAbstraction<T> other = (SingularityMachineAbstraction<T>) obj;
+    if (id == null) {
+      if (other.id != null) {
+        return false;
+      }
+    } else if (!id.equals(other.id)) {
+      return false;
+    }
+    return true;
   }
 
   public long getFirstSeenAt() {
     return firstSeenAt;
   }
 
-  public SingularityMachineState getState() {
-    return state;
+  public SingularityMachineStateHistoryUpdate getCurrentState() {
+    return currentState;
   }
 
-  public void setState(SingularityMachineState state) {
-    this.state = state;
-  }
-
+  public abstract T changeState(SingularityMachineStateHistoryUpdate newState);
 
 }
