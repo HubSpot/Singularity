@@ -139,7 +139,7 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
 
-  public boolean allowTestResourceCalls() {
+  public boolean isAllowTestResourceCalls() {
     return allowTestResourceCalls;
   }
 
