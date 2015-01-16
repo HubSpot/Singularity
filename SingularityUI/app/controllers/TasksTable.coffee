@@ -9,7 +9,6 @@ class TasksTableController extends Controller
 
     initialize: ({@state, @searchFilter}) ->
         # We want the view to handle the page loader for this one
-        console.dir(@state)
         if @state is 'decommissioning'
             @collections.tasks = new Tasks [], state: 'active'
         else
