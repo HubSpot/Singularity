@@ -30,6 +30,7 @@ class ServerItem extends Model
                 item.uptime = moment() - item.firstSeenAt
         if item.currentState?
             item.state = item.currentState.state
+            item.user = item.currentState.user
         item
 
     remove: =>
