@@ -12,6 +12,7 @@ import com.google.common.base.Optional;
 public class SingularityRequest {
 
   private final String id;
+  private final RequestType requestType;
 
   private final Optional<List<String>> owners;
   private final Optional<Integer> numRetriesOnFailure;
@@ -23,6 +24,8 @@ public class SingularityRequest {
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
   private final Optional<Long> scheduledExpectedRuntimeMillis;
 
+  //"use requestType instead"
+  @Deprecated
   private final Optional<Boolean> daemon;
 
   private final Optional<Integer> instances;
@@ -33,13 +36,9 @@ public class SingularityRequest {
 
   private final Optional<Boolean> loadBalanced;
 
-  public static SingularityRequestBuilder newBuilder(String id) {
-    return new SingularityRequestBuilder(id);
-  }
-
   @JsonCreator
-  public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("owners") Optional<List<String>> owners, @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
-      @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
+  public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
+      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
@@ -58,11 +57,16 @@ public class SingularityRequest {
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
+
+    if (requestType == null) {
+      this.requestType = RequestType.fromDaemonAndSchedule(schedule, daemon);
+    } else {
+      this.requestType = requestType;
+    }
   }
 
   public SingularityRequestBuilder toBuilder() {
-    return new SingularityRequestBuilder(id)
-    .setDaemon(daemon)
+    return new SingularityRequestBuilder(id, requestType)
     .setLoadBalanced(loadBalanced)
     .setInstances(instances)
     .setNumRetriesOnFailure(numRetriesOnFailure)
@@ -97,6 +101,7 @@ public class SingularityRequest {
     return quartzSchedule;
   }
 
+  @Deprecated
   public Optional<Boolean> getDaemon() {
     return daemon;
   }
@@ -111,6 +116,10 @@ public class SingularityRequest {
 
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
+  }
+
+  public RequestType getRequestType() {
+    return requestType;
   }
 
   public Optional<Long> getKillOldNonLongRunningTasksAfterMillis() {
@@ -140,7 +149,7 @@ public class SingularityRequest {
 
   @JsonIgnore
   public boolean isScheduled() {
-    return schedule.isPresent() || quartzSchedule.isPresent();
+    return requestType == RequestType.SCHEDULED;
   }
 
   @JsonIgnore
@@ -153,23 +162,29 @@ public class SingularityRequest {
   }
 
   @JsonIgnore
+  @Deprecated
   public boolean isDaemon() {
     return daemon.or(Boolean.TRUE).booleanValue();
   }
 
   @JsonIgnore
   public boolean isLongRunning() {
-    return !isScheduled() && isDaemon();
+    return requestType.isLongRunning();
+  }
+
+  @JsonIgnore
+  public boolean isAlwaysRunning() {
+    return requestType.isAlwaysRunning();
   }
 
   @JsonIgnore
   public boolean isOneOff() {
-    return !isScheduled() && !isDaemon();
+    return requestType == RequestType.ON_DEMAND;
   }
 
   @JsonIgnore
   public boolean isDeployable() {
-    return !isScheduled() && !isOneOff();
+    return requestType.isDeployable();
   }
 
   @JsonIgnore
@@ -189,9 +204,10 @@ public class SingularityRequest {
 
   @Override
   public String toString() {
-    return "SingularityRequest [id=" + id + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule=" + quartzSchedule + ", scheduleType="
-        + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", daemon="
-        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+    return "SingularityRequest [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule="
+        + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", scheduledExpectedRuntimeMillis="
+        + scheduledExpectedRuntimeMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement="
+        + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }

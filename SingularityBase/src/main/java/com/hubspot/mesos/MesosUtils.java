@@ -38,6 +38,7 @@ public final class MesosUtils {
 
   private static double getScalar(List<Resource> resources, String name) {
     for (Resource r : resources) {
+
       if (r.hasName() && r.getName().equals(name) && r.hasScalar()) {
         return getScalar(r);
       }
@@ -62,6 +63,7 @@ public final class MesosUtils {
 
   private static int getNumRanges(List<Resource> resources, String name) {
     int totalRanges = 0;
+
 
     Ranges ranges = getRanges(resources, name);
 

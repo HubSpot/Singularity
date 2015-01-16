@@ -19,7 +19,9 @@ import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -37,6 +39,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
@@ -353,8 +356,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testOneOffsDontRunByThemselves() {
     requestId = "oneoffRequest";
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId);
-    bldr.setDaemon(Optional.of(Boolean.FALSE));
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     requestResource.submit(bldr.build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
@@ -365,6 +367,32 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
+  }
+
+  @Test
+  public void testRunOnceRunOnlyOnce() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
+    request = bldr.build();
+    saveRequest(request);
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    resourceOffers();
+
+    Assert.assertTrue(deployManager.getRequestDeployState(requestId).get().getActiveDeploy().isPresent());
+    Assert.assertTrue(!deployManager.getRequestDeployState(requestId).get().getPendingDeploy().isPresent());
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
   }
 
   @Test
@@ -573,7 +601,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testUnpauseoOnDeploy() {
+  public void testUnpauseOnDeploy() {
     initRequest();
     initFirstDeploy();
 
@@ -699,7 +727,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     cleaner.drainCleanupQueue();
 
     Assert.assertTrue(!requestManager.getCleanupRequests().isEmpty());
-
     configuration.setCleanupEverySeconds(0);
 
     sleep(1);

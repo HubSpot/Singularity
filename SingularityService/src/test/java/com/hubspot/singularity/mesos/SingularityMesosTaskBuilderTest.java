@@ -30,6 +30,7 @@ import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -69,7 +70,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Test
   public void testShellCommand() {
-    final SingularityRequest request = new SingularityRequestBuilder("test").build();
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setCommand(Optional.of("/bin/echo hi"))
     .build();
@@ -83,7 +84,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Test
   public void testArgumentCommand() {
-    final SingularityRequest request = new SingularityRequestBuilder("test").build();
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setCommand(Optional.of("/bin/echo"))
     .setArguments(Optional.of(Collections.singletonList("wat")))
@@ -112,7 +113,7 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
     final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
 
-    final SingularityRequest request = new SingularityRequestBuilder("test").build();
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         Type.DOCKER,
         Optional.of(Collections.singletonList(new SingularityVolume("/container", Optional.of("/host"), Mode.RW))),

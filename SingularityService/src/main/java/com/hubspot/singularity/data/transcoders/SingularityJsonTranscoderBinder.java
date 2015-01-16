@@ -14,10 +14,10 @@ import com.google.inject.Scopes;
 import com.hubspot.singularity.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public final class SingularityJsonTranscoderBinder
-{
-  public static <U> SingularityJsonTranscoderBinder bindTranscoder(Binder binder)
-  {
+@SuppressWarnings("serial")
+public final class SingularityJsonTranscoderBinder {
+
+  public static <U> SingularityJsonTranscoderBinder bindTranscoder(Binder binder) {
     return new SingularityJsonTranscoderBinder(binder);
   }
 
@@ -93,4 +93,5 @@ public final class SingularityJsonTranscoderBinder
       return new CompressingJsonTranscoder<T>(singularityConfiguration, objectMapper, clazz);
     }
   }
+
 }

@@ -217,8 +217,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId)
-    .setLoadBalanced(Optional.of(isLoadBalanced));
+    RequestType requestType = RequestType.WORKER;
+
+    if (isScheduled) {
+      requestType = RequestType.SCHEDULED;
+    }
+
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, requestType);
+
+    bldr.setLoadBalanced(Optional.of(isLoadBalanced));
 
     if (isScheduled) {
       bldr.setQuartzSchedule(Optional.of(schedule));
@@ -331,7 +338,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityRequest buildRequest(String requestId) {
-    SingularityRequest request = new SingularityRequestBuilder(requestId).build();
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.WORKER).build();
 
     saveRequest(request);
 

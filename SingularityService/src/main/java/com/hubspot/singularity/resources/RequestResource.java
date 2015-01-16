@@ -199,7 +199,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     if (!requestWithState.getRequest().isLongRunning()) {
-      throw WebExceptions.badRequest("Can not bounce a scheduled or one-off request (%s)", requestWithState);
+      throw WebExceptions.badRequest("Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
     }
 
     checkRequestStateNotPaused(requestWithState, "bounce");
