@@ -89,11 +89,11 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
 
-    if (!deployRequest.getUnpauseOnSuccessfulDeploy().isPresent() || !deployRequest.getUnpauseOnSuccessfulDeploy().get().booleanValue()) {
+    if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    validator.checkDeploy(request, deploy);
+    deploy = validator.checkDeploy(request, deploy);
 
     final long now = System.currentTimeMillis();
 
