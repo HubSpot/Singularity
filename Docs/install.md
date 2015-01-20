@@ -27,8 +27,7 @@ In order to run Singularity, you can either build it from scratch or download a 
 
 #### Building from Source
 
-1. Run `mvn clean package` in the root of the Singularity repository.
-2. Copy
+Run `mvn clean package` in the root of the Singularity repository. The SingularityService JAR will be created in `SingularityService/target/`.
 
 #### Downloading a precompiled JAR
 
