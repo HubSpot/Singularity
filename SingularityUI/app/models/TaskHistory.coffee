@@ -11,7 +11,12 @@ class TaskHistory extends Model
     parse: (taskHistory) ->
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
         taskHistory.task?.mesosTask?.executor?.command?.environment?.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
-        
+
+        # Parse environment variables into key-value pairs
+        taskHistory.environment = {}
+        if taskHistory.task?.mesosTask?.command?.environment?.variables?
+            taskHistory.environment[name] = value for {name, value} in taskHistory.task.mesosTask.command.environment.variables
+
         ports = []
         
         if taskHistory.task?.taskRequest?.deploy?.resources?.numPorts > 0
