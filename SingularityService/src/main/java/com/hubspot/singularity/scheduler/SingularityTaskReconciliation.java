@@ -126,7 +126,7 @@ public class SingularityTaskReconciliation implements Managed {
           checkReconciliation(driver, reconciliationStart, remainingTaskIds, numTimes + 1);
         } catch (Throwable t) {
           LOG.error("While checking for reconciliation tasks", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, SingularityTaskReconciliation.class);
           abort.abort(AbortReason.UNRECOVERABLE_ERROR);
         }
       }

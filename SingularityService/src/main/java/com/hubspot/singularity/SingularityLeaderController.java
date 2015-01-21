@@ -83,7 +83,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
-        exceptionNotifier.notify(t);
+        exceptionNotifier.notify(t, getClass());
         abort.abort(AbortReason.UNRECOVERABLE_ERROR);
       }
 
@@ -122,7 +122,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
-        exceptionNotifier.notify(t);
+        exceptionNotifier.notify(t, getClass());
       } finally {
         abort.abort(AbortReason.LOST_LEADERSHIP);
       }
@@ -196,7 +196,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
           LOG.error("Caught exception while saving state", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, getClass());
         }
         finally {
           lock.unlock();

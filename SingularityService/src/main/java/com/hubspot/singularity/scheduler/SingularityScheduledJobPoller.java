@@ -115,7 +115,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
         cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
       } catch (ParseException e) {
         LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
-        exceptionNotifier.notify(e);
+        exceptionNotifier.notify(e, getClass());
         return Optional.absent();
       }
 
@@ -125,7 +125,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       if (nextRunAtDate == null) {
         String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
         LOG.warn(msg);
-        exceptionNotifier.notify(msg);
+        exceptionNotifier.notify(msg, getClass());
         return Optional.absent();
       }
 

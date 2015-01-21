@@ -116,7 +116,7 @@ public class SingularityHealthchecker implements Managed {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, getClass());
         }
       }
 
@@ -187,7 +187,7 @@ public class SingularityHealthchecker implements Managed {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, getClass());
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }

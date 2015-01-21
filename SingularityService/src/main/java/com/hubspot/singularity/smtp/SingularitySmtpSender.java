@@ -136,7 +136,7 @@ public class SingularitySmtpSender implements Managed {
       Transport.send(message);
     } catch (Throwable t) {
       LOG.warn("Unable to send message {}", getEmailLogFormat(toList, subject), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, getClass());
     }
   }
 

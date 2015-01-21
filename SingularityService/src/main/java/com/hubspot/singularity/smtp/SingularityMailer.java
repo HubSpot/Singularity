@@ -258,7 +258,7 @@ public class SingularityMailer implements Managed {
           prepareTaskCompletedMail(taskId, request, taskState);
         } catch (Throwable t) {
           LOG.error("While preparing task completed mail for {}", taskId, t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, SingularityMailer.class);
         }
       }
     });
@@ -339,7 +339,7 @@ public class SingularityMailer implements Managed {
           prepareRequestMail(request, type, user);
         } catch (Throwable t) {
           LOG.error("While preparing request mail for {} / {}", request, type, t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, SingularityMailer.class);
         }
       }
     });
@@ -397,7 +397,7 @@ public class SingularityMailer implements Managed {
           prepareRequestInCooldownMail(request);
         } catch (Throwable t) {
           LOG.error("While preparing request in cooldown mail for {}", request, t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, SingularityMailer.class);
         }
       }
     });

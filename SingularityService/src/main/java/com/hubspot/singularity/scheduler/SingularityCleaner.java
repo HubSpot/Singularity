@@ -38,6 +38,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.hooks.LbUpdateException;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -461,9 +462,9 @@ public class SingularityCleaner {
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
-        final String errorMsg = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
-        LOG.error(errorMsg);
-        exceptionNotifier.notify(errorMsg);
+        final String errorMessage = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+        LOG.error(errorMessage);
+        exceptionNotifier.notify(new LbUpdateException(errorMessage), getClass());
         return CheckLBState.RETRY;
       case UNKNOWN:
       case CANCELING:

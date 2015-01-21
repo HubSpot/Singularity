@@ -96,7 +96,7 @@ public class SingularityAbort implements ConnectionStateListener {
 
     sendAbortMail(message);
 
-    exceptionNotifier.notify(message);
+    exceptionNotifier.notify(message, getClass());
   }
 
   private void sendAbortMail(final String message) {

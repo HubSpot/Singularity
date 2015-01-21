@@ -80,7 +80,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       }
     } catch (Throwable t) {
       LOG.error("Caught throwable while saving health check result {}, will re-enqueue", result, t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, getClass());
 
       reEnqueueOrAbort(task);
     }
@@ -91,7 +91,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       healthchecker.enqueueHealthcheck(task);
     } catch (Throwable t) {
       LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, getClass());
 
       abort.abort(AbortReason.UNRECOVERABLE_ERROR);
     }
