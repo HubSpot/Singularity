@@ -8,6 +8,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
 public class UIConfiguration {
 
   @NotEmpty
@@ -20,6 +24,9 @@ public class UIConfiguration {
 
   @JsonProperty
   private String baseUrl;
+
+  @JsonProperty
+  private List<HashMap<String, String>> customQuickLinks = new LinkedList<>();
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
@@ -62,5 +69,13 @@ public class UIConfiguration {
 
   public void setNavColor(String navColor) {
     this.navColor = navColor;
+  }
+
+  public List<HashMap<String, String>> getCustomQuickLinks() {
+    return customQuickLinks;
+  }
+
+  public void setCustomQuickLinks(List<HashMap<String, String>> customQuickLinks) {
+    this.customQuickLinks = customQuickLinks;
   }
 }

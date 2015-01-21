@@ -1,11 +1,11 @@
 {{! Part of taskBase }}
-{{#if config.taskUrls}}
+{{#if config.customQuickLinks}}
     <div>
         <div class="page-header">
             <h2>Quick Links</h2>
         </div>
         <span>
-            {{#each config.taskUrls}}
+            {{#each config.customQuickLinks}}
                 <a class="btn btn-default" href="{{evaluateHandlebarsInContext url ../data.environment}}">{{evaluateHandlebarsInContext name ../data.environment}}</a>
             {{/each}}
         </span>
