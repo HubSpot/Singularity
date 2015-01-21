@@ -6,6 +6,9 @@
                     <th data-sort-attribute="requestId">
                         ID
                     </th>
+                    <th data-sort-attribute="request.deployableType">
+                        Type
+                    </th>
                     <th data-sort-attribute="pendingType">
                         Pending Type
                     </th>
@@ -17,6 +20,7 @@
                 {{#each requests}}
                     <tr data-request-id="{{ requestId }}">
                         <td>{{ requestId }}</td>
+                        <td>{{deployableType}}</td>
                         <td>{{humanizeText pendingType}}</td>
                     </tr>
                 {{/each}}

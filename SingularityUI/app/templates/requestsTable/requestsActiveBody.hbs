@@ -9,6 +9,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.deployableType">
+                        Type
+                    </th>
                     <th data-sort-attribute="request.instances" class="visible-lg visible-xl">
                         Instances
                     </th>
@@ -47,6 +50,9 @@
                             <a href="{{appRoot}}/request/{{ request.id }}" title="{{ request.id }}">
                                 {{ request.id }}
                             </a>
+                        </td>
+                        <td>
+                            {{deployableType}}
                         </td>
                         <td class="visible-lg visible-xl centered">
                             {{ request.instances }}

@@ -6,6 +6,9 @@
                     <th data-sort-attribute="requestId">
                         ID
                     </th>
+                    <th data-sort-attribute="request.deployableType">
+                        Type
+                    </th>
                     <th data-sort-attribute="user" class="visible-md">
                         User
                     </th>
@@ -24,6 +27,9 @@
                 <tr data-request-id="{{ requestId }}">
                     <td>
                         {{ requestId }}
+                    </td>
+                    <td>
+                        {{deployableType}}
                     </td>
                     <td class="visible-md">
                         {{ user }}

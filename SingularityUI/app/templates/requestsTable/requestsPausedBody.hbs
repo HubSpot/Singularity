@@ -6,6 +6,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.deployableType">
+                        Type
+                    </th>
                     <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
                         Requested
                     </th>
@@ -34,6 +37,9 @@
                                 {{ request.id }}
                             </a>
                         </span></td>
+                        <td>
+                            {{deployableType}}
+                        </td>
                         <td class="hidden-xs">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
