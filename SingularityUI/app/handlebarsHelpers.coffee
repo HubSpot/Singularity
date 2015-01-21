@@ -86,3 +86,8 @@ Handlebars.registerHelper 'humanizeFileSize', (fileSize) ->
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
     return '' if not email
     email.split('@')[0]
+
+# For custom quick links on tasks.
+Handlebars.registerHelper 'evaluateHandlebarsInContext', (text, context) ->
+    compiledTemplate = Handlebars.compile text
+    compiledTemplate context
