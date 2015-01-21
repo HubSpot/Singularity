@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -148,7 +149,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList());
 
     return pendingTask;
   }
@@ -169,7 +170,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo);
 
-    taskManager.createPendingTasks(Arrays.asList(pendingTask));
+    taskManager.savePendingTask(pendingTask);
 
     return task;
   }
@@ -293,9 +294,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList());
 
-    taskManager.createPendingTasks(Arrays.asList(pendingTask));
+    taskManager.savePendingTask(pendingTask);
 
     return pendingTask;
   }

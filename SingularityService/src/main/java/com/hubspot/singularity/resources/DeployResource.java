@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -105,7 +106,7 @@ public class DeployResource extends AbstractRequestResource {
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, Optional.<String> absent(), deployRequest.getUser(), PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployRequest.getUser(), PendingType.NEW_DEPLOY, Collections.<String> emptyList()));
     }
 
     return fillEntireRequest(requestWithState);

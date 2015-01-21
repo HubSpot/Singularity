@@ -3,39 +3,37 @@ package com.hubspot.singularity.data.transcoders;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hubspot.singularity.config.SingularityConfiguration;
 
-public class CompressingJsonTranscoder<T> extends CompressingTranscoder<T> {
+public class ListTranscoder<T> implements Transcoder<List<T>> {
   private static final byte[] EMPTY_BYTES = new byte[0];
 
   private final ObjectMapper objectMapper;
-  private final Class<T> clazz;
 
-  CompressingJsonTranscoder(final SingularityConfiguration configuration, final ObjectMapper objectMapper, final Class<T> clazz) {
-    super(configuration);
+  ListTranscoder(final ObjectMapper objectMapper) {
     this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");
-    this.clazz = checkNotNull(clazz, "clazz is null");
   }
 
   @Override
-  protected T actualFromBytes(@Nullable byte[] data) throws SingularityTranscoderException {
+  public List<T> fromBytes(@Nullable byte[] data) throws SingularityTranscoderException {
     if (data == null || data.length == 0) {
       return null;
     }
 
     try {
-      return objectMapper.readValue(data, clazz);
+      return objectMapper.readValue(data, new TypeReference<List<T>>() {});
     } catch (IOException e) {
       throw new SingularityTranscoderException(e);
     }
   }
 
   @Override
-  protected byte[] actualToBytes(@Nullable T object) throws SingularityTranscoderException {
+  public byte[] toBytes(@Nullable List<T> object) throws SingularityTranscoderException {
     try {
       return object == null ? EMPTY_BYTES : objectMapper.writeValueAsBytes(object);
     } catch (IOException e) {

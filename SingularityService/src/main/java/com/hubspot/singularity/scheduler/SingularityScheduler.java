@@ -319,7 +319,9 @@ public class SingularityScheduler {
       if (!scheduledTasks.isEmpty()) {
         LOG.trace("Scheduling tasks: {}", scheduledTasks);
 
-        taskManager.createPendingTasks(scheduledTasks);
+        for (SingularityPendingTask scheduledTask : scheduledTasks) {
+          taskManager.savePendingTask(scheduledTask);
+        }
       } else {
         LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
         requestManager.finish(request, System.currentTimeMillis());
@@ -555,7 +557,7 @@ public class SingularityScheduler {
         nextInstanceNumber++;
       }
 
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()), pendingRequest.getCmdLineArgs()));
+      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()), pendingRequest.getCmdLineArgsList()));
 
       nextInstanceNumber++;
     }

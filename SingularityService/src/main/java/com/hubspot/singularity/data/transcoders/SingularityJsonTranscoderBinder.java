@@ -14,10 +14,8 @@ import com.google.inject.Scopes;
 import com.hubspot.singularity.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-public final class SingularityJsonTranscoderBinder
-{
-  public static <U> SingularityJsonTranscoderBinder bindTranscoder(Binder binder)
-  {
+public final class SingularityJsonTranscoderBinder {
+  public static <U> SingularityJsonTranscoderBinder bindTranscoder(Binder binder) {
     return new SingularityJsonTranscoderBinder(binder);
   }
 
@@ -47,7 +45,6 @@ public final class SingularityJsonTranscoderBinder
     Key<IdTranscoder<T>> key = (Key<IdTranscoder<T>>) Key.get(typeToken.getType());
     binder.bind(key).toInstance(new IdTranscoder<T>(clazz));
   }
-
 
   static class JsonTranscoderProvider<T> implements Provider<JsonTranscoder<T>> {
     private final Class<T> clazz;
@@ -93,4 +90,5 @@ public final class SingularityJsonTranscoderBinder
       return new CompressingJsonTranscoder<T>(singularityConfiguration, objectMapper, clazz);
     }
   }
+
 }
