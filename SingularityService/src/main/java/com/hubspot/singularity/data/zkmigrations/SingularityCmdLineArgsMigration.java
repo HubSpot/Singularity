@@ -44,7 +44,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     this.pendingRequestTranscoder = pendingRequestTranscoder;
   }
 
-  private static class SingularityPendingRequestPrevious {
+  static class SingularityPendingRequestPrevious {
 
     private final String requestId;
     private final String deployId;
@@ -64,10 +64,36 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
       this.pendingType = pendingType;
     }
 
+    public String getRequestId() {
+      return requestId;
+    }
+
+    public String getDeployId() {
+      return deployId;
+    }
+
+    public long getTimestamp() {
+      return timestamp;
+    }
+
+    public PendingType getPendingType() {
+      return pendingType;
+    }
+
+    public Optional<String> getUser() {
+      return user;
+    }
+
+    public Optional<String> getCmdLineArgs() {
+      return cmdLineArgs;
+    }
+
+
+
   }
 
-  private static final String TASK_PENDING_PATH = "/tasks/scheduled";
-  private static final String REQUEST_PENDING_PATH = "/requests/pending";
+  static final String TASK_PENDING_PATH = "/tasks/scheduled";
+  static final String REQUEST_PENDING_PATH = "/requests/pending";
 
   @Override
   public void applyMigration() {
