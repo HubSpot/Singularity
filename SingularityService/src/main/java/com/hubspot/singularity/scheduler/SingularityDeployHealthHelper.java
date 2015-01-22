@@ -70,7 +70,7 @@ public class SingularityDeployHealthHelper {
           }
 
           if (runningThreshold < 1) {
-            return DeployHealth.HEALTHY;
+            continue;
           }
 
           Optional<SingularityTaskHistoryUpdate> runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
