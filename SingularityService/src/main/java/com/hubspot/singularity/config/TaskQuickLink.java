@@ -32,16 +32,4 @@ public class TaskQuickLink {
   public String getUrl() {
     return url;
   }
-
-  /**
-   * Create a JSON representation of this object for dumping into window.config
-   * portion of SingularityUI.
-   *
-   * @return JSON representation of TaskQuickLink
-   */
-  public String toString() {
-    return "{'name': {0}, 'url': {1}}".format(
-        name.replaceAll("\"", "\\\""),
-        url.replaceAll("\"", "\\\""));
-  }
 }
