@@ -97,9 +97,13 @@ public class TaskResource {
   @Path("/scheduled/task/{pendingTaskId}")
   @ApiOperation("Retrieve information about a pending task.")
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
-    SingularityPendingTask pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
+    Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
 
-    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask));
+    if (!pendingTask.isPresent()) {
+      throw new NotFoundException("Couldn't find: " + pendingTaskIdStr);
+    }
+
+    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask.get()));
 
     if (taskRequestList.isEmpty()) {
       throw new NotFoundException("Couldn't find: " + pendingTaskIdStr);

@@ -66,9 +66,8 @@ class Request extends Model
             contentType: 'application/json'
 
         if typeof confirmedOrPromptData is 'string'
-            options.data = confirmedOrPromptData
+            options.data = JSON.stringify([confirmedOrPromptData])
             options.processData = false
-            options.contentType = 'text/plain'
 
         $.ajax options
         

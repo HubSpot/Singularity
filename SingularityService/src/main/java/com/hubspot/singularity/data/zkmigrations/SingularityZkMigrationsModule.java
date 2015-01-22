@@ -15,5 +15,6 @@ public class SingularityZkMigrationsModule implements Module {
     dataMigrations.addBinding().to(LastTaskStatusMigration.class);
     dataMigrations.addBinding().to(SingularityPendingTaskIdMigration.class);
     dataMigrations.addBinding().to(SlaveAndRackMigration.class);
+    dataMigrations.addBinding().to(SingularityCmdLineArgsMigration.class);
   }
 }

@@ -48,7 +48,6 @@ public final class SingularityJsonTranscoderBinder {
     binder.bind(key).toInstance(new IdTranscoder<T>(clazz));
   }
 
-
   static class JsonTranscoderProvider<T> implements Provider<JsonTranscoder<T>> {
     private final Class<T> clazz;
     private ObjectMapper objectMapper;

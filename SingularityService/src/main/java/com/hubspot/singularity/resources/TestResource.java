@@ -38,7 +38,7 @@ public class TestResource {
   }
 
   private void checkAllowed() {
-    if (!configuration.allowTestResourceCalls()) {
+    if (!configuration.isAllowTestResourceCalls()) {
       throw WebExceptions.webException(403, "Test resource calls are disabled (set allowTestResourceCalls to true in configuration)");
     }
   }
