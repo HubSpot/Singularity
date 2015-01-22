@@ -36,11 +36,11 @@ public class TaskQuickLink {
   /**
    * Create a JSON representation of this object for dumping into window.config
    * portion of SingularityUI.
+   *
    * @return JSON representation of TaskQuickLink
    */
   public String toString() {
-    return String.format(
-        "{'name': {}, 'url': {}}",
+    return "{'name': {0}, 'url': {1}}".format(
         name.replaceAll("\"", "\\\""),
         url.replaceAll("\"", "\\\""));
   }
