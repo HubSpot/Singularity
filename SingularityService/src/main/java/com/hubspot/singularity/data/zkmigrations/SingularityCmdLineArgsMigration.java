@@ -37,7 +37,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
 
   @Inject
   public SingularityCmdLineArgsMigration(CuratorFramework curator, TaskManager taskManager, ObjectMapper objectMapper, Transcoder<SingularityPendingRequest> pendingRequestTranscoder) {
-    super(3);
+    super(4);
     this.curator = curator;
     this.taskManager = taskManager;
     this.objectMapper = objectMapper;
