@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
@@ -136,7 +137,7 @@ public class SingularitySmtpSender implements Managed {
       Transport.send(message);
     } catch (Throwable t) {
       LOG.warn("Unable to send message {}", getEmailLogFormat(toList, subject), t);
-      exceptionNotifier.notify(t, getClass());
+      exceptionNotifier.notify(t, ImmutableMap.of("subject", subject));
     }
   }
 

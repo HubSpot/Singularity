@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityTask;
@@ -80,7 +81,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       }
     } catch (Throwable t) {
       LOG.error("Caught throwable while saving health check result {}, will re-enqueue", result, t);
-      exceptionNotifier.notify(t, getClass());
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
       reEnqueueOrAbort(task);
     }
@@ -91,7 +92,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       healthchecker.enqueueHealthcheck(task);
     } catch (Throwable t) {
       LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
-      exceptionNotifier.notify(t, getClass());
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
       abort.abort(AbortReason.UNRECOVERABLE_ERROR);
     }

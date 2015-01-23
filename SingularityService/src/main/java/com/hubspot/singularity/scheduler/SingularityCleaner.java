@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -462,9 +463,9 @@ public class SingularityCleaner {
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
-        final String errorMessage = String.format("LB removal request for %s (%s) got unexpected response %s", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
-        LOG.error(errorMessage);
-        exceptionNotifier.notify(new LbUpdateException(errorMessage), getClass());
+        LOG.error("LB removal request {} ({}) got unexpected response {}", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+        exceptionNotifier.notify(String.format("LB removal failed for %s", lbAddUpdate.get().getLoadBalancerRequestId().toString()),
+            ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
         return CheckLBState.RETRY;
       case UNKNOWN:
       case CANCELING:

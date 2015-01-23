@@ -1,5 +1,9 @@
 package com.hubspot.singularity.sentry;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.inject.Singleton;
 
 import net.kencochrane.raven.Raven;
@@ -73,56 +77,12 @@ public class SingularityExceptionNotifier {
     return sentryConfiguration.get().getPrefix() + " ";
   }
 
-  public void notify(Throwable t, Class<?> logger) {
-    if (!raven.isPresent()) {
-      return;
+  private String getCallingClassName(StackTraceElement[] stackTrace) {
+    if (stackTrace != null && stackTrace.length > 1) {
+      return stackTrace[1].getClassName();
+    } else {
+      return "(unknown)";
     }
-
-    try {
-      notify(raven.get(), t, logger);
-    } catch (Throwable e) {
-      LOG.error("Caught exception while trying to report {} to Sentry", t.getMessage(), e);
-    }
-  }
-
-  public void notify(String message, Class<?> logger) {
-    if (!raven.isPresent()) {
-      return;
-    }
-
-    try {
-      notify(raven.get(), message, logger);
-    } catch (Throwable e) {
-      LOG.error("Caught exception while trying to report {} to Sentry", message, e);
-    }
-  }
-
-  private void notify(Raven raven, String message, Class<?> logger) {
-    final EventBuilder eventBuilder = new EventBuilder()
-      .setMessage(getPrefix() + message)
-      .setLogger(logger.getName())
-      .setLevel(Event.Level.ERROR);
-
-    sendEvent(raven, eventBuilder);
-  }
-
-  private void notify(Raven raven, Throwable t, Class<?> logger) {
-    final String culprit = determineCulprit(t);
-
-    final EventBuilder eventBuilder = new EventBuilder()
-      .setCulprit(getPrefix() + culprit)
-      .setMessage(Strings.nullToEmpty(t.getMessage()))
-      .setLevel(Event.Level.ERROR)
-      .setLogger(logger.getName())
-      .addSentryInterface(new ExceptionInterface(t));
-
-    sendEvent(raven, eventBuilder);
-  }
-
-  private void sendEvent(Raven raven, final EventBuilder eventBuilder) {
-    raven.runBuilderHelpers(eventBuilder);
-
-    raven.sendEvent(eventBuilder.build());
   }
 
   private String determineCulprit(final Throwable exception) {
@@ -146,4 +106,51 @@ public class SingularityExceptionNotifier {
     return culprit;
   }
 
+  private void sendEvent(Raven raven, final EventBuilder eventBuilder) {
+    raven.runBuilderHelpers(eventBuilder);
+
+    raven.sendEvent(eventBuilder.build());
+  }
+
+  public void notify(Throwable t, Map<String, String> extraData) {
+    if (!raven.isPresent()) {
+      return;
+    }
+
+    final String culprit = determineCulprit(t);
+
+    final EventBuilder eventBuilder = new EventBuilder()
+            .setCulprit(getPrefix() + culprit)
+            .setMessage(Strings.nullToEmpty(t.getMessage()))
+            .setLevel(Event.Level.ERROR)
+            .setLogger(getCallingClassName(Thread.currentThread().getStackTrace()))
+            .addSentryInterface(new ExceptionInterface(t));
+
+    if (extraData != null && !extraData.isEmpty()) {
+      for (Map.Entry<String, String> entry : extraData.entrySet()) {
+        eventBuilder.addExtra(entry.getKey(), entry.getValue());
+      }
+    }
+
+    sendEvent(raven.get(), eventBuilder);
+  }
+
+  public void notify(String subject, Map<String, String> extraData) {
+    if (!raven.isPresent()) {
+      return;
+    }
+
+    final EventBuilder eventBuilder = new EventBuilder()
+            .setMessage(getPrefix() + subject)
+            .setLevel(Event.Level.ERROR)
+            .setLogger(getCallingClassName(Thread.currentThread().getStackTrace()));
+
+    if (extraData != null && !extraData.isEmpty()) {
+      for (Map.Entry<String, String> entry : extraData.entrySet()) {
+        eventBuilder.addExtra(entry.getKey(), entry.getValue());
+      }
+    }
+
+    sendEvent(raven.get(), eventBuilder);
+  }
 }

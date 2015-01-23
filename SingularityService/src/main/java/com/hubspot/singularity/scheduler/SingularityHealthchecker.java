@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -116,7 +117,7 @@ public class SingularityHealthchecker implements Managed {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
-          exceptionNotifier.notify(t, getClass());
+          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
         }
       }
 
@@ -187,7 +188,7 @@ public class SingularityHealthchecker implements Managed {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      exceptionNotifier.notify(t, getClass());
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }
