@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.4.0-SNAPSHOT
+Version: 0.4.1-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#apideploys) - Manages Singularity Deploys for existing requests
@@ -381,102 +381,17 @@ Retrieve the list of logs stored in S3 for a specific task.
 #### Overview
 Manages Singularity racks.
 
-#### **GET** `/api/racks/active`
+#### **GET** `/api/racks/`
 
-Retrieve the list of active racks. A rack is active if it has one or more active slaves associated with it.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/dead`
-
-Retrieve the list of dead racks. A rack is dead if it has zero active slaves.
+Retrieve the list of all known racks, optionally filtering by a particular state
 
 
 ###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/decomissioning`
-
-Retrieve the list of decommissioning racks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/racks/rack/{rackId}/dead`
-
-Remove a dead rack.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Dead rack ID. | string |
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/racks/rack/{rackId}/decomission`
-
-Decomission a specific active rack.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Active rack ID. | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of person requestin the decommisioning. | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| state | false | Optionally specify a particular state to filter racks by | <a href="#UNKNOWN[com.hubspot.singularity.MachineState]">UNKNOWN[com.hubspot.singularity.MachineState]</a> |
 
 ###### Response
 [](#)
@@ -489,9 +404,9 @@ Decomission a specific active rack.
 
 
 - - -
-#### **DELETE** `/api/racks/rack/{rackId}/decomissioning`
+#### **GET** `/api/racks/rack/{rackId}`
 
-Undo the decomission operation on a specific decommissioning rack.
+Retrieve the history of a given rack
 
 
 ###### Parameters
@@ -499,7 +414,86 @@ Undo the decomission operation on a specific decommissioning rack.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| rackId | true | Decommissioned rack ID. | string |
+| rackId | true | Rack ID | string |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/racks/rack/{rackId}`
+
+Remove a known rack, erasing history. This operation will cancel decomissioning of racks
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/activate`
+
+Activate a decomissioning rack, canceling decomission without erasing history
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rackId | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | User requesting the activate | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/decommission`
+
+Begin decommissioning a specific active rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rack ID | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | User requesting the decommisioning | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
 [](#)
@@ -678,6 +672,29 @@ Retrieve the list of pending requests
 
 
 - - -
+#### **GET** `/api/requests/request/{requestId}`
+
+Retrieve a specific Request by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID | string |
+
+###### Response
+[SingularityRequestParent](#SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
 #### **DELETE** `/api/requests/request/{requestId}`
 
 Delete a specific Request by ID and return the deleted Request
@@ -697,29 +714,6 @@ Delete a specific Request by ID and return the deleted Request
 
 ###### Response
 [SingularityRequest](#SingularityRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **GET** `/api/requests/request/{requestId}`
-
-Retrieve a specific Request by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID | string |
-
-###### Response
-[SingularityRequestParent](#SingularityRequestParent)
 
 
 ###### Errors
@@ -952,102 +946,17 @@ Retrieve part of the contents of a file in a specific task&#39;s sandbox.
 #### Overview
 Manages Singularity slaves.
 
-#### **GET** `/api/slaves/active`
+#### **GET** `/api/slaves/`
 
-Retrieve the list of active slaves.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/slaves/dead`
-
-Retrieve the list of dead slaves.
+Retrieve the list of all known slaves, optionally filtering by a particular state
 
 
 ###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/slaves/decomissioning`
-
-Retrieve the list of decommissioning slaves.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/slaves/slave/{slaveId}/dead`
-
-Remove a specific dead slave.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
-
-###### Response
-[](#)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/slaves/slave/{slaveId}/decomission`
-
-Decommission a specific slave.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false |  | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+| state | false | Optionally specify a particular state to filter slaves by | <a href="#UNKNOWN[com.hubspot.singularity.MachineState]">UNKNOWN[com.hubspot.singularity.MachineState]</a> |
 
 ###### Response
 [](#)
@@ -1060,9 +969,9 @@ Decommission a specific slave.
 
 
 - - -
-#### **DELETE** `/api/slaves/slave/{slaveId}/decomissioning`
+#### **GET** `/api/slaves/slave/{slaveId}`
 
-Remove a specific decommissioning slave
+Retrieve the history of a given slave
 
 
 ###### Parameters
@@ -1070,7 +979,86 @@ Remove a specific decommissioning slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
+| slaveId | true | Slave ID | string |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/slaves/slave/{slaveId}`
+
+Remove a known slave, erasing history. This operation will cancel decomissioning of the slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active SlaveId | string |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/slaves/slave/{slaveId}/activate`
+
+Activate a decomissioning slave, canceling decomission without erasing history
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active slaveId | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | User requesting the activate | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
+
+###### Response
+[](#)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/slaves/slave/{slaveId}/decommission`
+
+Begin decommissioning a specific active slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active slaveId | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | User requesting the decommisioning | <a href="#UNKNOWN[string]">UNKNOWN[string]</a> |
 
 ###### Response
 [](#)
@@ -1526,13 +1514,17 @@ Stop the Mesos scheduler driver.
 #### Overview
 Manages Singularity webhooks.
 
-#### **GET** `/api/webhooks`
+#### **POST** `/api/webhooks`
 
-Retrieve a list of active webhooks.
+Add a new webhook.
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | <a href="#SingularityWebhook">SingularityWebhook</a> |
 
 ###### Response
 [](#)
@@ -1545,17 +1537,13 @@ Retrieve a list of active webhooks.
 
 
 - - -
-#### **POST** `/api/webhooks`
+#### **GET** `/api/webhooks`
 
-Add a new webhook.
+Retrieve a list of active webhooks.
 
 
 ###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | <a href="#SingularityWebhook">SingularityWebhook</a> |
+- No parameters
 
 ###### Response
 [](#)
@@ -1727,7 +1715,7 @@ Delete a specific webhook.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER |
+| type | <a href="#Type">Type</a> | optional |  Allowable values: DOCKER, MESOS |
 | volumes | <a href="#SingularityVolume">Array[SingularityVolume]</a> | optional |  |
 | docker | <a href="#SingularityDockerInfo">SingularityDockerInfo</a> | optional |  |
 
@@ -1831,7 +1819,7 @@ Delete a specific webhook.
 | cmdLineArgs | string | optional |  |
 | timestamp | long | optional |  |
 | deployId | string | optional |  |
-| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE |
+| pendingType | <a href="#PendingType">PendingType</a> | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP |
 
 
 ## SingularityRequest
@@ -1845,8 +1833,9 @@ Delete a specific webhook.
 | rackSensitive | boolean | optional |  |
 | owners | Array[string] | optional |  |
 | quartzSchedule | string | optional |  |
-| numRetriesOnFailure | int | optional |  |
+| scheduledExpectedRuntimeMillis | long | optional |  |
 | loadBalanced | boolean | optional |  |
+| numRetriesOnFailure | int | optional |  |
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | <a href="#ScheduleType">ScheduleType</a> | optional |  |
@@ -1860,8 +1849,9 @@ Delete a specific webhook.
 | requestId | string | optional |  |
 | user | string | optional |  |
 | killTasks | boolean | optional |  |
-| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING |
+| cleanupType | <a href="#RequestCleanupType">RequestCleanupType</a> | optional |  Allowable values: DELETING, PAUSING, BOUNCE |
 | timestamp | long | optional |  |
+| deployId | string | optional |  |
 
 
 ## SingularityRequestDeployState

@@ -18,6 +18,7 @@ class SimpleSubview extends View
     initialize: (@params) ->
         { @template } = @params
         @data = if @collection? then @collection else @model
+        @vars = if @vars? then @vars else {}
 
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @data, eventName, @render

@@ -11,45 +11,94 @@ class StatusView extends View
         @lastState = _.clone @model.attributes
 
     render: =>
-        # When refreshing we want to display a nice pretty animation
-        # showing which number boxes have changed.
-        if not @lastState?
-            # Render template from fresh data
-            @$el.html @template
-                state:  @model.attributes
-                synced: @model.synced
-        else
-            # Render template with old data and animate the new stuff in
-            @$el.html @template
-                state: @lastState
-                synced: @model.synced
+        @$el.html @template
+            state:  @model.attributes
+            synced: @model.synced
+            tasks: @tasks(@model)
+            requests: @requests(@model)
 
-            changedNumbers = {}
-
-            numberAttributes = []
-            # Go through each key. If the value is a number, we'll (try to)
-            # perform a change animation on that key's box
-            _.each _.keys(@model.attributes), (attribute) =>
-                if typeof @model.attributes[attribute] is 'number'
-                    numberAttributes.push attribute
-
-            for numberAttribute in numberAttributes
-                oldNumber = @lastState[numberAttribute]
-                newNumber = @model.attributes[numberAttribute]
-                if oldNumber isnt newNumber
-                    changedNumbers[numberAttribute] =
-                        direction: "#{ if newNumber > oldNumber then 'inc' else 'dec' }rease"
-                        difference: "#{ if newNumber > oldNumber then '+' else '-' }#{ Math.abs(newNumber - oldNumber) }"
-
-            for attributeName, changes of changedNumbers
-                $number = @$el.find(""".number[data-state-attribute="#{ attributeName }"]""")
-                $bigNumber = $number.parents('.big-number-link')
-                changeClassName = "changed-direction-#{ changes.direction }"
-                $bigNumber.addClass changeClassName
-                $bigNumber.find('.well').attr('data-changed-difference', changes.difference)
-                $number.html @model.attributes[attributeName]
-                do ($bigNumber, changeClassName) -> setTimeout (-> $bigNumber.removeClass changeClassName), 2000
+        @$('.chart-data div[title]').tooltip(placement: 'right')
 
         @captureLastState()
+
+    requests: (model) =>
+        total_requests = @model.attributes.allRequests
+        requests = [
+            {
+                type: 'active_item',
+                label: 'active',
+                count: @model.attributes.activeRequests,
+                height: @model.attributes.activeRequests / total_requests * 100,
+                link: '/requests/active'
+            },
+            {
+                type: 'paused_item',
+                label: 'paused',
+                count: @model.attributes.pausedRequests,
+                height: @model.attributes.pausedRequests / total_requests * 100,
+                link: '/requests/paused'
+            },
+            {
+                type: 'cooldown_item',
+                label: 'cooling down'
+                count: @model.attributes.cooldownRequests,
+                height: @model.attributes.cooldownRequests / total_requests * 100,
+                link: '/requests/cooldown'
+            },
+            {
+                type: 'pending_item',
+                label: 'pending',
+                count: @model.attributes.pendingRequests,
+                height: @model.attributes.pendingRequests / total_requests * 100,
+                link: '/requests/pending'
+            },
+            {
+                type: 'cleaning_item',
+                label: 'cleaning',
+                count: @model.attributes.cleaningRequests,
+                height: @model.attributes.cleaningRequests / total_requests * 100,
+                link: '/requests/cleaning'
+            },
+        ]
+        return requests
+
+    tasks: (model) =>
+        total_tasks = @model.attributes.activeTasks + @model.attributes.lateTasks + @model.attributes.scheduledTasks + @model.attributes.lbCleanupTasks
+        tasks = [
+            {
+                type: 'active_item',
+                label: 'active',
+                count: @model.attributes.activeTasks,
+                height: @model.attributes.activeTasks / total_tasks * 100,
+                link: '/tasks'
+            },
+            {
+                type: 'scheduled_item',
+                label: 'scheduled'
+                count: @model.attributes.scheduledTasks,
+                height: @model.attributes.scheduledTasks / total_tasks * 100,
+                link: '/tasks/scheduled'
+            },
+            {
+                type: 'overdue_item',
+                label: 'overdue',
+                count: @model.attributes.lateTasks,
+                height: @model.attributes.lateTasks / total_tasks * 100
+            },
+            {
+                type: 'cleaning_item',
+                label: 'cleaning',
+                count: @model.attributes.cleaningTasks,
+                height: @model.attributes.cleaningTasks / total_tasks * 100,
+                link: 'tasks/cleaning'
+            },
+            {
+                type: 'lbCleanup_item',
+                label: 'load balancer cleanup',
+                count: @model.attributes.lbCleanupTasks,
+                height: @model.attributes.lbCleanupTasks / total_tasks * 100
+            }
+        ]
+        return tasks
 
 module.exports = StatusView
