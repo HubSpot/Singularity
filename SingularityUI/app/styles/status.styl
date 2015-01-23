@@ -1,0 +1,48 @@
+@import colors
+
+.same-size-row-top
+    display table
+    width 100%
+
+.same-size-row
+    display table
+    width 100%
+    height 100%
+
+.same-size-col
+    float none
+    display table-cell
+    vertical-align top
+
+.chart-data
+    line-height 0
+
+div.datablock
+    width 100%
+    display inline-block
+    margin 0px
+    outline none
+    vertical-align top
+
+#legend .list-group-item, #legend-left .list-group-item
+    padding 4px 15px
+
+#legend .list-group-item
+    text-align right
+#active_item
+    background $green
+#paused_item
+    background $grey
+#pending_item
+    background $purple
+#cleaning_item
+    background $dark-yellow
+    color $grey
+#cooldown_item
+    background $blue
+#scheduled_item
+    background $blue
+#overdue_item
+    background $red
+#lbCleanup_item
+    background $orange
