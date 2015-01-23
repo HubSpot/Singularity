@@ -25,6 +25,12 @@ exports.config =
     server:
         base: '/singularity'
 
+    # Include full compiler to allow for compiling templates during runtime
+    plugins:
+        handlebars:
+            include:
+                runtime: false
+
 
     # When running SingularityUI via brunch server we need to make an index.html for it
     # based on the template that's shared with SingularityService

@@ -1,0 +1,13 @@
+{{! Part of taskBase }}
+{{#if config.taskQuickLinks}}
+    <div>
+        <div class="page-header">
+            <h2>Quick Links</h2>
+        </div>
+        <span>
+            {{#each config.taskQuickLinks}}
+                <a class="btn btn-default" href="{{evaluateHandlebarsInContext url ../data.environment}}">{{evaluateHandlebarsInContext name ../data.environment}}</a>
+            {{/each}}
+        </span>
+    </div>
+{{/if}}

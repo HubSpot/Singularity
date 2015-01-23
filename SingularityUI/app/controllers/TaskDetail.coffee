@@ -17,6 +17,7 @@ class TaskDetailController extends Controller
 
     templates:
         overview:      require '../templates/taskDetail/taskOverview'
+        quickLinks:    require '../templates/taskDetail/taskQuickLinks'
         history:       require '../templates/taskDetail/taskHistory'
         logs:          require '../templates/taskDetail/taskS3Logs'
         info:          require '../templates/taskDetail/taskInfo'
@@ -44,6 +45,10 @@ class TaskDetailController extends Controller
         @subviews.overview = new SimpleSubview
             model:    @models.task
             template: @templates.overview
+
+        @subviews.quickLinks = new SimpleSubview
+            model:    @models.task
+            template: @templates.quickLinks
 
         @subviews.history = new SimpleSubview
             model:    @models.task

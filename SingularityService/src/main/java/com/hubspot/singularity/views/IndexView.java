@@ -1,5 +1,8 @@
 package com.hubspot.singularity.views;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.views.View;
 
@@ -24,7 +27,9 @@ public class IndexView extends View {
   private final Integer slaveHttpPort;
   private final Integer slaveHttpsPort;
 
-  public IndexView(SingularityConfiguration configuration) {
+  private final String taskQuickLinks;
+
+  public IndexView(SingularityConfiguration configuration, ObjectMapper objectMapper) {
     super("index.mustache");
 
     appRoot = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
@@ -43,6 +48,13 @@ public class IndexView extends View {
     hideNewRequestButton = configuration.getUiConfiguration().isHideNewRequestButton();
 
     navColor = configuration.getUiConfiguration().getNavColor();
+
+    try {
+      taskQuickLinks = objectMapper.writeValueAsString(configuration.getUiConfiguration().getTaskQuickLinks());
+    }
+    catch (JsonProcessingException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   public String getAppRoot() {
@@ -89,11 +101,16 @@ public class IndexView extends View {
     return hideNewRequestButton;
   }
 
+  public String getTaskQuickLinks() {
+    return taskQuickLinks;
+  }
+
+
   @Override
   public String toString() {
     return "IndexView [appRoot=" + appRoot + ", staticRoot=" + staticRoot + ", apiRoot=" + apiRoot + ", navColor=" + navColor + ", defaultMemory=" + defaultMemory + ", defaultCpus=" + defaultCpus
         + ", hideNewDeployButton=" + hideNewDeployButton + ", hideNewRequestButton=" + hideNewRequestButton + ", title=" + title + ", slaveHttpPort=" + slaveHttpPort + ", slaveHttpsPort="
-        + slaveHttpsPort + "]";
+        + slaveHttpsPort + ", taskQuickLinks=" + taskQuickLinks + "]";
   }
 
 }

@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
+import java.util.Collections;
+import java.util.List;
+
 public class UIConfiguration {
 
   @NotEmpty
@@ -20,6 +23,9 @@ public class UIConfiguration {
 
   @JsonProperty
   private String baseUrl;
+
+  @JsonProperty
+  private List<TaskQuickLink> taskQuickLinks = Collections.emptyList();
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
@@ -62,5 +68,13 @@ public class UIConfiguration {
 
   public void setNavColor(String navColor) {
     this.navColor = navColor;
+  }
+
+  public List<TaskQuickLink> getTaskQuickLinks() {
+    return taskQuickLinks;
+  }
+
+  public void setTaskQuickLinks(List<TaskQuickLink> taskQuickLinks) {
+    this.taskQuickLinks = taskQuickLinks;
   }
 }

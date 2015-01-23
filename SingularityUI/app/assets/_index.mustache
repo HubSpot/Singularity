@@ -28,8 +28,11 @@
             defaultMemory: {{{defaultMemory}}},
             slaveHttpPort: {{{slaveHttpPort}}},
             {{#slaveHttpsPort}}
-            slaveHttpsPort: {{{slaveHttpsPort}}}
+            slaveHttpsPort: {{{slaveHttpsPort}}},
             {{/slaveHttpsPort}}
+            {{#taskQuickLinks}}
+            taskQuickLinks: {{{taskQuickLinks}}}
+            {{/taskQuickLinks}}
         };
     </script>
     <script src="{{{staticRoot}}}/js/app.js"></script>
