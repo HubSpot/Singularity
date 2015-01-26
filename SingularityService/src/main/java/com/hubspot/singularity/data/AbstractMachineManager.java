@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import static java.lang.String.format;
+
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -131,12 +133,12 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     Optional<T> objectHolder = getActiveObject(objectId);
 
     if (!objectHolder.isPresent()) {
-      LOG.warn(String.format("Marking an object %s as dead - but it wasn't active", objectId));
+      LOG.warn(format("Marking an object %s as dead - but it wasn't active", objectId));
       return;
     }
 
     if (delete(getActivePath(objectId)) != SingularityDeleteResult.DELETED) {
-      LOG.warn(String.format("Deleting active object at %s failed", getActivePath(objectId)));
+      LOG.warn(format("Deleting active object at %s failed", getActivePath(objectId)));
     }
 
     T object = objectHolder.get();
@@ -145,7 +147,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     object.setDeadAt(Optional.of(System.currentTimeMillis()));
 
     if (create(getDeadPath(objectId), Optional.of(transcoder.toBytes(object))) != SingularityCreateResult.CREATED) {
-      LOG.warn(String.format("Creating dead object at %s failed", getDeadPath(objectId)));
+      LOG.warn(format("Creating dead object at %s failed", getDeadPath(objectId)));
     }
   }
 
@@ -157,7 +159,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     try {
       curator.setData().forPath(path, data);
     } catch (NoNodeException nne) {
-      LOG.warn(String.format("Unexpected no node exception while storing decomissioned state for %s on path %s", object, path));
+      LOG.warn(format("Unexpected no node exception while storing decomissioned state for %s on path %s", object, path));
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
