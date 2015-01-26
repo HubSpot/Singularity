@@ -3,7 +3,6 @@ package com.hubspot.singularity.scheduler;
 import static com.google.common.base.Preconditions.checkNotNull;
 import io.dropwizard.lifecycle.Managed;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -13,12 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -26,11 +25,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderOnlyPoller.class);
 
-  private final ScheduledExecutorService executorService;
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
   private final Optional<Lock> lockHolder;
 
+  private ScheduledExecutorService executorService;
   private LeaderLatch leaderLatch;
   private SingularityExceptionNotifier exceptionNotifier;
   private SingularityAbort abort;
@@ -49,14 +48,15 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     this.pollTimeUnit = pollTimeUnit;
     this.lockHolder = lockHolder;
 
-    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
   }
 
   @Inject
-  void injectPollerDependencies(LeaderLatch leaderLatch,
+  void injectPollerDependencies(@Named(SingularityMainModule.CORE_THREADPOOL_NAME) ScheduledExecutorService executorService,
+      LeaderLatch leaderLatch,
       SingularityExceptionNotifier exceptionNotifier,
       SingularityAbort abort,
       SingularityMesosSchedulerDelegator mesosScheduler) {
+    this.executorService = executorService;
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
     this.abort = checkNotNull(abort, "abort is null");
@@ -134,6 +134,5 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   @Override
   public void stop() {
-    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
   }
 }
