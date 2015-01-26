@@ -490,7 +490,7 @@
     <build>
       <plugins>
         <plugin>
-          <groupId>com.hubspot</groupId>
+          <groupId>com.github.kongchen</groupId>
           <artifactId>swagger-maven-plugin</artifactId>
           <executions>
             <execution>
@@ -513,21 +513,6 @@
                     <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
                     <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
                     <outputPath>${basedir}/../Docs/reference/api.md</outputPath>
-                    <sortApis>true</sortApis>
-                  </apiSource>
-                  <apiSource>
-                    <locations>com.hubspot.singularity.config</locations>
-                    <apiVersion>${project.version}</apiVersion>
-
-                    <apiInfo>
-                      <title>Singularity Configuration</title>
-                      <description>Singularity Configuration</description>
-                    </apiInfo>
-
-                    <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
-                    <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
-                    <outputPath>${basedir}/../Docs/reference/config.md</outputPath>
-                    <sortApis>true</sortApis>
                   </apiSource>
                 </apiSources>
               </configuration>

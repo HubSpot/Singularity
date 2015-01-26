@@ -546,9 +546,9 @@
           <version>0.0.16</version>
         </plugin>
         <plugin>
-          <groupId>com.hubspot</groupId>
+          <groupId>com.github.kongchen</groupId>
           <artifactId>swagger-maven-plugin</artifactId>
-          <version>2.3.4-HUBSPOT</version>
+          <version>2.3.2</version>
           <dependencies>
             <dependency>
               <groupId>com.wordnik</groupId>
