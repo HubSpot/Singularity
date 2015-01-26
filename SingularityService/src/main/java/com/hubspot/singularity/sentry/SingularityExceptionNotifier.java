@@ -34,31 +34,6 @@ public class SingularityExceptionNotifier {
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;
 
-  private final Predicate<StackTraceElement> isSingularityTraceSignature = new Predicate<StackTraceElement>() {
-    @Override
-    public boolean apply(StackTraceElement input) {
-      for (String sig : sentryConfiguration.get().getSingularityTraceSignatures()) {
-        if (!input.getClassName().contains(sig)) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-  };
-
-  private final Predicate<StackTraceElement> isIgnoredStackTraceElement = new Predicate<StackTraceElement>() {
-    @Override
-    public boolean apply(StackTraceElement input) {
-      for (String sig : sentryConfiguration.get().getIgnoredTraceSignatures()) {
-        if (input.getClassName().contains(sig)) {
-          return true;
-        }
-      }
-      return false;
-    }
-  };
-
   @Inject
   public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration) {
     this.sentryConfiguration = sentryConfiguration;
@@ -78,32 +53,11 @@ public class SingularityExceptionNotifier {
   }
 
   private String getCallingClassName(StackTraceElement[] stackTrace) {
-    if (stackTrace != null && stackTrace.length > 1) {
-      return stackTrace[1].getClassName();
+    if (stackTrace != null && stackTrace.length > 2) {
+      return stackTrace[2].getClassName();
     } else {
       return "(unknown)";
     }
-  }
-
-  private String determineCulprit(final Throwable exception) {
-    Throwable cause = exception;
-    String culprit = null;
-
-    while (cause != null) {
-      final List<StackTraceElement> elements = new ArrayList<>(cause.getStackTrace().length);
-
-      if(elements.size() > 0){
-        final StackTraceElement root = Iterables.tryFind(elements, Predicates.not(isIgnoredStackTraceElement)).or(elements.get(0));
-        final Optional<StackTraceElement> lastSingularityElement = Iterables.tryFind(elements, Predicates.and(isSingularityTraceSignature, Predicates.not(isIgnoredStackTraceElement)));
-
-        final String singularityCulprit = lastSingularityElement.isPresent() ? String.format("%s.%s():%s", lastSingularityElement.get().getClassName(), lastSingularityElement.get().getMethodName(), lastSingularityElement.get().getLineNumber()) : "";
-        culprit = String.format("%s.%s():%s:%s|%s", root.getClassName(), root.getMethodName(), root.getLineNumber(), Throwables.getRootCause(exception).getClass().getName(), singularityCulprit);
-      }
-
-      cause = cause.getCause();
-    }
-
-    return culprit;
   }
 
   private void sendEvent(Raven raven, final EventBuilder eventBuilder) {
@@ -117,13 +71,13 @@ public class SingularityExceptionNotifier {
       return;
     }
 
-    final String culprit = determineCulprit(t);
+    final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .setCulprit(getPrefix() + culprit)
+            .setCulprit(getPrefix() + t.getMessage())
             .setMessage(Strings.nullToEmpty(t.getMessage()))
             .setLevel(Event.Level.ERROR)
-            .setLogger(getCallingClassName(Thread.currentThread().getStackTrace()))
+            .setLogger(getCallingClassName(currentThreadStackTrace))
             .addSentryInterface(new ExceptionInterface(t));
 
     if (extraData != null && !extraData.isEmpty()) {
@@ -140,10 +94,12 @@ public class SingularityExceptionNotifier {
       return;
     }
 
+    final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
+
     final EventBuilder eventBuilder = new EventBuilder()
             .setMessage(getPrefix() + subject)
             .setLevel(Event.Level.ERROR)
-            .setLogger(getCallingClassName(Thread.currentThread().getStackTrace()));
+            .setLogger(getCallingClassName(currentThreadStackTrace));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
