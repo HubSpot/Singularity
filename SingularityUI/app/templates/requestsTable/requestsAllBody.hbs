@@ -9,6 +9,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.requestType">
+                        Type
+                    </th>
                     <th data-sort-attribute="state">
                         State
                     </th>
@@ -24,7 +27,7 @@
                     <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
                         Deploy time
                     </th>
-                    
+
                     {{#ifInSubFilter 'scheduled' requestsSubFilter}}
                         <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
                             Schedule
@@ -50,6 +53,9 @@
                             <a title="{{ request.id }}" href="{{appRoot}}/request/{{ request.id }}">
                                 {{ request.id }}
                             </a>
+                        </td>
+                        <td>
+                            {{ request.requestType}}
                         </td>
                         <td>
                             {{humanizeText state}}

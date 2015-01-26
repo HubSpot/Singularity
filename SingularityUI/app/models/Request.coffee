@@ -22,14 +22,13 @@ class Request extends Model
         else
             data.id = data.request.id
 
-        # Gotta fecking figure out what kind of request this is
-        data.scheduled = typeof data.request.schedule is 'string'
-        data.onDemand = data.request.daemon? and not data.request.daemon and not data.scheduled
+        data.scheduled = data.request.requestType == 'SCHEDULED'
+        data.onDemand = data.request.requestType == 'ON_DEMAND'
         data.daemon = not data.scheduled and not data.onDemand
 
         data.instances = data.request.instances or 1
         data.hasMoreThanOneInstance = data.instances > 1
-          
+
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
 
