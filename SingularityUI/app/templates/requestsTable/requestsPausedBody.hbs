@@ -38,7 +38,7 @@
                             </a>
                         </span></td>
                         <td>
-                            {{ request.requestType}}
+                            {{humanizeText request.requestType}}
                         </td>
                         <td class="hidden-xs">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
