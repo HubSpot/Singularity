@@ -9,9 +9,7 @@
                 </span>
 
                 <span class="request-type">
-                    {{#if data.daemon}}daemon{{#if data.hasMoreThanOneInstance }} - {{data.instances}} instances{{/if}}{{/if}}
-                    {{#if data.onDemand}}on-demand{{/if}}
-                    {{#if data.scheduled}}scheduled{{/if}}
+                    {{humanizeText data.type}}
                 </span>
                 
             </h4>
@@ -35,7 +33,7 @@
 
             {{#if data.canBeRunNow}}
                 {{#unless data.deleted}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{#if data.onDemand}}on-demand{{else}}scheduled{{/if}}" data-action="run-request-now">
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{ data.type }}" data-action="run-request-now">
                         Run now
                     </a>
                 {{/unless}}
