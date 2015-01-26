@@ -72,12 +72,17 @@ class RequestsView extends View
             requests = _.filter requests, (request) =>
                 filter = false
 
-                if @subFilter.indexOf('daemon') isnt -1
-                    filter = filter or request.daemon
-                if @subFilter.indexOf('scheduled') isnt -1
-                    filter = filter or request.scheduled
-                if @subFilter.indexOf('ondemand') isnt -1
-                    filter = filter or request.onDemand
+                if @subFilter.indexOf('SERVICE') isnt -1
+                    filter = filter or request.type == 'SERVICE'
+                if @subFilter.indexOf('WORKER') isnt -1
+                    filter = filter or request.type == 'WORKER'
+                if @subFilter.indexOf('SCHEDULED') isnt -1
+                    filter = filter or request.type == 'SCHEDULED'
+                if @subFilter.indexOf('ON_DEMAND') isnt -1
+                    filter = filter or request.type == 'ON_DEMAND'
+                if @subFilter.indexOf('RUN_ONCE') isnt -1
+                    filter = filter or request.type == 'RUN_ONCE'
+
                 filter
 
         # Sort the table if the user clicked on the table heading things
@@ -298,7 +303,7 @@ class RequestsView extends View
             @subFilter = filter
         else
             # Select multiple filters
-            currentFilter = if @subFilter is 'all' then 'daemon-ondemand-scheduled' else  @subFilter
+            currentFilter = if @subFilter is 'all' then 'SERVICE-WORKER-SCHEDULED-ON_DEMAND-RUN_ONCE' else  @subFilter
 
             currentFilter = currentFilter.split '-'
             needToAdd = not _.contains currentFilter, filter
