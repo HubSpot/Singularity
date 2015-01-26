@@ -1,17 +1,16 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
+
 import com.google.common.base.Optional;
-import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.sun.jersey.api.NotFoundException;
 
 public class AbstractRequestResource {
 
@@ -26,21 +25,9 @@ public class AbstractRequestResource {
   protected SingularityRequestWithState fetchRequestWithState(String requestId) {
     Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId);
 
-    if (!request.isPresent()) {
-      throw handleNoMatchingRequest(requestId);
-    }
+    checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
 
     return request.get();
-  }
-
-  protected NotFoundException handleNoMatchingRequest(String requestId) {
-    throw WebExceptions.notFound("Couldn't find request with id %s", requestId);
-  }
-
-  protected void checkRequestStateNotPaused(SingularityRequestWithState requestWithState, String action) {
-    if (requestWithState.getState() == RequestState.PAUSED) {
-      throw WebExceptions.conflict("Request %s is paused. Unable to %s (it must be manually unpaused first)", requestWithState.getRequest().getId(), action);
-    }
   }
 
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {

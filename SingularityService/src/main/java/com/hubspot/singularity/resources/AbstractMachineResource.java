@@ -18,9 +18,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   }
 
   protected void remove(String objectId) {
-    if (manager.deleteObject(objectId) ==  SingularityDeleteResult.DIDNT_EXIST) {
-      throw new NotFoundException(String.format("Couldn't find dead %s with id %s", getObjectTypeString(), objectId));
-    }
+	checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DIDNT_EXIST, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
   }
 
   protected abstract String getObjectTypeString();

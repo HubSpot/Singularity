@@ -1,11 +1,13 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -26,7 +28,7 @@ public abstract class AbstractHistoryResource {
     try {
       return SingularityTaskId.valueOf(taskId);
     } catch (InvalidSingularityTaskIdException e) {
-      throw WebExceptions.badRequest("%s is not a valid task id: %s", taskId, e.getMessage());
+      throw badRequest("%s is not a valid task id: %s", taskId, e.getMessage());
     }
   }
 
@@ -37,9 +39,7 @@ public abstract class AbstractHistoryResource {
       history = historyManager.getTaskHistory(taskId.getId());
     }
 
-    if (!history.isPresent()) {
-      throw WebExceptions.notFound("No history for task %s", taskId);
-    }
+    checkNotFound(history.isPresent(), "No history for task %s", taskId);
 
     return history.get();
   }
@@ -53,9 +53,7 @@ public abstract class AbstractHistoryResource {
 
     deployHistory = historyManager.getDeployHistory(requestId, deployId);
 
-    if (!deployHistory.isPresent()) {
-      throw WebExceptions.notFound("Deploy history for request %s and deploy %s not found", requestId, deployId);
-    }
+    checkNotFound(deployHistory.isPresent(), "Deploy history for request %s and deploy %s not found", requestId, deployId);
 
     return deployHistory.get();
   }
