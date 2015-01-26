@@ -101,9 +101,7 @@ public class TaskResource {
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
     Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
 
-    if (!pendingTask.isPresent()) {
-      throw new NotFoundException("Couldn't find: " + pendingTaskIdStr);
-    }
+    checkNotFound(pendingTask.isPresent(), "Couldn't find %s", pendingTaskIdStr);
 
     List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask.get()));
 

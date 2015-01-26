@@ -1,5 +1,7 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -18,7 +20,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   }
 
   protected void remove(String objectId) {
-	checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DIDNT_EXIST, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
+    checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DELETED, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
   }
 
   protected abstract String getObjectTypeString();
