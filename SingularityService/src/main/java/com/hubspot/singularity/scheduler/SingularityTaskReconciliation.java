@@ -26,6 +26,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -48,7 +49,7 @@ public class SingularityTaskReconciliation {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
 
   @Inject
-  public SingularityTaskReconciliation(@Named(SingularityMainModule.CORE_THREADPOOL_NAME) ScheduledExecutorService executorService,
+  public SingularityTaskReconciliation(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
       SingularityExceptionNotifier exceptionNotifier,
       TaskManager taskManager,
       SingularityConfiguration configuration,
@@ -64,7 +65,7 @@ public class SingularityTaskReconciliation {
     this.schedulerDriverSupplier = schedulerDriverSupplier;
 
     this.isRunningReconciliation = new AtomicBoolean(false);
-    this.executorService = executorService;
+    this.executorService = executorServiceFactory.get(getClass().getSimpleName());
   }
 
   enum ReconciliationState {

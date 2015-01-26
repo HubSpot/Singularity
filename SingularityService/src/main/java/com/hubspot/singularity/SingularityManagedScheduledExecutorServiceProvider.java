@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkState;
-
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.concurrent.Executors;

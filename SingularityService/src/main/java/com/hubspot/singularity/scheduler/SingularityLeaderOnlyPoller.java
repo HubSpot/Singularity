@@ -13,11 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
-import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -47,16 +46,15 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
     this.lockHolder = lockHolder;
-
   }
 
   @Inject
-  void injectPollerDependencies(@Named(SingularityMainModule.CORE_THREADPOOL_NAME) ScheduledExecutorService executorService,
+  void injectPollerDependencies(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
       LeaderLatch leaderLatch,
       SingularityExceptionNotifier exceptionNotifier,
       SingularityAbort abort,
       SingularityMesosSchedulerDelegator mesosScheduler) {
-    this.executorService = executorService;
+    this.executorService = executorServiceFactory.get(getClass().getSimpleName());
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
     this.abort = checkNotNull(abort, "abort is null");
