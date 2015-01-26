@@ -1,7 +1,7 @@
-<div class="page-header">
-    <h2>Scheduled &amp; pending tasks</h2>
-</div>
 {{#if data}}
+    <div class="page-header">
+        <h2>Scheduled &amp; pending tasks</h2>
+    </div>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -42,6 +42,4 @@
             {{/each}}
         </tbody>
     </table>
-{{else}}
-    <div class="empty-table-message">No scheduled tasks</div>
 {{/if}}
