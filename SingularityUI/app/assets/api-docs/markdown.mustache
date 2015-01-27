@@ -48,7 +48,7 @@ Models:
 
 {{#responseClass}}
 ###### Response
-[{{className}}](#{{classLinkName}}){{^genericClasses}}{{/genericClasses}}{{#genericClasses}}< [{{className}}](#{{classLinkName}}) >{{/genericClasses}}
+{{^classLinkName}}{{className}}{{/classLinkName}}{{#classLinkName}}[{{className}}](#model-{{classLinkName}}){{#genericClasses}}< [{{className}}](#model-{{classLinkName}}) >{{/genericClasses}}{{/classLinkName}}
 {{/responseClass}}
 
 
@@ -95,7 +95,7 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 {{#items}}
-| {{name}} | {{#linkType}}<a href="#model-{{linkType}}">{{type}}</a>{{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{#allowableValue}} Allowable values: {{.}}{{/allowableValue}} |
+| {{name}} | {{#linkType}}[{{type}}](#model-{{linkType}}){{/linkType}}{{^linkType}}{{type}}{{/linkType}} | {{#required}}required{{/required}}{{^required}}optional{{/required}} | {{#description}}{{{description}}}{{/description}}{{#allowableValue}} Allowable values: {{.}}{{/allowableValue}} |
 {{/items}}
 
 {{/dataTypes}}
