@@ -100,4 +100,4 @@ It's a good idea to run a migration each time you upgrade to a new version of Si
 
 `java -jar SingularityService/target/SingularityService-*-shaded.jar server singularity_config.yaml`
 
-**Warning:** Singularity will abort (i.e. exit) when it hits an unrecoverable error, so it's a good idea to use monit, supervisor, or systemd to monitor and restart this the Singularity process.
+**Warning:** Singularity will abort (i.e. exit) when it hits an unrecoverable error, so it's a good idea to use monit, supervisor, or systemd to monitor and restart the Singularity process. It does this in order to simplify the handling of state which must be kept in sync with the Mesos master.
