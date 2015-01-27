@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -75,7 +76,7 @@ public class SingularityDeployHealthHelper {
           Optional<SingularityTaskHistoryUpdate> runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
           long taskDuration = System.currentTimeMillis() - runningUpdate.get().getTimestamp();
 
-          if (taskDuration < runningThreshold) {
+          if (taskDuration < TimeUnit.SECONDS.toMillis(runningThreshold)) {
             LOG.debug("Task {} has been running for {}, has not yet reached running threshold of {}", taskId, JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(runningThreshold));
             return DeployHealth.WAITING;
           }

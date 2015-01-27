@@ -19,7 +19,7 @@ import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
-public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
+public class SingularityExecutorTaskLogManager {
 
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final TemplateManager templateManager;
@@ -28,7 +28,6 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
   private final JsonObjectFileHelper jsonObjectFileHelper;
 
   public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefinition, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
-    super(log);
     this.log = log;
     this.taskDefinition = taskDefinition;
     this.templateManager = templateManager;
@@ -83,7 +82,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         taskDefinition.getServiceLogOut());
 
     try {
-      super.runCommand(cmd, Redirect.to(tailOfLogPath.toFile()));
+      new SimpleProcessManager(log).runCommand(cmd, Redirect.to(tailOfLogPath.toFile()));
     } catch (Throwable t) {
       log.error("Failed saving tail of log {} to {}", taskDefinition.getServiceLogOut(), configuration.getServiceFinishedTailLog(), t);
     }
@@ -115,7 +114,7 @@ public class SingularityExecutorTaskLogManager extends SimpleProcessManager {
         getLogrotateConfPath().toString());
 
     try {
-      super.runCommand(command);
+      new SimpleProcessManager(log).runCommand(command);
       return true;
     } catch (Throwable t) {
       log.warn("Tried to manually logrotate using {}, but caught", getLogrotateConfPath(), t);

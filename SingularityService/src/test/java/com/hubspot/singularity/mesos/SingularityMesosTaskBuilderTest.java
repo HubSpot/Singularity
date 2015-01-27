@@ -117,7 +117,7 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         Type.DOCKER,
         Optional.of(Collections.singletonList(new SingularityVolume("/container", Optional.of("/host"), Mode.RW))),
-        Optional.of(new SingularityDockerInfo("docker-image", Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
+        Optional.of(new SingularityDockerInfo("docker-image", true, Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setContainerInfo(Optional.of(containerInfo))
     .setCommand(Optional.of("/bin/echo"))
@@ -133,6 +133,7 @@ public class SingularityMesosTaskBuilderTest {
 
     assertEquals(Type.DOCKER, task.getMesosTask().getContainer().getType());
     assertEquals("docker-image", task.getMesosTask().getContainer().getDocker().getImage());
+    assertTrue(task.getMesosTask().getContainer().getDocker().getPrivileged());
     assertEquals("/container", task.getMesosTask().getContainer().getVolumes(0).getContainerPath());
     assertEquals("/host", task.getMesosTask().getContainer().getVolumes(0).getHostPath());
     assertEquals(Mode.RW, task.getMesosTask().getContainer().getVolumes(0).getMode());

@@ -3,14 +3,12 @@ import sys
 import grequests
 from glob import glob
 from termcolor import colored
-
 from callbacks import generate_callback
 from singularity_request import get_json_response
 import logfetch_base
 
 DOWNLOAD_FILE_FORMAT = '{0}/sandbox/{1}/download'
 BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
-REQUEST_TASKS_FORMAT = '/history/request/{0}/tasks'
 
 def download_live_logs(args):
   tasks = tasks_to_check(args)
@@ -59,20 +57,13 @@ def tasks_to_check(args):
   if args.taskId:
     return [args.taskId]
   else:
-    return tasks_for_request(args)
-
-def tasks_for_request(args):
-  if args.requestId and args.deployId:
-      tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args) if task["taskId"]["deployId"] == args.deployId]
-  else:
-    tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args)[0:args.task_count]]
-  return tasks
-
-def all_tasks_for_request(args):
-  uri = '{0}{1}'.format(logfetch_base.base_uri(args), REQUEST_TASKS_FORMAT.format(args.requestId))
-  return get_json_response(uri)
+    return logfetch_base.tasks_for_request(args)
 
 def logs_folder_files(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  files = get_json_response(uri, {'path' : '{0}/logs'.format(task)})
-  return [f['path'].rsplit('/')[-1] for f in files]
+  files_json = get_json_response(uri, {'path' : '{0}/logs'.format(task)})
+  if 'files' in files_json:
+    files = files_json['files']
+    return [f['name'] for f in files if logfetch_base.is_in_date_range(args, f['mtime'])]
+  else:
+    return [f['path'].rsplit('/')[-1] for f in files_json if logfetch_base.is_in_date_range(args, f['mtime'])]

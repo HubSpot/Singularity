@@ -23,7 +23,7 @@ def download_s3_logs(args):
     filename = log_file['key'].rsplit("/", 1)[1]
     full_log_path = '{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))
     full_gz_path = '{0}/{1}'.format(args.dest, filename)
-    if in_date_range(args.days, filename):
+    if in_date_range(args, filename):
       if not (os.path.isfile(full_log_path) or os.path.isfile(full_gz_path)):
         async_requests.append(
           grequests.AsyncRequest('GET', log_file['getUrl'],
@@ -37,12 +37,18 @@ def download_s3_logs(args):
   sys.stderr.write(colored('All S3 logs up to date', 'blue') + '\n')
   return all_logs
 
-def in_date_range(days, filename):
+def in_date_range(args, filename):
   timedelta = datetime.utcnow() - time_from_filename(filename)
-  if timedelta.days > days:
-    return False
+  if args.end_days:
+    if timedelta.days > args.start_days or timedelta.days <= args.end_days:
+      return False
+    else:
+      return True
   else:
-    return True
+    if timedelta.days > args.start_days:
+      return False
+    else:
+      return True
 
 def time_from_filename(filename):
   time_string = re.search('(\d{13})', filename).group(1)

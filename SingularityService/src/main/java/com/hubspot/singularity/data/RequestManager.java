@@ -108,6 +108,9 @@ public class RequestManager extends CuratorAsyncManager {
       if (checkExists(getCleanupPath(requestId, type)).isPresent()) {
         return true;
       }
+      if (Thread.currentThread().isInterrupted()) {
+        break;
+      }
     }
 
     return false;

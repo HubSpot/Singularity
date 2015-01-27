@@ -30,21 +30,22 @@ class NewRequest extends FormBaseView
 
         requestObject = {}
 
-        requestObject.id = @$('#id').val()
-        type             = @$('#type .active').data 'type'
+        requestObject.id   = @$('#id').val()
+        requestObject.requestType = @$('#type .active').data 'type'
+        type = requestObject.requestType
 
         requestObject.owners = @multiList '.owner'
 
-        if type in ['service', 'worker']
+        if type in ['SERVICE', 'WORKER']
             requestObject.daemon = true
 
             instances                   = parseInt @$("#instances-#{ type }").val()
             requestObject.instances     = instances if instances
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
 
-            if type is 'service'
+            if type is 'SERVICE'
                 requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
-        else if type is 'scheduled'
+        else if type is 'SCHEDULED'
             schedule = @$('#schedule').val()
             retries  = parseInt @$('#retries-on-failure').val()
 
@@ -54,7 +55,7 @@ class NewRequest extends FormBaseView
                 @alertRequiredField 'schedule'
 
             requestObject.numRetriesOnFailure = retries if retries
-        else if type is 'on-demand'
+        else if type is 'ON_DEMAND' or type is 'RUN_ONCE'
             requestObject.daemon = false
 
         return if @invalid

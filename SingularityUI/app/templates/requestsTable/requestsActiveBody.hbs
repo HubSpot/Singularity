@@ -9,6 +9,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.requestType">
+                        Type
+                    </th>
                     <th data-sort-attribute="request.instances" class="visible-lg visible-xl">
                         Instances
                     </th>
@@ -48,6 +51,9 @@
                                 {{ request.id }}
                             </a>
                         </td>
+                        <td>
+                            {{humanizeText request.requestType}}
+                        </td>
                         <td class="visible-lg visible-xl centered">
                             {{ request.instances }}
                         </td>
@@ -60,7 +66,7 @@
                         <td class="hidden-xs">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
-                        
+
                         {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
                                 {{ request.schedule }}

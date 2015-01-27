@@ -18,6 +18,11 @@ public abstract class SafeProcessManager {
   private final Logger log;
   private final Lock processLock;
 
+  // unnecessary code here : we shouldn't really subclass this when all we need is the following
+  // (1) artifact manager needs to kill an ensure it doesn't start something
+  // (2) process lock is unnecessary since we don't need to run multiple processes except in artifact manager
+  // (3) we could probably hand off these process variables to make them final in some other object.
+
   private volatile Optional<String> currentProcessCmd;
   private volatile Optional<Process> currentProcess;
   private volatile Optional<Integer> currentProcessPid;
@@ -102,12 +107,18 @@ public abstract class SafeProcessManager {
     currentProcessStart = Optional.absent();
   }
 
-  public void processFinished(int exitCode) {
+  protected void processFinished(Optional<Integer> exitCode) {
     lockInterruptibly();
 
     try {
       if (currentProcessCmd.isPresent() && currentProcessStart.isPresent()) {
-        log.debug("Process {} exited with {} after {}", currentProcessCmd.get(), exitCode, JavaUtils.duration(currentProcessStart.get()));
+        if (exitCode.isPresent()) {
+          log.debug("Process {} exited with {} after {}", currentProcessCmd.get(), exitCode.get(), JavaUtils.duration(currentProcessStart.get()));
+        } else {
+          log.debug("Process {} abandoned after {}", currentProcessCmd.get(), JavaUtils.duration(currentProcessStart.get()));
+        }
+      } else {
+        log.warn("Process finished called on an empty process manager");
       }
 
       resetCurrentVariables();

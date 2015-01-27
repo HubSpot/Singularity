@@ -20,7 +20,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     super(log);
   }
 
-  protected void runCommand(final List<String> command) throws InterruptedException, ProcessFailedException {
+  public void runCommand(final List<String> command) throws InterruptedException, ProcessFailedException {
     runCommand(command, Redirect.INHERIT);
   }
 
@@ -28,10 +28,10 @@ public class SimpleProcessManager extends SafeProcessManager {
     return runCommand(command, Redirect.PIPE);
   }
 
-  protected List<String> runCommand(final List<String> command, final Redirect redirectOutput) throws InterruptedException, ProcessFailedException {
+  public List<String> runCommand(final List<String> command, final Redirect redirectOutput) throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
-    int exitCode = 0;
+    Optional<Integer> exitCode = Optional.absent();
 
     Optional<OutputReader> reader = Optional.absent();
 
@@ -46,7 +46,7 @@ public class SimpleProcessManager extends SafeProcessManager {
         reader.get().start();
       }
 
-      exitCode = process.waitFor();
+      exitCode = Optional.of(process.waitFor());
 
       if (reader.isPresent()) {
         reader.get().join();
@@ -66,9 +66,11 @@ public class SimpleProcessManager extends SafeProcessManager {
       destroyProcessIfActive();
 
       throw Throwables.propagate(t);
+    } finally {
+      processFinished(exitCode);
     }
 
-    if (exitCode != 0) {
+    if (exitCode.isPresent() && exitCode.get() != 0) {
       throw new ProcessFailedException(String.format("Got non-zero exit code %s while running %s", exitCode, getCurrentProcessToString()));
     }
 

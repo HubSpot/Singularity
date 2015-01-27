@@ -31,3 +31,4 @@ scripts/*.gz
 scripts/singularity_logfetch.egg-info
 scripts/build
 scripts/dist
+scripts/.venv
