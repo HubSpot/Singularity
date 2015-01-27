@@ -32,7 +32,7 @@ class Request extends Model
 
         data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
         data.canBeRunNow = data.state is 'ACTIVE' and data.type in ['SCHEDULED', 'ON_DEMAND'] and data.hasActiveDeploy
-        data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
+        data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.type in ['WORKER', 'SERVICE']
         data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.type in ['WORKER', 'SERVICE']
 
         data
