@@ -90,7 +90,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
         LOG.info("{} is overdue by {}% (expectedRunTime: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, expectedRuntime.get(), configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
 
-        mailer.sendTaskOverdueMail(taskId, request.getRequest(), runtime, expectedRuntime.get());
+        mailer.sendTaskOverdueMail(taskManager.getTask(taskId), taskId, request.getRequest(), runtime, expectedRuntime.get());
 
         taskManager.saveNotifiedOverdue(taskId);
       } else {

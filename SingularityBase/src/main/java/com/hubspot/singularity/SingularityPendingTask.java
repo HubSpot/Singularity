@@ -7,12 +7,14 @@ import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.JavaUtils;
 
 public class SingularityPendingTask {
 
   private final SingularityPendingTaskId pendingTaskId;
+  private final Optional<String> user;
   private final List<String> cmdLineArgs;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
@@ -38,9 +40,11 @@ public class SingularityPendingTask {
   }
 
   @JsonCreator
-  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgs") List<String> cmdLineArgs) {
+  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgs") List<String> cmdLineArgs,
+      @JsonProperty("user") Optional<String> user) {
     this.pendingTaskId = pendingTaskId;
     this.cmdLineArgs = JavaUtils.nonNullImmutable(cmdLineArgs);
+    this.user = user;
   }
 
   @Override
@@ -63,6 +67,10 @@ public class SingularityPendingTask {
     return Objects.equals(pendingTaskId, other.getPendingTaskId());
   }
 
+  public Optional<String> getUser() {
+    return user;
+  }
+
   public SingularityPendingTaskId getPendingTaskId() {
     return pendingTaskId;
   }
@@ -73,7 +81,7 @@ public class SingularityPendingTask {
 
   @Override
   public String toString() {
-    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgs=" + cmdLineArgs + "]";
+    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", user=" + user + ", cmdLineArgs=" + cmdLineArgs + "]";
   }
 
 }
