@@ -395,7 +395,7 @@
 
               <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/index.html.mustache</outputTemplate>
               <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
-              <outputPath>${project.build.directory}/classes/static/api-docs/index.html</outputPath>
+              <outputPath>${project.build.directory}/classes/assets/api-docs/index.html</outputPath>
               <sortApis>true</sortApis>
             </apiSource>
           </apiSources>
