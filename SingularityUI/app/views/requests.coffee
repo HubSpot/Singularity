@@ -106,7 +106,7 @@ class RequestsView extends View
         if @state in ['all', 'active']
             for request in requests
                 request.starred = @collection.isStarred request.id
-            
+
         @currentRequests = requests
 
     preventSearchOverwrite: ->
