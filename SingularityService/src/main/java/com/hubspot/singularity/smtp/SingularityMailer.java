@@ -205,10 +205,17 @@ public class SingularityMailer implements Managed {
       case TASK_FAILED:
         return Optional.of(EmailType.TASK_FAILED);
       case TASK_FINISHED:
-        if (request.isScheduled()) {
-          return Optional.of(EmailType.TASK_FINISHED);
+        switch (request.getRequestType()) {
+          case ON_DEMAND:
+            return Optional.of(EmailType.TASK_FINISHED_ON_DEMAND);
+          case RUN_ONCE:
+            return Optional.of(EmailType.TASK_FINISHED_RUN_ONCE);
+          case SCHEDULED:
+            return Optional.of(EmailType.TASK_FINISHED_SCHEDULED);
+          case SERVICE:
+          case WORKER:
+            return Optional.of(EmailType.TASK_FINISHED_LONG_RUNNING);
         }
-        return Optional.of(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST);
       case TASK_KILLED:
         Optional<SingularityTaskHistoryUpdate> cleaningUpdate = SingularityTaskHistoryUpdate.getUpdate(taskHistory, ExtendedTaskState.TASK_CLEANING);
 
@@ -289,7 +296,8 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(taskTemplate, templateProperties);
 
-    queueMail(emailDestination, request, emailType, subject, body);
+    // TODO pull user
+    queueMail(emailDestination, request, emailType, Optional.<String> absent(), subject, body);
   }
 
   private void prepareTaskCompletedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
@@ -371,7 +379,7 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(requestModifiedTemplate, templateProperties);
 
-    queueMail(emailDestination, request, type.getEmailType(), subject, body);
+    queueMail(emailDestination, request, type.getEmailType(), user, subject, body);
   }
 
   public void sendRequestPausedMail(SingularityRequest request, Optional<String> user) {
@@ -425,7 +433,7 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
 
-    queueMail(emailDestination, request, EmailType.REQUEST_IN_COOLDOWN, subject, body);
+    queueMail(emailDestination, request, EmailType.REQUEST_IN_COOLDOWN, Optional.<String> absent(), subject, body);
   }
 
   private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
@@ -522,7 +530,7 @@ public class SingularityMailer implements Managed {
     return templateProperties.build();
   }
 
-  private void queueMail(final Collection<EmailDestination> destination, final SingularityRequest request, final EmailType emailType, String subject, String body) {
+  private void queueMail(final Collection<EmailDestination> destination, final SingularityRequest request, final EmailType emailType, final Optional<String> actionTaker, String subject, String body) {
     RateLimitResult result = checkRateLimitForMail(request, emailType);
 
     if (result == RateLimitResult.DONT_SEND_MAIL_IN_COOLDOWN) {
@@ -539,11 +547,18 @@ public class SingularityMailer implements Managed {
 
     if (destination.contains(EmailDestination.OWNERS) && request.getOwners().isPresent() && !request.getOwners().get().isEmpty()) {
       toList.addAll(request.getOwners().get());
-      if (destination.contains(EmailDestination.ADMINS)) {
+    }
+
+    if (destination.contains(EmailDestination.ACTION_TAKER) && actionTaker.isPresent()) {
+      toList.add(actionTaker.get());
+    }
+
+    if (destination.contains(EmailDestination.ADMINS) && !maybeSmtpConfiguration.get().getAdmins().isEmpty()) {
+      if (toList.isEmpty()) {
+        toList.addAll(maybeSmtpConfiguration.get().getAdmins());
+      } else {
         ccList.addAll(maybeSmtpConfiguration.get().getAdmins());
       }
-    } else if (destination.contains(EmailDestination.ADMINS)) {
-      toList.addAll(maybeSmtpConfiguration.get().getAdmins());
     }
 
     smtpSender.queueMail(toList, ccList, subject, body);

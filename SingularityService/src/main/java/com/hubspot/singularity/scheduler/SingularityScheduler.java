@@ -426,11 +426,14 @@ public class SingularityScheduler {
       mailer.sendRequestInCooldownMail(request);
     }
 
-    if (!request.isAlwaysRunning()) {
+    PendingType pendingType = PendingType.TASK_DONE;
+
+    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics)) {
+      LOG.debug("Retrying {} because {}", request.getId(), state);
+      pendingType = PendingType.RETRY;
+    } else if (!request.isAlwaysRunning()) {
       return Optional.absent();
     }
-
-    PendingType pendingType = PendingType.TASK_DONE;
 
     if (state.isSuccess()) {
       if (requestState == RequestState.SYSTEM_COOLDOWN) {
@@ -438,15 +441,6 @@ public class SingularityScheduler {
         LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
         requestState = RequestState.ACTIVE;
         requestManager.exitCooldown(request, System.currentTimeMillis());
-      }
-    } else if (request.isScheduled()) {
-      if (state.isFailed()) {
-        if (shouldRetryImmediately(request, deployStatistics)) {
-          pendingType = PendingType.RETRY;
-        }
-      } else {
-        LOG.debug("Setting pendingType to retry for request {}, because it failed due to {}", request.getId(), state);
-        pendingType = PendingType.RETRY;
       }
     }
 
