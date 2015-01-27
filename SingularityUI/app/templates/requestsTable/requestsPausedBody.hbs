@@ -16,7 +16,7 @@
                         Deploy user
                     </th>
 
-                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
+                    {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
                         <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
                             Schedule
                         </th>
@@ -47,7 +47,7 @@
                             {{usernameFromEmail requestDeployState.activeDeploy.user}}
                         </td>
 
-                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                        {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
                                 {{ request.schedule }}
                             </td>

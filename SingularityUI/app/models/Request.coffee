@@ -31,9 +31,9 @@ class Request extends Model
         data.deleted = data.state is 'DELETED'
 
         data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
-        data.canBeRunNow = data.state is 'ACTIVE' and (data.scheduled or data.onDemand) and data.hasActiveDeploy
+        data.canBeRunNow = data.state is 'ACTIVE' and data.type in ['SCHEDULED', 'ON_DEMAND'] and data.hasActiveDeploy
         data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN']
-        data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.daemon
+        data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.type in ['WORKER', 'SERVICE']
 
         data
 

@@ -19,7 +19,7 @@
                         Instances
                     </th>
 
-                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
+                    {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
                         <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
                             Schedule
                         </th>
@@ -53,7 +53,7 @@
                             {{ request.instances }}
                         </td>
 
-                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                        {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
                                 {{ request.schedule }}
                             </td>
@@ -61,7 +61,7 @@
 
                         <td class="actions-column hidden-xs">
                             {{#if canBeRunNow}}
-                                <a data-request-id="{{ request.id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now" title="Run now">
+                                <a data-request-id="{{ request.id }}" data-request-type="{{ type }}" data-action="run-now" title="Run now">
                                     <span class="glyphicon glyphicon-flash"></span>
                                 </a>
                             {{/if}}
