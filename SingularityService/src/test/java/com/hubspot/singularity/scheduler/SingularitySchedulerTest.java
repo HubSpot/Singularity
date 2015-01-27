@@ -400,6 +400,58 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    resourceOffers();
+
+    Assert.assertTrue(deployManager.getRequestDeployState(requestId).get().getActiveDeploy().isPresent());
+    Assert.assertTrue(!deployManager.getRequestDeployState(requestId).get().getPendingDeploy().isPresent());
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testRetries() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
+    request = bldr.setNumRetriesOnFailure(Optional.of(2)).build();
+    saveRequest(request);
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    deployChecker.checkDeploys();
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
   }
 
   @Test
