@@ -10,13 +10,11 @@ public class TaskQuickLink {
   /**
    * Name of the button label in the SingularityUI interface
    */
-  @JsonProperty
   private final String name;
   /**
    * Handlebars string to parse to generate a URL for the quick link
    * (e.g. "http://{{TASK_HOST}}/{{TASK_REQUEST_ID}}")
    */
-  @JsonProperty
   private final String url;
 
   @JsonCreator

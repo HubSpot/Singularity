@@ -27,7 +27,7 @@ public class IndexView extends View {
   private final Integer slaveHttpPort;
   private final Integer slaveHttpsPort;
 
-  private final String taskQuickLinks;
+  private final String taskQuickLinksJSON;
 
   public IndexView(SingularityConfiguration configuration, ObjectMapper objectMapper) {
     super("index.mustache");
@@ -50,7 +50,7 @@ public class IndexView extends View {
     navColor = configuration.getUiConfiguration().getNavColor();
 
     try {
-      taskQuickLinks = objectMapper.writeValueAsString(configuration.getUiConfiguration().getTaskQuickLinks());
+      taskQuickLinksJSON = objectMapper.writeValueAsString(configuration.getUiConfiguration().getTaskQuickLinks());
     }
     catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
@@ -101,8 +101,8 @@ public class IndexView extends View {
     return hideNewRequestButton;
   }
 
-  public String getTaskQuickLinks() {
-    return taskQuickLinks;
+  public String getTaskQuickLinksJSON() {
+    return taskQuickLinksJSON;
   }
 
 
@@ -110,7 +110,7 @@ public class IndexView extends View {
   public String toString() {
     return "IndexView [appRoot=" + appRoot + ", staticRoot=" + staticRoot + ", apiRoot=" + apiRoot + ", navColor=" + navColor + ", defaultMemory=" + defaultMemory + ", defaultCpus=" + defaultCpus
         + ", hideNewDeployButton=" + hideNewDeployButton + ", hideNewRequestButton=" + hideNewRequestButton + ", title=" + title + ", slaveHttpPort=" + slaveHttpPort + ", slaveHttpsPort="
-        + slaveHttpsPort + ", taskQuickLinks=" + taskQuickLinks + "]";
+        + slaveHttpsPort + ", taskQuickLinksJSON=" + taskQuickLinksJSON + "]";
   }
 
 }
