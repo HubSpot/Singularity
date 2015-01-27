@@ -76,6 +76,8 @@ public class SingularityMainModule implements Module {
 
   public static final String HTTP_HOST_AND_PORT = "http.host.and.port";
 
+  public static final String SINGULARITY_URI_BASE = "_singularity_uri_base";
+
   @Override
   public void configure(Binder binder) {
     binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toProvider(SingularityHostAndPortProvider.class).in(Scopes.SINGLETON);
@@ -143,8 +145,13 @@ public class SingularityMainModule implements Module {
     public HostAndPort get() {
       return HostAndPort.fromParts(hostname, httpPort);
     }
+  }
 
-
+  @Provides
+  @Named(SINGULARITY_URI_BASE)
+  String getSingularityUriBase(final SingularityConfiguration configuration) {
+    final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
   }
 
   @Provides

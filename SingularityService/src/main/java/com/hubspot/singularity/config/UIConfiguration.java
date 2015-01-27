@@ -1,5 +1,10 @@
 package com.hubspot.singularity.config;
 
+import java.util.Locale;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -9,6 +14,26 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class UIConfiguration {
+
+  public static enum RootUrlMode {
+    UI_REDIRECT,
+    INDEX_CATCHALL,
+    DISABLED;
+
+    public static RootUrlMode parse(String value) {
+      checkNotNull(value, "value is null");
+      value = value.toUpperCase(Locale.ENGLISH);
+
+      for (RootUrlMode rootUrlMode : RootUrlMode.values()) {
+        String name = rootUrlMode.name();
+        if (name.equals(value) || name.replace("_", "").equals(value)) {
+          return rootUrlMode;
+        }
+      }
+
+      throw new IllegalArgumentException("Value '" + value + "' unknown");
+    }
+  }
 
   @NotEmpty
   @JsonProperty
@@ -23,6 +48,13 @@ public class UIConfiguration {
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
+
+  /**
+   * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
+   * the UI URI (http://.../singularity/ui/) must be used.
+   */
+  @JsonProperty
+  private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -62,5 +94,25 @@ public class UIConfiguration {
 
   public void setNavColor(String navColor) {
     this.navColor = navColor;
+  }
+
+  @Valid
+  public RootUrlMode getRootUrlMode() {
+    return RootUrlMode.parse(rootUrlMode);
+  }
+
+  /**
+   * Supports 'uiRedirect', 'indexCatchall' and 'disabled'.
+   *
+   * <ul>
+   * <li>uiRedirect - UI is served off <tt>/ui</tt> path and index redirects there.</li>
+   * <li>indexCatchall - UI is served off <tt>/</tt> using a catchall resource.</li>
+   * <li>disabled> - UI is served off <tt>/ui> and the root resource is not served at all.</li>
+   * </ul>
+   *
+   * @param rootUrlMode A valid root url mode.
+   */
+  public void setRootUrlMode(String rootUrlMode) {
+    this.rootUrlMode = rootUrlMode;
   }
 }

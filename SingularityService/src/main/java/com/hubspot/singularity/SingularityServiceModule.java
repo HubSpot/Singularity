@@ -20,7 +20,7 @@ public class SingularityServiceModule extends ConfigurationAwareModule<Singulari
     binder.install(new SingularityMainModule());
     binder.install(new SingularityDataModule());
     binder.install(new SingularitySchedulerModule());
-    binder.install(new SingularityResourceModule());
+    binder.install(new SingularityResourceModule(configuration.getUiConfiguration()));
     binder.install(new SingularityTranscoderModule());
     binder.install(new SingularityHistoryModule(configuration));
     binder.install(new SingularityMesosModule());

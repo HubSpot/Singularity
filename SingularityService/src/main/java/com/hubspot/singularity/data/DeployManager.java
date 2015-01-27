@@ -215,7 +215,7 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
 
     if (!loadEntireHistory) {
-      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeployStatistics>absent()));
+      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics>absent()));
     }
 
     Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
