@@ -90,9 +90,12 @@
                                     <span class="glyphicon glyphicon-flash"></span>
                                 </a>
                             {{/if}}
-                            <a data-request-id="{{ request.id }}" data-action="scale" title="Scale">
-                                <span class="glyphicon glyphicon-signal"></span>
-                            </a>
+                            {{log .}}
+                            {{#if canBeScaled}}
+                                <a data-request-id="{{ request.id }}" data-action="scale" title="Scale">
+                                    <span class="glyphicon glyphicon-signal"></span>
+                                </a>
+                            {{/if}}
                             <a data-request-id="{{ request.id }}" data-action="remove" title="Remove">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>
