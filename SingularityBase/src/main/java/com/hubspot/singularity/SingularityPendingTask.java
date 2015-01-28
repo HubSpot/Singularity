@@ -15,6 +15,7 @@ public class SingularityPendingTask {
 
   private final SingularityPendingTaskId pendingTaskId;
   private final List<String> cmdLineArgsList;
+  private final Optional<String> user;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
