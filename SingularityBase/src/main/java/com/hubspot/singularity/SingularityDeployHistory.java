@@ -1,11 +1,12 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
-public class SingularityDeployHistory implements Comparable<SingularityDeployHistory> {
+public class SingularityDeployHistory implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
 
   private final Optional<SingularityDeployResult> deployResult;
   private final SingularityDeployMarker deployMarker;
@@ -28,23 +29,23 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
 
   @Override
   public int hashCode() {
-      return Objects.hashCode(deployResult, deployMarker, deploy, deployStatistics);
+    return Objects.hashCode(deployResult, deployMarker, deploy, deployStatistics);
   }
 
   @Override
   public boolean equals(Object other) {
-      if (other == this) {
-          return true;
-      }
-      if (other == null || other.getClass() != this.getClass()) {
-          return false;
-      }
+    if (other == this) {
+      return true;
+    }
+    if (other == null || other.getClass() != this.getClass()) {
+      return false;
+    }
 
-      SingularityDeployHistory that = (SingularityDeployHistory) other;
-      return Objects.equal(this.deployResult, that.deployResult)
-              && Objects.equal(this.deployMarker, that.deployMarker)
-              && Objects.equal(this.deploy, that.deploy)
-              && Objects.equal(this.deployStatistics, that.deployStatistics);
+    SingularityDeployHistory that = (SingularityDeployHistory) other;
+    return Objects.equal(this.deployResult, that.deployResult)
+        && Objects.equal(this.deployMarker, that.deployMarker)
+        && Objects.equal(this.deploy, that.deploy)
+        && Objects.equal(this.deployStatistics, that.deployStatistics);
   }
 
   public Optional<SingularityDeployResult> getDeployResult() {
@@ -57,6 +58,12 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
 
   public Optional<SingularityDeploy> getDeploy() {
     return deploy;
+  }
+
+  @Override
+  @JsonIgnore
+  public long getCreateTimestampForCalculatingHistoryAge() {
+    return deployMarker.getTimestamp();
   }
 
   public Optional<SingularityDeployStatistics> getDeployStatistics() {
