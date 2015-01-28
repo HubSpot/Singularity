@@ -65,6 +65,12 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
+  private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
+
+  private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
+
+  private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
+
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long deployHealthyBySeconds = 120;
@@ -205,6 +211,30 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownExpiresAfterMinutes() {
     return cooldownExpiresAfterMinutes;
+  }
+
+  public long getDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours() {
+    return deleteStaleRequestsFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public void setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours) {
+    this.deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = deleteStaleRequestsFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public long getDeleteDeploysFromZkWhenNoDatabaseAfterHours() {
+    return deleteDeploysFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public void setDeleteDeploysFromZkWhenNoDatabaseAfterHours(long deleteDeploysFromZkWhenNoDatabaseAfterHours) {
+    this.deleteDeploysFromZkWhenNoDatabaseAfterHours = deleteDeploysFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public long getDeleteTasksFromZkWhenNoDatabaseAfterHours() {
+    return deleteTasksFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public void setDeleteTasksFromZkWhenNoDatabaseAfterHours(long deleteTasksFromZkWhenNoDatabaseAfterHours) {
+    this.deleteTasksFromZkWhenNoDatabaseAfterHours = deleteTasksFromZkWhenNoDatabaseAfterHours;
   }
 
   public long getCooldownMinScheduleSeconds() {

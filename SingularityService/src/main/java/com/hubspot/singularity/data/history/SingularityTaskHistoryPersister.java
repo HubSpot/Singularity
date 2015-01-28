@@ -21,7 +21,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
-public class SingularityTaskHistoryPersister extends SingularityHistoryPersister {
+public class SingularityTaskHistoryPersister extends SingularityHistoryPersister<SingularityTaskId> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
 
@@ -57,7 +57,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
       if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartofPendingDeploy(pendingDeploys, taskId)) {
         continue;
       }
-      if (transferToHistoryDB(taskId)) {
+      if (moveToHistoryOrCheckForPurge(taskId)) {
         numTransferred++;
       }
       numTotal++;
@@ -76,27 +76,32 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     return false;
   }
 
-  private boolean transferToHistoryDB(SingularityTaskId inactiveTaskId) {
-    final long start = System.currentTimeMillis();
+  @Override
+  protected long getMaxAgeInMillisOfItem() {
+    return configuration.getDeleteTasksFromZkWhenNoDatabaseAfterHours();
+  }
 
-    final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(inactiveTaskId);
+  @Override
+  protected boolean moveToHistory(SingularityTaskId object) {
+    final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
 
     if (taskHistory.isPresent()) {
       try {
         historyManager.saveTaskHistory(taskHistory.get());
       } catch (Throwable t) {
-        LOG.warn("Failed to persist task into History for task {}", inactiveTaskId, t);
+        LOG.warn("Failed to persist task into History for task {}", object, t);
         return false;
       }
     } else {
-      LOG.warn("Inactive task {} did not have a task to persist", inactiveTaskId);
+      LOG.warn("Inactive task {} did not have a task to persist", object);
     }
 
-    SingularityDeleteResult deleteResult = taskManager.deleteTaskHistory(inactiveTaskId);
-
-    LOG.debug("Moved task history for {} from ZK to History in (delete result: {}) in {}", inactiveTaskId, deleteResult, JavaUtils.duration(start));
-
     return true;
+  }
+
+  @Override
+  protected SingularityDeleteResult purgeFromZk(SingularityTaskId object) {
+    return taskManager.deleteTaskHistory(object);
   }
 
 }
