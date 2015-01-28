@@ -32,6 +32,7 @@ public class ExecutorDataBuilder {
     this.extraCmdLineArgs = extraCmdLineArgs;
     this.loggingTag = loggingTag;
     this.loggingExtraFields = loggingExtraFields;
+    this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     this.maxTaskThreads = maxTaskThreads;
   }
 
