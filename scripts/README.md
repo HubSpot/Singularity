@@ -23,7 +23,7 @@ pip install singularity-logfetch
 |-r , --requestId|REquestId to fetch logs for|
 |--task-count|Number of recent tasks (belonging to a request) to fetch live logs (on machine not s3)|1|
 |-d , --deployId|DeployId to fetch logs for (Must also specify requestId when using this option)|
-|--dest|Destination folder for downloaded log files, default is current working directory|~/.logfetch_cache|
+|--dest|Destination folder for downloaded log files|~/.logfetch_cache|
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk_size|Chunk size for writing responses to file system|8192
 |-u, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
