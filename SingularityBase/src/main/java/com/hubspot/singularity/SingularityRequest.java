@@ -59,7 +59,7 @@ public class SingularityRequest {
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
 
     if (requestType == null) {
-      this.requestType = RequestType.fromDaemonAndSchedule(schedule, daemon);
+      this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
     } else {
       this.requestType = requestType;
     }
