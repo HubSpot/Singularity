@@ -15,7 +15,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityDeployWebhook;
+import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -92,11 +92,11 @@ public class SingularityWebhookSender {
   }
 
   private int checkDeployUpdates(SingularityWebhook webhook) {
-    final List<SingularityDeployWebhook> deployUpdates = webhookManager.getQueuedDeployUpdatesForHook(webhook.getId());
+    final List<SingularityDeployUpdate> deployUpdates = webhookManager.getQueuedDeployUpdatesForHook(webhook.getId());
 
     int numDeployUpdates = 0;
 
-    for (SingularityDeployWebhook deployUpdate : deployUpdates) {
+    for (SingularityDeployUpdate deployUpdate : deployUpdates) {
       executeWebhook(webhook, deployUpdate, new SingularityDeployWebhookAsyncHandler(webhookManager, webhook, deployUpdate, numDeployUpdates++ > configuration.getMaxQueuedUpdatesPerWebhook()));
     }
 

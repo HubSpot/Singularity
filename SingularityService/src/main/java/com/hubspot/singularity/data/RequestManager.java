@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
@@ -39,7 +40,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
 
-  private final WebhookManager webhookManager;
+  private final SingularityEventListener singularityEventListener;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -49,7 +50,7 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
 
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
       Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
@@ -57,7 +58,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestCleanupTranscoder = requestCleanupTranscoder;
     this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
-    this.webhookManager = webhookManager;
+    this.singularityEventListener = singularityEventListener;
   }
 
   private String getRequestPath(String requestId) {
@@ -171,7 +172,7 @@ public class RequestManager extends CuratorAsyncManager {
   protected SingularityCreateResult saveHistory(SingularityRequestHistory history) {
     final String path = getHistoryPath(history);
 
-    webhookManager.enqueueRequestUpdate(history);
+    singularityEventListener.requestHistoryEvent(history);
 
     return save(path, history, requestHistoryTranscoder);
   }
