@@ -27,7 +27,7 @@ public class LogrotateTemplateContext {
 
   /**
    * Log files are rotated count times before being removed.
-   * @return String count.
+   * @return count.
    */
   public String getRotateCount() {
     return configuration.getLogrotateCount();
@@ -36,7 +36,7 @@ public class LogrotateTemplateContext {
   /**
    * Remove rotated logs older than $count days.
    * The age is only checked if the logfile is to be rotated.
-   * @return String days.
+   * @return days.
    */
   public String getMaxageDays() {
     return configuration.getLogrotateMaxageDays();
@@ -44,7 +44,7 @@ public class LogrotateTemplateContext {
 
   /**
    * Logs are moved into $directory for rotation.
-   * @return String directory.
+   * @return directory.
    */
   public String getRotateDirectory() {
     return configuration.getLogrotateToDirectory();
@@ -52,7 +52,7 @@ public class LogrotateTemplateContext {
 
   /**
    * Extra files for logrotate to rotate.
-   * @return String[] filenames to rotate.
+   * @return filenames to rotate.
    */
   public String[] getExtrasFiles() {
     final String[] original = configuration.getLogrotateExtrasFiles();
@@ -68,7 +68,7 @@ public class LogrotateTemplateContext {
   /**
    * dateformat for extra files.
    * Only %Y %m %d and %s specifiers are allowed.
-   * @return String dateformat (e.g. "-%Y%m%d%s").
+   * @return dateformat (e.g. "-%Y%m%d%s").
    */
   public String getExtrasDateformat() {
     return configuration.getLogrotateExtrasDateformat();
@@ -77,7 +77,7 @@ public class LogrotateTemplateContext {
   /**
    * Default log to logrotate, defaults to service.log.
    * This if this log doesn't exist, logrotate will return an error message.
-   * @return String filename to rotate.
+   * @return filename to rotate.
    */
   public String getLogfile() {
     return taskDefinition.getServiceLogOut();
