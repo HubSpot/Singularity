@@ -135,6 +135,13 @@ public class SingularityConfiguration extends Configuration {
 
   private long zookeeperAsyncTimeout = 5000;
 
+  private long threadpoolShutdownDelayInSeconds = 1;
+
+  private int listenerThreadpoolSize = 3;
+
+  /** If true, the event system waits for all listeners having processed an event. */
+  private boolean waitForListeners = true;
+
   @JsonProperty("zookeeper")
   @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
@@ -359,6 +366,18 @@ public class SingularityConfiguration extends Configuration {
     return sandboxDefaultsToTaskId;
   }
 
+  public int getListenerThreadpoolSize() {
+    return listenerThreadpoolSize;
+  }
+
+  public boolean isWaitForListeners() {
+    return waitForListeners;
+  }
+
+  public long getThreadpoolShutdownDelayInSeconds() {
+    return threadpoolShutdownDelayInSeconds;
+  }
+
   public void setAllowRequestsWithoutOwners(boolean allowRequestsWithoutOwners) {
     this.allowRequestsWithoutOwners = allowRequestsWithoutOwners;
   }
@@ -579,4 +598,15 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
+  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
+    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
+  }
+
+  public void setListenerThreadpoolSize(int listenerThreadpoolSize) {
+    this.listenerThreadpoolSize = listenerThreadpoolSize;
+  }
+
+  public void setWaitForListeners(boolean waitForListeners) {
+    this.waitForListeners = waitForListeners;
+  }
 }
