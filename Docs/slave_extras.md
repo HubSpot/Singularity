@@ -1,11 +1,11 @@
 ## Singularity Extras for Mesos Slaves
 
-*This assumes you've already followed the steps from [install.ms](install.md)*
+*This assumes you've already followed the steps from [install.md](install.md)*
 
-- SingularityExecutor, a custom Mesos executor
-- SingularityExecutorCleanup, a background job that cleans up tasks that haven't been shut down cleanly (i.e. have been OOM killed or )
-- SingularityS3Uploader, a local service that uploads task logs to S3
-- SingularityS3Downloader, a local service that allows the executor to efficiently download files without being subject to OOM kills due to filling up the page cache.
+- `SingularityExecutor`, a custom Mesos executor
+- `SingularityExecutorCleanup`, a background job that cleans up tasks that haven't been shut down cleanly (i.e. have been OOM killed or )
+- `SingularityS3Uploader`, a local service that uploads task logs to S3
+- `SingularityS3Downloader`, a local service that allows the executor to efficiently download files without being subject to OOM kills due to filling up the page cache.
 
 ### 1. Create base property config files.
 
