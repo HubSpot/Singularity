@@ -39,7 +39,8 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ### Install ###
 
-- [Local Testing with Vagrant](Docs/install.md)
+- [Installation Instructions](Docs/install.md)
+- [Local Testing with Vagrant](Docs/vagrant.md)
 
 ----------
 
