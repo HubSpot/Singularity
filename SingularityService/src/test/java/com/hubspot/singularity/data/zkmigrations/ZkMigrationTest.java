@@ -74,9 +74,9 @@ public class ZkMigrationTest extends SingularityCuratorTestBase {
 
     migrationRunner.checkMigrations();
 
-    Assert.assertTrue(taskManager.getPendingTask(pt1).get().getCmdLineArgs().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgs().get(0).equals("cmd line args"));
-    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgs().size() == 1);
+    Assert.assertTrue(taskManager.getPendingTask(pt1).get().getCmdLineArgsList().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().get(0).equals("cmd line args"));
+    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().size() == 1);
 
     Assert.assertTrue(taskManager.getPendingTaskIds().contains(pt1));
     Assert.assertTrue(taskManager.getPendingTaskIds().contains(pt2));
