@@ -13,7 +13,7 @@ import com.hubspot.mesos.JavaUtils;
 public class SingularityPendingTask {
 
   private final SingularityPendingTaskId pendingTaskId;
-  private final List<String> cmdLineArgs;
+  private final List<String> cmdLineArgsList;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
@@ -38,9 +38,9 @@ public class SingularityPendingTask {
   }
 
   @JsonCreator
-  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgs") List<String> cmdLineArgs) {
+  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList) {
     this.pendingTaskId = pendingTaskId;
-    this.cmdLineArgs = JavaUtils.nonNullImmutable(cmdLineArgs);
+    this.cmdLineArgsList = JavaUtils.nonNullImmutable(cmdLineArgsList);
   }
 
   @Override
@@ -67,13 +67,13 @@ public class SingularityPendingTask {
     return pendingTaskId;
   }
 
-  public List<String> getCmdLineArgs() {
-    return cmdLineArgs;
+  public List<String> getCmdLineArgsList() {
+    return cmdLineArgsList;
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgs=" + cmdLineArgs + "]";
+    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + "]";
   }
 
 }

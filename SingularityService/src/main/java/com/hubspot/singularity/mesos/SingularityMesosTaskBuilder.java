@@ -224,8 +224,8 @@ class SingularityMesosTaskBuilder {
     if (task.getDeploy().getExecutorData().isPresent()) {
       ExecutorData executorData = task.getDeploy().getExecutorData().get();
 
-      if (!task.getPendingTask().getCmdLineArgs().isEmpty()) {
-        LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgs(), taskId.getId());
+      if (!task.getPendingTask().getCmdLineArgsList().isEmpty()) {
+        LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
 
         ExecutorDataBuilder executorDataBldr = executorData.toBuilder();
 
@@ -233,7 +233,7 @@ class SingularityMesosTaskBuilder {
         if (executorDataBldr.getExtraCmdLineArgs() != null && !executorDataBldr.getExtraCmdLineArgs().isEmpty()) {
           extraCmdLineArgsBuilder.addAll(executorDataBldr.getExtraCmdLineArgs());
         }
-        extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgs());
+        extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList());
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
 
         executorData = executorDataBldr.build();
@@ -263,7 +263,7 @@ class SingularityMesosTaskBuilder {
       commandBldr.addAllArguments(task.getDeploy().getArguments().get());
     }
 
-    commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgs());
+    commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgsList());
 
     if (task.getDeploy().getArguments().isPresent() ||
         // Hopefully temporary workaround for
