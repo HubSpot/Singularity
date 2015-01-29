@@ -1773,6 +1773,7 @@ Delete a specific webhook.
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| privileged | boolean | optional |  |
 | network | <a href="#Network">Network</a> | optional |  |
 | portMappings | <a href="#SingularityDockerPortMapping">Array[SingularityDockerPortMapping]</a> | optional |  |
 | image | string | optional |  |

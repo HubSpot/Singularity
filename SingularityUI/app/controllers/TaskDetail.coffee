@@ -51,6 +51,7 @@ class TaskDetailController extends Controller
 
         @subviews.fileBrowser = new FileBrowserSubview
             collection:      @collections.files
+            model:           @models.task
             # If we've been given a path we want the files, so scroll directly to it
             scrollWhenReady: @filePath isnt null
 
@@ -82,10 +83,11 @@ class TaskDetailController extends Controller
         app.showView @view
 
     refresh: ->
-        @models.task.fetch().error =>
-            # If this 404s the task doesn't exist
-            app.caughtError()
-            app.router.notFound()
+        @models.task.fetch
+            error: =>
+                # If this 404s the task doesn't exist
+                app.caughtError()
+                app.router.notFound()
 
         @models.resourceUsage?.fetch().error =>
             # If this 404s there's nothing to get so don't bother
