@@ -137,7 +137,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       return;
     }
 
-    if (delete(getActivePath(objectId)) != SingularityDeleteResult.DELETED) {
+    if (delete(getActivePath(objectId)).isSuccessful()) {
       LOG.warn(format("Deleting active object at %s failed", getActivePath(objectId)));
     }
 
@@ -146,7 +146,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     object.setState(SingularityMachineState.DEAD);
     object.setDeadAt(Optional.of(System.currentTimeMillis()));
 
-    if (create(getDeadPath(objectId), Optional.of(transcoder.toBytes(object))) != SingularityCreateResult.CREATED) {
+    if (!create(getDeadPath(objectId), Optional.of(transcoder.toBytes(object))).isSuccessful()) {
       LOG.warn(format("Creating dead object at %s failed", getDeadPath(objectId)));
     }
   }

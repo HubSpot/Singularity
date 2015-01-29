@@ -380,7 +380,7 @@ public class SingularityScheduler {
       return Optional.absent();
     }
 
-    if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
+    if (taskHistoryUpdateCreateResult.isSuccessful() && requestState != RequestState.SYSTEM_COOLDOWN) {
       mailer.sendTaskCompletedMail(taskId, request, state);
     } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
       LOG.debug("Not sending a task completed email because task {} is in SYSTEM_COOLDOWN", taskId);
@@ -388,7 +388,7 @@ public class SingularityScheduler {
       LOG.debug("Not sending a task completed email for task {} because Singularity already processed this update", taskId);
     }
 
-    if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
+    if (!state.isSuccess() && taskHistoryUpdateCreateResult.isSuccessful() && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
       LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
       requestState = RequestState.SYSTEM_COOLDOWN;
       requestManager.cooldown(request, System.currentTimeMillis());
