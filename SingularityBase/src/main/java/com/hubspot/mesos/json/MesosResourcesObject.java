@@ -1,37 +1,55 @@
 package com.hubspot.mesos.json;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 public class MesosResourcesObject {
 
-  private final int cpus;
-  private final long disk;
-  private final int mem;
-  private final String ports;
+  private final ImmutableMap<String, Object> properties;
 
   @JsonCreator
-  public MesosResourcesObject(@JsonProperty("cpus") int cpus, @JsonProperty("disk") long disk, @JsonProperty("mem") int mem, @JsonProperty("ports") String ports) {
-    this.cpus = cpus;
-    this.disk = disk;
-    this.mem = mem;
-    this.ports = ports;
+  public MesosResourcesObject(Map<String, Object> properties) {
+    this.properties = ImmutableMap.copyOf(checkNotNull(properties, "properties is null"));
   }
 
-  public int getNumCpus() {
-    return cpus;
+  public Optional<Integer> getNumCpus() {
+    return getResourceAsInteger("cpu");
   }
 
-  public long getDiskSpace() {
-    return disk;
+  public Optional<Long> getDiskSpace() {
+    return getResourceAsLong("disk");
   }
 
-  public int getMemoryMegaBytes() {
-    return mem;
+  public Optional<Integer> getMemoryMegaBytes() {
+    return getResourceAsInteger("mem");
   }
 
-  public String getPorts() {
-    return ports;
+  public Optional<String> getPorts() {
+    return getResourceAsString("ports");
   }
 
+  public Optional<Integer> getResourceAsInteger(String resourceName) {
+    checkNotNull(resourceName, "resourceName is null");
+    return properties.containsKey(resourceName) ? Optional.of(((Number) properties.get(resourceName)).intValue()) : Optional.<Integer> absent();
+  }
+
+  public Optional<Long> getResourceAsLong(String resourceName) {
+    checkNotNull(resourceName, "resourceName is null");
+    return properties.containsKey(resourceName) ? Optional.of(((Number) properties.get(resourceName)).longValue()) : Optional.<Long> absent();
+  }
+
+  public Optional<String> getResourceAsString(String resourceName) {
+    checkNotNull(resourceName, "resourceName is null");
+    return properties.containsKey(resourceName) ? Optional.of(properties.get(resourceName).toString()) : Optional.<String> absent();
+  }
+
+  public Optional<Object> getResourceAsObject(String resourceName) {
+    checkNotNull(resourceName, "resourceName is null");
+    return Optional.fromNullable(properties.get(resourceName));
+  }
 }

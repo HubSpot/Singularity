@@ -1,5 +1,8 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
+import static com.hubspot.singularity.WebExceptions.timeout;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,7 +47,6 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -113,9 +115,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private Collection<String> getS3PrefixesForRequest(String requestId) {
     Optional<SingularityRequestHistory> firstHistory = requestHistoryHelper.getFirstHistory(requestId);
 
-    if (!firstHistory.isPresent()) {
-      throw WebExceptions.notFound("No request history found for %s", requestId);
-    }
+    checkNotFound(firstHistory.isPresent(), "No request history found for %s", requestId);
 
     final long start = firstHistory.get().getCreatedAt();
 
@@ -217,15 +217,13 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private void checkS3() {
-    if (!s3.isPresent()) {
-      throw WebExceptions.notFound("S3 configuration was absent");
-    }
+    checkNotFound(s3.isPresent(), "S3 configuration was absent");
   }
 
   @GET
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
-  public Collection<SingularityS3Log> getS3LogsForTask(@ApiParam("The task ID to search for") @PathParam("taskId") String taskId) throws Exception {
+  public List<SingularityS3Log> getS3LogsForTask(@ApiParam("The task ID to search for") @PathParam("taskId") String taskId) throws Exception {
     checkS3();
 
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
@@ -233,7 +231,7 @@ public class S3LogResource extends AbstractHistoryResource {
     try {
       return getS3Logs(getS3PrefixesForTask(taskIdObject));
     } catch (TimeoutException te) {
-      throw WebExceptions.timeout("Timed out waiting for response from S3 for %s", taskId);
+      throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
@@ -242,13 +240,13 @@ public class S3LogResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
-  public Collection<SingularityS3Log> getS3LogsForRequest(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId) throws Exception {
+  public List<SingularityS3Log> getS3LogsForRequest(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId) throws Exception {
     checkS3();
 
     try {
       return getS3Logs(getS3PrefixesForRequest(requestId));
     } catch (TimeoutException te) {
-      throw WebExceptions.timeout("Timed out waiting for response from S3 for %s", requestId);
+      throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
@@ -257,14 +255,14 @@ public class S3LogResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
-  public Collection<SingularityS3Log> getS3LogsForDeploy(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
+  public List<SingularityS3Log> getS3LogsForDeploy(@ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
       @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId) throws Exception {
     checkS3();
 
     try {
       return getS3Logs(getS3PrefixesForDeploy(requestId, deployId));
     } catch (TimeoutException te) {
-      throw WebExceptions.timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
+      throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }

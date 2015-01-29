@@ -65,6 +65,14 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
+  private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
+
+  private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
+
+  private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
+
+  private long deleteUndeliverableWebhooksAfterHours = TimeUnit.DAYS.toHours(7);
+
   private long deltaAfterWhichTasksAreLateMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long deployHealthyBySeconds = 120;
@@ -82,6 +90,8 @@ public class SingularityConfiguration extends Configuration {
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
 
   private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(24);
+
+  private int listenerThreadpoolSize = 3;
 
   @JsonProperty("loadBalancerQueryParams")
   private Map<String, String> loadBalancerQueryParams;
@@ -125,9 +135,14 @@ public class SingularityConfiguration extends Configuration {
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
+  private long threadpoolShutdownDelayInSeconds = 1;
+
   @JsonProperty("ui")
   @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
+
+  /** If true, the event system waits for all listeners having processed an event. */
+  private boolean waitForListeners = true;
 
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
@@ -138,10 +153,6 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("zookeeper")
   @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
-
-  public boolean allowTestResourceCalls() {
-    return allowTestResourceCalls;
-  }
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -219,6 +230,22 @@ public class SingularityConfiguration extends Configuration {
     return defaultSlavePlacement;
   }
 
+  public long getDeleteDeploysFromZkWhenNoDatabaseAfterHours() {
+    return deleteDeploysFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public long getDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours() {
+    return deleteStaleRequestsFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public long getDeleteTasksFromZkWhenNoDatabaseAfterHours() {
+    return deleteTasksFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public long getDeleteUndeliverableWebhooksAfterHours() {
+    return deleteUndeliverableWebhooksAfterHours;
+  }
+
   public long getDeltaAfterWhichTasksAreLateMillis() {
     return deltaAfterWhichTasksAreLateMillis;
   }
@@ -249,6 +276,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getKillNonLongRunningTasksInCleanupAfterSeconds() {
     return killNonLongRunningTasksInCleanupAfterSeconds;
+  }
+
+  public int getListenerThreadpoolSize() {
+    return listenerThreadpoolSize;
   }
 
   public Optional<Map<String, String>> getLoadBalancerQueryParams() {
@@ -319,6 +350,10 @@ public class SingularityConfiguration extends Configuration {
     return startNewReconcileEverySeconds;
   }
 
+  public long getThreadpoolShutdownDelayInSeconds() {
+    return threadpoolShutdownDelayInSeconds;
+  }
+
   public UIConfiguration getUiConfiguration() {
     return uiConfiguration;
   }
@@ -343,6 +378,10 @@ public class SingularityConfiguration extends Configuration {
     return allowRequestsWithoutOwners;
   }
 
+  public boolean isAllowTestResourceCalls() {
+    return allowTestResourceCalls;
+  }
+
   public boolean isCompressLargeDataObjects() {
     return compressLargeDataObjects;
   }
@@ -357,6 +396,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isSandboxDefaultsToTaskId() {
     return sandboxDefaultsToTaskId;
+  }
+
+  public boolean isWaitForListeners() {
+    return waitForListeners;
   }
 
   public void setAllowRequestsWithoutOwners(boolean allowRequestsWithoutOwners) {
@@ -451,6 +494,22 @@ public class SingularityConfiguration extends Configuration {
     this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
   }
 
+  public void setDeleteDeploysFromZkWhenNoDatabaseAfterHours(long deleteDeploysFromZkWhenNoDatabaseAfterHours) {
+    this.deleteDeploysFromZkWhenNoDatabaseAfterHours = deleteDeploysFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public void setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours) {
+    this.deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = deleteStaleRequestsFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public void setDeleteTasksFromZkWhenNoDatabaseAfterHours(long deleteTasksFromZkWhenNoDatabaseAfterHours) {
+    this.deleteTasksFromZkWhenNoDatabaseAfterHours = deleteTasksFromZkWhenNoDatabaseAfterHours;
+  }
+
+  public void setDeleteUndeliverableWebhooksAfterHours(long deleteUndeliverableWebhooksAfterHours) {
+    this.deleteUndeliverableWebhooksAfterHours = deleteUndeliverableWebhooksAfterHours;
+  }
+
   public void setDeltaAfterWhichTasksAreLateMillis(long deltaAfterWhichTasksAreLateMillis) {
     this.deltaAfterWhichTasksAreLateMillis = deltaAfterWhichTasksAreLateMillis;
   }
@@ -485,6 +544,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setKillNonLongRunningTasksInCleanupAfterSeconds(long killNonLongRunningTasksInCleanupAfterSeconds) {
     this.killNonLongRunningTasksInCleanupAfterSeconds = killNonLongRunningTasksInCleanupAfterSeconds;
+  }
+
+  public void setListenerThreadpoolSize(int listenerThreadpoolSize) {
+    this.listenerThreadpoolSize = listenerThreadpoolSize;
   }
 
   public void setLoadBalancerQueryParams(Map<String, String> loadBalancerQueryParams) {
@@ -559,8 +622,16 @@ public class SingularityConfiguration extends Configuration {
     this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
   }
 
+  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
+    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
+  }
+
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
+  }
+
+  public void setWaitForListeners(boolean waitForListeners) {
+    this.waitForListeners = waitForListeners;
   }
 
   public void setWarnIfScheduledJobIsRunningForAtLeastMillis(long warnIfScheduledJobIsRunningForAtLeastMillis) {
@@ -578,5 +649,4 @@ public class SingularityConfiguration extends Configuration {
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
-
 }

@@ -1,6 +1,9 @@
 Handlebars.registerHelper 'appRoot', ->
     config.appRoot
 
+Handlebars.registerHelper 'apiDocs', ->
+    config.apiDocs
+
 Handlebars.registerHelper 'ifEqual', (v1, v2, options) ->
     if v1 is v2 then options.fn @ else options.inverse @
 
@@ -35,6 +38,15 @@ Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
     "#{timeObject.fromNow()} (#{ timeObject.format 'lll'})"
+
+Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
+    return options.inverse @ if not timestamp
+    timeObject = moment timestamp
+    now = moment()
+    if timeObject.isBefore(now)
+        options.fn @
+    else
+        options.inverse @
 
 # 12345 => 12 seconds
 Handlebars.registerHelper 'timestampDuration', (timestamp) ->

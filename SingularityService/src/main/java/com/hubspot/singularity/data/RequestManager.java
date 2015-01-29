@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRequest;
@@ -27,6 +28,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
@@ -38,7 +40,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
 
-  private final WebhookManager webhookManager;
+  private final SingularityEventListener singularityEventListener;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -48,7 +50,7 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
 
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
+  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
       Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
@@ -56,7 +58,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestCleanupTranscoder = requestCleanupTranscoder;
     this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
-    this.webhookManager = webhookManager;
+    this.singularityEventListener = singularityEventListener;
   }
 
   private String getRequestPath(String requestId) {
@@ -91,22 +93,25 @@ public class RequestManager extends CuratorAsyncManager {
     return getNumChildren(NORMAL_PATH_ROOT);
   }
 
-  public void deletePendingRequest(SingularityPendingRequest pendingRequest) {
-    delete(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()));
+  public SingularityDeleteResult deletePendingRequest(SingularityPendingRequest pendingRequest) {
+    return delete(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()));
   }
 
-  public void deleteHistoryParent(String requestId) {
-    delete(getHistoryParentPath(requestId));
+  public SingularityDeleteResult deleteHistoryParent(String requestId) {
+    return delete(getHistoryParentPath(requestId));
   }
 
-  public void deleteHistoryItem(SingularityRequestHistory history) {
-    delete(getHistoryPath(history));
+  public SingularityDeleteResult deleteHistoryItem(SingularityRequestHistory history) {
+    return delete(getHistoryPath(history));
   }
 
   public boolean cleanupRequestExists(String requestId) {
     for (RequestCleanupType type : RequestCleanupType.values()) {
       if (checkExists(getCleanupPath(requestId, type)).isPresent()) {
         return true;
+      }
+      if (Thread.currentThread().isInterrupted()) {
+        break;
       }
     }
 
@@ -167,7 +172,7 @@ public class RequestManager extends CuratorAsyncManager {
   protected SingularityCreateResult saveHistory(SingularityRequestHistory history) {
     final String path = getHistoryPath(history);
 
-    webhookManager.enqueueRequestUpdate(history);
+    singularityEventListener.requestHistoryEvent(history);
 
     return save(path, history, requestHistoryTranscoder);
   }

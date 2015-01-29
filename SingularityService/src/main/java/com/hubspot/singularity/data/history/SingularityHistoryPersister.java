@@ -1,59 +1,73 @@
 package com.hubspot.singularity.data.history;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.concurrent.TimeUnit;
-
-import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityHistoryItem;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-@Singleton
-public class SingularityHistoryPersister extends SingularityLeaderOnlyPoller implements Managed {
+public abstract class SingularityHistoryPersister<T extends SingularityHistoryItem> extends SingularityLeaderOnlyPoller {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
 
-  private final SingularityTaskHistoryPersister taskPersister;
-  private final SingularityDeployHistoryPersister deployPersister;
-  private final SingularityRequestHistoryPersister requestHistoryPersister;
-  private final SingularityExceptionNotifier exceptionNotifier;
+  protected final SingularityConfiguration configuration;
 
-  @Inject
-  public SingularityHistoryPersister(SingularityExceptionNotifier exceptionNotifier, SingularityTaskHistoryPersister taskPersister,
-      SingularityRequestHistoryPersister requestHistoryPersister, SingularityDeployHistoryPersister deployPersister, SingularityConfiguration configuration) {
-    super(configuration.getPersistHistoryEverySeconds(), TimeUnit.SECONDS, configuration.getDatabaseConfiguration().isPresent());
+  public SingularityHistoryPersister(SingularityConfiguration configuration) {
+    super(configuration.getPersistHistoryEverySeconds(), TimeUnit.SECONDS);
 
-    this.taskPersister = taskPersister;
-    this.deployPersister = deployPersister;
-    this.exceptionNotifier = exceptionNotifier;
-    this.requestHistoryPersister = requestHistoryPersister;
+    this.configuration = configuration;
   }
 
   @Override
-  public void runActionOnPoll() {
-    try {
-      taskPersister.checkInactiveTaskIds();
-    } catch (Throwable t) {
-      exceptionNotifier.notify(t);
-      LOG.error("While persisting task history", t);
-    }
-    try {
-      deployPersister.checkInactiveDeploys();
-    } catch (Throwable t) {
-      exceptionNotifier.notify(t);
-      LOG.error("While persisting deploy history", t);
-    }
-    try {
-      requestHistoryPersister.checkRequestHistory();
-    } catch (Throwable t) {
-      exceptionNotifier.notify(t);
-      LOG.error("While persisting request history", t);
-    }
+  protected boolean abortsOnError() {
+    return false;
   }
+
+  protected boolean persistsHistoryInsteadOfPurging() {
+    return configuration.getDatabaseConfiguration().isPresent();
+  }
+
+  @Override
+  protected boolean isEnabled() {
+    return persistsHistoryInsteadOfPurging() || getMaxAgeInMillisOfItem() > 0;
+  }
+
+  protected abstract long getMaxAgeInMillisOfItem();
+
+  protected abstract boolean moveToHistory(T object);
+
+  protected abstract SingularityDeleteResult purgeFromZk(T object);
+
+  protected boolean moveToHistoryOrCheckForPurge(T object) {
+    final long start = System.currentTimeMillis();
+
+    if (moveToHistoryOrCheckForPurgeAndShouldDelete(object)) {
+      SingularityDeleteResult deleteResult = purgeFromZk(object);
+      LOG.debug("%s %s (deleted: %s) in %s", persistsHistoryInsteadOfPurging() ? "Persisted" : "Purged", object, deleteResult, JavaUtils.duration(start));
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean moveToHistoryOrCheckForPurgeAndShouldDelete(T object) {
+    if (persistsHistoryInsteadOfPurging()) {
+      return moveToHistory(object);
+    }
+
+    final long age = System.currentTimeMillis() - object.getCreateTimestampForCalculatingHistoryAge();
+
+    if (age > getMaxAgeInMillisOfItem()) {
+      LOG.trace("Deleting %s because it is %s old (max : %s)", object, JavaUtils.durationFromMillis(age), JavaUtils.durationFromMillis(getMaxAgeInMillisOfItem()));
+      return true;
+    }
+
+    return false;
+  }
+
 }

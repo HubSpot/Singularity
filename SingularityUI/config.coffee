@@ -6,7 +6,7 @@ handlebars = require 'handlebars-brunch/node_modules/handlebars'
 # Brunch settings
 exports.config =
     paths:
-        public: path.resolve(__dirname, '../SingularityService/target/generated-resources/static')
+        public: path.resolve(__dirname, '../SingularityService/target/generated-resources/assets')
 
     files:
         javascripts:
@@ -23,7 +23,7 @@ exports.config =
             joinTo: 'static/js/app.js'
 
     server:
-        base: '/singularity'
+        base: process.env.SINGULARITY_BASE_URI ? '/singularity'
 
 
     # When running SingularityUI via brunch server we need to make an index.html for it
@@ -37,16 +37,16 @@ exports.config =
         indexTemplate = fs.readFileSync templatePath, 'utf-8'
 
         templateData =
-            staticRoot: "#{ @config.server.base }/static"
-            appRoot: @config.server.base
-            apiRoot: ''
+            staticRoot: process.env.SINGULARITY_STATIC_URI ? "#{ @config.server.base }/static"
+            appRoot: "#{ @config.server.base }/ui"
+            apiRoot: process.env.SINGULARITY_API_URI ? ''
             slaveHttpPort: 5051
-            title: 'Singularity (local dev)'
-            navColor: ''
+            title: process.env.SINGULARITY_TITLE ? 'Singularity (local dev)'
+            navColor: process.env.SINGULARITY_NAV_COLOR ? ''
             defaultCpus: 1
             defaultMemory: 128
-            hideNewDeployButton: "false"
-            hideNewRequestButton: "false"
+            hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON ? "false"
+            hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON ? "false"
             
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

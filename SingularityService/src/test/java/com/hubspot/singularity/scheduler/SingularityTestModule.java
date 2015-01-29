@@ -4,12 +4,15 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
+import net.kencochrane.raven.Raven;
 
 import java.util.Set;
-
-import net.kencochrane.raven.Raven;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
@@ -17,10 +20,6 @@ import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -33,8 +32,6 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
@@ -52,6 +49,7 @@ import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
+import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
@@ -59,7 +57,9 @@ import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -73,6 +73,9 @@ public class SingularityTestModule implements Module {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.ERROR);
+
+    Logger hsLogger = context.getLogger("com.hubspot");
+    hsLogger.setLevel(Level.ERROR);
 
     this.ts = new TestingServer();
   }
@@ -102,6 +105,8 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new GuiceBundle.GuiceEnforcerModule());
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
+    final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
+    mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
 
     mainBinder.install(Modules.override(new SingularityMainModule())
         .with(new Module() {
@@ -164,14 +169,15 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityHistoryModule());
     mainBinder.install(new SingularityZkMigrationsModule());
     mainBinder.install(new SingularityMesosClientModule());
+    mainBinder.install(new SingularityEventModule(configuration));
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
+    mainBinder.bind(SlaveResource.class);
+    mainBinder.bind(RackResource.class);
   }
 
-  @Provides
-  @Singleton
-  public SingularityConfiguration getTestingConfiguration(final TestingServer ts) {
+  private static SingularityConfiguration getSingularityConfigurationForTestingServer(final TestingServer ts) {
     SingularityConfiguration config = new SingularityConfiguration();
     config.setLoadBalancerUri("test");
 
@@ -190,5 +196,4 @@ public class SingularityTestModule implements Module {
 
     return config;
   }
-
 }

@@ -25,6 +25,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
@@ -148,6 +149,8 @@ public class SingularityMailer implements Managed {
     templateProperties.put("requestId", request.getId());
     templateProperties.put("singularityRequestLink", getSingularityRequestLink(request));
 
+    templateProperties.put("requestAlwaysRunning", request.isAlwaysRunning());
+    templateProperties.put("requestRunOnce", request.getRequestType() == RequestType.RUN_ONCE);
     templateProperties.put("requestScheduled", request.isScheduled());
     templateProperties.put("requestOneOff", request.isOneOff());
 
@@ -202,10 +205,17 @@ public class SingularityMailer implements Managed {
       case TASK_FAILED:
         return Optional.of(EmailType.TASK_FAILED);
       case TASK_FINISHED:
-        if (request.isScheduled()) {
-          return Optional.of(EmailType.TASK_FINISHED);
+        switch (request.getRequestType()) {
+          case ON_DEMAND:
+            return Optional.of(EmailType.TASK_FINISHED_ON_DEMAND);
+          case RUN_ONCE:
+            return Optional.of(EmailType.TASK_FINISHED_RUN_ONCE);
+          case SCHEDULED:
+            return Optional.of(EmailType.TASK_FINISHED_SCHEDULED);
+          case SERVICE:
+          case WORKER:
+            return Optional.of(EmailType.TASK_FINISHED_LONG_RUNNING);
         }
-        return Optional.of(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST);
       case TASK_KILLED:
         Optional<SingularityTaskHistoryUpdate> cleaningUpdate = SingularityTaskHistoryUpdate.getUpdate(taskHistory, ExtendedTaskState.TASK_CLEANING);
 
@@ -232,7 +242,7 @@ public class SingularityMailer implements Managed {
     }
   }
 
-  public void sendTaskOverdueMail(final SingularityTaskId taskId, final SingularityRequest request, final long runTime, final long expectedRuntime) {
+  public void sendTaskOverdueMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final long runTime, final long expectedRuntime) {
     final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
 
     templateProperties.put("runTime", DurationFormatUtils.formatDurationHMS(runTime));
@@ -241,10 +251,10 @@ public class SingularityMailer implements Managed {
 
     templateProperties.put("status", "is overdue to finish");
 
-    prepareTaskMail(taskId, request, EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, templateProperties.build(), taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_RUNNING);
+    prepareTaskMail(task, taskId, request, EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, templateProperties.build(), taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_RUNNING);
   }
 
-  public void sendTaskCompletedMail(final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
+  public void sendTaskCompletedMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending task completed mail - no SMTP configuration is present");
       return;
@@ -255,7 +265,7 @@ public class SingularityMailer implements Managed {
       @Override
       public void run() {
         try {
-          prepareTaskCompletedMail(taskId, request, taskState);
+          prepareTaskCompletedMail(task, taskId, request, taskState);
         } catch (Throwable t) {
           LOG.error("While preparing task completed mail for {}", taskId, t);
           exceptionNotifier.notify(t);
@@ -264,7 +274,7 @@ public class SingularityMailer implements Managed {
     });
   }
 
-  private void prepareTaskMail(SingularityTaskId taskId, SingularityRequest request, EmailType emailType, Map<String, Object> extraProperties,
+  private void prepareTaskMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, EmailType emailType, Map<String, Object> extraProperties,
       Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
 
     final Collection<EmailDestination> emailDestination = getDestination(emailType);
@@ -286,10 +296,12 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(taskTemplate, templateProperties);
 
-    queueMail(emailDestination, request, emailType, subject, body);
+    final Optional<String> user = task.isPresent() ? task.get().getTaskRequest().getPendingTask().getUser() : Optional.<String> absent();
+
+    queueMail(emailDestination, request, emailType, user, subject, body);
   }
 
-  private void prepareTaskCompletedMail(SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
+  private void prepareTaskCompletedMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
     final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
     final Optional<EmailType> emailType = getEmailType(taskState, request, taskHistory);
 
@@ -298,7 +310,7 @@ public class SingularityMailer implements Managed {
       return;
     }
 
-    prepareTaskMail(taskId, request, emailType.get(), Collections.<String, Object> emptyMap(), taskHistory, taskState);
+    prepareTaskMail(task, taskId, request, emailType.get(), Collections.<String, Object> emptyMap(), taskHistory, taskState);
   }
 
   private List<EmailDestination> getDestination(EmailType type) {
@@ -368,7 +380,7 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(requestModifiedTemplate, templateProperties);
 
-    queueMail(emailDestination, request, type.getEmailType(), subject, body);
+    queueMail(emailDestination, request, type.getEmailType(), user, subject, body);
   }
 
   public void sendRequestPausedMail(SingularityRequest request, Optional<String> user) {
@@ -422,7 +434,7 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
 
-    queueMail(emailDestination, request, EmailType.REQUEST_IN_COOLDOWN, subject, body);
+    queueMail(emailDestination, request, EmailType.REQUEST_IN_COOLDOWN, Optional.<String> absent(), subject, body);
   }
 
   private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
@@ -519,7 +531,7 @@ public class SingularityMailer implements Managed {
     return templateProperties.build();
   }
 
-  private void queueMail(final Collection<EmailDestination> destination, final SingularityRequest request, final EmailType emailType, String subject, String body) {
+  private void queueMail(final Collection<EmailDestination> destination, final SingularityRequest request, final EmailType emailType, final Optional<String> actionTaker, String subject, String body) {
     RateLimitResult result = checkRateLimitForMail(request, emailType);
 
     if (result == RateLimitResult.DONT_SEND_MAIL_IN_COOLDOWN) {
@@ -536,11 +548,18 @@ public class SingularityMailer implements Managed {
 
     if (destination.contains(EmailDestination.OWNERS) && request.getOwners().isPresent() && !request.getOwners().get().isEmpty()) {
       toList.addAll(request.getOwners().get());
-      if (destination.contains(EmailDestination.ADMINS)) {
+    }
+
+    if (destination.contains(EmailDestination.ACTION_TAKER) && actionTaker.isPresent()) {
+      toList.add(actionTaker.get());
+    }
+
+    if (destination.contains(EmailDestination.ADMINS) && !maybeSmtpConfiguration.get().getAdmins().isEmpty()) {
+      if (toList.isEmpty()) {
+        toList.addAll(maybeSmtpConfiguration.get().getAdmins());
+      } else {
         ccList.addAll(maybeSmtpConfiguration.get().getAdmins());
       }
-    } else if (destination.contains(EmailDestination.ADMINS)) {
-      toList.addAll(maybeSmtpConfiguration.get().getAdmins());
     }
 
     smtpSender.queueMail(toList, ccList, subject, body);

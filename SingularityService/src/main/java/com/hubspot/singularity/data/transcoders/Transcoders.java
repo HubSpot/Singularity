@@ -8,8 +8,7 @@ import javax.annotation.Nullable;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
-public final class Transcoders
-{
+public final class Transcoders {
   private Transcoders() {
     throw new AssertionError("do not instantiate");
   }
@@ -49,8 +48,7 @@ public final class Transcoders
 
     return new Function<String, T>() {
       @Override
-      public T apply(@Nullable String value)
-      {
+      public T apply(@Nullable String value) {
         if (value == null) {
           return null;
         }

@@ -5,12 +5,12 @@
   <parent>
     <groupId>org.basepom</groupId>
     <artifactId>basepom-standard-oss</artifactId>
-    <version>6</version>
+    <version>9</version>
   </parent>
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.4.1-SNAPSHOT</version>
+  <version>0.4.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -35,16 +35,17 @@
     <project.jdk7.home>${env.JAVA7_HOME}</project.jdk7.home>
     <project.build.targetJdk>1.7</project.build.targetJdk>
     <basepom.check.skip-license>true</basepom.check.skip-license>
-    <basepom.check.fail-extended>true</basepom.check.fail-extended>
 
     <basepom.test.timeout>120</basepom.test.timeout>
 
-    <dep.plugin.surefire.version>2.18</dep.plugin.surefire.version>
+    <!-- build the docs for releases -->
+    <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
     <!-- hubspot jackson and dropwizard dep use 2.3.x -->
     <dep.jackson.version>2.3.3</dep.jackson.version>
-    <dep.jackson.core.version>${dep.jackson.version}</dep.jackson.core.version>
-    <dep.jackson.databind.version>${dep.jackson.version}</dep.jackson.databind.version>
+
+    <!-- guava 18.0 is problematic, keep 17 for a while -->
+    <dep.guava.version>17.0</dep.guava.version>
 
     <!-- dropwizard uses jetty 9.0.x -->
     <dep.jetty.version>9.0.7.v20131107</dep.jetty.version>
@@ -53,6 +54,9 @@
     <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
 
     <dep.jesos.version>1.1</dep.jesos.version>
+
+    <dep.swagger.version>1.3.12</dep.swagger.version>
+    <dep.swagger-plugin.version>2.3.2</dep.swagger-plugin.version>
 
     <baragon.version>0.1.2</baragon.version>
     <curator.version>2.4.2</curator.version>
@@ -78,6 +82,7 @@
     <module>SingularityS3Uploader</module>
     <module>SingularityS3Downloader</module>
     <module>SingularityOOMKiller</module>
+    <module>SingularitySwagger</module>
     <module>EmbedSingularityExample</module>
   </modules>
 
@@ -455,7 +460,7 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.16.1-GA</version>
+        <version>3.18.2-GA</version>
       </dependency>
 
       <dependency>
@@ -503,7 +508,7 @@
       <dependency>
         <groupId>com.wordnik</groupId>
         <artifactId>swagger-annotations</artifactId>
-        <version>1.3.10</version>
+        <version>${dep.swagger.version}</version>
       </dependency>
 
       <dependency>
@@ -529,6 +534,38 @@
         <artifactId>snappy</artifactId>
         <version>${snappy.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.github.kongchen</groupId>
+        <artifactId>swagger-maven-plugin</artifactId>
+        <version>${dep.swagger-plugin.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-project</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jaxrs_2.10</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -541,24 +578,26 @@
           <version>0.0.16</version>
         </plugin>
         <plugin>
-          <groupId>com.ning.maven.plugins</groupId>
-          <artifactId>maven-duplicate-finder-plugin</artifactId>
-          <version>1.0.7</version>
-          <configuration>
-            <ignoredResources>
-              <ignoredResource>.*\.build\.json</ignoredResource>
-              <ignoredResource>.*\.html</ignoredResource>
-              <ignoredResource>META-INF/.*</ignoredResource>
-              <ignoredResource>about_files/.*</ignoredResource>
-              <ignoredResource>plugin\.properties</ignoredResource>
-              <ignoredResource>plugin\.xml</ignoredResource>
-              <ignoredResource>.*\.java</ignoredResource>
-              <ignoredResource>log4j\.xml</ignoredResource>
-              <ignoredResource>log4j\.properties</ignoredResource>
-              <ignoredResource>logback\.xml</ignoredResource>
-              <ignoredResource>logback\.properties</ignoredResource>
-            </ignoredResources>
-          </configuration>
+          <groupId>com.github.kongchen</groupId>
+          <artifactId>swagger-maven-plugin</artifactId>
+          <version>${dep.swagger-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.wordnik</groupId>
+              <artifactId>swagger-jaxrs_2.10</artifactId>
+              <version>${dep.swagger.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>com.wordnik</groupId>
+              <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
+              <version>${dep.swagger.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>com.hubspot</groupId>
+              <artifactId>SingularitySwagger</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -8,8 +8,7 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonTranscoder<T> implements Transcoder<T>
-{
+public class JsonTranscoder<T> implements Transcoder<T> {
   private static final byte[] EMPTY_BYTES = new byte[0];
 
   private final ObjectMapper objectMapper;

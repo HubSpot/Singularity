@@ -23,21 +23,22 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityDeployWebhook;
-import com.hubspot.singularity.SingularityDeployWebhook.DeployEventType;
+import com.hubspot.singularity.SingularityDeployUpdate;
+import com.hubspot.singularity.SingularityDeployUpdate.DeployEventType;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(DeployManager.class);
 
-  private final WebhookManager webhookManager;
+  private final SingularityEventListener singularityEventListener;
   private final Transcoder<SingularityDeploy> deployTranscoder;
   private final Transcoder<SingularityPendingDeploy> pendingDeployTranscoder;
   private final Transcoder<SingularityDeployMarker> deployMarkerTranscoder;
@@ -63,12 +64,12 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
   @Inject
-  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, Transcoder<SingularityDeploy> deployTranscoder,
+  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
-    this.webhookManager = webhookManager;
+    this.singularityEventListener = singularityEventListener;
     this.pendingDeployTranscoder = pendingDeployTranscoder;
     this.deployTranscoder = deployTranscoder;
     this.deployStatisticsTranscoder = deployStatisticsTranscoder;
@@ -182,7 +183,7 @@ public class DeployManager extends CuratorAsyncManager {
       LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));
     }
 
-    webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>absent()));
+    singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>absent()));
 
     create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
 
@@ -215,7 +216,7 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
 
     if (!loadEntireHistory) {
-      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeployStatistics>absent()));
+      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics>absent()));
     }
 
     Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
@@ -302,7 +303,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveDeployResult(SingularityDeployMarker deployMarker, Optional<SingularityDeploy> deploy, SingularityDeployResult result) {
-    webhookManager.enqueueDeployUpdate(new SingularityDeployWebhook(deployMarker, deploy, DeployEventType.FINISHED, Optional.of(result)));
+    singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, deploy, DeployEventType.FINISHED, Optional.of(result)));
 
     return save(getDeployResultPath(deployMarker.getRequestId(), deployMarker.getDeployId()), result, deployStateTranscoder);
   }

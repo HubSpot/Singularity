@@ -1,7 +1,7 @@
-<div class="page-header">
-    <h2>Scheduled &amp; pending tasks</h2>
-</div>
 {{#if data}}
+    <div class="page-header">
+        <h2>Scheduled &amp; pending tasks</h2>
+    </div>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -24,11 +24,16 @@
                     </td>
                     <td data-value="{{ pendingTask.pendingTaskId.nextRunAt }}">
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
+                        {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
+                            <span class="label label-danger">OVERDUE</span>
+                        {{/ifTimestampInPast}}
                     </td>
                     <td class="hidden-xs actions-column">
-                        <a data-action="run-now" title="Run now">
-                            <span class="glyphicon glyphicon-flash"></span>
-                        </a>
+                        {{#unless ../request.attributes.daemon}}
+                            <a data-action="run-now" title="Run now">
+                                <span class="glyphicon glyphicon-flash"></span>
+                            </a>
+                        {{/unless}}
                         <a data-action="viewJSON" title="JSON">
                             { }
                         </a>
@@ -37,6 +42,4 @@
             {{/each}}
         </tbody>
     </table>
-{{else}}
-    <div class="empty-table-message">No scheduled tasks</div>
 {{/if}}

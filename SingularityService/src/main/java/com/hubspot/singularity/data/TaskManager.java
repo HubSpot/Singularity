@@ -28,7 +28,6 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
@@ -44,6 +43,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -52,7 +52,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private static final String LAST_ACTIVE_TASK_STATUSES_PATH_ROOT = TASKS_ROOT + "/statuses";
-  public static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
+  private static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
   private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
@@ -76,20 +76,19 @@ public class TaskManager extends CuratorAsyncManager {
   private final Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder;
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
   private final Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerUpdateTranscoder;
+  private final Transcoder<SingularityPendingTask> pendingTaskTranscoder;
 
   private final IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder;
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
-  private final Function<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTaskFunction;
-
-  private final WebhookManager webhookManager;
+  private final SingularityEventListener singularityEventListener;
   private final String serverId;
 
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
       IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
-      Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder,
+      Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
@@ -100,25 +99,12 @@ public class TaskManager extends CuratorAsyncManager {
     this.taskCleanupTranscoder = taskCleanupTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.taskIdTranscoder = taskIdTranscoder;
+    this.pendingTaskTranscoder = pendingTaskTranscoder;
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
     this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
-    this.webhookManager = webhookManager;
+    this.singularityEventListener = singularityEventListener;
 
     this.serverId = serverId;
-
-    this.pendingTaskIdToPendingTaskFunction = new Function<SingularityPendingTaskId, SingularityPendingTask>() {
-
-      @Override
-      public SingularityPendingTask apply(SingularityPendingTaskId input) {
-        Optional<String> maybeCmdLineArgs = Optional.absent();
-
-        if (input.getPendingType() == PendingType.ONEOFF || input.getPendingType() == PendingType.IMMEDIATE) {
-          maybeCmdLineArgs = getStringData(ZKPaths.makePath(PENDING_PATH_ROOT, input.getId()));
-        }
-
-        return new SingularityPendingTask(input, maybeCmdLineArgs);
-      }
-    };
   }
 
   private String getLastHealthcheckPath(SingularityTaskId taskId) {
@@ -222,26 +208,10 @@ public class TaskManager extends CuratorAsyncManager {
     save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
   }
 
-  public void createPendingTasks(List<SingularityPendingTask> tasks) {
-    try {
-      for (SingularityPendingTask task : tasks) {
-        createPendingTask(task);
-      }
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-  }
-
-  private void createPendingTask(SingularityPendingTask task) throws Exception {
+  public SingularityCreateResult savePendingTask(SingularityPendingTask task) {
     final String pendingPath = getPendingPath(task.getPendingTaskId());
 
-    Optional<byte[]> data = Optional.absent();
-
-    if (task.getMaybeCmdLineArgs().isPresent()) {
-      data = Optional.of(task.getMaybeCmdLineArgs().get().getBytes(UTF_8));
-    }
-
-    create(pendingPath, data);
+    return save(pendingPath, task, pendingTaskTranscoder);
   }
 
   public List<SingularityTaskId> getAllTaskIds() {
@@ -357,15 +327,13 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    webhookManager.enqueueTaskUpdate(taskHistoryUpdate);
+    singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
     return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
   }
 
   public boolean isActiveTask(String taskId) {
-    final String path = getActivePath(taskId);
-
-    return exists(path);
+    return exists(getActivePath(taskId));
   }
 
   public List<SingularityTaskId> getTaskIdsForRequest(String requestId) {
@@ -448,8 +416,8 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(getLoadBalancerStatePath(taskId, requestType), taskLoadBalancerUpdateTranscoder);
   }
 
-  public SingularityPendingTask getPendingTask(SingularityPendingTaskId pendingTaskId) {
-    return pendingTaskIdToPendingTaskFunction.apply(pendingTaskId);
+  public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
+    return getData(getPendingPath(pendingTaskId), pendingTaskTranscoder);
   }
 
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
@@ -463,7 +431,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingTask> getPendingTasks() {
-    return Lists.transform(getPendingTaskIds(), pendingTaskIdToPendingTaskFunction);
+    return getAsyncChildren(PENDING_PATH_ROOT, pendingTaskTranscoder);
   }
 
   public void createTaskAndDeletePendingTask(SingularityTask task) {

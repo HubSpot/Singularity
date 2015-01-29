@@ -35,7 +35,7 @@ html
             if taskStateLost
               | This is likely an infrastructure issue. No action is required.
             if taskStateFinished
-              if requestScheduled
+              if !requestAlwaysRunning
                 | The task finished running and exited with a normal exit code. No action is required.
               else
                 | The task finished running and exited with a normal exit code. Since this task was not part of a scheduled request, it is worth investigating whether this was the expected behavior. Often this means the task actually failed and exited with an incorrect exit code.
@@ -58,6 +58,8 @@ html
                 p Singularity will run the task again on its normal schedule.
           if requestOneOff
             p Singularity will not run your task again unless manually instructed.
+          else if requestRunOnce
+            p Singularity will not run your task again until it is deployed.
           else if !requestScheduled
             p Singularity will continue to restart your task immediately.
           if !taskStateFinished

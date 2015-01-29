@@ -15,27 +15,36 @@ class SimpleSubview extends View
         _.extend super,
             'click [data-action="expandToggle"]': 'expandToggle'
 
-    initialize: ({@template}) ->
+    initialize: (@params) ->
+        { @template } = @params
         @data = if @collection? then @collection else @model
+        @vars = if @vars? then @vars else {}
 
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @data, eventName, @render
-            
+
         @listenTo @data, 'reset', =>
             @$el.empty()
 
     render: ->
         return if not @data.synced and @data.isEmpty?()
-        
-        @$el.html @template
-            config:   config
-            data:     @data.toJSON()
-            synced:   @data.synced
-            expanded: @expanded
+
+        @$el.html @template(@renderData())
 
         @$('.actions-column a[title]').tooltip()
 
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
+
+    renderData: ->
+        data =
+            config:    config
+            data:      @data.toJSON()
+            synced:    @data.synced
+            expanded:  @expanded
+        if @params.extraRenderData?
+            _.extend data, @params.extraRenderData(this)
+
+        data
 
     expandToggle: (event) ->
         @expanded = not @expanded

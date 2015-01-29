@@ -1,9 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
@@ -14,6 +16,7 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Protos.Value.Scalar;
+import org.apache.mesos.Protos.Value.Text;
 import org.apache.mesos.Protos.Value.Type;
 import org.apache.mesos.SchedulerDriver;
 import org.junit.After;
@@ -33,12 +36,16 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.scheduler.SingularityCleaner;
 import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
 import com.hubspot.singularity.scheduler.SingularityDeployChecker;
@@ -64,12 +71,20 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected TaskManager taskManager;
   @Inject
+  protected SlaveManager slaveManager;
+  @Inject
+  protected RackManager rackManager;
+  @Inject
   protected SchedulerDriverSupplier driverSupplier;
   protected SchedulerDriver driver;
   @Inject
   protected SingularityScheduler scheduler;
   @Inject
   protected SingularityDeployChecker deployChecker;
+  @Inject
+  protected RackResource rackResource;
+  @Inject
+  protected SlaveResource slaveResource;
   @Inject
   protected RequestResource requestResource;
   @Inject
@@ -123,10 +138,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory) {
-    return createOffer(cpus, memory, "slave1", "host1");
+    return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host) {
+    return createOffer(cpus, memory, slave, host, Optional.<String> absent());
+  }
+
+  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack) {
     SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
@@ -137,6 +156,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setFrameworkId(frameworkId)
         .setSlaveId(slaveId)
         .setHostname(host)
+        .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
         .build();
@@ -148,7 +168,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent());
 
     return pendingTask;
   }
@@ -169,7 +189,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo);
 
-    taskManager.createPendingTasks(Arrays.asList(pendingTask));
+    taskManager.savePendingTask(pendingTask);
 
     return task;
   }
@@ -191,6 +211,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(task.getMesosTask().getTaskId())
+        .setSlaveId(task.getOffer().getSlaveId())
         .setState(state);
 
     if (timestamp.isPresent()) {
@@ -217,8 +238,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId)
-    .setLoadBalanced(Optional.of(isLoadBalanced));
+    RequestType requestType = RequestType.WORKER;
+
+    if (isScheduled) {
+      requestType = RequestType.SCHEDULED;
+    }
+
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, requestType);
+
+    bldr.setLoadBalanced(Optional.of(isLoadBalanced));
 
     if (isScheduled) {
       bldr.setQuartzSchedule(Optional.of(schedule));
@@ -293,9 +321,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent());
 
-    taskManager.createPendingTasks(Arrays.asList(pendingTask));
+    taskManager.savePendingTask(pendingTask);
 
     return pendingTask;
   }
@@ -331,7 +359,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityRequest buildRequest(String requestId) {
-    SingularityRequest request = new SingularityRequestBuilder(requestId).build();
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.WORKER).build();
 
     saveRequest(request);
 

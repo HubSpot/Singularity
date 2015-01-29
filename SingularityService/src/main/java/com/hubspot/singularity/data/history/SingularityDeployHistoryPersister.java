@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -11,13 +12,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 
 @Singleton
-public class SingularityDeployHistoryPersister {
+public class SingularityDeployHistoryPersister extends SingularityHistoryPersister<SingularityDeployHistory> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployHistoryPersister.class);
 
@@ -25,12 +28,15 @@ public class SingularityDeployHistoryPersister {
   private final HistoryManager historyManager;
 
   @Inject
-  public SingularityDeployHistoryPersister(DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityDeployHistoryPersister(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
+    super(configuration);
+
     this.deployManager = deployManager;
     this.historyManager = historyManager;
   }
 
-  public void checkInactiveDeploys() {
+  @Override
+  public void runActionOnPoll() {
     LOG.info("Checking inactive deploys for deploy history persistance");
 
     final long start = System.currentTimeMillis();
@@ -48,7 +54,14 @@ public class SingularityDeployHistoryPersister {
         continue;
       }
 
-      if (transferToHistoryDB(deployKey)) {
+      Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
+
+      if (!deployHistory.isPresent()) {
+        LOG.info("Deploy history for key {} not found", deployKey);
+        continue;
+      }
+
+      if (moveToHistoryOrCheckForPurge(deployHistory.get())) {
         numTransferred++;
       }
 
@@ -56,6 +69,11 @@ public class SingularityDeployHistoryPersister {
     }
 
     LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));
+  }
+
+  @Override
+  protected long getMaxAgeInMillisOfItem() {
+    return TimeUnit.HOURS.toMillis(configuration.getDeleteDeploysFromZkWhenNoDatabaseAfterHours());
   }
 
   private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, SingularityDeployKey deployKey) {
@@ -75,28 +93,21 @@ public class SingularityDeployHistoryPersister {
     return true;
   }
 
-  private boolean transferToHistoryDB(SingularityDeployKey deployKey) {
-    final long start = System.currentTimeMillis();
-
-    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
-
-    if (!deployHistory.isPresent()) {
-      LOG.info("Deploy history for key {} not found", deployKey);
-      return false;
-    }
-
+  @Override
+  protected boolean moveToHistory(SingularityDeployHistory deployHistory) {
     try {
-      historyManager.saveDeployHistory(deployHistory.get());
+      historyManager.saveDeployHistory(deployHistory);
     } catch (Throwable t) {
-      LOG.warn("Failed to persist deploy history {} into History for deploy {}", deployHistory.get(), deployKey, t);
+      LOG.warn("Failed to persist deploy {} history ({})", SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()), deployHistory, t);
       return false;
     }
-
-    deployManager.deleteDeployHistory(deployKey);
-
-    LOG.debug("Moved deploy history for {} from ZK to History in {}", deployKey, JavaUtils.duration(start));
 
     return true;
+  }
+
+  @Override
+  protected SingularityDeleteResult purgeFromZk(SingularityDeployHistory deployHistory) {
+    return deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()));
   }
 
 }

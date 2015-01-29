@@ -1,5 +1,9 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
+import static com.hubspot.singularity.WebExceptions.notFound;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -31,11 +35,9 @@ import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
-import com.sun.jersey.api.NotFoundException;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -80,7 +82,7 @@ public class TaskResource {
     try {
       return SingularityPendingTaskId.valueOf(pendingTaskIdStr);
     } catch (InvalidSingularityTaskIdException e) {
-      throw WebExceptions.badRequest("%s is not a valid pendingTaskId: %s", pendingTaskIdStr, e.getMessage());
+      throw badRequest("%s is not a valid pendingTaskId: %s", pendingTaskIdStr, e.getMessage());
     }
   }
 
@@ -88,7 +90,7 @@ public class TaskResource {
     try {
       return SingularityTaskId.valueOf(activeTaskIdStr);
     } catch (InvalidSingularityTaskIdException e) {
-      throw WebExceptions.badRequest("%s is not a valid taskId: %s", activeTaskIdStr, e.getMessage());
+      throw badRequest("%s is not a valid taskId: %s", activeTaskIdStr, e.getMessage());
     }
   }
 
@@ -97,13 +99,13 @@ public class TaskResource {
   @Path("/scheduled/task/{pendingTaskId}")
   @ApiOperation("Retrieve information about a pending task.")
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
-    SingularityPendingTask pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
+    Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
 
-    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask));
+    checkNotFound(pendingTask.isPresent(), "Couldn't find %s", pendingTaskIdStr);
 
-    if (taskRequestList.isEmpty()) {
-      throw new NotFoundException("Couldn't find: " + pendingTaskIdStr);
-    }
+    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask.get()));
+
+    checkNotFound(!taskRequestList.isEmpty(), "Couldn't find: " + pendingTaskIdStr);
 
     return Iterables.getFirst(taskRequestList, null);
   }
@@ -122,19 +124,9 @@ public class TaskResource {
   @Path("/active/slave/{slaveId}")
   @ApiOperation("Retrieve list of active tasks on a specific slave.")
   public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getActiveObject(slaveId);
+    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
-    if (!maybeSlave.isPresent()) {
-      maybeSlave = slaveManager.getDecomissioning(slaveId);
-    }
-
-    if (!maybeSlave.isPresent()) {
-      maybeSlave = slaveManager.getDeadObject(slaveId);
-    }
-
-    if (!maybeSlave.isPresent()) {
-      throw new NotFoundException(String.format("Couldn't find a slave in any state with id %s", slaveId));
-    }
+    checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
     return taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get());
   }
@@ -168,9 +160,7 @@ public class TaskResource {
 
     Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
-    if (!task.isPresent() || !taskManager.isActiveTask(taskId)) {
-      throw new NotFoundException(String.format("No active task with id %s", taskId));
-    }
+    checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
 
     return task.get();
   }
@@ -202,7 +192,7 @@ public class TaskResource {
       }
     }
 
-    throw new NotFoundException(String.format("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.getOffer().getHostname()));
+    throw notFound("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.getOffer().getHostname());
   }
 
   @DELETE

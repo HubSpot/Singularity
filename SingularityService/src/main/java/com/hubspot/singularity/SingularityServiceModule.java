@@ -7,6 +7,7 @@ import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
+import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.guice.ConfigurationAwareModule;
 import com.hubspot.singularity.jersey.SingularityJerseyModule;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -20,12 +21,14 @@ public class SingularityServiceModule extends ConfigurationAwareModule<Singulari
     binder.install(new SingularityMainModule());
     binder.install(new SingularityDataModule());
     binder.install(new SingularitySchedulerModule());
-    binder.install(new SingularityResourceModule());
+    binder.install(new SingularityResourceModule(configuration.getUiConfiguration()));
     binder.install(new SingularityTranscoderModule());
     binder.install(new SingularityHistoryModule(configuration));
     binder.install(new SingularityMesosModule());
     binder.install(new SingularityZkMigrationsModule());
     binder.install(new SingularityMesosClientModule());
     binder.install(new SingularityJerseyModule());
+
+    binder.install(new SingularityEventModule(configuration));
   }
 }

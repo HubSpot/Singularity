@@ -13,6 +13,7 @@ import org.mockito.Matchers;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
@@ -47,7 +48,7 @@ public class BlendedHistoryTest extends SingularityCuratorTestBase {
   public void testBlendedRequestHistory() {
     HistoryManager hm = mock(HistoryManager.class);
     String rid = "rid";
-    request = new SingularityRequestBuilder(rid).build();
+    request = new SingularityRequestBuilder(rid, RequestType.WORKER).build();
     RequestHistoryHelper rhh = new RequestHistoryHelper(requestManager, hm);
 
     mockRequestHistory(hm, Collections.<SingularityRequestHistory> emptyList());

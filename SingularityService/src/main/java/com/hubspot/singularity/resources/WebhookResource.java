@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeployWebhook;
+import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -58,7 +58,7 @@ public class WebhookResource {
   @GET
   @Path("/deploy/{webhookId}")
   @ApiOperation("Retrieve a list of queued deploy updates for a specific webhook.")
-  public List<SingularityDeployWebhook> getQueuedDeployUpdates(@PathParam("webhookId") String webhookId) {
+  public List<SingularityDeployUpdate> getQueuedDeployUpdates(@PathParam("webhookId") String webhookId) {
     return webhookManager.getQueuedDeployUpdatesForHook(JavaUtils.urlEncode(webhookId));
   }
 

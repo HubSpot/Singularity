@@ -13,11 +13,14 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.data.SlaveManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
 
 @Path(SlaveResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -40,44 +43,48 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @GET
-  @Path("/active")
-  @ApiOperation("Retrieve the list of active slaves.")
-  public List<SingularitySlave> getSlaves() {
-    return slaveManager.getActiveObjects();
+  @Path("/")
+  @ApiOperation("Retrieve the list of all known slaves, optionally filtering by a particular state")
+  public List<SingularitySlave> getSlaves(@ApiParam("Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
+    return slaveManager.getObjectsFiltered(filterState);
   }
 
   @GET
-  @Path("/dead")
-  @ApiOperation("Retrieve the list of dead slaves.")
-  public List<SingularitySlave> getDead() {
-    return slaveManager.getDeadObjects();
-  }
-
-  @GET
-  @Path("/decomissioning")
-  @ApiOperation("Retrieve the list of decommissioning slaves.")
-  public List<SingularitySlave> getDecomissioning() {
-    return slaveManager.getDecomissioningObjects();
+  @Path("/slave/{slaveId}")
+  @ApiOperation("Retrieve the history of a given slave")
+  public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+    return slaveManager.getHistory(slaveId);
   }
 
   @DELETE
-  @Path("/slave/{slaveId}/dead")
-  @ApiOperation("Remove a specific dead slave.")
-  public void removeDeadSlave(@PathParam("slaveId") String slaveId) {
-    super.removeDead(slaveId);
-  }
-
-  @DELETE
-  @Path("/slave/{slaveId}/decomissioning")
-  @ApiOperation("Remove a specific decommissioning slave")
-  public void removeDecomissioningSlave(@PathParam("slaveId") String slaveId) {
-    super.removeDecomissioning(slaveId);
+  @Path("/slave/{slaveId}")
+  @ApiOperation("Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")
+  public void removeSlave(@ApiParam("Active SlaveId") @PathParam("slaveId") String slaveId) {
+    super.remove(slaveId);
   }
 
   @POST
   @Path("/slave/{slaveId}/decomission")
-  @ApiOperation("Decommission a specific slave.")
-  public void decomissionSlave(@PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> user) {
-    super.decomission(slaveId, user);
+  @Deprecated
+  public void decomissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
+    super.decommission(slaveId, user);
   }
+
+  @POST
+  @Path("/slave/{slaveId}/decommission")
+  @ApiOperation("Begin decommissioning a specific active slave")
+  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
+    super.decommission(slaveId, user);
+  }
+
+  @POST
+  @Path("/slave/{slaveId}/activate")
+  @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
+  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
+      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
+    super.activate(slaveId, user);
+  }
+
 }

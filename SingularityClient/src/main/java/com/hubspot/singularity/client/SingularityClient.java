@@ -28,7 +28,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityDeployWebhook;
+import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
@@ -71,7 +71,7 @@ public class SingularityClient {
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
-  private static final String TASKS_GET_ACTIVE_PER_HOST_FORMAT = TASKS_FORMAT + "/active/%s";
+  private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
@@ -111,7 +111,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
   private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
   private static final TypeReference<Collection<SingularityWebhook>> WEBHOOKS_COLLECTION = new TypeReference<Collection<SingularityWebhook>>() {};
-  private static final TypeReference<Collection<SingularityDeployWebhook>> DEPLOY_UPDATES_COLLECTION = new TypeReference<Collection<SingularityDeployWebhook>>() {};
+  private static final TypeReference<Collection<SingularityDeployUpdate>> DEPLOY_UPDATES_COLLECTION = new TypeReference<Collection<SingularityDeployUpdate>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
@@ -506,10 +506,10 @@ public class SingularityClient {
     return getCollection(requestUri, "active tasks", TASKS_COLLECTION);
   }
 
-  public Collection<SingularityTask> getActiveTasks(final String host) {
-    final String requestUri = String.format(TASKS_GET_ACTIVE_PER_HOST_FORMAT, getHost(), contextPath, host);
+  public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
+    final String requestUri = String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getHost(), contextPath, slaveId);
 
-    return getCollection(requestUri, String.format("active tasks on %s", host), TASKS_COLLECTION);
+    return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASKS_COLLECTION);
   }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<String> user) {
@@ -662,7 +662,7 @@ public class SingularityClient {
     return getCollection(requestUri, "active webhooks", WEBHOOKS_COLLECTION);
   }
 
-  public Collection<SingularityDeployWebhook> getQueuedDeployUpdates(String webhookId) {
+  public Collection<SingularityDeployUpdate> getQueuedDeployUpdates(String webhookId) {
     final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getHost(), contextPath, webhookId);
 
     return getCollection(requestUri, "deploy updates", DEPLOY_UPDATES_COLLECTION);

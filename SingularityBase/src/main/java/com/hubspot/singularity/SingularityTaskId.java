@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -14,7 +15,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 
-public class SingularityTaskId extends SingularityId {
+public class SingularityTaskId extends SingularityId implements SingularityHistoryItem {
 
   private final String requestId;
   private final String deployId;
@@ -98,6 +99,12 @@ public class SingularityTaskId extends SingularityId {
 
   public int getInstanceNo() {
     return instanceNo;
+  }
+
+  @Override
+  @JsonIgnore
+  public long getCreateTimestampForCalculatingHistoryAge() {
+    return getStartedAt();
   }
 
   public static SingularityTaskId valueOf(String string) throws InvalidSingularityTaskIdException {

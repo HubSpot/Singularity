@@ -1,5 +1,9 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
+import static com.hubspot.singularity.WebExceptions.notFound;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +29,6 @@ import com.hubspot.singularity.SingularitySandboxFile;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
@@ -64,7 +67,7 @@ public class SandboxResource extends AbstractHistoryResource {
     if (!taskHistory.getDirectory().isPresent()) {
       logSupport.checkDirectory(taskIdObj);
 
-      throw WebExceptions.badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
+      throw badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }
 
     return taskHistory;
@@ -107,7 +110,7 @@ public class SandboxResource extends AbstractHistoryResource {
 
       return new SingularitySandbox(sandboxFiles, pathToRoot, currentDirectory, slaveHostname);
     } catch (SlaveNotFoundException snfe) {
-      throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
+      throw notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
   }
 
@@ -127,9 +130,7 @@ public class SandboxResource extends AbstractHistoryResource {
     try {
       final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
 
-      if (!maybeChunk.isPresent()) {
-        throw WebExceptions.notFound("File %s does not exist for task ID %s", fullPath, taskId);
-      }
+      checkNotFound(maybeChunk.isPresent(), "File %s does not exist for task ID %s", fullPath, taskId);
 
       if (grep.isPresent()) {
         final Pattern grepPattern = Pattern.compile(grep.get());
@@ -147,7 +148,7 @@ public class SandboxResource extends AbstractHistoryResource {
 
       return maybeChunk.get();
     } catch (SlaveNotFoundException snfe) {
-      throw WebExceptions.notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
+      throw notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
   }
 

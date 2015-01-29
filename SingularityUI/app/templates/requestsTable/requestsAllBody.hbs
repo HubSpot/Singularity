@@ -9,6 +9,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.requestType">
+                        Type
+                    </th>
                     <th data-sort-attribute="state">
                         State
                     </th>
@@ -25,7 +28,7 @@
                         Deploy time
                     </th>
 
-                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
+                    {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
                         <th data-sort-attribute="request.schedule" class="visible-lg visible-xl schedule-header">
                             <span id="schedule">
                                 Schedule
@@ -55,6 +58,9 @@
                             </a>
                         </td>
                         <td>
+                            {{humanizeText request.requestType}}
+                        </td>
+                        <td>
                             {{humanizeText state}}
                         </td>
                         <td class="visible-lg visible-xl centered">
@@ -70,7 +76,7 @@
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
 
-                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                        {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
                                 {{#if request.quartzSchedule}}
                                     {{ request.quartzSchedule }}
@@ -91,13 +97,16 @@
                                 </a>
                             {{/ifEqual}}
                             {{#if canBeRunNow}}
-                                <a data-request-id="{{ request.id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now" title="Run now">
+                                <a data-request-id="{{ request.id }}" data-request-type="{{ type }}" data-action="run-now" title="Run now">
                                     <span class="glyphicon glyphicon-flash"></span>
                                 </a>
                             {{/if}}
-                            <a data-request-id="{{ request.id }}" data-action="scale" title="Scale">
-                                <span class="glyphicon glyphicon-signal"></span>
-                            </a>
+                            {{log .}}
+                            {{#if canBeScaled}}
+                                <a data-request-id="{{ request.id }}" data-action="scale" title="Scale">
+                                    <span class="glyphicon glyphicon-signal"></span>
+                                </a>
+                            {{/if}}
                             <a data-request-id="{{ request.id }}" data-action="remove" title="Remove">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>
