@@ -9,18 +9,36 @@ public class S3Configuration {
   @NotNull
   private int maxS3Threads = 3;
 
+  /**
+   * How long for SingularityService to wait for S3 List
+   */
   @NotNull
   private int waitForS3ListSeconds = 5;
 
+  /**
+   * How long for SingularityService to wait for generating a link
+   */
   @NotNull
   private int waitForS3LinksSeconds = 1;
 
+  /**
+   * Links to logs will expire after given number of milliseconds.
+   * A new link is generated for every /logs API call.
+   */
   @NotNull
   private long expireS3LinksAfterMillis = TimeUnit.DAYS.toMillis(1);
 
+  /**
+   * S3 Bucket that SingularityS3Uploader puts logs in.
+   */
   @NotNull
   private String s3Bucket;
 
+  /**
+   * S3 Key format for finding logs. Should be the same as
+   * configuration set for SingularityS3Uploader
+   * (e.g. '%requestId/%Y/%m/%taskId_%index-%s%fileext')
+   */
   @NotNull
   private String s3KeyFormat;
 
