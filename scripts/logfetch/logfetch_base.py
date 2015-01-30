@@ -11,15 +11,19 @@ ACTIVE_TASKS_FORMAT = '/history/request/{0}/tasks/active'
 
 def unpack_logs(logs):
   for zipped_file in logs:
-    if os.path.isfile(zipped_file):
-      file_in = gzip.open(zipped_file, 'rb')
-      unzipped = zipped_file.replace('.gz', '.log')
-      file_out = open(unzipped, 'wb')
-      file_out.write(file_in.read())
-      file_out.close()
-      file_in.close
-      os.remove(zipped_file)
-      sys.stderr.write(colored('Unpacked {0}'.format(zipped_file), 'green') + '\n')
+    try:
+      if os.path.isfile(zipped_file):
+        file_in = gzip.open(zipped_file, 'rb')
+        unzipped = zipped_file.replace('.gz', '.log')
+        file_out = open(unzipped, 'wb')
+        file_out.write(file_in.read())
+        file_out.close()
+        file_in.close
+        os.remove(zipped_file)
+        sys.stderr.write(colored('Unpacked {0}'.format(zipped_file), 'green') + '\n')
+    except:
+      sys.stderr.write(colored('Could not unpack {0}'.format(zipped_file), 'red') + '\n')
+      continue
 
 def base_uri(args):
   if not args.singularity_uri_base:
