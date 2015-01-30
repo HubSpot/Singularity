@@ -47,6 +47,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String TAIL_LOG_LINES_TO_SAVE = "executor.service.log.tail.lines.to.save";
   public static final String TAIL_LOG_FILENAME = "executor.service.log.tail.file.name";
 
+  public static final String S3_FILES_TO_BACKUP = "executor.s3.uploader.extra.files";
   public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
   public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
 

@@ -48,6 +48,11 @@ public class SingularityExecutorConfiguration {
   private final String logrotateExtrasDateformat;
   private final String[] logrotateExtrasFiles;
 
+  /**
+   * Extra files to backup to S3 besides the service log.
+   */
+  private final String[] s3FilesToBackup;
+
   private final Path logMetadataDirectory;
   private final String logMetadataSuffix;
 
@@ -84,6 +89,7 @@ public class SingularityExecutorConfiguration {
       @Named(SingularityExecutorConfigurationLoader.MAX_TASK_MESSAGE_LENGTH) String maxTaskMessageLength,
       @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
       @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix,
+      @Named(SingularityExecutorConfigurationLoader.S3_FILES_TO_BACKUP) String s3FilesToBackup,
       @Named(SingularityExecutorConfigurationLoader.S3_UPLOADER_BUCKET) String s3Bucket,
       @Named(SingularityExecutorConfigurationLoader.S3_UPLOADER_PATTERN) String s3KeyPattern,
       @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
@@ -126,6 +132,11 @@ public class SingularityExecutorConfiguration {
     this.logrotateCount = logrotateCount;
     this.logrotateMaxageDays = logrotateMaxageDays;
     this.logrotateDateformat = logrotateDateformat;
+    if ((s3FilesToBackup != null) && (s3FilesToBackup.trim().length() > 0)) {
+      this.s3FilesToBackup = s3FilesToBackup.split(",");
+    } else {
+      this.s3FilesToBackup = new String[0];
+    }
     this.s3Bucket = s3Bucket;
     this.s3KeyPattern = s3KeyPattern;
     this.s3MetadataSuffix = s3MetadataSuffix;
@@ -273,6 +284,10 @@ public class SingularityExecutorConfiguration {
     return s3MetadataDirectory;
   }
 
+  public String[] getS3FilesToBackup() {
+    return s3FilesToBackup;
+  }
+
   public String getS3KeyPattern() {
     return s3KeyPattern;
   }
@@ -311,8 +326,8 @@ public class SingularityExecutorConfiguration {
         + logrotateConfDirectory + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat="
         + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat + ", logrotateExtrasFiles=" + Arrays.toString(logrotateExtrasFiles) + ", logMetadataDirectory="
         + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog
-        + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket=" + s3Bucket + ", useLocalDownloadService="
-        + useLocalDownloadService + ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis + ", maxTaskThreads=" + maxTaskThreads + "]";
+        + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3FilesToBackup=" + Arrays.toString(s3FilesToBackup) + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket="
+        + s3Bucket + ", useLocalDownloadService=" + useLocalDownloadService + ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis + ", maxTaskThreads=" + maxTaskThreads + "]";
   }
 
 }
