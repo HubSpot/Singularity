@@ -31,7 +31,9 @@ public class IndexView extends View {
 
     checkNotNull(singularityUriBase, "singularityUriBase is null");
 
-    this.appRoot = String.format("%s%s", singularityUriBase, appRoot);
+    String rawAppRoot = String.format("%s%s", singularityUriBase, appRoot);
+
+    this.appRoot = (rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot;
     this.staticRoot = String.format("%s/static", singularityUriBase);
     this.apiDocs = String.format("%s/api-docs", singularityUriBase);
     this.apiRoot = String.format("%s%s", singularityUriBase, SingularityService.API_BASE_PATH);
