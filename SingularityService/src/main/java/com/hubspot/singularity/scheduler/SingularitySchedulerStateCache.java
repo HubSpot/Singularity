@@ -1,11 +1,12 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -26,9 +27,9 @@ public class SingularitySchedulerStateCache {
   private final Map<String, Optional<SingularitySlave>> slaveCache;
   private final Map<String, Optional<SingularityRack>> rackCache;
 
-  private Optional<List<SingularityTaskId>> activeTaskIds;
-  private Optional<List<SingularityPendingTask>> scheduledTasks;
-  private Optional<List<SingularityTaskId>> cleaningTasks;
+  private Optional<Collection<SingularityTaskId>> activeTaskIds;
+  private Optional<Collection<SingularityPendingTask>> scheduledTasks;
+  private Optional<Collection<SingularityTaskId>> cleaningTasks;
   private Optional<Integer> numActiveRacks;
   private Optional<Integer> numActiveSlaves;
 
@@ -48,30 +49,30 @@ public class SingularitySchedulerStateCache {
     rackCache = Maps.newHashMap();
   }
 
-  public List<SingularityTaskId> getActiveTaskIds() {
+  public Collection<SingularityTaskId> getActiveTaskIds() {
     if (!activeTaskIds.isPresent()) {
-      activeTaskIds = getMutableList(taskManager.getActiveTaskIds());
+      activeTaskIds = getMutableCollection(taskManager.getActiveTaskIds());
     }
 
     return activeTaskIds.get();
   }
 
-  public List<SingularityPendingTask> getScheduledTasks() {
+  public Collection<SingularityPendingTask> getScheduledTasks() {
     if (!scheduledTasks.isPresent()) {
-      scheduledTasks = getMutableList(taskManager.getPendingTasks());
+      scheduledTasks = getMutableCollection(taskManager.getPendingTasks());
     }
 
     return scheduledTasks.get();
   }
 
-  private <T> Optional<List<T>> getMutableList(List<T> immutableList) {
-    List<T> mutableList = Lists.newArrayList(immutableList);
-    return Optional.of(mutableList);
+  private <T> Optional<Collection<T>> getMutableCollection(List<T> immutableList) {
+    Collection<T> mutableSet = Sets.newHashSet(immutableList);
+    return Optional.of(mutableSet);
   }
 
-  public List<SingularityTaskId> getCleaningTasks() {
+  public Collection<SingularityTaskId> getCleaningTasks() {
     if (!cleaningTasks.isPresent()) {
-      cleaningTasks = getMutableList(taskManager.getCleanupTaskIds());
+      cleaningTasks = getMutableCollection(taskManager.getCleanupTaskIds());
     }
 
     return cleaningTasks.get();

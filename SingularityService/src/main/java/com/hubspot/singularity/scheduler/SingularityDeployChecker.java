@@ -179,7 +179,7 @@ public class SingularityDeployChecker {
 
   private void cleanupTasks(Iterable<SingularityTaskId> tasksToKill, TaskCleanupType cleanupType, long timestamp) {
     for (SingularityTaskId matchingTask : tasksToKill) {
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), cleanupType, timestamp, matchingTask));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), cleanupType, timestamp, matchingTask));
     }
   }
 

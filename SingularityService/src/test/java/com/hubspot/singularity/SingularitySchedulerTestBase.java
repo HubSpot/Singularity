@@ -174,13 +174,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
-    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, "host", "rack");
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
+    Offer offer = createOffer(125, 1024);
+
+    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
-    Offer offer = createOffer(125, 1024);
     TaskInfo taskInfo = TaskInfo.newBuilder()
         .setSlaveId(offer.getSlaveId())
         .setTaskId(taskIdProto)

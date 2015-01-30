@@ -241,6 +241,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsyncChildren(CLEANUP_PATH_ROOT, taskCleanupTranscoder);
   }
 
+  public Optional<SingularityTaskCleanup> getTaskCleanup(String taskId) {
+    return getData(getCleanupPath(taskId), taskCleanupTranscoder);
+  }
+
   public List<SingularityTask> getActiveTasks() {
     List<String> children = Lists.transform(getChildrenAsIds(ACTIVE_PATH_ROOT, taskIdTranscoder), new Function<SingularityTaskId, String>() {
 
@@ -270,7 +274,7 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsync(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, paths, taskStatusTranscoder);
   }
 
-  public List<SingularityTask> getTasksOnSlave(List<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
+  public List<SingularityTask> getTasksOnSlave(Collection<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
     List<SingularityTask> tasks = Lists.newArrayList();
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -500,17 +504,31 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getLastActiveTaskStatusPath(taskId));
   }
 
-  public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
-    StringBuilder msg = new StringBuilder(cleanupTask.getCleanupType().name());
+  public SingularityCreateResult saveTaskCleanup(SingularityTaskCleanup cleanup) {
+    saveTaskHistoryUpdate(cleanup);
 
-    if (cleanupTask.getUser().isPresent()) {
+    return save(getCleanupPath(cleanup.getTaskId().getId()), cleanup, taskCleanupTranscoder);
+  }
+
+  private void saveTaskHistoryUpdate(SingularityTaskCleanup cleanup) {
+    StringBuilder msg = new StringBuilder(cleanup.getCleanupType().name());
+
+    if (cleanup.getUser().isPresent()) {
       msg.append(" - ");
-      msg.append(cleanupTask.getUser().get());
+      msg.append(cleanup.getUser().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanupTask.getTaskId(), cleanupTask.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
+  }
 
-    return create(getCleanupPath(cleanupTask.getTaskId().getId()), cleanupTask, taskCleanupTranscoder);
+  public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {
+    final SingularityCreateResult result = create(getCleanupPath(cleanup.getTaskId().getId()), cleanup, taskCleanupTranscoder);
+
+    if (result == SingularityCreateResult.CREATED) {
+      saveTaskHistoryUpdate(cleanup);
+    }
+
+    return result;
   }
 
   public void deleteActiveTask(String taskId) {

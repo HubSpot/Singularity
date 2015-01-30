@@ -966,7 +966,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDECOMMissioning() {
+  public void testDecommissioning() {
     initRequest();
     initFirstDeploy();
 
@@ -1083,7 +1083,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testEmptyDECOMMissioning() {
+  public void testEmptyDecommissioning() {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
@@ -1092,6 +1092,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
+  }
+
+  @Test
+  public void testJobRescheduledWhenItFinishesDuringDecommission() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    resourceOffers();
+
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1"));
+
+    cleaner.drainCleanupQueue();
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    statusUpdate(task, TaskState.TASK_FINISHED);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
 
 

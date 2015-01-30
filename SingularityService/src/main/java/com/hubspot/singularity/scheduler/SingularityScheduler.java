@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -91,14 +92,14 @@ public class SingularityScheduler {
     this.cooldown = cooldown;
   }
 
-  private void cleanupTaskDueToDecomission(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject) {
+  private void cleanupTaskDueToDecomission(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject, Optional<String> user) {
     requestIdsToReschedule.add(task.getTaskRequest().getRequest().getId());
 
     matchingTaskIds.add(task.getTaskId());
 
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decomissioningObject);
 
-    taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
+    taskManager.createTaskCleanup(new SingularityTaskCleanup(user, TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
   }
 
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
@@ -115,7 +116,7 @@ public class SingularityScheduler {
     final Set<String> requestIdsToReschedule = Sets.newHashSet();
     final Set<SingularityTaskId> matchingTaskIds = Sets.newHashSet();
 
-    final List<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
+    final Collection<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
 
     final Map<SingularitySlave, MachineState> slaves = getDefaultMap(slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION));
 
@@ -123,7 +124,7 @@ public class SingularityScheduler {
       boolean foundTask = false;
 
       for (SingularityTask activeTask : taskManager.getTasksOnSlave(activeTaskIds, slave)) {
-        cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, activeTask, slave.toString());
+        cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, activeTask, slave.toString(), slave.getCurrentState().getUser());
         foundTask = true;
       }
 
@@ -320,7 +321,7 @@ public class SingularityScheduler {
     return deployMarker.isPresent() && deployMarker.get().getDeployId().equals(deployId);
   }
 
-  private void deleteScheduledTasks(final List<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
+  private void deleteScheduledTasks(final Collection<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
     for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
       LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
       taskManager.deletePendingTask(task.getPendingTaskId());
@@ -340,9 +341,9 @@ public class SingularityScheduler {
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest);
 
-    if (numMissingInstances > 0) {
-      LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}", numMissingInstances, request.getId(), matchingTaskIds, pendingRequest);
+    LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}", numMissingInstances, request.getId(), matchingTaskIds, pendingRequest);
 
+    if (numMissingInstances > 0) {
       final List<SingularityPendingTask> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest);
 
       if (!scheduledTasks.isEmpty()) {
@@ -355,10 +356,7 @@ public class SingularityScheduler {
         LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
         requestManager.finish(request, System.currentTimeMillis());
       }
-
     } else if (numMissingInstances < 0) {
-      LOG.debug("Missing instances is negative: {}, request {}, matching tasks: {}", numMissingInstances, request, matchingTaskIds);
-
       final long now = System.currentTimeMillis();
 
       for (int i = 0; i < Math.abs(numMissingInstances); i++) {
@@ -366,7 +364,7 @@ public class SingularityScheduler {
 
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
 
-        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
       }
     }
 
@@ -436,13 +434,11 @@ public class SingularityScheduler {
       return Optional.absent();
     }
 
-    if (state.isSuccess()) {
-      if (requestState == RequestState.SYSTEM_COOLDOWN) {
-        // TODO send not cooldown anymore email
-        LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
-        requestState = RequestState.ACTIVE;
-        requestManager.exitCooldown(request, System.currentTimeMillis());
-      }
+    if (state.isSuccess() && requestState == RequestState.SYSTEM_COOLDOWN) {
+      // TODO send not cooldown anymore email
+      LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
+      requestState = RequestState.ACTIVE;
+      requestManager.exitCooldown(request, System.currentTimeMillis());
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), System.currentTimeMillis(), pendingType);
@@ -467,6 +463,7 @@ public class SingularityScheduler {
 
     if (wasActive) {
       taskManager.deleteActiveTask(taskId.getId());
+      stateCache.getActiveTaskIds().remove(taskId);
     }
 
     taskManager.createLBCleanupTask(taskId);
