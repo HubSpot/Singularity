@@ -149,7 +149,7 @@ public class SingularityScheduler {
 
         if (rack.getId().equals(activeTaskId.getRackId())) {
           Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
-          cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString());
+          cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString(), rack.getCurrentState().getUser());
         }
       }
 
