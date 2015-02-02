@@ -92,14 +92,16 @@ public class SingularityScheduler {
     this.cooldown = cooldown;
   }
 
-  private void cleanupTaskDueToDecomission(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String decomissioningObject, Optional<String> user) {
+  private void cleanupTaskDueToDecomission(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task, String objectType, String decomissioningObject,
+      Optional<String> user) {
     requestIdsToReschedule.add(task.getTaskRequest().getRequest().getId());
 
     matchingTaskIds.add(task.getTaskId());
 
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decomissioningObject);
 
-    taskManager.createTaskCleanup(new SingularityTaskCleanup(user, TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId()));
+    taskManager.createTaskCleanup(new SingularityTaskCleanup(user, TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(), task.getTaskId(),
+        Optional.of(String.format("%s (%s) is decomissioning", objectType, decomissioningObject))));
   }
 
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
@@ -124,7 +126,7 @@ public class SingularityScheduler {
       boolean foundTask = false;
 
       for (SingularityTask activeTask : taskManager.getTasksOnSlave(activeTaskIds, slave)) {
-        cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, activeTask, slave.toString(), slave.getCurrentState().getUser());
+        cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, activeTask, "slave", slave.toString(), slave.getCurrentState().getUser());
         foundTask = true;
       }
 
@@ -149,7 +151,7 @@ public class SingularityScheduler {
 
         if (rack.getId().equals(activeTaskId.getRackId())) {
           Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
-          cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack.toString(), rack.getCurrentState().getUser());
+          cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), "rack", rack.toString(), rack.getCurrentState().getUser());
         }
       }
 
@@ -367,7 +369,7 @@ public class SingularityScheduler {
 
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
 
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String> absent()));
       }
     }
 

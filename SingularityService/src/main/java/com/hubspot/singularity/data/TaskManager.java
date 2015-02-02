@@ -514,8 +514,13 @@ public class TaskManager extends CuratorAsyncManager {
     StringBuilder msg = new StringBuilder(cleanup.getCleanupType().name());
 
     if (cleanup.getUser().isPresent()) {
-      msg.append(" - ");
+      msg.append(" - by ");
       msg.append(cleanup.getUser().get());
+    }
+
+    if (cleanup.getMessage().isPresent()) {
+      msg.append(" - ");
+      msg.append(cleanup.getMessage().get());
     }
 
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
