@@ -25,7 +25,8 @@ html
           div(style="border-top: 10px solid #df4210; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
             h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ requestId }
             h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") #{ status }
-            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityTaskLink }") View task
+            if singularityTaskLink
+              a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityTaskLink }") View task
 
         //- Status
         div(style="padding-bottom: 20px")
@@ -108,8 +109,11 @@ html
           dl(style="margin-bottom: 0")
             each log in logTails
               dt(style="font-weight: bold; margin: 0 0 9px")
-                a(href="#{ log.link }") #{ log.file }
-              dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px 0px 14px; border-radius: 3px")
+                if log.link
+                  a(href="#{ log.link }") #{ log.file }
+                else
+                  #{ log.file }
+              dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px 0.1px 14px; border-radius: 3px")
                 if log.log
                   pre(style="white-space: pre; margin: 0")
                     code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre;")
