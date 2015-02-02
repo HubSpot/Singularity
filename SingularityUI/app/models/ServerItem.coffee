@@ -54,6 +54,9 @@ class ServerItem extends Model
             url: "#{ @url()}/activate?user=#{ app.getUsername()}"
             type: "POST"
 
+    host: =>
+        @get 'host'
+
     #
     # promptX pops up a user confirmation and then does what you asked of it if they approve
     #
@@ -61,7 +64,7 @@ class ServerItem extends Model
     promptRemove: (callback) =>
         state = @get 'state'
         vex.dialog.confirm
-            message: @removeTemplates[state] {@id, @type}
+            message: @removeTemplates[state] {@id, @host, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Remove',
@@ -76,7 +79,7 @@ class ServerItem extends Model
     promptDecommission: (callback) =>
         state = @get 'state'
         vex.dialog.confirm
-            message: @decommissionTemplate {@id, @type}
+            message: @decommissionTemplate {@id, @host, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Decommission',
@@ -92,7 +95,7 @@ class ServerItem extends Model
     promptReactivate: (callback) =>
         state = @get 'state'
         vex.dialog.confirm
-            message: @reactivateTemplate {@id, @type}
+            message: @reactivateTemplate {@id, @host, @type}
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Reactivate',

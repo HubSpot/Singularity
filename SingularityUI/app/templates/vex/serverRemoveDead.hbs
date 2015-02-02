@@ -2,4 +2,10 @@
 	Are you sure you want to remove this {{ type }}?
 </p>
 
-<pre>{{ id }}</pre>
+<pre>
+    {{#if host }}
+        {{ host }}
+    {{else}}
+        {{ id }}
+    {{/if}}
+</pre>
