@@ -287,7 +287,7 @@ public class SingularityMailer implements Managed {
     }
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    templateProperties.put("singularity", new JadeHelpers(uiHostnameAndPath));
+    templateProperties.put("singularity", new MailTemplateHelpers(uiHostnameAndPath));
     populateRequestEmailProperties(templateProperties, request);
     populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState);
     templateProperties.putAll(extraProperties);
@@ -368,7 +368,7 @@ public class SingularityMailer implements Managed {
 
     final String subject = String.format("Request %s has been %s — Singularity", request.getId(), type.name().toLowerCase());
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    templateProperties.put("singularity", new JadeHelpers(uiHostnameAndPath));
+    templateProperties.put("singularity", new MailTemplateHelpers(uiHostnameAndPath));
     populateRequestEmailProperties(templateProperties, request);
 
     templateProperties.put("requestPaused", type == RequestMailType.PAUSED);
@@ -426,7 +426,7 @@ public class SingularityMailer implements Managed {
     }
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    templateProperties.put("singularity", new JadeHelpers(uiHostnameAndPath));
+    templateProperties.put("singularity", new MailTemplateHelpers(uiHostnameAndPath));
     populateRequestEmailProperties(templateProperties, request);
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());

@@ -15,7 +15,7 @@ import java.util.Map;
  * Helpers that get passed to the Jade renderer. These helpers manipulate information given to the
  * Jade context into different formats.
  */
-public class JadeHelpers {
+public class MailTemplateHelpers {
   private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
@@ -26,7 +26,7 @@ public class JadeHelpers {
    */
   private final Optional<String> uiHostnameAndPath;
 
-  public JadeHelpers(Optional<String> uiHostnameAndPath) {
+  public MailTemplateHelpers(Optional<String> uiHostnameAndPath) {
     this.uiHostnameAndPath = uiHostnameAndPath;
   }
 
