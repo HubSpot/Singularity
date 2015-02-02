@@ -1,12 +1,9 @@
 package com.hubspot.singularity.smtp;
 
-import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.config.EmailConfigurationEnums;
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -26,7 +23,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityRequest;
@@ -64,11 +60,11 @@ public class SingularityMailer implements Managed {
   private final JadeTemplate rateLimitedTemplate;
 
   private final MetadataManager metadataManager;
-  private final SandboxManager sandboxManager;
 
   private final Optional<String> uiHostnameAndPath;
 
   private final Joiner adminJoiner;
+  private final MailTemplateHelpers mailTemplateHelpers;
 
   @Inject
   public SingularityMailer(SingularitySmtpSender smtpSender, SingularityConfiguration configuration,
@@ -86,10 +82,11 @@ public class SingularityMailer implements Managed {
     this.configuration = configuration;
     this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
-    this.sandboxManager = sandboxManager;
     this.metadataManager = metadataManager;
     this.exceptionNotifier = exceptionNotifier;
     this.adminJoiner = Joiner.on(", ").skipNulls();
+
+    this.mailTemplateHelpers = new MailTemplateHelpers(this.uiHostnameAndPath, sandboxManager, this.maybeSmtpConfiguration);
 
     this.requestModifiedTemplate = requestModifiedTemplate;
     this.taskTemplate = taskTemplate;
@@ -114,45 +111,9 @@ public class SingularityMailer implements Managed {
     }
   }
 
-  /**
-   * Get a log file from a remote mesos slave.
-   * @param taskId id of the task.
-   * @param filename log file name.
-   * @param task required for method to retrieve task logs properly.
-   * @param directory directory to read log from.
-   * @return array of strings, each a line of the log file.
-   */
-  private Optional<String[]> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {
-    if (!task.isPresent() || !directory.isPresent()) {
-      LOG.warn("Couldn't retrieve {} for {} because task ({}) or directory ({}) wasn't present", filename, taskId, task.isPresent(), directory.isPresent());
-      return Optional.absent();
-    }
-
-    final String slaveHostname = task.get().getOffer().getHostname();
-
-    final String fullPath = String.format("%s/%s", directory.get(), filename);
-
-    final Long logLength = (long)maybeSmtpConfiguration.get().getTaskLogLength();
-
-    final Optional<MesosFileChunkObject> logChunkObject;
-
-    try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
-    } catch (RuntimeException e) {
-      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
-      return Optional.absent();
-    }
-
-    if (logChunkObject.isPresent()) {
-      return Optional.of(logChunkObject.get().getData().split("[\r\n]+"));
-    } else {
-      LOG.error("Singularity mailer failed to get {} log for {} task ", filename, taskId.getId());
-      return Optional.absent();
-    }
-  }
-
   private void populateRequestEmailProperties(Map<String, Object> templateProperties, SingularityRequest request) {
     templateProperties.put("requestId", request.getId());
+    templateProperties.put("singularityRequestLink", mailTemplateHelpers.getSingularityRequestLink(request.getId()));
 
     templateProperties.put("requestScheduled", request.isScheduled());
     templateProperties.put("requestOneOff", request.isOneOff());
@@ -165,14 +126,10 @@ public class SingularityMailer implements Managed {
     Optional<SingularityTask> task = taskManager.getTask(taskId);
     Optional<String> directory = taskManager.getDirectory(taskId);
 
+    templateProperties.put("singularityTaskLink", mailTemplateHelpers.getSingularityTaskLink(taskId.getId()));
+
     // Grab the tails of log files from remote mesos slaves.
-    LinkedHashMap<String, String[]> logTails = new LinkedHashMap<>();
-    for (String file : maybeSmtpConfiguration.get().getTaskEmailTailFiles()) {
-      // To enable support for tailing the service.log file, replace instances of $MESOS_TASK_ID.
-      file = file.replaceAll("\\$MESOS_TASK_ID", MesosUtils.getSafeTaskIdForDirectory(taskId.getId()));
-      logTails.put(file, getTaskLogFile(taskId, file, task, directory).or(new String[0]));
-    }
-    templateProperties.put("logTails", logTails);
+    templateProperties.put("logTails", mailTemplateHelpers.getTaskLogs(taskId, task, directory));
 
     templateProperties.put("taskId", taskId.getId());
     templateProperties.put("deployId", taskId.getDeployId());
@@ -192,8 +149,8 @@ public class SingularityMailer implements Managed {
     templateProperties.put("taskStateKilled", taskState == ExtendedTaskState.TASK_KILLED);
     templateProperties.put("taskStateRunning", taskState == ExtendedTaskState.TASK_RUNNING);
 
-    templateProperties.put("taskHistory", taskHistory);
-    templateProperties.put("taskRan", didTaskRun(taskHistory));
+    templateProperties.put("taskUpdates", mailTemplateHelpers.getJadeTaskHistory(taskHistory));
+    templateProperties.put("taskRan", mailTemplateHelpers.didTaskRun(taskHistory));
   }
 
   private Optional<TaskCleanupType> getTaskCleanupTypefromSingularityTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
@@ -287,12 +244,11 @@ public class SingularityMailer implements Managed {
     }
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    templateProperties.put("singularity", new MailTemplateHelpers(uiHostnameAndPath));
     populateRequestEmailProperties(templateProperties, request);
     populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState);
     templateProperties.putAll(extraProperties);
 
-    final String subject = getSubjectForTaskHistory(taskId, taskState, emailType, taskHistory);
+    final String subject = mailTemplateHelpers.getSubjectForTaskHistory(taskId, taskState, emailType, taskHistory);
 
     final String adminEmails = adminJoiner.join(maybeSmtpConfiguration.get().getAdmins());
     templateProperties.put("adminEmails", adminEmails);
@@ -368,7 +324,6 @@ public class SingularityMailer implements Managed {
 
     final String subject = String.format("Request %s has been %s — Singularity", request.getId(), type.name().toLowerCase());
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    templateProperties.put("singularity", new MailTemplateHelpers(uiHostnameAndPath));
     populateRequestEmailProperties(templateProperties, request);
 
     templateProperties.put("requestPaused", type == RequestMailType.PAUSED);
@@ -426,7 +381,6 @@ public class SingularityMailer implements Managed {
     }
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    templateProperties.put("singularity", new MailTemplateHelpers(uiHostnameAndPath));
     populateRequestEmailProperties(templateProperties, request);
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
@@ -495,6 +449,8 @@ public class SingularityMailer implements Managed {
    */
   private Map<String, Object> getRateLimitTemplateProperties(SingularityRequest request, final EmailType emailType) {
     final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
+
+    templateProperties.put("singularityRequestLink", mailTemplateHelpers.getSingularityRequestLink(request.getId()));
     templateProperties.put("rateLimitAfterNotifications", Integer.toString(maybeSmtpConfiguration.get().getRateLimitAfterNotifications()));
     templateProperties.put("rateLimitPeriodFormat", DurationFormatUtils.formatDurationHMS(maybeSmtpConfiguration.get().getRateLimitPeriodMillis()));
     templateProperties.put("rateLimitCooldownFormat", DurationFormatUtils.formatDurationHMS(maybeSmtpConfiguration.get().getRateLimitCooldownMillis()));
@@ -541,36 +497,4 @@ public class SingularityMailer implements Managed {
 
     smtpSender.queueMail(toList, ccList, subject, body);
   }
-
-  /**
-   * Get a subject line for the task email based on the task history.
-   * @param taskId SingularityTaskId.
-   * @param state detailed task state information.
-   * @param type email purpose.
-   * @param history task history.
-   * @return subject line string.
-   */
-  private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, EmailConfigurationEnums.EmailType type, Collection<SingularityTaskHistoryUpdate> history) {
-    if (type == EmailConfigurationEnums.EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
-      return String.format("Task is overdue to finish (%s)", taskId.toString());
-    }
-
-    if (!didTaskRun(history)) {
-      return String.format("Task never started and was %s (%s)", state.getDisplayName(), taskId.toString());
-    }
-
-    return String.format("Task %s (%s)", state.getDisplayName(), taskId.toString());
-  }
-
-  /**
-   * From a task's history, determine if it ran.
-   * @param history task history.
-   * @return whether the task ran.
-   */
-  private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
-    SingularityTaskHistoryUpdate.SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
-
-    return simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.DONE || simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.RUNNING;
-  }
-
 }

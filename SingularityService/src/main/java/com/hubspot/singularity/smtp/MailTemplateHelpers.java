@@ -3,9 +3,19 @@ package com.hubspot.singularity.smtp;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.hubspot.mesos.MesosUtils;
+import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.EmailConfigurationEnums;
+import com.hubspot.singularity.config.SMTPConfiguration;
+import com.hubspot.singularity.data.SandboxManager;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +26,13 @@ import java.util.Map;
  * Jade context into different formats.
  */
 public class MailTemplateHelpers {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
+
+  /**
+   * For fetching log files from mesos slaves.
+   */
+  private final SandboxManager sandboxManager;
+
   private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
@@ -25,9 +42,12 @@ public class MailTemplateHelpers {
    * Used to generate links, if no String is present, helpers will return empty Strings.
    */
   private final Optional<String> uiHostnameAndPath;
+  private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
 
-  public MailTemplateHelpers(Optional<String> uiHostnameAndPath) {
+  public MailTemplateHelpers(Optional<String> uiHostnameAndPath, SandboxManager sandboxManager, Optional<SMTPConfiguration> maybeSmtpConfiguration) {
     this.uiHostnameAndPath = uiHostnameAndPath;
+    this.sandboxManager = sandboxManager;
+    this.maybeSmtpConfiguration = maybeSmtpConfiguration;
   }
 
   /**
@@ -48,6 +68,70 @@ public class MailTemplateHelpers {
     }
 
     return output;
+  }
+
+  /**
+   * Format task logs into a List of Maps for Jade to interpret easily.
+   * @param taskId task to get logs from.
+   * @param task task object to get logs from.
+   * @param directory directory to read log from.
+   * @return Jade interpretable List of Maps.
+   */
+  public List<Map<String, String>> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
+    List<String> taskEmailTailFiles = maybeSmtpConfiguration.get().getTaskEmailTailFiles();
+    List<Map<String, String>> logTails = Lists.newArrayListWithCapacity(taskEmailTailFiles.size());
+
+    for (String filepath : taskEmailTailFiles) {
+      // To enable support for tailing the service.log file, replace instances of $MESOS_TASK_ID.
+      filepath = filepath.replaceAll("\\$MESOS_TASK_ID", MesosUtils.getSafeTaskIdForDirectory(taskId.getId()));
+
+      logTails.add(
+          ImmutableMap.<String, String>builder()
+              .put("path", filepath)
+              .put("file", getFileName(filepath))
+              .put("link", getSingularityLogLink(filepath, taskId.getId()))
+              .put("log", getTaskLogFile(taskId, filepath, task, directory).or(""))
+              .build());
+    }
+
+    return logTails;
+  }
+
+  /**
+   * Get a log file from a remote mesos slave.
+   * @param taskId id of the task.
+   * @param filename log file name.
+   * @param task required for method to retrieve task logs properly.
+   * @param directory directory to read log from.
+   * @return string of the log file.
+   */
+  private Optional<String> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {
+    if (!task.isPresent() || !directory.isPresent()) {
+      LOG.warn("Couldn't retrieve {} for {} because task ({}) or directory ({}) wasn't present", filename, taskId, task.isPresent(), directory.isPresent());
+      return Optional.absent();
+    }
+
+    final String slaveHostname = task.get().getOffer().getHostname();
+
+    final String fullPath = String.format("%s/%s", directory.get(), filename);
+
+    final Long logLength = (long)maybeSmtpConfiguration.get().getTaskLogLength();
+
+    final Optional<MesosFileChunkObject> logChunkObject;
+
+    try {
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
+    } catch (RuntimeException e) {
+      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
+      return Optional.absent();
+    }
+
+    if (logChunkObject.isPresent()) {
+      return Optional.of(logChunkObject.get().getData());
+    } else {
+      LOG.error("Singularity mailer failed to get {} log for {} task ", filename, taskId.getId());
+      return Optional.absent();
+    }
   }
 
   /**
@@ -97,5 +181,36 @@ public class MailTemplateHelpers {
     }
 
     return String.format(LOG_LINK_FORMAT, uiHostnameAndPath.get(), taskId, logPath);
+  }
+
+  /**
+   * Get a subject line for the task email based on the task history.
+   * @param taskId SingularityTaskId.
+   * @param state detailed task state information.
+   * @param type email purpose.
+   * @param history task history.
+   * @return subject line string.
+   */
+  public String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, EmailConfigurationEnums.EmailType type, Collection<SingularityTaskHistoryUpdate> history) {
+    if (type == EmailConfigurationEnums.EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
+      return String.format("Task is overdue to finish (%s)", taskId.toString());
+    }
+
+    if (!didTaskRun(history)) {
+      return String.format("Task never started and was %s (%s)", state.getDisplayName(), taskId.toString());
+    }
+
+    return String.format("Task %s (%s)", state.getDisplayName(), taskId.toString());
+  }
+
+  /**
+   * From a task's history, determine if it ran.
+   * @param history task history.
+   * @return whether the task ran.
+   */
+  public boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
+    SingularityTaskHistoryUpdate.SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
+
+    return simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.DONE || simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.RUNNING;
   }
 }
