@@ -487,6 +487,12 @@ public class SingularityMailer implements Managed {
     return RateLimitResult.SEND_MAIL;
   }
 
+  /**
+   * Add needed information to the rate limit email Jade context.
+   * @param request SingularityRequest that the rate limit email is about.
+   * @param emailType what the email is about.
+   * @return template properties to add to the Jade context.
+   */
   private Map<String, Object> getRateLimitTemplateProperties(SingularityRequest request, final EmailType emailType) {
     final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
     templateProperties.put("rateLimitAfterNotifications", Integer.toString(maybeSmtpConfiguration.get().getRateLimitAfterNotifications()));
@@ -498,6 +504,16 @@ public class SingularityMailer implements Managed {
     return templateProperties.build();
   }
 
+  /**
+   * Check to see if email should be rate limited, and if so, send a rate limit
+   * email notification. Next attempt to email will immediately return.
+   *
+   * @param destination collection of enum values used to specify who will receive this email.
+   * @param request SingularityRequest this email is about.
+   * @param emailType what the email is about (e.g. TASK_FAILED).
+   * @param subject the subject line of the email.
+   * @param body the body of the email.
+   */
   private void queueMail(final Collection<EmailDestination> destination, final SingularityRequest request, final EmailType emailType, String subject, String body) {
     RateLimitResult result = checkRateLimitForMail(request, emailType);
 
@@ -513,6 +529,7 @@ public class SingularityMailer implements Managed {
     final List<String> toList = Lists.newArrayList();
     final List<String> ccList = Lists.newArrayList();
 
+    // Decide where to send this email.
     if (destination.contains(EmailDestination.OWNERS) && request.getOwners().isPresent() && !request.getOwners().get().isEmpty()) {
       toList.addAll(request.getOwners().get());
       if (destination.contains(EmailDestination.ADMINS)) {
@@ -525,6 +542,14 @@ public class SingularityMailer implements Managed {
     smtpSender.queueMail(toList, ccList, subject, body);
   }
 
+  /**
+   * Get a subject line for the task email based on the task history.
+   * @param taskId SingularityTaskId.
+   * @param state detailed task state information.
+   * @param type email purpose.
+   * @param history task history.
+   * @return subject line string.
+   */
   private String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, EmailConfigurationEnums.EmailType type, Collection<SingularityTaskHistoryUpdate> history) {
     if (type == EmailConfigurationEnums.EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
       return String.format("Task is overdue to finish (%s)", taskId.toString());
@@ -537,6 +562,11 @@ public class SingularityMailer implements Managed {
     return String.format("Task %s (%s)", state.getDisplayName(), taskId.toString());
   }
 
+  /**
+   * From a task's history, determine if it ran.
+   * @param history task history.
+   * @return whether the task ran.
+   */
   private boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
     SingularityTaskHistoryUpdate.SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
