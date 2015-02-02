@@ -24,6 +24,7 @@ public class SingularityRunnerBaseLogging {
   private final String hubSpotLogLevel;
   private final String loggingPattern;
   private final Properties properties;
+  private final String[] obfuscateKeys;
 
   @Inject
   public SingularityRunnerBaseLogging(
@@ -32,11 +33,13 @@ public class SingularityRunnerBaseLogging {
       @Named(SingularityRunnerBaseConfigurationLoader.LOGGING_PATTERN) String loggingPattern,
       @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_LEVEL) String rootLogLevel,
       @Named(SingularityRunnerBaseConfigurationLoader.HUBSPOT_LOG_LEVEL) String hubSpotLogLevel,
+      @Named(SingularityRunnerBaseConfigurationLoader.OBFUSCATE_KEYS) String obfuscateKeys,
       Properties properties) {
     this.rootLogPath = Paths.get(rootLogDirectory).resolve(rootLogFilename).toString();
     this.loggingPattern = loggingPattern;
     this.properties = properties;
     this.hubSpotLogLevel = hubSpotLogLevel;
+    this.obfuscateKeys = obfuscateKeys.split("\\,");
 
     Logger rootLogger = configureRootLogger(rootLogLevel);
     printProperties(rootLogger);
@@ -52,7 +55,33 @@ public class SingularityRunnerBaseLogging {
     Collections.sort(strKeys);
 
     for (String key : strKeys) {
-      rootLogger.info("  {} -> {}", key, properties.get(key));
+      String value = properties.getProperty(key);
+      if (shouldObfuscateValue(key)) {
+        value = obfuscateValue(value);
+      }
+      rootLogger.info("  {} -> {}", key, value);
+    }
+  }
+
+  private boolean shouldObfuscateValue(String key) {
+    for (String obfuscateKey : obfuscateKeys) {
+      if (key.contains(obfuscateKey)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private static String obfuscateValue(String value) {
+    if (value == null) {
+      return value;
+    }
+
+    if (value.length() > 4) {
+      return String.format("***************%s", value.substring(value.length() - 4, value.length()));
+    } else {
+      return "(OMITTED)";
     }
   }
 

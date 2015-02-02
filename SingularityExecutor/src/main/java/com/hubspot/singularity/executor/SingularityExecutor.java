@@ -113,11 +113,11 @@ public class SingularityExecutor implements Executor {
     KillState killState = monitor.requestKill(taskId);
 
     switch (killState) {
-    case ALREADY_REQUESTED:
     case DIDNT_EXIST:
     case INCONSISTENT_STATE:
       LOG.warn("Couldn't kill task {} due to killState {}", taskId, killState);
       break;
+    case DESTROYING_PROCESS:
     case INTERRUPTING_PRE_PROCESS:
     case KILLING_PROCESS:
       LOG.info("Requested kill of task {} with killState {}", taskId, killState);

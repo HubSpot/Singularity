@@ -239,6 +239,8 @@ public class SingularityExecutorMonitor {
 
   public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
     try {
+      processKiller.cancelDestroyFuture(task.getTaskId());
+
       if (errorMsg.isPresent()) {
         task.getLog().error(errorMsg.get(), errorObjects);
       }
@@ -341,7 +343,7 @@ public class SingularityExecutorMonitor {
   }
 
   public enum KillState {
-    DIDNT_EXIST, ALREADY_REQUESTED, INTERRUPTING_PRE_PROCESS, KILLING_PROCESS, INCONSISTENT_STATE;
+    DIDNT_EXIST, INTERRUPTING_PRE_PROCESS, KILLING_PROCESS, DESTROYING_PROCESS, INCONSISTENT_STATE;
   }
 
   public KillState requestKill(String taskId) {
@@ -358,12 +360,12 @@ public class SingularityExecutorMonitor {
 
     task.getLock().lock();
 
-    try {
-      if (task.wasKilled()) {
-        return KillState.ALREADY_REQUESTED;
-      }
+    boolean wasKilled = task.wasKilled();
 
-      task.markKilled();
+    try {
+      if (!wasKilled) {
+        task.markKilled();
+      }
 
       processBuilderFuture = processBuildingTasks.get(task.getTaskId());
       runningProcess = processRunningTasks.get(task.getTaskId());
@@ -380,9 +382,13 @@ public class SingularityExecutorMonitor {
     }
 
     if (runningProcess != null) {
-      processKiller.submitKillRequest(runningProcess);
-
-      return KillState.KILLING_PROCESS;
+      if (wasKilled) {
+        processKiller.submitDestroyRequest(runningProcess);
+        return KillState.DESTROYING_PROCESS;
+      } else {
+        processKiller.submitKillRequest(runningProcess);
+        return KillState.KILLING_PROCESS;
+      }
     }
 
     return KillState.INCONSISTENT_STATE;
