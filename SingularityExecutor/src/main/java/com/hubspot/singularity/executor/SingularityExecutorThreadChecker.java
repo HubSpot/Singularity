@@ -54,7 +54,7 @@ public class SingularityExecutorThreadChecker {
         } catch (Throwable t) {
           LOG.error("While checking threads", t);
         } finally {
-          LOG.debug("Finished checking threads after {}", JavaUtils.duration(start));
+          LOG.trace("Finished checking threads after {}", JavaUtils.duration(start));
         }
       }
     }, configuration.getCheckThreadsEveryMillis(), configuration.getCheckThreadsEveryMillis(), TimeUnit.MILLISECONDS);

@@ -56,7 +56,7 @@ public class SingularityRunnerBaseLogging {
 
     for (String key : strKeys) {
       String value = properties.getProperty(key);
-      if (shouldObfuscateValue(key)) {
+      if (!SingularityRunnerBaseConfigurationLoader.OBFUSCATE_KEYS.equals(key) && shouldObfuscateValue(key)) {
         value = obfuscateValue(value);
       }
       rootLogger.info("  {} -> {}", key, value);
