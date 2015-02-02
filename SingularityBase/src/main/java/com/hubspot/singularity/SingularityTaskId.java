@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -52,6 +53,15 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     public String apply(@Nonnull SingularityTaskId input) {
       return input.getRequestId();
     }
+  };
+
+  public static Comparator<SingularityTaskId> INSTANCE_NO_COMPARATOR = new Comparator<SingularityTaskId>() {
+
+    @Override
+    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
+      return Integer.compare(o1.instanceNo, o2.instanceNo);
+    }
+
   };
 
   public static Predicate<SingularityTaskId> notIn(Collection<SingularityTaskId> exclude) {

@@ -76,7 +76,7 @@ public class SingularityTestModule implements Module {
     rootLogger.setLevel(Level.ERROR);
 
     Logger hsLogger = context.getLogger("com.hubspot");
-    hsLogger.setLevel(Level.TRACE);
+    hsLogger.setLevel(Level.ERROR);
 
     this.ts = new TestingServer();
   }

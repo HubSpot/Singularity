@@ -26,6 +26,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -1114,5 +1115,28 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
 
+  @Test
+  public void testScaleDownTakesHighestInstances() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(5)));
+
+    resourceOffers();
+
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    requestResource.updateInstances(requestId, Optional.of("user1"), new SingularityRequestInstances(requestId, Optional.of(2)));
+
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(3, taskManager.getKilledTaskIdRecords().size());
+
+    for (SingularityKilledTaskIdRecord taskId : taskManager.getKilledTaskIdRecords()) {
+      Assert.assertTrue(taskId.getTaskId().getInstanceNo() > 2);
+    }
+
+  }
 
 }

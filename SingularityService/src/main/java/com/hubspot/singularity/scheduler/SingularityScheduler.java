@@ -336,7 +336,8 @@ public class SingularityScheduler {
     }
   }
 
-  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds) {
+  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
+      SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds) {
     deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest);
@@ -359,12 +360,14 @@ public class SingularityScheduler {
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
+      Collections.sort(matchingTaskIds, Collections.reverseOrder(SingularityTaskId.INSTANCE_NO_COMPARATOR)); // clean the highest numbers
+
       for (int i = 0; i < Math.abs(numMissingInstances); i++) {
         final SingularityTaskId toCleanup = matchingTaskIds.get(i);
 
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
 
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup));
       }
     }
 
