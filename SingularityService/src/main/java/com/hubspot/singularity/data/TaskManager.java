@@ -514,7 +514,7 @@ public class TaskManager extends CuratorAsyncManager {
     StringBuilder msg = new StringBuilder(cleanup.getCleanupType().name());
 
     if (cleanup.getUser().isPresent()) {
-      msg.append(" - by ");
+      msg.append(" by ");
       msg.append(cleanup.getUser().get());
     }
 

@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 
 public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
@@ -23,6 +24,12 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
   public String getId() {
     return id;
   }
+
+  @JsonIgnore
+  public abstract String getName();
+
+  @JsonIgnore
+  public abstract String getTypeName();
 
   @Override
   public int hashCode() {
