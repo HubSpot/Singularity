@@ -21,6 +21,12 @@ class ServerItem extends Model
         require '../templates/vex/slaveReactivate'
 
     parse: (item) =>
+        if item instanceof Array
+            current = {}
+            current.timestamp = 0
+            for i in item
+                current = i if i.timestamp > current.timestamp
+            item = current
         if item.firstSeenAt?
             if item.decomissioningAt?
                 item.uptime = item.decomissioningAt - item.firstSeenAt

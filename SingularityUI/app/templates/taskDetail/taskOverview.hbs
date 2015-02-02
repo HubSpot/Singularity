@@ -1,3 +1,6 @@
+{{#if data.decommissioning}}
+    <div class="alert alert-warning" role="alert">This task is running on a decommissioning host and will be replaced soon</div>
+{{/if}}
 {{! Part of taskBase }}
 <header class='detail-header'>
     <div class="row">
@@ -20,12 +23,6 @@
                 {{ data.task.taskId.id }}
             </h3>
         </div>
-        {{#if data.decommissioning}}
-            <div class="col-md-1">
-                <span class='label label-warning'>DECOM</span>
-            </div>
-        {{/if}}
-
         {{! Right side, buttons }}
         <div class="col-md-4 button-container">
             <a class="btn btn-default" data-action="viewObjectJSON">

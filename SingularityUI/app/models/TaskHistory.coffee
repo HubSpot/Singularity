@@ -41,7 +41,7 @@ class TaskHistory extends Model
                 error: =>
                     app.caughtError()
             decommission_states = ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
-            if taskHistory.slave.attributes[0].state in decommission_states
+            if taskHistory.slave.attributes.state in decommission_states
                 taskHistory.decommissioning = true
             else if taskHistory.slave.attributes.state is not 'ACTIVE'
                 taskHistory.slaveMissing = true
