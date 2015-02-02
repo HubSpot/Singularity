@@ -51,7 +51,7 @@ class SlavesView extends View
         $target = $(event.currentTarget)
         state = $target.data 'state'
         slaveModel = new Slave
-            id:    $target.data 'slave-id'
+            id:    $target.data 'slave-host'
             state: state
 
         slaveModel.promptRemove => @trigger 'refreshrequest'
@@ -60,7 +60,7 @@ class SlavesView extends View
         $target = $(event.currentTarget)
         state = $target.data 'state'
         slaveModel = new Slave
-            id:    $target.data 'slave-id'
+            id:    $target.data 'slave-host'
             state: state
 
         slaveModel.promptDecommission => @trigger 'refreshrequest'
@@ -69,7 +69,7 @@ class SlavesView extends View
         $target = $(event.currentTarget)
         state = $target.data 'state'
         slaveModel = new Slave
-            id:    $target.data 'slave-id'
+            id:    $target.data 'slave-host'
             state: state
 
         slaveModel.promptReactivate => @trigger 'refreshrequest'
