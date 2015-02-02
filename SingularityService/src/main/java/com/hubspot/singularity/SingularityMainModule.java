@@ -50,7 +50,7 @@ import com.hubspot.singularity.hooks.SingularityWebhookSender;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
-import com.hubspot.singularity.smtp.JadeHelper;
+import com.hubspot.singularity.smtp.JadeTemplateLoader;
 import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
@@ -188,12 +188,12 @@ public class SingularityMainModule implements Module {
   }
 
   private JadeTemplate getJadeTemplate(String name) throws IOException {
-    Parser parser = new Parser("templates/" + name, JadeHelper.JADE_LOADER);
+    Parser parser = new Parser("templates/" + name, JadeTemplateLoader.JADE_LOADER);
     Node root = parser.parse();
 
     final JadeTemplate jadeTemplate = new JadeTemplate();
 
-    jadeTemplate.setTemplateLoader(JadeHelper.JADE_LOADER);
+    jadeTemplate.setTemplateLoader(JadeTemplateLoader.JADE_LOADER);
     jadeTemplate.setRootNode(root);
 
     return jadeTemplate;

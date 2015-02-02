@@ -25,13 +25,13 @@ html
           div(style="border-top: 10px solid #df4210; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
             h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ requestId }
             h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has entered system cooldown
-            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityRequestLink }") View request
+            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularity.getSingularityRequestLink(requestId) }") View request
 
         div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Status
           p #{ requestId } finished unsuccessfully #{ numFailures } time(s) consecutively within #{ cooldownExpiresFormat }. Singularity has placed it into a system cooldown in order to protect cluster resources:
             ul
-              li New tasks will <em>still be scheduled and executed</em>, but these tasks will be delayed by #{cooldownDelayFormat}.
-              li This penalty will clear when either a task finishes successfully or less than #{numFailures} tasks have failed, been killed or lost within a period of #{cooldownExpiresFormat}.
+              li New tasks will <em>still be scheduled and executed</em>, but these tasks will be delayed by #{ cooldownDelayFormat }.
+              li This penalty will clear when either a task finishes successfully or less than #{ numFailures } tasks have failed, been killed or lost within a period of #{ cooldownExpiresFormat }.
               li You will not receive failure mails for #{ requestId } while it is in cooldown.
