@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,10 @@ public class SMTPConfiguration {
 
   @JsonProperty
   private long rateLimitCooldownMillis = TimeUnit.HOURS.toMillis(1);
+
+  // Files to tail when sending a task email.
+  @JsonProperty
+  private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
   @JsonProperty("emails")
   private Map<EmailType, List<EmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<EmailType, List<EmailDestination>>builder()
@@ -188,4 +193,11 @@ public class SMTPConfiguration {
     this.rateLimitCooldownMillis = rateLimitCooldownMillis;
   }
 
+  public List<String> getTaskEmailTailFiles() {
+    return taskEmailTailFiles;
+  }
+
+  public void setTaskEmailTailFiles(List<String> taskEmailTailFiles) {
+    this.taskEmailTailFiles = taskEmailTailFiles;
+  }
 }

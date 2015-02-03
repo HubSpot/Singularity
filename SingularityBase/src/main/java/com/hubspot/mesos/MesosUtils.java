@@ -2,6 +2,8 @@ package com.hubspot.mesos;
 
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -311,4 +313,11 @@ public final class MesosUtils {
     return remaining;
   }
 
+  public static Path getTaskDirectoryPath(String taskId) {
+    return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
+  }
+
+  public static String getSafeTaskIdForDirectory(String taskId) {
+    return taskId.replace(":", "_");
+  }
 }
