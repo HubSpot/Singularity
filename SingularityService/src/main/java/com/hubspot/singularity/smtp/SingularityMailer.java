@@ -61,17 +61,17 @@ public class SingularityMailer implements Managed {
 
   private final MetadataManager metadataManager;
 
-  private final Optional<String> uiHostnameAndPath;
-
   private final Joiner adminJoiner;
   private final MailTemplateHelpers mailTemplateHelpers;
 
   @Inject
-  public SingularityMailer(SingularitySmtpSender smtpSender, SingularityConfiguration configuration,
+  public SingularityMailer(
+      SingularitySmtpSender smtpSender,
+      SingularityConfiguration configuration,
       TaskManager taskManager,
-      SandboxManager sandboxManager,
       MetadataManager metadataManager,
       SingularityExceptionNotifier exceptionNotifier,
+      MailTemplateHelpers mailTemplateHelpers,
       @Named(SingularityMainModule.TASK_TEMPLATE) JadeTemplate taskTemplate,
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
@@ -80,13 +80,12 @@ public class SingularityMailer implements Managed {
     this.smtpSender = smtpSender;
     this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
     this.configuration = configuration;
-    this.uiHostnameAndPath = configuration.getUiConfiguration().getBaseUrl();
     this.taskManager = taskManager;
     this.metadataManager = metadataManager;
     this.exceptionNotifier = exceptionNotifier;
     this.adminJoiner = Joiner.on(", ").skipNulls();
 
-    this.mailTemplateHelpers = new MailTemplateHelpers(this.uiHostnameAndPath, sandboxManager, this.maybeSmtpConfiguration);
+    this.mailTemplateHelpers = mailTemplateHelpers;
 
     this.requestModifiedTemplate = requestModifiedTemplate;
     this.taskTemplate = taskTemplate;

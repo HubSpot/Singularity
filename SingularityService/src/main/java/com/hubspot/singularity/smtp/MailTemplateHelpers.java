@@ -3,6 +3,8 @@ package com.hubspot.singularity.smtp;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -11,6 +13,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.EmailConfigurationEnums;
 import com.hubspot.singularity.config.SMTPConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -25,6 +28,7 @@ import java.util.Map;
  * Helpers that get passed to the Jade renderer. These helpers manipulate information given to the
  * Jade context into different formats.
  */
+@Singleton
 public class MailTemplateHelpers {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
 
@@ -41,13 +45,14 @@ public class MailTemplateHelpers {
   /**
    * Used to generate links, if no String is present, helpers will return empty Strings.
    */
-  private final Optional<String> uiHostnameAndPath;
-  private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
+  private final Optional<String> uiBaseUrl;
+  private final Optional<SMTPConfiguration> smtpConfiguration;
 
-  public MailTemplateHelpers(Optional<String> uiHostnameAndPath, SandboxManager sandboxManager, Optional<SMTPConfiguration> maybeSmtpConfiguration) {
-    this.uiHostnameAndPath = uiHostnameAndPath;
+  @Inject
+  public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
+    this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
-    this.maybeSmtpConfiguration = maybeSmtpConfiguration;
+    this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
   }
 
   /**
@@ -78,7 +83,7 @@ public class MailTemplateHelpers {
    * @return Jade interpretable List of Maps.
    */
   public List<Map<String, String>> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
-    List<String> taskEmailTailFiles = maybeSmtpConfiguration.get().getTaskEmailTailFiles();
+    List<String> taskEmailTailFiles = smtpConfiguration.get().getTaskEmailTailFiles();
     List<Map<String, String>> logTails = Lists.newArrayListWithCapacity(taskEmailTailFiles.size());
 
     for (String filepath : taskEmailTailFiles) {
@@ -115,7 +120,7 @@ public class MailTemplateHelpers {
 
     final String fullPath = String.format("%s/%s", directory.get(), filename);
 
-    final Long logLength = (long)maybeSmtpConfiguration.get().getTaskLogLength();
+    final Long logLength = (long) smtpConfiguration.get().getTaskLogLength();
 
     final Optional<MesosFileChunkObject> logChunkObject;
 
@@ -149,11 +154,11 @@ public class MailTemplateHelpers {
    * @return link.
    */
   public String getSingularityTaskLink(String taskId) {
-    if (!uiHostnameAndPath.isPresent()) {
+    if (!uiBaseUrl.isPresent()) {
       return "";
     }
 
-    return String.format(TASK_LINK_FORMAT, uiHostnameAndPath.get(), taskId);
+    return String.format(TASK_LINK_FORMAT, uiBaseUrl.get(), taskId);
   }
 
   /**
@@ -162,11 +167,11 @@ public class MailTemplateHelpers {
    * @return link.
    */
   public String getSingularityRequestLink(String requestId) {
-    if (!uiHostnameAndPath.isPresent()) {
+    if (!uiBaseUrl.isPresent()) {
       return "";
     }
 
-    return String.format(REQUEST_LINK_FORMAT, uiHostnameAndPath.get(), requestId);
+    return String.format(REQUEST_LINK_FORMAT, uiBaseUrl.get(), requestId);
   }
 
   /**
@@ -176,11 +181,11 @@ public class MailTemplateHelpers {
    * @return link.
    */
   public String getSingularityLogLink(String logPath, String taskId) {
-    if (!uiHostnameAndPath.isPresent()) {
+    if (!uiBaseUrl.isPresent()) {
       return "";
     }
 
-    return String.format(LOG_LINK_FORMAT, uiHostnameAndPath.get(), taskId, logPath);
+    return String.format(LOG_LINK_FORMAT, uiBaseUrl.get(), taskId, logPath);
   }
 
   /**
