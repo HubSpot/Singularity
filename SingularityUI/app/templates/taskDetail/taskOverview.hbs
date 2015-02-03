@@ -1,5 +1,7 @@
 {{#if data.decommissioning}}
-    <div class="alert alert-warning" role="alert">This task is running on a decommissioning host and will be replaced soon</div>
+    {{#if data.isStillRunning}}
+        <div class="alert alert-warning" role="alert">This task is running on a decommissioning host and will be replaced soon</div>
+    {{/if}}
 {{/if}}
 {{! Part of taskBase }}
 <header class='detail-header'>
