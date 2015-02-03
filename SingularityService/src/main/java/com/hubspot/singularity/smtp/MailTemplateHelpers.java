@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -85,7 +86,7 @@ public class MailTemplateHelpers {
     // No configuration for SMTP, what did you do to execute this?
     if (!smtpConfiguration.isPresent()) {
       LOG.warn("Tried to getTaskLogs for sending email without SMTP configuration set.");
-      return Lists.newArrayListWithCapacity(0);
+      return Collections.emptyList();
     }
 
     List<String> taskEmailTailFiles = smtpConfiguration.get().getTaskEmailTailFiles();
