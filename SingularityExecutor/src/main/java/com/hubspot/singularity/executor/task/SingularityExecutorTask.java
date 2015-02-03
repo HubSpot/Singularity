@@ -113,7 +113,6 @@ public class SingularityExecutorTask {
     return threadCountAtOverage.get();
   }
 
-
   public void markDestroyed() {
     this.destroyed.set(true);
   }
