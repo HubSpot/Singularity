@@ -3,7 +3,11 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
-import com.hubspot.singularity.smtp.*;
+import com.hubspot.singularity.smtp.JadeTemplateLoader;
+import com.hubspot.singularity.smtp.MailTemplateHelpers;
+import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
+import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
