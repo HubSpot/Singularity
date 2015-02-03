@@ -1,4 +1,4 @@
-{{#if data.task.mesosTask.executor.command.environment.variables}}
+{{#if data.environment}}
     <div class="page-header">
         <h2>
             Environment variables
@@ -13,11 +13,11 @@
     </div>
     <div class="row {{#unless expanded}}hide{{/unless}}">
         <ul class="list-unstyled horizontal-description-list">
-            {{#each data.task.mesosTask.executor.command.environment.variables}}
+            {{#each data.environment}}
                 <li class="col-md-4">
                     <div>
-                        <h4>{{ name }}</h4>
-                        <p>{{ value }}</p>
+                        <h4>{{ @key }}</h4>
+                        <p>{{ this }}</p>
                     </div>
                 </li>
             {{/each}}
