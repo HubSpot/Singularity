@@ -57,6 +57,7 @@ public class MailTemplateHelpers {
 
   /**
    * Format taskHistory information into a Map for Jade to generate a table from.
+   *
    * @param taskHistory task history information.
    * @return map for Jade to pull "date", "update", and "message" information from.
    */
@@ -65,7 +66,7 @@ public class MailTemplateHelpers {
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
-          ImmutableMap.<String, String> builder()
+          ImmutableMap.<String, String>builder()
               .put("date", DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN))
               .put("update", WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()))
               .put("message", taskUpdate.getStatusMessage().or(""))
@@ -76,27 +77,27 @@ public class MailTemplateHelpers {
   }
 
   /**
-   * Format task logs into a List of Maps for Jade to interpret easily.
-   * @param taskId task to get logs from.
-   * @param task task object to get logs from.
+   * Format task logs into a List of SingularityMailTaskLog for Jade to interpret easily.
+   *
+   * @param taskId    task to get logs from.
+   * @param task      task object to get logs from.
    * @param directory directory to read log from.
-   * @return Jade interpretable List of Maps.
+   * @return Jade interpretable List of SingularityMailTaskLog.
    */
-  public List<Map<String, String>> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
+  public List<SingularityMailTaskLog> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
     List<String> taskEmailTailFiles = smtpConfiguration.get().getTaskEmailTailFiles();
-    List<Map<String, String>> logTails = Lists.newArrayListWithCapacity(taskEmailTailFiles.size());
+    List<SingularityMailTaskLog> logTails = Lists.newArrayListWithCapacity(taskEmailTailFiles.size());
 
-    for (String filepath : taskEmailTailFiles) {
+    for (String filePath : taskEmailTailFiles) {
       // To enable support for tailing the service.log file, replace instances of $MESOS_TASK_ID.
-      filepath = filepath.replaceAll("\\$MESOS_TASK_ID", MesosUtils.getSafeTaskIdForDirectory(taskId.getId()));
+      filePath = filePath.replaceAll("\\$MESOS_TASK_ID", MesosUtils.getSafeTaskIdForDirectory(taskId.getId()));
 
       logTails.add(
-          ImmutableMap.<String, String>builder()
-              .put("path", filepath)
-              .put("file", getFileName(filepath))
-              .put("link", getSingularityLogLink(filepath, taskId.getId()))
-              .put("log", getTaskLogFile(taskId, filepath, task, directory).or(""))
-              .build());
+          new SingularityMailTaskLog(
+              filePath,
+              getFileName(filePath),
+              getSingularityLogLink(filePath, taskId.getId()),
+              getTaskLogFile(taskId, filePath, task, directory).or("")));
     }
 
     return logTails;
@@ -104,9 +105,10 @@ public class MailTemplateHelpers {
 
   /**
    * Get a log file from a remote mesos slave.
-   * @param taskId id of the task.
-   * @param filename log file name.
-   * @param task required for method to retrieve task logs properly.
+   *
+   * @param taskId    id of the task.
+   * @param filename  log file name.
+   * @param task      required for method to retrieve task logs properly.
    * @param directory directory to read log from.
    * @return string of the log file.
    */
@@ -141,6 +143,7 @@ public class MailTemplateHelpers {
 
   /**
    * Get the file name from the file path.
+   *
    * @param path file path string.
    */
   public String getFileName(String path) {
@@ -150,6 +153,7 @@ public class MailTemplateHelpers {
 
   /**
    * Get a working link to the SingularityUI page for the given taskId.
+   *
    * @param taskId which task to link to.
    * @return link.
    */
@@ -163,6 +167,7 @@ public class MailTemplateHelpers {
 
   /**
    * Get a working link to the SingularityUI page for the given requestId.
+   *
    * @param requestId which request to go to.
    * @return link.
    */
@@ -176,8 +181,9 @@ public class MailTemplateHelpers {
 
   /**
    * Get a working link to the SingularityUI task log tail page.
+   *
    * @param logPath path of the log file.
-   * @param taskId under which task should this look to find the log file.
+   * @param taskId  under which task should this look to find the log file.
    * @return link.
    */
   public String getSingularityLogLink(String logPath, String taskId) {
@@ -190,9 +196,10 @@ public class MailTemplateHelpers {
 
   /**
    * Get a subject line for the task email based on the task history.
-   * @param taskId SingularityTaskId.
-   * @param state detailed task state information.
-   * @param type email purpose.
+   *
+   * @param taskId  SingularityTaskId.
+   * @param state   detailed task state information.
+   * @param type    email purpose.
    * @param history task history.
    * @return subject line string.
    */
@@ -210,6 +217,7 @@ public class MailTemplateHelpers {
 
   /**
    * From a task's history, determine if it ran.
+   *
    * @param history task history.
    * @return whether the task ran.
    */
