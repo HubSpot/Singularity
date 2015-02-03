@@ -66,7 +66,7 @@ public class SingularityExecutorArtifactFetcher {
 
     public void cancel() {
       artifactManager.markKilled();
-      artifactManager.destroyProcessIfActive();
+      artifactManager.signalKillToProcessIfActive();
     }
 
     public void fetchFiles() {

@@ -27,7 +27,8 @@ public class SingularityExecutorTask {
   private final AtomicBoolean killed;
   private final AtomicInteger threadCountAtOverage;
   private final AtomicBoolean killedAfterThreadOverage;
-  private final AtomicBoolean destroyed;
+  private final AtomicBoolean destroyedAfterWaiting;
+  private final AtomicBoolean forceDestroyed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
   private final SingularityExecutorTaskCleanup taskCleanup;
@@ -41,7 +42,8 @@ public class SingularityExecutorTask {
 
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
-    this.destroyed = new AtomicBoolean(false);
+    this.destroyedAfterWaiting = new AtomicBoolean(false);
+    this.forceDestroyed = new AtomicBoolean(false);
     this.killedAfterThreadOverage = new AtomicBoolean(false);
     this.threadCountAtOverage = new AtomicInteger(0);
 
@@ -88,8 +90,12 @@ public class SingularityExecutorTask {
     return processBuilder;
   }
 
-  public boolean wasDestroyed() {
-    return destroyed.get();
+  public boolean wasForceDestroyed() {
+    return forceDestroyed.get();
+  }
+
+  public boolean wasDestroyedAfterWaiting() {
+    return destroyedAfterWaiting.get();
   }
 
   public boolean wasKilled() {
@@ -113,8 +119,12 @@ public class SingularityExecutorTask {
     return threadCountAtOverage.get();
   }
 
-  public void markDestroyed() {
-    this.destroyed.set(true);
+  public void markForceDestroyed() {
+    this.forceDestroyed.set(true);
+  }
+
+  public void markDestroyedAfterWaiting() {
+    this.destroyedAfterWaiting.set(true);
   }
 
   public ExecutorDriver getDriver() {

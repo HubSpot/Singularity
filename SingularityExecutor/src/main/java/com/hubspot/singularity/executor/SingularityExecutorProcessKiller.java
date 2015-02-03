@@ -30,16 +30,14 @@ public class SingularityExecutorProcessKiller {
   }
 
   public void submitKillRequest(final SingularityExecutorTaskProcessCallable processCallable) {
-    processCallable.getTask().getTaskId();
-
-    // make it so that the task can not make progress
-    processCallable.markKilled();
-    processCallable.signalProcessIfActive();
+    processCallable.markKilled();  // makes it so that the task can not start
+    processCallable.signalTermToProcessIfActive();
 
     destroyFutures.put(processCallable.getTask().getTaskId(), scheduledExecutorService.schedule(new Runnable() {
       @Override
       public void run() {
-        submitDestroyRequest(processCallable);
+        processCallable.getTask().markDestroyedAfterWaiting();
+        processCallable.signalKillToProcessIfActive();
       }
     }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS));
   }
@@ -50,11 +48,6 @@ public class SingularityExecutorProcessKiller {
     if (future != null) {
       future.cancel(false);
     }
-  }
-
-  public void submitDestroyRequest(final SingularityExecutorTaskProcessCallable processCallable) {
-    processCallable.getTask().markDestroyed();
-    processCallable.destroyProcessIfActive();
   }
 
   public ExecutorService getExecutorService() {

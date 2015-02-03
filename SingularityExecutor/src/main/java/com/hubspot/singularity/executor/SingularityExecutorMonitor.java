@@ -383,7 +383,8 @@ public class SingularityExecutorMonitor {
 
     if (runningProcess != null) {
       if (wasKilled) {
-        processKiller.submitDestroyRequest(runningProcess);
+        task.markForceDestroyed();
+        runningProcess.signalKillToProcessIfActive();
         return KillState.DESTROYING_PROCESS;
       } else {
         processKiller.submitKillRequest(runningProcess);
@@ -424,12 +425,14 @@ public class SingularityExecutorMonitor {
         } else if (task.wasKilled()) {
           taskState = TaskState.TASK_KILLED;
 
-          if (!task.wasDestroyed()) {
-            message = "Task killed. Process exited gracefully with code " + exitCode;
-          } else {
+          if (task.wasDestroyedAfterWaiting()) {
             final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis());
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
+          } else if (task.wasForceDestroyed()) {
+            message = "Task killed forcibly after multiple kill requests from framework";
+          } else {
+            message = "Task killed. Process exited gracefully with code " + exitCode;
           }
         } else if (task.isSuccessExitCode(exitCode)) {
           taskState = TaskState.TASK_FINISHED;

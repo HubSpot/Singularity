@@ -19,7 +19,7 @@ public abstract class SafeProcessManager {
   private final Lock processLock;
 
   // unnecessary code here : we shouldn't really subclass this when all we need is the following
-  // (1) artifact manager needs to kill an ensure it doesn't start something
+  // (1) artifact manager needs to kill to ensure it doesn't start something after killing.
   // (2) process lock is unnecessary since we don't need to run multiple processes except in artifact manager
   // (3) we could probably hand off these process variables to make them final in some other object.
 
@@ -135,7 +135,7 @@ public abstract class SafeProcessManager {
     return String.format("%s - (pid: %s)", currentProcessCmd.or("<none>"), currentProcessPid.or(0));
   }
 
-  public void signalProcessIfActive() {
+  public void signalTermToProcessIfActive() {
     this.processLock.lock();
 
     try {
@@ -147,7 +147,7 @@ public abstract class SafeProcessManager {
     }
   }
 
-  public void destroyProcessIfActive() {
+  public void signalKillToProcessIfActive() {
     this.processLock.lock();
 
     try {
