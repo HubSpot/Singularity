@@ -61,4 +61,6 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 - [Third-party load balancer API design requirements](Docs/development/lbs.md)
 - [Publishing releases (for committers)](Docs/development/maven.md)
 
- 
+----------
+
+Singularity is built and used by a number of different companies. Check out the list of adopters [here](Docs/adopters.md). 

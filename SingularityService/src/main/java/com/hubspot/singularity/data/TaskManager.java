@@ -44,6 +44,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -82,11 +83,11 @@ public class TaskManager extends CuratorAsyncManager {
 
   private final Function<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTaskFunction;
 
-  private final WebhookManager webhookManager;
+  private final SingularityEventListener singularityEventListener;
   private final String serverId;
 
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, WebhookManager webhookManager, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
+  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
       IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder,
@@ -102,7 +103,7 @@ public class TaskManager extends CuratorAsyncManager {
     this.taskIdTranscoder = taskIdTranscoder;
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
     this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
-    this.webhookManager = webhookManager;
+    this.singularityEventListener = singularityEventListener;
 
     this.serverId = serverId;
 
@@ -357,7 +358,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    webhookManager.enqueueTaskUpdate(taskHistoryUpdate);
+    singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
     return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
   }

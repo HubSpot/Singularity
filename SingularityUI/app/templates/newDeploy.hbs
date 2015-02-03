@@ -120,15 +120,34 @@
                 </div>
             </fieldset>
         </div>
-          
-        <fieldset id="container-expandable" class='expandable hide'>
-            <div class="form-group required">
-              <label for="docker">Docker image</label>
-              <input type="text" id="docker" class="form-control" placeholder="eg: registry.hub.docker.com/centos/centos6:latest">
+
+        <div id="container-expandable" class="expandable hide">
+            <fieldset>
+                <div class="form-group required">
+                  <label for="docker">Docker image</label>
+                  <input type="text" id="docker" class="form-control" placeholder="eg: registry.hub.docker.com/centos/centos6:latest">
+
+                  <label for="dockernetwork">Docker Network</label>
+                  <select id="dockernetwork" class="form-control">
+                    <option value="NONE">None</option>
+                    <option value="BRIDGE">Bridge</option>
+                    <option value="HOST">Host</option>
+                  </select>
+                </div>
+            </fieldset>
+
+            <div id="docker-port-mappings"></div>
+
+            <div id="docker-port-button-row" class="row">
+                <div class="col-sm-6">
+                    <button class="btn btn-success btn-block">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Docker Port Mapping
+                    </button>
+                </div>
             </div>
-        
-        </fieldset>
-        
+        </div>
+
         {{#if model.request.loadBalanced}}
             <div class="form-group required">
                 <label for="service-base-path">Service base path</label>
