@@ -16,6 +16,9 @@ class TaskHistory extends Model
         taskHistory.environment = {}
         if taskHistory.task?.mesosTask?.command?.environment?.variables?
             taskHistory.environment[name] = value for {name, value} in taskHistory.task.mesosTask.command.environment.variables
+        # If using a custom executor, mesos puts everything under .executor
+        if taskHistory.task?.mesosTask?.executor?.command?.environment?.variables?
+            taskHistory.environment[name] = value for {name, value} in taskHistory.task.mesosTask.executor.command.environment.variables
 
         ports = []
         
