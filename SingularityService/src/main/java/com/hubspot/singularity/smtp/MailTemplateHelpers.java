@@ -1,7 +1,6 @@
 package com.hubspot.singularity.smtp;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Helpers that get passed to the Jade renderer. These helpers manipulate information given to the
@@ -84,6 +82,10 @@ public class MailTemplateHelpers {
    * @return Jade interpretable List of SingularityMailTaskLog.
    */
   public List<SingularityMailTaskLog> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
+    // No configuration for SMTP, what did you do to execute this?
+    if (!smtpConfiguration.isPresent())
+      return Lists.newArrayListWithCapacity(0);
+
     List<String> taskEmailTailFiles = smtpConfiguration.get().getTaskEmailTailFiles();
     List<SingularityMailTaskLog> logTails = Lists.newArrayListWithCapacity(taskEmailTailFiles.size());
 
@@ -93,10 +95,10 @@ public class MailTemplateHelpers {
 
       logTails.add(
           new SingularityMailTaskLog(
-              filePath,
-              getFileName(filePath),
-              getSingularityLogLink(filePath, taskId.getId()),
-              getTaskLogFile(taskId, filePath, task, directory).or("")));
+              filePath, // path
+              getFileName(filePath), // file
+              getSingularityLogLink(filePath, taskId.getId()), // link
+              getTaskLogFile(taskId, filePath, task, directory).or(""))); // log
     }
 
     return logTails;
