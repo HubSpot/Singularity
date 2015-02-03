@@ -83,8 +83,10 @@ public class MailTemplateHelpers {
    */
   public List<SingularityMailTaskLog> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
     // No configuration for SMTP, what did you do to execute this?
-    if (!smtpConfiguration.isPresent())
+    if (!smtpConfiguration.isPresent()) {
+      LOG.warn("Tried to getTaskLogs for sending email without SMTP configuration set.");
       return Lists.newArrayListWithCapacity(0);
+    }
 
     List<String> taskEmailTailFiles = smtpConfiguration.get().getTaskEmailTailFiles();
     List<SingularityMailTaskLog> logTails = Lists.newArrayListWithCapacity(taskEmailTailFiles.size());
@@ -114,6 +116,10 @@ public class MailTemplateHelpers {
    * @return string of the log file.
    */
   private Optional<String> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {
+    if (!smtpConfiguration.isPresent()) {
+      LOG.warn("Tried to get a task log file without SMTP configuration set up.");
+      return Optional.absent();
+    }
     if (!task.isPresent() || !directory.isPresent()) {
       LOG.warn("Couldn't retrieve {} for {} because task ({}) or directory ({}) wasn't present", filename, taskId, task.isPresent(), directory.isPresent());
       return Optional.absent();
