@@ -61,16 +61,15 @@ public class MailTemplateHelpers {
    * @param taskHistory task history information.
    * @return map for Jade to pull "date", "update", and "message" information from.
    */
-  public List<Map<String, String>> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
-    List<Map<String, String>> output = Lists.newArrayListWithCapacity(taskHistory.size());
+  public List<SingularityMailTaskHistoryUpdate> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
+    List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
-          ImmutableMap.<String, String>builder()
-              .put("date", DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN))
-              .put("update", WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()))
-              .put("message", taskUpdate.getStatusMessage().or(""))
-              .build());
+          new SingularityMailTaskHistoryUpdate(
+              DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN), // date
+              WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()), // update
+              taskUpdate.getStatusMessage().or(""))); // message
     }
 
     return output;
