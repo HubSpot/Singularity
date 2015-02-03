@@ -28,6 +28,6 @@ public class StaticCatchallResource {
   @GET
   @Produces(MediaType.TEXT_HTML)
   public IndexView getIndex() {
-    return new IndexView(singularityUriBase, "/", configuration);
+    return new IndexView(singularityUriBase, "", configuration);
   }
 }
