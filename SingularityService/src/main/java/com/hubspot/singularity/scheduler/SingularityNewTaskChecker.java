@@ -213,7 +213,8 @@ public class SingularityNewTaskChecker implements Managed {
     switch (state) {
       case CHECK_IF_OVERDUE:
         if (isOverdue(task)) {
-          taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId(),
+              Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(killAfterUnhealthyMillis)))));
         } else {
           reEnqueueCheck(task);
         }
@@ -222,7 +223,8 @@ public class SingularityNewTaskChecker implements Managed {
         reEnqueueCheck(task);
         break;
       case UNHEALTHY_KILL_TASK:
-        taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId()));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId(),
+            Optional.of("Task is not healthy")));
         break;
       case HEALTHY:
       case OBSOLETE:

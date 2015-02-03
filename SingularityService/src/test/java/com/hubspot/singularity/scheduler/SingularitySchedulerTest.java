@@ -26,6 +26,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -966,7 +967,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDECOMMissioning() {
+  public void testDecommissioning() {
     initRequest();
     initFirstDeploy();
 
@@ -1083,7 +1084,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testEmptyDECOMMissioning() {
+  public void testEmptyDecommissioning() {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
@@ -1094,5 +1095,48 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
   }
 
+  @Test
+  public void testJobRescheduledWhenItFinishesDuringDecommission() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    resourceOffers();
+
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1"));
+
+    cleaner.drainCleanupQueue();
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    statusUpdate(task, TaskState.TASK_FINISHED);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testScaleDownTakesHighestInstances() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(5)));
+
+    resourceOffers();
+
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    requestResource.updateInstances(requestId, Optional.of("user1"), new SingularityRequestInstances(requestId, Optional.of(2)));
+
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(3, taskManager.getKilledTaskIdRecords().size());
+
+    for (SingularityKilledTaskIdRecord taskId : taskManager.getKilledTaskIdRecords()) {
+      Assert.assertTrue(taskId.getTaskId().getInstanceNo() > 2);
+    }
+
+  }
 
 }

@@ -12,27 +12,27 @@ pip install singularity-logfetch
 - Configuration can either be read from a file, or from command line arguments.
 - An example configuration files lives in this directory at .logfetch.example
 - Any arguments specified in the log file can be overriden on the command line
-- You can store a number of configuration files for different clusters in the config directory (~/.logfetch by default) and choose which config to use with the -c option
+- You can store a number of configuration files for different clusters in the config directory (`~/.logfetch` by default) and choose which config to use with the -c option
 
 ##Options
-|Flags|Descrption|Default|
+|Flags|Description|Default|
 |:---:|:---------|:-----:|
-|-f , --conf_folder|Folder to look for configuration files|~/.logfetch|
+|-f , --conf_folder|Folder to look for configuration files|`~/.logfetch`|
 |-c , --conf_file|configuration file to use(path relative to conf_folder)|default|
 |-t , --taskId|TaskId to fetch logs for|
-|-r , --requestId|REquestId to fetch logs for|
+|-r , --requestId|RequestId to fetch logs for|
 |--task-count|Number of recent tasks (belonging to a request) to fetch live logs (on machine not s3)|1|
 |-d , --deployId|DeployId to fetch logs for (Must also specify requestId when using this option)|
-|--dest|Destination folder for downloaded log files|~/.logfetch_cache|
+|--dest|Destination folder for downloaded log files|`~/.logfetch_cache`|
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk_size|Chunk size for writing responses to file system|8192
-|-u, --singularity-uri-base|Base url for singularity (ie localhost:8080/singularity/v2/api), This MUST be set|
+|-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`), This MUST be set|
 |-s , --start-days|Search for logs no older than this many days|7
 |-e , --end-days|Search for logs no newer than this many days| None (today)
 |-g, --grep|Grep string for searching log files|
 
 ##Grep and Log Files
-When the -g option is set, the log fetcher will grep the downloaded files for the provided regex.
+When the `-g` option is set, the log fetcher will grep the downloaded files for the provided regex.
 
 - you can pass in a full grep command (including options) to run or just the grep regex
 - the default command will just be `grep (your regex)` if a full grep command is not supplied
@@ -40,11 +40,11 @@ When the -g option is set, the log fetcher will grep the downloaded files for th
 ##Example Usage
 - Specify a configuration file AND folder to use
 
-`logfetch -r ‘My_Jobs_Id’ -c somefile -f ~/.somefolder` (uses ~/.somefolder/somefile as config file)
+`logfetch -r 'My_Jobs_Id' -c somefile -f ~/.somefolder` (uses ~/.somefolder/somefile as config file)
 
 - Specify a configuration file in the default directory
 
-`logfetch -r ‘My_Jobs_Id’ -c somefile` (uses ~/.logfetch/somefile as config file)
+`logfetch -r 'My_Jobs_Id' -c somefile` (uses ~/.logfetch/somefile as config file)
 
 - Search logs for a request
 
@@ -67,12 +67,12 @@ When the -g option is set, the log fetcher will grep the downloaded files for th
 `logfetch -r 'My_Jobs_Id'`
 
 ##Tailing Logs
-You can tail live log files byusing logtail. Just provude the request, task, or request and deploy along with a log file path.
+You can tail live log files using `logtail`. Just provide the request, task, or request and deploy along with a log file path.
 
-For example, to tail the service.log file for all tasks for a request named MyRequest, you would use the command:
+For example, to tail the `service.log` file for all tasks for a request named `MyRequest`, you would use the command:
 
-`logtail -r ‘MyRequest’ -l ‘service.log’`
+`logtail -r 'MyRequest' -l 'service.log'`
 
-- The path for the log file is relative to the base path for that task’s sandbox. ie. to tail a file in (sandbox path)/logs/access.log, the argument to -l would be ‘logs/access.log’
+- The path for the log file is relative to the base path for that task's sandbox. For example, to tail a file in `(sandbox path)/logs/access.log`, the argument to -l would be `logs/access.log`
 
-You can also provide the -g option which will provide the grep string to the singularity api and search the results. You cannot provide a full grep command as in some of the above examples, just a string to match on
+You can also provide the `-g` option which will provide the grep string to the singularity API and search the results. You cannot provide a full grep command as in some of the above examples, just a string to match on.

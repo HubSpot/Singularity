@@ -247,7 +247,7 @@ public class SingularityCleaner {
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
 
-      taskManager.createCleanupTask(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId, Optional.<String> absent()));
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(), PendingType.BOUNCE));
