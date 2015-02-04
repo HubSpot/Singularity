@@ -154,6 +154,21 @@ class RequestsView extends View
             @focusSearchAfterRender = false
 
         @renderTable()
+        @$('.actions-column a[title]').tooltip()
+        @$('.schedule-header span#schedule').popover({
+            animation: false,
+            placement : 'auto',
+            trigger: 'hover',
+            delay: {hide: 400},
+            container: 'span#schedule',
+            html: true,
+            content: "<p>All schedules are in <a data-action='show-quartz'>quartz format</a> unless otherwise specified.</p>",
+            template: '<div class="popover table-header-popover" role="tooltip"><div class="popover-content"></div></div>'
+        }).on
+            show: (e) ->
+                @showPopover(e)
+            hide: (e) ->
+                @hidePopover(e)
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -189,7 +204,7 @@ class RequestsView extends View
             requests:          requests
             rowsOnly:          true
             requestsSubFilter: @subFilter
-        
+
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
 
@@ -202,22 +217,6 @@ class RequestsView extends View
             utils.fixTableColumns $table
         else
             $tableBody.append $contents
-
-        @$('.actions-column a[title]').tooltip()
-        @$('.schedule-header span#schedule').popover({
-            animation: false,
-            placement : 'auto',
-            trigger: 'hover',
-            delay: {hide: 400},
-            container: 'span#schedule',
-            html: true,
-            content: "<p>All schedules are in <a data-action='show-quartz'>quartz format</a> unless otherwise specified.</p>",
-            template: '<div class="popover table-header-popover" role="tooltip"><div class="popover-content"></div></div>'
-        }).on
-            show: (e) ->
-                @showPopover(e)
-            hide: (e) ->
-                @hidePopover(e)
 
     hidePopover: (e) ->
         $this = $(this)
@@ -372,5 +371,6 @@ class RequestsView extends View
     showQuartz: (event) =>
         vex.dialog.alert
             message: @quartzTemplate
+        event.stopPropogation()
 
 module.exports = RequestsView
