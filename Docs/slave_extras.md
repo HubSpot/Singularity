@@ -79,7 +79,7 @@ executor.use.local.download.service=true
 ```bash
 #!/bin/bash
 
-exec java -jar path/to/SingularityExecutor-*-shaded.jar
+exec java -Djava.library.path=/usr/local/lib -jar path/to/SingularityExecutor-*-shaded.jar
 ```
 
 ### 3. Install SingularityExecutorCleanup (optional)
