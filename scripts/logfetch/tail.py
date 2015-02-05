@@ -12,7 +12,7 @@ THREAD_TIMEOUT = 100000
 def start_tail(args):
   if args.requestId:
     sys.stderr.write('Fetching tasks\n')
-    tasks = [str(t) for t in logfetch_base.tasks_for_request(args)]
+    tasks = [str(t) for t in logfetch_base.tasks_for_requests(args)]
   else:
     tasks = [args.taskId]
   if args.verbose:
@@ -74,5 +74,6 @@ class LogStreamer(threading.Thread):
       params['grep'] = args.grep
     response = requests.get(uri, params=params).json()
     prefix = '({0}) =>'.format(task) if args.verbose else ''
-    sys.stdout.write('{0}{1}\n'.format(colored(prefix, 'blue'), response['data']))
+    if response['data'] != '':
+        sys.stdout.write('{0}{1}'.format(colored(prefix, 'blue'), response['data']))
     return offset + len(response['data'].encode('utf-8'))

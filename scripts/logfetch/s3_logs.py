@@ -10,13 +10,11 @@ from singularity_request import get_json_response
 from callbacks import generate_callback
 
 TASK_FORMAT = '/task/{0}'
-DEPLOY_FORMAT = '/request/{0}/deploy/{1}'
-REQUEST_FORMAT = '/request/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
 
 def download_s3_logs(args):
   sys.stderr.write(colored('Checking for S3 log files', 'blue') + '\n')
-  logs = get_json_response(singularity_s3logs_uri(args))
+  logs = logs_for_all_requests(args)
   async_requests = []
   all_logs = []
   for log_file in logs:
@@ -37,6 +35,16 @@ def download_s3_logs(args):
   sys.stderr.write(colored('All S3 logs up to date', 'blue') + '\n')
   return all_logs
 
+def logs_for_all_requests(args):
+  if args.taskId:
+    return get_json_response(singularity_s3logs_uri(args, args.taskId))
+  else:
+    tasks = logfetch_base.tasks_for_requests(args)
+    logs = []
+    for task in tasks:
+      logs = logs + get_json_response(singularity_s3logs_uri(args, task))
+    return logs
+
 def in_date_range(args, filename):
   timedelta = datetime.utcnow() - time_from_filename(filename)
   if args.end_days:
@@ -55,16 +63,8 @@ def time_from_filename(filename):
   return datetime.utcfromtimestamp(int(time_string[0:-3]))
 
 
-def singularity_s3logs_uri(args):
-  if args.taskId:
-    singularity_path = TASK_FORMAT.format(args.taskId)
-  elif args.deployId and args.requestId:
-    singularity_path = DEPLOY_FORMAT.format(args.requestId, args.deployId)
-  elif args.requestId:
-    singularity_path = REQUEST_FORMAT.format(args.requestId)
-  else:
-    exit("Specify one of taskId, requestId and deployId, or requestId")
+def singularity_s3logs_uri(args, idString):
+  singularity_path = TASK_FORMAT.format(idString)
   singularity_uri = S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), singularity_path)
-
   return singularity_uri
 

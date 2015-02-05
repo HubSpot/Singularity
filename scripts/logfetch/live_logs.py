@@ -24,31 +24,34 @@ def download_live_logs(args):
     uri = DOWNLOAD_FILE_FORMAT.format(metadata['slaveHostname'])
     service_log = '{0}-service.log'.format(task)
     tail_log = '{0}-tail_of_finished_service.log'.format(task)
-    async_requests.append(
-      grequests.AsyncRequest('GET',uri ,
-        callback=generate_callback(uri, args.dest, service_log, args.chunk_size),
-        params={'path' : '{0}/{1}/service.log'.format(metadata['fullPathToRoot'], metadata['currentDirectory'])}
-      )
-    )
-    all_logs.append('{0}/{1}'.format(args.dest, service_log))
-    async_requests.append(
-      grequests.AsyncRequest('GET',uri ,
-        callback=generate_callback(uri, args.dest, tail_log, args.chunk_size),
-        params={'path' : '{0}/{1}/tail_of_finished_service.log'.format(metadata['fullPathToRoot'], metadata['currentDirectory'])}
-      )
-    )
-    all_logs.append('{0}/{1}'.format(args.dest, service_log))
-    for log_file in logs_folder_files(args, task):
-      logfile_name = '{0}-{1}'.format(task, log_file)
+    if (args.logtype and logfetch_base.log_matches(service_log, args.logtype)) or not args.logtype:
       async_requests.append(
         grequests.AsyncRequest('GET',uri ,
-          callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
-          params={'path' : '{0}/{1}/logs/{1}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+          callback=generate_callback(uri, args.dest, service_log, args.chunk_size),
+          params={'path' : '{0}/{1}/service.log'.format(metadata['fullPathToRoot'], metadata['currentDirectory'])}
         )
       )
-      if logfile_name.endswith('.gz'):
-        zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
-      all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
+      all_logs.append('{0}/{1}'.format(args.dest, service_log))
+    if (args.logtype and logfetch_base.log_matches(tail_log, args.logtype)) or not args.logtype:
+      async_requests.append(
+        grequests.AsyncRequest('GET',uri ,
+          callback=generate_callback(uri, args.dest, tail_log, args.chunk_size),
+          params={'path' : '{0}/{1}/tail_of_finished_service.log'.format(metadata['fullPathToRoot'], metadata['currentDirectory'])}
+        )
+      )
+      all_logs.append('{0}/{1}'.format(args.dest, tail_log))
+    for log_file in logs_folder_files(args, task):
+      logfile_name = '{0}-{1}'.format(task, log_file)
+      if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
+        async_requests.append(
+          grequests.AsyncRequest('GET',uri ,
+            callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
+            params={'path' : '{0}/{1}/logs/{1}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+          )
+        )
+        if logfile_name.endswith('.gz'):
+          zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
+        all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
 
   grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   logfetch_base.unpack_logs(zipped_files)
@@ -58,7 +61,7 @@ def tasks_to_check(args):
   if args.taskId:
     return [args.taskId]
   else:
-    return logfetch_base.tasks_for_request(args)
+    return logfetch_base.tasks_for_requests(args)
 
 def files_json(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
