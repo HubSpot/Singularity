@@ -16,7 +16,7 @@
             <div>
                 <h4>Memory (rss vs limit)</h4>
                 <div class="progress text-center">
-                  <div class="progress-bar progress-bar-success progress-bar-striped text-center" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{percentageOf data.memLimitBytes data.memRssBytes}}%;"></div>
+                  <div class="progress-bar progress-bar-success progress-bar-striped text-center" role="progressbar" style="width: {{percentageOf data.memRssBytes data.memLimitBytes}}%;"></div>
                 </div>
                 {{humanizeFileSize data.memRssBytes}} / {{humanizeFileSize data.memLimitBytes}}
             </div>
