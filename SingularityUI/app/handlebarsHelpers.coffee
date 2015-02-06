@@ -13,6 +13,14 @@ Handlebars.registerHelper 'ifLT', (v1, v2, options) ->
 Handlebars.registerHelper 'ifGT', (v1, v2, options) ->
     if v1 > v2 then options.fn @ else options.inverse @
 
+Handlebars.registerHelper "ifAll", (conditions..., options)->
+    for condition in conditions
+        return options.inverse @ unless condition?
+    options.fn @
+
+Handlebars.registerHelper 'percentageOf', (v1, v2) ->
+    Math.round(v1/v2)
+
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
     if haystack.indexOf(needle) isnt -1
