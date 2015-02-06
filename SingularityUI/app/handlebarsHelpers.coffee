@@ -16,7 +16,7 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
     options.fn @
 
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
-    v1/v2 * 100
+    (v1/v2) * 100
 
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
