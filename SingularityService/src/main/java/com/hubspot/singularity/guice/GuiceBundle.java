@@ -140,6 +140,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     environment.servlets().addFilter("Guice Filter", GuiceFilter.class).addMappingForUrlPatterns(null, false, environment.getApplicationContext().getContextPath() + "*");
   }
 
+  @SuppressWarnings("serial")
   private static <T> void addJerseyBindings(Environment environment, Injector injector, String propertyName, Class<T> clazz) {
     TypeToken<Set<T>> setToken = new TypeToken<Set<T>>() {}.where(new TypeParameter<T>() {}, clazz);
 

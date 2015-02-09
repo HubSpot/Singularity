@@ -14,7 +14,7 @@
                     <h2>My requests</h2>
                 </div>
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <a class="big-number-link" href="{{appRoot}}/requests/active/all/{{ deployUser }}" data-requests-active-filter="all">
                             <div class="well">
                                 <div class="big-number">
@@ -26,38 +26,62 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-3">
-                        <a class="big-number-link" href="{{appRoot}}/requests/active/daemon/{{ deployUser }}" data-requests-active-filter="daemon">
-                            <div class="well">
-                                <div class="big-number">
-                                    <div class="number" data-state-attribute="requests">
-                                        {{ userRequestTotals.daemon }}
-                                    </div>
-                                    <div class="number-label">daemon</div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a class="big-number-link" href="{{appRoot}}/requests/active/ondemand/{{ deployUser }}" data-requests-active-filter="on-demand">
+                    <div class="col-md-2">
+                        <a class="big-number-link" href="{{appRoot}}/requests/active/ON_DEAMAND/{{ deployUser }}" data-requests-active-filter="ON_DEMAND">
                             <div class="well">
                                 <div class="big-number">
                                     <div class="number" data-state-attribute="requests">
                                         {{ userRequestTotals.onDemand }}
                                     </div>
-                                    <div class="number-label">on-demand</div>
+                                    <div class="number-label">On Demand</div>
                                 </div>
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-3">
-                        <a class="big-number-link" href="{{appRoot}}/requests/active/scheduled/{{ deployUser }}" data-requests-active-filter="scheduled">
+                    <div class="col-md-2">
+                        <a class="big-number-link" href="{{appRoot}}/requests/active/WORKER/{{ deployUser }}" data-requests-active-filter="WORKER">
+                            <div class="well">
+                                <div class="big-number">
+                                    <div class="number" data-state-attribute="requests">
+                                        {{ userRequestTotals.worker }}
+                                    </div>
+                                    <div class="number-label">Worker</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a class="big-number-link" href="{{appRoot}}/requests/active/SCHEDULED/{{ deployUser }}" data-requests-active-filter="SCHEDULED">
                             <div class="well">
                                 <div class="big-number">
                                     <div class="number" data-state-attribute="requests">
                                         {{ userRequestTotals.scheduled }}
                                     </div>
-                                    <div class="number-label">scheduled</div>
+                                    <div class="number-label">Scheduled</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a class="big-number-link" href="{{appRoot}}/requests/active/RUN_ONCE/{{ deployUser }}" data-requests-active-filter="RUN_ONCE">
+                            <div class="well">
+                                <div class="big-number">
+                                    <div class="number" data-state-attribute="requests">
+                                        {{ userRequestTotals.runOnce }}
+                                    </div>
+                                    <div class="number-label">Run Once</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a class="big-number-link" href="{{appRoot}}/requests/active/SERVICE/{{ deployUser }}" data-requests-active-filter="SERVICE">
+                            <div class="well">
+                                <div class="big-number">
+                                    <div class="number" data-state-attribute="requests">
+                                        {{ userRequestTotals.service }}
+                                    </div>
+                                    <div class="number-label">Service</div>
                                 </div>
                             </div>
                         </a>

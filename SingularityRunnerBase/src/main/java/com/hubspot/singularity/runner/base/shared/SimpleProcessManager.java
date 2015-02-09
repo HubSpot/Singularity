@@ -57,13 +57,13 @@ public class SimpleProcessManager extends SafeProcessManager {
       }
 
     } catch (InterruptedException ie) {
-      destroyProcessIfActive();
+      signalKillToProcessIfActive();
 
       throw ie;
     } catch (Throwable t) {
       getLog().error("Unexpected exception while running {}", getCurrentProcessToString(), t);
 
-      destroyProcessIfActive();
+      signalKillToProcessIfActive();
 
       throw Throwables.propagate(t);
     } finally {

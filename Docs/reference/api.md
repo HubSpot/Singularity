@@ -3,17 +3,17 @@
 Version: 0.4.2-SNAPSHOT
 
 Endpoints:
-- [`/api/deploys`](#endpoint-0) - Manages Singularity Deploys for existing requests
-- [`/api/history`](#endpoint-1) - Manages historical data for tasks, requests, and deploys.
-- [`/api/logs`](#endpoint-2) - Manages Singularity task logs stored in S3.
-- [`/api/racks`](#endpoint-3) - Manages Singularity racks.
-- [`/api/requests`](#endpoint-4) - Manages Singularity Requests, the parent object for any deployed task
-- [`/api/sandbox`](#endpoint-5) - Provides a proxy to Mesos sandboxes.
-- [`/api/slaves`](#endpoint-6) - Manages Singularity slaves.
-- [`/api/state`](#endpoint-7) - Provides information about the current state of Singularity.
-- [`/api/tasks`](#endpoint-8) - Manages Singularity tasks.
-- [`/api/test`](#endpoint-9) - Misc testing endpoints.
-- [`/api/webhooks`](#endpoint-10) - Manages Singularity webhooks.
+- [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
+- [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
+- [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
+- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
+- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
+- [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
+- [`/api/slaves`](#endpoint-/api/slaves) - Manages Singularity slaves.
+- [`/api/state`](#endpoint-/api/state) - Provides information about the current state of Singularity.
+- [`/api/tasks`](#endpoint-/api/tasks) - Manages Singularity tasks.
+- [`/api/test`](#endpoint-/api/test) - Misc testing endpoints.
+- [`/api/webhooks`](#endpoint-/api/webhooks) - Manages Singularity webhooks.
 
 Models:
 - [`ByteString`](#model-ByteString)
@@ -56,11 +56,12 @@ Models:
 - [`SingularityDeployRequest`](#model-SingularityDeployRequest)
 - [`SingularityDeployResult`](#model-SingularityDeployResult)
 - [`SingularityDeployStatistics`](#model-SingularityDeployStatistics)
-- [`SingularityDeployWebhook`](#model-SingularityDeployWebhook)
+- [`SingularityDeployUpdate`](#model-SingularityDeployUpdate)
 - [`SingularityDockerInfo`](#model-SingularityDockerInfo)
 - [`SingularityDockerPortMapping`](#model-SingularityDockerPortMapping)
 - [`SingularityHostState`](#model-SingularityHostState)
 - [`SingularityLoadBalancerUpdate`](#model-SingularityLoadBalancerUpdate)
+- [`SingularityMachineStateHistoryUpdate`](#model-SingularityMachineStateHistoryUpdate)
 - [`SingularityPauseRequest`](#model-SingularityPauseRequest)
 - [`SingularityPendingDeploy`](#model-SingularityPendingDeploy)
 - [`SingularityPendingRequest`](#model-SingularityPendingRequest)
@@ -98,7 +99,7 @@ Models:
 - - -
 
 ## Endpoints
-### <a name="#endpoint-0"></a> /api/deploys
+### <a name="endpoint-/api/deploys"></a> /api/deploys
 #### Overview
 Manages Singularity Deploys for existing requests
 
@@ -174,7 +175,7 @@ Start a new deployment for a Request
 
 
 - - -
-### <a name="#endpoint-1"></a> /api/history
+### <a name="endpoint-/api/history"></a> /api/history
 #### Overview
 Manages historical data for tasks, requests, and deploys.
 
@@ -360,7 +361,7 @@ Retrieve the history for a specific deploy.
 
 
 - - -
-### <a name="#endpoint-2"></a> /api/logs
+### <a name="endpoint-/api/logs"></a> /api/logs
 #### Overview
 Manages Singularity task logs stored in S3.
 
@@ -434,36 +435,13 @@ Retrieve the list of logs stored in S3 for a specific request.
 
 
 - - -
-### <a name="#endpoint-3"></a> /api/racks
+### <a name="endpoint-/api/racks"></a> /api/racks
 #### Overview
 Manages Singularity racks.
 
-#### **DELETE** `/api/racks/rack/{rackId}/decomissioning`
+#### **POST** `/api/racks/rack/{rackId}/decommission`
 
-Undo the decomission operation on a specific decommissioning rack.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Decommissioned rack ID. | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/racks/rack/{rackId}/decomission`
-
-Decomission a specific active rack.
+Begin decommissioning a specific active rack
 
 
 ###### Parameters
@@ -471,12 +449,12 @@ Decomission a specific active rack.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| rackId | true | Active rack ID. | string |
+| rackId | true | Active rack ID | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false | Username of person requestin the decommisioning. | string |
+| user | false | User requesting the decommisioning | string |
 
 ###### Response
 
@@ -489,9 +467,9 @@ Decomission a specific active rack.
 
 
 - - -
-#### **DELETE** `/api/racks/rack/{rackId}/dead`
+#### **POST** `/api/racks/rack/{rackId}/activate`
 
-Remove a dead rack.
+Activate a decomissioning rack, canceling decomission without erasing history
 
 
 ###### Parameters
@@ -499,7 +477,12 @@ Remove a dead rack.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| rackId | true | Dead rack ID. | string |
+| rackId | true | Active rackId | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | User requesting the activate | string |
 
 ###### Response
 
@@ -512,13 +495,63 @@ Remove a dead rack.
 
 
 - - -
-#### **GET** `/api/racks/decomissioning`
+#### **GET** `/api/racks/rack/{rackId}`
 
-Retrieve the list of decommissioning racks.
+Retrieve the history of a given rack
 
 
 ###### Parameters
-- No parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/racks/rack/{rackId}`
+
+Remove a known rack, erasing history. This operation will cancel decomissioning of racks
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/`
+
+Retrieve the list of all known racks, optionally filtering by a particular state
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| state | false | Optionally specify a particular state to filter racks by | string |
 
 ###### Response
 [List[SingularityRack]](#model-SingularityRack)
@@ -531,45 +564,7 @@ Retrieve the list of decommissioning racks.
 
 
 - - -
-#### **GET** `/api/racks/dead`
-
-Retrieve the list of dead racks. A rack is dead if it has zero active slaves.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRack]](#model-SingularityRack)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/active`
-
-Retrieve the list of active racks. A rack is active if it has one or more active slaves associated with it.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRack]](#model-SingularityRack)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="#endpoint-4"></a> /api/requests
+### <a name="endpoint-/api/requests"></a> /api/requests
 #### Overview
 Manages Singularity Requests, the parent object for any deployed task
 
@@ -621,7 +616,7 @@ Schedule a one-off or scheduled Singularity request for immediate execution.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Additional command line arguments to append to the task | string |
+| body | false | Additional command line arguments to append to the task | List[string] |
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -942,7 +937,7 @@ Create or update a Singularity Request
 
 
 - - -
-### <a name="#endpoint-5"></a> /api/sandbox
+### <a name="endpoint-/api/sandbox"></a> /api/sandbox
 #### Overview
 Provides a proxy to Mesos sandboxes.
 
@@ -1005,36 +1000,13 @@ Retrieve information about a specific task&#39;s sandbox.
 
 
 - - -
-### <a name="#endpoint-6"></a> /api/slaves
+### <a name="endpoint-/api/slaves"></a> /api/slaves
 #### Overview
 Manages Singularity slaves.
 
-#### **DELETE** `/api/slaves/slave/{slaveId}/decomissioning`
+#### **POST** `/api/slaves/slave/{slaveId}/decommission`
 
-Remove a specific decommissioning slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/slaves/slave/{slaveId}/decomission`
-
-Decommission a specific slave.
+Begin decommissioning a specific active slave
 
 
 ###### Parameters
@@ -1042,12 +1014,12 @@ Decommission a specific slave.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
+| slaveId | true | Active slaveId | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| user | false |  | string |
+| user | false | User requesting the decommisioning | string |
 
 ###### Response
 
@@ -1060,9 +1032,9 @@ Decommission a specific slave.
 
 
 - - -
-#### **DELETE** `/api/slaves/slave/{slaveId}/dead`
+#### **POST** `/api/slaves/slave/{slaveId}/activate`
 
-Remove a specific dead slave.
+Activate a decomissioning slave, canceling decomission without erasing history
 
 
 ###### Parameters
@@ -1070,7 +1042,12 @@ Remove a specific dead slave.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
+| slaveId | true | Active slaveId | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| user | false | User requesting the activate | string |
 
 ###### Response
 
@@ -1083,13 +1060,63 @@ Remove a specific dead slave.
 
 
 - - -
-#### **GET** `/api/slaves/decomissioning`
+#### **GET** `/api/slaves/slave/{slaveId}`
 
-Retrieve the list of decommissioning slaves.
+Retrieve the history of a given slave
 
 
 ###### Parameters
-- No parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Slave ID | string |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/slaves/slave/{slaveId}`
+
+Remove a known slave, erasing history. This operation will cancel decomissioning of the slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active SlaveId | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/`
+
+Retrieve the list of all known slaves, optionally filtering by a particular state
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| state | false | Optionally specify a particular state to filter slaves by | string |
 
 ###### Response
 [List[SingularitySlave]](#model-SingularitySlave)
@@ -1102,45 +1129,7 @@ Retrieve the list of decommissioning slaves.
 
 
 - - -
-#### **GET** `/api/slaves/dead`
-
-Retrieve the list of dead slaves.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularitySlave]](#model-SingularitySlave)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/slaves/active`
-
-Retrieve the list of active slaves.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularitySlave]](#model-SingularitySlave)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="#endpoint-7"></a> /api/state
+### <a name="endpoint-/api/state"></a> /api/state
 #### Overview
 Provides information about the current state of Singularity.
 
@@ -1214,7 +1203,7 @@ Retrieve information about the current state of Singularity.
 
 
 - - -
-### <a name="#endpoint-8"></a> /api/tasks
+### <a name="endpoint-/api/tasks"></a> /api/tasks
 #### Overview
 Manages Singularity tasks.
 
@@ -1456,7 +1445,7 @@ Retrieve the list of active tasks.
 
 
 - - -
-### <a name="#endpoint-9"></a> /api/test
+### <a name="endpoint-/api/test"></a> /api/test
 #### Overview
 Misc testing endpoints.
 
@@ -1579,7 +1568,7 @@ Abort the Mesos scheduler driver.
 
 
 - - -
-### <a name="#endpoint-10"></a> /api/webhooks
+### <a name="endpoint-/api/webhooks"></a> /api/webhooks
 #### Overview
 Manages Singularity webhooks.
 
@@ -1665,7 +1654,7 @@ Retrieve a list of queued deploy updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[List[SingularityDeployWebhook]](#model-SingularityDeployWebhook)
+[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
 
 
 ###### Errors
@@ -1735,14 +1724,14 @@ string
 | defaultInstanceForType | [CommandInfo](#model-CommandInfo) | optional |  |
 | urisOrBuilderList | [List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]](#model-List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;) | optional |  |
-| urisCount | int | optional |  |
 | argumentsCount | int | optional |  |
+| urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | user | string | optional |  |
-| value | string | optional |  |
 | initialized | boolean | optional |  |
+| value | string | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
 | userBytes | [ByteString](#model-ByteString) | optional |  |
 | shell | boolean | optional |  |
@@ -1761,8 +1750,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | urisOrBuilderList | [List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]](#model-List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]) | optional |  |
-| argumentsCount | int | optional |  |
 | urisCount | int | optional |  |
+| argumentsCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
@@ -1781,8 +1770,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | defaultInstanceForType | [ContainerInfo](#model-ContainerInfo) | optional |  |
-| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;) | optional |  |
 | type | [Type](#model-Type) | optional |  Allowable values: DOCKER, MESOS |
+| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;) | optional |  |
 | hostname | string | optional |  |
 | dockerOrBuilder | [DockerInfoOrBuilder](#model-DockerInfoOrBuilder) | optional |  |
 | initialized | boolean | optional |  |
@@ -1808,8 +1797,8 @@ string
 | volumesCount | int | optional |  |
 | volumesList | [List[Volume]](#model-List[Volume]) | optional |  |
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
-| docker | [DockerInfo](#model-DockerInfo) | optional |  |
 | volumesOrBuilderList | [List[? extends org.apache.mesos.Protos$VolumeOrBuilder]](#model-List[? extends org.apache.mesos.Protos$VolumeOrBuilder]) | optional |  |
+| docker | [DockerInfo](#model-DockerInfo) | optional |  |
 
 
 ## <a name="model-Descriptor"></a> Descriptor
@@ -1832,8 +1821,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| defaultInstanceForType | [DockerInfo](#model-DockerInfo) | optional |  |
 | portMappingsOrBuilderList | [List[? extends org.apache.mesos.Protos$ContainerInfo$DockerInfo$PortMappingOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ContainerInfo$DockerInfo$PortMappingOrBuilder]) | optional |  |
+| defaultInstanceForType | [DockerInfo](#model-DockerInfo) | optional |  |
 | parametersList | [List[Parameter]](#model-List[Parameter]) | optional |  |
 | parametersOrBuilderList | [List[? extends org.apache.mesos.Protos$ParameterOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ParameterOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo$DockerInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo$DockerInfo&gt;) | optional |  |
@@ -1971,8 +1960,8 @@ string
 | resourcesList | [List[Resource]](#model-List[Resource]) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 
 
@@ -1989,9 +1978,9 @@ string
 | executorId | [ExecutorID](#model-ExecutorID) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| sourceBytes | [ByteString](#model-ByteString) | optional |  |
-| command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
+| command | [CommandInfo](#model-CommandInfo) | optional |  |
+| sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](#model-List[Resource]) | optional |  |
@@ -2034,8 +2023,8 @@ string
 | parserForType | [com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$FileOptions&gt;](#model-com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$FileOptions&gt;) | optional |  |
 | javaPackageBytes | [ByteString](#model-ByteString) | optional |  |
 | goPackageBytes | [ByteString](#model-ByteString) | optional |  |
-| javaGenericServices | boolean | optional |  |
 | uninterpretedOptionCount | int | optional |  |
+| javaGenericServices | boolean | optional |  |
 | javaOuterClassnameBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
 | javaOuterClassname | string | optional |  |
@@ -2046,8 +2035,8 @@ string
 | uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | javaPackage | string | optional |  |
 | goPackage | string | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | javaGenerateEqualsAndHash | boolean | optional |  |
 | initializationErrorString | string | optional |  |
 | ccGenericServices | boolean | optional |  |
@@ -2111,8 +2100,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| defaultInstanceForType | [HealthCheck](#model-HealthCheck) | optional |  |
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
+| defaultInstanceForType | [HealthCheck](#model-HealthCheck) | optional |  |
 | gracePeriodSeconds | double | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](#model-HTTPOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;) | optional |  |
@@ -2134,14 +2123,14 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| gracePeriodSeconds | double | optional |  |
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
+| gracePeriodSeconds | double | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](#model-HTTPOrBuilder) | optional |  |
 | consecutiveFailures | int | optional |  |
 | intervalSeconds | double | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
-| http | [HTTP](#model-HTTP) | optional |  |
 | timeoutSeconds | double | optional |  |
+| http | [HTTP](#model-HTTP) | optional |  |
 | delaySeconds | double | optional |  |
 
 
@@ -2192,8 +2181,8 @@ string
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | messageSetWireFormat | boolean | optional |  |
+| uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
 | initializationErrorString | string | optional |  |
@@ -2213,8 +2202,8 @@ string
 | hostname | string | optional |  |
 | attributesCount | int | optional |  |
 | initialized | boolean | optional |  |
-| idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
 | attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
+| idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | serializedSize | int | optional |  |
@@ -2224,8 +2213,8 @@ string
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | attributesOrBuilderList | [List[? extends org.apache.mesos.Protos$AttributeOrBuilder]](#model-List[? extends org.apache.mesos.Protos$AttributeOrBuilder]) | optional |  |
-| resourcesCount | int | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| resourcesCount | int | optional |  |
 | id | [OfferID](#model-OfferID) | optional |  |
 | initializationErrorString | string | optional |  |
 
@@ -2360,7 +2349,7 @@ string
 | instanceSequentialFailureTimestamps | [com.google.common.collect.ListMultimap&lt;java.lang.Integer, java.lang.Long&gt;](#model-com.google.common.collect.ListMultimap&lt;java.lang.Integer, java.lang.Long&gt;) | optional |  |
 
 
-## <a name="model-SingularityDeployWebhook"></a> SingularityDeployWebhook
+## <a name="model-SingularityDeployUpdate"></a> SingularityDeployUpdate
 
 | name | type | required | description |
 |------|------|----------|-------------|
@@ -2416,6 +2405,16 @@ string
 | timestamp | long | optional |  |
 
 
+## <a name="model-SingularityMachineStateHistoryUpdate"></a> SingularityMachineStateHistoryUpdate
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| state | [MachineState](#model-MachineState) | optional |  Allowable values: MISSING_ON_STARTUP, ACTIVE, STARTING_DECOMMISSION, DECOMMISSIONING, DECOMMISSIONED, DEAD |
+| user | string | optional |  |
+| timestamp | long | optional |  |
+| objectId | string | optional |  |
+
+
 ## <a name="model-SingularityPauseRequest"></a> SingularityPauseRequest
 
 | name | type | required | description |
@@ -2439,9 +2438,9 @@ string
 |------|------|----------|-------------|
 | user | string | optional |  |
 | requestId | string | optional |  |
-| cmdLineArgs | string | optional |  |
 | timestamp | long | optional |  |
 | deployId | string | optional |  |
+| cmdLineArgsList | Array[string] | optional |  |
 | pendingType | [PendingType](#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP |
 
 
@@ -2450,7 +2449,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | pendingTaskId | [SingularityPendingTaskId](#model-SingularityPendingTaskId) | optional |  |
-| maybeCmdLineArgs | string | optional |  |
+| user | string | optional |  |
+| cmdLineArgsList | Array[string] | optional |  |
 
 
 ## <a name="model-SingularityPendingTaskId"></a> SingularityPendingTaskId
@@ -2470,11 +2470,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| deadAt | long | optional |  |
-| decomissionedAt | long | optional |  |
-| state | [SingularityMachineState](#model-SingularityMachineState) | optional |  Allowable values: ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD |
-| decomissioningBy | string | optional |  |
-| decomissioningAt | long | optional |  |
+| currentState | [SingularityMachineStateHistoryUpdate](#model-SingularityMachineStateHistoryUpdate) | optional |  |
 | firstSeenAt | long | optional |  |
 | id | string | optional |  |
 
@@ -2489,6 +2485,7 @@ string
 | slavePlacement | [SlavePlacement](#model-SlavePlacement) | optional |  |
 | rackSensitive | boolean | optional |  |
 | owners | Array[string] | optional |  |
+| requestType | [RequestType](#model-RequestType) | optional |  Allowable values: SERVICE, WORKER, SCHEDULED, ON_DEMAND, RUN_ONCE |
 | quartzSchedule | string | optional |  |
 | scheduledExpectedRuntimeMillis | long | optional |  |
 | loadBalanced | boolean | optional |  |
@@ -2574,12 +2571,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| deadAt | long | optional |  |
-| decomissionedAt | long | optional |  |
-| state | [SingularityMachineState](#model-SingularityMachineState) | optional |  Allowable values: ACTIVE, DECOMISSIONING, DECOMISSIONED, DEAD |
+| currentState | [SingularityMachineStateHistoryUpdate](#model-SingularityMachineStateHistoryUpdate) | optional |  |
 | host | string | optional | Slave hostname |
-| decomissioningBy | string | optional |  |
-| decomissioningAt | long | optional |  |
 | rackId | string | optional | Slave rack ID |
 | firstSeenAt | long | optional |  |
 | id | string | optional |  |
@@ -2601,10 +2594,14 @@ string
 | deadSlaves | int | optional |  |
 | lateTasks | int | optional |  |
 | overProvisionedRequests | int | optional |  |
+| decommissioningSlaves | int | optional |  |
+| unknownRacks | int | optional |  |
 | numDeploys | int | optional |  |
 | cleaningTasks | int | optional |  |
+| unknownSlaves | int | optional |  |
 | activeRequests | int | optional |  |
 | futureTasks | int | optional |  |
+| decommissioningRacks | int | optional |  |
 | finishedRequests | int | optional |  |
 | deadRacks | int | optional |  |
 | pendingRequests | int | optional |  |
@@ -2785,8 +2782,8 @@ string
 |------|------|----------|-------------|
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [TaskInfo](#model-TaskInfo) | optional |  |
-| taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
 | taskId | [TaskID](#model-TaskID) | optional |  |
+| taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;) | optional |  |
 | slaveIdOrBuilder | [SlaveIDOrBuilder](#model-SlaveIDOrBuilder) | optional |  |
 | resourcesOrBuilderList | [List[? extends org.apache.mesos.Protos$ResourceOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ResourceOrBuilder]) | optional |  |

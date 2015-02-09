@@ -6,6 +6,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.requestType">
+                        Type
+                    </th>
                     <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
                         Requested
                     </th>
@@ -13,9 +16,11 @@
                         Deploy user
                     </th>
 
-                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
-                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
-                            Schedule
+                    {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
+                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl schedule-header">
+                            <span id="schedule">
+                                Schedule <span class="glyphicon glyphicon-question-sign"/>
+                            </span>
                         </th>
                     {{/ifInSubFilter}}
 
@@ -34,6 +39,9 @@
                                 {{ request.id }}
                             </a>
                         </span></td>
+                        <td>
+                            {{humanizeText request.requestType}}
+                        </td>
                         <td class="hidden-xs">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
@@ -41,9 +49,17 @@
                             {{usernameFromEmail requestDeployState.activeDeploy.user}}
                         </td>
 
-                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                        {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
-                                {{ request.schedule }}
+                                {{#if request.quartzSchedule}}
+                                    {{ request.quartzSchedule }}
+                                {{else}}
+                                    {{#ifEqual request.scheduleType "quartz"}}
+                                        {{ request.schedule }}
+                                    {{else}}
+                                        {{ request.schedule }} {{ request.scheduleType }}
+                                    {{/ifEqual}}
+                                {{/if}}
                             </td>
                         {{/ifInSubFilter}}
 

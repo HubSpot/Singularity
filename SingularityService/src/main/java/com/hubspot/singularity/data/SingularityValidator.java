@@ -62,8 +62,7 @@ public class SingularityValidator {
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
-    checkBadRequest(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
-    checkBadRequest(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
+    checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
     checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
 
@@ -117,7 +116,6 @@ public class SingularityValidator {
 
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-      checkBadRequest(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
 
       if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
         checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
@@ -134,14 +132,15 @@ public class SingularityValidator {
 
       checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
     } else {
+      checkBadRequest(!request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent(), "Non-scheduled requests can not specify a schedule");
       checkBadRequest(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
-      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
     }
 
     if (!request.isLongRunning()) {
       checkBadRequest(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
       checkBadRequest(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
     } else {
+      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for non-long running requests");
       checkBadRequest(!request.getKillOldNonLongRunningTasksAfterMillis().isPresent(), "longRunning requests can not define a killOldNonLongRunningTasksAfterMillis value");
     }
 

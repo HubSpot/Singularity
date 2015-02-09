@@ -8,8 +8,8 @@ public class SingularityRequestWebhookAsyncHandler extends AbstractSingularityWe
 
   private final WebhookManager webhookManager;
 
-  public SingularityRequestWebhookAsyncHandler(WebhookManager webhookManager, SingularityWebhook webhook, SingularityRequestHistory requestUpdate, boolean shouldDeleteUpdateDueToQueueAboveCapacity) {
-    super(webhook, requestUpdate, shouldDeleteUpdateDueToQueueAboveCapacity);
+  public SingularityRequestWebhookAsyncHandler(WebhookManager webhookManager, SingularityWebhook webhook, SingularityRequestHistory requestUpdate, boolean shouldDeleteUpdateOnFailure) {
+    super(webhook, requestUpdate, shouldDeleteUpdateOnFailure);
 
     this.webhookManager = webhookManager;
   }

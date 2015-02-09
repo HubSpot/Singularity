@@ -282,19 +282,20 @@ public class SingularityMesosScheduler implements Scheduler {
       return;
     }
 
+    final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+
     final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
     if (isActiveTask && !taskState.isDone()) {
-     final SingularityTask task = taskManager.getTask(taskIdObj).get();
-     final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
-     if (taskState == ExtendedTaskState.TASK_RUNNING) {
-       healthchecker.enqueueHealthcheck(task, pendingDeploy);
-     }
+      if (taskState == ExtendedTaskState.TASK_RUNNING) {
+        healthchecker.enqueueHealthcheck(task.get(), pendingDeploy);
+      }
 
-     if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-       newTaskChecker.enqueueNewTaskCheck(task);
-     }
+      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+        newTaskChecker.enqueueNewTaskCheck(task.get());
+      }
     }
 
     final SingularityTaskHistoryUpdate taskUpdate =
@@ -309,7 +310,11 @@ public class SingularityMesosScheduler implements Scheduler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      scheduler.handleCompletedTask(taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCacheProvider.get());
+      SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
+
+      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getSlaveId().getValue(), stateCache);
+
+      scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache);
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);

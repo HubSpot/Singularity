@@ -4,15 +4,12 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
-import net.kencochrane.raven.Raven;
 
 import java.util.Set;
+
+import net.kencochrane.raven.Raven;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
@@ -20,6 +17,10 @@ import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -57,7 +58,9 @@ import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
+import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -71,6 +74,9 @@ public class SingularityTestModule implements Module {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     rootLogger.setLevel(Level.ERROR);
+
+    Logger hsLogger = context.getLogger("com.hubspot");
+    hsLogger.setLevel(Level.ERROR);
 
     this.ts = new TestingServer();
   }
@@ -168,6 +174,8 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
+    mainBinder.bind(SlaveResource.class);
+    mainBinder.bind(RackResource.class);
   }
 
   private static SingularityConfiguration getSingularityConfigurationForTestingServer(final TestingServer ts) {

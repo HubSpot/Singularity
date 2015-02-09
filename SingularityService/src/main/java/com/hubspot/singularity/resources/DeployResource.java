@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Collections;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
@@ -110,7 +111,7 @@ public class DeployResource extends AbstractRequestResource {
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, Optional.<String> absent(), deployUser, PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY, Collections.<String> emptyList()));
     }
 
     return fillEntireRequest(requestWithState);

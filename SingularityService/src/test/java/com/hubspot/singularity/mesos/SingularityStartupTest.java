@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -118,7 +119,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testOneOffDoesntGetRescheduled() {
-    saveRequest(new SingularityRequestBuilder(requestId).setDaemon(Optional.of(Boolean.FALSE)).build());
+    saveRequest(new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND).build());
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 

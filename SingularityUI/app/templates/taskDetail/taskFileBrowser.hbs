@@ -3,76 +3,82 @@
         Files
     </h2>
 </div>
-<ul class="breadcrumb">
-    {{#each breadcrumbs}}
-        <li>
-            <a data-directory-path="{{ path }}">{{ name }}</a>
-        </li>
-    {{/each}}
-</ul>
-{{#if files}}
-    <table class="table table-striped files-table">
-        <thead>
-            <tr>
-                <th>
-                    Name
-                </th>
-                <th class="hidden-xs">
-                    Size
-                </th>
-                <th class="hidden-xs">
-                    Last modified
-                </th>
-                <th class="hidden-xs">
-
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each files}}
+{{#if task.slaveMissing}}
+    <div class="empty-table-message">
+        Files can not be fetched because the slave is no longer available
+    </div>
+{{else}}
+    <ul class="breadcrumb">
+        {{#each breadcrumbs}}
+            <li>
+                <a data-directory-path="{{ path }}">{{ name }}</a>
+            </li>
+        {{/each}}
+    </ul>
+    {{#if files}}
+        <table class="table table-striped files-table">
+            <thead>
                 <tr>
-                    <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ name }}">
-                        {{#if isDirectory}}
-                            <a data-directory-path="{{ uiPath }}" href="{{appRoot}}/task/{{ taskId }}/files/{{ uiPath }}">
-                                <span class="glyphicon glyphicon-folder-open"></span>{{ name }}/
-                            </a>
-                        {{else}}
-                            {{#if isTailable}}
-                                <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ uiPath }}">
-                                    <span class="glyphicon glyphicon-file"></span>{{ name }}
+                    <th>
+                        Name
+                    </th>
+                    <th class="hidden-xs">
+                        Size
+                    </th>
+                    <th class="hidden-xs">
+                        Last modified
+                    </th>
+                    <th class="hidden-xs">
+
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each files}}
+                    <tr>
+                        <td data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ name }}">
+                            {{#if isDirectory}}
+                                <a data-directory-path="{{ uiPath }}" href="{{appRoot}}/task/{{ taskId }}/files/{{ uiPath }}">
+                                    <span class="glyphicon glyphicon-folder-open"></span>{{ name }}/
                                 </a>
                             {{else}}
-                                <span class="glyphicon glyphicon-file"></span>{{ name }}
+                                {{#if isTailable}}
+                                    <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ uiPath }}">
+                                        <span class="glyphicon glyphicon-file"></span>{{ name }}
+                                    </a>
+                                {{else}}
+                                    <span class="glyphicon glyphicon-file"></span>{{ name }}
+                                {{/if}}
                             {{/if}}
-                        {{/if}}
-                    </td>
-                    <td class="hidden-xs" data-value="{{ size }}">
-                        {{#unless isDirectory}}
-                            {{humanizeFileSize size}}
-                        {{/unless}}
-                    </td>
-                    <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
-                    <td class="actions-column hidden-xs">
-                        {{#unless isDirectory}}
-                            <a href="{{ downloadLink }}" target="_blank" title="Download">
-                                <span class="glyphicon glyphicon-download-alt"></span>
-                            </a>
-                        {{/unless}}
-                    </td>
-                </tr>
-            {{/each}}
-        </tbody>
-    </table>
-{{else}}
-    {{#if synced}}
-        <div class="empty-table-message">
-            This directory is empty
-        </div>
+                        </td>
+                        <td class="hidden-xs" data-value="{{ size }}">
+                            {{#unless isDirectory}}
+                                {{humanizeFileSize size}}
+                            {{/unless}}
+                        </td>
+                        <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
+                        <td class="actions-column hidden-xs">
+                            {{#unless isDirectory}}
+                                <a href="{{ downloadLink }}" target="_blank" title="Download">
+                                    <span class="glyphicon glyphicon-download-alt"></span>
+                                </a>
+                            {{/unless}}
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
     {{else}}
-        <div class="page-loader-container">
+        {{#if synced}}
             <div class="empty-table-message">
-                Could not get files. The task is probably still starting up.
+                This directory is empty
             </div>
-        </div>
+        {{else}}
+            <div class="page-loader-container">
+                <div class="empty-table-message">
+                    Could not get files. The task is probably still starting up.
+                </div>
+            </div>
+        {{/if}}
     {{/if}}
 {{/if}}

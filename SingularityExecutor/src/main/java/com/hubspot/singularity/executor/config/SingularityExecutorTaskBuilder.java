@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 
+import com.hubspot.mesos.MesosUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
@@ -55,7 +56,7 @@ public class SingularityExecutorTaskBuilder {
   }
 
   public Logger buildTaskLogger(String taskId) {
-    Path javaExecutorLogPath = configuration.getTaskDirectoryPath(taskId).resolve(configuration.getExecutorJavaLog());
+    Path javaExecutorLogPath = MesosUtils.getTaskDirectoryPath(taskId).resolve(configuration.getExecutorJavaLog());
 
     return executorLogging.buildTaskLogger(taskId, javaExecutorLogPath.toString());
   }
@@ -63,7 +64,7 @@ public class SingularityExecutorTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
 
-    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, configuration.getTaskDirectoryPath(taskId).toString(), configuration.getServiceLog(),
+    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), configuration.getServiceLog(),
         configuration.getTaskAppDirectory(), configuration.getExecutorBashLog(), configuration.getLogrotateStateFile());
 
     jsonObjectFileHelper.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);

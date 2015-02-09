@@ -2,6 +2,8 @@ package com.hubspot.mesos;
 
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,6 +40,7 @@ public final class MesosUtils {
 
   private static double getScalar(List<Resource> resources, String name) {
     for (Resource r : resources) {
+
       if (r.hasName() && r.getName().equals(name) && r.hasScalar()) {
         return getScalar(r);
       }
@@ -62,6 +65,7 @@ public final class MesosUtils {
 
   private static int getNumRanges(List<Resource> resources, String name) {
     int totalRanges = 0;
+
 
     Ranges ranges = getRanges(resources, name);
 
@@ -309,4 +313,11 @@ public final class MesosUtils {
     return remaining;
   }
 
+  public static Path getTaskDirectoryPath(String taskId) {
+    return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
+  }
+
+  public static String getSafeTaskIdForDirectory(String taskId) {
+    return taskId.replace(":", "_");
+  }
 }

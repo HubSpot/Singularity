@@ -31,7 +31,7 @@ public class SingularityCooldown {
   }
 
   public boolean shouldEnterCooldown(SingularityRequest request, SingularityTaskId taskId, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
-    if (requestState != RequestState.ACTIVE || request.isOneOff()) {
+    if (requestState != RequestState.ACTIVE || !request.isAlwaysRunning()) {
       return false;
     }
 
