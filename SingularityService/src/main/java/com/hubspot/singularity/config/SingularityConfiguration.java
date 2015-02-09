@@ -135,8 +135,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
-  private long threadpoolShutdownDelayInSeconds = 1;
-
   @JsonProperty("ui")
   @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
@@ -224,6 +222,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
+  }
+
+  public int getCoreThreadpoolSize() {
+    return coreThreadpoolSize;
   }
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
@@ -402,14 +404,6 @@ public class SingularityConfiguration extends Configuration {
     return sandboxDefaultsToTaskId;
   }
 
-  public int getCoreThreadpoolSize() {
-    return coreThreadpoolSize;
-  }
-
-  public long getThreadpoolShutdownDelayInSeconds() {
-    return threadpoolShutdownDelayInSeconds;
-  }
-
   public boolean isWaitForListeners() {
     return waitForListeners;
   }
@@ -492,6 +486,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCooldownMinScheduleSeconds(long cooldownMinScheduleSeconds) {
     this.cooldownMinScheduleSeconds = cooldownMinScheduleSeconds;
+  }
+
+  public void setCoreThreadpoolSize(int coreThreadpoolSize) {
+    this.coreThreadpoolSize = coreThreadpoolSize;
   }
 
   public void setDatabaseConfiguration(DataSourceFactory databaseConfiguration) {
@@ -634,10 +632,6 @@ public class SingularityConfiguration extends Configuration {
     this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
   }
 
-  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
-    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
-  }
-
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
   }
@@ -660,13 +654,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
-  }
-  public void setCoreThreadpoolSize(int coreThreadpoolSize) {
-    this.coreThreadpoolSize = coreThreadpoolSize;
-  }
-
-  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
-    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
   }
 
 }
