@@ -11,7 +11,7 @@ TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
 
 def download_s3_logs(args):
-  sys.stderr.write(colored('Checking for S3 log files', 'blue') + '\n')
+  sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
   logs = logs_for_all_requests(args)
   async_requests = []
   all_logs = []
@@ -24,12 +24,12 @@ def download_s3_logs(args):
         )
       all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
   if async_requests:
-    sys.stderr.write(colored('Starting S3 Downloads', 'blue'))
+    sys.stderr.write(colored('Starting S3 Downloads', 'cyan'))
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   zipped_files = ['{0}/{1}'.format(args.dest, log_file['key'].rsplit("/", 1)[1]) for log_file in logs]
-  sys.stderr.write(colored('Unpacking S3 logs\n', 'blue'))
+  sys.stderr.write(colored('Unpacking S3 logs\n', 'cyan'))
   logfetch_base.unpack_logs(zipped_files)
-  sys.stderr.write(colored('All S3 logs up to date', 'blue') + '\n')
+  sys.stderr.write(colored('All S3 logs up to date', 'cyan') + '\n')
   return all_logs
 
 def already_downloaded(dest, filename):

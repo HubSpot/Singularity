@@ -16,7 +16,7 @@ def download_live_logs(args):
   async_requests = []
   zipped_files = []
   all_logs = []
-  sys.stderr.write(colored('Finding current live log files', 'blue') + '\n')
+  sys.stderr.write(colored('Finding current live log files', 'cyan') + '\n')
   for task in tasks:
     metadata = files_json(args, task)
     uri = DOWNLOAD_FILE_FORMAT.format(metadata['slaveHostname'])
@@ -46,10 +46,12 @@ def download_live_logs(args):
           zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
         all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
 
-  sys.stderr.write(colored('Starting live logs downloads\n', 'blue'))
-  grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
-  sys.stderr.write(colored('Unpacking logs\n', 'blue'))
-  logfetch_base.unpack_logs(zipped_files)
+  if async_requests:
+    sys.stderr.write(colored('Starting live logs downloads\n', 'cyan'))
+    grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
+  if zipped_files:
+    sys.stderr.write(colored('Unpacking logs\n', 'cyan'))
+    logfetch_base.unpack_logs(zipped_files)
   return all_logs
 
 def tasks_to_check(args):
