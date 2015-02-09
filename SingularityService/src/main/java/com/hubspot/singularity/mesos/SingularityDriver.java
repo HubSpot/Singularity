@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Scheduler;
@@ -20,6 +21,7 @@ import com.google.inject.Inject;
 import com.groupon.mesos.JesosSchedulerDriver;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
 public class SingularityDriver {
@@ -31,14 +33,23 @@ public class SingularityDriver {
   private final SchedulerDriver driver;
 
   @Inject
-  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final MesosConfiguration configuration) throws IOException {
-    this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
+  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final SingularityConfiguration singularityConfiguration, final MesosConfiguration configuration) throws IOException {
+    FrameworkInfo.Builder frameworkInfoBuilder = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
         .setName(configuration.getFrameworkName())
         .setId(FrameworkID.newBuilder().setValue(configuration.getFrameworkId()))
-        .setUser("")  // let mesos assign
-        .build();
+        .setUser("");  // let mesos assign
+
+    if (singularityConfiguration.getHostname().isPresent()) {
+      frameworkInfoBuilder.setHostname(singularityConfiguration.getHostname().get());
+    }
+
+    if (singularityConfiguration.getUiConfiguration().getBaseUrl().isPresent()) {
+      frameworkInfoBuilder.setWebuiUrl(singularityConfiguration.getUiConfiguration().getBaseUrl().get());
+    }
+
+    this.frameworkInfo = frameworkInfoBuilder.build();
 
     this.scheduler = scheduler;
 
