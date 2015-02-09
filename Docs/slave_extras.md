@@ -1,9 +1,15 @@
 ## Singularity Extras for Mesos Slaves
 
-*This assumes you've already followed the steps from [install.md](install.md)*
+*This document assumes you've already followed the steps from [install.md](install.md)*
 
-- `SingularityExecutor`, a custom Mesos executor
-- `SingularityExecutorCleanup`, a background job that cleans up tasks that haven't been shut down cleanly (i.e. have been OOM killed or )
+- `SingularityExecutor`, a custom Mesos executor. This executor provides numerous benefits over the default Mesos executor, including:
+  - Thread usage limits
+  - Detailed status updates for tasks
+  - Log rotation
+  - Support for downloading multiple artifacts
+  - "Embedded" artifacts (artifacts bundled into the Task object, as opposed to downloaded)
+  - Log persistence in S3 (when used in conjunction with `SingularityS3Uploader`)
+- `SingularityExecutorCleanup`, a background job that cleans up tasks that haven't cleanly terminated (i.e. have been OOM killed by OS, or the executor experiences a fatal error)
 - `SingularityS3Uploader`, a local service that uploads task logs to S3
 - `SingularityS3Downloader`, a local service that allows the executor to efficiently download files without being subject to OOM kills due to filling up the page cache.
 
