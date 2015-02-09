@@ -18,10 +18,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.groupon.mesos.JesosSchedulerDriver;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.resources.UiResource;
 
 @Singleton
 public class SingularityDriver {
@@ -33,8 +37,9 @@ public class SingularityDriver {
   private final SchedulerDriver driver;
 
   @Inject
-  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final SingularityConfiguration singularityConfiguration, final MesosConfiguration configuration) throws IOException {
-    FrameworkInfo.Builder frameworkInfoBuilder = Protos.FrameworkInfo.newBuilder()
+  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final SingularityConfiguration singularityConfiguration, final MesosConfiguration configuration,
+                    @Named(SingularityMainModule.SINGULARITY_URI_BASE) final String singularityUriBase) throws IOException {
+    final FrameworkInfo.Builder frameworkInfoBuilder = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
         .setName(configuration.getFrameworkName())
@@ -45,8 +50,13 @@ public class SingularityDriver {
       frameworkInfoBuilder.setHostname(singularityConfiguration.getHostname().get());
     }
 
-    if (singularityConfiguration.getUiConfiguration().getBaseUrl().isPresent()) {
-      frameworkInfoBuilder.setWebuiUrl(singularityConfiguration.getUiConfiguration().getBaseUrl().get());
+    // only set the web UI URL if it's fully qualified
+    if (singularityUriBase.startsWith("http://") || singularityUriBase.startsWith("https://")) {
+      if (singularityConfiguration.getUiConfiguration().getRootUrlMode() == UIConfiguration.RootUrlMode.INDEX_CATCHALL) {
+        frameworkInfoBuilder.setWebuiUrl(singularityUriBase);
+      } else {
+        frameworkInfoBuilder.setWebuiUrl(singularityUriBase + UiResource.UI_RESOURCE_LOCATION);
+      }
     }
 
     this.frameworkInfo = frameworkInfoBuilder.build();
