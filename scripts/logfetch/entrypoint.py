@@ -25,21 +25,30 @@ def exit(reason):
   sys.exit(1)
 
 def tail_logs(args):
-  start_tail(args)
+  try:
+    start_tail(args)
+  except KeyboardInterrupt:
+    exit('Stopping logtail...')
 
 def fetch_logs(args):
-  check_dest(args)
-  all_logs = []
-  all_logs += download_s3_logs(args)
-  all_logs += download_live_logs(args)
-  grep_files(args, all_logs)
+  try:
+    check_dest(args)
+    all_logs = []
+    all_logs += download_s3_logs(args)
+    all_logs += download_live_logs(args)
+    grep_files(args, all_logs)
+  except KeyboardInterrupt:
+    exit('Stopping logfetch...')
 
 def cat_logs(args):
-  check_dest(args)
-  all_logs = []
-  all_logs += download_s3_logs(args)
-  all_logs += download_live_logs(args)
-  cat_files(args, all_logs)
+  try:
+    check_dest(args)
+    all_logs = []
+    all_logs += download_s3_logs(args)
+    all_logs += download_live_logs(args)
+    cat_files(args, all_logs)
+  except KeyboardInterrupt:
+    exit('Stopping logcat...')
 
 
 def check_dest(args):
