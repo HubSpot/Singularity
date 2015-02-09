@@ -1,5 +1,8 @@
 package com.hubspot.singularity.data;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+
 import java.util.List;
 
 import javax.inject.Singleton;
@@ -18,7 +21,6 @@ import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -59,16 +61,9 @@ public class SingularityValidator {
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
 
-  private void check(boolean expression, String message) {
-    if (!expression) {
-      throw WebExceptions.badRequest(message);
-    }
-  }
-
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
-    check(request.isScheduled() == existingRequest.isScheduled(), "Request can not change whether it is a scheduled request");
-    check(request.isDaemon() == existingRequest.isDaemon(), "Request can not change whether it is a daemon");
-    check(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
+    checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
+    checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
@@ -76,27 +71,31 @@ public class SingularityValidator {
     double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
     double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
 
-    check(cpusPerInstance > 0, "Request must have more than 0 cpus");
-    check(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
+    checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
+    checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
 
-    check(cpusPerInstance <= maxCpusPerInstance, String.format("Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance));
-    check(cpusPerInstance * instances <= maxCpusPerRequest, String.format("Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest));
+    checkBadRequest(cpusPerInstance <= maxCpusPerInstance, "Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance);
+    checkBadRequest(cpusPerInstance * instances <= maxCpusPerRequest,
+        "Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest);
 
-    check(memoryMbPerInstance <= maxMemoryMbPerInstance, String.format("Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance));
-    check(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, String.format("Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(), memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest));
+    checkBadRequest(memoryMbPerInstance <= maxMemoryMbPerInstance,
+        "Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance);
+    checkBadRequest(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, "Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(),
+        memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest);
   }
 
-  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
-    check(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
+  public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
+      Optional<SingularityDeploy> pendingDeploy) {
+    checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
     if (!allowRequestsWithoutOwners) {
-      check(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
+      checkBadRequest(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
     }
 
-    check(request.getId().length() < maxRequestIdSize, String.format("Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId()));
-    check(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
+    checkBadRequest(request.getId().length() < maxRequestIdSize, "Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId());
+    checkBadRequest(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
 
-    check(request.getInstancesSafe() <= maxInstancesPerRequest, String.format("Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest));
+    checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest,"Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
 
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
@@ -115,69 +114,75 @@ public class SingularityValidator {
     if (request.isScheduled()) {
       final String originalSchedule = request.getQuartzScheduleSafe();
 
-      check(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
+      checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-      check(!request.getDaemon().isPresent(), "Scheduled request must not set a daemon flag");
-      check(request.getInstances().or(1) == 1, "Scheduled requests can not be ran on more than one instance");
 
       if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
-        check(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+        checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
       }
 
       if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
         quartzSchedule = originalSchedule;
       } else {
-        check(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
-        check(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
+        checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+        checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
 
         quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
       }
 
-      check(isValidCronSchedule(quartzSchedule), String.format("Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule));
+      checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
     } else {
-      check(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
-      check(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for scheduled requests");
+      checkBadRequest(!request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent(), "Non-scheduled requests can not specify a schedule");
+      checkBadRequest(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
     }
 
     if (!request.isLongRunning()) {
-      check(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
-      check(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
+      checkBadRequest(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
+      checkBadRequest(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
     } else {
-      check(!request.getKillOldNonLongRunningTasksAfterMillis().isPresent(), "longRunning requests can not define a killOldNonLongRunningTasksAfterMillis value");
+      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for non-long running requests");
+      checkBadRequest(!request.getKillOldNonLongRunningTasksAfterMillis().isPresent(), "longRunning requests can not define a killOldNonLongRunningTasksAfterMillis value");
     }
 
     if (request.isScheduled()) {
-      check(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
+      checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
     } else if (request.isOneOff()) {
-      check(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
+      checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
   public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
-    check(deploy.getId() != null && !deploy.getId().contains("/") && !deploy.getId().contains("-"), "Id must not be null and can not contain / or - characters");
-    check(deploy.getId().length() < maxDeployIdSize, String.format("Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deploy.getId().length(), deploy.getId()));
-    check(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
+
+    checkNotNull(request, "request is null");
+    checkNotNull(deploy, "deploy is null");
+
+    String deployId = deploy.getId();
+
+    checkBadRequest(deployId != null, "Id must not be null");
+    checkBadRequest(!deployId.contains("/") && !deployId.contains("-"), "Id must not be null and can not contain / or - characters");
+    checkBadRequest(deployId.length() < maxDeployIdSize, "Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
+    checkBadRequest(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
 
     if (request.isLoadBalanced()) {
-      check(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
+      checkBadRequest(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
     }
 
     checkForIllegalResources(request, deploy);
 
-    check((deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent()) ||
-        (deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
-            (deploy.getContainerInfo().isPresent())),
+    checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
+        deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
+        deploy.getContainerInfo().isPresent(),
         "If not using custom executor, specify a command or containerInfo. If using custom executor, specify executorData and customExecutorCmd and no command.");
 
-    check(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
+    checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
     if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == Protos.ContainerInfo.Type.DOCKER) {
       checkDocker(deploy);
     }
 
-    check(deployHistoryHelper.isDeployIdAvailable(request.getId(), deploy.getId()), "Can not deploy a deploy that has already been deployed");
+    checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
   }
 
   private void checkDocker(SingularityDeploy deploy) {
@@ -186,16 +191,19 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
-        check(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE, "Docker networking type must be BRIDGE if port mappings are set");
+        checkBadRequest(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE,
+            "Docker networking type must be BRIDGE if port mappings are set");
       }
 
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
-          check(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts, String.format("Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1));
+          checkBadRequest(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts,
+              "Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1);
         }
 
         if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
-          check(portMapping.getHostPort() >= 0 && portMapping.getHostPort() < numPorts, String.format("Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1));
+          checkBadRequest(portMapping.getHostPort() >= 0 && portMapping.getHostPort() < numPorts,
+              "Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1);
         }
       }
     }
@@ -228,9 +236,7 @@ public class SingularityValidator {
 
     String[] split = schedule.split(" ");
 
-    if (split.length < 4) {
-      throw WebExceptions.badRequest("Schedule %s is invalid because it contained only %s splits (looking for at least 4)", schedule, split.length);
-    }
+    checkBadRequest(split.length >= 4, "Schedule %s is invalid because it contained only %s splits (looking for at least 4)", schedule, split.length);
 
     List<String> newSchedule = Lists.newArrayListWithCapacity(6);
 
@@ -262,9 +268,7 @@ public class SingularityValidator {
     if (isValidInteger(dayOfWeek)) {
       int dayOfWeekValue = Integer.parseInt(dayOfWeek);
 
-      if (dayOfWeekValue < 0 || dayOfWeekValue > 7) {
-        throw WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
-      }
+      checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
 
       if (dayOfWeekValue == 7) {
         dayOfWeekValue = 1;

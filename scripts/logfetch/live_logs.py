@@ -7,7 +7,7 @@ from callbacks import generate_callback
 from singularity_request import get_json_response
 import logfetch_base
 
-DOWNLOAD_FILE_FORMAT = '{0}/sandbox/{1}/download'
+DOWNLOAD_FILE_FORMAT = 'http://{0}:5051/files/download.json'
 BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
 
 def download_live_logs(args):
@@ -20,20 +20,21 @@ def download_live_logs(args):
     os.remove(f)
   sys.stderr.write(colored('Downloading current live log files', 'blue') + '\n')
   for task in tasks:
-    uri = DOWNLOAD_FILE_FORMAT.format(logfetch_base.base_uri(args), task)
+    metadata = files_json(args, task)
+    uri = DOWNLOAD_FILE_FORMAT.format(metadata['slaveHostname'])
     service_log = '{0}-service.log'.format(task)
     tail_log = '{0}-tail_of_finished_service.log'.format(task)
     async_requests.append(
       grequests.AsyncRequest('GET',uri ,
         callback=generate_callback(uri, args.dest, service_log, args.chunk_size),
-        params={'path' : '{0}/service.log'.format(task)}
+        params={'path' : '{0}/{1}/service.log'.format(metadata['fullPathToRoot'], metadata['currentDirectory'])}
       )
     )
     all_logs.append('{0}/{1}'.format(args.dest, service_log))
     async_requests.append(
       grequests.AsyncRequest('GET',uri ,
         callback=generate_callback(uri, args.dest, tail_log, args.chunk_size),
-        params={'path' : '{0}/tail_of_finished_service.log'.format(task)}
+        params={'path' : '{0}/{1}/tail_of_finished_service.log'.format(metadata['fullPathToRoot'], metadata['currentDirectory'])}
       )
     )
     all_logs.append('{0}/{1}'.format(args.dest, service_log))
@@ -42,7 +43,7 @@ def download_live_logs(args):
       async_requests.append(
         grequests.AsyncRequest('GET',uri ,
           callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
-          params={'path' : '{0}/logs/{1}'.format(task, log_file)}
+          params={'path' : '{0}/{1}/logs/{1}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
         )
       )
       if logfile_name.endswith('.gz'):
@@ -58,6 +59,10 @@ def tasks_to_check(args):
     return [args.taskId]
   else:
     return logfetch_base.tasks_for_request(args)
+
+def files_json(args, task):
+  uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
+  return get_json_response(uri)
 
 def logs_folder_files(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)

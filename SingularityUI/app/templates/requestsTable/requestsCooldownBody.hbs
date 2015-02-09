@@ -6,6 +6,9 @@
                     <th data-sort-attribute="request.id">
                         Name
                     </th>
+                    <th data-sort-attribute="request.requestType">
+                        Type
+                    </th>
                     <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
                         Requested
                     </th>
@@ -16,9 +19,11 @@
                         Instances
                     </th>
 
-                    {{#ifInSubFilter 'scheduled' requestsSubFilter}}
-                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
-                            Schedule
+                    {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
+                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl schedule-header">
+                            <span id="schedule">
+                                Schedule <span class="glyphicon glyphicon-question-sign"/>
+                            </span>
                         </th>
                     {{/ifInSubFilter}}
 
@@ -37,6 +42,9 @@
                                 {{ request.id }}
                             </a>
                         </span></td>
+                        <td>
+                            {{humanizeText request.requestType}}
+                        </td>
                         <td data-value="{{ requestDeployState.activeDeploy.timestamp }}" class="hidden-xs">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
@@ -47,15 +55,23 @@
                             {{ request.instances }}
                         </td>
 
-                        {{#ifInSubFilter 'scheduled' ../requestsSubFilter}}
+                        {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
-                                {{ request.schedule }}
+                                {{#if request.quartzSchedule}}
+                                    {{ request.quartzSchedule }}
+                                {{else}}
+                                    {{#ifEqual request.scheduleType "quartz"}}
+                                        {{ request.schedule }}
+                                    {{else}}
+                                        {{ request.schedule }} {{ request.scheduleType }}
+                                    {{/ifEqual}}
+                                {{/if}}
                             </td>
                         {{/ifInSubFilter}}
 
                         <td class="actions-column hidden-xs">
                             {{#if canBeRunNow}}
-                                <a data-request-id="{{ request.id }}" data-request-type="{{#if scheduled}}scheduled{{else}}on-demand{{/if}}" data-action="run-now" title="Run now">
+                                <a data-request-id="{{ request.id }}" data-request-type="{{ type }}" data-action="run-now" title="Run now">
                                     <span class="glyphicon glyphicon-flash"></span>
                                 </a>
                             {{/if}}

@@ -1,5 +1,11 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Collections;
+import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkConflict;
+import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
+
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +21,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -34,7 +39,6 @@ import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -109,18 +113,6 @@ public class RequestResource extends AbstractRequestResource {
     return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
   }
 
-  private void checkRequestNotCleaning(String requestId) {
-    if (requestManager.cleanupRequestExists(requestId)) {
-      throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", requestId);
-    }
-  }
-
-  private void checkRequestIdPresent(SingularityRequest request) {
-    if (request.getId() == null) {
-      throw WebExceptions.badRequest("Request must have an id");
-    }
-  }
-
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Create or update a Singularity Request", response=SingularityRequestParent.class)
@@ -130,8 +122,8 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequestParent submit(@ApiParam("The Singularity request to create or update") SingularityRequest request,
       @ApiParam("Username of the person requesting to create or update") @QueryParam("user") Optional<String> user) {
-    checkRequestIdPresent(request);
-    checkRequestNotCleaning(request.getId());
+    checkNotNullBadRequest(request.getId(), "Request must have an id");
+    checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
@@ -140,9 +132,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
 
-    if (!maybeOldRequest.isPresent() && requestManager.cleanupRequestExists(request.getId())) {
-      throw WebExceptions.conflict("Request %s is currently cleaning. Try again after a few moments", request.getId());
-    }
+    checkConflict(maybeOldRequest.isPresent() || !requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
     final long now = System.currentTimeMillis();
 
@@ -183,9 +173,7 @@ public class RequestResource extends AbstractRequestResource {
   private String getAndCheckDeployId(String requestId) {
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
-    if (!maybeDeployId.isPresent()) {
-      throw WebExceptions.conflict("Can not schedule/bounce a request (%s) with no deploy", requestId);
-    }
+    checkConflict(maybeDeployId.isPresent(), "Can not schedule/bounce a request (%s) with no deploy", requestId);
 
     return maybeDeployId.get();
   }
@@ -198,60 +186,46 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    if (!requestWithState.getRequest().isLongRunning()) {
-      throw WebExceptions.badRequest("Can not bounce a scheduled or one-off request (%s)", requestWithState);
-    }
+    checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
-    checkRequestStateNotPaused(requestWithState, "bounce");
+    checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
         new SingularityRequestCleanup(user, RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
 
-    if (createResult == SingularityCreateResult.EXISTED) {
-      throw WebExceptions.conflict("%s is already bouncing", requestId);
-    }
+    checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
     return fillEntireRequest(requestWithState);
   }
 
   @POST
   @Path("/request/{requestId}/run")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate execution.", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
       @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> user,
-      @ApiParam("Additional command line arguments to append to the task") String commandLineArgs) {
+      @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    checkRequestStateNotPaused(requestWithState, "run now");
-
-    Optional<String> maybeCmdLineArgs = Optional.absent();
+    checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     PendingType pendingType = null;
 
     if (requestWithState.getRequest().isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
-
-      if (!taskManager.getActiveTaskIdsForRequest(requestId).isEmpty()) {
-        throw WebExceptions.conflict("Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
-      }
+      checkConflict(taskManager.getActiveTaskIdsForRequest(requestId).isEmpty(), "Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
     } else if (requestWithState.getRequest().isOneOff()) {
       pendingType = PendingType.ONEOFF;
     } else {
-      throw WebExceptions.badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
+      throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
 
-    if (!Strings.isNullOrEmpty(commandLineArgs)) {
-      maybeCmdLineArgs = Optional.of(commandLineArgs);
-    }
+    SingularityCreateResult result = requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), user, pendingType, commandLineArgs));
 
-    SingularityCreateResult result = requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
-
-    if (result == SingularityCreateResult.EXISTED) {
-      throw WebExceptions.conflict("%s is already pending, please try again soon", requestId);
-    }
+    checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
     return fillEntireRequest(requestWithState);
   }
@@ -267,7 +241,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    checkRequestStateNotPaused(requestWithState, "pause");
+    checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to pause (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     Optional<Boolean> killTasks = Optional.absent();
     if (pauseRequest.isPresent()) {
@@ -279,9 +253,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent()));
 
-    if (result == SingularityCreateResult.EXISTED) {
-      throw WebExceptions.conflict("%s is already pausing - try again soon", requestId, result);
-    }
+    checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 
     mailer.sendRequestPausedMail(requestWithState.getRequest(), user);
 
@@ -300,9 +272,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the unpause") @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    if (requestWithState.getState() != RequestState.PAUSED) {
-      throw WebExceptions.conflict("Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
-    }
+    checkConflict(requestWithState.getState() == RequestState.PAUSED, "Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
 
     mailer.sendRequestUnpausedMail(requestWithState.getRequest(), user);
 
@@ -313,7 +283,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.unpause(requestWithState.getRequest(), now, user);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, Optional.<String> absent(), user, PendingType.UNPAUSED));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, user, PendingType.UNPAUSED, Collections.<String> emptyList()));
     }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
@@ -433,10 +403,9 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequest updateInstances(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
       @ApiParam("Username of the person requesting the scale") @QueryParam("user") Optional<String> user,
       @ApiParam("Object to hold number of instances to request") SingularityRequestInstances newInstances) {
-    if (requestId == null || newInstances.getId() == null || !requestId.equals(newInstances.getId())) {
-      throw WebExceptions.badRequest("Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
-    }
-    checkRequestNotCleaning(requestId);
+
+    checkBadRequest(requestId != null && newInstances.getId() != null && requestId.equals(newInstances.getId()), "Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
+    checkConflict(!requestManager.cleanupRequestExists(requestId), "Request %s is currently cleaning. Try again after a few moments", requestId);
 
     SingularityRequest oldRequest = fetchRequest(requestId);
     Optional<SingularityRequest> maybeOldRequest = Optional.of(oldRequest);

@@ -25,7 +25,8 @@ html
           div(style="border-top: 10px solid #df4210; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
             h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") #{ requestId }
             h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") #{ status }
-            a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityTaskLink }") View task
+            if singularityTaskLink
+              a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityTaskLink }") View task
 
         //- Status
         div(style="padding-bottom: 20px")
@@ -35,7 +36,7 @@ html
             if taskStateLost
               | This is likely an infrastructure issue. No action is required.
             if taskStateFinished
-              if requestScheduled
+              if !requestAlwaysRunning
                 | The task finished running and exited with a normal exit code. No action is required.
               else
                 | The task finished running and exited with a normal exit code. Since this task was not part of a scheduled request, it is worth investigating whether this was the expected behavior. Often this means the task actually failed and exited with an incorrect exit code.
@@ -58,12 +59,14 @@ html
                 p Singularity will run the task again on its normal schedule.
           if requestOneOff
             p Singularity will not run your task again unless manually instructed.
+          else if requestRunOnce
+            p Singularity will not run your task again until it is deployed.
           else if !requestScheduled
             p Singularity will continue to restart your task immediately.
           if !taskStateFinished
             if !taskStateRunning
               if !taskRan
-                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{adminEmails}.
+                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{ adminEmails }.
               else
                 if taskStateFailed
                   p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
@@ -106,21 +109,16 @@ html
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Files
           dl(style="margin-bottom: 0")
-            dt(style="font-weight: bold; margin: 0 0 9px") Standard output
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px 0 14px; border-radius: 3px")
-              if stdout
-                pre(style="white-space: pre; margin: 0")
-                  code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
-                    for line in stdout
-                      div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
-              else
-                | No stdout available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
-            dt(style="font-weight: bold; margin: 0 0 9px") Standard error
-            dd(style="background: #eee; display: block; margin: 0; padding: 10px 14px 0 14px; border-radius: 3px")
-              if stdout
-                pre(style="white-space: pre; margin: 0")
-                  code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace")
-                    for line in stderr
-                      div(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre; margin-bottom: 12px")= line
-              else
-                | No stderr available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
+            each log in logTails
+              dt(style="font-weight: bold; margin: 0 0 9px")
+                if log.link
+                  a(href="#{ log.link }") #{ log.file }
+                else
+                  #{ log.file }
+              dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px")
+                if log.log
+                  pre(style="white-space: pre; margin: 0")
+                    code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre;")
+                      #{ log.log }
+                else
+                  | #{ log.path } not available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.

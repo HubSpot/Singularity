@@ -1,6 +1,7 @@
 View = require './view'
 
 Request = require '../models/Request'
+Slaves = require '../collections/Slaves'
 
 class TasksView extends View
 
@@ -10,9 +11,10 @@ class TasksView extends View
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
-        active:    require '../templates/tasksTable/tasksActiveBody'
-        scheduled: require '../templates/tasksTable/tasksScheduledBody'
-        cleaning:  require '../templates/tasksTable/tasksCleaningBody'
+        active:          require '../templates/tasksTable/tasksActiveBody'
+        scheduled:       require '../templates/tasksTable/tasksScheduledBody'
+        cleaning:        require '../templates/tasksTable/tasksCleaningBody'
+        decommissioning: require '../templates/tasksTable/tasksDecommissioningBody'
 
     # For staged rendering
     renderProgress: 0
@@ -82,7 +84,6 @@ class TasksView extends View
 
     render: =>
         @preventSearchOverwrite()
-
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -135,9 +136,21 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
+        decommissioning_hosts = new Slaves(
+            @attributes.slaves.filter (model) ->
+                model.attributes.state in ['DECOMMISSIONING','DECOMISSIONING', 'DECOMMISSIONED','DECOMISSIONED', 'STARTING_DECOMMISSION', 'STARTING_DECOMISSION']
+        ).map((model) ->
+            model.get('host')
+        )
+        if decommissioning_hosts.length is 0
+            hosts = 'none'
+        else
+            hosts = decommissioning_hosts.join().replace(/_/g, "-")
+
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
+            decommissioning_hosts: hosts
         
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"

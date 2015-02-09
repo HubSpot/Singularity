@@ -11,86 +11,83 @@
     </h2>
 </div>
 <div class="row {{#unless expanded}}hide{{/unless}}">
-    <ul class="list-unstyled horizontal-description-list">
-        {{#if data.cpusNrPeriods }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>CPUs number of periods</h4>
-                    <p>{{ data.cpusNrPeriods }}</p>
+    {{#ifAll data.memRssBytes data.memLimitBytes}}
+        <div class='col-md-3'>
+            <div>
+                <h4>Memory (rss vs limit)</h4>
+                <div class="progress text-center">
+                  <div class="progress-bar progress-bar-success progress-bar-striped text-center" role="progressbar" style="width: {{percentageOf data.memRssBytes data.memLimitBytes}}%;"></div>
                 </div>
-            </li>
-        {{/if}}
-        {{#if data.cpusNrThrottled }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>CPUs number throttled</h4>
-                    <p>{{ data.cpusNrThrottled }}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.cpusSystemTimeSecs }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>System time (sec)</h4>
-                    <p>{{ data.cpusSystemTimeSecs }}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.cpusThrottledTimeSecs }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>Throttled time (sec)</h4>
-                    <p>{{ data.cpusThrottledTimeSecs }}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.cpusUserTimeSecs }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>User time (sec)</h4>
-                    <p>{{ data.cpusUserTimeSecs }}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.memAnonBytes }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>Memory (anon)</h4>
-                    <p>{{humanizeFileSize data.memAnonBytes}}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.memFileBytes }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>Memory (file)</h4>
-                    <p>{{humanizeFileSize data.memFileBytes}}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.memMappedFileBytes }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>Memory (mapped file)</h4>
-                    <p>{{humanizeFileSize data.memMappedFileBytes}}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.memRssBytes }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>Memory (rss)</h4>
-                    <p>{{humanizeFileSize data.memRssBytes}}</p>
-                </div>
-            </li>
-        {{/if}}
-        {{#if data.memLimitBytes }}
-            <li class='col-md-4'>
-                <div>
-                    <h4>Memory (limit)</h4>
-                    <p>{{humanizeFileSize data.memLimitBytes}}</p>
-                </div>
-            </li>
-        {{/if}}
-    </ul>
+                {{humanizeFileSize data.memRssBytes}} / {{humanizeFileSize data.memLimitBytes}}
+            </div>
+        </div>
+    {{/ifAll}}
+    <div class='col-md-9'>
+        <ul class="list-unstyled horizontal-description-list">
+            {{#if data.cpusNrPeriods }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>CPUs number of periods</h4>
+                        <p>{{ data.cpusNrPeriods }}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.cpusNrThrottled }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>CPUs number throttled</h4>
+                        <p>{{ data.cpusNrThrottled }}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.cpusSystemTimeSecs }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>System time (sec)</h4>
+                        <p>{{ data.cpusSystemTimeSecs }}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.cpusThrottledTimeSecs }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>Throttled time (sec)</h4>
+                        <p>{{ data.cpusThrottledTimeSecs }}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.cpusUserTimeSecs }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>User time (sec)</h4>
+                        <p>{{ data.cpusUserTimeSecs }}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.memAnonBytes }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>Memory (anon)</h4>
+                        <p>{{humanizeFileSize data.memAnonBytes}}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.memFileBytes }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>Memory (file)</h4>
+                        <p>{{humanizeFileSize data.memFileBytes}}</p>
+                    </div>
+                </li>
+            {{/if}}
+            {{#if data.memMappedFileBytes }}
+                <li class='col-md-4'>
+                    <div>
+                        <h4>Memory (mapped file)</h4>
+                        <p>{{humanizeFileSize data.memMappedFileBytes}}</p>
+                    </div>
+                </li>
+            {{/if}}
+        </ul>
+    </div>
 </div>

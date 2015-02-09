@@ -1,5 +1,9 @@
 package com.hubspot.singularity.sentry;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.inject.Singleton;
 
 import net.kencochrane.raven.Raven;
@@ -53,31 +57,39 @@ public class SingularityExceptionNotifier {
     }
   }
 
-  public void notify(String message) {
+  public void notify(String subject) {
+    notify(subject, Collections.<String, String> emptyMap());
+  }
+
+  public void notify(String subject, Map<String, String> extraData) {
     if (!raven.isPresent()) {
       return;
     }
 
     try {
-      notify(raven.get(), message);
+      notify(raven.get(), subject, extraData);
     } catch (Throwable e) {
-      LOG.error("Caught exception while trying to report {} to Sentry", message, e);
+      LOG.error("Caught exception while trying to report {} ({}) to Sentry", subject, extraData, e);
     }
   }
 
-  private void notify(Raven raven, String message) {
+  private void notify(Raven raven, String subject, Map<String, String> extraData) {
     final EventBuilder eventBuilder = new EventBuilder()
-      .setMessage(getPrefix() + message)
-      .setLevel(Event.Level.ERROR);
+    .setMessage(getPrefix() + subject)
+    .setLevel(Event.Level.ERROR);
+
+    for (Entry<String, String> extraDataEntry : extraData.entrySet()) {
+      eventBuilder.addExtra(extraDataEntry.getKey(), extraDataEntry.getValue());
+    }
 
     sendEvent(raven, eventBuilder);
   }
 
   private void notify(Raven raven, Throwable t) {
     final EventBuilder eventBuilder = new EventBuilder()
-      .setMessage(getPrefix() + t.getMessage())
-      .setLevel(Event.Level.ERROR)
-      .addSentryInterface(new ExceptionInterface(t));
+    .setMessage(getPrefix() + t.getMessage())
+    .setLevel(Event.Level.ERROR)
+    .addSentryInterface(new ExceptionInterface(t));
 
     sendEvent(raven, eventBuilder);
   }

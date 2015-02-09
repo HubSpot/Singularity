@@ -16,6 +16,8 @@ class RequestsView extends View
         pending:  require '../templates/requestsTable/requestsPendingBody'
         cleaning: require '../templates/requestsTable/requestsCleaningBody'
 
+    quartzTemplate: require '../templates/vex/quartzInfo'
+
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown']
 
@@ -33,6 +35,7 @@ class RequestsView extends View
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="starToggle"]': 'toggleStar'
             'click [data-action="run-now"]': 'runRequest'
+            'click [data-action="show-quartz"]': 'showQuartz'
             'click [data-filter]': 'changeFilters'
 
             'change input[type="search"]': 'searchChange'
@@ -57,27 +60,32 @@ class RequestsView extends View
             requests = _.filter requests, (request) =>
                 searchFilter = @searchFilter.toLowerCase().split("@")[0]
                 valuesToSearch = []
-                
+
                 for user in request.request.owners ? []
                   valuesToSearch.push(user.split("@")[0])
-                  
+
                 valuesToSearch.push(request.request.id)
                 valuesToSearch.push(request.requestDeployState?.activeDeploy?.user)
-                
+
                 searchTarget = valuesToSearch.join("")
                 searchTarget.toLowerCase().indexOf(searchFilter) isnt -1
-        
+
         # Only show requests that match the clicky filters
         if @state in @haveSubfilter and @subFilter isnt 'all'
             requests = _.filter requests, (request) =>
                 filter = false
 
-                if @subFilter.indexOf('daemon') isnt -1
-                    filter = filter or request.daemon
-                if @subFilter.indexOf('scheduled') isnt -1
-                    filter = filter or request.scheduled
-                if @subFilter.indexOf('ondemand') isnt -1
-                    filter = filter or request.onDemand
+                if @subFilter.indexOf('SERVICE') isnt -1
+                    filter = filter or request.type == 'SERVICE'
+                if @subFilter.indexOf('WORKER') isnt -1
+                    filter = filter or request.type == 'WORKER'
+                if @subFilter.indexOf('SCHEDULED') isnt -1
+                    filter = filter or request.type == 'SCHEDULED'
+                if @subFilter.indexOf('ON_DEMAND') isnt -1
+                    filter = filter or request.type == 'ON_DEMAND'
+                if @subFilter.indexOf('RUN_ONCE') isnt -1
+                    filter = filter or request.type == 'RUN_ONCE'
+
                 filter
 
         # Sort the table if the user clicked on the table heading things
@@ -101,7 +109,7 @@ class RequestsView extends View
         if @state in ['all', 'active']
             for request in requests
                 request.starred = @collection.isStarred request.id
-            
+
         @currentRequests = requests
 
     preventSearchOverwrite: ->
@@ -146,6 +154,21 @@ class RequestsView extends View
             @focusSearchAfterRender = false
 
         @renderTable()
+        @$('.actions-column a[title]').tooltip()
+        @$('.schedule-header span#schedule').popover({
+            animation: false,
+            placement : 'auto',
+            trigger: 'hover',
+            delay: {hide: 400},
+            container: 'span#schedule',
+            html: true,
+            content: "<p>All schedules are in <a data-action='show-quartz'>quartz format</a> unless otherwise specified.</p>",
+            template: '<div class="popover table-header-popover" role="tooltip"><div class="popover-content"></div></div>'
+        }).on
+            show: (e) ->
+                @showPopover(e)
+            hide: (e) ->
+                @hidePopover(e)
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -181,7 +204,7 @@ class RequestsView extends View
             requests:          requests
             rowsOnly:          true
             requestsSubFilter: @subFilter
-        
+
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
 
@@ -195,7 +218,27 @@ class RequestsView extends View
         else
             $tableBody.append $contents
 
-        @$('.actions-column a[title]').tooltip()
+    hidePopover: (e) ->
+        $this = $(this)
+        if $this.data("forceHidePopover")
+            $this.data "forceHidePopover", false
+            return true
+        e.stopImmediatePropagation()
+        clearTimeout $this.data("popoverTO")
+        $this.data "hoveringPopover", false
+        $this.data "waitingForPopoverTO", true
+        $this.data "popoverTO", setTimeout(->
+            unless $this.data("hoveringPopover")
+                $this.data "forceHidePopover", true
+                $this.data "waitingForPopoverTO", false
+                $this.popover "hide"
+        , 1500)
+        false
+
+    showPopover: (e) ->
+        $this = $(this)
+        $this.data "hoveringPopover", true
+        e.stopImmediatePropagation()  if $this.data("waitingForPopoverTO")
 
     sortTable: (event) =>
         @isSorted = true
@@ -205,7 +248,8 @@ class RequestsView extends View
 
         $currentlySortedHeading = @$ "[data-sorted=true]"
         $currentlySortedHeading.removeAttr "data-sorted"
-        $currentlySortedHeading.find('span').remove()
+        $currentlySortedHeading.find("span.glyphicon-chevron-up").remove()
+        $currentlySortedHeading.find("span.glyphicon-chevron-down").remove()
 
         if newSortAttribute is @sortAttribute and @sortAscending?
             @sortAscending = not @sortAscending
@@ -257,15 +301,15 @@ class RequestsView extends View
         @collection.get(id).promptUnpause =>
             $row.remove()
             @trigger 'refreshrequest'
-            
+
     scaleRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
-        
+
         @collection.get(id).promptScale =>
           $row.addClass 'flash'
           @trigger 'refreshrequest'
-          
+
     runRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
@@ -273,13 +317,13 @@ class RequestsView extends View
         @collection.get(id).promptRun =>
             $row.addClass 'flash'
             setTimeout (=> $row.removeClass 'flash'), 500
-                        
+
     toggleStar: (e) ->
         $target = $(e.currentTarget)
         $row = $target.parents 'tr'
 
         id = $row.data 'request-id'
-        
+
         @collection.toggleStar id
 
         starred = $target.attr('data-starred') is "true"
@@ -298,7 +342,7 @@ class RequestsView extends View
             @subFilter = filter
         else
             # Select multiple filters
-            currentFilter = if @subFilter is 'all' then 'daemon-ondemand-scheduled' else  @subFilter
+            currentFilter = if @subFilter is 'all' then 'SERVICE-WORKER-SCHEDULED-ON_DEMAND-RUN_ONCE' else  @subFilter
 
             currentFilter = currentFilter.split '-'
             needToAdd = not _.contains currentFilter, filter
@@ -323,5 +367,10 @@ class RequestsView extends View
         if @searchFilter isnt previousSearchFilter
             @updateUrl()
             @renderTable()
+
+    showQuartz: (event) =>
+        vex.dialog.alert
+            message: @quartzTemplate
+        event.stopPropogation()
 
 module.exports = RequestsView
