@@ -14,7 +14,7 @@ from cat import cat_files
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 DEFAULT_CONF_DIR = os.path.expanduser('~/.logfetch')
 DEFAULT_CONF_FILE = 'default'
-DEFAULT_PARALLEL_FETCHES = 5
+DEFAULT_PARALLEL_FETCHES = 10
 DEFAULT_CHUNK_SIZE = 8192
 DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
 DEFAULT_TASK_COUNT = 10

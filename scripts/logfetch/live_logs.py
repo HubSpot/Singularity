@@ -16,14 +16,14 @@ def download_live_logs(args):
   async_requests = []
   zipped_files = []
   all_logs = []
-  sys.stderr.write(colored('Removing old service.log files', 'blue') + '\n')
+  sys.stderr.write(colored('Removing old live log files', 'blue') + '\n')
   for f in glob('{0}/*service.log'.format(args.dest)):
     os.remove(f)
   sys.stderr.write(colored('Downloading current live log files', 'blue') + '\n')
   for task in tasks:
     metadata = files_json(args, task)
     uri = DOWNLOAD_FILE_FORMAT.format(metadata['slaveHostname'])
-    for log_file in base_directory_files(args, task):
+    for log_file in base_directory_files(args, task, metadata):
       logfile_name = '{0}-{1}'.format(task, log_file)
       if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
         async_requests.append(
@@ -72,9 +72,7 @@ def logs_folder_files(args, task):
   else:
     return [f['path'].rsplit('/')[-1] for f in files_json if logfetch_base.is_in_date_range(args, f['mtime'])]
 
-def base_directory_files(args, task):
-  uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  files_json = get_json_response(uri)
+def base_directory_files(args, task, files_json):
   if 'files' in files_json:
     files = files_json['files']
     return [f['name'] for f in files if valid_logfile(args, f)]

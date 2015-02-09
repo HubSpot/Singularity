@@ -2,7 +2,7 @@ import os
 import sys
 from termcolor import colored
 
-GREP_COMMAND_FORMAT = 'xargs -n {0} {1} < {2}'
+GREP_COMMAND_FORMAT = 'while read file; do {0} "$file"; done < {1}'
 DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
 
 def grep_files(args, all_logs):
@@ -27,6 +27,6 @@ def remove_greplist(greplist_filename):
 
 def grep_command(args, all_logs, greplist_filename):
   if 'grep' in args.grep:
-    return GREP_COMMAND_FORMAT.format(len(all_logs), args.grep, greplist_filename)
+    return GREP_COMMAND_FORMAT.format(args.grep, greplist_filename)
   else:
-    return GREP_COMMAND_FORMAT.format(len(all_logs), DEFAULT_GREP_COMMAND.format(args.grep), greplist_filename)
+    return GREP_COMMAND_FORMAT.format(DEFAULT_GREP_COMMAND.format(args.grep), greplist_filename)
