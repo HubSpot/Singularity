@@ -3,7 +3,6 @@ import ConfigParser
 import sys
 import os
 from termcolor import colored
-
 from fake_section_head import FakeSectionHead
 from live_logs import download_live_logs
 from s3_logs import download_s3_logs
@@ -20,15 +19,15 @@ DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
 DEFAULT_TASK_COUNT = 10
 DEFAULT_DAYS = 7
 
-def exit(reason):
-  sys.stderr.write(colored(reason, 'red') + '\n')
+def exit(reason, color='red'):
+  sys.stderr.write(colored(reason, color) + '\n')
   sys.exit(1)
 
 def tail_logs(args):
   try:
     start_tail(args)
   except KeyboardInterrupt:
-    exit('Stopping logtail...')
+    exit('Stopping logtail...', 'magenta')
 
 def fetch_logs(args):
   try:
@@ -38,7 +37,7 @@ def fetch_logs(args):
     all_logs += download_live_logs(args)
     grep_files(args, all_logs)
   except KeyboardInterrupt:
-    exit('Stopping logfetch...')
+    exit('Stopping logfetch...', 'magenta')
 
 def cat_logs(args):
   try:
@@ -48,7 +47,7 @@ def cat_logs(args):
     all_logs += download_live_logs(args)
     cat_files(args, all_logs)
   except KeyboardInterrupt:
-    exit('Stopping logcat...')
+    exit('Stopping logcat...', 'magenta')
 
 
 def check_dest(args):

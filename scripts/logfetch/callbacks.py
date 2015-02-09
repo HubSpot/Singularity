@@ -10,7 +10,7 @@ def generate_callback(request, destination, filename, chunk_size):
     with open(path, 'wb') as f:
       for chunk in response.iter_content(chunk_size):
         f.write(chunk)
-    sys.stderr.write(colored('finished downloading {0}'.format(path), 'green') + '\n')
+    sys.stderr.write(colored('Downloaded ', 'green') + colored(path, 'white') + '\n')
 
   return callback
 

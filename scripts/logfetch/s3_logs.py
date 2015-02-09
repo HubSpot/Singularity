@@ -2,12 +2,10 @@ import os
 import sys
 import re
 import grequests
-from datetime import datetime
-from termcolor import colored
-
 import logfetch_base
-from singularity_request import get_json_response
+from termcolor import colored
 from callbacks import generate_callback
+from singularity_request import get_json_response
 
 TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
@@ -19,21 +17,23 @@ def download_s3_logs(args):
   all_logs = []
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
-    full_log_path = '{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))
-    full_gz_path = '{0}/{1}'.format(args.dest, filename)
-    if in_date_range(args, filename):
-      if not (os.path.isfile(full_log_path) or os.path.isfile(full_gz_path)):
+    if logfetch_base.is_in_date_range(args, time_from_filename(filename)):
+      if not already_downloaded(args.dest, filename):
         async_requests.append(
-          grequests.AsyncRequest('GET', log_file['getUrl'],
-            callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size)
-          )
+          grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size))
         )
       all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
-  grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
+  if async_requests:
+    sys.stderr.write(colored('Starting S3 Downloads', 'blue'))
+    grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   zipped_files = ['{0}/{1}'.format(args.dest, log_file['key'].rsplit("/", 1)[1]) for log_file in logs]
+  sys.stderr.write(colored('Unpacking S3 logs\n', 'blue'))
   logfetch_base.unpack_logs(zipped_files)
   sys.stderr.write(colored('All S3 logs up to date', 'blue') + '\n')
   return all_logs
+
+def already_downloaded(dest, filename):
+  return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename)))
 
 def logs_for_all_requests(args):
   if args.taskId:
@@ -42,29 +42,14 @@ def logs_for_all_requests(args):
     tasks = logfetch_base.tasks_for_requests(args)
     logs = []
     for task in tasks:
-      logs = logs + get_json_response(singularity_s3logs_uri(args, task))
+      s3_logs = get_json_response(singularity_s3logs_uri(args, task))
+      logs = logs + s3_logs if s3_logs else logs
     return logs
-
-def in_date_range(args, filename):
-  timedelta = datetime.utcnow() - time_from_filename(filename)
-  if args.end_days:
-    if timedelta.days > args.start_days or timedelta.days <= args.end_days:
-      return False
-    else:
-      return True
-  else:
-    if timedelta.days > args.start_days:
-      return False
-    else:
-      return True
 
 def time_from_filename(filename):
   time_string = re.search('(\d{13})', filename).group(1)
-  return datetime.utcfromtimestamp(int(time_string[0:-3]))
-
+  return int(time_string[0:-3])
 
 def singularity_s3logs_uri(args, idString):
-  singularity_path = TASK_FORMAT.format(idString)
-  singularity_uri = S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), singularity_path)
-  return singularity_uri
+  return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), TASK_FORMAT.format(idString))
 
