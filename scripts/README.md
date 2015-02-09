@@ -31,7 +31,7 @@ Two commands exist for downloading logs.
 |-o, --dest|Destination folder for download output|`~/.logfetch_cache`|
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk-size|Chunk size for writing responses to file system|8192
-|-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`), This MUST be set|
+|-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)| Must be set!|
 |-s , --start-days|Search for logs no older than this many days|7
 |-e , --end-days|Search for logs no newer than this many days| None (today)
 |-g, --grep|Grep string for searching log files(Only for `logfetch`)|
@@ -96,8 +96,8 @@ You can also provide the `-g` option which will provide the grep string to the s
 |-t , --task-id|Task Id to fetch logs for|
 |-r , --request-id|Request Id to fetch logs for|
 |-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
-|-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`), This MUST be set|
+|-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)|Must be set!|
 |-g, --grep|Grep string for searching log files|
 |-l, --logfile|Log file path to tail (ie logs/access.log)|Must be set!|
-|-v, --verbose|Extra output about the task id associated with logs in the output| False|
+|-v, --verbose|Extra output about the task id associated with logs in the output|False|
 
