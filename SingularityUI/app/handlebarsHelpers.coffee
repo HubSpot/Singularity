@@ -76,21 +76,13 @@ Handlebars.registerHelper 'humanizeText', (text) ->
     text
 
 # 2121 => '2 KB'
-Handlebars.registerHelper 'humanizeFileSize', (fileSize) ->
-    kilo = 1024
-    mega = 1024 * 1024
-    giga = 1024 * 1024 * 1024
+Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
+    k = 1024
+    sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
-    shorten = (which) -> Math.round fileSize / which
-
-    if fileSize > giga
-        return "#{ shorten giga } GB"
-    else if fileSize > mega
-        return "#{ shorten mega } MB"
-    else if fileSize > kilo
-        return "#{ shorten kilo } KB"
-    else
-        return "#{ fileSize } B"
+    return '0 B' if bytes is 0
+    i = Math.floor(Math.log(bytes) / Math.log(k))
+    return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i]
 
 # 'sbacanu@hubspot.com' => 'sbacanu'
 # 'seb'                 => 'seb'
