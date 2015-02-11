@@ -81,8 +81,8 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
     sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
     return '0 B' if bytes is 0
-    i = Math.floor(Math.log(bytes) / Math.log(k))
-    return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i]
+    i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length-1)
+    return +(bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
 
 # 'sbacanu@hubspot.com' => 'sbacanu'
 # 'seb'                 => 'seb'
