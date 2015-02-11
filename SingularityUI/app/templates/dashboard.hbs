@@ -67,52 +67,11 @@
         </div>
     {{/if}}
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-12 table-staged">
             <div class="page-header">
                 <h2>Starred requests</h2>
             </div>
-            {{#if starredRequests.length}}
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th data-sortable="false"></th>
-                            <th>Request</th>
-                            <th class="hidden-xs">Requested</th>
-                            <th class="visible-lg visible-xl">Deploy user</th>
-                            <th class="visible-lg visible-xl">Instances</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each starredRequests}}
-                            <tr data-request-id="{{ request.id }}">
-                                <td>
-                                    <a class="star" data-action="unstar" data-starred="true">
-                                        <span class="glyphicon glyphicon-star"></span>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="{{appRoot}}/request/{{ request.id }}">
-                                        {{ request.id }}
-                                    </a>
-                                </td>
-                                <td class="hidden-xs" data-value="{{ requestDeployState.activeDeploy.timestamp }}">
-                                    <span title="{{ requestDeployState.activeDeploy.timestamp }}">
-                                        {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
-                                    </span>
-                                </td>
-                                <td class="visible-lg visible-xl">
-                                    {{usernameFromEmail requestDeployState.activeDeploy.user}}
-                                </td>
-                                <td class="visible-lg visible-xl">
-                                    {{ request.instances }}
-                                </td>
-                            </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-            {{else}}
-                <div class="empty-table-message"><p>No starred requests</p></div>
-            {{/if}}
+            {{> requestsBody }}
         </div>
     </div>
 {{else}}
