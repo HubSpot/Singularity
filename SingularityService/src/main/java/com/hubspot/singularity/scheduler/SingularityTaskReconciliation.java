@@ -99,6 +99,7 @@ public class SingularityTaskReconciliation implements Managed {
 
     if (!schedulerDriver.isPresent()) {
       LOG.trace("Not running reconciliation - no schedulerDriver present");
+      isRunningReconciliation.set(false);
       return ReconciliationState.NO_DRIVER;
     }
 
