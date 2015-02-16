@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import javax.inject.Provider;
@@ -16,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -23,6 +27,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -35,6 +40,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
@@ -102,6 +108,10 @@ public class SingularityClient {
   private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy/%s";
   private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request/%s";
   private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task/%s";
+
+  private static final String SANDBOX_FORMAT = "http://%s/%s/sandbox";
+  private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";
+  private static final String SANDBOX_READ_FILE_FORMAT = SANDBOX_FORMAT + "/%s/read";
 
   private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
@@ -179,6 +189,44 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     HttpResponse response = httpClient.execute(HttpRequest.newBuilder().setUrl(uri).build());
+
+    if (response.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    checkResponse(type, response);
+
+    LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
+
+    return Optional.fromNullable(response.getAs(clazz));
+  }
+
+  private <T> Optional<T> getSingleWithParams(String uri, String type, String id, Map<String, Object> queryParams, Class<T> clazz) {
+    checkNotNull(id, String.format("Provide a %s id", type));
+
+    LOG.info("Getting {} {} from {}", type, id, uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        .setUrl(uri);
+
+    for (Entry<String, Object> queryParamEntry : queryParams.entrySet()) {
+      if (queryParamEntry.getValue() instanceof String) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (String) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Integer) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Integer) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Long) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Long) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Boolean) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Boolean) queryParamEntry.getValue());
+      } else {
+        throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
+            queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
+      }
+    }
+
+    HttpResponse response = httpClient.execute(requestBuilder.build());
 
     if (response.getStatusCode() == 404) {
       return Optional.absent();
@@ -678,6 +726,62 @@ public class SingularityClient {
     final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getHost(), contextPath, webhookId);
 
     return getCollection(requestUri, "request updates", TASK_UPDATES_COLLECTION);
+  }
+
+  //
+  // SANDBOX
+  //
+
+  /**
+   * Retrieve information about a specific task's sandbox
+   *
+   * @param taskId
+   *    The task ID to browse
+   * @param path
+   *    The path to browse from.
+   *    if not specified it will browse from the sandbox root.
+   * @return
+   *    A {@link SingularitySandbox} object that captures the information for the path to a specific task's Mesos sandbox
+   */
+  public Optional<SingularitySandbox> browseTaskSandBox(String taskId, String path) {
+    final String requestUrl = String.format(SANDBOX_BROWSE_FORMAT, getHost(), contextPath, taskId);
+
+    return getSingleWithParams(requestUrl, "browse sandbox for task", taskId, ImmutableMap.<String, Object>of("path", path), SingularitySandbox.class);
+
+  }
+
+  /**
+   * Retrieve part of the contents of a file in a specific task's sandbox.
+   *
+   * @param taskId
+   *    The task ID of the sandbox to read from
+   * @param path
+   *    The path to the file to be read. Relative to the sandbox root (without a leading slash)
+   * @param grep
+   *    Optional string to grep for
+   * @param offset
+   *    Byte offset to start reading from
+   * @param length
+   *    Maximum number of bytes to read
+   * @return
+   *    A {@link MesosFileChunkObject} that contains the requested partial file contents
+   */
+  public Optional<MesosFileChunkObject> read(String taskId, String path, Optional<String> grep, Optional<Long> offset, Optional<Long> length) {
+    final String requestUrl = String.format(SANDBOX_READ_FILE_FORMAT, getHost(), contextPath, taskId);
+
+    Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("path", path);
+
+    if (grep.isPresent()) {
+      queryParamBuider.put("grep", grep);
+    }
+    if (offset.isPresent()) {
+      queryParamBuider.put("offset", offset);
+    }
+    if (length.isPresent()) {
+      queryParamBuider.put("length", length);
+    }
+
+    return getSingleWithParams(requestUrl, "Read sandbox file for task", taskId, queryParamBuider.build(), MesosFileChunkObject.class);
   }
 
 }
