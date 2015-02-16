@@ -766,7 +766,7 @@ public class SingularityClient {
    * @return
    *    A {@link MesosFileChunkObject} that contains the requested partial file contents
    */
-  public Optional<MesosFileChunkObject> read(String taskId, String path, Optional<String> grep, Optional<Long> offset, Optional<Long> length) {
+  public Optional<MesosFileChunkObject> readSandBoxFile(String taskId, String path, Optional<String> grep, Optional<Long> offset, Optional<Long> length) {
     final String requestUrl = String.format(SANDBOX_READ_FILE_FORMAT, getHost(), contextPath, taskId);
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("path", path);
