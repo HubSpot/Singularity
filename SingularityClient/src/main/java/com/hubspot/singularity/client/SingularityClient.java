@@ -772,13 +772,13 @@ public class SingularityClient {
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("path", path);
 
     if (grep.isPresent()) {
-      queryParamBuider.put("grep", grep);
+      queryParamBuider.put("grep", grep.get());
     }
     if (offset.isPresent()) {
-      queryParamBuider.put("offset", offset);
+      queryParamBuider.put("offset", offset.get());
     }
     if (length.isPresent()) {
-      queryParamBuider.put("length", length);
+      queryParamBuider.put("length", length.get());
     }
 
     return getSingleWithParams(requestUrl, "Read sandbox file for task", taskId, queryParamBuider.build(), MesosFileChunkObject.class);
