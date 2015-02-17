@@ -1,8 +1,6 @@
-import os
 import sys
 import fnmatch
 import grequests
-from glob import glob
 from termcolor import colored
 from callbacks import generate_callback
 from singularity_request import get_json_response
@@ -19,32 +17,33 @@ def download_live_logs(args):
   sys.stderr.write(colored('Finding current live log files', 'cyan') + '\n')
   for task in tasks:
     metadata = files_json(args, task)
-    uri = DOWNLOAD_FILE_FORMAT.format(metadata['slaveHostname'])
-    for log_file in base_directory_files(args, task, metadata):
-      logfile_name = '{0}-{1}'.format(task, log_file)
-      if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
-        async_requests.append(
-          grequests.AsyncRequest('GET',uri ,
-            callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
-            params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+    if 'slaveHostname' in metadata:
+      uri = DOWNLOAD_FILE_FORMAT.format(metadata['slaveHostname'])
+      for log_file in base_directory_files(args, task, metadata):
+        logfile_name = '{0}-{1}'.format(task, log_file)
+        if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
+          async_requests.append(
+            grequests.AsyncRequest('GET',uri ,
+              callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
+              params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+            )
           )
-        )
-        if logfile_name.endswith('.gz'):
-          zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
-        all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
+          if logfile_name.endswith('.gz'):
+            zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
+          all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
 
-    for log_file in logs_folder_files(args, task):
-      logfile_name = '{0}-{1}'.format(task, log_file)
-      if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
-        async_requests.append(
-          grequests.AsyncRequest('GET',uri ,
-            callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
-            params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+      for log_file in logs_folder_files(args, task):
+        logfile_name = '{0}-{1}'.format(task, log_file)
+        if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
+          async_requests.append(
+            grequests.AsyncRequest('GET',uri ,
+              callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
+              params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+            )
           )
-        )
-        if logfile_name.endswith('.gz'):
-          zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
-        all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
+          if logfile_name.endswith('.gz'):
+            zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
+          all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
 
   if async_requests:
     sys.stderr.write(colored('Starting live logs downloads\n', 'cyan'))
