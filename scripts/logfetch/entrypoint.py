@@ -10,6 +10,7 @@ from tail import start_tail
 from grep import grep_files
 from cat import cat_files
 
+VERSION = '0.0.10'
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 DEFAULT_CONF_DIR = os.path.expanduser('~/.logfetch')
 DEFAULT_CONF_FILE = 'default'
@@ -55,7 +56,7 @@ def check_dest(args):
     os.makedirs(args.dest)
 
 def fetch():
-  conf_parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
+  conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest='conf_folder', help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest='conf_file', help="Specify config file within the conf folder", metavar="FILE")
   args, remaining_argv = conf_parser.parse_known_args()
@@ -106,7 +107,7 @@ def fetch():
   fetch_logs(args)
 
 def cat():
-  conf_parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
+  conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest="conf_folder", help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest="conf_file", help="Specify config file within the conf folder", metavar="FILE")
   args, remaining_argv = conf_parser.parse_known_args()
@@ -156,7 +157,7 @@ def cat():
   cat_logs(args)
 
 def tail():
-  conf_parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
+  conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest="conf_folder", help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest="conf_file", help="Specify config file within the conf folder", metavar="FILE")
   args, remaining_argv = conf_parser.parse_known_args()
@@ -182,7 +183,7 @@ def tail():
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
   parser.add_argument("-g", "--grep", dest="grep", help="String to grep for")
   parser.add_argument("-l", "--logfile", dest="logfile", help="Logfile path/name to tail (ie 'logs/access.log')")
-  parser.add_argument("-v", "--verbose", dest="verbose", help="more verbose output", action='store_true')
+  parser.add_argument("-V", "--verbose", dest="verbose", help="more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
