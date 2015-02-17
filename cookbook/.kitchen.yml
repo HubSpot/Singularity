@@ -1,0 +1,24 @@
+---
+driver:
+  name: vagrant
+  require_chef_omnibus: 11.16.4
+
+provisioner:
+  name: chef_solo
+  encrypted_data_bag_secret_key_path: <%= ENV['HOME'] %>/.chef/encrypted_data_bag_secret
+
+platforms:
+  - name: ubuntu-14.04
+    driver_config:
+      customize:
+        cpus: 4
+        memory: 1536
+      network:
+        - - private_network
+          - ip: '192.168.33.10'
+
+suites:
+  - name: default
+    run_list:
+      - recipe[singularity::default]
+    attributes:
