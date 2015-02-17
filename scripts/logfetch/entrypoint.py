@@ -10,7 +10,7 @@ from tail import start_tail
 from grep import grep_files
 from cat import cat_files
 
-VERSION = '0.0.10'
+VERSION = '0.10.0'
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 DEFAULT_CONF_DIR = os.path.expanduser('~/.logfetch')
 DEFAULT_CONF_FILE = 'default'
