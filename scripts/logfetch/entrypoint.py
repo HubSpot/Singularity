@@ -2,6 +2,7 @@ import argparse
 import ConfigParser
 import sys
 import os
+import pkg_resources
 from termcolor import colored
 from fake_section_head import FakeSectionHead
 from live_logs import download_live_logs
@@ -10,7 +11,7 @@ from tail import start_tail
 from grep import grep_files
 from cat import cat_files
 
-VERSION = '0.10.0'
+VERSION = pkg_resources.require("singularity-logfetch")[0].version
 CONF_READ_ERR_FORMAT = 'Could not load config from {0} due to {1}'
 DEFAULT_CONF_DIR = os.path.expanduser('~/.logfetch')
 DEFAULT_CONF_FILE = 'default'
