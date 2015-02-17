@@ -31,7 +31,7 @@ def start_tail(args):
       if not t.isAlive:
         break
   except KeyboardInterrupt:
-    sys.stderr.write(colored('Stopping tail', 'magenta'))
+    sys.stderr.write(colored('Stopping tail', 'magenta') + '\n')
     sys.exit(0)
 
 class LogStreamer(threading.Thread):
