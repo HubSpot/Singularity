@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import javax.annotation.Nonnull;
 import javax.inject.Provider;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -239,7 +238,7 @@ public class SingularityClient {
     return response.getAs(typeReference);
   }
 
-  private void addQueryParams(@Nonnull HttpRequest.Builder requestBuilder, @Nonnull Map<String, Object> queryParams) {
+  private void addQueryParams(HttpRequest.Builder requestBuilder, Map<String, Object> queryParams) {
     for (Entry<String, Object> queryParamEntry : queryParams.entrySet()) {
       if (queryParamEntry.getValue() instanceof String) {
         requestBuilder.addQueryParam(queryParamEntry.getKey(), (String) queryParamEntry.getValue());
