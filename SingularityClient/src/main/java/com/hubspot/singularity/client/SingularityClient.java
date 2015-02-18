@@ -661,7 +661,7 @@ public class SingularityClient {
     String type = "slaves";
 
     if (slaveState.isPresent()) {
-      maybeQueryParams = Optional.<Map<String, Object>>of(ImmutableMap.<String, Object>of("state", slaveState.get()));
+      maybeQueryParams = Optional.<Map<String, Object>>of(ImmutableMap.<String, Object>of("state", slaveState.get().toString()));
 
       type = String.format("%s slaves", slaveState.get().toString());
     }
