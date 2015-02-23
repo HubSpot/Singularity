@@ -2,6 +2,7 @@ package com.hubspot.singularity.runner.base.shared;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -24,9 +25,13 @@ public class S3UploadMetadata {
   private final String s3Bucket;
   private final String s3KeyFormat;
   private final boolean finished;
+  private final Optional<Integer> pid;
+  private final Optional<String> s3AccessKey;
+  private final Optional<String> s3Secret;
 
   @JsonCreator
-  public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat, @JsonProperty("finished") boolean finished) {
+  public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat,
+      @JsonProperty("finished") boolean finished, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey, @JsonProperty("directory") Optional<String> s3Secret) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -37,6 +42,9 @@ public class S3UploadMetadata {
     this.s3Bucket = s3Bucket;
     this.s3KeyFormat = s3KeyFormat;
     this.finished = finished;
+    this.pid = pid;
+    this.s3AccessKey = s3AccessKey;
+    this.s3Secret = s3Secret;
   }
 
   @Override
@@ -51,28 +59,28 @@ public class S3UploadMetadata {
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
-        return true;
+      return true;
     }
     if (obj == null) {
-        return false;
+      return false;
     }
     if (getClass() != obj.getClass()) {
-        return false;
+      return false;
     }
     S3UploadMetadata other = (S3UploadMetadata) obj;
     if (directory == null) {
       if (other.directory != null) {
         return false;
-    }
+      }
     } else if (!directory.equals(other.directory)) {
-        return false;
+      return false;
     }
     if (fileGlob == null) {
       if (other.fileGlob != null) {
         return false;
-    }
+      }
     } else if (!fileGlob.equals(other.fileGlob)) {
-        return false;
+      return false;
     }
     return true;
   }
@@ -97,9 +105,22 @@ public class S3UploadMetadata {
     return finished;
   }
 
+  public Optional<Integer> getPid() {
+    return pid;
+  }
+
+  public Optional<String> getS3AccessKey() {
+    return s3AccessKey;
+  }
+
+  public Optional<String> getS3Secret() {
+    return s3Secret;
+  }
+
   @Override
   public String toString() {
-    return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + "]";
+    return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", pid=" + pid
+        + ", s3AccessKey=" + s3AccessKey + ", s3Secret=" + s3Secret + "]";
   }
 
 }

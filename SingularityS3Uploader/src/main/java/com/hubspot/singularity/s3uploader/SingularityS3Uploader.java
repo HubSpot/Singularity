@@ -1,5 +1,6 @@
 package com.hubspot.singularity.s3uploader;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -11,18 +12,22 @@ import java.util.Set;
 
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
+import org.jets3t.service.ServiceException;
+import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
+import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 
-public class SingularityS3Uploader {
+public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
 
@@ -35,8 +40,19 @@ public class SingularityS3Uploader {
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
 
-  public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
-    this.s3Service = s3Service;
+  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
+    AWSCredentials credentials = defaultCredentials;
+
+    if (uploadMetadata.getS3Secret().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
+      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3Secret().get());
+    }
+
+    try {
+      this.s3Service = new RestS3Service(credentials);
+    } catch (S3ServiceException e) {
+      throw Throwables.propagate(e);
+    }
+
     this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
@@ -52,6 +68,15 @@ public class SingularityS3Uploader {
 
   public S3UploadMetadata getUploadMetadata() {
     return uploadMetadata;
+  }
+
+  @Override
+  public void close() throws IOException {
+    try {
+      s3Service.shutdown();
+    } catch (ServiceException e) {
+      throw new IOException(e);
+    }
   }
 
   @Override

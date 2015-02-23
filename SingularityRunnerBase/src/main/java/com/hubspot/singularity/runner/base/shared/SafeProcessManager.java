@@ -29,9 +29,11 @@ public abstract class SafeProcessManager {
   private volatile Optional<Long> currentProcessStart;
 
   private final AtomicBoolean killed;
+  private final ProcessUtils processUtils;
 
   public SafeProcessManager(Logger log) {
     this.log = log;
+    this.processUtils = new ProcessUtils(log);
 
     this.currentProcessCmd = Optional.absent();
     this.currentProcess = Optional.absent();
@@ -85,7 +87,7 @@ public abstract class SafeProcessManager {
 
       process = builder.start();
 
-      currentProcessPid = Optional.of(ProcessUtils.getUnixPID(process));
+      currentProcessPid = Optional.of(processUtils.getUnixPID(process));
       currentProcess = Optional.of(process);
       currentProcessCmd = Optional.of(cmd);
 
@@ -140,7 +142,7 @@ public abstract class SafeProcessManager {
 
     try {
       if (currentProcessPid.isPresent()) {
-        ProcessUtils.sendSignal(Signal.SIGTERM, log, currentProcessPid.get());
+        processUtils.sendSignal(Signal.SIGTERM, currentProcessPid.get());
       }
     } finally {
       this.processLock.unlock();
@@ -152,7 +154,7 @@ public abstract class SafeProcessManager {
 
     try {
       if (currentProcess.isPresent()) {
-        ProcessUtils.sendSignal(Signal.SIGKILL, log, currentProcessPid.get());
+        processUtils.sendSignal(Signal.SIGKILL, currentProcessPid.get());
       }
     } finally {
       this.processLock.unlock();
