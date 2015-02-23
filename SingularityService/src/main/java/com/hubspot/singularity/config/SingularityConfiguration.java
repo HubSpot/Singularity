@@ -152,6 +152,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long threadpoolShutdownDelayInSeconds = 1;
 
+  @Valid
+  @JsonProperty("customExecutor")
+  private CustomExecutorConfiguration customExecutorConfiguration;
+
   @JsonProperty("zookeeper")
   @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
@@ -656,4 +660,11 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
+  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
+    return customExecutorConfiguration;
+  }
+
+  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
+    this.customExecutorConfiguration = customExecutorConfiguration;
+  }
 }
