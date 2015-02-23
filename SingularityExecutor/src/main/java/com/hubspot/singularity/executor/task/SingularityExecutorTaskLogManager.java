@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityTaskId;
@@ -171,7 +172,7 @@ public class SingularityExecutorTaskLogManager {
   private boolean writeS3MetadataFile(boolean finished) {
     Path logrotateDirectory = taskDefinition.getServiceLogOutPath().getParent().resolve(configuration.getLogrotateToDirectory());
 
-    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished);
+    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished, Optional.<Integer> absent(), Optional.<String> absent(), Optional.<String> absent());
 
     String s3UploadMetadatafilename = String.format("%s%s", taskDefinition.getTaskId(), configuration.getS3MetadataSuffix());
 
