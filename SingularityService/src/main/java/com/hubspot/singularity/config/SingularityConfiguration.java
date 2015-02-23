@@ -154,7 +154,8 @@ public class SingularityConfiguration extends Configuration {
 
   @Valid
   @JsonProperty("customExecutor")
-  private CustomExecutorConfiguration customExecutorConfiguration;
+  @NotNull
+  private CustomExecutorConfiguration customExecutorConfiguration = new CustomExecutorConfiguration();
 
   @JsonProperty("zookeeper")
   @Valid
