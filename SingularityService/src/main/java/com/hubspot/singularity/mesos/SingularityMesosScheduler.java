@@ -34,6 +34,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -51,6 +52,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
 
   private final Resources defaultResources;
+  private final Resources defaultCustomExecutorResources;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
@@ -71,8 +73,9 @@ public class SingularityMesosScheduler implements Scheduler {
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
-      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder) {
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
+    this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.schedulerPriority = schedulerPriority;
@@ -195,6 +198,11 @@ public class SingularityMesosScheduler implements Scheduler {
 
       if (taskRequest.getDeploy().getResources().isPresent()) {
         taskResources = taskRequest.getDeploy().getResources().get();
+      }
+
+      // if using a custom executor, factor in custom executor resources too
+      if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
+        taskResources = Resources.add(taskResources, taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources));
       }
 
       LOG.trace("Attempting to match task {} resources {} with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), taskResources, offerHolder.getCurrentResources());

@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
+import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.smtp.JadeTemplateLoader;
 import com.hubspot.singularity.smtp.MailTemplateHelpers;
 import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
@@ -205,6 +206,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public MesosConfiguration mesosConfiguration(final SingularityConfiguration config) {
     return config.getMesosConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public CustomExecutorConfiguration customExecutorConfiguration(final SingularityConfiguration config) {
+    return config.getCustomExecutorConfiguration();
   }
 
   @Provides
