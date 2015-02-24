@@ -48,8 +48,8 @@ def logs_for_all_requests(args):
     if not logs:
         sys.stderr.write(colored('No tasks found in time range, searching s3 history...\n', 'magenta'))
         for request in logfetch_base.all_requests(args):
-            s3_logs = get_json_response(s3_request_logs_uri(args, request))
-            logs = logs + s3_logs if s3_logs else logs
+          s3_logs = get_json_response(s3_request_logs_uri(args, request))
+          logs = logs + s3_logs if s3_logs else logs
     return logs
 
 def time_from_filename(filename):
