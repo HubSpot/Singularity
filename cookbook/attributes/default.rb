@@ -7,6 +7,10 @@ else
 end
 
 default[:singularity] = {
+  :user => 'singularity',
+  :group => 'singularity',
+  :git_ref => 'd3bd662e0179ada5f12068b45499d33c09a86dbd',
+  :version => '0.4.2',
   :database => {
     :db_name => "singularity",
     :username => "singularity",
