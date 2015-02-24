@@ -21,6 +21,9 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100
 
+Handlebars.registerHelper 'round', (value, place) ->
+    +(value).toFixed(place)
+
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
     if haystack.indexOf(needle) isnt -1

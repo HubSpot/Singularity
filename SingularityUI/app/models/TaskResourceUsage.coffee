@@ -12,8 +12,7 @@ class TaskResourceUsage extends Model
         currentTime = @get('cpusSystemTimeSecs') + @get('cpusUserTimeSecs')
         previousTime = previous.cpusSystemTimeSecs + previous.cpusUserTimeSecs
         timestampDiff = @get('timestamp') - previous.timestamp
-        cpus_used_raw = (currentTime - previousTime) / timestampDiff
-        cpus_used = Math.round(cpus_used_raw * 100) / 100        
+        cpus_used = (currentTime - previousTime) / timestampDiff
         cpuUsageExceeding = (cpus_used / @get('cpusLimit')) > 1.10
         
         if cpuUsageExceeding
