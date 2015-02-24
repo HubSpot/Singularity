@@ -9,6 +9,7 @@ from singularity_request import get_json_response
 
 TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
+REQUEST_FORMAT = '/request/{0}'
 
 def download_s3_logs(args):
   sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
@@ -37,19 +38,27 @@ def already_downloaded(dest, filename):
 
 def logs_for_all_requests(args):
   if args.taskId:
-    return get_json_response(singularity_s3logs_uri(args, args.taskId))
+    return get_json_response(s3_task_logs_uri(args, args.taskId))
   else:
     tasks = logfetch_base.tasks_for_requests(args)
     logs = []
     for task in tasks:
-      s3_logs = get_json_response(singularity_s3logs_uri(args, task))
+      s3_logs = get_json_response(s3_task_logs_uri(args, task))
       logs = logs + s3_logs if s3_logs else logs
+    if not logs:
+        sys.stderr.write(colored('No tasks found in time range, searching s3 history...\n', 'magenta'))
+        for request in logfetch_base.all_requests(args):
+            s3_logs = get_json_response(s3_request_logs_uri(args, request))
+            logs = logs + s3_logs if s3_logs else logs
     return logs
 
 def time_from_filename(filename):
   time_string = re.search('(\d{13})', filename).group(1)
   return int(time_string[0:-3])
 
-def singularity_s3logs_uri(args, idString):
+def s3_task_logs_uri(args, idString):
   return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), TASK_FORMAT.format(idString))
+
+def s3_request_logs_uri(args, idString):
+  return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), REQUEST_FORMAT.format(idString))
 
