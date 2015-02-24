@@ -383,6 +383,7 @@ public class SingularityCleaner {
       case UNKNOWN:
       case WAITING:
       case SUCCESS:
+      case INVALID_REQUEST_NOOP:
         return true;
       default:
         LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
@@ -417,6 +418,7 @@ public class SingularityCleaner {
       case CANCELING:
       case SUCCESS:
       case WAITING:
+      case INVALID_REQUEST_NOOP:
     }
 
     return false;
@@ -459,6 +461,7 @@ public class SingularityCleaner {
 
     switch (lbRemoveUpdate.getLoadBalancerState()) {
       case SUCCESS:
+      case INVALID_REQUEST_NOOP:
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
