@@ -22,3 +22,8 @@ suites:
     run_list:
       - recipe[singularity::default]
     attributes:
+      mesos:
+        master:
+          quorum: 1
+        slave:
+          master: http://localhost:2181/singularity
