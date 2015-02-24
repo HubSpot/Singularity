@@ -82,6 +82,15 @@ class TaskDetailController extends Controller
 
         app.showView @view
 
+        #  Refresh once again on page load to calculate CPU Usage 
+        @initialPageLoad = true
+
+        if @initialPageLoad
+            setTimeout (=>
+                @refresh() 
+                @initialPageLoad = false
+            ), 2000
+
     refresh: ->
         @models.task.fetch
             error: =>
@@ -89,10 +98,17 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 app.router.notFound()
 
-        @models.resourceUsage?.fetch().error =>
-            # If this 404s there's nothing to get so don't bother
-            app.caughtError()
-            delete @models.resourceUsage
+
+        @models.resourceUsage?.fetch()
+            .done =>
+                # Store current resource usage to compare against future resource usage
+                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')              
+                @models.resourceUsage.set('previousUsage', @models.resourceUsage.toJSON())
+
+            .error =>
+                # If this 404s there's nothing to get so don't bother
+                app.caughtError()
+                delete @models.resourceUsage
 
         if @collections.s3Logs?.currentPage is 1
             @collections.s3Logs.fetch().error =>
