@@ -31,7 +31,7 @@ public class S3UploadMetadata {
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat,
-      @JsonProperty("finished") boolean finished, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey, @JsonProperty("directory") Optional<String> s3Secret) {
+      @JsonProperty("finished") boolean finished, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey, @JsonProperty("s3Secret") Optional<String> s3Secret) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
