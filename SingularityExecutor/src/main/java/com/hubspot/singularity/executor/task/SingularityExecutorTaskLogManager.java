@@ -89,7 +89,7 @@ public class SingularityExecutorTaskLogManager {
     }
   }
 
-  private boolean removeLogrotateFile() {
+  public boolean removeLogrotateFile() {
     boolean deleted = false;
     try {
       deleted = Files.deleteIfExists(getLogrotateConfPath());

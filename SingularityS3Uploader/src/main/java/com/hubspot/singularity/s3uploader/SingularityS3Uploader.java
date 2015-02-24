@@ -97,7 +97,12 @@ public class SingularityS3Uploader implements Closeable {
 
     for (Path file : JavaUtils.iterable(directory)) {
       if (!pathMatcher.matches(file.getFileName())) {
-        LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+        continue;
+      }
+
+      if (Files.size(file) == 0) {
+        LOG.trace("{} Skipping {} because its size is 0", logIdentifier, file);
         continue;
       }
 
