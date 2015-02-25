@@ -3,6 +3,7 @@ import ConfigParser
 import sys
 import os
 import pkg_resources
+from datetime import datetime
 from termcolor import colored
 from fake_section_head import FakeSectionHead
 from live_logs import download_live_logs
@@ -56,6 +57,22 @@ def check_dest(args):
   if not os.path.exists(args.dest):
     os.makedirs(args.dest)
 
+def check_args(args):
+  if args.deployId and not args.requestId:
+    exit("Must specify request-id (-r) when specifying deploy-id")
+  elif not args.requestId and not args.deployId and not args.taskId:
+    exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
+
+def convert_to_days(argument):
+    try:
+        val = int(argument)
+    except:
+      try:
+        val = (datetime.now() - datetime.strptime(argument, "%m-%d-%Y")).days
+      except:
+        exit('Start/End days value must be either a number of days or a date in format "mm-dd-yyyy"')
+    return val
+
 def fetch():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest='conf_folder', help="specify a folder for config files to live")
@@ -70,7 +87,8 @@ def fetch():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : DEFAULT_DAYS
+    "start_days" : DEFAULT_DAYS,
+    "end_days" : 0 #today
   }
 
   try:
@@ -91,17 +109,16 @@ def fetch():
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
   parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this many days", type=int)
-  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no new than this many days (defaults to None/today)", type=int)
+  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
+  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
   parser.add_argument("-l", "--log-type", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
 
   args = parser.parse_args(remaining_argv)
 
-  if args.deployId and not args.requestId:
-    exit("Must specify request-id (-r) when specifying deploy-id")
-  elif not args.requestId and not args.deployId and not args.taskId:
-    exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
+  check_args(args)
+  args.start_days = convert_to_days(args.start_days)
+  args.end_days = convert_to_days(args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
@@ -121,7 +138,8 @@ def cat():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : DEFAULT_DAYS
+    "start_days" : DEFAULT_DAYS,
+    "end_days" : 0 #today
   }
 
   try:
@@ -142,16 +160,15 @@ def cat():
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
   parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this many days", type=int)
-  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no new than this many days (defaults to None/today)", type=int)
+  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
+  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
   parser.add_argument("-l", "--logtype", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
 
   args = parser.parse_args(remaining_argv)
 
-  if args.deployId and not args.requestId:
-    exit("Must specify requestId (-r) when specifying deploy-id")
-  elif not args.requestId and not args.deployId and not args.taskId:
-    exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
+  check_args(args)
+  args.start_days = convert_to_days(args.start_days)
+  args.end_days = convert_to_days(args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
@@ -188,12 +205,9 @@ def tail():
 
   args = parser.parse_args(remaining_argv)
 
-  if args.deployId and not args.requestId:
-    exit("Must specify request-id (-r) when specifying deploy-id")
-  elif not args.requestId and not args.deployId and not args.taskId:
-    exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
-  elif not args.logfile:
+  if not args.logfile:
     exit("Must specify logfile to tail (-l)")
+  check_args(args)
 
   args.dest = os.path.expanduser(args.dest)
 
