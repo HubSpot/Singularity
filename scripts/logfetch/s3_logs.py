@@ -45,12 +45,11 @@ def logs_for_all_requests(args):
     for task in tasks:
       s3_logs = get_json_response(s3_task_logs_uri(args, task))
       logs = logs + s3_logs if s3_logs else logs
-    if not logs:
-        sys.stderr.write(colored('No tasks found in time range, searching s3 history...\n', 'magenta'))
-        for request in logfetch_base.all_requests(args):
-          s3_logs = get_json_response(s3_request_logs_uri(args, request))
-          logs = logs + s3_logs if s3_logs else logs
-    return logs
+    sys.stderr.write(colored('Also searching s3 history...\n', 'magenta'))
+    for request in logfetch_base.all_requests(args):
+      s3_logs = get_json_response(s3_request_logs_uri(args, request))
+      logs = logs + s3_logs if s3_logs else logs
+    return [dict(t) for t in set([tuple(l.items()) for l in logs])]
 
 def time_from_filename(filename):
   time_string = re.search('(\d{13})', filename).group(1)
