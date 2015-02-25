@@ -87,7 +87,8 @@ def fetch():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : DEFAULT_DAYS
+    "start_days" : DEFAULT_DAYS,
+    "end_days" : 0 #today
   }
 
   try:
@@ -116,8 +117,8 @@ def fetch():
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start_days = convert_to_days(args.start_days) if args.start_days else args.start_days
-  args.end_days = convert_to_days(args.end_days) if args.end_days else args.end_days
+  args.start_days = convert_to_days(args.start_days)
+  args.end_days = convert_to_days(args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
@@ -137,7 +138,8 @@ def cat():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : DEFAULT_DAYS
+    "start_days" : DEFAULT_DAYS,
+    "end_days" : 0 #today
   }
 
   try:
@@ -165,8 +167,8 @@ def cat():
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start_days = convert_to_days(args.start_days) if args.start_days else args.start_days
-  args.end_days = convert_to_days(args.end_days) if args.end_days else args.end_days
+  args.start_days = convert_to_days(args.start_days)
+  args.end_days = convert_to_days(args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
