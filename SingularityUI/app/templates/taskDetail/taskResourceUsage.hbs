@@ -38,7 +38,7 @@
                         <div class="progress text-center">
                           <div class="progress-bar progress-bar-success progress-bar-{{data.cpuUsageClassStatus }} progress-bar-striped text-center" role="progressbar" style="width: {{percentageOf data.cpuUsage data.cpusLimit }}%;"></div>
                         </div>
-                        {{round data.cpuUsage 2}} used / {{data.cpusLimit}} allocated CPUs
+                        {{fixedDecimal data.cpuUsage}} used / {{data.cpusLimit}} allocated CPUs
                     {{else}}
                         <span class='page-loader small inline-left'></span> Calculating...
                     {{/ifAll}}
