@@ -1,14 +1,14 @@
 ## Singularity Webhooks
 
-Singularity provides for integration with third-party services via webhooks for three types of objects: requests, deploys, and tasks.
+Singularity provides webhooks for changes to the three core types of objects in Singularity: requests, deploys, and tasks.
 
-Webhooks are added via the API and can be one and only one of the three types.
+Webhooks are managed via the [API](reference/api.md#endpoint-/api/webhooks) and a separate webhook should be added separately in order to receive updates about all three object types.
 
 ### Adding a Webhook
 
 In order to create a new Webhook, post the json for the [SingularityWebhook](reference/api.md#model-SingularityWebhook) to the [webhook endpoint](reference/api.md#post-apiwebhooks).
 
-For example, create a file webhook.json (create your own requestb.in for testing!)
+For example, to receive request updates, send the following json: (create a file webhook.json with your own requestb.in for testing!)
 
 ```json
 {
@@ -18,9 +18,11 @@ For example, create a file webhook.json (create your own requestb.in for testing
 }
 ```
 
+Then post that to the webhooks endpoint:
+
 ```sh
 curl -i -X POST -H "Content-Type: application/json" -d@webhook.json \
-http://singularity/singularity/api/requests
+http://singularityhostname/singularity/api/webhooks
 ```
 
 This webhook will start to receive events anytime a [Request](reference/api.md#model-SingularityRequest) is created, modified, or deleted.
@@ -29,7 +31,7 @@ This webhook will start to receive events anytime a [Request](reference/api.md#m
 
 #### Request
 
-Request webhooks are sent every time a request is created, deleted, or updated - as well as when it's state changes (it becomes paused or enters cooldown.)
+Request webhooks are sent every time a request is created, deleted, or updated - as well as when its state changes (because it is paused or enters cooldown.)
 
 Request webhooks are in the format of [SingularityRequestHistory](reference/api.md#-singularityrequesthistory) objects. 
 
