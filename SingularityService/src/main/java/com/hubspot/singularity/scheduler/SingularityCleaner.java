@@ -383,8 +383,9 @@ public class SingularityCleaner {
       case UNKNOWN:
       case WAITING:
       case SUCCESS:
-      case INVALID_REQUEST_NOOP:
         return true;
+      case INVALID_REQUEST_NOOP:
+        return false;  // don't need to remove because Baragon doesnt know about it
       default:
         LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
         return false;

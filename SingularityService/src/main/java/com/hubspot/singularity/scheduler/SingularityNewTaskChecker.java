@@ -300,10 +300,10 @@ public class SingularityNewTaskChecker implements Managed {
   private Optional<CheckTaskState> checkLbState(BaragonRequestState lbState) {
     switch (lbState) {
       case SUCCESS:
-      case INVALID_REQUEST_NOOP:
         return Optional.of(CheckTaskState.HEALTHY);
       case CANCELED:
       case FAILED:
+      case INVALID_REQUEST_NOOP:
         return Optional.of(CheckTaskState.UNHEALTHY_KILL_TASK);
       case CANCELING:
       case UNKNOWN:
