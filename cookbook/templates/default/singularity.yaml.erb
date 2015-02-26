@@ -1,0 +1,44 @@
+# singularity-related config:
+server:
+  type: simple
+  applicationContextPath: /
+  connector:
+    type: http
+    port: 7099
+  requestLog:
+    appenders:
+      - type: file
+        currentLogFilename: ../logs/access.log
+        archivedLogFilenamePattern: ../logs/access-%d.log.gz
+
+database:
+  driverClass: com.mysql.jdbc.Driver
+  user: <%= node[:singularity][:database][:username] %>
+  password: <%= node[:singularity][:database][:password] %>
+  url: jdbc:mysql://localhost:3306/<%= node[:singularity][:database][:db_name] %>
+
+mesos:
+  master: <%= node[:mesos][:master][:zk] %>
+  defaultCpus: 1
+  defaultMemory: 128
+  frameworkName: Singularity
+  frameworkId: Singularity
+  frameworkFailoverTimeout: 1000000
+
+zookeeper:
+  quorum: <%= node[:singularity][:zk_hosts].join(',') %>
+  zkNamespace: singularity
+  sessionTimeoutMillis: 60000
+  connectTimeoutMillis: 5000
+  retryBaseSleepTimeMilliseconds: 1000
+  retryMaxTries: 3
+
+logging:
+  loggers:
+    "com.hubspot.singularity" : DEBUG
+
+ui:
+  title: Singularity (<%= node.chef_environment %>)
+  baseUrl: <%= node[:singularity][:base_url] %>
+
+loadBalancerUri: <%= @baragon_url.gsub(/\/$/, '') %>/request
