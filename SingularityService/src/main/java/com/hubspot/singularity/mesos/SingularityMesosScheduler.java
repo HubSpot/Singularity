@@ -194,24 +194,20 @@ public class SingularityMesosScheduler implements Scheduler {
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
-      Resources taskResources = defaultResources;
+      final Resources taskResources = taskRequest.getDeploy().getResources().or(defaultResources);
 
-      if (taskRequest.getDeploy().getResources().isPresent()) {
-        taskResources = taskRequest.getDeploy().getResources().get();
-      }
+      // only factor in executor resources if we're running a custom executor
+      final Optional<Resources> executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ? taskRequest.getDeploy().getCustomExecutorResources().or(Optional.of(defaultCustomExecutorResources)) : Optional.<Resources>absent();
 
-      // if using a custom executor, factor in custom executor resources too
-      if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
-        taskResources = Resources.add(taskResources, taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources));
-      }
+      final Resources totalResources = Resources.add(taskResources, executorResources.or(Resources.EMPTY_RESOURCES));
 
-      LOG.trace("Attempting to match task {} resources {} with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), taskResources, offerHolder.getCurrentResources());
+      LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
 
-      final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskResources, offerHolder.getCurrentResources());
+      final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources());
       final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
-        final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources);
+        final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
 
         LOG.trace("Accepted and built task {}", task);
 

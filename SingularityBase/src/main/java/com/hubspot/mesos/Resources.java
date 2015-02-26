@@ -13,6 +13,8 @@ public class Resources {
     return new Resources(a.getCpus() + b.getCpus(), a.getMemoryMb() + b.getMemoryMb(), a.getNumPorts() + b.getNumPorts());
   }
 
+  public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0);
+
   private final double cpus;
   private final double memoryMb;
   private final int numPorts;
