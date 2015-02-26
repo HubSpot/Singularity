@@ -1,9 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -16,10 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -31,7 +28,7 @@ import com.ning.http.client.RequestBuilder;
 
 @SuppressWarnings("deprecation")
 @Singleton
-public class SingularityHealthchecker implements Managed {
+public class SingularityHealthchecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -48,7 +45,9 @@ public class SingularityHealthchecker implements Managed {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityHealthchecker(@Named(SingularityMainModule.HEALTHCHECK_THREADPOOL_NAME) ScheduledExecutorService executorService,
+      AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
+      TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
@@ -58,16 +57,7 @@ public class SingularityHealthchecker implements Managed {
 
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
 
-    this.executorService = Executors.newScheduledThreadPool(configuration.getHealthcheckStartThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityHealthchecker-%d").build());
-  }
-
-  @Override
-  public void start() {
-  }
-
-  @Override
-  public void stop() {
-    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
+    this.executorService = executorService;
   }
 
   public void enqueueHealthcheck(SingularityTask task) {

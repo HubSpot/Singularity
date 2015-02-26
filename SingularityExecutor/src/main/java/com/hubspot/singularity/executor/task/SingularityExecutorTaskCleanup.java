@@ -31,6 +31,7 @@ public class SingularityExecutorTaskCleanup {
 
     if (!Files.exists(taskDirectory)) {
       log.info("Directory {} didn't exist for cleanup", taskDirectory);
+      taskLogManager.removeLogrotateFile();
       return cleanTaskDefinitionFile();
     }
 
@@ -77,7 +78,7 @@ public class SingularityExecutorTaskCleanup {
           "rm",
           "-rf",
           pathToDelete
-      );
+          );
 
       new SimpleProcessManager(log).runCommand(cmd);
 

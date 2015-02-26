@@ -135,8 +135,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
-  private long threadpoolShutdownDelayInSeconds = 1;
-
   @JsonProperty("ui")
   @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
@@ -149,6 +147,15 @@ public class SingularityConfiguration extends Configuration {
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
   private long zookeeperAsyncTimeout = 5000;
+
+  private int coreThreadpoolSize = 8;
+
+  private long threadpoolShutdownDelayInSeconds = 1;
+
+  @Valid
+  @JsonProperty("customExecutor")
+  @NotNull
+  private CustomExecutorConfiguration customExecutorConfiguration = new CustomExecutorConfiguration();
 
   @JsonProperty("zookeeper")
   @Valid
@@ -220,6 +227,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
+  }
+
+  public int getCoreThreadpoolSize() {
+    return coreThreadpoolSize;
   }
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
@@ -482,6 +493,10 @@ public class SingularityConfiguration extends Configuration {
     this.cooldownMinScheduleSeconds = cooldownMinScheduleSeconds;
   }
 
+  public void setCoreThreadpoolSize(int coreThreadpoolSize) {
+    this.coreThreadpoolSize = coreThreadpoolSize;
+  }
+
   public void setDatabaseConfiguration(DataSourceFactory databaseConfiguration) {
     this.databaseConfiguration = databaseConfiguration;
   }
@@ -622,10 +637,6 @@ public class SingularityConfiguration extends Configuration {
     this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
   }
 
-  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
-    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
-  }
-
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
   }
@@ -648,5 +659,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
+    return customExecutorConfiguration;
+  }
+
+  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
+    this.customExecutorConfiguration = customExecutorConfiguration;
   }
 }
