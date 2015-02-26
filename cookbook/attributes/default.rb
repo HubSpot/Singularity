@@ -7,17 +7,24 @@ else
 end
 
 default[:singularity] = {
-  :user => 'singularity',
-  :group => 'singularity',
-  :git_ref => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
-  :version => '0.4.2',
-  :home => '/home/singularity',
-  :database => {
-    :db_name => "singularity",
-    :username => "singularity",
-    :password => "9thlevel"
-  },
+  :user                     => 'singularity',
+  :group                    => 'singularity',
+  :git_ref                  => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
+  :version                  => '0.4.2',
+  :data_dir                 => '/var/lib/singularity',
+  :log_dir                  => '/var/log/singularity',
+  :conf_dir                 => '/etc/singularity',
+  :base_url                 => "http://#{node[:fqdn]}:7099/singularity",
+  :app_mysql_defaults       => { 'adapter' => 'mysql2',
+                                 'pool' => 20,
+                                 'timeout' => 5000 },
+  :database                 => { :db_name => "singularity",
+                                 :username => "singularity",
+                                 :password => "9thlevel" }
 }
+
+default[:singularity][:home] = '/usr/local/singularity'
+default[:singularity][:log_level] = 'INFO'
 
 default[:mesos] = {
   :package_version => "0.21.0-1.0.ubuntu1404",
@@ -45,6 +52,8 @@ default[:mysql] = {
   :bind_address => '0.0.0.0',
   :version => '5.5',
 }
+
+default['baragon']['service_yaml']['server']['connector']['port'] = 8088
 
 override['java']['install_flavor'] = "oracle"
 override['java']['jdk_version'] = "7"
