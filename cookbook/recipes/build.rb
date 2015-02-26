@@ -1,3 +1,6 @@
+include_recipe 'build-essential'
+include_recipe 'git'
+
 directory "#{Chef::Config[:file_cache_path]}/Singularity" do
   owner node[:singularity][:user]
 end
