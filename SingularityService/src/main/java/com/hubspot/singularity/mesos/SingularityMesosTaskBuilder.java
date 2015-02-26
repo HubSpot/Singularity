@@ -62,7 +62,7 @@ class SingularityMesosTaskBuilder {
     this.configuration = configuration;
   }
 
-  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources) {
+  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Optional<Resources> desiredExecutorResources) {
     final String rackId = slaveAndRackManager.getRackId(offer);
     final String host = slaveAndRackManager.getSlaveHost(offer);
 
@@ -85,7 +85,7 @@ class SingularityMesosTaskBuilder {
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
-      prepareCustomExecutor(bldr, taskId, taskRequest, ports);
+      prepareCustomExecutor(bldr, taskId, taskRequest, ports, desiredExecutorResources);
     } else {
       prepareCommand(bldr, taskId, taskRequest, ports);
     }
@@ -213,31 +213,23 @@ class SingularityMesosTaskBuilder {
     bldr.setContainer(containerBuilder);
   }
 
-  private List<Resource> buildCustomExecutorResources(final SingularityTaskRequest task) {
+  private List<Resource> buildMesosResources(final Optional<Resources> resources) {
     ImmutableList.Builder<Resource> builder = ImmutableList.builder();
 
-    if (task.getDeploy().getCustomExecutorResources().isPresent()) {
-      if (task.getDeploy().getCustomExecutorResources().get().getCpus() > 0) {
-        builder.add(MesosUtils.getCpuResource(task.getDeploy().getCustomExecutorResources().get().getCpus()));
+    if (resources.isPresent()) {
+      if (resources.get().getCpus() > 0) {
+        builder.add(MesosUtils.getCpuResource(resources.get().getCpus()));
       }
 
-      if (task.getDeploy().getCustomExecutorResources().get().getMemoryMb() > 0) {
-        builder.add(MesosUtils.getMemoryResource(task.getDeploy().getCustomExecutorResources().get().getMemoryMb()));
-      }
-    } else {
-      if (configuration.getCustomExecutorConfiguration().getNumCpus() > 0) {
-        builder.add(MesosUtils.getCpuResource(configuration.getCustomExecutorConfiguration().getNumCpus()));
-      }
-
-      if (configuration.getCustomExecutorConfiguration().getMemoryMb() > 0) {
-        builder.add(MesosUtils.getMemoryResource(configuration.getCustomExecutorConfiguration().getMemoryMb()));
+      if (resources.get().getMemoryMb() > 0) {
+        builder.add(MesosUtils.getMemoryResource(resources.get().getMemoryMb()));
       }
     }
 
     return builder.build();
   }
 
-  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
+  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports, final Optional<Resources> desiredExecutorResources) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
     prepareEnvironment(task, taskId, commandBuilder, ports);
@@ -246,7 +238,7 @@ class SingularityMesosTaskBuilder {
             .setCommand(commandBuilder.build())
             .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
             .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
-            .addAllResources(buildCustomExecutorResources(task))
+            .addAllResources(buildMesosResources(desiredExecutorResources))
             .build()
         );
 
