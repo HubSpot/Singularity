@@ -7,11 +7,18 @@ else
 end
 
 default[:singularity] = {
-  :database => {
-    :db_name => "singularity",
-    :username => "singularity",
-    :password => "9thlevel"
-  },
+  :home                     => '/usr/local/singularity',
+  :data_dir                 => '/var/lib/singularity',
+  :log_dir                  => '/var/log/singularity',
+  :conf_dir                 => '/etc/singularity',
+  :singularity_jar_checksum => '70b80d62a355af34578aa92b2885393ff3e5df1163e51fb39432b58223d3523d',
+  :base_url                 => "http://#{node[:fqdn]}:7099/singularity",
+  :app_mysql_defaults       => { 'adapter' => 'mysql2',
+                                 'pool' => 20,
+                                 'timeout' => 5000 },
+  :database                 => { :db_name => "singularity",
+                                 :username => "singularity",
+                                 :password => "9thlevel" },
 }
 
 default[:mesos] = {
@@ -40,6 +47,8 @@ default[:mysql] = {
   :bind_address => '0.0.0.0',
   :version => '5.5',
 }
+
+default['baragon']['service_yaml']['server']['connector']['port'] = 8088
 
 override['java']['install_flavor'] = "oracle"
 override['java']['jdk_version'] = "7"
