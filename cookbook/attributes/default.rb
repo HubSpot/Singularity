@@ -18,7 +18,7 @@ default[:singularity] = {
                                  'timeout' => 5000 },
   :database                 => { :db_name => "singularity",
                                  :username => "singularity",
-                                 :password => "9thlevel" },
+                                 :password => "9thlevel" }
 }
 
 default[:mesos] = {
