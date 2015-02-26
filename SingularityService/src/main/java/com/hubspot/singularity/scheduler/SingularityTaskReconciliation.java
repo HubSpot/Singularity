@@ -1,11 +1,8 @@
 package com.hubspot.singularity.scheduler;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,14 +20,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -39,7 +35,7 @@ import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
-public class SingularityTaskReconciliation implements Managed {
+public class SingularityTaskReconciliation {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskReconciliation.class);
 
@@ -53,7 +49,8 @@ public class SingularityTaskReconciliation implements Managed {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
 
   @Inject
-  public SingularityTaskReconciliation(SingularityExceptionNotifier exceptionNotifier,
+  public SingularityTaskReconciliation(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+      SingularityExceptionNotifier exceptionNotifier,
       TaskManager taskManager,
       SingularityConfiguration configuration,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
@@ -68,16 +65,7 @@ public class SingularityTaskReconciliation implements Managed {
     this.schedulerDriverSupplier = schedulerDriverSupplier;
 
     this.isRunningReconciliation = new AtomicBoolean(false);
-    this.executorService = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityTaskReconciliation-%d").build());
-  }
-
-  @Override
-  public void start() {
-  }
-
-  @Override
-  public void stop() {
-    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
+    this.executorService = executorServiceFactory.get(getClass().getSimpleName());
   }
 
   enum ReconciliationState {

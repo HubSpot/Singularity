@@ -37,9 +37,11 @@ import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 @Singleton
@@ -50,12 +52,14 @@ class SingularityMesosTaskBuilder {
   private final ObjectMapper objectMapper;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final ExecutorIdGenerator idGenerator;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration) {
     this.objectMapper = objectMapper;
     this.slaveAndRackManager = slaveAndRackManager;
     this.idGenerator = idGenerator;
+    this.configuration = configuration;
   }
 
   public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources) {
@@ -209,16 +213,41 @@ class SingularityMesosTaskBuilder {
     bldr.setContainer(containerBuilder);
   }
 
+  private List<Resource> buildCustomExecutorResources(final SingularityTaskRequest task) {
+    ImmutableList.Builder<Resource> builder = ImmutableList.builder();
+
+    if (task.getDeploy().getCustomExecutorResources().isPresent()) {
+      if (task.getDeploy().getCustomExecutorResources().get().getCpus() > 0) {
+        builder.add(MesosUtils.getCpuResource(task.getDeploy().getCustomExecutorResources().get().getCpus()));
+      }
+
+      if (task.getDeploy().getCustomExecutorResources().get().getMemoryMb() > 0) {
+        builder.add(MesosUtils.getMemoryResource(task.getDeploy().getCustomExecutorResources().get().getMemoryMb()));
+      }
+    } else {
+      if (configuration.getCustomExecutorConfiguration().getNumCpus() > 0) {
+        builder.add(MesosUtils.getCpuResource(configuration.getCustomExecutorConfiguration().getNumCpus()));
+      }
+
+      if (configuration.getCustomExecutorConfiguration().getMemoryMb() > 0) {
+        builder.add(MesosUtils.getMemoryResource(configuration.getCustomExecutorConfiguration().getMemoryMb()));
+      }
+    }
+
+    return builder.build();
+  }
+
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
     prepareEnvironment(task, taskId, commandBuilder, ports);
 
-    bldr.setExecutor(
-        ExecutorInfo.newBuilder()
-        .setCommand(commandBuilder.build())
-        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
-        .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+    bldr.setExecutor(ExecutorInfo.newBuilder()
+            .setCommand(commandBuilder.build())
+            .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
+            .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+            .addAllResources(buildCustomExecutorResources(task))
+            .build()
         );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
