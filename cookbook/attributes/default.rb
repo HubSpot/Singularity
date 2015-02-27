@@ -15,7 +15,7 @@ default[:singularity] = {
   :data_dir                 => '/var/lib/singularity',
   :log_dir                  => '/var/log/singularity',
   :conf_dir                 => '/etc/singularity',
-  :singularity_jar_checksum => '70b80d62a355af34578aa92b2885393ff3e5df1163e51fb39432b58223d3523d',
+  :singularity_jar_checksum => '639ee2a26acdcadc7102b847de4e04d53132f269523083e018c6abe0e054c671',
   :base_url                 => "http://#{node[:fqdn]}:7099/singularity",
   :app_mysql_defaults       => { 'adapter' => 'mysql2',
                                  'pool' => 20,
