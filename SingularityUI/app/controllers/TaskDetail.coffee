@@ -82,13 +82,6 @@ class TaskDetailController extends Controller
 
         app.showView @view
 
-        #  Refresh once again on page load to calculate initial CPU Usage value
-        @initialPageLoad = true
-        if @initialPageLoad
-            setTimeout (=>
-                @refresh() 
-                @initialPageLoad = false
-            ), 2000
 
     fetchResourceUsage: ->
         @models.resourceUsage?.fetch()
@@ -96,6 +89,10 @@ class TaskDetailController extends Controller
                 # Store current resource usage to compare against future resource usage
                 @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')              
                 @models.resourceUsage.set('previousUsage', @models.resourceUsage.toJSON())
+                
+                if not @resourcesFetched
+                    setTimeout (=> @fetchResourceUsage() ), 2000
+                    @resourcesFetched = true
 
             .error =>
                 # If this 404s there's nothing to get so don't bother
@@ -103,6 +100,8 @@ class TaskDetailController extends Controller
                 delete @models.resourceUsage
 
     refresh: ->
+        @resourcesFetched = false
+
         @models.task.fetch()
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
