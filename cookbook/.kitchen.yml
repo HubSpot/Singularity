@@ -21,9 +21,18 @@ suites:
   - name: default
     run_list:
       - recipe[singularity::default]
+      - recipe[zookeeper::default]
+      - recipe[zookeeper::service]
     attributes:
+      singularity:
+        zk_hosts:
+        - 'localhost:2181'
       mesos:
         master:
           quorum: 1
         slave:
+          attributes:
+            rackid: us-east-1b
           master: http://localhost:2181/singularity
+      zookeeper:
+        service_style: upstart
