@@ -33,6 +33,6 @@ suites:
         slave:
           attributes:
             rackid: us-east-1b
-          master: http://localhost:2181/singularity
+          master: zk://localhost:2181/singularity
       zookeeper:
         service_style: upstart
