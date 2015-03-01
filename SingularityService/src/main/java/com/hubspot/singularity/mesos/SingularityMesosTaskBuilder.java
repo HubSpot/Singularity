@@ -62,7 +62,7 @@ class SingularityMesosTaskBuilder {
     this.configuration = configuration;
   }
 
-  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Optional<Resources> desiredExecutorResources) {
+  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
     final String rackId = slaveAndRackManager.getRackId(offer);
     final String host = slaveAndRackManager.getSlaveHost(offer);
 
@@ -213,23 +213,21 @@ class SingularityMesosTaskBuilder {
     bldr.setContainer(containerBuilder);
   }
 
-  private List<Resource> buildMesosResources(final Optional<Resources> resources) {
+  private List<Resource> buildMesosResources(final Resources resources) {
     ImmutableList.Builder<Resource> builder = ImmutableList.builder();
 
-    if (resources.isPresent()) {
-      if (resources.get().getCpus() > 0) {
-        builder.add(MesosUtils.getCpuResource(resources.get().getCpus()));
-      }
+    if (resources.getCpus() > 0) {
+      builder.add(MesosUtils.getCpuResource(resources.getCpus()));
+    }
 
-      if (resources.get().getMemoryMb() > 0) {
-        builder.add(MesosUtils.getMemoryResource(resources.get().getMemoryMb()));
-      }
+    if (resources.getMemoryMb() > 0) {
+      builder.add(MesosUtils.getMemoryResource(resources.getMemoryMb()));
     }
 
     return builder.build();
   }
 
-  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports, final Optional<Resources> desiredExecutorResources) {
+  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports, final Resources desiredExecutorResources) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
     prepareEnvironment(task, taskId, commandBuilder, ports);

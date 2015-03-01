@@ -197,9 +197,9 @@ public class SingularityMesosScheduler implements Scheduler {
       final Resources taskResources = taskRequest.getDeploy().getResources().or(defaultResources);
 
       // only factor in executor resources if we're running a custom executor
-      final Optional<Resources> executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ? taskRequest.getDeploy().getCustomExecutorResources().or(Optional.of(defaultCustomExecutorResources)) : Optional.<Resources>absent();
+      final Resources executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ? taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;
 
-      final Resources totalResources = Resources.add(taskResources, executorResources.or(Resources.EMPTY_RESOURCES));
+      final Resources totalResources = Resources.add(taskResources, executorResources);
 
       LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
 
