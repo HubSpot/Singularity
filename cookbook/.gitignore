@@ -1,0 +1,62 @@
+\#*#
+*#
+.#*
+.*~
+*~
+**/.DS_Store
+*.sw[po]
+tags
+TAGS
+Session.vim
+.svn
+*.dSYM
+*.log
+*.dvi
+*.aux
+*.elc
+.zshrc_local
+.zsh_alias
+samples
+
+.vim/bundle/
+.vim/.netrwhist
+
+# Eclipse
+.classpath
+.settings
+.metadata
+.project
+.hsproject
+.dist-scion
+Servers
+target
+
+# cabal
+dist
+
+# SpringSource Tool Suite
+.springBeans
+
+# IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+*.idea
+.idea
+
+# Simple Build Tool
+project/boot
+project/plugins/project
+lib_managed
+src_managed
+target
+
+#ensime
+.ensime
+.ensime~
+
+# R app
+**/.Rapp.history
+
+.kitchen/*
+Gemfile.lock

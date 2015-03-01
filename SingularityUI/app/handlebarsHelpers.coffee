@@ -21,6 +21,12 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100
 
+# Override decimal rounding: {{fixedDecimal data.cpuUsage place="4"}}
+Handlebars.registerHelper 'fixedDecimal', (value, options) ->
+    if options.hash.place then place = options.hash.place else place = 2
+    +(value).toFixed(place)
+
+
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
     if haystack.indexOf(needle) isnt -1

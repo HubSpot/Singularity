@@ -66,7 +66,7 @@ class Application
         setInterval @globalRefresh, @globalRefreshTime
 
     globalRefresh: =>
-        return if localStorage.getItem 'suppressRefresh'
+        return if localStorage.getItem('suppressRefresh') is 'true'
         if @blurred
             clearInterval @globalRefreshInterval
             return
