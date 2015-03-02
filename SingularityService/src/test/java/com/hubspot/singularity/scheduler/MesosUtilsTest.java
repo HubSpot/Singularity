@@ -25,18 +25,10 @@ import com.hubspot.singularity.SingularityTaskId;
 
 public class MesosUtilsTest {
 
-  private void assertFound(int numPorts, Resource resource) {
-    int portsFound = 0;
-    for (Range r : resource.getRanges().getRangeList()) {
-      portsFound += (r.getEnd() - r.getBegin()) + 1;
-    }
-    Assert.assertEquals(numPorts, portsFound);
-  }
-
   private void test(int numPorts, String... ranges) {
     Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(ranges));
 
-    assertFound(numPorts, resource);
+    Assert.assertEquals(numPorts, MesosUtils.getNumPorts(Collections.singletonList(resource)));
   }
 
   @Test
