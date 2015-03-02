@@ -92,7 +92,7 @@ Full configuration documentation lives here: [configuration.md](reference/config
 
 If you're operating Singularity with MySQL, you first need to run a liquibase migration to create all appropriate tables: (this snippet assumes your Singularity configuration YAML exists as `singularity_config.yaml`)
 
-`java SingularityService/target/SingularityService-*-shaded.jar db migrate singularity_config.yaml --migrations mysql/migrations.sql`
+`java -jar SingularityService/target/SingularityService-*-shaded.jar db migrate singularity_config.yaml --migrations mysql/migrations.sql`
 
 It's a good idea to run a migration each time you upgrade to a new version of Singularity.
 
