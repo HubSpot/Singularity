@@ -3,12 +3,6 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
-import com.hubspot.singularity.config.CustomExecutorConfiguration;
-import com.hubspot.singularity.smtp.JadeTemplateLoader;
-import com.hubspot.singularity.smtp.MailTemplateHelpers;
-import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
-import com.hubspot.singularity.smtp.SingularityMailer;
-import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -31,7 +25,6 @@ import org.jets3t.service.security.AWSCredentials;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
@@ -44,6 +37,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.config.SMTPConfiguration;
@@ -58,6 +52,11 @@ import com.hubspot.singularity.hooks.SingularityWebhookSender;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
+import com.hubspot.singularity.smtp.JadeTemplateLoader;
+import com.hubspot.singularity.smtp.MailTemplateHelpers;
+import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
+import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.parser.Parser;
@@ -159,7 +158,7 @@ public class SingularityMainModule implements Module {
     @Inject
     SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_ADDRESS_PROPERTY) String hostAddress) {
       checkNotNull(configuration, "configuration is null");
-      this.hostname = !Strings.isNullOrEmpty(configuration.getHostname()) ? configuration.getHostname() : JavaUtils.getHostName().or(hostAddress);
+      this.hostname = configuration.getHostname().or(JavaUtils.getHostName().or(hostAddress));
 
       SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
       HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();

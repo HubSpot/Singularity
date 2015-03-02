@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.hubspot.singularity.SlavePlacement;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -206,7 +207,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<String> getCommonHostnameSuffixToOmit() {
-    return Optional.fromNullable(commonHostnameSuffixToOmit);
+    return Optional.fromNullable(Strings.emptyToNull(commonHostnameSuffixToOmit));
   }
 
   public long getConsiderTaskHealthyAfterRunningForSeconds() {
@@ -277,8 +278,8 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckTimeoutSeconds;
   }
 
-  public String getHostname() {
-    return hostname;
+  public Optional<String> getHostname() {
+    return Optional.fromNullable(Strings.emptyToNull(hostname));
   }
 
   public long getKillAfterTasksDoNotRunDefaultSeconds() {
