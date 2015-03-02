@@ -4,6 +4,7 @@ import io.dropwizard.lifecycle.Managed;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -83,7 +84,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
-        exceptionNotifier.notify(t);
+        exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
         abort.abort(AbortReason.UNRECOVERABLE_ERROR);
       }
 
@@ -122,7 +123,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
-        exceptionNotifier.notify(t);
+        exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
       } finally {
         abort.abort(AbortReason.LOST_LEADERSHIP);
       }
@@ -196,7 +197,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
           LOG.error("Caught exception while saving state", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
         }
         finally {
           lock.unlock();

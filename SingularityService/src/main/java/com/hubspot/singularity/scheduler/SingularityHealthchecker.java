@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -106,7 +107,7 @@ public class SingularityHealthchecker {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
         }
       }
 
@@ -177,7 +178,7 @@ public class SingularityHealthchecker {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }

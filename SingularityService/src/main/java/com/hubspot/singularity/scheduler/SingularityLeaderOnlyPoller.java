@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import static com.google.common.base.Preconditions.checkNotNull;
 import io.dropwizard.lifecycle.Managed;
 
+import java.util.Collections;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -107,7 +108,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       runActionOnPoll();
     } catch (Throwable t) {
       LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
       if (abortsOnError()) {
         abort.abort(AbortReason.UNRECOVERABLE_ERROR);
       }

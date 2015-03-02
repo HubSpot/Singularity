@@ -18,6 +18,7 @@ import ch.qos.logback.classic.LoggerContext;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -96,7 +97,7 @@ public class SingularityAbort implements ConnectionStateListener {
 
     sendAbortMail(message);
 
-    exceptionNotifier.notify(message);
+    exceptionNotifier.notify(message, ImmutableMap.of("abortReason", abortReason.name()));
   }
 
   private void sendAbortMail(final String message) {

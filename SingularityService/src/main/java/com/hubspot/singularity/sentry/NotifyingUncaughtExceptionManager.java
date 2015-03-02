@@ -1,6 +1,7 @@
 package com.hubspot.singularity.sentry;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,6 @@ public class NotifyingUncaughtExceptionManager implements UncaughtExceptionHandl
   @Override
   public void uncaughtException(Thread t, Throwable e) {
     LOG.error("Uncaught exception!", e);
-    notifier.notify(e);
+    notifier.notify(e, Collections.<String, String>emptyMap());
   }
 }
