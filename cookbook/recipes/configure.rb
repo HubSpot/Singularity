@@ -13,8 +13,7 @@ execute 'migrate_singularity_db' do
   command "#{node[:java][:java_home]}/bin/java " \
           "-jar #{node[:singularity][:home]}/bin/singularity.jar " \
           "db migrate #{node[:singularity][:conf_dir]}/singularity.yaml " \
-          "--migrations #{Chef::Config[:file_cache_path]}/Singularity/mysql/" \
-          'migrations.sql ' \
+          "--migrations #{node[:singularity][:home]}/mysql/migrations.sql " \
           "&& touch #{node[:singularity][:conf_dir]}/migration_ran"
   action  :nothing
 end
