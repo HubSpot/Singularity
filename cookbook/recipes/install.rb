@@ -7,10 +7,9 @@
 ].each { |cur_dir| directory cur_dir }
 
 remote_file "#{node[:singularity][:home]}/bin/singularity.jar" do
-  mode     0644
-  source   "file://#{Chef::Config[:file_cache_path]}/Singularity/" \
-           'SingularityService/target/' \
-           "SingularityService-#{node[:singularity][:version]}-SNAPSHOT-" \
-           'shaded.jar'
-  checksum node[:singularity][:singularity_jar_checksum]
+  mode   0644
+  source "file://#{Chef::Config[:file_cache_path]}/Singularity/" \
+         'SingularityService/target/' \
+         "SingularityService-#{node[:singularity][:version]}-SNAPSHOT-" \
+         'shaded.jar'
 end
