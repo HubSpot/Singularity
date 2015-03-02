@@ -183,7 +183,7 @@ public class SingularityNewTaskChecker implements Managed {
     } catch (Throwable t) {
       LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
       exceptionNotifier.notify(t);
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
 

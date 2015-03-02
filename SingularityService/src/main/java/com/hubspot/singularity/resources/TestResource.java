@@ -6,6 +6,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
+import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import org.apache.mesos.Protos.TaskID;
@@ -83,7 +84,7 @@ public class TestResource {
   public void abort() {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
-    abort.abort(AbortReason.TEST_ABORT);
+    abort.abort(AbortReason.TEST_ABORT, Optional.<Throwable>absent());
   }
 
   @POST
