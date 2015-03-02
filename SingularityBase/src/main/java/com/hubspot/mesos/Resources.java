@@ -33,4 +33,42 @@ public class Resources {
     return "Resources [cpus=" + cpus + ", memoryMb=" + memoryMb + ", numPorts=" + numPorts + "]";
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    Resources resources = (Resources) o;
+
+    if (Double.compare(resources.cpus, cpus) != 0) {
+      return false;
+    }
+
+    if (Double.compare(resources.memoryMb, memoryMb) != 0) {
+      return false;
+    }
+
+    if (numPorts != resources.numPorts) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result;
+    long temp;
+    temp = Double.doubleToLongBits(cpus);
+    result = (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(memoryMb);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    result = 31 * result + numPorts;
+    return result;
+  }
 }
