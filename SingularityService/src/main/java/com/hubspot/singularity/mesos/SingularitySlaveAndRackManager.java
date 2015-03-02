@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
@@ -321,7 +322,7 @@ class SingularitySlaveAndRackManager {
     if (!slave.isPresent()) {
       final String message = String.format("Couldn't find slave with id %s for task %s", slaveId, taskId);
       LOG.warn(message);
-      exceptionNotifier.notify(message);
+      exceptionNotifier.notify(message, ImmutableMap.of("slaveId", slaveId, "taskId", taskId.toString()));
       return;
     }
 
@@ -336,7 +337,7 @@ class SingularitySlaveAndRackManager {
     if (!rack.isPresent()) {
       final String message = String.format("Couldn't find rack with id %s for task %s", taskId.getRackId(), taskId);
       LOG.warn(message);
-      exceptionNotifier.notify(message);
+      exceptionNotifier.notify(message, ImmutableMap.of("rackId", taskId.getRackId(), "taskId", taskId.toString()));
       return;
     }
 
