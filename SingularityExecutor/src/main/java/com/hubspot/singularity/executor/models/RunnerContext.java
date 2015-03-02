@@ -2,26 +2,29 @@ package com.hubspot.singularity.executor.models;
 
 import com.google.common.base.Optional;
 
+/**
+ * Handlebars context for generating the runner.sh file.
+ */
 public class RunnerContext {
 
   private final String cmd;
-  private final String user;
-  private final String logfile;
-  private final String taskId;
   private final String taskAppDirectory;
+  private final String logDir;
+  private final String user;
+  private final String logFile;
+  private final String taskId;
+
   private final Optional<Integer> maxTaskThreads;
 
-  public RunnerContext(String cmd, String taskAppDirectory, String user, String logfile, String taskId, Optional<Integer> maxTaskThreads) {
+  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String taskId, Optional<Integer> maxTaskThreads) {
     this.cmd = cmd;
-    this.user = user;
-    this.logfile = logfile;
-    this.taskId = taskId;
     this.taskAppDirectory = taskAppDirectory;
-    this.maxTaskThreads = maxTaskThreads;
-  }
+    this.logDir = logDir;
+    this.user = user;
+    this.logFile = logFile;
+    this.taskId = taskId;
 
-  public String getTaskId() {
-    return taskId;
+    this.maxTaskThreads = maxTaskThreads;
   }
 
   public String getCmd() {
@@ -32,12 +35,20 @@ public class RunnerContext {
     return taskAppDirectory;
   }
 
+  public String getLogDir() {
+    return logDir;
+  }
+
   public String getUser() {
     return user;
   }
 
-  public String getLogfile() {
-    return logfile;
+  public String getLogFile() {
+    return logFile;
+  }
+
+  public String getTaskId() {
+    return taskId;
   }
 
   public Optional<Integer> getMaxTaskThreads() {
@@ -47,11 +58,12 @@ public class RunnerContext {
   @Override
   public String toString() {
     return "RunnerContext [" +
-        "cmd='" + cmd + '\'' +
-        ", user='" + user + '\'' +
-        ", logfile='" + logfile + '\'' +
-        ", taskId='" + taskId + '\'' +
-        ", taskAppDirectory='" + taskAppDirectory + '\'' +
+        "cmd='" + cmd + "'" +
+        ", taskAppDirectory='" + taskAppDirectory + "'" +
+        ", logDir='" + logDir + "'" +
+        ", user='" + user + "'" +
+        ", logFile='" + logFile + "'" +
+        ", taskId='" + taskId + "'" +
         ", maxTaskThreads=" + maxTaskThreads +
         ']';
   }
