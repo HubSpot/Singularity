@@ -896,7 +896,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     saveRequest(request.toBuilder().setScheduledExpectedRuntimeMillis(Optional.of(1L)).build());
 
-    SingularityTask thirdTask = launchTask(request, firstDeploy, now - 500, 1, TaskState.TASK_RUNNING);
+    SingularityTask thirdTask = launchTask(request, firstDeploy, now - 502, 1, TaskState.TASK_RUNNING);
 
     scheduledJobPoller.runActionOnPoll();
 
