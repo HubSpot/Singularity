@@ -7,11 +7,17 @@ Handlebars.registerHelper 'apiDocs', ->
 Handlebars.registerHelper 'ifEqual', (v1, v2, options) ->
     if v1 is v2 then options.fn @ else options.inverse @
 
+Handlebars.registerHelper 'ifNotEqual', (v1, v2, options) ->
+    if v1 isnt v2 then options.fn @ else options.inverse @
+
 Handlebars.registerHelper 'ifLT', (v1, v2, options) ->
     if v1 < v2 then options.fn @ else options.inverse @
 
 Handlebars.registerHelper 'ifGT', (v1, v2, options) ->
     if v1 > v2 then options.fn @ else options.inverse @
+
+# Handlebars.registerHelper 'ifAnd', (v1, v2, v3, v4, options) ->
+#     if (v1 is v2) and (v3 is v4) then options.fn @ else options.inverse @
 
 Handlebars.registerHelper "ifAll", (conditions..., options)->
     for condition in conditions

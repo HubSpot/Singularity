@@ -1,3 +1,23 @@
+{{#if data.isStillRunning}}
+    {{#ifNotEqual data.killStatus 'kill9'}}
+        {{#if data.isStillRunning}}
+            {{#if data.isInCleanup}} 
+                <div class="alert alert-warning" role="alert">Request is bouncing. This task will be killed once all replacement tasks are healthy. You may still force kill this task.</div>
+            {{/if}}
+            {{#unless data.isInCleanup}} 
+                {{#if data.isCleaning}}
+                    <div class="alert alert-warning" role="alert"> 
+                        Task is in cleaning. You may still force kill this task (kill -9).
+                    </div>
+                {{/if}}
+            {{/unless}}
+        {{/if}}
+    {{/ifNotEqual}}
+    {{#ifEqual data.killStatus 'kill9'}}
+        <div class="alert alert-warning" role="alert">Request is being force killed (kill -9)</div>
+    {{/ifEqual}}
+{{/if}}
+
 {{#if data.decommissioning}}
     {{#if data.isStillRunning}}
         <div class="alert alert-warning" role="alert">This task is running on a decommissioning host and will be replaced soon</div>
@@ -14,7 +34,6 @@
                     <a href="{{appRoot}}/request/{{ request.id }}">
                         {{ request.id }}
                     </a>
-
                 </h5>
             {{/with}}
         </div>
@@ -29,12 +48,21 @@
         <div class="col-md-4 button-container">
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
-            </a>
-
+            </a>        
             {{#if data.isStillRunning}}
-                <a class="btn btn-danger" data-action="remove">
-                Kill task
-                </a>
+                {{#if data.isInCleanup}} 
+                    <a class="btn btn-danger" data-action="remove" data-kill-type="killOverride"> Override kill </a>
+                {{/if}}  
+        
+                {{#unless data.isInCleanup}} 
+                    {{#if data.isCleaning}}
+                        <a class="btn btn-danger" data-action="remove" data-kill-type="kill9"> Destroy task </a>
+                    {{/if}}
+                {{/unless}}
+
+                {{#unless data.isCleaning}}
+                    <a class="btn btn-danger" data-action="remove" data-kill-type="kill"> Kill task </a>
+                {{/unless}}
             {{/if}}
         </div>
     </div>
