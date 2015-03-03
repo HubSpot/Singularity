@@ -46,6 +46,11 @@ class TaskHistory extends Model
             else if taskHistory.slave.attributes.state is not 'ACTIVE'
                 taskHistory.slaveMissing = true
         taskHistory
+    
+    setCurrentState: ->
+        isCleaning = _.last( @get 'taskUpdates' ).taskState is 'TASK_CLEANING'
+        @set 'isCleaning', isCleaning
+
 
     parseResources: (task) ->
         cpus: _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''

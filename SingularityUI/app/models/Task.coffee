@@ -3,11 +3,15 @@ Model = require './model'
 Request = require './Request'
 
 killTemplate = require '../templates/vex/taskKill'
+killOverrideTemplate = require '../templates/vex/taskKillOverride'
+killDestroyTemplate = require '../templates/vex/taskKillDestroy'
+killDestroyWarningTemplate = require '../templates/vex/taskKillDestroyWarning'
 
 class Task extends Model
 
     url: => "#{ config.apiRoot }/tasks/task/#{ @get 'id' }"
 
+    initialize: ->
     # Won't be displayed in JSON dialog
     ignoreAttributes: ['id', 'host', 'cpus', 'memoryMb']
 
@@ -29,29 +33,59 @@ class Task extends Model
     promptX opens a dialog asking the user to confirm an action and then does it
     ###
 
-    killTask: =>
+
+
+    killTask: (type) =>
+
+        username = app.getUsername()
+        params =
+            user: username
+
+        if type is 'killOverride' or 'kill9'
+            params.override = true
+        
+        url = @url() + "?" + $.param params
+
         $.ajax
-            url: "#{ @url() }?user=#{ app.getUsername() }"
+            url: url
             type: "DELETE"
+
 
     promptRun: (callback) =>
         # We tell the Request to run
         requestModel = new Request id: @get('request').id
         requestModel.promptRun => callback()
 
-    promptKill: (callback) =>
+    # Choose prompt based on if we plan to 
+    # gracefully kill (sigterm),s or force kill (kill-9)
+    promptKill: (type, callback) =>        
+        if type is 'killOverride'
+            btnText = 'Override'
+            templ = killOverrideTemplate
+        else if type is 'kill9'
+            btnText = 'Destroy task'
+            templ = killDestroyTemplate
+        # Warn user if they attempt to gracefully kill a task 
+        # but as they kill, that task is no longer in Cleanup
+        else if type is 'kill9Warning'
+            btnText = 'Destroy task'
+            templ = killDestroyWarningTemplate
+        else
+            btnText = 'Kill task'
+            templ = killTemplate
+
         vex.dialog.confirm
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
-                    text: 'Kill task'
+                    text: btnText
                     className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
                 vex.dialog.buttons.NO
             ]
 
-            message: killTemplate id: @get('id')
+            message: templ id: @get('id')
             callback: (confirmed) =>
                 return unless confirmed
-                deleteRequest = @killTask()
+                deleteRequest = @killTask(type)
                 deleteRequest.done callback
 
                 # ignore errors (probably means you tried
@@ -59,5 +93,6 @@ class Task extends Model
                 deleteRequest.error =>
                     app.caughtError()
                     callback()
+
 
 module.exports = Task

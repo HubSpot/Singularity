@@ -78,7 +78,7 @@ class taskOverviewSubview extends View
         if @killType is 'killOverride'
             @getCleaningStatus =>
                 if not @model.get 'isInCleanup'
-                    @killType = 'kill9Update'
+                    @killType = 'kill9Warning'
                     
                 return @killPrompt()
         

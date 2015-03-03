@@ -217,7 +217,7 @@ class TasksView extends View
         $row = $(e.target).parents 'tr'
         id = $row.data 'task-id' 
 
-        @collection.get(id).promptKill =>
+        @collection.get(id).promptKill 'kill', =>
             $row.remove()
 
     runTask: (e) =>
