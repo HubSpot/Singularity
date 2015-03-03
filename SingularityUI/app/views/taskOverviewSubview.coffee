@@ -77,10 +77,9 @@ class taskOverviewSubview extends View
         # Check if the status is no longer in Cleanup since clicking the kill button
         if @killType is 'killOverride'
             @getCleaningStatus =>
-                if not @model.get 'isInCleanup'
-                    @killType = 'kill9Warning'
-                    
-                return @killPrompt()
+                @killType = 'kill9Warning' if not @model.get 'isInCleanup'
+                @killPrompt()
+            return
         
         @killPrompt()
 
