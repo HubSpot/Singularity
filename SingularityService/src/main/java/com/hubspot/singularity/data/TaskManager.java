@@ -112,6 +112,12 @@ public class TaskManager extends CuratorAsyncManager {
     this.serverId = serverId;
   }
 
+  // since we can't use creatingParentsIfNeeded in transactions
+  public void createRequiredParents() {
+    create(HISTORY_PATH_ROOT);
+    create(ACTIVE_PATH_ROOT);
+  }
+
   private String getLastHealthcheckPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), LAST_HEALTHCHECK_KEY);
   }
