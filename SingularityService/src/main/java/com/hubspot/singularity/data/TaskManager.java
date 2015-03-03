@@ -1,16 +1,5 @@
 package com.hubspot.singularity.data;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.mesos.Protos.TaskStatus;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -44,9 +33,25 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.mesos.Protos.TaskStatus;
+import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
+
+  private static final Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
 
   private static final String TASKS_ROOT = "/tasks";
 
@@ -464,8 +469,13 @@ public class TaskManager extends CuratorAsyncManager {
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.<String>absent()));
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
-    create(getTaskPath(task.getTaskId()), task, taskTranscoder);
-    create(getActivePath(task.getTaskId().getId()));
+    try {
+      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(getTaskPath(task.getTaskId()), taskTranscoder.toBytes(task)).and();
+
+      transaction.create().forPath(getActivePath(task.getTaskId().getId())).and().commit();
+    } catch (KeeperException.NodeExistsException nee) {
+      LOG.error("Task or active path already existed for {}", task.getTaskId());
+    }
   }
 
   public List<SingularityTaskId> getLBCleanupTasks() {
