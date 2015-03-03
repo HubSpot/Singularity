@@ -11,6 +11,7 @@ default[:singularity] = {
   :group => 'singularity',
   :git_ref => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
   :version => '0.4.2',
+  :home => '/home/singularity',
   :database => {
     :db_name => "singularity",
     :username => "singularity",
