@@ -17,7 +17,7 @@ execute 'build_singularity' do
   # Maven (or rather npm) has issues with
   # being run as root.
   user    node[:singularity][:user]
-  environment('HOME' => '/home/singularity')
+  environment('HOME' => node[:singularity][:home])
   command '/usr/bin/mvn clean package -DskipTests'
   creates "#{Chef::Config[:file_cache_path]}/Singularity/" \
           'SingularityService/target/' \
