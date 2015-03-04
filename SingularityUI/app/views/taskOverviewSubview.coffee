@@ -25,7 +25,6 @@ class taskOverviewSubview extends View
             @$el.empty()
 
         @getCleaningStatus()
-
     
     # Store 'Cleanup' state
     getCleaningStatus: (callback) ->     
@@ -36,10 +35,9 @@ class taskOverviewSubview extends View
 
             callback?()
 
-
     render: ->
         return if not @model.synced and @model.isEmpty?()
-        @$el.html @template(@renderData())
+        @$el.html @template @renderData()
 
     renderData: ->
         data =
@@ -49,26 +47,22 @@ class taskOverviewSubview extends View
 
         data
 
-
     killPrompt: ->
         @taskModel.promptKill @killType, =>
-            if @killType is 'kill9'
+            if _.contains ['kill9','kill9Warning'], @killType
                 @model.set 'killStatus', 'kill9'
 
-            # Poll for 'Cleanup' changes so we can 
-            # update kill messages/buttons
+            # Poll for 'Cleanup' changes so we can update kill messages/buttons
             x = 0
             taskKillInterval = setInterval((=>
                 @trigger 'refreshrequest'
                 @getCleaningStatus()
 
-                if ++x == 4 or  !@model.get 'isStillRunning'
+                if ++x == 4 or !@model.get 'isStillRunning'
                     clearInterval taskKillInterval 
                 return
 
             ), 1500)
-
-
     
     killTask: (event) ->
         @killType = $(event.currentTarget).data('kill-type')      
@@ -82,10 +76,6 @@ class taskOverviewSubview extends View
             return
         
         @killPrompt()
-
-
-
-
 
 
 
