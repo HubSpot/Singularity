@@ -23,6 +23,7 @@
         <div class="alert alert-warning" role="alert">This task is running on a decommissioning host and will be replaced soon</div>
     {{/if}}
 {{/if}}
+
 {{! Part of taskBase }}
 <header class='detail-header'>
     <div class="row">
@@ -48,25 +49,24 @@
         <div class="col-md-4 button-container">
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
-            </a>        
+            </a>
             {{#if data.isStillRunning}}
-                {{#if data.isInCleanup}} 
-                    <a class="btn btn-danger" data-action="remove" data-kill-type="killOverride"> Override kill </a>
-                {{/if}}  
-        
-                {{#unless data.isInCleanup}} 
+                {{#unless data.isCleaning}}
+                    <a class="btn btn-danger" data-action="remove" data-kill-type="kill"> Kill task </a>
+                {{/unless}}
+                {{#ifNotEqual data.killStatus 'kill9'}}
+                    {{#if data.isInCleanup}}
+                        <a class="btn btn-danger" data-action="remove" data-kill-type="killOverride"> Override kill </a>
+                    {{/if}}
+                {{/ifNotEqual}}
+                {{#unless data.isInCleanup}}
                     {{#if data.isCleaning}}
                         <a class="btn btn-danger" data-action="remove" data-kill-type="kill9"> Destroy task </a>
                     {{/if}}
                 {{/unless}}
-
-                {{#unless data.isCleaning}}
-                    <a class="btn btn-danger" data-action="remove" data-kill-type="kill"> Kill task </a>
-                {{/unless}}
             {{/if}}
         </div>
     </div>
-
 </header>
 
 {{#if data.taskUpdates}}
