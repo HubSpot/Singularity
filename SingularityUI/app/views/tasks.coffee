@@ -3,6 +3,8 @@ View = require './view'
 Request = require '../models/Request'
 Slaves = require '../collections/Slaves'
 
+killTemplate = require '../templates/vex/taskKill'
+
 class TasksView extends View
 
     isSorted: false
@@ -217,8 +219,30 @@ class TasksView extends View
         $row = $(e.target).parents 'tr'
         id = $row.data 'task-id' 
 
-        @collection.get(id).promptKill 'kill', =>
+        @promptKill id, ->
             $row.remove()
+    
+    promptKill: (id, callback) ->
+        vex.dialog.confirm
+            buttons: [
+                $.extend {}, vex.dialog.buttons.YES,
+                    text: 'Kill task'
+                    className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
+                vex.dialog.buttons.NO
+            ]
+            message: killTemplate id: id
+            
+            callback: (confirmed) =>
+                return unless confirmed
+                deleteRequest = @collection.get(id).killTask 'kill'
+
+                # ignore errors (probably means you tried
+                # to kill an already dead task)
+                deleteRequest.error =>
+                    app.caughtError()
+
+                callback?()
+
 
     runTask: (e) =>
         $row = $(e.target).parents 'tr'
