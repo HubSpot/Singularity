@@ -49,9 +49,12 @@ class taskOverviewSubview extends View
 
     killPrompt: ->
         @taskModel.promptKill @killType, =>
-            if _.contains ['kill9','kill9Warning'], @killType
+            if @killType is 'kill9' or @killType is 'kill9Warning'
                 @model.set 'killStatus', 'kill9'
 
+            @trigger 'refreshrequest'
+            @getCleaningStatus()
+            
             # Poll for 'Cleanup' changes so we can update kill messages/buttons
             x = 0
             taskKillInterval = setInterval((=>

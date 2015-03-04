@@ -41,7 +41,7 @@ class Task extends Model
         params =
             user: username
 
-        if type is 'killOverride' or 'kill9'
+        if type is 'killOverride' or type is 'kill9'
             params.override = true
         
         url = @url() + "?" + $.param params
@@ -57,16 +57,14 @@ class Task extends Model
         requestModel.promptRun => callback()
 
     # Choose prompt based on if we plan to 
-    # gracefully kill (sigterm),s or force kill (kill-9)
-    promptKill: (type, callback) =>        
+    # gracefully kill (sigterm), or force kill (kill-9)
+    promptKill: (type, callback) =>
         if type is 'killOverride'
             btnText = 'Override'
             templ = killOverrideTemplate
         else if type is 'kill9'
             btnText = 'Destroy task'
             templ = killDestroyTemplate
-        # Warn user if they attempt to gracefully kill a task 
-        # but as they kill, that task is no longer in Cleanup
         else if type is 'kill9Warning'
             btnText = 'Destroy task'
             templ = killDestroyWarningTemplate
