@@ -119,16 +119,23 @@ class taskOverviewSubview extends View
                             @killType = 'kill9Warning'              
                             @promptKill()
                             return
+                        @killTask()
 
-                deleteRequest = @taskModel.killTask @killType
-                deleteRequest.done @updateKillStatus()
+                else
+                    @killTask()
+                
 
-                # ignore errors (probably means you tried
-                # to kill an already dead task)
-                deleteRequest.error =>
-                    app.caughtError()
-                    @updateKillStatus()
 
+
+    killTask: ->
+        deleteRequest = @taskModel.killTask @killType
+        deleteRequest.done @updateKillStatus()
+
+        # ignore errors (probably means you tried
+        # to kill an already dead task)
+        deleteRequest.error =>
+            app.caughtError()
+            @updateKillStatus()
 
 
 module.exports = taskOverviewSubview
