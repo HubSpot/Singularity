@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -157,6 +159,12 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("customExecutor")
   @NotNull
   private CustomExecutorConfiguration customExecutorConfiguration = new CustomExecutorConfiguration();
+
+  private boolean createDeployIds = false;
+
+  @Min(4)
+  @Max(32)
+  private int deployIdLength = 8;
 
   @JsonProperty("zookeeper")
   @Valid
@@ -668,5 +676,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
     this.customExecutorConfiguration = customExecutorConfiguration;
+  }
+
+  public boolean isCreateDeployIds() {
+    return createDeployIds;
+  }
+
+  public void setCreateDeployIds(boolean createDeployIds) {
+    this.createDeployIds = createDeployIds;
+  }
+
+  public int getDeployIdLength() {
+    return deployIdLength;
+  }
+
+  public void setDeployIdLength(int deployIdLength) {
+    this.deployIdLength = deployIdLength;
   }
 }
