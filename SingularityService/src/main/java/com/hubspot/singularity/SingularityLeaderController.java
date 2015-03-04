@@ -85,11 +85,11 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
         exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
-        abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
       }
 
       if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
-        abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.<Throwable>absent());
       }
     }
   }
@@ -125,7 +125,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         LOG.error("While stopping driver", t);
         exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
       } finally {
-        abort.abort(AbortReason.LOST_LEADERSHIP);
+        abort.abort(AbortReason.LOST_LEADERSHIP, Optional.<Throwable>absent());
       }
     }
   }

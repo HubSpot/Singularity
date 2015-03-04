@@ -95,7 +95,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
     exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
 
-    abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+    abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
   }
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) throws Exception {
@@ -309,7 +309,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
       LOG.error("Aborting due to error: {}", message);
 
-      abort.abort(AbortReason.MESOS_ERROR);
+      abort.abort(AbortReason.MESOS_ERROR, Optional.<Throwable>absent());
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {

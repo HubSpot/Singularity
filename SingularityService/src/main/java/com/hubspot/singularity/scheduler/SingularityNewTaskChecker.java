@@ -173,7 +173,7 @@ public class SingularityNewTaskChecker {
     } catch (Throwable t) {
       LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
       exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
 

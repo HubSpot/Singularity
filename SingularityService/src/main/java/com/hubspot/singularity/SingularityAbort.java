@@ -55,7 +55,7 @@ public class SingularityAbort implements ConnectionStateListener {
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
     if (newState == ConnectionState.LOST) {
       LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
-      abort(AbortReason.LOST_ZK_CONNECTION);
+      abort(AbortReason.LOST_ZK_CONNECTION, Optional.<Throwable>absent());
     }
   }
 
@@ -63,10 +63,10 @@ public class SingularityAbort implements ConnectionStateListener {
     LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
   }
 
-  public void abort(AbortReason abortReason) {
+  public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
     if (!aborting.getAndSet(true)) {
       try {
-        sendAbortNotification(abortReason);
+        sendAbortNotification(abortReason, throwable);
         flushLogs();
       } finally {
         exit();
@@ -90,17 +90,17 @@ public class SingularityAbort implements ConnectionStateListener {
     }
   }
 
-  private void sendAbortNotification(AbortReason abortReason) {
+  private void sendAbortNotification(AbortReason abortReason, Optional<Throwable> throwable) {
     final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText(), abortReason);
 
     LOG.error(message);
 
-    sendAbortMail(message);
+    sendAbortMail(message, throwable);
 
     exceptionNotifier.notify(message, ImmutableMap.of("abortReason", abortReason.name()));
   }
 
-  private void sendAbortMail(final String message) {
+  private void sendAbortMail(final String message, final Optional<Throwable> throwable) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.warn("Couldn't send abort mail because no SMTP configuration is present");
       return;
@@ -113,7 +113,9 @@ public class SingularityAbort implements ConnectionStateListener {
       return;
     }
 
-    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.<String> of(), message, "");
+    final String body = throwable.isPresent() ? throwable.get().toString() : "(no stack trace)";
+
+    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.<String> of(), message, body);
   }
 
   private void flushLogs() {

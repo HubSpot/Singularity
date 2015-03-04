@@ -116,7 +116,7 @@ public class SingularityTaskReconciliation {
         } catch (Throwable t) {
           LOG.error("While checking for reconciliation tasks", t);
           exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
-          abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+          abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
         }
       }
     }, configuration.getCheckReconcileWhenRunningEveryMillis(), TimeUnit.MILLISECONDS);

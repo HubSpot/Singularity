@@ -94,7 +94,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
       exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
 
