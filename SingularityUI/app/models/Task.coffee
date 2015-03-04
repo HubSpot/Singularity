@@ -1,11 +1,5 @@
 Model = require './model'
-
 Request = require './Request'
-
-killTemplate = require '../templates/vex/taskKill'
-killOverrideTemplate = require '../templates/vex/taskKillOverride'
-killDestroyTemplate = require '../templates/vex/taskKillDestroy'
-killDestroyWarningTemplate = require '../templates/vex/taskKillDestroyWarning'
 
 class Task extends Model
 
@@ -36,7 +30,6 @@ class Task extends Model
 
 
     killTask: (type) =>
-
         username = app.getUsername()
         params =
             user: username
@@ -56,41 +49,6 @@ class Task extends Model
         requestModel = new Request id: @get('request').id
         requestModel.promptRun => callback()
 
-    # Choose prompt based on if we plan to 
-    # gracefully kill (sigterm), or force kill (kill-9)
-    promptKill: (type, callback) =>
-        if type is 'killOverride'
-            btnText = 'Override'
-            templ = killOverrideTemplate
-        else if type is 'kill9'
-            btnText = 'Destroy task'
-            templ = killDestroyTemplate
-        else if type is 'kill9Warning'
-            btnText = 'Destroy task'
-            templ = killDestroyWarningTemplate
-        else
-            btnText = 'Kill task'
-            templ = killTemplate
-
-        vex.dialog.confirm
-            buttons: [
-                $.extend {}, vex.dialog.buttons.YES,
-                    text: btnText
-                    className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
-                vex.dialog.buttons.NO
-            ]
-
-            message: templ id: @get('id')
-            callback: (confirmed) =>
-                return unless confirmed
-                deleteRequest = @killTask(type)
-                deleteRequest.done callback
-
-                # ignore errors (probably means you tried
-                # to kill an already dead task)
-                deleteRequest.error =>
-                    app.caughtError()
-                    callback()
 
 
 module.exports = Task
