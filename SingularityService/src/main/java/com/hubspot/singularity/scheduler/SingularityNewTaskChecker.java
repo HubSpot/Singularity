@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -158,7 +159,7 @@ public class SingularityNewTaskChecker {
           checkTask(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
           reEnqueueCheckOrAbort(task);
         }
@@ -171,8 +172,8 @@ public class SingularityNewTaskChecker {
       reEnqueueCheck(task);
     } catch (Throwable t) {
       LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
-      exceptionNotifier.notify(t);
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
 
@@ -292,6 +293,7 @@ public class SingularityNewTaskChecker {
         return Optional.of(CheckTaskState.HEALTHY);
       case CANCELED:
       case FAILED:
+      case INVALID_REQUEST_NOOP:
         return Optional.of(CheckTaskState.UNHEALTHY_KILL_TASK);
       case CANCELING:
       case UNKNOWN:

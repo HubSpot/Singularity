@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -115,7 +116,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
         cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
       } catch (ParseException e) {
         LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
-        exceptionNotifier.notify(e);
+        exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString()));
         return Optional.absent();
       }
 
@@ -125,7 +126,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       if (nextRunAtDate == null) {
         String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
         LOG.warn(msg);
-        exceptionNotifier.notify(msg);
+        exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
         return Optional.absent();
       }
 

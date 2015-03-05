@@ -7,11 +7,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -94,7 +96,7 @@ public class SingularityHealthchecker {
   }
 
   private ScheduledFuture<?> enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace("Enqueing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
+    LOG.trace("En-queuing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
 
     return executorService.schedule(new Runnable() {
 
@@ -106,11 +108,24 @@ public class SingularityHealthchecker {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+
+          reEnqueueOrAbort(task);
         }
       }
 
     }, delaySeconds, TimeUnit.SECONDS);
+  }
+
+  public void reEnqueueOrAbort(SingularityTask task) {
+    try {
+      enqueueHealthcheck(task);
+    } catch (Throwable t) {
+      LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+
+      abort.abort(SingularityAbort.AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+    }
   }
 
   private Optional<String> getHealthcheckUri(SingularityTask task) {
@@ -149,6 +164,13 @@ public class SingularityHealthchecker {
       return false;
     }
 
+    Optional<SingularityTaskHealthcheckResult> lastHealthcheck = taskManager.getLastHealthcheck(task.getTaskId());
+
+    if (lastHealthcheck.isPresent() && !lastHealthcheck.get().isFailed()) {
+      LOG.debug("Not submitting a new healthcheck for {} because it already passed a healthcheck", task.getTaskId());
+      return false;
+    }
+
     return true;
   }
 
@@ -177,7 +199,7 @@ public class SingularityHealthchecker {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityTask;
@@ -60,12 +61,12 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage) {
-    SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,
-        errorMessage, task.getTaskId());
-
-    LOG.trace("Saving healthcheck result {}", result);
-
     try {
+      SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,
+          errorMessage, task.getTaskId());
+
+      LOG.trace("Saving healthcheck result {}", result);
+
       taskManager.saveHealthcheckResult(result);
 
       if (result.isFailed()) {
@@ -79,22 +80,12 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
         newTaskChecker.runNewTaskCheckImmediately(task);
       }
     } catch (Throwable t) {
-      LOG.error("Caught throwable while saving health check result {}, will re-enqueue", result, t);
-      exceptionNotifier.notify(t);
+      LOG.error("Caught throwable while saving health check result for {}, will re-enqueue", task.getTaskId(), t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
-      reEnqueueOrAbort(task);
+      healthchecker.reEnqueueOrAbort(task);
     }
   }
 
-  private void reEnqueueOrAbort(SingularityTask task) {
-    try {
-      healthchecker.enqueueHealthcheck(task);
-    } catch (Throwable t) {
-      LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
-      exceptionNotifier.notify(t);
-
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR);
-    }
-  }
 
 }
