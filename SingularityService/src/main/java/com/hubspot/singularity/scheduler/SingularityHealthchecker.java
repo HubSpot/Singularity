@@ -110,19 +110,19 @@ public class SingularityHealthchecker {
           LOG.error("Uncaught throwable in async healthcheck", t);
           exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
-          reEnqueueOrAbort(task, t);
+          reEnqueueOrAbort(task);
         }
       }
 
     }, delaySeconds, TimeUnit.SECONDS);
   }
 
-  public void reEnqueueOrAbort(SingularityTask task, Throwable t) {
+  public void reEnqueueOrAbort(SingularityTask task) {
     try {
       enqueueHealthcheck(task);
     } catch (Throwable t) {
       LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
       abort.abort(SingularityAbort.AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
