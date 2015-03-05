@@ -1,5 +1,5 @@
 <p>Note - this task has recently updated and is NO LONGER in Cleanup. </p>
 <pre>{{ id }}</pre>
 <p>
-    If you continue, this will NOT initiate a graceful kill but instead will override cleanup type and immediately initiate a non-graceful kill (-9 PID) and not wait for replacement tasks.
+    If you continue, this will NOT initiate a graceful kill but instead will override any pending cleanup operations, and immediately send a kill request to the executor and not wait for replacement tasks.
 </p>

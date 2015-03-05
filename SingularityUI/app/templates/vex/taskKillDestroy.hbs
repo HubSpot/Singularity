@@ -1,5 +1,5 @@
 <p>Are you sure you want to destroy this task?</p>
 <pre>{{ id }}</pre>
 <p>
-    This will override cleanup type, immediately initiate a non-graceful kill (-9 PID) and not wait for replacement tasks.
+    This will override any pending cleanup operations and immediately send a kill request to the executor without waiting for replacement tasks.
 </p>
