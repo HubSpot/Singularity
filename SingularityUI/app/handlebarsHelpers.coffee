@@ -29,7 +29,6 @@ Handlebars.registerHelper 'fixedDecimal', (value, options) ->
     if options.hash.place then place = options.hash.place else place = 2
     +(value).toFixed(place)
 
-
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
     if haystack.indexOf(needle) isnt -1
@@ -43,6 +42,17 @@ Handlebars.registerHelper 'unlessInSubFilter', (needle, haystack, options) ->
         options.fn @
     else
         options.inverse @
+
+
+Handlebars.registerHelper 'rename', (text,  options) ->
+    text = text.trim()
+    cases =
+        'cooling down': 'cooling'
+        'load balancer cleanup': 'LB cleanup'
+
+    return cases[text] if cases[text]        
+    text
+
 
 # {{#withLast [1, 2, 3]}}
 #     {{! this = 3 }}
@@ -69,6 +79,7 @@ Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
 Handlebars.registerHelper 'timestampDuration', (timestamp) ->
     return '' if not timestamp
     moment.duration(timestamp).humanize()
+
 
 # 1234567890 => 1 Aug 1991 15:00
 Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
