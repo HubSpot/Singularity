@@ -12,91 +12,119 @@ class StatusView extends View
 
     render: =>
         @$el.html @template
-            state:  @model.attributes
+            state:  @model.toJSON()
             synced: @model.synced
             tasks: @tasks(@model)
             requests: @requests(@model)
 
-        @$('.chart-data div[title]').tooltip(placement: 'right')
+        @$('.chart .chart__data-point[title]').tooltip(placement: 'right')
 
         @captureLastState()
 
+
+
     requests: (model) =>
-        total_requests = @model.attributes.allRequests
+        total_requests = @model.get 'allRequests'
+
+        # ## for testing
+        # total_requests = 100
+        # @model.set({
+        #     'activeRequests': 20
+        #     'pausedRequests': 20
+        #     'cooldownRequests': 20
+        #     'pendingRequests': 20
+        #     'cleaningRequests': 20
+        # })
+
         requests = [
             {
-                type: 'active_item',
-                label: 'active',
-                count: @model.attributes.activeRequests,
-                height: @model.attributes.activeRequests / total_requests * 100,
+                type: 'active'
+                label: 'active'
+                count: @model.get('activeRequests')
+                percent: @model.get('activeRequests') / total_requests * 100
                 link: '/requests/active'
-            },
+            }
             {
-                type: 'paused_item',
-                label: 'paused',
-                count: @model.attributes.pausedRequests,
-                height: @model.attributes.pausedRequests / total_requests * 100,
+                type: 'paused'
+                label: 'paused'
+                count: @model.get('pausedRequests')
+                percent: @model.get('pausedRequests') / total_requests * 100
                 link: '/requests/paused'
-            },
+            }
             {
-                type: 'cooldown_item',
+                type: 'cooldown'
                 label: 'cooling down'
-                count: @model.attributes.cooldownRequests,
-                height: @model.attributes.cooldownRequests / total_requests * 100,
+                count: @model.get('cooldownRequests')
+                percent: @model.get('cooldownRequests') / total_requests * 100
                 link: '/requests/cooldown'
-            },
+            }
             {
-                type: 'pending_item',
-                label: 'pending',
-                count: @model.attributes.pendingRequests,
-                height: @model.attributes.pendingRequests / total_requests * 100,
+                type: 'pending'
+                label: 'pending'
+                count: @model.get('pendingRequests')
+                percent: @model.attributes.pendingRequests / total_requests * 100
                 link: '/requests/pending'
-            },
+            }
             {
-                type: 'cleaning_item',
-                label: 'cleaning',
-                count: @model.attributes.cleaningRequests,
-                height: @model.attributes.cleaningRequests / total_requests * 100,
+                type: 'cleaning'
+                label: 'cleaning'
+                count: @model.get('cleaningRequests')
+                percent: @model.get('cleaningRequests') / total_requests * 100
                 link: '/requests/cleaning'
             },
         ]
         return requests
 
+
     tasks: (model) =>
-        total_tasks = @model.attributes.activeTasks + @model.attributes.lateTasks + @model.attributes.scheduledTasks + @model.attributes.lbCleanupTasks
+        total_tasks = @model.get('activeTasks') + @model.get('lateTasks') + @model.get('scheduledTasks') + @model.get('lbCleanupTasks')
+        console.log @model.toJSON()
+
+
+        # ## for testing
+        # total_tasks = 100
+        # @model.set({
+        #     'activeTasks': 20
+        #     'scheduledTasks': 20
+        #     'lateTasks': 20
+        #     'cleaningTasks': 20
+        #     'lbCleanupTasks': 20
+        # })
+
+
         tasks = [
             {
-                type: 'active_item',
-                label: 'active',
-                count: @model.attributes.activeTasks,
-                height: @model.attributes.activeTasks / total_tasks * 100,
+                type: 'active'
+                label: 'active'
+                count: @model.get('activeTasks')
+                percent: @model.get('activeTasks') / total_tasks * 100
                 link: '/tasks'
-            },
+            }
             {
-                type: 'scheduled_item',
+                type: 'scheduled'
                 label: 'scheduled'
-                count: @model.attributes.scheduledTasks,
-                height: @model.attributes.scheduledTasks / total_tasks * 100,
+                count: @model.get('scheduledTasks')
+                percent: @model.get('scheduledTasks') / total_tasks * 100
                 link: '/tasks/scheduled'
-            },
+            }
             {
-                type: 'overdue_item',
-                label: 'overdue',
-                count: @model.attributes.lateTasks,
-                height: @model.attributes.lateTasks / total_tasks * 100
-            },
+                type: 'overdue'
+                label: 'overdue'
+                count: @model.get('lateTasks')
+                percent: @model.get('lateTasks') / total_tasks * 100
+            }
             {
-                type: 'cleaning_item',
-                label: 'cleaning',
-                count: @model.attributes.cleaningTasks,
-                height: @model.attributes.cleaningTasks / total_tasks * 100,
+                type: 'cleaning'
+                label: 'cleaning'
+                count: @model.get('cleaningTasks')
+                percent: @model.get('cleaningTasks') / total_tasks * 100
                 link: 'tasks/cleaning'
-            },
+            }
             {
-                type: 'lbCleanup_item',
-                label: 'load balancer cleanup',
-                count: @model.attributes.lbCleanupTasks,
-                height: @model.attributes.lbCleanupTasks / total_tasks * 100
+                type: 'lbCleanup'
+                label: 'load balancer cleanup'
+                count: @model.get('lbCleanupTasks')
+                percent: @model.get('lbCleanupTasks') / total_tasks * 100
             }
         ]
         return tasks
