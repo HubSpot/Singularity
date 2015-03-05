@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +96,7 @@ public class SingularityHealthchecker {
   }
 
   private ScheduledFuture<?> enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace("Enqueing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
+    LOG.trace("En-queuing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
 
     return executorService.schedule(new Runnable() {
 
@@ -108,10 +109,23 @@ public class SingularityHealthchecker {
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
           exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+
+          reEnqueueOrAbort(task, t);
         }
       }
 
     }, delaySeconds, TimeUnit.SECONDS);
+  }
+
+  public void reEnqueueOrAbort(SingularityTask task, Throwable t) {
+    try {
+      enqueueHealthcheck(task);
+    } catch (Throwable t) {
+      LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
+      exceptionNotifier.notify(t);
+
+      abort.abort(SingularityAbort.AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+    }
   }
 
   private Optional<String> getHealthcheckUri(SingularityTask task) {
@@ -147,6 +161,13 @@ public class SingularityHealthchecker {
     }
 
     if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().or(false)) {
+      return false;
+    }
+
+    Optional<SingularityTaskHealthcheckResult> lastHealthcheck = taskManager.getLastHealthcheck(task.getTaskId());
+
+    if (lastHealthcheck.isPresent() && !lastHealthcheck.get().isFailed()) {
+      LOG.debug("Not submitting a new healthcheck for {} because it already passed a healthcheck", task.getTaskId());
       return false;
     }
 

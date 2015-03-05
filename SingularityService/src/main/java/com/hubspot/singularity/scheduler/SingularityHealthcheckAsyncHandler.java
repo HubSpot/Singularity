@@ -61,12 +61,12 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage) {
-    SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,
-        errorMessage, task.getTaskId());
-
-    LOG.trace("Saving healthcheck result {}", result);
-
     try {
+      SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,
+          errorMessage, task.getTaskId());
+
+      LOG.trace("Saving healthcheck result {}", result);
+
       taskManager.saveHealthcheckResult(result);
 
       if (result.isFailed()) {
@@ -80,22 +80,12 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
         newTaskChecker.runNewTaskCheckImmediately(task);
       }
     } catch (Throwable t) {
-      LOG.error("Caught throwable while saving health check result {}, will re-enqueue", result, t);
+      LOG.error("Caught throwable while saving health check result for {}, will re-enqueue", task.getTaskId(), t);
       exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
-      reEnqueueOrAbort(task);
+      healthchecker.reEnqueueOrAbort(task);
     }
   }
 
-  private void reEnqueueOrAbort(SingularityTask task) {
-    try {
-      healthchecker.enqueueHealthcheck(task);
-    } catch (Throwable t) {
-      LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
-      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
-
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
-    }
-  }
 
 }
