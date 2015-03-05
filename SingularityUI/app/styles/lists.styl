@@ -1,28 +1,20 @@
 @import colors
 
-
-.list-group--plain
-    .list-group-item
-        border: none
-        padding 6px 10px 6px 0
-    .badge
-        margin-right: 10px
-        
-
-.inactive-link
-    color $grey
-    &:hover
-        text-decoration none
-        color $grey
-        cursor default
+// Simple Lists
+.list-plain
+    list-style none
+    padding-left 15px
+    li
+        margin-bottom 5px
 
 
+// List of text in a panel
 .panel--list
     .panel-title
         font-size 24px
-    // .panel-heading
-    //     a
-    //         text-decoration none
+    .panel-heading
+        a
+            text-decoration none
     .list-group
         margin-bottom 0
     .panel-body
@@ -38,38 +30,49 @@
             float left
         &:first-child
             border-top none
-    
 
+
+// List of links in a panel
 .list-group--links
     border: none
-    .badge
-        margin-right 10px
-        float left
-        padding 4px 10px
-        border-radius 0
-        min-width 90px
-        font-weight 500
 
-    
     .list-group-item
-        border none
-        padding 4px 10px 6px 0
+        padding: 0
         a
-            display inline-block
+            display block
+            padding 10px 15px
             &:hover
                 background $grey-xtra-light
                 text-decoration none
-                &:after
-                    content 'view all →'
-                    display inline-block
-                    font-size 12px
-                    padding-left 5px
-                    padding-right 5px
+                // &:after
+                //     content 'view all →'
+                //     display inline-block
+                //     font-size 12px
+                //     padding-left 5px
+                //     padding-right 5px
                     
             &.inactive-link
                 &:hover
                     background: inherit
                     &:after
                         content ''
-                    
+                
+    .list-group--slim
+        .list-group-item a
+            padding: 5px 15px
+            
+
+.list-group--plain
+    .list-group-item
+        border: none
+        a, li
+            padding: 5px 15px
         
+
+
+.inactive-link
+    color $grey
+    &:hover
+        text-decoration none
+        color $grey
+        cursor default

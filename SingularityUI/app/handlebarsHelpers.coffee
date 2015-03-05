@@ -44,16 +44,6 @@ Handlebars.registerHelper 'unlessInSubFilter', (needle, haystack, options) ->
         options.inverse @
 
 
-Handlebars.registerHelper 'rename', (text,  options) ->
-    text = text.trim()
-    cases =
-        'cooling down': 'cooling'
-        'load balancer cleanup': 'LB cleanup'
-
-    return cases[text] if cases[text]        
-    text
-
-
 # {{#withLast [1, 2, 3]}}
 #     {{! this = 3 }}
 # {{/withLast}}
