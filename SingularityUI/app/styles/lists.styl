@@ -1,0 +1,75 @@
+@import colors
+
+
+.list-group--plain
+    .list-group-item
+        border: none
+        padding 6px 10px 6px 0
+    .badge
+        margin-right: 10px
+        
+
+.inactive-link
+    color $grey
+    &:hover
+        text-decoration none
+        color $grey
+        cursor default
+
+
+.panel--list
+    .panel-title
+        font-size 24px
+    // .panel-heading
+    //     a
+    //         text-decoration none
+    .list-group
+        margin-bottom 0
+    .panel-body
+        padding 0
+        margin-bottom 0
+    .list-group-item
+        padding 10px 15px
+        border none
+        border-top 1px solid #dadada
+        font-size 15px
+        .badge
+            margin-right 10px
+            float left
+        &:first-child
+            border-top none
+    
+
+.list-group--links
+    border: none
+    .badge
+        margin-right 10px
+        float left
+        padding 4px 10px
+        border-radius 0
+        min-width 90px
+        font-weight 500
+
+    
+    .list-group-item
+        border none
+        padding 4px 10px 6px 0
+        a
+            display inline-block
+            &:hover
+                background $grey-xtra-light
+                text-decoration none
+                &:after
+                    content 'view all →'
+                    display inline-block
+                    font-size 12px
+                    padding-left 5px
+                    padding-right 5px
+                    
+            &.inactive-link
+                &:hover
+                    background: inherit
+                    &:after
+                        content ''
+                    
+        
