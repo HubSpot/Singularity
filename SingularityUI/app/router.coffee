@@ -42,7 +42,10 @@ class Router extends Backbone.Router
         'task/:taskId/tail/*path': 'tail'
 
         'racks(/)': 'racks'
+    
+        'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
+    
         
         '*anything': 'notFound'
 
@@ -79,8 +82,8 @@ class Router extends Backbone.Router
     racks: ->
         app.bootstrapController new RacksController
 
-    slaves: ->
-        app.bootstrapController new SlavesController
+    slaves: (state = 'all') ->
+        app.bootstrapController new SlavesController {state}
 
     notFound: ->
         app.bootstrapController new NotFoundController

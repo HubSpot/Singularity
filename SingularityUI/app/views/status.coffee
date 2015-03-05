@@ -8,7 +8,7 @@ class StatusView extends View
         @listenTo @model, 'sync', @render
 
     captureLastState: ->
-        @lastState = _.clone @model.attributes
+        @lastState = _.clone @model.toJSON()
 
     render: =>
         @$el.html @template
@@ -23,18 +23,9 @@ class StatusView extends View
 
 
 
+
     requests: (model) =>
         total_requests = @model.get 'allRequests'
-
-        # ## for testing
-        # total_requests = 100
-        # @model.set({
-        #     'activeRequests': 20
-        #     'pausedRequests': 20
-        #     'cooldownRequests': 20
-        #     'pendingRequests': 20
-        #     'cleaningRequests': 20
-        # })
 
         requests = [
             {
@@ -78,19 +69,6 @@ class StatusView extends View
 
     tasks: (model) =>
         total_tasks = @model.get('activeTasks') + @model.get('lateTasks') + @model.get('scheduledTasks') + @model.get('lbCleanupTasks')
-        console.log @model.toJSON()
-
-
-        # ## for testing
-        # total_tasks = 100
-        # @model.set({
-        #     'activeTasks': 20
-        #     'scheduledTasks': 20
-        #     'lateTasks': 20
-        #     'cleaningTasks': 20
-        #     'lbCleanupTasks': 20
-        # })
-
 
         tasks = [
             {

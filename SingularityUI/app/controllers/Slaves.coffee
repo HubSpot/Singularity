@@ -7,10 +7,10 @@ SimpleSubview = require '../views/simpleSubview'
 
 class SlavesController extends Controller
 
-    initialize: ->
+    initialize: ({@state}) ->  
         app.showPageLoader()
         @collections.slaves         = new Slaves []
-        @setView new SlavesView
+        @setView new SlavesView _.extend {@state}, 
             collection: @collections.slaves
 
         app.showView @view

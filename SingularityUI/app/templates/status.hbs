@@ -16,28 +16,28 @@
                     </div>
                     <div class="col-md-9">
                         <div class="row same-size-row">
-                            <div class="col-md-9">
-                                <ul class="list-group list-group--links">
+                            <div class="col-md-8">
+                                <ul class="list-group list-group--links list-group--plain list-group--slim">
                                     {{#each requests}}
                                     <li class="list-group-item">
                                         {{#if link}}
                                         <a href="{{appRoot}}{{ link }}">
                                             <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }} - {{rename label }} ({{fixedDecimal percent place="0"}}%) </span>
+                                            <span class='chart__label'>{{ count }}  {{ label }} ({{fixedDecimal percent place="0"}}%) </span>
                                         </a>
                                         {{else}}
                                         <span class="badge" id="{{ type }}">{{ count }}</span>
-                                        {{rename label }}
+                                        {{ label }}
                                         {{/if}}
                                     </li>
                                     {{/each}}
                                 </ul>
-                                <ul class="list-group list-group--plain">
-                                    <li class="list-group-item">
+                                <ul class='list-plain'>
+                                    <li>
                                         <strong>{{state.overProvisionedRequests}}</strong>
                                         Over Provisioned
                                     </li>
-                                    <li class="list-group-item">
+                                    <li>
                                         <span {{#ifGT state.underProvisionedRequests 0}}class='color-warning'{{/ifGT}}>
                                             <strong>{{state.underProvisionedRequests}}</strong>
                                             Under Provisioned
@@ -67,15 +67,21 @@
                     </div>
                     <div class="col-md-9">
                         <div class="row same-size-row">
-                            <div class="col-md-9">
-                                <ul class="list-group list-group--links">
+                            <div class="col-md-8">
+                                <ul class="list-group list-group--links list-group--plain list-group--slim">
                                     {{#each tasks}}
+                                        
+
                                     <li class="list-group-item">
+
                                         <a {{#unless link}}class='inactive-link'{{/unless}} {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
                                             <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }} - {{rename label }} ({{fixedDecimal percent place="0"}}%)</span>
+                                            <span class='chart__label'>{{ count }} - {{ label }} ({{fixedDecimal percent place="0"}}%)</span>
                                         </a>
+
                                     </li>
+
+
                                     {{/each}}
                                 </ul>
                                 <ul class="list-group list-group--plain">
@@ -101,50 +107,53 @@
 <div class="row">
 
     <div class="col-md-4">
+
+
         <div class="panel panel-default panel--list">
             <div class="panel-heading">
                 <a href="{{appRoot}}/racks"><h3 class="panel-title">Racks</h3></a>
             </div>
+
             <div class="panel-body">
-                <ul class="list-group ">
+            
+                <ul class="list-group list-group--links">
                     <li class="list-group-item">
-                        <strong>{{state.activeRacks}}</strong>
-                        Active Racks
+                        <a href="{{appRoot}}/racks">{{state.activeRacks}} Active Racks</a>
                     </li>
                     <li class="list-group-item {{#ifGT state.decommissioningRacks 0}}color-warning{{/ifGT}}">
-                        <strong>{{state.decommissioningRacks}}</strong>
-                        Decommissioning Racks
+                        <a href="{{appRoot}}/racks">{{state.decommissioningRacks}} Decommissioning Racks</a>
                     </li>
                     <li class="list-group-item {{#ifGT state.deadRacks 0}}color-warning{{/ifGT}}">
-                        <strong>{{state.deadRacks}}</strong>
-                        Dead Racks
+                        <a href="{{appRoot}}/racks">{{state.deadRacks}} Dead Racks</a>
                     </li>
                 </ul>
+            
             </div>
         </div>
+
+
     </div>
+
+
+
     <div class="col-md-4">
         <div class="panel panel-default panel--list">
             <div class="panel-heading">
                 <a href="{{appRoot}}/slaves"><h3 class="panel-title">Slaves</h3></a>
             </div>
             <div class="panel-body">
-                <ul class="list-group ">
+                <ul class="list-group list-group--links">
                     <li class="list-group-item">
-                        <strong>{{state.activeSlaves}}</strong>    
-                        Active Slaves
+                        <a href="{{appRoot}}/slaves/active"> {{state.activeSlaves}} Active Slaves </a>
                     </li>
-                    <li class="list-group-item {{#ifGT state.decommissioningSlaves 0}}color-warning{{/ifGT}}">
-                        <strong>{{state.decommissioningSlaves}}</strong>    
-                        Decommissioning Slaves
+                    <li class="list-group-item">
+                        <a {{#ifGT state.decommissioningSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/decommission"> {{state.decommissioningSlaves}} Decommissioning Slaves</a>
                     </li>
-                    <li class="list-group-item {{#ifGT state.deadSlaves 0}}color-warning{{/ifGT}}">
-                        <strong>{{state.deadSlaves}}</strong>
-                        Dead Slaves
+                    <li class="list-group-item">
+                        <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.deadSlaves}} Dead Slaves </a>
                     </li>
-                    <li class="list-group-item {{#ifGT state.unknownSlaves 0}}color-warning{{/ifGT}}">
-                        <strong>{{state.unknownSlaves}}</strong>
-                        Unknown Slaves
+                    <li class="list-group-item">
+                        <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.unknownSlaves}} Unknown Slaves </a>
                     </span>
                     </li>
                 </ul>
