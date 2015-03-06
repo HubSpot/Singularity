@@ -70,27 +70,22 @@
                             <div class="col-md-8">
                                 <ul class="list-group list-group--links list-group--plain list-group--slim">
                                     {{#each tasks}}
-                                        
-
                                     <li class="list-group-item">
-
                                         <a {{#unless link}}class='inactive-link'{{/unless}} {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
                                             <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
                                             <span class='chart__label'>{{ count }} {{ label }} ({{fixedDecimal percent place="0"}}%)</span>
                                         </a>
 
                                     </li>
-
-
                                     {{/each}}
                                 </ul>
                                 <ul class="list-group list-group--plain">
                                     <li class="list-group-item">
-                                        <span class='badge pull-left roomy-right'>
+                                        Max Task Lag:
+                                        <span>
                                             {{timestampDuration state.maxTaskLag}}
-                                            {{#ifEqual 0 state.maxTaskLag }}a few seconds{{/ifEqual}}
+                                            {{#ifEqual 0 state.maxTaskLag }}0{{/ifEqual}}
                                         </span>
-                                        Max Task Lag
                                     </li>
                                 </ul>
                             </div>
@@ -119,7 +114,7 @@
                     <li class="list-group-item">
                         <a href="{{appRoot}}/racks">{{state.activeRacks}} Active Racks</a>
                     </li>
-                    <li class="list-group-item {{#ifGT state.decommissioningRacks 0}}color-warning{{/ifGT}}">
+                    <li class="list-group-item">
                         <a href="{{appRoot}}/racks">{{state.decommissioningRacks}} Decommissioning Racks</a>
                     </li>
                     <li class="list-group-item {{#ifGT state.deadRacks 0}}color-warning{{/ifGT}}">
@@ -173,7 +168,7 @@
                     {{#ifNotEqual state.oldestDeploy 0}}
                     <li class="list-group-item">
                         <strong>{{timestampDuration state.oldestDeploy}}</strong>
-                         Time since last deploy
+                         since last deploy
                     </li>
                     {{/ifNotEqual}}
                 </ul>
