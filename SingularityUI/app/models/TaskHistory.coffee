@@ -51,6 +51,20 @@ class TaskHistory extends Model
         isCleaning = _.last( @get 'taskUpdates' ).taskState is 'TASK_CLEANING'
         @set 'isCleaning', isCleaning
 
+    setCleanupMessage: (cleanupType) ->
+        cleanupMessages =
+            USER_REQUESTED        : "User clicked the Kill Task button in the UI."
+            DECOMISSIONING        : "Slave the task is running on is decomissioning."
+            SCALING_DOWN          : "Parent request's instance # was decreased, killing this task as a result."
+            BOUNCING              : "Parent request is bouncing, can't kill this task until its replacement task(s) are healthy."
+            DEPLOY_FAILED         : "This task was part of a new deploy that failed for some reason, so this task isn't necessary anymore."
+            NEW_DEPLOY_SUCCEEDED  : "A deploy completed successfully, and this task belongs to the old deploy."
+            DEPLOY_CANCELED       : "This task was part of a deploy that was cancelled, so this task isn't necessary anymore."
+            UNHEALTHY_NEW_TASK    : "This task is part of a pending deploy, and it didn't become healthy -- kill this task and try again with a new one."
+            OVERDUE_NEW_TASK      : "This task took too long to become healthy, so we're killing it."
+
+        @set 'isInCleanup', true
+        @set 'cleanupMessage', cleanupMessages[cleanupType]
 
     parseResources: (task) ->
         cpus: _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''

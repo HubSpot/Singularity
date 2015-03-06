@@ -1,7 +1,9 @@
 {{#if data.isStillRunning}}
     {{#ifNotEqual data.killStatus 'kill9'}}
             {{#if data.isInCleanup}} 
-                <div class="alert alert-warning" role="alert">Request is bouncing. This task will be killed once all replacement tasks are healthy. You may still force kill this task.</div>
+                <div class="alert alert-warning" role="alert">
+                    Task is in Cleanup. {{data.cleanupMessage}} You may still force kill this task.
+                </div>
             {{else}} 
                 {{#if data.isCleaning}}
                     <div class="alert alert-warning" role="alert"> 
@@ -13,12 +15,6 @@
     {{#ifEqual data.killStatus 'kill9'}}
         <div class="alert alert-warning" role="alert">Request is being force killed.</div>
     {{/ifEqual}}
-{{/if}}
-
-{{#if data.decommissioning}}
-    {{#if data.isStillRunning}}
-        <div class="alert alert-warning" role="alert">This task is running on a decommissioning host and will be replaced soon</div>
-    {{/if}}
 {{/if}}
 
 {{! Part of taskBase }}

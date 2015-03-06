@@ -30,12 +30,11 @@ class taskOverviewSubview extends View
 
         @getCleaningStatus()
     
-    # Store 'Cleanup' state
+    # If task is in Cleanup, provide a humanized message to share with them
     getCleaningStatus: (callback) ->   
         @collection.fetch({reset: true}).done =>
             cleanup = _.findWhere @collection.models, id: @model.get 'taskId'
-            if cleanup then state = true else state = false
-            @model.set 'isInCleanup', state
+            @model.setCleanupMessage(cleanup.get('cleanupType')) if cleanup
             callback?()
 
     render: ->
