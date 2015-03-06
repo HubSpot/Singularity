@@ -11,8 +11,7 @@ class SlavesView extends View
     initialPageLoad: true
 
     initialize: ({@state}) ->
-        # for eventName in ['sync', 'add', 'remove', 'change']
-        for eventName in ['sync', 'remove', 'change']
+        for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @collection, eventName, @render
 
         @listenTo @collection, 'reset', =>
@@ -26,7 +25,6 @@ class SlavesView extends View
             'click [data-action="reactivate"]':   'reactivateSlave'
 
     render: ->
-        console.log 'render.'
         return if not @collection.synced and @collection.isEmpty?()
         @$el.html @template()
 

@@ -6,16 +6,16 @@
                 <a href="{{appRoot}}/requests"><h3>Requests</h3></a>
             </div>
             <div class="panel-body">       
-                <div class="row same-size-row">
-                    <div class="col-md-3 chart">
+                <div class="row">
+                    <div class="col-md-3 col-sm-3 hidden-xs chart">
                         <div class='chart__column'>
                             {{#each requests}}
                                 <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
                             {{/each}}
                         </div>
                     </div>
-                    <div class="col-md-9">
-                        <div class="row same-size-row">
+                    <div class="col-md-9 col-sm-9">
+                        <div class="row">
                             <div class="col-md-8">
                                 <ul class="list-group list-group--links list-group--plain list-group--slim">
                                     {{#each requests}}
@@ -57,16 +57,16 @@
                 <a href="{{appRoot}}/tasks"><h3>Tasks</h3></a>
             </div>
             <div class="panel-body">
-                <div class="row same-size-row">
-                    <div class="col-md-3 chart">
+                <div class="row">
+                    <div class="col-md-3 col-sm-3 chart hidden-xs">
                         <div class='chart__column'>
                             {{#each tasks}}
                                 <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
                             {{/each}}
                         </div>
                     </div>
-                    <div class="col-md-9">
-                        <div class="row same-size-row">
+                    <div class="col-md-9 col-sm-9">
+                        <div class="row">
                             <div class="col-md-8">
                                 <ul class="list-group list-group--links list-group--plain list-group--slim">
                                     {{#each tasks}}
@@ -76,7 +76,7 @@
 
                                         <a {{#unless link}}class='inactive-link'{{/unless}} {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
                                             <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }} - {{ label }} ({{fixedDecimal percent place="0"}}%)</span>
+                                            <span class='chart__label'>{{ count }} {{ label }} ({{fixedDecimal percent place="0"}}%)</span>
                                         </a>
 
                                     </li>
@@ -86,12 +86,11 @@
                                 </ul>
                                 <ul class="list-group list-group--plain">
                                     <li class="list-group-item">
-                                        <strong>
+                                        <span class='badge pull-left roomy-right'>
                                             {{timestampDuration state.maxTaskLag}}
-                                            {{#ifEqual 0 state.maxTaskLag }}0{{/ifEqual}}
-                                        </strong>
-                                        Max Task Lag 
-
+                                            {{#ifEqual 0 state.maxTaskLag }}a few seconds{{/ifEqual}}
+                                        </span>
+                                        Max Task Lag
                                     </li>
                                 </ul>
                             </div>
@@ -147,7 +146,7 @@
                         <a href="{{appRoot}}/slaves/active"> {{state.activeSlaves}} Active Slaves </a>
                     </li>
                     <li class="list-group-item">
-                        <a {{#ifGT state.decommissioningSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/decommission"> {{state.decommissioningSlaves}} Decommissioning Slaves</a>
+                        <a href="{{appRoot}}/slaves/decommission"> {{state.decommissioningSlaves}} Decommissioning Slaves</a>
                     </li>
                     <li class="list-group-item">
                         <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.deadSlaves}} Dead Slaves </a>
