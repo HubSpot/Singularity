@@ -1,3 +1,20 @@
 <p>Are you sure you want to run a task for this request immediately?</p>
 <pre>{{ id }}</pre>
-<p>Additional command line input (optional):</p>
+
+<p>Additional command line input <small>(optional)</small>:</p>
+<div class="vex-dialog-input">
+	<input id='commandLineInput' name="commandLineInput" type="text" class="vex-dialog-prompt-input" placeholder="" value="">
+</div>
+<hr style='border-color: #dadada'>
+
+<p>Wait for task to start, then bring me directly to a file <small>(optional)</small>:</p>
+
+<div class="vex-dialog-input">
+	<input id='filename' name="filename" type="text" class="vex-dialog-prompt-input" placeholder="e.g. service.log" value="">
+</div>
+
+<div class="vex-dialog-input checkbox">
+    <label>
+		<input id='storeSetting' name="storeSetting" type="checkbox"> Save this setting in local storage
+    </label>
+</div>
