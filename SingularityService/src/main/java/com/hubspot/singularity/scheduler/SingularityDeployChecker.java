@@ -307,6 +307,7 @@ public class SingularityDeployChecker {
       case SUCCESS:
         return DeployState.SUCCEEDED;
       case FAILED:
+      case INVALID_REQUEST_NOOP:
         return DeployState.FAILED;
       case CANCELING:
         return DeployState.CANCELING;
