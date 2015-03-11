@@ -29,6 +29,12 @@ class TailView extends View
         @listenTo @collection, 'sync', =>
             @$el.removeClass 'fetching-data'
 
+        @listenTo @model, 'change', @setTaskHistory
+
+
+    setTaskHistory: ->
+        @isTaskRunning = @model.get 'isStillRunning'
+
     handleAjaxError: (response) =>
         # ATM we get 404s if we request dirs and 500s if the file doesn't exist
         if response.status in [404, 500]
@@ -142,16 +148,20 @@ class TailView extends View
         @startTailing()
 
     startTailing: =>
-        return if @isTailing is true
+        return if @isTailing or not @isTaskRunning
 
         @isTailing = true
         @scrollToBottom()
 
         clearInterval @tailInterval
         @tailInterval = setInterval =>
+            @stopTailing() if not @isTaskRunning
+
             @collection.fetchNext().done =>
                 # Only show the newly tail-ed lines if we are still tailing
                 @scrollToBottom() if @isTailing
+                @model.fetch()
+
         , @pollingTimeout
 
         # The class is for CSS stylin' of certain stuff
