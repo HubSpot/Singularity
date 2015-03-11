@@ -27,5 +27,3 @@ suites:
           with_zookeeper: false
         master:
           quorum: 1
-        slave:
-          master: http://localhost:2181/singularity
