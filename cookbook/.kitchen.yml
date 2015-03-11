@@ -23,6 +23,8 @@ suites:
       - recipe[singularity::default]
     attributes:
       mesos:
+        mesosphere:
+          with_zookeeper: false
         master:
           quorum: 1
         slave:
