@@ -25,7 +25,10 @@ default[:singularity] = {
 }
 
 set[:mesos][:type] = 'mesosphere'
-default[:mesos][:master][:zk] = 'http://localhost:2181/singularity'
+set[:mesos][:mesosphere][:with_zookeeper] = true
+
+default[:mesos][:master][:zk] = 'http://localhost:2181/mesos'
+default[:mesos][:slave][:master] = 'http://localhost:2181/mesos'
 
 default[:docker] = {
   :enabled => true,
