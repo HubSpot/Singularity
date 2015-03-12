@@ -11,3 +11,4 @@ include_recipe "singularity::java"
 include_recipe "singularity::build"
 include_recipe "singularity::install"
 include_recipe "singularity::configure"
+include_recipe 'docker' if node[:docker][:enabled]
