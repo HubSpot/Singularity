@@ -30,10 +30,7 @@ default[:mesos] = {
   :slave_attributes => {}
 }
 
-default[:docker] = {
-  :enabled => true,
-  :package_version => "1.0.1~dfsg1-0ubuntu1~ubuntu0.14.04.1",
-}
+default[:docker][:enabled] = true
 
 default[:mysql] = {
   :port => '3306',
