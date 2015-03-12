@@ -161,10 +161,10 @@ class SingularityMesosTaskBuilder {
     }
 
     return Optional.of(DockerInfo.PortMapping.newBuilder()
-            .setContainerPort(containerPort)
-            .setHostPort(hostPort)
-            .setProtocol(singularityDockerPortMapping.getProtocol())
-            .build());
+        .setContainerPort(containerPort)
+        .setHostPort(hostPort)
+        .setProtocol(singularityDockerPortMapping.getProtocol())
+        .build());
   }
 
   private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
@@ -224,8 +224,8 @@ class SingularityMesosTaskBuilder {
     if (task.getDeploy().getExecutorData().isPresent()) {
       ExecutorData executorData = task.getDeploy().getExecutorData().get();
 
-      if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
-        LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId());
+      if (!task.getPendingTask().getCmdLineArgsList().isEmpty()) {
+        LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
 
         ExecutorDataBuilder executorDataBldr = executorData.toBuilder();
 
@@ -233,7 +233,7 @@ class SingularityMesosTaskBuilder {
         if (executorDataBldr.getExtraCmdLineArgs() != null && !executorDataBldr.getExtraCmdLineArgs().isEmpty()) {
           extraCmdLineArgsBuilder.addAll(executorDataBldr.getExtraCmdLineArgs());
         }
-        extraCmdLineArgsBuilder.add(task.getPendingTask().getMaybeCmdLineArgs().get());
+        extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList());
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
 
         executorData = executorDataBldr.build();
@@ -247,31 +247,23 @@ class SingularityMesosTaskBuilder {
         bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
       }
     } else {
-      bldr.setData(ByteString.copyFromUtf8(getCommand(taskId, task)));
+      bldr.setData(ByteString.copyFromUtf8(task.getDeploy().getCommand().get()));
     }
   }
 
-  private String getCommand(final SingularityTaskId taskId, final SingularityTaskRequest task) {
-    String cmd = task.getDeploy().getCommand().get();
-
-    if (task.getPendingTask().getMaybeCmdLineArgs().isPresent()) {
-      cmd = String.format("%s %s", cmd, task.getPendingTask().getMaybeCmdLineArgs().get());
-      LOG.info("Adding command line args ({}) to task {} - new cmd: {}", task.getPendingTask().getMaybeCmdLineArgs().get(), taskId.getId(), cmd);
-    }
-
-    return cmd;
-  }
 
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
     if (task.getDeploy().getCommand().isPresent()) {
-      commandBldr.setValue(getCommand(taskId, task));
+      commandBldr.setValue(task.getDeploy().getCommand().get());
     }
 
     if (task.getDeploy().getArguments().isPresent()) {
       commandBldr.addAllArguments(task.getDeploy().getArguments().get());
     }
+
+    commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgsList());
 
     if (task.getDeploy().getArguments().isPresent() ||
         // Hopefully temporary workaround for

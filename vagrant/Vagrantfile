@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
   # additional plugin checks for base_image machine
   if ARGV[1] == 'base_image'
     if !Vagrant.has_plugin?("vagrant-omnibus")
-      raise "Please install vagrant-omnibus via `vagrant plugin install vagrant-ominbus --plugin-version=1.4.1`"
+      raise "Please install vagrant-omnibus via `vagrant plugin install vagrant-omnibus --plugin-version=1.4.1`"
     end
 
     if !Vagrant.has_plugin?("vagrant-berkshelf")
@@ -19,8 +19,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.synced_folder "../", "/singularity", type: "nfs"
 
-  config.vm.box = "singularity-develop-0.20.1"
-  config.vm.box_url = "https://hubspot-vagrant-boxes.s3.amazonaws.com/singularity-develop-0.20.1"
+  config.vm.box = "singularity-develop-0.21.0"
+  config.vm.box_url = "https://hubspot-vagrant-boxes.s3.amazonaws.com/singularity-develop-0.21.0"
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--memory", "1024"]
@@ -69,22 +69,18 @@ Vagrant.configure("2") do |config|
       chef.json = {
         :mysql => {
           :server_root_password => "#{mysql_password}",
-          :server_repl_password => "#{mysql_password}",
-          :server_debian_password => "#{mysql_password}",
-          :bind_address => "0.0.0.0",
-          :allow_remote_root => true
         },
         :mesos => {
-          :package_version => '0.20.1-1.0.ubuntu1404',
+          :package_version => '0.21.0-1.0.ubuntu1404',
           :master => {
             :hostname => config.vm.hostname
           },
           :slave => {
             :hostname => config.vm.hostname
+          },
+          :slave_resources => {
+            'cpus(*)' => '10.0'  # oversubscribe CPUs to make running multiple tasks easier
           }
-        },
-        :docker => {
-          :enabled => true
         }
       }
     end

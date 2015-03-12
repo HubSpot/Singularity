@@ -14,5 +14,7 @@ public class SingularityZkMigrationsModule implements Module {
     Multibinder<ZkDataMigration> dataMigrations = Multibinder.newSetBinder(binder, ZkDataMigration.class);
     dataMigrations.addBinding().to(LastTaskStatusMigration.class);
     dataMigrations.addBinding().to(SingularityPendingTaskIdMigration.class);
+    dataMigrations.addBinding().to(SlaveAndRackMigration.class);
+    dataMigrations.addBinding().to(SingularityCmdLineArgsMigration.class);
   }
 }

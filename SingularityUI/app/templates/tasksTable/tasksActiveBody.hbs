@@ -41,6 +41,9 @@
                     </td>
                     <td class="hidden-xs">
                         {{ host }}
+                        {{#ifInSubFilter host ../decommissioning_hosts}}
+                            <span class='label label-warning'>DECOM</span>
+                        {{/ifInSubFilter}}
                     </td>
                     <td class="visible-lg">
                         {{ taskId.rackId }}

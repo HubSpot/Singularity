@@ -2,7 +2,13 @@
 	Are you sure you want to remove this {{ type }}?
 </p>
 
-<pre>{{ id }}</pre>
+<pre>
+    {{#if host }}
+        {{ host }}
+    {{else}}
+        {{ id }}
+    {{/if}}
+</pre>
 
 <p>
 	Removing a decommissioned {{ type }} will cause that slave to become active again if the mesos-slave process is still running.

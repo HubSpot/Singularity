@@ -1,12 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
@@ -22,13 +24,12 @@ public class SingularitySchedulerStateCache {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
 
-  private Optional<List<SingularityTaskId>> activeTaskIds;
-  private Optional<List<SingularityPendingTask>> scheduledTasks;
-  private Optional<List<SingularityRack>> decomissioningRacks;
-  private Optional<Set<String>> decomissioningRackIds;
-  private Optional<List<SingularitySlave>> decomissioningSlaves;
-  private Optional<Set<String>> decomissioningSlaveIds;
-  private Optional<List<SingularityTaskId>> cleaningTasks;
+  private final Map<String, Optional<SingularitySlave>> slaveCache;
+  private final Map<String, Optional<SingularityRack>> rackCache;
+
+  private Optional<Collection<SingularityTaskId>> activeTaskIds;
+  private Optional<Collection<SingularityPendingTask>> scheduledTasks;
+  private Optional<Collection<SingularityTaskId>> cleaningTasks;
   private Optional<Integer> numActiveRacks;
   private Optional<Integer> numActiveSlaves;
 
@@ -40,92 +41,41 @@ public class SingularitySchedulerStateCache {
 
     activeTaskIds = Optional.absent();
     scheduledTasks = Optional.absent();
-    decomissioningRacks = Optional.absent();
-    decomissioningRackIds = Optional.absent();
-    decomissioningSlaves = Optional.absent();
-    decomissioningSlaveIds = Optional.absent();
     cleaningTasks = Optional.absent();
     numActiveRacks = Optional.absent();
     numActiveSlaves = Optional.absent();
+
+    slaveCache = Maps.newHashMap();
+    rackCache = Maps.newHashMap();
   }
 
-  public List<SingularityTaskId> getActiveTaskIds() {
+  public Collection<SingularityTaskId> getActiveTaskIds() {
     if (!activeTaskIds.isPresent()) {
-      activeTaskIds = getMutableList(taskManager.getActiveTaskIds());
+      activeTaskIds = getMutableCollection(taskManager.getActiveTaskIds());
     }
 
     return activeTaskIds.get();
   }
 
-  public List<SingularityPendingTask> getScheduledTasks() {
+  public Collection<SingularityPendingTask> getScheduledTasks() {
     if (!scheduledTasks.isPresent()) {
-      scheduledTasks = getMutableList(taskManager.getPendingTasks());
+      scheduledTasks = getMutableCollection(taskManager.getPendingTasks());
     }
 
     return scheduledTasks.get();
   }
 
-  private void checkDecomissioningRacks() {
-    if (decomissioningRacks.isPresent()) {
-      return;
-    }
-
-    decomissioningRacks = Optional.of(rackManager.getDecomissioningObjects());
-    Set<String> decomissioningRacksIdsSet = Sets.newHashSetWithExpectedSize(decomissioningRacks.get().size());
-    for (SingularityRack rack : decomissioningRacks.get()) {
-      decomissioningRacksIdsSet.add(rack.getId());
-    }
-    decomissioningRackIds = Optional.of(decomissioningRacksIdsSet);
+  private <T> Optional<Collection<T>> getMutableCollection(List<T> immutableList) {
+    Collection<T> mutableSet = Sets.newHashSet(immutableList);
+    return Optional.of(mutableSet);
   }
 
-  public List<SingularityRack> getDecomissioningRacks() {
-    checkDecomissioningRacks();
-
-    return decomissioningRacks.get();
-  }
-
-  private void checkDecomissioningSlaves() {
-    if (decomissioningSlaves.isPresent()) {
-      return;
-    }
-
-    decomissioningSlaves = Optional.of(slaveManager.getDecomissioningObjects());
-    Set<String> decomissioningSlaveIdsSet = Sets.newHashSetWithExpectedSize(decomissioningSlaves.get().size());
-    for (SingularitySlave slave : decomissioningSlaves.get()) {
-      decomissioningSlaveIdsSet.add(slave.getId());
-    }
-    decomissioningSlaveIds = Optional.of(decomissioningSlaveIdsSet);
-  }
-
-  public List<SingularitySlave> getDecomissioningSlaves() {
-    checkDecomissioningSlaves();
-
-    return decomissioningSlaves.get();
-  }
-
-  private <T> Optional<List<T>> getMutableList(List<T> immutableList) {
-    List<T> mutableList = Lists.newArrayList(immutableList);
-    return Optional.of(mutableList);
-  }
-
-  public List<SingularityTaskId> getCleaningTasks() {
+  public Collection<SingularityTaskId> getCleaningTasks() {
     if (!cleaningTasks.isPresent()) {
-      cleaningTasks = getMutableList(taskManager.getCleanupTaskIds());
+      cleaningTasks = getMutableCollection(taskManager.getCleanupTaskIds());
     }
 
     return cleaningTasks.get();
-  }
-
-  public boolean isSlaveDecomissioning(String slaveId) {
-    checkDecomissioningSlaves();
-
-    return decomissioningSlaveIds.get().contains(slaveId);
-  }
-
-  public boolean isRackDecomissioning(String rackId) {
-    checkDecomissioningRacks();
-
-    return decomissioningRackIds.get().contains(rackId);
   }
 
   public int getNumActiveRacks() {
@@ -133,7 +83,7 @@ public class SingularitySchedulerStateCache {
       return numActiveRacks.get();
     }
 
-    numActiveRacks = Optional.of(rackManager.getNumActive());
+    numActiveRacks = Optional.of(rackManager.getNumObjectsAtState(MachineState.ACTIVE));
 
     return numActiveRacks.get();
   }
@@ -143,9 +93,25 @@ public class SingularitySchedulerStateCache {
       return numActiveSlaves.get();
     }
 
-    numActiveSlaves = Optional.of(slaveManager.getNumActive());
+    numActiveSlaves = Optional.of(slaveManager.getNumObjectsAtState(MachineState.ACTIVE));
 
     return numActiveSlaves.get();
+  }
+
+  public Optional<SingularitySlave> getSlave(String slaveId) {
+    if (!slaveCache.containsKey(slaveId)) {
+      slaveCache.put(slaveId, slaveManager.getObject(slaveId));
+    }
+
+    return slaveCache.get(slaveId);
+  }
+
+  public Optional<SingularityRack> getRack(String rackId) {
+    if (!rackCache.containsKey(rackId)) {
+      rackCache.put(rackId, rackManager.getObject(rackId));
+    }
+
+    return rackCache.get(rackId);
   }
 
 }

@@ -28,6 +28,8 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
   private final CuratorFramework curator;
   private final TaskManager taskManager;
 
+  private final String PENDING_TASKS_ROOT = "/tasks/scheduled";
+
   @Inject
   public SingularityPendingTaskIdMigration(CuratorFramework curator, TaskManager taskManager) {
     super(2);
@@ -40,7 +42,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
     final long start = System.currentTimeMillis();
 
     try {
-      if (curator.checkExists().forPath(TaskManager.PENDING_PATH_ROOT) == null) {
+      if (curator.checkExists().forPath(PENDING_TASKS_ROOT) == null) {
         return;
       }
     } catch (Exception e) {
@@ -48,16 +50,16 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
     }
 
     try {
-      for (String pendingTaskId : curator.getChildren().forPath(TaskManager.PENDING_PATH_ROOT)) {
+      for (String pendingTaskId : curator.getChildren().forPath(PENDING_TASKS_ROOT)) {
         SingularityPendingTaskId newPendingTaskId = createFrom(pendingTaskId, start);
         if (!newPendingTaskId.toString().equals(pendingTaskId)) {
           LOG.info("Migrating {} to {}", pendingTaskId, newPendingTaskId);
 
           Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
-          taskManager.createPendingTasks(Collections.singletonList(new SingularityPendingTask(newPendingTaskId, cmdLineArgs)));
+          taskManager.savePendingTask(new SingularityPendingTask(newPendingTaskId, cmdLineArgs.isPresent() ? Collections.singletonList(cmdLineArgs.get()) : Collections.<String> emptyList(), Optional.<String> absent()));
 
-          curator.delete().forPath(ZKPaths.makePath(TaskManager.PENDING_PATH_ROOT, pendingTaskId));
+          curator.delete().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
         }
       }
     } catch (Exception e) {
@@ -66,7 +68,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
   }
 
   private Optional<String> getCmdLineArgs(String pendingTaskId) throws Exception {
-    byte[] data = curator.getData().forPath(ZKPaths.makePath(TaskManager.PENDING_PATH_ROOT, pendingTaskId));
+    byte[] data = curator.getData().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
 
     if (data != null && data.length > 0) {
       return Optional.of(StringTranscoder.INSTANCE.fromBytes(data));

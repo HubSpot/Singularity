@@ -2,6 +2,12 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
+
+import com.hubspot.singularity.smtp.JadeTemplateLoader;
+import com.hubspot.singularity.smtp.MailTemplateHelpers;
+import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
+import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -50,10 +56,6 @@ import com.hubspot.singularity.hooks.SingularityWebhookSender;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
-import com.hubspot.singularity.smtp.JadeHelper;
-import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
-import com.hubspot.singularity.smtp.SingularityMailer;
-import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.parser.Parser;
@@ -95,6 +97,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     binder.bind(SingularityMailer.class).in(Scopes.SINGLETON);
     binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
+    binder.bind(MailTemplateHelpers.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
@@ -195,12 +198,12 @@ public class SingularityMainModule implements Module {
   }
 
   private JadeTemplate getJadeTemplate(String name) throws IOException {
-    Parser parser = new Parser("templates/" + name, JadeHelper.JADE_LOADER);
+    Parser parser = new Parser("templates/" + name, JadeTemplateLoader.JADE_LOADER);
     Node root = parser.parse();
 
     final JadeTemplate jadeTemplate = new JadeTemplate();
 
-    jadeTemplate.setTemplateLoader(JadeHelper.JADE_LOADER);
+    jadeTemplate.setTemplateLoader(JadeTemplateLoader.JADE_LOADER);
     jadeTemplate.setRootNode(root);
 
     return jadeTemplate;

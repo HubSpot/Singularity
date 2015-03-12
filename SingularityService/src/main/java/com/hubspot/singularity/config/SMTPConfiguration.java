@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -61,13 +62,18 @@ public class SMTPConfiguration {
   @JsonProperty
   private long rateLimitCooldownMillis = TimeUnit.HOURS.toMillis(1);
 
+  // Files to tail when sending a task email.
+  @JsonProperty
+  private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
+
   @JsonProperty("emails")
   private Map<EmailType, List<EmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<EmailType, List<EmailDestination>>builder()
       .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
       .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
-      .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
-      .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS))
-      .put(EmailType.TASK_FINISHED_NON_SCHEDULED_REQUEST, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS, EmailDestination.ACTION_TAKER))
+      .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.ACTION_TAKER))
+      .put(EmailType.TASK_FINISHED_LONG_RUNNING, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.TASK_FINISHED_ON_DEMAND, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ACTION_TAKER))
       .put(EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
@@ -187,4 +193,11 @@ public class SMTPConfiguration {
     this.rateLimitCooldownMillis = rateLimitCooldownMillis;
   }
 
+  public List<String> getTaskEmailTailFiles() {
+    return taskEmailTailFiles;
+  }
+
+  public void setTaskEmailTailFiles(List<String> taskEmailTailFiles) {
+    this.taskEmailTailFiles = taskEmailTailFiles;
+  }
 }

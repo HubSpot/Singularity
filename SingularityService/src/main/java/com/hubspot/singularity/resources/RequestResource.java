@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Collections;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
@@ -20,7 +21,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -186,7 +186,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> user) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a scheduled or one-off request (%s)", requestWithState);
+    checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
@@ -200,18 +200,17 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate execution.", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
       @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> user,
-      @ApiParam("Additional command line arguments to append to the task") String commandLineArgs) {
+      @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
-
-    Optional<String> maybeCmdLineArgs = Optional.absent();
 
     PendingType pendingType = null;
 
@@ -224,11 +223,7 @@ public class RequestResource extends AbstractRequestResource {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
 
-    if (!Strings.isNullOrEmpty(commandLineArgs)) {
-      maybeCmdLineArgs = Optional.of(commandLineArgs);
-    }
-
-    SingularityCreateResult result = requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), maybeCmdLineArgs, user, pendingType));
+    SingularityCreateResult result = requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), user, pendingType, commandLineArgs));
 
     checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
@@ -288,7 +283,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.unpause(requestWithState.getRequest(), now, user);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, Optional.<String> absent(), user, PendingType.UNPAUSED));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, user, PendingType.UNPAUSED, Collections.<String> emptyList()));
     }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));

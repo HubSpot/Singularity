@@ -1,5 +1,8 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -15,28 +18,25 @@ public class SingularityPendingRequest {
   private final long timestamp;
   private final PendingType pendingType;
   private final Optional<String> user;
-  private final Optional<String> cmdLineArgs;
+  private final List<String> cmdLineArgsList;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, PendingType pendingType) {
-    this(requestId, deployId, timestamp, Optional.<String> absent(), Optional.<String> absent(), pendingType);
+    this(requestId, deployId, timestamp, Optional.<String> absent(), pendingType, Collections.<String> emptyList());
   }
 
   @JsonCreator
-  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs, @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType) {
+  public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
+      @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
     this.user = user;
-    this.cmdLineArgs = cmdLineArgs;
+    this.cmdLineArgsList = cmdLineArgsList;
     this.pendingType = pendingType;
   }
 
   public long getTimestamp() {
     return timestamp;
-  }
-
-  public Optional<String> getCmdLineArgs() {
-    return cmdLineArgs;
   }
 
   public String getDeployId() {
@@ -55,9 +55,14 @@ public class SingularityPendingRequest {
     return pendingType;
   }
 
+  public List<String> getCmdLineArgsList() {
+    return cmdLineArgsList;
+  }
+
   @Override
   public String toString() {
-    return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + ", pendingType=" + pendingType + ", cmdLineArgs=" + cmdLineArgs + "]";
+    return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", pendingType=" + pendingType + ", user=" + user + ", cmdLineArgsList="
+        + cmdLineArgsList + "]";
   }
 
 }

@@ -36,14 +36,18 @@ class DashboardView extends View
           return false
         userRequestTotals =
             all: userRequests.length
-            daemon:    0
-            onDemand:  0
+            onDemand:    0
+            worker:  0
             scheduled: 0
+            runOnce: 0
+            service: 0
 
         _.each userRequests, (request) =>
-            if request.get('onDemand')  then userRequestTotals.onDemand  += 1
-            if request.get('scheduled') then userRequestTotals.scheduled += 1
-            if request.get('daemon')    then userRequestTotals.daemon    += 1
+            if request.type == 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
+            if request.type == 'SCHEDULED'  then userRequestTotals.scheduled += 1
+            if request.type == 'WORKER'     then userRequestTotals.worker    += 1
+            if request.type == 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
+            if request.type == 'SERVICE'    then userRequestTotals.service   += 1
 
         context =
             deployUser: deployUser

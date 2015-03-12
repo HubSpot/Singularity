@@ -28,6 +28,12 @@ class Task extends Model
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
     ###
+
+    killTask: =>
+        $.ajax
+            url: "#{ @url() }?user=#{ app.getUsername() }"
+            type: "DELETE"
+
     promptRun: (callback) =>
         # We tell the Request to run
         requestModel = new Request id: @get('request').id
@@ -45,7 +51,7 @@ class Task extends Model
             message: killTemplate id: @get('id')
             callback: (confirmed) =>
                 return unless confirmed
-                deleteRequest = @destroy()
+                deleteRequest = @killTask()
                 deleteRequest.done callback
 
                 # ignore errors (probably means you tried

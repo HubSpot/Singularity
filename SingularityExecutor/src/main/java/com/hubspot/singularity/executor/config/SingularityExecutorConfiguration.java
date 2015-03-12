@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -248,14 +249,6 @@ public class SingularityExecutorConfiguration {
     return taskAppDirectory;
   }
 
-  public Path getTaskDirectoryPath(String taskId) {
-    return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
-  }
-
-  private String getSafeTaskIdForDirectory(String taskId) {
-    return taskId.replace(":", "_");
-  }
-
   public String getLogrotateCommand() {
     return logrotateCommand;
   }
@@ -309,7 +302,7 @@ public class SingularityExecutorConfiguration {
   }
 
   public Path getTaskDefinitionPath(String taskId) {
-    return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
+    return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(MesosUtils.getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
   }
 
   public Optional<Integer> getMaxTaskThreads() {
