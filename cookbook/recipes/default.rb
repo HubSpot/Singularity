@@ -1,6 +1,6 @@
 user node[:singularity][:user] do
   supports(manage_home: true)
-  home "/home/#{node[:singularity][:user]}"
+  home node[:singularity][:home]
 end
 
 include_recipe 'mesos'

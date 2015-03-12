@@ -24,6 +24,8 @@ default[:singularity] = {
                                  :password => "9thlevel" }
 }
 
+default[:singularity][:home] = '/usr/local/singularity'
+
 set[:mesos][:type] = 'mesosphere'
 set[:mesos][:mesosphere][:with_zookeeper] = true
 
