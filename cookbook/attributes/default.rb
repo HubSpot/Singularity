@@ -7,7 +7,6 @@ else
 end
 
 default[:singularity] = {
-  :home                     => '/usr/local/singularity',
   :data_dir                 => '/var/lib/singularity',
   :log_dir                  => '/var/log/singularity',
   :conf_dir                 => '/etc/singularity',
@@ -19,6 +18,8 @@ default[:singularity] = {
                                  :username => "singularity",
                                  :password => "9thlevel" }
 }
+
+default[:home][:singularity] = '/usr/local/singularity'
 
 default[:mesos] = {
   :package_version => "0.21.0-1.0.ubuntu1404",
