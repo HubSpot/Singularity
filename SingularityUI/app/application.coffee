@@ -101,6 +101,20 @@ class Application
             return if @blurred and jqxhr.statusText is 'timeout'
 
             url = settings.url.replace(config.appRoot, '')
+            
+            try
+                serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
+            catch
+                serverMessage = jqxhr.responseText
+
+            serverMessage = _.escape serverMessage
+            
+            # Check if the file/directory doesn't exist yet so we
+            # can handle the error with somee style on tailing pages           
+            directoryPatt = new RegExp("does not have a directory yet")
+            hasNoDirectory = directoryPatt.test serverMessage
+            
+            return if jqxhr.status is 400 and hasNoDirectory
 
             if jqxhr.status is 502
                 Messenger().info
@@ -116,12 +130,6 @@ class Application
                     hideAfter: 20
             else
                 console.log jqxhr.responseText
-                try
-                    serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
-                catch
-                    serverMessage = jqxhr.responseText
-
-                serverMessage = _.escape serverMessage
 
                 Messenger().error
                     message:   "<p>An uncaught error occurred with your request. The server said:</p><pre>#{ serverMessage }</pre><p>The error has been saved to your JS console.</p>"
