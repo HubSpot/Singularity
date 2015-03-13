@@ -38,10 +38,18 @@
     <div class="tail-fetching-start">
         fetching more lines <div class="page-loader small"></div>
     </div>
-    <div class="lines-wrapper"></div>
-
+    <div class="lines-wrapper">
+        {{#if ajaxError.status}}
+        <div class="lines-wrapper">
+            <div class="empty-table-message">
+                {{#ifEqual ajaxError.errorType 'NoDirectory'}}
+                    <p>This file has not been created yet. Hang tight, we're working on it.</p>
+                {{/ifEqual}}
+            </div>
+        </div>
+        {{/if}}
+    </div>
     <div class="tail-fetching-end">
         fetching more lines <div class="page-loader small"></div>
     </div>
 </div>
-

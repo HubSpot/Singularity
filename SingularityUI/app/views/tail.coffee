@@ -30,19 +30,15 @@ class TailView extends View
             @$el.addClass 'fetching-data'
         @listenTo @collection, 'sync', =>
             @$el.removeClass 'fetching-data'
+
+        @listenTo @model, 'change:isStillRunning', => @stopTailing() unless @model.get 'isStillRunning'
+
+        @ajaxError = status: false
+        @listenTo @collection, 'ajaxError', @handleAjaxError
         
-        @listenTo @model, 'change:isStillRunning', => @stopTailing() unless @model.get 'isStillRunning'        
-
-    handleAjaxError: (response) =>
-        # ATM we get 404s if we request dirs and 500s if the file doesn't exist
-        if response.status in [404, 500]
-            app.caughtError()
-            @$el.html "<h1>Could not get request file.</h1>"
-
     render: =>
         breadcrumbs = utils.pathToBreadcrumbs @path
-
-        @$el.html @template {@taskId, @filename, breadcrumbs}
+        @$el.html @template {@taskId, @filename, breadcrumbs, @ajaxError}
 
         @$contents = @$ '.tail-contents'
         @$linesWrapper = @$contents.children('.lines-wrapper')
@@ -145,6 +141,10 @@ class TailView extends View
             , 0
 
     afterInitialData: =>
+        # Remove any `data is loading` message
+        clearInterval @dataInterval
+        @dumpContents()
+
         setTimeout =>
             @scrollToBottom()
         , 150
@@ -217,5 +217,17 @@ class TailView extends View
         @$('.line').removeClass('highlightLine')
         $(e.currentTarget).closest('.line').addClass('highlightLine')
 
+    # If we get a 400 we can render a nicer
+    # message that the file is being generated
+    handleAjaxError: (response) =>
+        @ajaxError =
+            status: true
+            errorType: response.errorType
+        
+        @dataInterval = setInterval =>
+            @collection.fetchInitialData()
+        , 2000
+
+        @render()
 
 module.exports = TailView
