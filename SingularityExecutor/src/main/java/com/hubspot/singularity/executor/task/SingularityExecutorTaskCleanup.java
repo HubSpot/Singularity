@@ -53,7 +53,7 @@ public class SingularityExecutorTaskCleanup {
   public boolean cleanTaskDefinitionFile() {
     Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
 
-    log.info("Successfull cleanup, deleting file {}", taskDefinitionPath);
+    log.info("Successful cleanup, deleting file {}", taskDefinitionPath);
 
     try {
       boolean deleted = Files.deleteIfExists(taskDefinitionPath);
