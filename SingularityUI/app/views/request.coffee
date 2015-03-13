@@ -64,7 +64,7 @@ class RequestView extends View
         @model.promptRun (data) =>   
             # If user wants to redirect to a file after the task starts
             if data.filename.length > 1
-                @listenTo @activeTasks, 'add', @redirectToFile
+                @listenToOnce @activeTasks, 'add', @redirectToFile
                 
                 @redirectFilename = data.filename
                 @mostRecentTask = @history.first().get('id')
