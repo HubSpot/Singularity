@@ -64,7 +64,16 @@ class LogLines extends Collection
                 length: @initialRequestLength
 
             @trigger 'initialdata'
-
+        .error (response) =>
+         
+   # If we get a 400, the file has likely not been generated
+            # yet, so we'll pass a message to the view
+            if response.status is 400              
+                directoryPatt = new RegExp("does not have a directory yet")
+                hasNoDirectory = directoryPatt.test response.responseText
+                if hasNoDirectory
+                    @trigger 'ajaxError', {status: 400, errorType: 'NoDirectory'}
+    
     fetchPrevious: ->
         @fetch data:
             offset: orZero @getMinOffset() - @state.get('currentRequestLength')
