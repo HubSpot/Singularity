@@ -1139,4 +1139,28 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   }
 
+  @Test
+  public void testWaitAfterTaskWorks() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    statusUpdate(task, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() < 1000L);
+
+    resourceOffers();
+
+    long extraWait = 100000L;
+
+    saveAndSchedule(request.toBuilder().setWaitAtLeastMillisAfterTaskFinishesForReschedule(Optional.of(extraWait)).setInstances(Optional.of(2)));
+    resourceOffers();
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() > 1000L);
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
+
 }

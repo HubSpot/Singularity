@@ -19,6 +19,7 @@ public class SingularityRequestBuilder {
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
   private Optional<Long> scheduledExpectedRuntimeMillis;
 
+  private Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
 
   @Deprecated
   // use requestType
@@ -52,7 +53,7 @@ public class SingularityRequestBuilder {
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis);
+        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -182,12 +183,21 @@ public class SingularityRequestBuilder {
     return requestType;
   }
 
+  public Optional<Long> getWaitAtLeastMillisAfterTaskFinishesForReschedule() {
+    return waitAtLeastMillisAfterTaskFinishesForReschedule;
+  }
+
+  public SingularityRequestBuilder setWaitAtLeastMillisAfterTaskFinishesForReschedule(Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule) {
+    this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule
         + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis
-        + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity="
-        + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule + ", daemon="
+        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }
