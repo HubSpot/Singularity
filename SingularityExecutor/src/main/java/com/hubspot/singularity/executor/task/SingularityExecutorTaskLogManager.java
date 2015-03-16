@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
@@ -165,7 +165,7 @@ public class SingularityExecutorTaskLogManager {
     fileNames.add(taskDefinition.getServiceLogOutPath().getFileName().toString());
     fileNames.addAll(Arrays.asList(configuration.getS3FilesToBackup()));
 
-    return String.format("{%s}*.gz*", StringUtils.join(fileNames, ","));
+    return String.format("{%s}*.gz*", Joiner.on(",").join(fileNames));
   }
 
   private String getS3KeyPattern() {

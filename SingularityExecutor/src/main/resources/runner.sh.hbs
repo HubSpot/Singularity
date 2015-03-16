@@ -35,7 +35,7 @@ fi
 # Create log directory for logrotate runs
 if [[ ! -d {{{ logDir }}} ]]; then
     echo "Creating log directory ({{{ logDir }}})"
-    mkdir {{{ logDir }}}
+    mkdir -p {{{ logDir }}}
     sudo chown -R {{{ user }}} {{{ logDir }}}
 fi
 
