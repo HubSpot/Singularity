@@ -103,10 +103,6 @@ public class SingularityExecutorTaskLogManager {
     return true;
   }
 
-  /**
-   * Trigger manual logrotate run.
-   * @return True on successful run or skip. False on error.
-   */
   public boolean manualLogrotate() {
     if (!Files.exists(getLogrotateConfPath())) {
       log.info("{} did not exist, skipping manual logrotation", getLogrotateConfPath());

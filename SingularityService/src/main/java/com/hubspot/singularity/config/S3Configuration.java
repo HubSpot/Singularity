@@ -9,15 +9,9 @@ public class S3Configuration {
   @NotNull
   private int maxS3Threads = 3;
 
-  /**
-   * How long for SingularityService to wait for S3 List
-   */
   @NotNull
   private int waitForS3ListSeconds = 5;
 
-  /**
-   * How long for SingularityService to wait for generating a link
-   */
   @NotNull
   private int waitForS3LinksSeconds = 1;
 
@@ -28,9 +22,6 @@ public class S3Configuration {
   @NotNull
   private long expireS3LinksAfterMillis = TimeUnit.DAYS.toMillis(1);
 
-  /**
-   * S3 Bucket that SingularityS3Uploader puts logs in.
-   */
   @NotNull
   private String s3Bucket;
 
@@ -111,6 +102,5 @@ public class S3Configuration {
   public void setS3SecretKey(String s3SecretKey) {
     this.s3SecretKey = s3SecretKey;
   }
-
 
 }

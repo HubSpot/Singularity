@@ -87,13 +87,13 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     task.getLog().info("Writing a runner script to execute {}", cmd);
 
     templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(
-        cmd, // cmd
-        configuration.getTaskAppDirectory(), // taskAppDirectory
-        configuration.getLogrotateToDirectory(), // logDir
-        executorData.getUser().or(configuration.getDefaultRunAsUser()), // user
-        configuration.getServiceLog(), // logFile
-        task.getTaskId(), // taskId
-        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()))); // maxTaskThreads
+        cmd,
+        configuration.getTaskAppDirectory(),
+        configuration.getLogrotateToDirectory(),
+        executorData.getUser().or(configuration.getDefaultRunAsUser()),
+        configuration.getServiceLog(),
+        task.getTaskId(),
+        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads())));
 
     List<String> command = Lists.newArrayList();
     command.add("bash");

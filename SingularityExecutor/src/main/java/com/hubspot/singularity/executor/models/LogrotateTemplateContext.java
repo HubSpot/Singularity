@@ -12,10 +12,6 @@ public class LogrotateTemplateContext {
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorConfiguration configuration;
 
-  /**
-   * @param configuration configuration to pull from.
-   * @param taskDefinition information about the task we're writing the logrotate configs for.
-   */
   public LogrotateTemplateContext(SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition) {
     this.configuration = configuration;
     this.taskDefinition = taskDefinition;
@@ -25,33 +21,20 @@ public class LogrotateTemplateContext {
     return configuration.getLogrotateDateformat();
   }
 
-  /**
-   * Log files are rotated count times before being removed.
-   * @return count.
-   */
   public String getRotateCount() {
     return configuration.getLogrotateCount();
   }
 
-  /**
-   * Remove rotated logs older than $count days.
-   * The age is only checked if the logfile is to be rotated.
-   * @return days.
-   */
   public String getMaxageDays() {
     return configuration.getLogrotateMaxageDays();
   }
 
-  /**
-   * Logs are moved into $directory for rotation.
-   * @return directory.
-   */
   public String getRotateDirectory() {
     return configuration.getLogrotateToDirectory();
   }
 
   /**
-   * Extra files for logrotate to rotate.
+   * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
   public String[] getExtrasFiles() {
@@ -65,11 +48,6 @@ public class LogrotateTemplateContext {
     return transformed;
   }
 
-  /**
-   * dateformat for extra files.
-   * Only %Y %m %d and %s specifiers are allowed.
-   * @return dateformat (e.g. "-%Y%m%d%s").
-   */
   public String getExtrasDateformat() {
     return configuration.getLogrotateExtrasDateformat();
   }
