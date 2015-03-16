@@ -277,6 +277,7 @@ public class SingularityExecutorConfiguration {
     return s3MetadataDirectory;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public String[] getS3FilesToBackup() {
     return s3FilesToBackup;
   }
