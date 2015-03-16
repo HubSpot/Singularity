@@ -65,10 +65,10 @@ class LogLines extends Collection
 
             @trigger 'initialdata'
         .error (response) =>
-         
-   # If we get a 400, the file has likely not been generated
+            # If we get a 400, the file has likely not been generated
             # yet, so we'll pass a message to the view
-            if response.status is 400              
+            if response.status is 400
+                app.caughtError() 
                 directoryPatt = new RegExp("does not have a directory yet")
                 hasNoDirectory = directoryPatt.test response.responseText
                 if hasNoDirectory
