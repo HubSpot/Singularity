@@ -93,6 +93,7 @@ public class S3ArtifactDownloader {
     if (s3Artifact.getFilesize().isPresent()) {
       length = s3Artifact.getFilesize().get();
     } else {
+      log.info("Getting details for S3 Artifact: " + s3Artifact);
       StorageObject details = s3.getObjectDetails(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
 
       Preconditions.checkNotNull(details, "Couldn't find object at %s/%s", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
