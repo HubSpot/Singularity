@@ -86,6 +86,7 @@ public class S3ArtifactDownloader {
   }
 
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo) throws Exception {
+	log.info("Downloading {}", s3Artifact);
     final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()));
 
     long length = 0;
@@ -93,7 +94,6 @@ public class S3ArtifactDownloader {
     if (s3Artifact.getFilesize().isPresent()) {
       length = s3Artifact.getFilesize().get();
     } else {
-      log.info("Getting details for S3 Artifact: " + s3Artifact);
       StorageObject details = s3.getObjectDetails(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
 
       Preconditions.checkNotNull(details, "Couldn't find object at %s/%s", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
