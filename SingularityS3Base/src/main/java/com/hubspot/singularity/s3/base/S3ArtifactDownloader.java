@@ -86,6 +86,7 @@ public class S3ArtifactDownloader {
   }
 
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo) throws Exception {
+	log.info("Downloading {}", s3Artifact);
     final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()));
 
     long length = 0;
