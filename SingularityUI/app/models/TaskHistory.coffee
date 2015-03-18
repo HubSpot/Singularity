@@ -45,11 +45,10 @@ class TaskHistory extends Model
                 taskHistory.decommissioning = true
             else if taskHistory.slave.attributes.state is not 'ACTIVE'
                 taskHistory.slaveMissing = true
+
+        taskHistory.isCleaning = _.last( taskHistory.taskUpdates ).taskState is 'TASK_CLEANING'
+
         taskHistory
-    
-    setCurrentState: ->
-        isCleaning = _.last( @get 'taskUpdates' ).taskState is 'TASK_CLEANING'
-        @set 'isCleaning', isCleaning
 
     setCleanupMessage: (cleanupType) ->
         cleanupMessages =

@@ -106,8 +106,6 @@ class TaskDetailController extends Controller
 
         @models.task.fetch()
             .done =>
-                # Store current task state
-                @models.task.setCurrentState() 
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
             .error =>
                 # If this 404s the task doesn't exist
