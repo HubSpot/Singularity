@@ -234,7 +234,7 @@ class TasksView extends View
             
             callback: (confirmed) =>
                 return unless confirmed
-                deleteRequest = @collection.get(id).killTask 'kill'
+                deleteRequest = @collection.get(id).kill()
 
                 # ignore errors (probably means you tried
                 # to kill an already dead task)

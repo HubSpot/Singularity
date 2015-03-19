@@ -21,26 +21,16 @@ class Task extends Model
             task.id = task.taskId.id
         else if task.pendingTask?
             task.id = "#{ task.pendingTask.pendingTaskId.requestId }-#{ task.pendingTask.pendingTaskId.nextRunAt }-#{ task.pendingTask.pendingTaskId.instanceNo }"
+
         task
 
-    ###
-    promptX opens a dialog asking the user to confirm an action and then does it
-    ###
-
-
-
-    killTask: (type) =>
-        username = app.getUsername()
+    kill: (override=false) =>
         params =
-            user: username
-
-        if type is 'killOverride' or type is 'kill9'
-            params.override = true
-        
-        url = @url() + "?" + $.param params
+            user: app.getUsername()
+            override: override
 
         $.ajax
-            url: url
+            url: "#{ @url() }?#{ $.param params }"
             type: "DELETE"
 
 

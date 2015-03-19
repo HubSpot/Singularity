@@ -2,6 +2,10 @@ Model = require './model'
 
 Slave = require './Slave'
 
+DECOMMISION_STATES = ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+
+TERMINAL_TASK_STATES = ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+
 # This model hits up the history API and gets us the record for
 # an old (or current) Task
 class TaskHistory extends Model
@@ -12,7 +16,9 @@ class TaskHistory extends Model
 
     parse: (taskHistory) ->
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
+
         taskHistory.task?.mesosTask?.executor?.command?.environment?.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
+
 
         ports = []
 
@@ -25,14 +31,17 @@ class TaskHistory extends Model
 
         taskHistory.ports = ports
 
+
         isStillRunning = true
 
         for taskUpdate in taskHistory.taskUpdates
-          if taskUpdate.taskState in ["TASK_KILLED", "TASK_LOST", "TASK_FAILED", "TASK_FINISHED"]
+          if taskUpdate.taskState in TERMINAL_TASK_STATES
             isStillRunning = false
             break
 
         taskHistory.isStillRunning = isStillRunning
+
+
         if taskHistory.task.offer?
             taskHistory.slaveId = taskHistory.task.offer.slaveId.value
             taskHistory.slave = new Slave id: taskHistory.slaveId
@@ -40,30 +49,16 @@ class TaskHistory extends Model
                 async: false
                 error: =>
                     app.caughtError()
-            decommission_states = ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
-            if taskHistory.slave.attributes.state in decommission_states
+            if taskHistory.slave.attributes.state in DECOMMISION_STATES
                 taskHistory.decommissioning = true
             else if taskHistory.slave.attributes.state is not 'ACTIVE'
                 taskHistory.slaveMissing = true
 
+
         taskHistory.isCleaning = _.last( taskHistory.taskUpdates ).taskState is 'TASK_CLEANING'
 
+
         taskHistory
-
-    setCleanupMessage: (cleanupType) ->
-        cleanupMessages =
-            USER_REQUESTED        : "User clicked the Kill Task button in the UI."
-            DECOMISSIONING        : "Slave the task is running on is decomissioning."
-            SCALING_DOWN          : "Parent request's instance # was decreased, killing this task as a result."
-            BOUNCING              : "Parent request is bouncing, can't kill this task until its replacement task(s) are healthy."
-            DEPLOY_FAILED         : "This task was part of a new deploy that failed for some reason, so this task isn't necessary anymore."
-            NEW_DEPLOY_SUCCEEDED  : "A deploy completed successfully, and this task belongs to the old deploy."
-            DEPLOY_CANCELED       : "This task was part of a deploy that was cancelled, so this task isn't necessary anymore."
-            UNHEALTHY_NEW_TASK    : "This task is part of a pending deploy, and it didn't become healthy -- kill this task and try again with a new one."
-            OVERDUE_NEW_TASK      : "This task took too long to become healthy, so we're killing it."
-
-        @set 'isInCleanup', true
-        @set 'cleanupMessage', cleanupMessages[cleanupType]
 
     parseResources: (task) ->
         cpus: _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''

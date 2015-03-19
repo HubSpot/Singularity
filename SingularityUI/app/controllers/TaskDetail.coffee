@@ -5,6 +5,7 @@ TaskResourceUsage = require '../models/TaskResourceUsage'
 
 TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
+TaskCleanups = require '../collections/TaskCleanups'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -38,14 +39,15 @@ class TaskDetailController extends Controller
 
         @collections.s3Logs = new TaskS3Logs [], {@taskId}
 
+        @collections.taskCleanups = new TaskCleanups
+
         #
         # Subviews
         #
-        @subviews.overview = new OverviewSubview     
+        @subviews.overview = new OverviewSubview
+            collection: @collections.taskCleanups
             model:      @models.task
             template:   @templates.overview
-
-        @subviews.overview.on 'refreshrequest', => @refresh()
 
         @subviews.history = new SimpleSubview
             model:    @models.task
@@ -103,6 +105,8 @@ class TaskDetailController extends Controller
 
     refresh: ->
         @resourcesFetched = false
+
+        @collections.taskCleanups.fetch()
 
         @models.task.fetch()
             .done =>
