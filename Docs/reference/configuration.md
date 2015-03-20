@@ -62,11 +62,14 @@ These are settings that are more likely to be altered.
 | cooldownMinScheduleSeconds | 120 | When a request enters cooldown, new tasks are delayed by at least this long | long | 
 
 #### Load Balancer API ####
+
+These settings should live under the `baragon` field in the root configuration
+
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| loadBalancerQueryParams | null | Additional query parameters to pass to the Load Balancer API | Map<String, String> | 
-| loadBalancerRequestTimeoutMillis | 2000 | The timeout for making API calls to the Load Balancer API (these will be retried) | long |
-| loadBalancerUri | null | The URI of the Load Balancer API (Baragon) | string |
+| authkey | null | Baragon auth key | String |
+| requestTimeoutMs | 2000 | The timeout for making API calls to the Load Balancer API (these will be retried) | long |
+| baseUri | null | The base uri for Baragon (host + context path) | String |
 
 #### User Interface ####
 | Parameter | Default | Description | Type |

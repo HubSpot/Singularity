@@ -58,7 +58,7 @@
     <dep.swagger.version>1.3.12</dep.swagger.version>
     <dep.swagger-plugin.version>2.3.2</dep.swagger-plugin.version>
 
-    <baragon.version>0.1.4</baragon.version>
+    <baragon.version>0.1.6</baragon.version>
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.1</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>
@@ -153,6 +153,12 @@
         <artifactId>BaragonCore</artifactId>
         <version>${baragon.version}</version>
       </dependency>
+
+        <dependency>
+            <groupId>com.hubspot</groupId>
+            <artifactId>BaragonClient</artifactId>
+            <version>${baragon.version}</version>
+        </dependency>
 
       <dependency>
         <groupId>com.sun.mail</groupId>
