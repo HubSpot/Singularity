@@ -34,7 +34,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private Optional<SingularityExecutorTaskArtifactFetcher> taskArtifactFetcher;
 
-  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, TemplateManager templateManager, SingularityExecutorConfiguration configuration, ExecutorData executorData, String executorPid) {
+  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, TemplateManager templateManager, SingularityExecutorConfiguration configuration,
+      ExecutorData executorData, String executorPid) {
     this.executorData = executorData;
     this.task = task;
     this.executorUtils = executorUtils;
@@ -85,7 +86,14 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
     task.getLog().info("Writing a runner script to execute {}", cmd);
 
-    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(cmd, configuration.getTaskAppDirectory(), executorData.getUser().or(configuration.getDefaultRunAsUser()), configuration.getServiceLog(), task.getTaskId(), executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads())));
+    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(
+        cmd,
+        configuration.getTaskAppDirectory(),
+        configuration.getLogrotateToDirectory(),
+        executorData.getUser().or(configuration.getDefaultRunAsUser()),
+        configuration.getServiceLog(),
+        task.getTaskId(),
+        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads())));
 
     List<String> command = Lists.newArrayList();
     command.add("bash");
