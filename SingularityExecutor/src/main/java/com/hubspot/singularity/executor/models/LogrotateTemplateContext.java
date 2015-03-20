@@ -3,6 +3,9 @@ package com.hubspot.singularity.executor.models;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Handlebars context for generating logrotate.conf files.
  * Check `man logrotate` for more information.
@@ -37,12 +40,12 @@ public class LogrotateTemplateContext {
    * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
-  public String[] getExtrasFiles() {
-    final String[] original = configuration.getLogrotateExtrasFiles();
-    final String[] transformed = new String[original.length];
+  public List<String> getExtrasFiles() {
+    final List<String> original = configuration.getLogrotateExtrasFiles();
+    final List<String> transformed = new ArrayList<>(original.size());
 
-    for (int i = 0; i < original.length; i++) {
-      transformed[i] = taskDefinition.getTaskDirectoryPath().resolve(original[i]).toString();
+    for (String filename : original) {
+      transformed.add(taskDefinition.getTaskDirectoryPath().resolve(filename).toString());
     }
 
     return transformed;
