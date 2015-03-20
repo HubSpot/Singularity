@@ -4,8 +4,7 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Joiner;
@@ -157,9 +156,8 @@ public class SingularityExecutorTaskLogManager {
    * @return file glob String.
    */
   private String getS3Glob() {
-    List<String> fileNames = new LinkedList<>();
+    List<String> fileNames = new ArrayList<>(configuration.getAdditionalS3FilesToBackup());
     fileNames.add(taskDefinition.getServiceLogOutPath().getFileName().toString());
-    fileNames.addAll(Arrays.asList(configuration.getS3FilesToBackup()));
 
     return String.format("{%s}*.gz*", Joiner.on(",").join(fileNames));
   }
