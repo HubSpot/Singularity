@@ -624,6 +624,12 @@ public class SingularityScheduler {
       }
     }
 
+    if (pendingType == PendingType.TASK_DONE && request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().or(0L) > 0) {
+      nextRunAt = Math.max(nextRunAt, now + request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get());
+
+      LOG.trace("Adjusted next run of {} to {} (by {}) due to waitAtLeastMillisAfterTaskFinishesForReschedule", request.getId(), nextRunAt, JavaUtils.durationFromMillis(request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()));
+    }
+
     if (state == RequestState.SYSTEM_COOLDOWN && pendingType != PendingType.NEW_DEPLOY) {
       final long prevNextRunAt = nextRunAt;
       nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));

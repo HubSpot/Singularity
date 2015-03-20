@@ -24,6 +24,8 @@ public class SingularityRequest {
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
   private final Optional<Long> scheduledExpectedRuntimeMillis;
 
+  private final Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
+
   //"use requestType instead"
   @Deprecated
   private final Optional<Boolean> daemon;
@@ -42,7 +44,8 @@ public class SingularityRequest {
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis) {
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
+      @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -57,6 +60,7 @@ public class SingularityRequest {
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
+    this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
 
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -77,6 +81,7 @@ public class SingularityRequest {
     .setScheduleType(scheduleType)
     .setQuartzSchedule(quartzSchedule)
     .setRackAffinity(copyOfList(rackAffinity))
+    .setWaitAtLeastMillisAfterTaskFinishesForReschedule(waitAtLeastMillisAfterTaskFinishesForReschedule)
     .setSlavePlacement(slavePlacement)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis);
   }
@@ -202,12 +207,16 @@ public class SingularityRequest {
     return scheduleType.or(ScheduleType.CRON);
   }
 
+  public Optional<Long> getWaitAtLeastMillisAfterTaskFinishesForReschedule() {
+    return waitAtLeastMillisAfterTaskFinishesForReschedule;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequest [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule="
         + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", scheduledExpectedRuntimeMillis="
-        + scheduledExpectedRuntimeMillis + ", daemon=" + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement="
-        + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + scheduledExpectedRuntimeMillis + ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule + ", daemon=" + daemon + ", instances=" + instances
+        + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
   }
 
 }

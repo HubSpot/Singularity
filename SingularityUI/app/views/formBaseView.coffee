@@ -96,6 +96,10 @@ class FormBaseView extends View
             val = $element.val()
             return val if val
             return if $element.parents('.required').length then "" else undefined
+    
+    base64Encode: (content) -> 
+        return if not content?
+        btoa content
 
     multiMap: (selector) =>
         $elements = @$ selector

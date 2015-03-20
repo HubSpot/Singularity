@@ -15,12 +15,21 @@ public class S3Configuration {
   @NotNull
   private int waitForS3LinksSeconds = 1;
 
+  /**
+   * Links to logs will expire after given number of milliseconds.
+   * A new link is generated for every /logs API call.
+   */
   @NotNull
   private long expireS3LinksAfterMillis = TimeUnit.DAYS.toMillis(1);
 
   @NotNull
   private String s3Bucket;
 
+  /**
+   * S3 Key format for finding logs. Should be the same as
+   * configuration set for SingularityS3Uploader
+   * (e.g. '%requestId/%Y/%m/%taskId_%index-%s%fileext')
+   */
   @NotNull
   private String s3KeyFormat;
 
@@ -93,6 +102,5 @@ public class S3Configuration {
   public void setS3SecretKey(String s3SecretKey) {
     this.s3SecretKey = s3SecretKey;
   }
-
 
 }
