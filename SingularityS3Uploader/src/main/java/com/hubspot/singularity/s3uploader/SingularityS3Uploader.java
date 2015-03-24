@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
@@ -33,6 +34,7 @@ public class SingularityS3Uploader implements Closeable {
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
+  private final Optional<PathMatcher> finishedPathMatcher;
   private final String fileDirectory;
   private final S3Service s3Service;
   private final S3Bucket s3Bucket;
@@ -57,6 +59,13 @@ public class SingularityS3Uploader implements Closeable {
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
     this.pathMatcher = fileSystem.getPathMatcher("glob:" + uploadMetadata.getFileGlob());
+
+    if (uploadMetadata.getOnFinishGlob().isPresent()) {
+      finishedPathMatcher = Optional.of(fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get()));
+    } else {
+      finishedPathMatcher = Optional.<PathMatcher> absent();
+    }
+
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
@@ -97,8 +106,12 @@ public class SingularityS3Uploader implements Closeable {
 
     for (Path file : JavaUtils.iterable(directory)) {
       if (!pathMatcher.matches(file.getFileName())) {
-        LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
-        continue;
+        if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(file.getFileName())) {
+          LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+          continue;
+        } else {
+          LOG.trace("Not skipping file {} because it matched finish glob {}", file, uploadMetadata.getOnFinishGlob().get());
+        }
       }
 
       found++;
