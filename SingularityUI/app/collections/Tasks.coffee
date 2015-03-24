@@ -18,10 +18,10 @@ class Tasks extends Collection
 
     url: ->
         requestFilter = if @requestId? then "/request/#{ @requestId }" else ''
-        propertyString = $.param 'property': @propertyFilterMap[@state] or [], true
+        propertyString = $.param 'property': @propertyFilterMap[@state] or @addPropertyString || [], true
         "#{ config.apiRoot }/tasks/#{ @state }#{ requestFilter }?#{ propertyString }"
 
-    initialize: (models = [], {@state, @requestId}) ->
+    initialize: (models = [], {@state, @requestId, @addPropertyString}) ->
         @comparator = @comparatorMap[@state]
 
 module.exports = Tasks
