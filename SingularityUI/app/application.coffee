@@ -134,6 +134,12 @@ class Application
     showPageLoader: ->
         @$page.html "<div class='page-loader centered cushy'></div>"
 
+    appendPageLoader: ->
+        @$page.append "<div class='page-loader centered cushy'></div>"
+
+    hidePageLoader: ->
+        @$page.find('.page-loader').remove()
+
     bootstrapController: (controller) ->
         @currentController = controller
 
