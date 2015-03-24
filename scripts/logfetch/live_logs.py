@@ -34,7 +34,7 @@ def download_live_logs(args):
 
       for log_file in logs_folder_files(args, task):
         logfile_name = '{0}-{1}'.format(task, log_file)
-        if (args.logtype and logfetch_base.log_matches(log_file, args.logtype)) or not args.logtype:
+        if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
           async_requests.append(
             grequests.AsyncRequest('GET',uri ,
               callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size),
