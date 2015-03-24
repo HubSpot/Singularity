@@ -36,7 +36,7 @@
                         <a data-task-id="{{ id }}" data-action="run-now" title="Run now">
                             <span class="glyphicon glyphicon-flash"></span>
                         </a>
-                        <a data-task-id="{{ id }}" data-action="viewJSON" title="JSON">
+                        <a data-task-id="{{ id }}" data-nextRunAt="{{ pendingTask.pendingTaskId.nextRunAt}}" data-request-id="{{ pendingTask.pendingTaskId.requestId }}" data-action="viewJSON" title="JSON">
                             { }
                         </a>
                     </td>

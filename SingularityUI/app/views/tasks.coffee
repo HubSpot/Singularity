@@ -210,8 +210,16 @@ class TasksView extends View
         app.router.navigate "/tasks/#{ @state }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        id = $(e.target).parents('tr').data 'task-id'
-        utils.viewJSON @collection.get id
+        task =
+            taskId: $(e.target).data 'task-id'
+            requestId: $(e.target).data 'request-id'
+            nextRunAt: $(e.target).data 'nextrunat'
+
+        # need to make a fetch for scheduled tasks
+        if task.nextRunAt
+            @trigger 'getPendingTask', task
+        else
+            utils.viewJSON @collection.get task.taskId
 
     removeTask: (e) ->
         $row = $(e.target).parents 'tr'
