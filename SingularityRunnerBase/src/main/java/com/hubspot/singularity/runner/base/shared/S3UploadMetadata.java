@@ -24,11 +24,13 @@ import com.google.common.base.Preconditions;
  *
  * For example, if the s3KeyFormat was: %filename-%Y and the file name on local disk was "file1.txt" the S3 key would be : s3Bucket/file1.txt-2015 (assuming current year is 2015)
  *
- * finished - set this to true if you wish *this s3 upload metadata configuration* file to be deleted after the last matching file is uploaded to S3 successfully (think of it as safe delete.)
+ * finished - set this to true if you wish *this s3 upload metadata configuration* file to be deleted and no more files uploaded after the last matching file is uploaded to S3 successfully (think of it as safe delete.)
  * onFinishGlob - a glob to match files which should be uploaded *only* after finished is set to true OR the pid is no longer active
  * pid - the pid of the process to watch, such that when that pid is no longer running, finished is set to true (stop uploading files / watching directory once all files are successfully uploaded.)
  * s3AccessKey - the access key to use to talk to s3 (optional in case you want to re-use the default Singularity configuration's key)
  * s3Secret - the secret key to use to talk to s3 (optional in case you want to re-use the default Singularity configuration's key)
+ *
+ * finishedAfterMillisWithoutNewFile - after millis without a new file, set finished to true (see above for result.) - (-1 never expire) - absent - uses system default.
  *
  */
 public class S3UploadMetadata {
@@ -42,11 +44,12 @@ public class S3UploadMetadata {
   private final Optional<Integer> pid;
   private final Optional<String> s3AccessKey;
   private final Optional<String> s3Secret;
+  private final Optional<Long> finishedAfterMillisWithoutNewFile;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat,
       @JsonProperty("finished") boolean finished, @JsonProperty("onFinishGlob") Optional<String> onFinishGlob, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
-      @JsonProperty("s3Secret") Optional<String> s3Secret) {
+      @JsonProperty("s3Secret") Optional<String> s3Secret, @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -61,6 +64,7 @@ public class S3UploadMetadata {
     this.s3AccessKey = s3AccessKey;
     this.s3Secret = s3Secret;
     this.onFinishGlob = onFinishGlob;
+    this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
   }
 
   @Override
@@ -137,11 +141,14 @@ public class S3UploadMetadata {
     return onFinishGlob;
   }
 
+  public Optional<Long> getFinishedAfterMillisWithoutNewFile() {
+    return finishedAfterMillisWithoutNewFile;
+  }
+
   @Override
   public String toString() {
     return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", onFinishGlob="
-        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + s3AccessKey + ", s3Secret=" + s3Secret + "]";
+        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + s3AccessKey + ", s3Secret=" + s3Secret + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
   }
-
 
 }

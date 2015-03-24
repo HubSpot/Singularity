@@ -84,7 +84,7 @@ public class SingularityS3Uploader implements Closeable {
     return "SingularityS3Uploader [uploadMetadata=" + uploadMetadata + ", metadataPath=" + metadataPath + "]";
   }
 
-  public int upload(Set<Path> synchronizedToUpload) throws IOException {
+  public int upload(Set<Path> synchronizedToUpload, boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
 
