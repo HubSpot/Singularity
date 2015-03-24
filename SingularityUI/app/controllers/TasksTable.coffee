@@ -35,11 +35,11 @@ class TasksTableController extends Controller
         app.showView @view
 
     getPendingTask: (task) ->
-        app.appendPageLoader()
+        app.showFixedPageLoader()
         @collections.tasksPending = new TasksPending [], {requestID: task.requestId}
         @collections.tasksPending.fetch().done =>
             utils.viewJSON @collections.tasksPending.getTaskByRuntime task.nextRunAt
-            app.hidePageLoader()
+            # app.hideFixedPageLoader()
 
 
     refresh: ->
