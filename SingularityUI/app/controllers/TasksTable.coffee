@@ -11,7 +11,6 @@ TasksTableView = require '../views/tasks'
 class TasksTableController extends Controller
 
     initialize: ({@state, @searchFilter}) ->
-        # We want the view to handle the page loader for this one
         if @state is 'decommissioning'
             @collections.tasks = new Tasks [], state: 'active'
         else if @state is 'scheduled'
@@ -36,7 +35,6 @@ class TasksTableController extends Controller
         app.showView @view
 
     getPendingTask: (task) ->
-        ## NEED A LOADER
         app.appendPageLoader()
         @collections.tasksPending = new TasksPending [], {requestID: task.requestId}
         @collections.tasksPending.fetch().done =>
