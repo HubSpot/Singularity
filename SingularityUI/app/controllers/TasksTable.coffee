@@ -38,9 +38,13 @@ class TasksTableController extends Controller
         app.showFixedPageLoader()
         @collections.tasksPending = new TasksPending [], {requestID: task.requestId}
         @collections.tasksPending.fetch().done =>
-            utils.viewJSON @collections.tasksPending.getTaskByRuntime task.nextRunAt
-            # app.hideFixedPageLoader()
-
+            utils.viewJSON @collections.tasksPending.getTaskByRuntime(task.nextRunAt), (resp) =>
+                if resp.error
+                    Messenger().error
+                        message:   "<p>This task is no longer pending.</p>"
+                        hideAFter: 20
+                    @refresh()
+            app.hideFixedPageLoader()
 
     refresh: ->
         # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
