@@ -45,8 +45,8 @@ public class SingularityS3Uploader implements Closeable {
   public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
     AWSCredentials credentials = defaultCredentials;
 
-    if (uploadMetadata.getS3Secret().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
-      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3Secret().get());
+    if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
+      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
     }
 
     try {
@@ -148,7 +148,7 @@ public class SingularityS3Uploader implements Closeable {
         Files.delete(file);
       } catch (S3ServiceException se) {
         metrics.error();
-        LOG.warn("{} Couldn't upload due to {} ({}) - {}", logIdentifier, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage());
+        LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
       } catch (Exception e) {
         metrics.error();
         LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
