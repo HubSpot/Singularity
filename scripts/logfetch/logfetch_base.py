@@ -11,10 +11,13 @@ ALL_REQUESTS = '/requests'
 REQUEST_TASKS_FORMAT = '/history/request/{0}/tasks'
 ACTIVE_TASKS_FORMAT = '/history/request/{0}/tasks/active'
 
-def unpack_logs(logs):
+def unpack_logs(args, logs):
+  successful = []
   for zipped_file in logs:
     try:
       if os.path.isfile(zipped_file):
+        if args.verbose:
+          sys.stderr.write(colored('Starting unpack of {0}'.format(zipped_file), 'magenta') + '\n')
         file_in = gzip.open(zipped_file, 'rb')
         unzipped = zipped_file.replace('.gz', '.log')
         file_out = open(unzipped, 'wb')
@@ -22,12 +25,19 @@ def unpack_logs(logs):
         file_out.close()
         file_in.close
         os.remove(zipped_file)
-        sys.stderr.write(colored('Unpacked ', 'green') + colored(zipped_file, 'white') + '\n')
-    except:
+        if args.verbose:
+          sys.stderr.write(colored('Unpacked ', 'green') + colored(zipped_file, 'white') + '\n')
+        else:
+          sys.stderr.write(colored('.', 'green'))
+      successful.append(unzipped)
+    except Exception as e:
+      print e
       if os.path.isfile(zipped_file):
         os.remove(zipped_file)
       sys.stderr.write(colored('Could not unpack {0}'.format(zipped_file), 'red') + '\n')
       continue
+  sys.stderr.write('\n')
+  return successful
 
 def base_uri(args):
   if not args.singularity_uri_base:
@@ -74,8 +84,8 @@ def all_requests(args):
   return included_requests
 
 def is_in_date_range(args, timestamp):
-  timedelta = datetime.utcnow() - datetime.utcfromtimestamp(timestamp)
+  timstamp_datetime = datetime.utcfromtimestamp(timestamp)
   if args.end_days:
-    return False if timedelta.days > args.start_days or timedelta.days <= args.end_days else True
+    return False if (timstamp_datetime < args.start_days or timstamp_datetime > args.end_days) else True
   else:
-    return False if timedelta.days > args.start_days else True
+    return False if timedelta.days < args.start_days else True
