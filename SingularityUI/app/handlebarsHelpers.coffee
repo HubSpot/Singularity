@@ -95,3 +95,8 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
     return '' if not email
     email.split('@')[0]
+
+
+Handlebars.registerHelper 'parseJSON', (string, property) ->
+    json = JSON.parse string
+    console.log json

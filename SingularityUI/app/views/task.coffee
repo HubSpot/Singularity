@@ -18,14 +18,15 @@ class TaskView extends View
         @$el.html @baseTemplate
 
         # Plop subview contents in there. It'll take care of everything itself
-        @$('#overview').html     @subviews.overview.$el
-        @$('#history').html      @subviews.history.$el
-        @$('#file-browser').html @subviews.fileBrowser.$el
-        @$('#s3-logs').html      @subviews.s3Logs.$el
-        @$('#lb-updates').html   @subviews.lbUpdates.$el
-        @$('#info').html         @subviews.info.$el
-        @$('#resources').html    @subviews.resourceUsage.$el
-        @$('#environment').html  @subviews.environment.$el
+        @$('#overview').html        @subviews.overview.$el
+        @$('#history').html         @subviews.history.$el
+        @$('#file-browser').html    @subviews.fileBrowser.$el
+        @$('#s3-logs').html         @subviews.s3Logs.$el
+        @$('#lb-updates').html      @subviews.lbUpdates.$el
+        @$('#health-checks').html   @subviews.healthChecks.$el
+        @$('#info').html            @subviews.info.$el
+        @$('#resources').html       @subviews.resourceUsage.$el
+        @$('#environment').html     @subviews.environment.$el
 
     viewJson: (event) ->
         utils.viewJSON @model

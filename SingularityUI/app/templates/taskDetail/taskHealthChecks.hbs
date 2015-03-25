@@ -1,32 +1,35 @@
 {{#if synced}}
     <div class="page-header">
-        <h2>Load Balancer State</h2>
+        <h2>Health Checks</h2>
     </div>
-    {{#ifGT data.loadBalancerUpdates.length 0}}
+    {{#ifGT data.healthcheckResults.length 0}}
         <div class="table-container">
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Updated</th>
-                        <th>State</th>
-                        <th>Message</th>
-                        <th></th>
+                        <th>Time Occured</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>errorMessage</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{#each data.loadBalancerUpdates}}
+                    {{#each data.healthcheckResults}}
                         <tr>
                             <td>
                                {{timestampFormatted timestamp}}
                             </td>
                             <td>
-                               {{humanizeText loadBalancerState}}
+                               {{durationMillis}}{{#if durationMillis}}ms{{/if}}
                             </td>
                             <td>
-                               {{message}}
+                               {{statusCode}}
+                            </td>
+                            <td> {{responseBody}}
+                                                           
                             </td>
                             <td class="actions-column">
-                                <a data-lb-index="{{@index}}" data-action="viewLbJSON" title="JSON">
+                                <a data-index="{{@index}}" data-action="viewHealthCheckJSON" title="JSON">
                                     { }
                                 </a>
                             </td>
@@ -37,7 +40,7 @@
         </div>
     {{else}}
         <div class="empty-table-message">
-            No Load Balancer Info
+            No Health Checks
         </div>
     {{/ifGT}}
 {{else}}
