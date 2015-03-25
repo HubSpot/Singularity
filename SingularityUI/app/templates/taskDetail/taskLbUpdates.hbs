@@ -1,0 +1,45 @@
+{{#if synced}}
+    <div class="page-header">
+        <h2>Load Balancer State</h2>
+    </div>
+    {{#if data}}
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Updated</th>
+                        <th>State</th>
+                        <th>Message</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each data.loadBalancerUpdates}}
+                        <tr>
+                            <td>
+                               {{timestampFormatted timestamp}}
+                            </td>
+                            <td>
+                               {{humanizeText loadBalancerState}}
+                            </td>
+                            <td>
+                               {{message}}
+                            </td>
+                            <td class="actions-column">
+                                <a data-lb-index="{{@index}}" data-action="viewLbJSON" title="JSON">
+                                    { }
+                                </a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    {{else}}
+        <div class="empty-table-message">
+            No Load Balancer Info
+        </div>
+    {{/if}}
+{{else}}
+    <div class="page-loader centered cushy"></div>
+{{/if}}
