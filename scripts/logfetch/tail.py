@@ -1,8 +1,10 @@
+import os
 import sys
 import logfetch_base
 import requests
 import time
 import threading
+from grep import grep_command
 from termcolor import colored
 
 TAIL_LOG_FORMAT = '{0}/sandbox/{1}/read'
@@ -75,5 +77,22 @@ class LogStreamer(threading.Thread):
     response = requests.get(uri, params=params).json()
     prefix = '({0}) =>\n'.format(task) if args.verbose else ''
     if response['data'] != '':
+      if args.grep:
+        filename = '{0}/.grep{1}'.format(args.dest, self.Task)
+        self.create_grep_file(args, filename, response['data'])
+        output = os.popen(grep_command(args, filename)).read()
+        sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), output))
+        self.remove_grep_file(filename)
+      else:
         sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data']))
     return offset + len(response['data'].encode('utf-8'))
+
+  def create_grep_file(self, args, filename, content):
+    grep_file = open(filename, 'wb')
+    grep_file.write(content)
+    grep_file.close()
+
+
+  def remove_grep_file(self, grep_file):
+    if os.path.isfile(grep_file):
+      os.remove(grep_file)
