@@ -363,7 +363,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testOneOffsDontRunByThemselves() {
-    requestId = "oneoffRequest";
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     requestResource.submit(bldr.build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
@@ -375,6 +374,65 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
+    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+
+    resourceOffers();
+    Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
+
+    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+    Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
+  }
+
+  @Test
+  public void testOneOffsDontMoveDuringDecomission() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    requestResource.submit(bldr.build(), Optional.<String> absent());
+    deploy("d2");
+
+    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+
+    validateTaskDoesntMoveDuringDecommission();
+  }
+
+  private void validateTaskDoesntMoveDuringDecommission() {
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+
+    Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    cleaner.drainCleanupQueue();
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    cleaner.drainCleanupQueue();
+
+    // task should not move!
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 1);
   }
 
   @Test
@@ -396,7 +454,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
-    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
 
     resourceOffers();
 
@@ -420,6 +478,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testRunOnceDontMoveDuringDecomission() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
+    request = bldr.build();
+    saveRequest(request);
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    validateTaskDoesntMoveDuringDecommission();
   }
 
   @Test
