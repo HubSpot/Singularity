@@ -3,7 +3,7 @@ import ConfigParser
 import sys
 import os
 import pkg_resources
-from datetime import datetime
+from datetime import datetime, timedelta
 from termcolor import colored
 from fake_section_head import FakeSectionHead
 from live_logs import download_live_logs
@@ -63,12 +63,12 @@ def check_args(args):
   elif not args.requestId and not args.deployId and not args.taskId:
     exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
 
-def convert_to_days(argument):
+def convert_to_date(argument):
     try:
-        val = int(argument)
+        val = datetime.now() - timedelta(days=int(argument))
     except:
       try:
-        val = (datetime.now() - datetime.strptime(argument, "%m-%d-%Y")).days
+        val = datetime.strptime(argument, "%m-%d-%Y")
       except:
         exit('Start/End days value must be either a number of days or a date in format "mm-dd-yyyy"')
     return val
@@ -113,12 +113,13 @@ def fetch():
   parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
   parser.add_argument("-l", "--log-type", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
+  parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start_days = convert_to_days(args.start_days)
-  args.end_days = convert_to_days(args.end_days)
+  args.start_days = convert_to_date(args.start_days)
+  args.end_days = convert_to_date(args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
@@ -163,12 +164,13 @@ def cat():
   parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
   parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
   parser.add_argument("-l", "--logtype", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
+  parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start_days = convert_to_days(args.start_days)
-  args.end_days = convert_to_days(args.end_days)
+  args.start_days = convert_to_date(args.start_days)
+  args.end_days = convert_to_date(args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
