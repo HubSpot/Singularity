@@ -42,7 +42,6 @@ public class BlendedHistoryTest extends SingularityCuratorTestBase {
     return new SingularityRequestHistory(createdAt, Optional.<String> absent(), type, request);
   }
 
-
   // DESCENDING
   @Test
   public void testBlendedRequestHistory() {

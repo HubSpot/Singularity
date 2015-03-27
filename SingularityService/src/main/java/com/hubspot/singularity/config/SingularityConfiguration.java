@@ -7,11 +7,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.hubspot.singularity.SlavePlacement;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -135,8 +138,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
-  private long threadpoolShutdownDelayInSeconds = 1;
-
   @JsonProperty("ui")
   @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
@@ -149,6 +150,21 @@ public class SingularityConfiguration extends Configuration {
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
   private long zookeeperAsyncTimeout = 5000;
+
+  private int coreThreadpoolSize = 8;
+
+  private long threadpoolShutdownDelayInSeconds = 1;
+
+  @Valid
+  @JsonProperty("customExecutor")
+  @NotNull
+  private CustomExecutorConfiguration customExecutorConfiguration = new CustomExecutorConfiguration();
+
+  private boolean createDeployIds = false;
+
+  @Min(4)
+  @Max(32)
+  private int deployIdLength = 8;
 
   @JsonProperty("zookeeper")
   @Valid
@@ -199,7 +215,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<String> getCommonHostnameSuffixToOmit() {
-    return Optional.fromNullable(commonHostnameSuffixToOmit);
+    return Optional.fromNullable(Strings.emptyToNull(commonHostnameSuffixToOmit));
   }
 
   public long getConsiderTaskHealthyAfterRunningForSeconds() {
@@ -220,6 +236,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
+  }
+
+  public int getCoreThreadpoolSize() {
+    return coreThreadpoolSize;
   }
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
@@ -266,8 +286,8 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckTimeoutSeconds;
   }
 
-  public String getHostname() {
-    return hostname;
+  public Optional<String> getHostname() {
+    return Optional.fromNullable(Strings.emptyToNull(hostname));
   }
 
   public long getKillAfterTasksDoNotRunDefaultSeconds() {
@@ -482,6 +502,10 @@ public class SingularityConfiguration extends Configuration {
     this.cooldownMinScheduleSeconds = cooldownMinScheduleSeconds;
   }
 
+  public void setCoreThreadpoolSize(int coreThreadpoolSize) {
+    this.coreThreadpoolSize = coreThreadpoolSize;
+  }
+
   public void setDatabaseConfiguration(DataSourceFactory databaseConfiguration) {
     this.databaseConfiguration = databaseConfiguration;
   }
@@ -622,10 +646,6 @@ public class SingularityConfiguration extends Configuration {
     this.startNewReconcileEverySeconds = startNewReconcileEverySeconds;
   }
 
-  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
-    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
-  }
-
   public void setUiConfiguration(UIConfiguration uiConfiguration) {
     this.uiConfiguration = uiConfiguration;
   }
@@ -648,5 +668,29 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
+    return customExecutorConfiguration;
+  }
+
+  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
+    this.customExecutorConfiguration = customExecutorConfiguration;
+  }
+
+  public boolean isCreateDeployIds() {
+    return createDeployIds;
+  }
+
+  public void setCreateDeployIds(boolean createDeployIds) {
+    this.createDeployIds = createDeployIds;
+  }
+
+  public int getDeployIdLength() {
+    return deployIdLength;
+  }
+
+  public void setDeployIdLength(int deployIdLength) {
+    this.deployIdLength = deployIdLength;
   }
 }

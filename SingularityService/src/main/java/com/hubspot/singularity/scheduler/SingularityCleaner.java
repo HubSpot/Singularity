@@ -384,6 +384,8 @@ public class SingularityCleaner {
       case WAITING:
       case SUCCESS:
         return true;
+      case INVALID_REQUEST_NOOP:
+        return false;  // don't need to remove because Baragon doesnt know about it
       default:
         LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
         return false;
@@ -417,6 +419,7 @@ public class SingularityCleaner {
       case CANCELING:
       case SUCCESS:
       case WAITING:
+      case INVALID_REQUEST_NOOP:
     }
 
     return false;
@@ -459,12 +462,13 @@ public class SingularityCleaner {
 
     switch (lbRemoveUpdate.getLoadBalancerState()) {
       case SUCCESS:
+      case INVALID_REQUEST_NOOP:
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
         LOG.error("LB removal request {} ({}) got unexpected response {}", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
         exceptionNotifier.notify(String.format("LB removal failed for %s", lbAddUpdate.get().getLoadBalancerRequestId().toString()),
-            ImmutableMap.<String, String> of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
+            ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
         return CheckLBState.RETRY;
       case UNKNOWN:
       case CANCELING:

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -92,9 +93,9 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
 
-    exceptionNotifier.notify(t);
+    exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
 
-    abort.abort(AbortReason.UNRECOVERABLE_ERROR);
+    abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
   }
 
   private void startup(SchedulerDriver driver, MasterInfo masterInfo) throws Exception {
@@ -308,7 +309,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
       LOG.error("Aborting due to error: {}", message);
 
-      abort.abort(AbortReason.MESOS_ERROR);
+      abort.abort(AbortReason.MESOS_ERROR, Optional.<Throwable>absent());
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {

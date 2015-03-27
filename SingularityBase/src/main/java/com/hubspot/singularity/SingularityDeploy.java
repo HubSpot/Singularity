@@ -29,6 +29,8 @@ public class SingularityDeploy {
   private final Optional<String> customExecutorCmd;
   private final Optional<String> customExecutorId;
   private final Optional<String> customExecutorSource;
+  private final Optional<Resources> customExecutorResources;
+
   private final Optional<Resources> resources;
 
   private final Optional<String> command;
@@ -63,6 +65,7 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorCmd") Optional<String> customExecutorCmd,
       @JsonProperty("customExecutorId") Optional<String> customExecutorId,
       @JsonProperty("customExecutorSource") Optional<String> customExecutorSource,
+      @JsonProperty("customExecutorResources") Optional<Resources> customExecutorResources,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("uris") Optional<List<String>> uris,
@@ -90,6 +93,7 @@ public class SingularityDeploy {
     this.customExecutorCmd = customExecutorCmd;
     this.customExecutorId = customExecutorId;
     this.customExecutorSource = customExecutorSource;
+    this.customExecutorResources = customExecutorResources;
 
     this.metadata = metadata;
     this.version = version;
@@ -190,6 +194,11 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="Custom Mesos executor source.")
   public Optional<String> getCustomExecutorSource() { return customExecutorSource; }
 
+  @ApiModelProperty(required=false, value="Resources to allocate for custom mesos executor")
+  public Optional<Resources> getCustomExecutorResources() {
+    return customExecutorResources;
+  }
+
   @ApiModelProperty(required=false, value="Resources required for this deploy.", dataType="com.hubspot.mesos.Resources")
   public Optional<Resources> getResources() {
     return resources;
@@ -272,6 +281,7 @@ public class SingularityDeploy {
         ", customExecutorCmd=" + customExecutorCmd +
         ", customExecutorId=" + customExecutorId +
         ", customExecutorSource=" + customExecutorSource +
+        ", customExecutorResources=" + customExecutorResources +
         ", resources=" + resources +
         ", command=" + command +
         ", arguments=" + arguments +

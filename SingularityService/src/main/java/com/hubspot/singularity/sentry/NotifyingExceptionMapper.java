@@ -2,6 +2,8 @@ package com.hubspot.singularity.sentry;
 
 import io.dropwizard.jersey.errors.LoggingExceptionMapper;
 
+import java.util.Collections;
+
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
@@ -20,7 +22,7 @@ public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> 
     final Response response = super.toResponse(e);
 
     if (response.getStatus() >= 500) {
-      notifier.notify(e);
+      notifier.notify(e, Collections.<String, String>emptyMap());
     }
 
     return response;

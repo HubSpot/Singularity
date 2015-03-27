@@ -1,6 +1,7 @@
 package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeploy;
@@ -30,6 +31,11 @@ public class SingularityDeployRequest {
   @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request.")
   public Optional<Boolean> getUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy;
+  }
+
+  @JsonIgnore
+  public boolean isUnpauseOnSuccessfulDeploy() {
+    return unpauseOnSuccessfulDeploy.or(Boolean.FALSE);
   }
 
   @ApiModelProperty(required=true, value="The Singularity deploy object")

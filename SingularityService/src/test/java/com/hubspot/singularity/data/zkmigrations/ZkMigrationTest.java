@@ -37,9 +37,9 @@ public class ZkMigrationTest extends SingularityCuratorTestBase {
 
   @Test
   public void testMigrationRunner() {
-    Assert.assertTrue(migrationRunner.checkMigrations() == 4);
+    Assert.assertTrue(migrationRunner.checkMigrations() == 5);
 
-    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("4"));
+    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("5"));
 
     Assert.assertTrue(migrationRunner.checkMigrations() == 0);
   }
