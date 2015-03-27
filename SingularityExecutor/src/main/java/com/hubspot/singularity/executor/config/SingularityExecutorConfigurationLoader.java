@@ -47,6 +47,7 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String TAIL_LOG_LINES_TO_SAVE = "executor.service.log.tail.lines.to.save";
   public static final String TAIL_LOG_FILENAME = "executor.service.log.tail.file.name";
 
+  public static final String S3_FILES_TO_BACKUP = "executor.s3.uploader.extras.files";
   public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
   public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
 
@@ -89,6 +90,8 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
     properties.put(LOGROTATE_STATE_FILE, "logrotate.status");
     properties.put(LOGROTATE_EXTRAS_FILES, "");
     properties.put(LOGROTATE_EXTRAS_DATEFORMAT, "-%Y%m%d");
+
+    properties.put(S3_FILES_TO_BACKUP, "");
 
     properties.put(USE_LOCAL_DOWNLOAD_SERVICE, Boolean.toString(false));
     properties.put(LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(3)));

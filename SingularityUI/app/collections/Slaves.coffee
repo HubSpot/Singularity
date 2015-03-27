@@ -9,8 +9,4 @@ class Slaves extends Collection
 
     initialize: (models) =>
 
-    parse: (slaves) ->
-        _.map slaves, (slave) =>
-            slave
-
 module.exports = Slaves

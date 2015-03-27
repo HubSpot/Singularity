@@ -31,6 +31,7 @@ public class SingularityExecutorTaskCleanup {
 
     if (!Files.exists(taskDirectory)) {
       log.info("Directory {} didn't exist for cleanup", taskDirectory);
+      taskLogManager.removeLogrotateFile();
       return cleanTaskDefinitionFile();
     }
 
@@ -53,7 +54,7 @@ public class SingularityExecutorTaskCleanup {
   public boolean cleanTaskDefinitionFile() {
     Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
 
-    log.info("Successfull cleanup, deleting file {}", taskDefinitionPath);
+    log.info("Successful cleanup, deleting file {}", taskDefinitionPath);
 
     try {
       boolean deleted = Files.deleteIfExists(taskDefinitionPath);
@@ -77,7 +78,7 @@ public class SingularityExecutorTaskCleanup {
           "rm",
           "-rf",
           pathToDelete
-      );
+          );
 
       new SimpleProcessManager(log).runCommand(cmd);
 

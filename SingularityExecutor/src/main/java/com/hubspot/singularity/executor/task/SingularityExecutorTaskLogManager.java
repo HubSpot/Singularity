@@ -4,10 +4,13 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityTaskId;
@@ -88,7 +91,7 @@ public class SingularityExecutorTaskLogManager {
     }
   }
 
-  private boolean removeLogrotateFile() {
+  public boolean removeLogrotateFile() {
     boolean deleted = false;
     try {
       deleted = Files.deleteIfExists(getLogrotateConfPath());
@@ -148,8 +151,16 @@ public class SingularityExecutorTaskLogManager {
     return jsonObjectFileHelper.writeObject(tailMetadata, path, log);
   }
 
+  /**
+   * Return a String for generating a PathMatcher.
+   * The matching files are caught by the S3 Uploader and pushed to S3.
+   * @return file glob String.
+   */
   private String getS3Glob() {
-    return String.format("%s*.gz*", taskDefinition.getServiceLogOutPath().getFileName());
+    List<String> fileNames = new ArrayList<>(configuration.getAdditionalS3FilesToBackup());
+    fileNames.add(taskDefinition.getServiceLogOutPath().getFileName().toString());
+
+    return String.format("{%s}*.gz*", Joiner.on(",").join(fileNames));
   }
 
   private String getS3KeyPattern() {
@@ -171,11 +182,12 @@ public class SingularityExecutorTaskLogManager {
   private boolean writeS3MetadataFile(boolean finished) {
     Path logrotateDirectory = taskDefinition.getServiceLogOutPath().getParent().resolve(configuration.getLogrotateToDirectory());
 
-    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished);
+    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished, Optional.<String> absent(), Optional.<Integer> absent(), Optional.<String> absent(),
+        Optional.<String> absent(), Optional.<Long> absent());
 
-    String s3UploadMetadatafilename = String.format("%s%s", taskDefinition.getTaskId(), configuration.getS3MetadataSuffix());
+    String s3UploadMetadataFileName = String.format("%s%s", taskDefinition.getTaskId(), configuration.getS3MetadataSuffix());
 
-    Path s3UploadMetadataPath = configuration.getS3MetadataDirectory().resolve(s3UploadMetadatafilename);
+    Path s3UploadMetadataPath = configuration.getS3MetadataDirectory().resolve(s3UploadMetadataFileName);
 
     return jsonObjectFileHelper.writeObject(s3UploadMetadata, s3UploadMetadataPath, log);
   }

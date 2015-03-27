@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Singleton;
 
@@ -13,6 +14,7 @@ import org.quartz.CronExpression;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityDockerInfo;
@@ -20,6 +22,7 @@ import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -39,6 +42,8 @@ public class SingularityValidator {
   private final int defaultMemoryMb;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
+  private final boolean createDeployIds;
+  private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
 
@@ -47,6 +52,8 @@ public class SingularityValidator {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
+    this.createDeployIds = configuration.isCreateDeployIds();
+    this.deployIdLength = configuration.getDeployIdLength();
     this.deployHistoryHelper = deployHistoryHelper;
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
@@ -153,14 +160,20 @@ public class SingularityValidator {
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
-  public void checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
-
+  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
 
     String deployId = deploy.getId();
 
-    checkBadRequest(deployId != null, "Id must not be null");
+    if (deployId == null) {
+      checkBadRequest(createDeployIds, "Id must not be null");
+      SingularityDeployBuilder builder = deploy.toBuilder();
+      builder.setId(createUniqueDeployId());
+      deploy = builder.build();
+      deployId = deploy.getId();
+    }
+
     checkBadRequest(!deployId.contains("/") && !deployId.contains("-"), "Id must not be null and can not contain / or - characters");
     checkBadRequest(deployId.length() < maxDeployIdSize, "Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
     checkBadRequest(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
@@ -183,6 +196,14 @@ public class SingularityValidator {
     }
 
     checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
+
+    return deploy;
+  }
+
+  private String createUniqueDeployId() {
+    UUID id = UUID.randomUUID();
+    String result = Hashing.sha256().newHasher().putLong(id.getLeastSignificantBits()).putLong(id.getMostSignificantBits()).hash().toString();
+    return result.substring(0, deployIdLength);
   }
 
   private void checkDocker(SingularityDeploy deploy) {
