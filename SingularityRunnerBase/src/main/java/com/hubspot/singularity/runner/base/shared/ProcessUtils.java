@@ -57,7 +57,12 @@ public class ProcessUtils {
     final long start = System.currentTimeMillis();
 
     if (log.isPresent()) {
-      log.get().info("Signaling {} ({}) to process {}", signal, signal.getCode(), pid);
+      final String logLine = String.format("Signaling %s (%s) to process %s", signal, signal.getCode(), pid);
+      if (signal == Signal.CHECK) {
+        log.get().trace(logLine);
+      } else {
+        log.get().info(logLine);
+      }
     }
 
     try {
