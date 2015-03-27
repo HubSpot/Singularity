@@ -183,8 +183,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
     final Map<SingularityS3Uploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
+    final Map<SingularityS3Uploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
 
     for (final SingularityS3Uploader uploader : metadataToUploader.values()) {
+      final boolean isFinished = isFinished(uploader);
+      // do this here so we run at least once with isFinished = true
+      finishing.put(uploader, isFinished);
+
       futures.put(uploader, executorService.submit(new Callable<Integer>() {
 
         @Override
@@ -192,7 +197,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
           Integer returnValue = 0;
           try {
-            returnValue = uploader.upload(filesToUpload);
+            returnValue = uploader.upload(filesToUpload, isFinished);
           } catch (Throwable t) {
             metrics.error();
             LOG.error("Error while processing uploader {}", uploader, t);
@@ -208,21 +213,16 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     final long now = System.currentTimeMillis();
     final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(metadataToUploader.size());
 
-    // TODO cancel/timeouts?
     for (Entry<SingularityS3Uploader, Future<Integer>> uploaderToFuture : futures.entrySet()) {
       final SingularityS3Uploader uploader = uploaderToFuture.getKey();
       try {
         final int foundFiles = uploaderToFuture.getValue().get();
+        final boolean isFinished = finishing.get(uploader);
 
         if (foundFiles == 0) {
-          final long durationSinceLastFile = now - uploaderLastHadFilesAt.get(uploader);
-          final boolean isFinished = isFinished(uploader);
-
-          if ((durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile()) || isFinished) {
-            LOG.info("Expiring uploader {}", uploader);
+          if (shouldExpire(uploader, isFinished)) {
+            LOG.info("Expiring {}", uploader);
             expiredUploaders.add(uploader);
-          } else {
-            LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, durationSinceLastFile, configuration.getStopCheckingAfterMillisWithoutNewFile(), isFinished);
           }
         } else {
           LOG.trace("Updating uploader {} last expire time", uploader);
@@ -255,6 +255,31 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     return totesUploads;
   }
 
+  private boolean shouldExpire(SingularityS3Uploader uploader, boolean isFinished) {
+    if (isFinished) {
+      return true;
+    }
+
+    if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().isPresent()) {
+      if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().get() < 0) {
+        LOG.trace("{} never expires", uploader);
+        return false;
+      }
+    }
+
+    final long durationSinceLastFile = System.currentTimeMillis() - uploaderLastHadFilesAt.get(uploader);
+
+    final long expireAfterMillis = uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().or(configuration.getStopCheckingAfterMillisWithoutNewFile());
+
+    if (durationSinceLastFile > expireAfterMillis) {
+      return true;
+    } else {
+      LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, JavaUtils.durationFromMillis(durationSinceLastFile), JavaUtils.durationFromMillis(expireAfterMillis), isFinished);
+    }
+
+    return false;
+  }
+
   private boolean isFinished(SingularityS3Uploader uploader) {
     if (expiring.contains(uploader)) {
       return true;
@@ -262,6 +287,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     if (uploader.getUploadMetadata().getPid().isPresent()) {
       if (!processUtils.doesProcessExist(uploader.getUploadMetadata().getPid().get())) {
+        LOG.info("Pid {} not present - expiring uploader {}", uploader.getUploadMetadata().getPid().get(), uploader);
+        expiring.add(uploader);
         return true;
       }
     }

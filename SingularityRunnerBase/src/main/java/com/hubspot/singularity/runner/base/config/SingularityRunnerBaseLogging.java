@@ -73,7 +73,7 @@ public class SingularityRunnerBaseLogging {
     return false;
   }
 
-  private static String obfuscateValue(String value) {
+  public static String obfuscateValue(String value) {
     if (value == null) {
       return value;
     }

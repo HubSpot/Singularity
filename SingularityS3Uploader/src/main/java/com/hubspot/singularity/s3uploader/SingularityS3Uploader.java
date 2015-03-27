@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
@@ -33,6 +34,7 @@ public class SingularityS3Uploader implements Closeable {
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
+  private final Optional<PathMatcher> finishedPathMatcher;
   private final String fileDirectory;
   private final S3Service s3Service;
   private final S3Bucket s3Bucket;
@@ -43,8 +45,8 @@ public class SingularityS3Uploader implements Closeable {
   public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
     AWSCredentials credentials = defaultCredentials;
 
-    if (uploadMetadata.getS3Secret().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
-      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3Secret().get());
+    if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
+      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
     }
 
     try {
@@ -57,6 +59,13 @@ public class SingularityS3Uploader implements Closeable {
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
     this.pathMatcher = fileSystem.getPathMatcher("glob:" + uploadMetadata.getFileGlob());
+
+    if (uploadMetadata.getOnFinishGlob().isPresent()) {
+      finishedPathMatcher = Optional.of(fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get()));
+    } else {
+      finishedPathMatcher = Optional.<PathMatcher> absent();
+    }
+
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
@@ -84,7 +93,7 @@ public class SingularityS3Uploader implements Closeable {
     return "SingularityS3Uploader [uploadMetadata=" + uploadMetadata + ", metadataPath=" + metadataPath + "]";
   }
 
-  public int upload(Set<Path> synchronizedToUpload) throws IOException {
+  public int upload(Set<Path> synchronizedToUpload, boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
 
@@ -97,8 +106,12 @@ public class SingularityS3Uploader implements Closeable {
 
     for (Path file : JavaUtils.iterable(directory)) {
       if (!pathMatcher.matches(file.getFileName())) {
-        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
-        continue;
+        if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(file.getFileName())) {
+          LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+          continue;
+        } else {
+          LOG.trace("Not skipping file {} because it matched finish glob {}", file, uploadMetadata.getOnFinishGlob().get());
+        }
       }
 
       if (Files.size(file) == 0) {
@@ -140,7 +153,7 @@ public class SingularityS3Uploader implements Closeable {
         Files.delete(file);
       } catch (S3ServiceException se) {
         metrics.error();
-        LOG.warn("{} Couldn't upload due to {} ({}) - {}", logIdentifier, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage());
+        LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
       } catch (Exception e) {
         metrics.error();
         LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
