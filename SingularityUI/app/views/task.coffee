@@ -9,7 +9,7 @@ class TaskView extends View
     events: ->
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
-            'click [data-action="viewLbJSON"]': 'viewLoadBalancerJSON'
+            'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
 
     initialize: ({@taskId}) ->
@@ -31,23 +31,24 @@ class TaskView extends View
     viewJson: (event) ->
         utils.viewJSON @model
 
-    viewLoadBalancerJSON: (event) =>
-        lbIndex = $(event.target).data('lbIndex')
+    viewJsonProperty: (event) =>        
+        index = $(event.target).data('index')
+        objKey = $(event.target).data('key')
 
         # Clone the model so we can use the viewJSON
         # method which requires a model
-        lbModel = @model.clone()
-        lbModel.synced = true
+        modelClone = $.extend true, {}, @model
+        modelClone.synced = true
 
         # remove unwanted attributes and
-        # only keep the chosen LB info
-        for own key, value of lbModel.attributes
-            if key isnt 'loadBalancerUpdates'
-                lbModel.unset key, {silent:true}
+        # only keep the chosen attribute
+        for own key, value of modelClone.attributes
+            if key isnt objKey
+                modelClone.unset key, {silent:true}
             else
-                lbModel.attributes[key].splice 0, lbModel.attributes[key].length, value[lbIndex]
+                modelClone.attributes[key].splice 0, modelClone.attributes[key].length, value[index]
 
-        utils.viewJSON lbModel
+        utils.viewJSON modelClone
 
     killTask: (event) ->
         taskModel = new Task id: @taskId

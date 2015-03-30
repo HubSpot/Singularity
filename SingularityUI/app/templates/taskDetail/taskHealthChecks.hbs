@@ -25,11 +25,11 @@
                             <td>
                                {{statusCode}}
                             </td>
-                            <td> {{responseBody}}
-                                                           
+                            <td> 
+                                {{errorMessage}}
                             </td>
                             <td class="actions-column">
-                                <a data-index="{{@index}}" data-action="viewHealthCheckJSON" title="JSON">
+                                <a data-index="{{@index}}" data-key="healthcheckResults" data-action="viewJsonProperty" title="JSON">
                                     { }
                                 </a>
                             </td>
