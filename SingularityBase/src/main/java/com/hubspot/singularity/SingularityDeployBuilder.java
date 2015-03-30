@@ -23,6 +23,8 @@ public class SingularityDeployBuilder {
   private Optional<String> customExecutorCmd;
   private Optional<String> customExecutorId;
   private Optional<String> customExecutorSource;
+  private Optional<Resources> customExecutorResources;
+
   private Optional<Resources> resources;
 
   private Optional<String> command;
@@ -54,6 +56,7 @@ public class SingularityDeployBuilder {
     this.customExecutorCmd = Optional.absent();
     this.customExecutorId = Optional.absent();
     this.customExecutorSource = Optional.absent();
+    this.customExecutorResources = Optional.absent();
     this.resources = Optional.absent();
     this.command = Optional.absent();
     this.arguments = Optional.absent();
@@ -72,7 +75,7 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
         healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
   }
 
@@ -158,6 +161,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setCustomExecutorSource(Optional<String> customExecutorSource) {
     this.customExecutorSource = customExecutorSource;
+    return this;
+  }
+
+  public Optional<Resources> getCustomExecutorResources() {
+    return customExecutorResources;
+  }
+
+  public SingularityDeployBuilder setCustomExecutorResources(Optional<Resources> customExecutorResources) {
+    this.customExecutorResources = customExecutorResources;
     return this;
   }
 
@@ -299,6 +311,7 @@ public class SingularityDeployBuilder {
         ", customExecutorCmd=" + customExecutorCmd +
         ", customExecutorId=" + customExecutorId +
         ", customExecutorSource=" + customExecutorSource +
+        ", customExecutorResources=" + customExecutorResources +
         ", resources=" + resources +
         ", command=" + command +
         ", arguments=" + arguments +

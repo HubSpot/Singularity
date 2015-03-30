@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Scheduler;
@@ -17,9 +18,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.groupon.mesos.JesosSchedulerDriver;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.resources.UiResource;
 
 @Singleton
 public class SingularityDriver {
@@ -31,14 +37,29 @@ public class SingularityDriver {
   private final SchedulerDriver driver;
 
   @Inject
-  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final MesosConfiguration configuration) throws IOException {
-    this.frameworkInfo = Protos.FrameworkInfo.newBuilder()
+  SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final SingularityConfiguration singularityConfiguration, final MesosConfiguration configuration,
+                    @Named(SingularityMainModule.SINGULARITY_URI_BASE) final String singularityUriBase) throws IOException {
+    final FrameworkInfo.Builder frameworkInfoBuilder = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())
         .setName(configuration.getFrameworkName())
         .setId(FrameworkID.newBuilder().setValue(configuration.getFrameworkId()))
-        .setUser("")  // let mesos assign
-        .build();
+        .setUser("");  // let mesos assign
+
+    if (singularityConfiguration.getHostname().isPresent()) {
+      frameworkInfoBuilder.setHostname(singularityConfiguration.getHostname().get());
+    }
+
+    // only set the web UI URL if it's fully qualified
+    if (singularityUriBase.startsWith("http://") || singularityUriBase.startsWith("https://")) {
+      if (singularityConfiguration.getUiConfiguration().getRootUrlMode() == UIConfiguration.RootUrlMode.INDEX_CATCHALL) {
+        frameworkInfoBuilder.setWebuiUrl(singularityUriBase);
+      } else {
+        frameworkInfoBuilder.setWebuiUrl(singularityUriBase + UiResource.UI_RESOURCE_LOCATION);
+      }
+    }
+
+    this.frameworkInfo = frameworkInfoBuilder.build();
 
     this.scheduler = scheduler;
 

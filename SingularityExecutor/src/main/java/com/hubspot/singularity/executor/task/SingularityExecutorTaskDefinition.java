@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 
 public class SingularityExecutorTaskDefinition {
@@ -17,14 +18,16 @@ public class SingularityExecutorTaskDefinition {
   private final String serviceLogOut;
   private final String taskAppDirectory;
   private final String logrotateStateFile;
+  private final String executorPid;
 
   @JsonCreator
-  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory,
+  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, @JsonProperty("executorPid") String executorPid,
       @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile) {
     this.executorData = executorData;
     this.taskId = taskId;
     this.taskDirectoryPath = Paths.get(taskDirectory);
 
+    this.executorPid = executorPid;
     this.executorBashOut = executorBashOut;
     this.serviceLogOut = serviceLogOut;
     this.taskAppDirectory = taskAppDirectory;
@@ -84,10 +87,23 @@ public class SingularityExecutorTaskDefinition {
     return taskId;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityExecutorTaskDefinition [taskId=" + taskId + "]";
+  public String getExecutorPid() {
+    return executorPid;
   }
 
+  @JsonIgnore
+  public Optional<Integer> getExecutorPidSafe() {
+    try {
+      return Optional.of(Integer.parseInt(executorPid));
+    } catch (NumberFormatException nfe) {
+      return Optional.<Integer> absent();
+    }
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityExecutorTaskDefinition [executorData=" + executorData + ", taskId=" + taskId + ", taskDirectoryPath=" + taskDirectoryPath + ", executorBashOut=" + executorBashOut
+        + ", serviceLogOut=" + serviceLogOut + ", taskAppDirectory=" + taskAppDirectory + ", logrotateStateFile=" + logrotateStateFile + ", executorPid=" + executorPid + "]";
+  }
 
 }

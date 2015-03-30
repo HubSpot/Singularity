@@ -139,7 +139,7 @@ class NewDeployView extends FormBaseView
                             name:     @valOrNothing '.name', $artifact
                             filename: @valOrNothing '.filename', $artifact
                             md5sum:   @valOrNothing '.md5', $artifact
-                            content:  @valOrNothing '.content', $artifact
+                            content:  @base64Encode @valOrNothing '.content', $artifact
                     else if type is 'external'
                         deployObject.executorData.externalArtifacts = [] unless deployObject.executorData.externalArtifacts
                         deployObject.executorData.externalArtifacts.push

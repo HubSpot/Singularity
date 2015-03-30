@@ -1,25 +1,24 @@
 package com.hubspot.singularity.scheduler;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -31,7 +30,7 @@ import com.ning.http.client.RequestBuilder;
 
 @SuppressWarnings("deprecation")
 @Singleton
-public class SingularityHealthchecker implements Managed {
+public class SingularityHealthchecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -48,7 +47,9 @@ public class SingularityHealthchecker implements Managed {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityHealthchecker(AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
+  public SingularityHealthchecker(@Named(SingularityMainModule.HEALTHCHECK_THREADPOOL_NAME) ScheduledExecutorService executorService,
+      AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
+      TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
@@ -58,16 +59,7 @@ public class SingularityHealthchecker implements Managed {
 
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
 
-    this.executorService = Executors.newScheduledThreadPool(configuration.getHealthcheckStartThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityHealthchecker-%d").build());
-  }
-
-  @Override
-  public void start() {
-  }
-
-  @Override
-  public void stop() {
-    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
+    this.executorService = executorService;
   }
 
   public void enqueueHealthcheck(SingularityTask task) {
@@ -104,7 +96,7 @@ public class SingularityHealthchecker implements Managed {
   }
 
   private ScheduledFuture<?> enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace("Enqueing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
+    LOG.trace("En-queuing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
 
     return executorService.schedule(new Runnable() {
 
@@ -116,11 +108,24 @@ public class SingularityHealthchecker implements Managed {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+
+          reEnqueueOrAbort(task);
         }
       }
 
     }, delaySeconds, TimeUnit.SECONDS);
+  }
+
+  public void reEnqueueOrAbort(SingularityTask task) {
+    try {
+      enqueueHealthcheck(task);
+    } catch (Throwable t) {
+      LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+
+      abort.abort(SingularityAbort.AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+    }
   }
 
   private Optional<String> getHealthcheckUri(SingularityTask task) {
@@ -159,6 +164,13 @@ public class SingularityHealthchecker implements Managed {
       return false;
     }
 
+    Optional<SingularityTaskHealthcheckResult> lastHealthcheck = taskManager.getLastHealthcheck(task.getTaskId());
+
+    if (lastHealthcheck.isPresent() && !lastHealthcheck.get().isFailed()) {
+      LOG.debug("Not submitting a new healthcheck for {} because it already passed a healthcheck", task.getTaskId());
+      return false;
+    }
+
     return true;
   }
 
@@ -187,7 +199,7 @@ public class SingularityHealthchecker implements Managed {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }
