@@ -29,7 +29,7 @@ def unpack_logs(args, logs):
           sys.stderr.write(colored('Unpacked ', 'green') + colored(zipped_file, 'white') + '\n')
         else:
           sys.stderr.write(colored('.', 'green'))
-      successful.append(unzipped)
+        successful.append(unzipped)
     except Exception as e:
       print e
       if os.path.isfile(zipped_file):
