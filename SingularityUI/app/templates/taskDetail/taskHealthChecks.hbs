@@ -8,10 +8,10 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Time Occured</th>
+                            <th>Timestamp</th>
                             <th>Duration</th>
-                            <th>Status</th>
-                            <th>errorMessage</th>
+                            <th>HTTP Status</th>
+                            <th>Message</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,6 +44,11 @@
                 No Health Checks
             </div>
         {{/ifGT}}
+        {{#if data.task.taskRequest.deploy.skipHealthChecksOnDeploy }}
+            <div class="empty-table-message">
+                Healthchecks are disabled for this deploy
+            </div>
+        {{/if}}
     {{/ifGT}}
 {{else}}
     <div class="page-loader centered cushy"></div>

@@ -28,7 +28,7 @@ class TaskView extends View
     viewJson: (event) ->
         utils.viewJSON @model
 
-    viewJsonProperty: (event) =>        
+    viewJsonProperty: (event) =>
         index = $(event.target).data('index')
         objKey = $(event.target).data('key')
 
