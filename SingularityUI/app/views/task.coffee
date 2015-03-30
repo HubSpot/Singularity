@@ -1,7 +1,5 @@
 View = require './view'
 
-Task = require '../models/Task'
-
 class TaskView extends View
 
     baseTemplate: require '../templates/taskDetail/taskBase'
@@ -11,7 +9,6 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
-
     initialize: ({@taskId}) ->
 
     render: ->
@@ -54,5 +51,7 @@ class TaskView extends View
         taskModel = new Task id: @taskId
         taskModel.promptKill =>
             setTimeout (=> @trigger 'refreshrequest'), 1000
+
+
 
 module.exports = TaskView
