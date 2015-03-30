@@ -274,7 +274,7 @@ public class SingularityDeployChecker {
   }
 
   private SingularityDeployResult enqueueSwitchLoadBalancer(SingularityRequest request, SingularityDeploy deploy, SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
-    if (configuration.getLoadBalancerUri() == null) {
+    if (configuration.getLoadBalancerUri() == null && !configuration.getLoadBalancerConfig().isPresent()) {
       LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
       return new SingularityDeployResult(DeployState.FAILED, "No valid load balancer URI was present");
     }
@@ -286,6 +286,8 @@ public class SingularityDeployChecker {
     updateLoadBalancerStateForTasks(deployTasks, LoadBalancerRequestType.ADD, new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.<String> absent()));
 
     SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(lbRequestId, request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
+
+    updateLoadBalancerStateForTasks(deployTasks, LoadBalancerRequestType.ADD, enqueueResult);
 
     DeployState deployState = interpretLoadBalancerState(enqueueResult, DeployState.WAITING);
 
@@ -368,6 +370,8 @@ public class SingularityDeployChecker {
 
     if (shouldCheckLbState(pendingDeploy)) {
       final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(getLoadBalancerRequestId(pendingDeploy.getDeployMarker()));
+
+      updateLoadBalancerStateForTasks(deployActiveTasks, LoadBalancerRequestType.ADD, lbUpdate);
 
       DeployState deployState = interpretLoadBalancerState(lbUpdate, pendingDeploy.getCurrentDeployState());
 

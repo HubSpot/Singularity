@@ -96,10 +96,13 @@ public class SingularityConfiguration extends Configuration {
 
   private int listenerThreadpoolSize = 3;
 
+  @JsonProperty("baragon")
+  private Optional<LoadBalancerConfiguration> loadBalancerConfig = Optional.absent();
+
   @JsonProperty("loadBalancerQueryParams")
   private Map<String, String> loadBalancerQueryParams;
 
-  private long loadBalancerRequestTimeoutMillis = 2000;
+  private int loadBalancerRequestTimeoutMillis = 2000;
 
   private String loadBalancerUri;
 
@@ -302,14 +305,21 @@ public class SingularityConfiguration extends Configuration {
     return listenerThreadpoolSize;
   }
 
+  public Optional<LoadBalancerConfiguration> getLoadBalancerConfig() {
+    return loadBalancerConfig;
+  }
+
+  @Deprecated
   public Optional<Map<String, String>> getLoadBalancerQueryParams() {
     return Optional.fromNullable(loadBalancerQueryParams);
   }
 
-  public long getLoadBalancerRequestTimeoutMillis() {
+  @Deprecated
+  public int getLoadBalancerRequestTimeoutMillis() {
     return loadBalancerRequestTimeoutMillis;
   }
 
+  @Deprecated
   public String getLoadBalancerUri() {
     return loadBalancerUri;
   }
@@ -578,7 +588,7 @@ public class SingularityConfiguration extends Configuration {
     this.loadBalancerQueryParams = loadBalancerQueryParams;
   }
 
-  public void setLoadBalancerRequestTimeoutMillis(long loadBalancerRequestTimeoutMillis) {
+  public void setLoadBalancerRequestTimeoutMillis(int loadBalancerRequestTimeoutMillis) {
     this.loadBalancerRequestTimeoutMillis = loadBalancerRequestTimeoutMillis;
   }
 
