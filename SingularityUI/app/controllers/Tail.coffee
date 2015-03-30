@@ -16,10 +16,10 @@ class TailController extends Controller
             model: @models.taskHistory
 
         app.showView @view
+        @collections.logLines.fetchInitialData()
         @refresh()
 
     refresh: ->
-        @collections.logLines.fetchInitialData()
         @models.taskHistory.fetch()
 
 
