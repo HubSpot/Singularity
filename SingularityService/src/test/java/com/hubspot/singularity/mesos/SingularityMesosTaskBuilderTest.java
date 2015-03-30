@@ -120,7 +120,9 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         Type.DOCKER,
-        Optional.of(Collections.singletonList(new SingularityVolume("/container", Optional.of("/host"), Mode.RW))),
+        Optional.of(Arrays.asList(
+                new SingularityVolume("/container", Optional.of("/host"), Mode.RW),
+                new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}"), Mode.RO))),
         Optional.of(new SingularityDockerInfo("docker-image", true, Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setContainerInfo(Optional.of(containerInfo))
@@ -138,9 +140,14 @@ public class SingularityMesosTaskBuilderTest {
     assertEquals(Type.DOCKER, task.getMesosTask().getContainer().getType());
     assertEquals("docker-image", task.getMesosTask().getContainer().getDocker().getImage());
     assertTrue(task.getMesosTask().getContainer().getDocker().getPrivileged());
+
     assertEquals("/container", task.getMesosTask().getContainer().getVolumes(0).getContainerPath());
     assertEquals("/host", task.getMesosTask().getContainer().getVolumes(0).getHostPath());
     assertEquals(Mode.RW, task.getMesosTask().getContainer().getVolumes(0).getMode());
+
+    assertEquals(String.format("/container/%s/%s", task.getTaskRequest().getDeploy().getRequestId(), task.getTaskRequest().getDeploy().getId()), task.getMesosTask().getContainer().getVolumes(1).getContainerPath());
+    assertEquals(String.format("/host/%s/%s", task.getTaskRequest().getDeploy().getRequestId(), task.getTaskRequest().getDeploy().getId()), task.getMesosTask().getContainer().getVolumes(1).getHostPath());
+    assertEquals(Mode.RO, task.getMesosTask().getContainer().getVolumes(1).getMode());
 
     assertEquals(80, task.getMesosTask().getContainer().getDocker().getPortMappings(0).getContainerPort());
     assertEquals(8080, task.getMesosTask().getContainer().getDocker().getPortMappings(0).getHostPort());
