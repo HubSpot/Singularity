@@ -21,6 +21,12 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
         return options.inverse @ unless condition?
     options.fn @
 
+Handlebars.registerHelper 'ifCoercedBooleanIsTrue', (value, options) ->
+    if !!value
+        options.fn @
+    else 
+        options.inverse @
+
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100
 
