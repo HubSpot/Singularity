@@ -99,4 +99,3 @@ Handlebars.registerHelper 'usernameFromEmail', (email) ->
 
 Handlebars.registerHelper 'parseJSON', (string, property) ->
     json = JSON.parse string
-    console.log json
