@@ -1,47 +1,49 @@
 {{#if synced}}
-    <div class="page-header">
-        <h2>Health Checks</h2>
-    </div>
-    {{#ifGT data.healthcheckResults.length 0}}
-        <div class="table-container">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Time Occured</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th>errorMessage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each data.healthcheckResults}}
+    {{#ifGT data.task.taskRequest.deploy.healthcheckUri.length 0}}
+        <div class="page-header">
+            <h2>Healthchecks</h2>
+        </div>
+        {{#ifGT data.healthcheckResults.length 0}}
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td>
-                               {{timestampFormatted timestamp}}
-                            </td>
-                            <td>
-                               {{durationMillis}}{{#if durationMillis}}ms{{/if}}
-                            </td>
-                            <td>
-                               {{statusCode}}
-                            </td>
-                            <td> 
-                                {{errorMessage}}
-                            </td>
-                            <td class="actions-column">
-                                <a data-index="{{@index}}" data-key="healthcheckResults" data-action="viewJsonProperty" title="JSON">
-                                    { }
-                                </a>
-                            </td>
+                            <th>Time Occured</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>errorMessage</th>
                         </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
-    {{else}}
-        <div class="empty-table-message">
-            No Health Checks
-        </div>
+                    </thead>
+                    <tbody>
+                        {{#each data.healthcheckResults}}
+                            <tr>
+                                <td>
+                                   {{timestampFormatted timestamp}}
+                                </td>
+                                <td>
+                                   {{durationMillis}}{{#if durationMillis}}ms{{/if}}
+                                </td>
+                                <td>
+                                   {{statusCode}}
+                                </td>
+                                <td> 
+                                    {{errorMessage}}
+                                </td>
+                                <td class="actions-column">
+                                    <a data-index="{{@index}}" data-key="healthcheckResults" data-action="viewJsonProperty" title="JSON">
+                                        { }
+                                    </a>
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        {{else}}
+            <div class="empty-table-message">
+                No Health Checks
+            </div>
+        {{/ifGT}}
     {{/ifGT}}
 {{else}}
     <div class="page-loader centered cushy"></div>
