@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
@@ -37,7 +38,6 @@ import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
-import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -171,6 +171,20 @@ class SingularityMesosTaskBuilder {
         .build());
   }
 
+  private String fillInTaskIdValues(String string, SingularityTaskId taskId) {
+    if (!Strings.isNullOrEmpty(string)) {
+      string = string.replace("${TASK_REQUEST_ID}", taskId.getRequestId())
+              .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
+              .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
+              .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
+              .replace("${TASK_HOST}", taskId.getHost())
+              .replace("${TASK_RACK_ID}", taskId.getRackId())
+              .replace("${TASK_ID}", taskId.toString());
+    }
+
+    return string;
+  }
+
   private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
     containerBuilder.setType(containerInfo.getType());
@@ -202,9 +216,9 @@ class SingularityMesosTaskBuilder {
 
     for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
       final Volume.Builder volumeBuilder = Volume.newBuilder();
-      volumeBuilder.setContainerPath(volumeInfo.getContainerPath());
+      volumeBuilder.setContainerPath(fillInTaskIdValues(volumeInfo.getContainerPath(), taskId));
       if (volumeInfo.getHostPath().isPresent()) {
-        volumeBuilder.setHostPath(volumeInfo.getHostPath().get());
+        volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), taskId));
       }
       volumeBuilder.setMode(volumeInfo.getMode());
       containerBuilder.addVolumes(volumeBuilder);
