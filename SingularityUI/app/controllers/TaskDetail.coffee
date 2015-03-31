@@ -20,6 +20,8 @@ class TaskDetailController extends Controller
         overview:      require '../templates/taskDetail/taskOverview'
         history:       require '../templates/taskDetail/taskHistory'
         logs:          require '../templates/taskDetail/taskS3Logs'
+        lbUpdates:     require '../templates/taskDetail/taskLbUpdates'
+        healthChecks:  require '../templates/taskDetail/taskHealthChecks'
         info:          require '../templates/taskDetail/taskInfo'
         environment:   require '../templates/taskDetail/taskEnvironment'
         resourceUsage: require '../templates/taskDetail/taskResourceUsage'
@@ -62,6 +64,14 @@ class TaskDetailController extends Controller
         @subviews.s3Logs = new ExpandableTableSubview
             collection: @collections.s3Logs
             template:   @templates.logs
+
+        @subviews.lbUpdates = new SimpleSubview
+            model:    @models.task
+            template:   @templates.lbUpdates
+
+        @subviews.healthChecks = new SimpleSubview
+            model:    @models.task
+            template:   @templates.healthChecks
 
         @subviews.info = new SimpleSubview
             model:    @models.task
