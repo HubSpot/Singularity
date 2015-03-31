@@ -11,7 +11,7 @@
                             <th>Timestamp</th>
                             <th>Duration</th>
                             <th>HTTP Status</th>
-                            <th>Message</th>
+                            <th>Response</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -27,7 +27,7 @@
                                    {{statusCode}}
                                 </td>
                                 <td> 
-                                    {{errorMessage}}
+                                    {{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}
                                 </td>
                                 <td class="actions-column">
                                     <a data-index="{{@index}}" data-key="healthcheckResults" data-action="viewJsonProperty" title="JSON">
