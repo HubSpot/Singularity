@@ -10,7 +10,7 @@
                         <tr>
                             <th>Timestamp</th>
                             <th>Duration</th>
-                            <th>HTTP Status</th>
+                            <th>Status</th>
                             <th>Response</th>
                         </tr>
                     </thead>
@@ -24,7 +24,15 @@
                                    {{durationMillis}}{{#if durationMillis}}ms{{/if}}
                                 </td>
                                 <td>
-                                   {{statusCode}}
+                                    {{#if statusCode}}
+                                        {{#ifEqual statusCode 200}}
+                                            <span class="label label-success">HTTP {{statusCode}}</span>
+                                        {{else}}
+                                            <span class="label label-danger">HTTP {{statusCode}}</span>
+                                        {{/ifEqual}}
+                                    {{else}}
+                                        <span class="label label-warning">No Response</span>
+                                    {{/if}}
                                 </td>
                                 <td> 
                                     {{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}
