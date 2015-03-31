@@ -1,5 +1,5 @@
 {{#if synced}}
-    {{#ifCoercedBooleanIsTrue data.task.taskRequest.deploy.healthcheckUri}}
+    {{#if data.task.taskRequest.deploy.healthcheckUri}}
         <div class="page-header">
             <h2>Healthchecks</h2>
         </div>
@@ -41,7 +41,7 @@
             </div>
         {{else}}
             <div class="empty-table-message">
-                No Health Checks
+                No Healthchecks
             </div>
         {{/ifGT}}
         {{#if data.task.taskRequest.deploy.skipHealthChecksOnDeploy }}
@@ -49,7 +49,7 @@
                 Healthchecks are disabled for this deploy
             </div>
         {{/if}}
-    {{/ifCoercedBooleanIsTrue}}
+    {{/if}}
 {{else}}
     <div class="page-loader centered cushy"></div>
 {{/if}}
