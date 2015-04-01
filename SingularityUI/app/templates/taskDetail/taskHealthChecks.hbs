@@ -3,6 +3,9 @@
         <div class="page-header">
             <h2>Healthchecks</h2>
         </div>
+        <div class="well">
+            Beginning on <span class="healthcheck-number">Task running</span>, hit <a class="healthcheck-link" target="_blank" href="http://{{data.task.offer.hostname}}:{{data.ports.[0]}}{{data.task.taskRequest.deploy.healthcheckUri}}">{{data.task.taskRequest.deploy.healthcheckUri}}</a> with a <span class="healthcheck-number">{{#if data.task.taskRequest.deploy.healthcheckTimeoutSeconds}}{{data.task.taskRequest.deploy.healthcheckTimeoutSeconds}}{{else}}{{config.defaultHealthcheckTimeoutSeconds}}{{/if}}</span> second timeout every <span class="healthcheck-number">{{#if data.task.taskRequest.deploy.healthcheckIntervalSeconds}}{{data.task.taskRequest.deploy.healthcheckIntervalSeconds}}{{else}}{{config.defaultHealthcheckIntervalSeconds}}{{/if}}</span> second(s) until <span class="healthcheck-number">HTTP 200</span> is received, or <span class="healthcheck-number">{{#if data.task.taskRequest.deploy.deployHealthTimeoutSeconds}}{{data.task.taskRequest.deploy.deployHealthTimeoutSeconds}}{{else}}{{config.defaultDeployHealthTimeoutSeconds}}{{/if}}</span> seconds have elapsed.
+        </div>
         {{#ifGT data.healthcheckResults.length 0}}
             <div class="table-container">
                 <table class="table table-striped">
@@ -11,14 +14,14 @@
                             <th>Timestamp</th>
                             <th>Duration</th>
                             <th>Status</th>
-                            <th>Response</th>
+                            <th>Message</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#each data.healthcheckResults}}
                             <tr>
                                 <td>
-                                   {{timestampFormatted timestamp}}
+                                   {{timestampFormattedWithSeconds timestamp}}
                                 </td>
                                 <td>
                                    {{durationMillis}}{{#if durationMillis}}ms{{/if}}
@@ -34,8 +37,8 @@
                                         <span class="label label-warning">No Response</span>
                                     {{/if}}
                                 </td>
-                                <td> 
-                                    {{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}
+                                <td>
+                                    <pre class="healthcheck-message">{{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}</pre>
                                 </td>
                                 <td class="actions-column">
                                     <a data-index="{{@index}}" data-key="healthcheckResults" data-action="viewJsonProperty" title="JSON">

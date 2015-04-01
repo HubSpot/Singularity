@@ -76,6 +76,11 @@ Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
     timeObject = moment timestamp
     timeObject.format 'lll'
 
+Handlebars.registerHelper 'timestampFormattedWithSeconds', (timestamp) ->
+    return '' if not timestamp
+    timeObject = moment timestamp
+    timeObject.format 'lll:ss'
+
 # 'DRIVER_NOT_RUNNING' => 'Driver not running'
 Handlebars.registerHelper 'humanizeText', (text) ->
     return '' if not text
