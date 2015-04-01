@@ -21,6 +21,8 @@ import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
  * %m - adds month
  * %d - adds day of the month
  * %s - adds milliseconds
+ * %guid - adds a guid
+ * %host - adds the hostname
  * %index - adds the index of the file uploaded at this moment (to preserve uniqueness)
  *
  * For example, if the s3KeyFormat was: %filename-%Y and the file name on local disk was "file1.txt" the S3 key would be : s3Bucket/file1.txt-2015 (assuming current year is 2015)

@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityS3FormatHelper {
 
@@ -41,23 +43,49 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
 
-  public static String getKey(String s3KeyFormat, int sequence, long timestamp, String filename) {
+  public static String getKey(String s3KeyFormat, int sequence, long timestamp, String filename, Optional<String> hostname) {
     final Calendar calendar = Calendar.getInstance();
     calendar.setTimeInMillis(timestamp);
 
-    s3KeyFormat = s3KeyFormat.replace("%filename", filename);
-
-    int lastPeriod = filename.lastIndexOf(".");
-
-    if (lastPeriod > -1) {
-      s3KeyFormat = s3KeyFormat.replace("%fileext", filename.substring(lastPeriod));
+    if (s3KeyFormat.contains("%filename")) {
+      s3KeyFormat = s3KeyFormat.replace("%filename", filename);
     }
 
-    s3KeyFormat = s3KeyFormat.replace("%Y", getYear(calendar.get(Calendar.YEAR)));
-    s3KeyFormat = s3KeyFormat.replace("%m", getDayOrMonth(getMonth(calendar)));
-    s3KeyFormat = s3KeyFormat.replace("%d", getDayOrMonth(calendar.get(Calendar.DAY_OF_MONTH)));
-    s3KeyFormat = s3KeyFormat.replace("%s", Long.toString(timestamp));
-    s3KeyFormat = s3KeyFormat.replace("%index", Integer.toString(sequence));
+    if (s3KeyFormat.contains("%fileext")) {
+      int lastPeriod = filename.lastIndexOf(".");
+
+      if (lastPeriod > -1) {
+        s3KeyFormat = s3KeyFormat.replace("%fileext", filename.substring(lastPeriod));
+      }
+    }
+
+    if (s3KeyFormat.contains("%guid")) {
+      s3KeyFormat = s3KeyFormat.replace("%guid", UUID.randomUUID().toString());
+    }
+
+    if (s3KeyFormat.contains("%host")) {
+      s3KeyFormat = s3KeyFormat.replace("%host", hostname.or(JavaUtils.getHostName().or("unknownhost")));
+    }
+
+    if (s3KeyFormat.contains("%Y")) {
+      s3KeyFormat = s3KeyFormat.replace("%Y", getYear(calendar.get(Calendar.YEAR)));
+    }
+
+    if (s3KeyFormat.contains("%m")) {
+      s3KeyFormat = s3KeyFormat.replace("%m", getDayOrMonth(getMonth(calendar)));
+    }
+
+    if (s3KeyFormat.contains("%d")) {
+      s3KeyFormat = s3KeyFormat.replace("%d", getDayOrMonth(calendar.get(Calendar.DAY_OF_MONTH)));
+    }
+
+    if (s3KeyFormat.contains("%s")) {
+      s3KeyFormat = s3KeyFormat.replace("%s", Long.toString(timestamp));
+    }
+
+    if (s3KeyFormat.contains("%index")) {
+      s3KeyFormat = s3KeyFormat.replace("%index", Integer.toString(sequence));
+    }
 
     return s3KeyFormat;
   }
