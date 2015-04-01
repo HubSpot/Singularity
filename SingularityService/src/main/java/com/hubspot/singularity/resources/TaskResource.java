@@ -6,9 +6,13 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -21,6 +25,8 @@ import javax.ws.rs.core.Response.Status;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.client.MesosClient;
@@ -31,12 +37,18 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
+import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
@@ -52,35 +64,34 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class TaskResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
 
-  private final TaskManager taskManager;
-  private final SlaveManager slaveManager;
-  private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
+  private final SlaveManager slaveManager;
+  private final TaskManager taskManager;
+  private final TaskRequestManager taskRequestManager;
+  private final Map<String, ShellCommandDescriptor> shellCommands;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, UIConfiguration uiConfiguration) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
+
+    this.shellCommands = Maps.newHashMapWithExpectedSize(uiConfiguration.getShellCommands().size());
+
+    for (ShellCommandDescriptor shellCommand : uiConfiguration.getShellCommands()) {
+      shellCommands.put(shellCommand.getName(), shellCommand);
+    }
   }
 
-  @GET
-  @PropertyFiltering
-  @Path("/scheduled")
-  @ApiOperation("Retrieve list of scheduled tasks.")
-  public List<SingularityTaskRequest> getScheduledTasks() {
-    final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
+  private SingularityTask checkActiveTask(String taskId) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
-    return taskRequestManager.getTaskRequests(tasks);
-  }
+    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
-  @GET
-  @PropertyFiltering
-  @Path("/scheduled/ids")
-  @ApiOperation("Retrieve list of scheduled task IDs.")
-  public List<SingularityPendingTaskId> getScheduledTaskIds() {
-    return taskManager.getPendingTaskIds();
+    checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
+
+    return task.get();
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -100,40 +111,10 @@ public class TaskResource {
   }
 
   @GET
-  @PropertyFiltering
-  @Path("/scheduled/task/{pendingTaskId}")
-  @ApiOperation("Retrieve information about a pending task.")
-  public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
-    Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
-
-    checkNotFound(pendingTask.isPresent(), "Couldn't find %s", pendingTaskIdStr);
-
-    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask.get()));
-
-    checkNotFound(!taskRequestList.isEmpty(), "Couldn't find: " + pendingTaskIdStr);
-
-    return Iterables.getFirst(taskRequestList, null);
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/scheduled/request/{requestId}")
-  @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
-  public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
-    final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
-
-    return taskRequestManager.getTaskRequests(tasks);
-  }
-
-  @GET
-  @Path("/active/slave/{slaveId}")
-  @ApiOperation("Retrieve list of active tasks on a specific slave.")
-  public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
-
-    checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
-
-    return taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get());
+  @Path("/task/{taskId}")
+  @ApiOperation("Retrieve information about a specific active task.")
+  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
+    return checkActiveTask(taskId);
   }
 
   @GET
@@ -160,21 +141,66 @@ public class TaskResource {
     return taskManager.getLBCleanupTasks();
   }
 
-  private SingularityTask checkActiveTask(String taskId) {
-    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled/task/{pendingTaskId}")
+  @ApiOperation("Retrieve information about a pending task.")
+  public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
+    Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
 
-    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+    checkNotFound(pendingTask.isPresent(), "Couldn't find %s", pendingTaskIdStr);
 
-    checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
+    List<SingularityTaskRequest> taskRequestList = taskRequestManager.getTaskRequests(Collections.singletonList(pendingTask.get()));
 
-    return task.get();
+    checkNotFound(!taskRequestList.isEmpty(), "Couldn't find: " + pendingTaskIdStr);
+
+    return Iterables.getFirst(taskRequestList, null);
   }
 
   @GET
-  @Path("/task/{taskId}")
-  @ApiOperation("Retrieve information about a specific active task.")
-  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
-    return checkActiveTask(taskId);
+  @PropertyFiltering
+  @Path("/scheduled/ids")
+  @ApiOperation("Retrieve list of scheduled task IDs.")
+  public List<SingularityPendingTaskId> getScheduledTaskIds() {
+    return taskManager.getPendingTaskIds();
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled")
+  @ApiOperation("Retrieve list of scheduled tasks.")
+  public List<SingularityTaskRequest> getScheduledTasks() {
+    final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
+
+    return taskRequestManager.getTaskRequests(tasks);
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled/request/{requestId}")
+  @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
+  public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
+    final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
+
+    return taskRequestManager.getTaskRequests(tasks);
+  }
+
+  @GET
+  @Path("/task/{taskId}/cleanup")
+  @ApiOperation("Get the cleanup object for the task, if it exists")
+  public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
+    return taskManager.getTaskCleanup(taskId);
+  }
+
+  @GET
+  @Path("/active/slave/{slaveId}")
+  @ApiOperation("Retrieve list of active tasks on a specific slave.")
+  public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
+    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+
+    checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
+
+    return taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get());
   }
 
   @GET
@@ -201,10 +227,47 @@ public class TaskResource {
   }
 
   @GET
-  @Path("/task/{taskId}/cleanup")
-  @ApiOperation("Get the cleanup object for the task, if it exists")
-  public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
-    return taskManager.getTaskCleanup(taskId);
+  @Path("/task/{taskId}/commands/queued")
+  @ApiOperation(value="Retrieve a list of the shell commands queued for execution for the given taskId")
+  public List<SingularityTaskShellCommandRequest> getQueuedShellCommands(@PathParam("taskId") String taskId) {
+    return taskManager.getTaskShellCommandRequests(getTaskIdFromStr(taskId));
+  }
+
+  //  @GET
+  //  @Path("/task/{taskId}/commands/active")
+
+  @POST
+  @Path("/task/{taskId}/command")
+  @ApiOperation(value="Run a configured shell command against the given task")
+  @ApiResponses({
+    @ApiResponse(code=400, message="Given shell command option doesn't exist"),
+    @ApiResponse(code=403, message="Given shell command doesn't exist")
+  })
+  @Consumes({ MediaType.APPLICATION_JSON })
+  public void runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user, SingularityShellCommand shellCommand) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+
+    if (!taskManager.isActiveTask(taskId)) {
+      throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
+    }
+
+    if (!shellCommands.containsKey(shellCommand.getName())) {
+      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), shellCommands.keySet());
+    }
+
+    ShellCommandDescriptor commandDescriptor = shellCommands.get(shellCommand.getName());
+    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.getOptions().size());
+    for (ShellCommandOptionDescriptor option : commandDescriptor.getOptions()) {
+      options.add(option.getName());
+    }
+
+    for (String option : shellCommand.getOptions()) {
+      if (!options.contains(option)) {
+        throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+      }
+    }
+
+    taskManager.saveTaskShellCommandRequest(new SingularityTaskShellCommandRequest(taskIdObj, user, System.currentTimeMillis(), shellCommand));
   }
 
   @DELETE

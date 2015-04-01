@@ -1,10 +1,13 @@
 package com.hubspot.singularity.config;
 
-import java.util.Locale;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -12,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
 public class UIConfiguration {
 
@@ -45,6 +49,10 @@ public class UIConfiguration {
 
   @JsonProperty
   private String baseUrl;
+
+  @JsonProperty
+  @NotNull
+  private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
@@ -115,4 +123,13 @@ public class UIConfiguration {
   public void setRootUrlMode(String rootUrlMode) {
     this.rootUrlMode = rootUrlMode;
   }
+
+  public List<ShellCommandDescriptor> getShellCommands() {
+    return shellCommands;
+  }
+
+  public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
+    this.shellCommands = shellCommands;
+  }
+
 }

@@ -1,6 +1,9 @@
 package com.hubspot.singularity.config.shell;
 
+import java.util.Collections;
 import java.util.List;
+
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -16,6 +19,36 @@ public class ShellCommandDescriptor {
   private String description;
 
   @JsonProperty
-  private List<ShellCommandOptionDescriptor> options;
+  @NotNull
+  private List<ShellCommandOptionDescriptor> options = Collections.emptyList();
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public List<ShellCommandOptionDescriptor> getOptions() {
+    return options;
+  }
+
+  public void setOptions(List<ShellCommandOptionDescriptor> options) {
+    this.options = options;
+  }
+
+  @Override
+  public String toString() {
+    return "ShellCommandDescriptor [name=" + name + ", description=" + description + ", options=" + options + "]";
+  }
 
 }
