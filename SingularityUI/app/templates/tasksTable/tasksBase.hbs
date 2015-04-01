@@ -7,6 +7,9 @@
             <li {{#ifEqual tasksFilter "scheduled"}}class="active"{{/ifEqual}}>
                 <a href="{{appRoot}}/tasks/scheduled">Scheduled</a>
             </li>
+            <li {{#ifEqual tasksFilter "lbcleanup"}}class="active"{{/ifEqual}}>
+                <a href="{{appRoot}}/tasks/lbcleanup">LB Cleaning</a>
+            </li>
             <li {{#ifEqual tasksFilter "cleaning"}}class="active"{{/ifEqual}}>
                 <a href="{{appRoot}}/tasks/cleaning">Cleaning</a>
             </li>
