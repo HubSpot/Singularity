@@ -1,3 +1,3 @@
 {{#each lines}}
-    <div id='line-{{offset}}' class="line" data-offset="{{ offset }}"><a class='copy-link' data-clipboard-text='{{../url}}#{{offset}}'><span class="glyphicon glyphicon-link"></span> </a>{{ data }}</div>
+    <div id='line-{{offset}}' class="line" data-offset="{{ offset }}"><a href='#{{offset}}' class='copy-link'><span class="glyphicon glyphicon-link"></span> </a>{{ data }}</div>
 {{/each}}

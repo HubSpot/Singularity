@@ -12,6 +12,7 @@ class TailView extends View
         _.extend super,
             'click .tail-top-button': 'goToTop'
             'click .tail-bottom-button': 'goToBottom'
+            'click .copy-link' : 'copyLink'
 
     initialize: ({@taskId, @path, firstRequest, @offset}) ->
         @filename = _.last @path.split '/'
@@ -86,13 +87,6 @@ class TailView extends View
                 @$linesWrapper.append @linesTemplate 
                     lines: _.pluck lines, 'attributes'
                     url: url
-
-        @addCopyLinks()
-
-    addCopyLinks: ->
-        # Add unique link to each line
-        for link in @$contents.find('.copy-link')
-            new ZeroClipboard $(link)
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
@@ -214,6 +208,9 @@ class TailView extends View
         if state.changed.moreToFetch?
             @$('.tail-fetching-end').toggle(state.changed.moreToFetch)
 
+    copyLink: (e) ->
+        @$('.line').removeClass('highlightLine')
+        $(e.currentTarget).closest('.line').addClass('highlightLine')
 
 
 module.exports = TailView
