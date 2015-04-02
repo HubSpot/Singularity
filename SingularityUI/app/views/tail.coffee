@@ -13,7 +13,7 @@ class TailView extends View
             'click .tail-top-button': 'goToTop'
             'click .tail-bottom-button': 'goToBottom'
 
-    initialize: ({@taskId, @path, firstRequest}) ->
+    initialize: ({@taskId, @path, firstRequest, @offset}) ->
         @filename = _.last @path.split '/'
 
         @listenTo @collection, 'reset',       @dumpContents
@@ -57,10 +57,14 @@ class TailView extends View
         # Well, or just render them if we're starting fresh
         $firstLine = @$linesWrapper.find '.line:first-child'
         $lastLine  = @$linesWrapper.find '.line:last-child'
+        url = window.location.host + window.location.pathname
 
         # If starting fresh
         if $firstLine.length is 0
-            @$linesWrapper.html @linesTemplate lines: @collection.toJSON()
+
+            @$linesWrapper.html @linesTemplate 
+                lines: @collection.toJSON()
+                url: url
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
             lastLineOffset  = parseInt $lastLine.data 'offset'
@@ -68,7 +72,9 @@ class TailView extends View
             if @collection.getMinOffset() < firstLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') < firstLineOffset
-                @$linesWrapper.prepend @linesTemplate lines: _.pluck lines, 'attributes'
+                @$linesWrapper.prepend @linesTemplate 
+                    lines: _.pluck lines, 'attributes'
+                    url: url
 
                 # Gonna need to scroll back to the previous `firstLine` after otherwise
                 # we end up at the top again
@@ -77,7 +83,16 @@ class TailView extends View
             else if @collection.getStartOffsetOfLastLine() > lastLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') > lastLineOffset
-                @$linesWrapper.append @linesTemplate lines: _.pluck lines, 'attributes'
+                @$linesWrapper.append @linesTemplate 
+                    lines: _.pluck lines, 'attributes'
+                    url: url
+
+        @addCopyLinks()
+
+    addCopyLinks: ->
+        # Add unique link to each line
+        for link in @$contents.find('.copy-link')
+            new ZeroClipboard $(link)
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
@@ -193,7 +208,7 @@ class TailView extends View
             @startTailing()
 
     showOrHideMoreToFetchSpinners: (state) ->
-        if state.changed.moreToFetchAtBeginning?
+        if state.changed.moreToFetchAtBeginning? and not @offset
             @$('.tail-fetching-start').toggle(state.changed.moreToFetchAtBeginning)
 
         if state.changed.moreToFetch?

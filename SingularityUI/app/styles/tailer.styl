@@ -54,6 +54,16 @@
         line-height 1.6em
         padding 0 2em
         white-space pre
+    
+        &:hover
+            .copy-link
+                visibility visible
+
+        .copy-link
+            text-decoration none
+            visibility hidden
+            padding-left 5px
+    
 
 // Edge of fetched log content indicators/spinners (start hidden and toggled by Backbone)
 .tail-fetching-start, .tail-fetching-end
@@ -92,3 +102,5 @@
 
         .page-loader
             display inline-block
+
+        
