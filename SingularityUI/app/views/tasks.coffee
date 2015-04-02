@@ -16,6 +16,7 @@ class TasksView extends View
         active:          require '../templates/tasksTable/tasksActiveBody'
         scheduled:       require '../templates/tasksTable/tasksScheduledBody'
         cleaning:        require '../templates/tasksTable/tasksCleaningBody'
+        lbcleanup:      require '../templates/tasksTable/tasksLbCleaningBody'
         decommissioning: require '../templates/tasksTable/tasksDecommissioningBody'
 
     # For staged rendering
