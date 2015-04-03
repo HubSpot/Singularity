@@ -471,7 +471,7 @@ public class SingularityScheduler {
       stateCache.getActiveTaskIds().remove(taskId);
     }
 
-    if (task.isPresent() && task.get().getTaskRequest().getRequest().isLoadBalanced()) {
+    if (!task.isPresent() || task.get().getTaskRequest().getRequest().isLoadBalanced()) {
       taskManager.createLBCleanupTask(taskId);
     }
 
