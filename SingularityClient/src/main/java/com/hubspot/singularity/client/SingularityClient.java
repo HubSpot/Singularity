@@ -41,6 +41,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
@@ -110,6 +111,11 @@ public class SingularityClient {
   private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";
   private static final String SANDBOX_READ_FILE_FORMAT = SANDBOX_FORMAT + "/%s/read";
 
+  private static final String S3_LOG_FORMAT = "http://%s/%s/logs";
+  private static final String S3_LOG_GET_TASK_LOGS = S3_LOG_FORMAT + "/task/%s";
+  private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
+  private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
+
   private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
@@ -122,6 +128,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
+  private final static TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -807,6 +814,63 @@ public class SingularityClient {
     }
 
     return getSingleWithParams(requestUrl, "Read sandbox file for task", taskId, Optional.<Map<String, Object>>of(queryParamBuider.build()), MesosFileChunkObject.class);
+  }
+
+  //
+  // S3 LOGS
+  //
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific task
+   *
+   * @param taskId
+   *    The task ID to search for
+   *
+   * @return
+   *    A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getTaskLogs(String taskId) {
+    final String requestUri = String.format(S3_LOG_GET_TASK_LOGS, getHost(), contextPath, taskId);
+
+    final String type = String.format("S3 logs for task %s", taskId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+  }
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific request
+   *
+   * @param requestId
+   *    The request ID to search for
+   *
+   * @return
+   *     A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getRequestLogs(String requestId) {
+    final String requestUri = String.format(S3_LOG_GET_REQUEST_LOGS, getHost(), contextPath, requestId);
+
+    final String type = String.format("S3 logs for request %s", requestId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+  }
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific deploy if a singularity request
+   *
+   * @param requestId
+   *    The request ID to search for
+   * @param deployId
+   *    The deploy ID (within the specified request) to search for
+   *
+   * @return
+   *    A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getDeployLogs(String requestId, String deployId) {
+    final String requestUri = String.format(S3_LOG_GET_DEPLOY_LOGS, getHost(), contextPath, requestId, deployId);
+
+    final String type = String.format("S3 logs for deploy %s of request %s", deployId, requestId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
   }
 
 }
