@@ -16,6 +16,7 @@ def download_s3_logs(args):
   logs = logs_for_all_requests(args)
   async_requests = []
   zipped_files = []
+  all_logs = []
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
     if logfetch_base.is_in_date_range(args, time_from_filename(filename)):
@@ -26,6 +27,7 @@ def download_s3_logs(args):
       else:
         if args.verbose:
           sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'magenta') + '\n')
+        all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
       zipped_files.append('{0}/{1}'.format(args.dest, filename))
     else:
       if args.verbose:
@@ -36,7 +38,7 @@ def download_s3_logs(args):
   else:
     sys.stderr.write(colored('No S3 logs to download', 'cyan'))
   sys.stderr.write(colored('\nUnpacking S3 logs\n', 'cyan'))
-  all_logs = logfetch_base.unpack_logs(args, zipped_files)
+  all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
   sys.stderr.write(colored('All S3 logs up to date', 'cyan') + '\n')
   return all_logs
 
