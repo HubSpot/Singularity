@@ -1,30 +1,44 @@
 package com.hubspot.singularity.s3downloader.config;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
-@Singleton
-public class SingularityS3DownloaderConfiguration {
+import javax.validation.constraints.Min;
 
-  private final long httpServerTimeout;
-  private final int numDownloaderThreads;
+import com.google.common.base.Optional;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
 
-  @Inject
-  public SingularityS3DownloaderConfiguration(
-      @Named(SingularityS3DownloaderConfigurationLoader.HTTP_SERVER_TIMEOUT) String httpServerTimeout,
-      @Named(SingularityS3DownloaderConfigurationLoader.NUM_DOWNLOADER_THREADS) String numDownloaderThreads
-      ) {
-    this.httpServerTimeout = Long.parseLong(httpServerTimeout);
-    this.numDownloaderThreads = Integer.parseInt(numDownloaderThreads);
+@Configuration("/etc/singularity.s3downloader.yaml")
+public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguration {
+  public static final String NUM_DOWNLOADER_THREADS = "s3downloader.downloader.threads";
+
+  public static final String HTTP_SERVER_TIMEOUT = "s3downloader.http.timeout";
+
+  @Min(1)
+  private long httpServerTimeout = TimeUnit.MINUTES.toMillis(30);
+
+  @Min(1)
+  private int numDownloaderThreads = 25;
+
+  public SingularityS3DownloaderConfiguration() {
+    super(Optional.of("singularity-s3downloader.log"));
+  }
+
+  public long getHttpServerTimeout() {
+    return httpServerTimeout;
+  }
+
+  public void setHttpServerTimeout(long httpServerTimeout) {
+    this.httpServerTimeout = httpServerTimeout;
   }
 
   public int getNumDownloaderThreads() {
     return numDownloaderThreads;
   }
 
-  public long getHttpServerTimeout() {
-    return httpServerTimeout;
+  public void setNumDownloaderThreads(int numDownloaderThreads) {
+    this.numDownloaderThreads = numDownloaderThreads;
   }
 
   @Override
@@ -32,4 +46,14 @@ public class SingularityS3DownloaderConfiguration {
     return "SingularityS3DownloaderConfiguration [httpServerTimeout=" + httpServerTimeout + ", numDownloaderThreads=" + numDownloaderThreads + "]";
   }
 
+  @Override
+  public void updateFromProperties(Properties properties) {
+    if (properties.containsKey(NUM_DOWNLOADER_THREADS)) {
+      setNumDownloaderThreads(Integer.parseInt(properties.getProperty(NUM_DOWNLOADER_THREADS)));
+    }
+
+    if (properties.containsKey(HTTP_SERVER_TIMEOUT)) {
+      setHttpServerTimeout(Long.parseLong(properties.getProperty(HTTP_SERVER_TIMEOUT)));
+    }
+  }
 }

@@ -1,71 +1,86 @@
 package com.hubspot.singularity.s3uploader.config;
 
-import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
+import java.util.Properties;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import javax.validation.constraints.Min;
 
-@Singleton
-public class SingularityS3UploaderConfiguration {
+import com.google.common.base.Optional;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
 
-  private final long pollForShutDownMillis;
-  private final int executorMaxUploadThreads;
+@Configuration("/etc/singularity.s3uploader.yaml")
+public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
+  public static final String POLL_MILLIS = "s3uploader.poll.for.shutdown.millis";
 
-  private final long checkUploadsEverySeconds;
-  private final long stopCheckingAfterMillisWithoutNewFile;
+  public static final String CHECK_FOR_UPLOADS_EVERY_SECONDS = "s3uploader.check.uploads.every.seconds";
+  public static final String STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE = "s3uploader.stop.checking.after.hours.without.new.file";
 
-  private final Path s3MetadataDirectory;
-  private final String s3MetadataSuffix;
+  public static final String EXECUTOR_MAX_UPLOAD_THREADS = "s3uploader.max.upload.threads";
 
-  @Inject
-  public SingularityS3UploaderConfiguration(
-      @Named(SingularityS3UploaderConfigurationLoader.POLL_MILLIS) String pollForShutDownMillis,
-      @Named(SingularityS3UploaderConfigurationLoader.EXECUTOR_MAX_UPLOAD_THREADS) String executorMaxUploadThreads,
-      @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
-      @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
-      @Named(SingularityS3UploaderConfigurationLoader.CHECK_FOR_UPLOADS_EVERY_SECONDS) String checkUploadsEverySeconds,
-      @Named(SingularityS3UploaderConfigurationLoader.STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE) String stopCheckingAfterHoursWithoutNewFile
-      ) {
-    this.pollForShutDownMillis = Long.parseLong(pollForShutDownMillis);
-    this.executorMaxUploadThreads = Integer.parseInt(executorMaxUploadThreads);
-    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY);
-    this.s3MetadataSuffix = s3MetadataSuffix;
-    this.checkUploadsEverySeconds = Long.parseLong(checkUploadsEverySeconds);
-    this.stopCheckingAfterMillisWithoutNewFile = TimeUnit.HOURS.toMillis(Long.parseLong(stopCheckingAfterHoursWithoutNewFile));
-  }
+  @Min(0)
+  private long pollForShutDownMillis = 1000;
 
-  public Path getS3MetadataDirectory() {
-    return s3MetadataDirectory;
-  }
+  @Min(1)
+  private int executorMaxUploadThreads = 25;
 
-  public String getS3MetadataSuffix() {
-    return s3MetadataSuffix;
-  }
+  @Min(1)
+  private long checkUploadsEverySeconds = 600;
 
-  public int getExecutorMaxUploadThreads() {
-    return executorMaxUploadThreads;
+  @Min(1)
+  private long stopCheckingAfterMillisWithoutNewFile = 168;
+
+  public SingularityS3UploaderConfiguration() {
+    super(Optional.of("singularity-s3uploader.log"));
   }
 
   public long getPollForShutDownMillis() {
     return pollForShutDownMillis;
   }
 
+  public void setPollForShutDownMillis(long pollForShutDownMillis) {
+    this.pollForShutDownMillis = pollForShutDownMillis;
+  }
+
+  public int getExecutorMaxUploadThreads() {
+    return executorMaxUploadThreads;
+  }
+
+  public void setExecutorMaxUploadThreads(int executorMaxUploadThreads) {
+    this.executorMaxUploadThreads = executorMaxUploadThreads;
+  }
+
   public long getCheckUploadsEverySeconds() {
     return checkUploadsEverySeconds;
+  }
+
+  public void setCheckUploadsEverySeconds(long checkUploadsEverySeconds) {
+    this.checkUploadsEverySeconds = checkUploadsEverySeconds;
   }
 
   public long getStopCheckingAfterMillisWithoutNewFile() {
     return stopCheckingAfterMillisWithoutNewFile;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityS3UploaderConfiguration [pollForShutDownMillis=" + pollForShutDownMillis + ", executorMaxUploadThreads=" + executorMaxUploadThreads + ", checkUploadsEverySeconds=" + checkUploadsEverySeconds
-        + ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile + ", s3MetadataDirectory=" + s3MetadataDirectory + ", s3MetadataSuffix=" + s3MetadataSuffix + "]";
+  public void setStopCheckingAfterMillisWithoutNewFile(long stopCheckingAfterMillisWithoutNewFile) {
+    this.stopCheckingAfterMillisWithoutNewFile = stopCheckingAfterMillisWithoutNewFile;
   }
 
+  @Override
+  public void updateFromProperties(Properties properties) {
+    if (properties.containsKey(POLL_MILLIS)) {
+      setPollForShutDownMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));
+    }
+
+    if (properties.containsKey(CHECK_FOR_UPLOADS_EVERY_SECONDS)) {
+      setCheckUploadsEverySeconds(Long.parseLong(properties.getProperty(CHECK_FOR_UPLOADS_EVERY_SECONDS)));
+    }
+
+    if (properties.containsKey(STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE)) {
+      setStopCheckingAfterMillisWithoutNewFile(Long.parseLong(properties.getProperty(STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE)));
+    }
+
+    if (properties.containsKey(EXECUTOR_MAX_UPLOAD_THREADS)) {
+      setExecutorMaxUploadThreads(Integer.parseInt(properties.getProperty(EXECUTOR_MAX_UPLOAD_THREADS)));
+    }
+  }
 }

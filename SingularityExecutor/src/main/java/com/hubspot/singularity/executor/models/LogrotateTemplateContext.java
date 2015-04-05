@@ -24,11 +24,11 @@ public class LogrotateTemplateContext {
     return configuration.getLogrotateDateformat();
   }
 
-  public String getRotateCount() {
+  public int getRotateCount() {
     return configuration.getLogrotateCount();
   }
 
-  public String getMaxageDays() {
+  public int getMaxageDays() {
     return configuration.getLogrotateMaxageDays();
   }
 

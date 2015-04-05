@@ -4,8 +4,7 @@ import java.util.Arrays;
 
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.shared.SingularityRunner;
-import com.hubspot.singularity.s3.base.config.SingularityS3ConfigurationLoader;
-import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderConfigurationLoader;
+import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderConfiguration;
 import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule;
 
 public class SingularityS3DownloaderRunner {
@@ -17,7 +16,7 @@ public class SingularityS3DownloaderRunner {
   private SingularityS3DownloaderRunner() {}
 
   public void run(String[] args) {
-    new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityS3DownloaderConfigurationLoader()), new SingularityS3DownloaderModule()));
+    new SingularityRunner().run(Arrays.asList(new SingularityRunnerBaseModule(SingularityS3DownloaderConfiguration.class), new SingularityS3DownloaderModule()));
   }
 
 }
