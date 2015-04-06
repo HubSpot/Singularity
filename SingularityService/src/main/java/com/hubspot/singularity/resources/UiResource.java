@@ -20,7 +20,7 @@ import com.hubspot.singularity.views.IndexView;
 @Path(UiResource.UI_RESOURCE_LOCATION + "{uiPath:.*}")
 public class UiResource {
 
-  static final String UI_RESOURCE_LOCATION = "/ui/";
+  public static final String UI_RESOURCE_LOCATION = "/ui/";
 
   private final SingularityConfiguration configuration;
   private final String singularityUriBase;

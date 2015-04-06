@@ -2,9 +2,15 @@ package com.hubspot.singularity.executor.cleanup;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -12,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -31,6 +38,9 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
+import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
+import com.hubspot.singularity.runner.base.shared.ProcessUtils;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 
 public class SingularityExecutorCleanup {
 
@@ -42,6 +52,7 @@ public class SingularityExecutorCleanup {
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
   private final MesosClient mesosClient;
+  private final ProcessUtils processUtils;
 
   @Inject
   public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient) {
@@ -51,6 +62,7 @@ public class SingularityExecutorCleanup {
     this.singularityClient = singularityClient;
     this.templateManager = templateManager;
     this.mesosClient = mesosClient;
+    this.processUtils = new ProcessUtils(LOG);
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -101,7 +113,7 @@ public class SingularityExecutorCleanup {
 
         final String taskId = taskDefinition.get().getTaskId();
 
-        if (runningTaskIds.contains(taskId)) {
+        if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition.get())) {
           statisticsBldr.incrRunningTasksIgnored();
           continue;
         }
@@ -150,6 +162,16 @@ public class SingularityExecutorCleanup {
     }
   }
 
+  private boolean executorStillRunning(SingularityExecutorTaskDefinition taskDefinition) {
+    Optional<Integer> executorPidSafe = taskDefinition.getExecutorPidSafe();
+
+    if (!executorPidSafe.isPresent()) {
+      return false;
+    }
+
+    return processUtils.doesProcessExist(executorPidSafe.get());
+  }
+
   private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
     SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, executorConfiguration, LOG, jsonObjectFileHelper);
 
@@ -171,7 +193,63 @@ public class SingularityExecutorCleanup {
       }
     }
 
+    checkForUncompressedLogrotatedFile(taskDefinition);
+
     return taskCleanup.cleanup(cleanupTaskAppDirectory);
   }
+
+  private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {
+    final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
+    final Path logrotateToPath = taskDefinition.getServiceLogOutPath().getParent().resolve(executorConfiguration.getLogrotateToDirectory());
+
+    try {
+      DirectoryStream<Path> dirStream = Files.newDirectoryStream(logrotateToPath, String.format("%s-*", serviceLogOutPath.getFileName()));
+      return dirStream.iterator();
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  private void checkForUncompressedLogrotatedFile(SingularityExecutorTaskDefinition taskDefinition) {
+    final Iterator<Path> iterator = getUncompressedLogrotatedFileIterator(taskDefinition);
+    final Set<String> emptyPaths = new HashSet<>();
+    final List<Path> ungzippedFiles = new ArrayList<>();
+
+    // check for matched 0 byte gz files.. and delete/gzip them
+
+    while (iterator.hasNext()) {
+      Path path = iterator.next();
+
+      if (path.getFileName().toString().endsWith(".gz")) {
+        try {
+          if (Files.size(path) == 0) {
+            Files.deleteIfExists(path);
+
+            String pathString = path.getFileName().toString();
+
+            emptyPaths.add(pathString.substring(0, pathString.length() - 3)); // removing .gz
+          }
+        } catch (IOException ioe) {
+          LOG.error("Failed to handle empty gz file {}", path, ioe);
+        }
+      } else {
+        ungzippedFiles.add(path);
+      }
+    }
+
+    for (Path path : ungzippedFiles) {
+      if (emptyPaths.contains(path.getFileName().toString())) {
+        LOG.info("Gzipping abandoned file {}", path);
+        try {
+          new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of("gzip", path.toString()));
+        } catch (InterruptedException | ProcessFailedException e) {
+          LOG.error("Failed to gzip {}", path, e);
+        }
+      } else {
+        LOG.debug("Didn't find matched empty gz file for {}", path);
+      }
+    }
+  }
+
 
 }

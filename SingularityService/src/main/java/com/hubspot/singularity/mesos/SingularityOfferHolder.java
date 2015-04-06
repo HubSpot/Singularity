@@ -32,7 +32,14 @@ public class SingularityOfferHolder {
 
   public void addMatchedTask(SingularityTask task) {
     acceptedTasks.add(task);
+
+    // subtract task resources from offer
     currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResourcesList());
+
+    // subtract executor resources from offer, if any are defined
+    if (task.getMesosTask().hasExecutor() && task.getMesosTask().getExecutor().getResourcesCount() > 0) {
+      currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getExecutor().getResourcesList());
+    }
   }
 
   public void launchTasks(SchedulerDriver driver) {

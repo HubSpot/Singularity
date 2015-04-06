@@ -86,7 +86,7 @@ For example, to tail the `service.log` file for all tasks for a request named `M
 
 - The path for the log file is relative to the base path for that task's sandbox. For example, to tail a file in `(sandbox path)/logs/access.log`, the argument to -l would be `logs/access.log`
 
-You can also provide the `-g` option which will provide the grep string to the singularity API and search the results. You cannot provide a full grep command as in some of the above examples, just a string to match on.
+You can also provide the `-g` option which will provide the grep string to the singularity API and search the results. This can be a string to match on or a full grep command as above.
 
 ##Options
 |Flags|Description|Default|
@@ -97,7 +97,7 @@ You can also provide the `-g` option which will provide the grep string to the s
 |-r , --request-id|Request Id to fetch logs for|
 |-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)|Must be set!|
-|-g, --grep|Grep string for searching log files|
+|-g, --grep|Grep string or full command for searching output|
 |-l, --logfile|Log file path to tail (ie logs/access.log)|Must be set!|
 |-v, --verbose|Extra output about the task id associated with logs in the output|False|
 

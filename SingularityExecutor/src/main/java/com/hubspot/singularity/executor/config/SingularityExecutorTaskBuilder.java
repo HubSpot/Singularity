@@ -2,7 +2,6 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 
-import com.hubspot.mesos.MesosUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
@@ -16,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
@@ -64,8 +64,8 @@ public class SingularityExecutorTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
 
-    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), configuration.getServiceLog(),
-        configuration.getTaskAppDirectory(), configuration.getExecutorBashLog(), configuration.getLogrotateStateFile());
+    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
+        configuration.getServiceLog(), configuration.getTaskAppDirectory(), configuration.getExecutorBashLog(), configuration.getLogrotateStateFile());
 
     jsonObjectFileHelper.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);
 

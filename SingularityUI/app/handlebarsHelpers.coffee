@@ -21,6 +21,12 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100
 
+# Override decimal rounding: {{fixedDecimal data.cpuUsage place="4"}}
+Handlebars.registerHelper 'fixedDecimal', (value, options) ->
+    if options.hash.place then place = options.hash.place else place = 2
+    +(value).toFixed(place)
+
+
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
     if haystack.indexOf(needle) isnt -1
@@ -76,21 +82,13 @@ Handlebars.registerHelper 'humanizeText', (text) ->
     text
 
 # 2121 => '2 KB'
-Handlebars.registerHelper 'humanizeFileSize', (fileSize) ->
-    kilo = 1024
-    mega = 1024 * 1024
-    giga = 1024 * 1024 * 1024
+Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
+    k = 1024
+    sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
-    shorten = (which) -> Math.round fileSize / which
-
-    if fileSize > giga
-        return "#{ shorten giga } GB"
-    else if fileSize > mega
-        return "#{ shorten mega } MB"
-    else if fileSize > kilo
-        return "#{ shorten kilo } KB"
-    else
-        return "#{ fileSize } B"
+    return '0 B' if bytes is 0
+    i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length-1)
+    return +(bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
 
 # 'sbacanu@hubspot.com' => 'sbacanu'
 # 'seb'                 => 'seb'

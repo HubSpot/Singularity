@@ -22,8 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.jets3t.service.S3Service;
-import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +33,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
+import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
@@ -56,10 +56,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final Lock runLock;
   private final ExecutorService executorService;
   private final FileSystem fileSystem;
-  private final S3Service s3Service;
   private final Set<SingularityS3Uploader> expiring;
   private final SingularityS3UploaderMetrics metrics;
   private final JsonObjectFileHelper jsonObjectFileHelper;
+  private final ProcessUtils processUtils;
+  private final AWSCredentials defaultCredentials;
 
   private ScheduledFuture<?> future;
 
@@ -68,13 +69,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.metrics = metrics;
+    this.defaultCredentials = new AWSCredentials(s3Configuration.getS3AccessKey(), s3Configuration.getS3SecretKey());
 
     this.fileSystem = FileSystems.getDefault();
-    try {
-      this.s3Service = new RestS3Service(new AWSCredentials(s3Configuration.getS3AccessKey(), s3Configuration.getS3SecretKey()));
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
 
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.configuration = configuration;
@@ -86,6 +83,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.metrics.setExpiringCollection(expiring);
 
     this.runLock = new ReentrantLock();
+
+    this.processUtils = new ProcessUtils(LOG);
 
     this.executorService = JavaUtils.newFixedTimingOutThreadPool(configuration.getExecutorMaxUploadThreads(), TimeUnit.SECONDS.toMillis(30), "SingularityS3Uploader-%d");
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityS3Driver-%d").build());
@@ -184,8 +183,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
     final Map<SingularityS3Uploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
+    final Map<SingularityS3Uploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
 
     for (final SingularityS3Uploader uploader : metadataToUploader.values()) {
+      final boolean isFinished = isFinished(uploader);
+      // do this here so we run at least once with isFinished = true
+      finishing.put(uploader, isFinished);
+
       futures.put(uploader, executorService.submit(new Callable<Integer>() {
 
         @Override
@@ -193,7 +197,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
           Integer returnValue = 0;
           try {
-            returnValue = uploader.upload(filesToUpload);
+            returnValue = uploader.upload(filesToUpload, isFinished);
           } catch (Throwable t) {
             metrics.error();
             LOG.error("Error while processing uploader {}", uploader, t);
@@ -209,21 +213,16 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     final long now = System.currentTimeMillis();
     final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(metadataToUploader.size());
 
-    // TODO cancel/timeouts?
     for (Entry<SingularityS3Uploader, Future<Integer>> uploaderToFuture : futures.entrySet()) {
       final SingularityS3Uploader uploader = uploaderToFuture.getKey();
       try {
         final int foundFiles = uploaderToFuture.getValue().get();
+        final boolean isFinished = finishing.get(uploader);
 
         if (foundFiles == 0) {
-          final long durationSinceLastFile = now - uploaderLastHadFilesAt.get(uploader);
-          final boolean isFinished = isFinished(uploader);
-
-          if ((durationSinceLastFile > configuration.getStopCheckingAfterMillisWithoutNewFile()) || isFinished) {
-            LOG.info("Expiring uploader {}", uploader);
+          if (shouldExpire(uploader, isFinished)) {
+            LOG.info("Expiring {}", uploader);
             expiredUploaders.add(uploader);
-          } else {
-            LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, durationSinceLastFile, configuration.getStopCheckingAfterMillisWithoutNewFile(), isFinished);
           }
         } else {
           LOG.trace("Updating uploader {} last expire time", uploader);
@@ -245,6 +244,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       expiring.remove(expiredUploader);
 
       try {
+        Closeables.close(expiredUploader, true);
+
         Files.delete(expiredUploader.getMetadataPath());
       } catch (IOException e) {
         LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
@@ -254,8 +255,45 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     return totesUploads;
   }
 
+  private boolean shouldExpire(SingularityS3Uploader uploader, boolean isFinished) {
+    if (isFinished) {
+      return true;
+    }
+
+    if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().isPresent()) {
+      if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().get() < 0) {
+        LOG.trace("{} never expires", uploader);
+        return false;
+      }
+    }
+
+    final long durationSinceLastFile = System.currentTimeMillis() - uploaderLastHadFilesAt.get(uploader);
+
+    final long expireAfterMillis = uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().or(configuration.getStopCheckingAfterMillisWithoutNewFile());
+
+    if (durationSinceLastFile > expireAfterMillis) {
+      return true;
+    } else {
+      LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, JavaUtils.durationFromMillis(durationSinceLastFile), JavaUtils.durationFromMillis(expireAfterMillis), isFinished);
+    }
+
+    return false;
+  }
+
   private boolean isFinished(SingularityS3Uploader uploader) {
-    return expiring.contains(uploader);
+    if (expiring.contains(uploader)) {
+      return true;
+    }
+
+    if (uploader.getUploadMetadata().getPid().isPresent()) {
+      if (!processUtils.doesProcessExist(uploader.getUploadMetadata().getPid().get())) {
+        LOG.info("Pid {} not present - expiring uploader {}", uploader.getUploadMetadata().getPid().get(), uploader);
+        expiring.add(uploader);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private boolean handleNewOrModifiedS3Metadata(Path filename) throws IOException {
@@ -289,7 +327,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     try {
       metrics.getUploaderCounter().inc();
 
-      SingularityS3Uploader uploader = new SingularityS3Uploader(s3Service, metadata, fileSystem, metrics, filename);
+      SingularityS3Uploader uploader = new SingularityS3Uploader(defaultCredentials, metadata, fileSystem, metrics, filename);
 
       if (metadata.isFinished()) {
         expiring.add(uploader);

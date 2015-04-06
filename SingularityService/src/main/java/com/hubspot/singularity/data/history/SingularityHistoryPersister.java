@@ -48,7 +48,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
     if (moveToHistoryOrCheckForPurgeAndShouldDelete(object)) {
       SingularityDeleteResult deleteResult = purgeFromZk(object);
-      LOG.debug("%s %s (deleted: %s) in %s", persistsHistoryInsteadOfPurging() ? "Persisted" : "Purged", object, deleteResult, JavaUtils.duration(start));
+      LOG.debug("{} {} (deleted: {}) in {}", persistsHistoryInsteadOfPurging() ? "Persisted" : "Purged", object, deleteResult, JavaUtils.duration(start));
       return true;
     }
 
@@ -63,7 +63,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
     final long age = System.currentTimeMillis() - object.getCreateTimestampForCalculatingHistoryAge();
 
     if (age > getMaxAgeInMillisOfItem()) {
-      LOG.trace("Deleting %s because it is %s old (max : %s)", object, JavaUtils.durationFromMillis(age), JavaUtils.durationFromMillis(getMaxAgeInMillisOfItem()));
+      LOG.trace("Deleting {} because it is {} old (max : {})", object, JavaUtils.durationFromMillis(age), JavaUtils.durationFromMillis(getMaxAgeInMillisOfItem()));
       return true;
     }
 
