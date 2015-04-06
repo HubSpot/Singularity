@@ -39,12 +39,10 @@
         fetching more lines <div class="page-loader small"></div>
     </div>
     <div class="lines-wrapper">
-        {{#if ajaxError.status}}
+        {{#if ajaxError.present}}
         <div class="lines-wrapper">
             <div class="empty-table-message">
-                {{#ifEqual ajaxError.errorType 'NoDirectory'}}
-                    <p>This file has not been created yet. Hang tight, we're working on it.</p>
-                {{/ifEqual}}
+                <p>{{ajaxError.message}}</p>
             </div>
         </div>
         {{/if}}

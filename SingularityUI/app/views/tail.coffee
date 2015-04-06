@@ -14,7 +14,7 @@ class TailView extends View
             'click .tail-bottom-button': 'goToBottom'
             'click .offset-link' : 'offsetLink'
 
-    initialize: ({@taskId, @path, firstRequest, @offset}) ->
+    initialize: ({@taskId, @path, @ajaxError, firstRequest, @offset}) ->
         @filename = _.last @path.split '/'
 
         @listenTo @collection, 'reset',       @dumpContents
@@ -33,12 +33,19 @@ class TailView extends View
 
         @listenTo @model, 'change:isStillRunning', => @stopTailing() unless @model.get 'isStillRunning'
 
-        @ajaxError = status: false
-        @listenTo @collection, 'ajaxError', @handleAjaxError
+        @collectionRefreshInterval = null
+
+        @listenTo @ajaxError, 'change:present', @render
+        @listenTo @ajaxError, 'change:shouldRefresh', =>
+            if @ajaxError.get('present') and @ajaxError.get('shouldRefresh')
+                @collectionRefreshInterval = setInterval =>
+                    @collection.fetchInitialData()
+                , 2000
+
         
     render: =>
         breadcrumbs = utils.pathToBreadcrumbs @path
-        @$el.html @template {@taskId, @filename, breadcrumbs, @ajaxError}
+        @$el.html @template {@taskId, @filename, breadcrumbs, ajaxError: @ajaxError.toJSON()}
 
         @$contents = @$ '.tail-contents'
         @$linesWrapper = @$contents.children('.lines-wrapper')
@@ -142,7 +149,8 @@ class TailView extends View
 
     afterInitialData: =>
         # Remove any `data is loading` message
-        clearInterval @dataInterval
+        if @collectionRefreshInterval
+            clearInterval @collectionRefreshInterval
         @dumpContents()
 
         setTimeout =>

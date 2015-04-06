@@ -36,7 +36,7 @@ class LogLines extends Collection
 
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
-    initialize: (models, {@taskId, @path}) ->
+    initialize: (models, {@taskId, @path, @ajaxError}) ->
 
     getMinOffset: =>
         if @length > 0 then @first().getStartOffset() else 0
@@ -57,6 +57,7 @@ class LogLines extends Collection
         .done (response) =>
             offset = response.offset - @baseRequestLength
             offset = orZero offset
+            @ajaxError.set present: false
 
             request = @fetch data:
                 path: @path
@@ -67,12 +68,12 @@ class LogLines extends Collection
         .error (response) =>
             # If we get a 400, the file has likely not been generated
             # yet, so we'll pass a message to the view
-            if response.status is 400
-                app.caughtError() 
-                directoryPatt = new RegExp("does not have a directory yet")
-                hasNoDirectory = directoryPatt.test response.responseText
-                if hasNoDirectory
-                    @trigger 'ajaxError', {status: 400, errorType: 'NoDirectory'}
+            if response.status in [400, 404, 500]
+                app.caughtError()
+                @ajaxError.set
+                    status: response.status
+                    responseText: response.responseText
+                    present: true
     
     fetchPrevious: ->
         @fetch data:
