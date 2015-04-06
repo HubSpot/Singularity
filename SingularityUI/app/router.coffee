@@ -74,7 +74,8 @@ class Router extends Backbone.Router
         app.bootstrapController new TaskDetailController {taskId, filePath}
         
     tail: (taskId, path = '') ->
-        app.bootstrapController new TailController {taskId, path}
+        offset = window.location.hash.substr(1) || null
+        app.bootstrapController new TailController {taskId, path, offset}
 
     racks: ->
         app.bootstrapController new RacksController
