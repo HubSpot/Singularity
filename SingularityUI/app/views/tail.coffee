@@ -12,7 +12,7 @@ class TailView extends View
         _.extend super,
             'click .tail-top-button': 'goToTop'
             'click .tail-bottom-button': 'goToBottom'
-            'click .copy-link' : 'copyLink'
+            'click .offset-link' : 'offsetLink'
 
     initialize: ({@taskId, @path, firstRequest, @offset}) ->
         @filename = _.last @path.split '/'
@@ -212,7 +212,7 @@ class TailView extends View
         if state.changed.moreToFetch?
             @$('.tail-fetching-end').toggle(state.changed.moreToFetch)
 
-    copyLink: (e) ->
+    offsetLink: (e) ->
         @$('.line').removeClass('highlightLine')
         $(e.currentTarget).closest('.line').addClass('highlightLine')
 
