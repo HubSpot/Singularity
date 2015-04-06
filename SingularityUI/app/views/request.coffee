@@ -22,11 +22,11 @@ class RequestView extends View
 
             'click [data-action="expand-deploy-history"]': 'flashDeployHistory'
 
-    initialize: ({@requestId}) ->
+    initialize: ({@requestId, @history, @activeTasks}) ->
 
     render: ->
         @$el.html @template
-          config: config
+            config: config
 
         # Attach subview elements
         @$('#header').html           @subviews.header.$el
@@ -54,11 +54,18 @@ class RequestView extends View
             app.router.navigate 'requests', trigger: true
 
     runRequest: (e) =>
-        @model.promptRun =>
-            @trigger 'refreshrequest'
-            setTimeout =>
+        @model.promptRun (data) =>   
+            # If user wants to redirect to a file after the task starts
+            if data.filename.length > 1
+                @listenToOnce @activeTasks, 'add', @redirectToFile
+                
+                @redirectFilename = data.filename
+                @mostRecentTask = @history.first().get('id')
+
+                @startPollingTasks()
+            else
                 @trigger 'refreshrequest'
-            , 2500
+                setTimeout ( => @trigger 'refreshrequest'), 2500
 
     scaleRequest: (e) =>
         @model.promptScale =>
@@ -81,13 +88,62 @@ class RequestView extends View
 
         @model.promptRun =>
             @subviews.scheduledTasks.collection.remove id
-            @subviews.scheduledTasks.render()
-
+            @subviews.scheduledTasks.render()            
             setTimeout =>
                 @trigger 'refreshrequest'
             , 3000
 
     flashDeployHistory: ->
         @subviews.deployHistory.flash()
+
+    # Start polling for task changes, and check
+    # Task History changes in case we need 
+    # to back out of the file redirect 
+    startPollingTasks: ->
+        @redirectCancelPrompt()
+        @activeInterval = setInterval ( => 
+            @trigger 'refreshrequest' 
+            @checkTaskHistoryChange()
+        ), 2000
+
+    stopPollingTasks: ->
+        clearInterval @activeInterval
+        @stopListening @activeTasks, 'add', @redirectToFile
+
+    # While waiting for the task to start up, if the Task History
+    # updates, and the most recent task has a "dead state",
+    # it likely never ran, so let's close the prompt and stop polling
+    checkTaskHistoryChange: ->
+        deadStates = ['TASK_FAILED', 'TASK_LOST', 'TASK_LOST_WHILE_DOWN'] ## include 'TASK_KILLED' ?
+        currentTask = @history.first()
+        if currentTask.get('id') isnt @mostRecentTask and (currentTask.get('lastTaskState') in deadStates)
+            vex.close()
+            @stopPollingTasks()
+        
+    # If redirecting after the task starts,
+    # get the id to generate the url
+    redirectToFile: (type) ->
+        @stopPollingTasks()
+        id = @activeTasks.first().get('id')
+
+        ## Give some time for the file to be created
+        setTimeout =>
+            app.router.navigate "#task/#{id}/tail/#{id}/#{@redirectFilename}", trigger: true
+            vex.close()
+        , 2000
+
+    ## Prompt for cancelling the redirect after it's been initiated
+    redirectCancelPrompt: ->
+        vex.dialog.alert
+            message: """
+                <div class="page-loader" style='display: inline-block'></div>
+                Redirecting to <span class='label label-default'>#{@redirectFilename}</span> once task has started.
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Cancel'
+            ]
+            callback: (data) =>
+                @stopPollingTasks() if data is true
+
 
 module.exports = RequestView
