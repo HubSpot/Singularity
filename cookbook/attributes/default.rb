@@ -24,6 +24,7 @@ default[:singularity] = {
 }
 
 default[:singularity][:home] = '/usr/local/singularity'
+default[:singularity][:log_level] = 'INFO'
 
 set[:mesos][:type] = 'mesosphere'
 set[:mesos][:mesosphere][:with_zookeeper] = true
