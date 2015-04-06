@@ -20,6 +20,7 @@ class TailView extends View
         @listenTo @collection, 'reset',       @dumpContents
         @listenTo @collection, 'sync',        @renderLines
         @listenTo @collection, 'initialdata', @afterInitialData
+        @listenTo @collection, 'initialOffsetData', @afterInitialOffsetData
 
         @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
         @listenTo @collection.state, 'change:moreToFetchAtBeginning', @showOrHideMoreToFetchSpinners
@@ -151,6 +152,9 @@ class TailView extends View
         , 150
 
         @startTailing()
+
+    afterInitialOffsetData: =>
+        @$contents.scrollTop 1
 
     startTailing: =>
         return if @isTailing or not @model.get 'isStillRunning'
