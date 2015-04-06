@@ -154,7 +154,10 @@ class TailView extends View
         @startTailing()
 
     afterInitialOffsetData: =>
-        @$contents.scrollTop 1
+        setTimeout =>
+            @$contents.scrollTop 1
+            @$('.lines-wrapper').find('.line').first().addClass('highlightLine')
+        , 150
 
     startTailing: =>
         return if @isTailing or not @model.get 'isStillRunning'
