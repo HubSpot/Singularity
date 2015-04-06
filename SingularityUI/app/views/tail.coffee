@@ -48,7 +48,10 @@ class TailView extends View
         @$linesWrapper = @$contents.children('.lines-wrapper')
 
         # Attach scroll event manually because Backbone is poopy about it
-        @$contents.on 'scroll, mousewheel, DOMMouseScroll', @handleScroll
+        @$contents.on 'scroll, mousewheel', @handleScroll
+        # FireFox support
+        @$contents.on 'DOMMouseScroll', @handleScroll
+        
 
         # Some stuff in the app can change this stuff. We wanna reset it
         $('html, body').css 'min-height', '0px'
