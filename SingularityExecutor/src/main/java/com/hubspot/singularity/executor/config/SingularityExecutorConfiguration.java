@@ -3,7 +3,6 @@ package com.hubspot.singularity.executor.config;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;

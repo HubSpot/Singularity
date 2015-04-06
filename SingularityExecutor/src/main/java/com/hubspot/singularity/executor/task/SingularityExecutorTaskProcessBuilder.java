@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.hubspot.singularity.executor.models.DockerContext;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -81,19 +82,26 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData) {
     final String cmd = getCommand(executorData);
+    RunnerContext runnerContext = new RunnerContext(
+      cmd,
+      configuration.getTaskAppDirectory(),
+      configuration.getLogrotateToDirectory(),
+      executorData.getUser().or(configuration.getDefaultRunAsUser()),
+      configuration.getServiceLog(),
+      task.getTaskId(),
+      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()));
+    EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
+    if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
+      templateManager.writeDockerScript(getPath("runner.sh"), new DockerContext(environmentContext, runnerContext));
 
-    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(taskInfo));
+      task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
+    } else {
+      templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 
-    task.getLog().info("Writing a runner script to execute {}", cmd);
+      task.getLog().info("Writing a runner script to execute {}", cmd);
 
-    templateManager.writeRunnerScript(getPath("runner.sh"), new RunnerContext(
-        cmd,
-        configuration.getTaskAppDirectory(),
-        configuration.getLogrotateToDirectory(),
-        executorData.getUser().or(configuration.getDefaultRunAsUser()),
-        configuration.getServiceLog(),
-        task.getTaskId(),
-        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads())));
+      templateManager.writeRunnerScript(getPath("runner.sh"), runnerContext);
+    }
 
     List<String> command = Lists.newArrayList();
     command.add("bash");

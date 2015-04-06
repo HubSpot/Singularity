@@ -212,8 +212,9 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
-        checkBadRequest(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE,
-            "Docker networking type must be BRIDGE if port mappings are set");
+        checkBadRequest(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE ||
+            dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.HOST,
+            "Docker networking type must be BRIDGE or HOST if port mappings are set");
       }
 
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {

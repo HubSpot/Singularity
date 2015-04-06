@@ -1,0 +1,125 @@
+#!/bin/bash
+#
+# This script was automatically generated.
+# Task ID: {{{ runContext.taskId }}}
+#
+
+set -e
+
+# Wrappers for running docker containers
+function ensure_started_container {
+  exists=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
+  if [ "$?" = "true" ] ; then
+    echo "skipping docker start, already started"
+  else
+    output=`sudo -E -u {{{ runContext.user }}} docker start "$1"`
+    echo "[sudo -E -u {{{ runContext.user }}} docker start] $output"
+  fi
+  running=1
+}
+
+function setup_signals {
+  cid="$1"; shift
+  handler="$1"; shift
+  for sig; do
+    trap "$handler '$cid' '$sig'" "$sig"
+  done
+}
+
+function handle_signal {
+  echo "[docker-exec] received $2"
+  case "$2" in
+    SIGINT)
+      output=`sudo -E -u {{{ runContext.user }}} docker stop -t 5 "$1"`
+      echo "[sudo -E -u {{{ runContext.user }}} docker stop] $output"
+      running=0
+      ;;
+    SIGTERM)
+      output=`sudo -E -u {{{ runContext.user }}} docker stop -t 5 "$1"`
+      echo "[sudo -E -u {{{ runContext.user }}} docker stop] $output"
+     running=0
+      ;;
+    SIGHUP)
+      output=`sudo -E -u {{{ runContext.user }}} docker restart -t 5 "$1"`
+      echo "[sudo -E -u {{{ runContext.user }}} docker restart] $output"
+
+      # restart logging
+      sudo -E -u {{{ runContext.user }}}  >> {{{ runContext.logFile }}} 2>&1 &
+      kill "$logger_pid" 2> /dev/null
+      logger_pid="$!"
+      ;;
+  esac
+}
+
+DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
+sudo -E -u {{{ runContext.user }}} docker pull $DOCKER_IMAGE
+
+DOCKER_ENV="-e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
+
+# load env vars
+{{#each envContext.env}}
+DOCKER_ENV="$DOCKER_ENV -e {{{name}}}={{{bashEscaped value}}}"
+{{/each}}
+
+# Create log directory for logrotate runs
+if [[ ! -d {{{ runContext.logDir }}} ]]; then
+  echo "Creating log directory ({{{ runContext.logDir }}})"
+  mkdir -p {{{ runContext.logDir }}}
+  sudo chown -R {{{ runContext.user }}} {{{ runContext.logDir }}}
+fi
+
+# load artifact's profile.d
+if [[ -d .profile.d ]]; then
+  for FILE in $(ls .profile.d/*); do
+    while read -r line; do
+      DOCKER_ENV="$DOCKER_ENV -e $line"
+    done <<< $FILE
+  done
+else
+  echo "No deploy-specific profile.d"
+fi
+
+# set up port mappings
+{{#each envContext.dockerInfo.portMappingsList}}
+DOCKER_PORTS="$DOCKER_PORTS -p {{{ hostPort }}}:{{{ containerPort }}}"
+{{/each}}
+
+# set up attached volumes
+DOCKER_VOLUMES="-v `pwd`:/mnt/mesos/sandbox"
+DOCKER_ENV="$DOCKER_ENV -e MESOS_SANDBOX=/mnt/mesos/sandbox"
+{{#each envContext.containerVolumes}}
+DOCKER_VOLUMES="$DOCKER_VOLUMES -v {{{ hostPath }}}:{{{ containerPath }}}"
+{{/each}}
+
+# set up network config
+{{#if envContext.dockerInfo.network}}
+raw_network={{envContext.dockerInfo.network}}
+DOCKER_NETWORK="--net=${raw_network,,}" #downcase
+{{else}}
+DOCKER_NETWORK="--net=host"
+{{/if}}
+
+DOCKER_OPTIONS="-d --name={{{ runContext.taskId }}} $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
+
+running=0
+
+echo "Starting continer with: sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}}"
+cid=$(sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}})
+
+setup_signals "$cid" "handle_signal" SIGINT SIGTERM SIGHUP
+
+ensure_started_container "$cid"
+
+sudo -E -u {{{ runContext.user }}} docker attach "$cid" >> {{{ runContext.logFile }}} 2>&1 &
+logger_pid="$!"
+
+while true; do
+  if [ "$running" = "1" ]; then
+    sleep 1
+  else
+    break
+  fi
+done
+
+exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
+exit "$exit_code"
