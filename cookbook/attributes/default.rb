@@ -19,7 +19,7 @@ default[:singularity] = {
                                  :password => "9thlevel" }
 }
 
-default[:home][:singularity] = '/usr/local/singularity'
+default[:singularity][:home] = '/usr/local/singularity'
 default[:singularity][:log_level] = 'INFO'
 
 default[:mesos] = {
