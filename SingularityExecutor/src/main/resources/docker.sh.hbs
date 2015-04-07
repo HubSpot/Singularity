@@ -9,14 +9,22 @@ set -e
 STOP_TIME=5 # Max time to wait for container to stop before killing
 
 function ensure_started_container {
-  exists=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
-  if [ "$?" = "true" ] ; then
-    echo "skipping docker start, already started"
+  status=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
+  if [ "$status" = "true" ] ; then
+    echo "Container is running!"
+    running=1
   else
-    output=`sudo -E -u {{{ runContext.user }}} docker start "$1"`
-    echo "[sudo -E -u {{{ runContext.user }}} docker start] $output"
+    echo "Continaer did not start properly"
+    running=0
   fi
-  running=1
+}
+
+function check_contianer_running {
+  status=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
+  if [ "$status" = "false" ] ; then
+    echo "container is no longer running..."
+    running=0
+  fi
 }
 
 function setup_signals {
@@ -29,33 +37,15 @@ function setup_signals {
 
 function handle_signal {
   echo "Received $2"
-  case "$2" in
-    SIGINT)
-      echo "Stopped via sudo -E -u {{{ runContext.user }}} docker stop $1"
-      sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
-      running=0
-      ;;
-    SIGTERM)
-      echo "Stopped via sudo -E -u {{{ runContext.user }}} docker stop $1"
-      sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
-     running=0
-      ;;
-    SIGHUP)
-      echo "Restarting with sudo -E -u {{{ runContext.user }}} docker restart -t 5 $1"
-      sudo -E -u {{{ runContext.user }}} docker restart -t $STOP_TIME "$1"
-
-      # restart logging
-      sudo -E -u {{{ runContext.user }}}  >> {{{ runContext.logFile }}} 2>&1 &
-      kill "$logger_pid" 2> /dev/null
-      logger_pid="$!"
-      ;;
-  esac
+  echo "Stopped via sudo -E -u {{{ runContext.user }}} docker stop $1"
+  sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
+  running=0
 }
 
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 sudo -E -u {{{ runContext.user }}} docker pull $DOCKER_IMAGE
 
-DOCKER_ENV="-e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
+DOCKER_ENV=""
 
 # load env vars
 {{#each envContext.env}}DOCKER_ENV="$DOCKER_ENV -e {{{name}}}={{{bashEscaped value}}}"{{/each}}
@@ -84,7 +74,8 @@ fi
 # set up attached volumes
 DOCKER_VOLUMES="-v `pwd`:/mnt/mesos/sandbox"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_SANDBOX=/mnt/mesos/sandbox"
-DOCKER_ENV="$DOCKER_ENV -e LOG_DIR=/mnt/mesos/sandbox/logs"
+DOCKER_ENV="$DOCKER_ENV -e SANDBOX_LOG_DIR=/mnt/mesos/sandbox/logs"
+DOCKER_ENV="$DOCKER_ENV -e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
 {{#each envContext.containerVolumes}}
 {{#if mode}}raw_mode={{{ mode }}}{{/if}}
 DOCKER_VOLUMES="$DOCKER_VOLUMES -v {{{ hostPath }}}:{{{ containerPath }}}{{#if mode}}:${raw_mode,,}{{/if}}"
@@ -106,7 +97,7 @@ running=0
 echo "Starting continer with: sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}}"
 cid=$(sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}})
 
-setup_signals "$cid" "handle_signal" SIGINT SIGTERM SIGHUP
+setup_signals "$cid" "handle_signal" SIGINT SIGTERM
 
 ensure_started_container "$cid"
 
@@ -116,7 +107,8 @@ logger_pid="$!"
 
 while true; do
   if [ "$running" = "1" ]; then
-    sleep 1
+    sleep 10
+    check_contianer_running "$cid"
   else
     break
   fi
