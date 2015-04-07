@@ -79,11 +79,6 @@ class SingularityMesosTaskBuilder {
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
     }
 
-    final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
-    if (containerInfo.isPresent()) {
-      prepareContainerInfo(taskId, bldr, containerInfo.get(), ports);
-    }
-
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
       prepareCustomExecutor(bldr, taskId, taskRequest, ports, desiredExecutorResources);
     } else {
@@ -171,7 +166,7 @@ class SingularityMesosTaskBuilder {
         .build());
   }
 
-  private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
+  private ContainerInfo prepareContainerInfo(final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
     containerBuilder.setType(containerInfo.getType());
 
@@ -210,7 +205,7 @@ class SingularityMesosTaskBuilder {
       containerBuilder.addVolumes(volumeBuilder);
     }
 
-    bldr.setContainer(containerBuilder);
+    return containerBuilder.build();
   }
 
   private List<Resource> buildMesosResources(final Resources resources) {
@@ -232,13 +227,17 @@ class SingularityMesosTaskBuilder {
 
     prepareEnvironment(task, taskId, commandBuilder, ports);
 
-    bldr.setExecutor(ExecutorInfo.newBuilder()
+    final ExecutorInfo.Builder executorInfoBuilder = ExecutorInfo.newBuilder()
             .setCommand(commandBuilder.build())
             .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
             .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
-            .addAllResources(buildMesosResources(desiredExecutorResources))
-            .build()
-        );
+            .addAllResources(buildMesosResources(desiredExecutorResources));
+
+    if (task.getDeploy().getContainerInfo().isPresent()) {
+      executorInfoBuilder.setContainer(prepareContainerInfo(task.getDeploy().getContainerInfo().get(), ports));
+    }
+
+    bldr.setExecutor(executorInfoBuilder.build());
 
     if (task.getDeploy().getExecutorData().isPresent()) {
       ExecutorData executorData = task.getDeploy().getExecutorData().get();
@@ -296,6 +295,10 @@ class SingularityMesosTaskBuilder {
     }
 
     prepareEnvironment(task, taskId, commandBldr, ports);
+
+    if (task.getDeploy().getContainerInfo().isPresent()) {
+      bldr.setContainer(prepareContainerInfo(task.getDeploy().getContainerInfo().get(), ports));
+    }
 
     bldr.setCommand(commandBldr);
   }
