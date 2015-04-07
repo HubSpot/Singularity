@@ -49,35 +49,6 @@ import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
-  @Test
-  public void testOnDemandTimestampMatchesPendingRequest() {
-    initOnDemandRequest();
-    initFirstDeploy();
-
-    final long timestamp = System.currentTimeMillis();
-
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, timestamp, PendingType.ONEOFF));
-
-    scheduler.drainPendingQueue(stateCacheProvider.get());
-
-    Assert.assertEquals(1, taskManager.getPendingTasks().size());
-    Assert.assertEquals(timestamp, taskManager.getPendingTasks().get(0).getPendingTaskId().getNextRunAt());
-  }
-
-  @Test
-  public void testRunNowScheduledRequestTimestampMatchesPendingRequest() {
-    initScheduledRequest();
-    initFirstDeploy();
-
-    final long timestamp = System.currentTimeMillis();
-
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, timestamp, PendingType.IMMEDIATE));
-
-    scheduler.drainPendingQueue(stateCacheProvider.get());
-
-    Assert.assertEquals(1, taskManager.getPendingTasks().size());
-    Assert.assertEquals(timestamp, taskManager.getPendingTasks().get(0).getPendingTaskId().getNextRunAt());
-  }
 
   @Test
   public void testSchedulerIsolatesPendingTasksBasedOnDeploy() {
