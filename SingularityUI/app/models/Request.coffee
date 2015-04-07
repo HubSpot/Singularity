@@ -130,10 +130,12 @@ class Request extends Model
             ]
             afterOpen: -> 
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
+                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
 
             callback: (data) =>
                 return if data is false
                 localStorage.setItem('taskRunRedirectFilename', data.filename) if data.filename?
+                localStorage.setItem('taskRunAutoTail', data.autoTail)
                 data.id = @get 'id'
                 @run(data.commandLineInput).done callback(data)
 

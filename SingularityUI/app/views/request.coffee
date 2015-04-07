@@ -1,6 +1,12 @@
 View = require './view'
 
 Deploy = require '../models/Deploy'
+TaskFiles = require '../collections/TaskFiles'
+
+interval = (a, b) -> setInterval(b, a)  # f u javascript
+timeout = (a, b) -> setTimeout(b, a)
+
+AUTO_TAIL_TIMEOUT = 5 * 60 * 1000
 
 class RequestView extends View
 
@@ -63,13 +69,10 @@ class RequestView extends View
     runRequest: (e) =>
         @model.promptRun (data) =>   
             # If user wants to redirect to a file after the task starts
-            if data.filename.length > 1
-                @listenToOnce @activeTasks, 'add', @redirectToFile
-                
-                @redirectFilename = data.filename
-                @mostRecentTask = @history.first().get('id')
-
-                @startPollingTasks()
+            if data.autoTail is 'on'
+                @autoTailFilename = data.filename
+                @autoTailTimestamp = +new Date()
+                @startAutoTailPolling()
             else
                 @trigger 'refreshrequest'
                 setTimeout ( => @trigger 'refreshrequest'), 2500
@@ -106,51 +109,80 @@ class RequestView extends View
     # Start polling for task changes, and check
     # Task History changes in case we need 
     # to back out of the file redirect 
-    startPollingTasks: ->
-        @redirectCancelPrompt()
-        @activeInterval = setInterval ( => 
-            @trigger 'refreshrequest' 
-            @checkTaskHistoryChange()
-        ), 2000
+    startAutoTailPolling: ->
+        @showAutoTailWaitingDialog()
+        @stopAutoTailPolling()
 
-    stopPollingTasks: ->
-        clearInterval @activeInterval
-        @stopListening @activeTasks, 'add', @redirectToFile
+        @listenTo @history, 'reset', @handleHistoryReset
+        @listenToOnce @activeTasks, 'add', @handleActiveTasksAdd
 
-    # While waiting for the task to start up, if the Task History
-    # updates, and the most recent task has a "dead state",
-    # it likely never ran, so let's close the prompt and stop polling
-    checkTaskHistoryChange: ->
-        deadStates = ['TASK_FAILED', 'TASK_LOST', 'TASK_LOST_WHILE_DOWN'] ## include 'TASK_KILLED' ?
-        currentTask = @history.first()
-        if currentTask.get('id') isnt @mostRecentTask and (currentTask.get('lastTaskState') in deadStates)
+        @autoTailPollInterval = interval 2000, =>
+            if @autoTailTaskFiles
+                @autoTailTaskFiles.fetch().error -> app.caughtError()  # we don't care about errors in this situation
+            else
+                @history.fetch()
+                @activeTasks.fetch()
+
+        @autoTailTimeout = timeout 60000, =>
+            @stopAutoTailPolling()
             vex.close()
-            @stopPollingTasks()
-        
-    # If redirecting after the task starts,
-    # get the id to generate the url
-    redirectToFile: (type) ->
-        @stopPollingTasks()
-        id = @activeTasks.first().get('id')
+            vex.dialog.alert
+                message: """
+                    <h3>Failure</h3>
+                    <code>#{ @autoTailFilename }</code> did not exist after #{ Math.floor(AUTO_TAIL_TIMEOUT / 60000) } minute(s).
+                """
+                buttons: [
+                    $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
+                ]
 
-        ## Give some time for the file to be created
-        setTimeout =>
-            app.router.navigate "#task/#{id}/tail/#{id}/#{@redirectFilename}", trigger: true
+    handleHistoryReset: (tasks) =>
+        timestamp = @autoTailTimestamp
+        matchingTask = tasks.find (task) -> task.get('taskId').startedAt > timestamp
+        if matchingTask
+            $('.auto-tail-checklist').addClass 'waiting-for-file'
+            @stopListening @activeTasks, 'add'
+            @autoTailTaskFiles = new TaskFiles [], taskId: matchingTask.get('id')
+
+    handleActiveTasksAdd: (task) =>
+        $('.auto-tail-checklist').addClass 'waiting-for-file'
+        @autoTailTaskId = task.get('id')
+        @autoTailTaskFiles = new TaskFiles [], taskId: @autoTailTaskId
+        @listenTo @autoTailTaskFiles, 'add', @handleTaskFilesAdd
+
+    handleTaskFilesAdd: =>
+        if @autoTailTaskFiles.findWhere({name: @autoTailFilename})
+            @stopAutoTailPolling()
+            @stopListening @history, 'reset', @handleHistoryReset
+            app.router.navigate "#task/#{@autoTailTaskId}/tail/#{@autoTailTaskId}/#{@autoTailFilename}", trigger: true
             vex.close()
-        , 2000
+
+    stopAutoTailPolling: ->
+        if @autoTailPollInterval
+            clearInterval @autoTailPollInterval
+        if @autoTailTimeout
+            clearTimeout @autoTailTimeout
+        @stopListening @activeTasks, 'add', @handleActiveTasksAdd
+        @stopListening @history, 'reset', @handleHistoryReset
+        if @autoTailTaskFiles
+            @stopListening @autoTailTaskFiles, 'add', @handleTaskFilesAdd
+        @autoTailTaskFiles = null
 
     ## Prompt for cancelling the redirect after it's been initiated
-    redirectCancelPrompt: ->
+    showAutoTailWaitingDialog: ->
         vex.dialog.alert
+            overlayClosesOnClick: false
             message: """
-                <div class="page-loader" style='display: inline-block'></div>
-                Redirecting to <span class='label label-default'>#{@redirectFilename}</span> once task has started.
+                <h3>Launching</h3>
+                <ol class="auto-tail-checklist">
+                    <li class="auto-tail-task-start">Waiting for task to launch</li>
+                    <li class="auto-tail-file-exists">Waiting for <code>#{ @autoTailFilename }</code> to exist</li>
+                </ol>
             """
             buttons: [
-                $.extend _.clone(vex.dialog.buttons.YES), text: 'Cancel'
+                $.extend _.clone(vex.dialog.buttons.NO), text: 'Close'
             ]
             callback: (data) =>
-                @stopPollingTasks() if data is true
+                @stopAutoTailPolling()
 
 
 module.exports = RequestView
