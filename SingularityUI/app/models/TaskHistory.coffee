@@ -56,6 +56,7 @@ class TaskHistory extends Model
 
 
         taskHistory.isCleaning = _.last( taskHistory.taskUpdates ).taskState is 'TASK_CLEANING'
+        taskHistory.showRecentHealthchecksOnly = true
 
 
         taskHistory
