@@ -14,21 +14,13 @@ default[:singularity] = {
   },
 }
 
-default[:mesos] = {
-  :package_version => "0.21.0-1.0.ubuntu1404",
-  :common => {
-    :ip => private_ip,
-  },
-  :master => {
-    :cluster => 'vagrant-singularity',
-  },
-  :slave => {
-    :containerizers => 'docker,mesos',
-    :switch_user => 'false'
-  },
-  :slave_resources => {},
-  :slave_attributes => {}
-}
+default[:singularity][:home] = '/usr/local/singularity'
+
+set[:mesos][:type] = 'mesosphere'
+set[:mesos][:mesosphere][:with_zookeeper] = true
+
+default[:mesos][:master][:zk] = 'zk://localhost:2181/mesos'
+default[:mesos][:slave][:master] = 'zk://localhost:2181/mesos'
 
 default[:docker] = {
   :enabled => true,
