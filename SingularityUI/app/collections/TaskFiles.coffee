@@ -1,8 +1,11 @@
 Collection = require './collection'
+TaskFile = require '../models/TaskFile'
 
 class TaskFiles extends Collection
 
     url: -> "#{ config.apiRoot }/sandbox/#{ @taskId }/browse"
+
+    model: TaskFile
 
     initialize: (models, { @taskId, @path }) ->
     
