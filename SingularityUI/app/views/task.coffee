@@ -9,6 +9,7 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
+            'click #toggle-Healthchecks' : 'toggleHealthchecks'
     initialize: ({@taskId}) ->
 
     render: ->
@@ -52,6 +53,8 @@ class TaskView extends View
         taskModel.promptKill =>
             setTimeout (=> @trigger 'refreshrequest'), 1000
 
+    toggleHealthchecks: ->
+        @model.set 'showRecentHealthchecksOnly', !@model.get 'showRecentHealthchecksOnly'
 
 
 module.exports = TaskView
