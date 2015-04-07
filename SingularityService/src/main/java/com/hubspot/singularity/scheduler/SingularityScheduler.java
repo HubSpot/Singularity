@@ -213,7 +213,7 @@ public class SingularityScheduler {
 
         final RequestState requestState = checkCooldown(maybeRequest.get(), deployStatistics);
 
-        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds);
+        int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, pendingRequest, matchingTaskIds);
 
         if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
           LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
@@ -338,7 +338,7 @@ public class SingularityScheduler {
     }
   }
 
-  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
+  private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state,
       SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds) {
     deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
 
@@ -347,7 +347,7 @@ public class SingularityScheduler {
     LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}", numMissingInstances, request.getId(), matchingTaskIds, pendingRequest);
 
     if (numMissingInstances > 0) {
-      final List<SingularityPendingTask> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest);
+      final List<SingularityPendingTask> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, pendingRequest.getDeployId(), pendingRequest);
 
       if (!scheduledTasks.isEmpty()) {
         LOG.trace("Scheduling tasks: {}", scheduledTasks);
@@ -448,7 +448,7 @@ public class SingularityScheduler {
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), System.currentTimeMillis(), pendingType);
 
-    scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
+    scheduleTasks(stateCache, request, requestState, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
 
     return Optional.of(pendingType);
   }
@@ -563,9 +563,8 @@ public class SingularityScheduler {
     return numInstances - matchingTaskIds.size();
   }
 
-  private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state,
-      SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest) {
-    final Optional<Long> nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest.getPendingType());
+  private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, String deployId, SingularityPendingRequest pendingRequest) {
+    final Optional<Long> nextRunAt = getNextRunAt(pendingRequest, request, state);
 
     if (!nextRunAt.isPresent()) {
       return Collections.emptyList();
@@ -595,14 +594,17 @@ public class SingularityScheduler {
     return newTasks;
   }
 
-  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, PendingType pendingType) {
+  private Optional<Long> getNextRunAt(SingularityPendingRequest pendingRequest, SingularityRequest request, RequestState requestState) {
     final long now = System.currentTimeMillis();
 
     long nextRunAt = now;
 
     if (request.isScheduled()) {
-      if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
-        LOG.info("Scheduling requested immediate run of {}", request.getId());
+      if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+        nextRunAt = pendingRequest.getTimestamp();
+        LOG.info("Scheduling requested {} run of {} at timestamp of pending request ({})", pendingRequest.getPendingType(), request.getId(), nextRunAt);
+      } else if (pendingRequest.getPendingType() == PendingType.RETRY) {
+        LOG.info("Immediately scheduling requested {} run of {}", pendingRequest.getPendingType(), request.getId());
       } else {
         try {
           Date scheduleFrom = new Date(now);
@@ -624,15 +626,20 @@ public class SingularityScheduler {
           throw Throwables.propagate(pe);
         }
       }
+    } else if (request.isOneOff()) {
+      if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+        nextRunAt = pendingRequest.getTimestamp();
+        LOG.info("Scheduling requested {} run of {} at timestamp of pending request ({})", pendingRequest.getPendingType(), request.getId(), nextRunAt);
+      }
     }
 
-    if (pendingType == PendingType.TASK_DONE && request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().or(0L) > 0) {
+    if (pendingRequest.getPendingType() == PendingType.TASK_DONE && request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().or(0L) > 0) {
       nextRunAt = Math.max(nextRunAt, now + request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get());
 
       LOG.trace("Adjusted next run of {} to {} (by {}) due to waitAtLeastMillisAfterTaskFinishesForReschedule", request.getId(), nextRunAt, JavaUtils.durationFromMillis(request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()));
     }
 
-    if (state == RequestState.SYSTEM_COOLDOWN && pendingType != PendingType.NEW_DEPLOY) {
+    if (requestState == RequestState.SYSTEM_COOLDOWN && pendingRequest.getPendingType() != PendingType.NEW_DEPLOY) {
       final long prevNextRunAt = nextRunAt;
       nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));
       LOG.trace("Adjusted next run of {} to {} (from: {}) due to cooldown", request.getId(), nextRunAt, prevNextRunAt);

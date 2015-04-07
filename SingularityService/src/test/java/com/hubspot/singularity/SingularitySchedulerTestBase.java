@@ -228,7 +228,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void statusUpdate(SingularityTask task, TaskState state) {
-    statusUpdate(task, state, Optional.<Long> absent());
+    statusUpdate(task, state, Optional.<Long>absent());
   }
 
   protected void initLoadBalancedRequest() {
@@ -237,6 +237,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void initScheduledRequest() {
     protectedInitRequest(false, true);
+  }
+
+  protected void initOnDemandRequest() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+
+    request = bldr.build();
+
+    saveRequest(request);
   }
 
   protected void saveRequest(SingularityRequest request) {
