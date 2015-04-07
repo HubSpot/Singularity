@@ -47,6 +47,8 @@ exports.config =
             defaultMemory: 128
             hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON ? "false"
             hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON ? "false"
+            defaultHealthcheckIntervalSeconds: 5
+            defaultHealthcheckTimeoutSeconds: 10
             
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate
