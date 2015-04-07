@@ -55,7 +55,7 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testTaskPurging() {
-    initRequest();
+    initLoadBalancedRequest();
     initFirstDeploy();
 
     SingularityTask taskOne = launchTask(request, firstDeploy, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), 1, TaskState.TASK_RUNNING);
