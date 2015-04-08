@@ -5,6 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 
@@ -29,14 +35,15 @@ public class SingularityExecutorTaskCleanup {
   public boolean cleanup(boolean cleanupTaskAppDirectory, boolean isDocker) {
     final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
 
+    boolean dockerCleanSuccess = true;
     if (isDocker) {
-      cleanDocker();
+      dockerCleanSuccess = cleanDocker();
     }
 
     if (!Files.exists(taskDirectory)) {
       log.info("Directory {} didn't exist for cleanup", taskDirectory);
       taskLogManager.removeLogrotateFile();
-      return cleanTaskDefinitionFile();
+      return (cleanTaskDefinitionFile() && dockerCleanSuccess);
     }
 
     boolean logTearDownSuccess = taskLogManager.teardown();
@@ -49,24 +56,10 @@ public class SingularityExecutorTaskCleanup {
     log.info("Cleaned up logs ({}) and task app directory ({})", logTearDownSuccess, cleanupTaskAppDirectorySuccess);
 
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
-      return cleanTaskDefinitionFile();
+      return (cleanTaskDefinitionFile() && dockerCleanSuccess);
     }
 
     return false;
-  }
-
-  private boolean cleanDocker() {
-    try {
-      final List<String> stopCmd = ImmutableList.of("docker", "stop", taskDefinition.getTaskId(), "-t", "10");
-      new SimpleProcessManager(log).runCommand(stopCmd);
-      final List<String> removeCmd = ImmutableList.of("docker", "rm", taskDefinition.getTaskId());
-      new SimpleProcessManager(log).runCommand(removeCmd);
-      log.info(String.format("Ensured removal of docker container %s", taskDefinition.getTaskId()));
-      return true;
-    } catch (Exception e) {
-      log.error(String.format("Could not ensure removal of docker container due to error %s", e));
-      return false;
-    }
   }
 
   public boolean cleanTaskDefinitionFile() {
@@ -105,6 +98,42 @@ public class SingularityExecutorTaskCleanup {
       log.error("While deleting directory {}", pathToDelete, t);
     }
 
+    return false;
+  }
+
+  private boolean cleanDocker() {
+    try {
+      if (!checkContainerRemoved()) {
+        log.info(String.format("Attempting to remove container %s", taskDefinition.getTaskId()));
+        // docker doesn't return properly so using executor to enforce a timeout  >:-/
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<String> future = executor.submit(new Callable<String>() {
+          public String call() throws Exception {
+            List<String> removeCmd = ImmutableList.of("docker", "rm", "-f", taskDefinition.getTaskId());
+            List<String> output = new SimpleProcessManager(log).runCommandWithOutput(removeCmd);
+            return output.toString();
+          }
+        });
+        log.info(future.get(10, TimeUnit.SECONDS));
+      } else {
+        log.info("Container has already been removed");
+      }
+    } catch (TimeoutException te) {
+      log.debug("docker remove timed out, still checking if container was removed");
+    } catch (Exception e) {
+      log.info(String.format("Could not ensure removal of docker container due to error %s", e));
+    }
+    return checkContainerRemoved();
+  }
+
+  private boolean checkContainerRemoved() {
+    try {
+      List<String> dockerPsCmd = ImmutableList.of("docker", "ps", "-a", "|", "grep", "-o", taskDefinition.getTaskId());
+      List<String> dockerPsOutput = new SimpleProcessManager(log).runCommandWithOutput(dockerPsCmd);
+      return dockerPsOutput.isEmpty();
+    } catch (Exception e) {
+      log.info(String.format("Could not ensure removal of docker container due to error %s", e));
+    }
     return false;
   }
 

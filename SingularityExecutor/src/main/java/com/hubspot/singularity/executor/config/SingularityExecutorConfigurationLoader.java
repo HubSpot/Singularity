@@ -28,7 +28,6 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
   public static final String TASK_SERVICE_LOG_PATH = "executor.task.service.log.path";
 
   public static final String DEFAULT_USER = "executor.default.user";
-  public static final String DOCKER_USER = "executor.docker.user";
 
   public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
   public static final String GLOBAL_TASK_DEFINITION_SUFFIX = "executor.global.task.definition.suffix";
@@ -76,7 +75,6 @@ public class SingularityExecutorConfigurationLoader extends SingularityConfigura
     properties.put(SHUTDOWN_TIMEOUT_MILLIS, Long.toString(TimeUnit.MINUTES.toMillis(5)));
     properties.put(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS, Long.toString(TimeUnit.SECONDS.toMillis(30)));
     properties.put(SHUTDOWN_STOP_DRIVER_AFTER_MILLIS, Long.toString(TimeUnit.SECONDS.toMillis(5)));
-    properties.put(DOCKER_USER, "");
 
     properties.put(TAIL_LOG_LINES_TO_SAVE, "500");
     properties.put(TAIL_LOG_FILENAME, "tail_of_finished_service.log");

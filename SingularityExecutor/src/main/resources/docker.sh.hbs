@@ -43,6 +43,8 @@ function handle_signal {
   echo "Received $2"
   echo "Stopping via sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
   sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
+  echo "Attempting to remove container"
+  sudo -E -u {{{ runContext.user }}} docker rm $1
   running=0
 }
 
