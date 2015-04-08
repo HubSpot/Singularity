@@ -15,7 +15,8 @@ class TaskHistory extends Model
     initialize: ({ @taskId }) ->
 
     parse: (taskHistory) ->
-        _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
+        taskHistory.taskUpdates = _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
+        taskHistory.healthcheckResults = (_.sortBy taskHistory.healthcheckResults, (t) -> t.timestamp).reverse()
 
         taskHistory.task?.mesosTask?.executor?.command?.environment?.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
 
