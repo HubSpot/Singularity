@@ -8,6 +8,10 @@ set -e
 
 STOP_TIME=5 # Max time to wait for container to stop before killing
 
+CURRENT_DIR=`pwd`
+CGROUPS_GUID=${CURRENT_DIR##*runs/}
+CGROUPS_GUID=${CGROUPS_GUID%/*}
+
 function ensure_started_container {
   status=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
   if [ "$status" = "true" ] ; then
@@ -37,22 +41,71 @@ function setup_signals {
 
 function handle_signal {
   echo "Received $2"
-  echo "Stopped via sudo -E -u {{{ runContext.user }}} docker stop $1"
+  echo "Stopping via sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
   sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
   running=0
 }
 
+function fetch_image {
+  have_image=0
+  possible_matches=`sudo -E -u {{{ runContext.user }}} docker images | grep ${1%:*} | awk '{print $1}'`
+  if [ -n "$possible_matches" ] ; then
+    specified_version=${1##*:}
+    if [[ "$specified_version" == *"/"* ]] ; then
+      specified_version="latest"
+    fi
+    possible_version_matches=`sudo -E -u {{{ runContext.user }}} docker images | grep ${1%:*} | awk '{print $2}'`
+    if [ -n "$possible_version_matches" ] ; then
+      while read -r line; do
+        if [[ "$specified_version" == "$line" ]]; then
+          have_image=1
+        fi
+      done <<< "$possible_version_matches"
+    fi
+  fi
+  if [[ "$have_image" != 1 ]] ; then
+    echo "Did not find image $1 locally, pulling from repository..."
+    sudo -E -u {{{ runContext.user }}} docker pull $1
+  else
+    echo "Image has already been pulled..."
+  fi
+}
+
+function setup_cgroups {
+  if [ -d "/cgroup" ] ;then
+    CGROUPS_DIR="/cgroup"
+  else
+    if [ -d "/sys/fs/cgroup" ] ; then
+      CGROUPS_DIR="/sys/fs/cgroup"
+    else
+      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for task"
+      return 0
+    fi
+  fi
+  echo "Adding docker processes to mesos executor cgroup..."
+  docker_root_pid=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Pid}} $1`
+  docker_processes=`pstree -pn $docker_root_pid |grep -o '([[:digit:]]*)' | grep -o '[[:digit:]]*'`
+  subsystems=(memory cpu cpuacct)
+  for s in "${subsystems[@]}" ; do
+    while read line; do
+      echo $line >> "$CGROUPS_DIR/$s/mesos/$2/tasks"
+    done <<< "$docker_processes"
+  done
+}
+
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
-sudo -E -u {{{ runContext.user }}} docker pull $DOCKER_IMAGE
+fetch_image $DOCKER_IMAGE
 
 DOCKER_ENV=""
 
 # load env vars
-{{#each envContext.env}}DOCKER_ENV="$DOCKER_ENV -e {{{name}}}={{{bashEscaped value}}}"{{/each}}
+{{#each envContext.env}}
+DOCKER_ENV="$DOCKER_ENV -e {{{name}}}={{{bashEscaped value}}}"
+{{/each}}
 
 # Create log directory for logrotate runs
 if [[ ! -d {{{ runContext.logDir }}} ]]; then
-  echo "Creating log directory ({{{ runContext.logDir }}})"
+  echo "Creating log directory ({{{ runContext.logDir }}})..."
   mkdir -p {{{ runContext.logDir }}}
   sudo chown -R {{{ runContext.user }}} {{{ runContext.logDir }}}
 fi
@@ -72,13 +125,13 @@ fi
 {{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS="$DOCKER_PORTS -p {{{ hostPort }}}:{{{ containerPort }}}"{{/each}}
 
 # set up attached volumes
-DOCKER_VOLUMES="-v `pwd`:/mnt/mesos/sandbox"
+DOCKER_VOLUMES="-v $CURRENT_DIR:/mnt/mesos/sandbox"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_SANDBOX=/mnt/mesos/sandbox"
 DOCKER_ENV="$DOCKER_ENV -e SANDBOX_LOG_DIR=/mnt/mesos/sandbox/logs"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
 {{#each envContext.containerVolumes}}
-{{#if mode}}raw_mode={{{ mode }}}{{/if}}
-DOCKER_VOLUMES="$DOCKER_VOLUMES -v {{{ hostPath }}}:{{{ containerPath }}}{{#if mode}}:${raw_mode,,}{{/if}}"
+{{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
+DOCKER_VOLUMES="$DOCKER_VOLUMES -v {{{ hostPath }}}:{{{ containerPath }}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}"
 {{/each}}
 
 # set up network config
@@ -100,6 +153,10 @@ cid=$(sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAG
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
 
 ensure_started_container "$cid"
+
+set +e
+setup_cgroups "$cid" "$CGROUPS_GUID"
+set -e
 
 # Attach for logging and wait for signals, then exit with container exist status
 sudo -E -u {{{ runContext.user }}} docker attach "$cid" >> {{{ runContext.logFile }}} 2>&1 &
