@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
@@ -98,16 +99,25 @@ public class SingularityExecutorThreadChecker {
   private int getNumUsedThreads(SingularityExecutorTaskProcessCallable taskProcess) throws InterruptedException, ProcessFailedException {
     SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
 
+    Optional<Integer> dockerPid = Optional.absent();
+    if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
+      List<String> dockerPidCmd = ImmutableList.of("docker", "inspect", "-f", "{{.State.Pid}}", taskProcess.getTask().getTaskId());
+      List<String> dockerPidOutput = checkThreadsProcessManager.runCommandWithOutput(dockerPidCmd);
+      if (dockerPidOutput.isEmpty()) {
+        throw new ProcessFailedException("Could not get docker root pid");
+      }
+      dockerPid = Optional.of(Integer.parseInt(dockerPidOutput.get(0)));
+    }
+
     List<String> cmd = ImmutableList.of("/bin/sh",
-        "-c",
-        String.format("pstree %s -p | wc -l", taskProcess.getCurrentPid().get()));
+      "-c",
+      String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
 
     List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
 
     if (output.isEmpty()) {
       throw new ProcessFailedException("Output from ps was empty");
     }
-
     return Integer.parseInt(output.get(0));
   }
 
