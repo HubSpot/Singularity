@@ -1,15 +1,18 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.primitives.Longs;
 
-public class SingularityTaskShellCommandRequest extends SingularityId {
+public class SingularityTaskShellCommandRequest implements Comparable<SingularityTaskShellCommandRequest> {
 
   private final SingularityTaskId taskId;
   private final Optional<String> user;
   private final SingularityShellCommand shellCommand;
   private final long timestamp;
+  private final SingularityTaskShellCommandRequestId id;
 
   @JsonCreator
   public SingularityTaskShellCommandRequest(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("user") Optional<String> user, @JsonProperty("timestamp") long timestamp,
@@ -18,11 +21,17 @@ public class SingularityTaskShellCommandRequest extends SingularityId {
     this.user = user;
     this.timestamp = timestamp;
     this.shellCommand = shellCommand;
+    this.id = new SingularityTaskShellCommandRequestId(taskId, shellCommand.getName(), timestamp);
+  }
+
+  @JsonIgnore
+  public SingularityTaskShellCommandRequestId getId() {
+    return id;
   }
 
   @Override
-  public String getId() {
-    return getShellCommand().getName().replace("/", "") + getTimestamp(); // make sure the name is safe for ZK.
+  public int compareTo(SingularityTaskShellCommandRequest o) {
+    return Longs.compare(o.getTimestamp(), timestamp);
   }
 
   public SingularityTaskId getTaskId() {

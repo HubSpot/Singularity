@@ -1,7 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -57,6 +55,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
+  private final SingularityMesosFrameworkMessageHandler messageHandler;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
@@ -72,7 +71,7 @@ public class SingularityMesosScheduler implements Scheduler {
   @Inject
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
-      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
+      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
@@ -82,6 +81,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
+    this.messageHandler = messageHandler;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
@@ -326,7 +326,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, new String(data, UTF_8));
+    LOG.info("Framework message from executor {} on slave {} with {} bytes of data", executorId, slaveId, data.length);
+
+    messageHandler.handleMessage(executorId, slaveId, data);
   }
 
   @Override

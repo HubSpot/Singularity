@@ -17,16 +17,18 @@ public class ShellCommandOptionDescriptor {
     return name;
   }
 
-  public void setName(String name) {
+  public ShellCommandOptionDescriptor setName(String name) {
     this.name = name;
+    return this;
   }
 
   public String getDescription() {
     return description;
   }
 
-  public void setDescription(String description) {
+  public ShellCommandOptionDescriptor setDescription(String description) {
     this.description = description;
+    return this;
   }
 
   @Override

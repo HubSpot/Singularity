@@ -45,6 +45,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
@@ -61,6 +62,7 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
+import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -108,6 +110,7 @@ public class SingularityTestModule implements Module {
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
+    mainBinder.bind(UIConfiguration.class).toInstance(new UIConfiguration());
 
     mainBinder.install(Modules.override(new SingularityMainModule(configuration))
         .with(new Module() {
@@ -174,6 +177,7 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
+    mainBinder.bind(TaskResource.class);
     mainBinder.bind(SlaveResource.class);
     mainBinder.bind(RackResource.class);
   }

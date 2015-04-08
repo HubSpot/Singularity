@@ -26,24 +26,27 @@ public class ShellCommandDescriptor {
     return name;
   }
 
-  public void setName(String name) {
+  public ShellCommandDescriptor setName(String name) {
     this.name = name;
+    return this;
   }
 
   public String getDescription() {
     return description;
   }
 
-  public void setDescription(String description) {
+  public ShellCommandDescriptor setDescription(String description) {
     this.description = description;
+    return this;
   }
 
   public List<ShellCommandOptionDescriptor> getOptions() {
     return options;
   }
 
-  public void setOptions(List<ShellCommandOptionDescriptor> options) {
+  public ShellCommandDescriptor setOptions(List<ShellCommandOptionDescriptor> options) {
     this.options = options;
+    return this;
   }
 
   @Override

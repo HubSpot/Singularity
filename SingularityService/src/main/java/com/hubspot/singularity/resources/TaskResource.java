@@ -6,7 +6,6 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -23,9 +22,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -68,7 +67,7 @@ public class TaskResource {
   private final SlaveManager slaveManager;
   private final TaskManager taskManager;
   private final TaskRequestManager taskRequestManager;
-  private final Map<String, ShellCommandDescriptor> shellCommands;
+  private final UIConfiguration uiConfiguration;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, UIConfiguration uiConfiguration) {
@@ -77,11 +76,7 @@ public class TaskResource {
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
 
-    this.shellCommands = Maps.newHashMapWithExpectedSize(uiConfiguration.getShellCommands().size());
-
-    for (ShellCommandDescriptor shellCommand : uiConfiguration.getShellCommands()) {
-      shellCommands.put(shellCommand.getName(), shellCommand);
-    }
+    this.uiConfiguration = uiConfiguration;
   }
 
   private SingularityTask checkActiveTask(String taskId) {
@@ -227,14 +222,11 @@ public class TaskResource {
   }
 
   @GET
-  @Path("/task/{taskId}/commands/queued")
-  @ApiOperation(value="Retrieve a list of the shell commands queued for execution for the given taskId")
-  public List<SingularityTaskShellCommandRequest> getQueuedShellCommands(@PathParam("taskId") String taskId) {
-    return taskManager.getTaskShellCommandRequests(getTaskIdFromStr(taskId));
+  @Path("/commands/queued")
+  @ApiOperation(value="Retrieve a list of all the shell commands queued for execution")
+  public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
+    return taskManager.getAllQueuedTaskShellCommandRequests();
   }
-
-  //  @GET
-  //  @Path("/task/{taskId}/commands/active")
 
   @POST
   @Path("/task/{taskId}/command")
@@ -244,20 +236,27 @@ public class TaskResource {
     @ApiResponse(code=403, message="Given shell command doesn't exist")
   })
   @Consumes({ MediaType.APPLICATION_JSON })
-  public void runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user, SingularityShellCommand shellCommand) {
+  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user, final SingularityShellCommand shellCommand) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     if (!taskManager.isActiveTask(taskId)) {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
     }
 
-    if (!shellCommands.containsKey(shellCommand.getName())) {
-      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), shellCommands.keySet());
+    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+
+      @Override
+      public boolean apply(ShellCommandDescriptor input) {
+        return input.getName().equals(shellCommand.getName());
+      }
+    });
+
+    if (!commandDescriptor.isPresent()) {
+      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
     }
 
-    ShellCommandDescriptor commandDescriptor = shellCommands.get(shellCommand.getName());
-    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.getOptions().size());
-    for (ShellCommandOptionDescriptor option : commandDescriptor.getOptions()) {
+    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
+    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
       options.add(option.getName());
     }
 
@@ -267,7 +266,11 @@ public class TaskResource {
       }
     }
 
-    taskManager.saveTaskShellCommandRequest(new SingularityTaskShellCommandRequest(taskIdObj, user, System.currentTimeMillis(), shellCommand));
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, user, System.currentTimeMillis(), shellCommand);
+
+    taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
+
+    return shellRequest;
   }
 
   @DELETE
