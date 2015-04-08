@@ -26,8 +26,12 @@ public class SingularityExecutorTaskCleanup {
     this.log = log;
   }
 
-  public boolean cleanup(boolean cleanupTaskAppDirectory) {
+  public boolean cleanup(boolean cleanupTaskAppDirectory, boolean isDocker) {
     final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
+
+    if (isDocker) {
+      cleanDocker();
+    }
 
     if (!Files.exists(taskDirectory)) {
       log.info("Directory {} didn't exist for cleanup", taskDirectory);
@@ -49,6 +53,20 @@ public class SingularityExecutorTaskCleanup {
     }
 
     return false;
+  }
+
+  private boolean cleanDocker() {
+    try {
+      final List<String> stopCmd = ImmutableList.of("docker", "stop", taskDefinition.getTaskId(), "-t", "10");
+      new SimpleProcessManager(log).runCommand(stopCmd);
+      final List<String> removeCmd = ImmutableList.of("docker", "rm", taskDefinition.getTaskId());
+      new SimpleProcessManager(log).runCommand(removeCmd);
+      log.info(String.format("Ensured removal of docker container %s", taskDefinition.getTaskId()));
+      return true;
+    } catch (Exception e) {
+      log.error(String.format("Could not ensure removal of docker container due to error %s", e));
+      return false;
+    }
   }
 
   public boolean cleanTaskDefinitionFile() {

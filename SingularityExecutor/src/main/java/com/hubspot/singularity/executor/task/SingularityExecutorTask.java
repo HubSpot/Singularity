@@ -59,7 +59,9 @@ public class SingularityExecutorTask {
 
     boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed();
 
-    taskCleanup.cleanup(cleanupAppTaskDirectory);
+    boolean isDocker = (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker());
+
+    taskCleanup.cleanup(cleanupAppTaskDirectory, isDocker);
   }
 
   public SingularityExecutorTaskLogManager getTaskLogManager() {
