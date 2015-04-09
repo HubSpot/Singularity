@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-import fnmatch
 import grequests
 import logfetch_base
 from termcolor import colored
@@ -23,7 +22,7 @@ def download_s3_logs(args):
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
     if logfetch_base.is_in_date_range(args, time_from_filename(filename)):
-      if (not args.logtype) or is_old_log_format(filename) or log_matches(args, filename):
+      if not args.logtype or log_matches(args, filename):
         if not already_downloaded(args.dest, filename):
           async_requests.append(
             grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose))
@@ -77,10 +76,15 @@ def s3_task_logs_uri(args, idString):
 def s3_request_logs_uri(args, idString):
   return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), REQUEST_FORMAT.format(idString))
 
-def is_old_log_format(filename):
-  m = re.search(FILE_REGEX, filename)
-  return not m
-
 def log_matches(args, filename):
-    m = re.search(FILE_REGEX, filename)
-    return fnmatch.fnmatch(args.logtype.replace('logs/', ''), m.group(1))
+  if 'filename' in args.file_pattern:
+    return logfetch_base.log_matches(filename, '*{0}*'.format(args.logtype.replace('logs/', '')))
+  else:
+    sys.stderr.write(colored('Cannot match on log file names for s3 logs when filename is not in s3 pattern', 'red'))
+    if args.no_name_fetch_off:
+      sys.stderr.write(colored('Will not fetch any s3 logs beacuse --no-name-fetch-off is set, remove this setting to fetch all for this case instead', 'red'))
+      return False
+    else:
+      sys.stderr.write(colored('Will fetch all s3 logs, set --no-name-fetch-off to skip s3 logs instead for this case', 'red'))
+      return True
+
