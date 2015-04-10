@@ -46,6 +46,7 @@ class taskOverviewSubview extends View
         config:           config
         data:             @model.toJSON()
         isDeployPending:  @isDeployPending
+        healthCheck:      @model.get('healthcheckResults')[0]
         synced:           @model.synced and @collection.synced and @deploys.synced
 
     # If we have a deploy pending for this task,
