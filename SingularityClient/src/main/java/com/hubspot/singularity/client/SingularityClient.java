@@ -80,6 +80,7 @@ public class SingularityClient {
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
+  private static final String REQUEST_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/requests";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
@@ -129,6 +130,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
   private static final TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
+  private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_HISTORY_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -686,6 +688,45 @@ public class SingularityClient {
     final String requestUri = String.format(SLAVES_DELETE_FORMAT, getHost(), contextPath, slaveId);
 
     delete(requestUri, "deleting slave", slaveId, user);
+  }
+
+  //
+  // REQUEST HISTORY
+  //
+
+  /**
+   * Retrieve a paged list of updates for a particular {@link SingularityRequest}
+   *
+   * @param requestId
+   *    Request ID to look up
+   * @param count
+   *    Number of items to return per page
+   * @param page
+   *    Which page of items to return
+   * @return
+   *    A list of {@link SingularityRequestHistory}
+   */
+  public Collection<SingularityRequestHistory> getHistoryForRequest(String requestId,  Optional<Integer> count, Optional<Integer> page) {
+    final String requestUri = String.format(REQUEST_HISTORY_FORMAT, getHost(), contextPath, requestId);
+
+    Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
+
+    ImmutableMap.Builder<String, Object> queryParamsBuilder = ImmutableMap.<String, Object>builder();
+
+    if (count.isPresent() ) {
+      queryParamsBuilder.put("count", count.get());
+    }
+
+    if (page.isPresent()) {
+      queryParamsBuilder.put("page", page.get());
+    }
+
+    Map<String, Object> queryParams = queryParamsBuilder.build();
+    if (!queryParams.isEmpty()) {
+      maybeQueryParams = Optional.of(queryParams);
+    }
+
+    return getCollectionWithParams(requestUri, "request history", maybeQueryParams, REQUEST_HISTORY_COLLECTION);
   }
 
   //
