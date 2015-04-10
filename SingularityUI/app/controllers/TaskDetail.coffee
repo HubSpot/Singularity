@@ -6,6 +6,7 @@ TaskResourceUsage = require '../models/TaskResourceUsage'
 TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 TaskCleanups = require '../collections/TaskCleanups'
+Deploys = require '../collections/Deploys'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -43,12 +44,15 @@ class TaskDetailController extends Controller
 
         @collections.taskCleanups = new TaskCleanups
 
+        # For notifications at the task level
+        @collections.deploys = new Deploys {state: 'pending'}
         #
         # Subviews
         #
         @subviews.overview = new OverviewSubview
             collection: @collections.taskCleanups
             model:      @models.task
+            deploys:    @collections.deploys
             template:   @templates.overview
 
         @subviews.history = new SimpleSubview
@@ -117,6 +121,8 @@ class TaskDetailController extends Controller
         @resourcesFetched = false
 
         @collections.taskCleanups.fetch()
+
+        @collections.deploys.fetch()
 
         @models.task.fetch()
             .done =>
