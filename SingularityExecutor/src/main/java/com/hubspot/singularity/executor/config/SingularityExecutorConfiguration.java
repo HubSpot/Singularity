@@ -50,7 +50,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public static final String LOGROTATE_COMMAND = "executor.logrotate.command";
   public static final String LOGROTATE_CONFIG_DIRECTORY = "executor.logrotate.config.folder";
   public static final String LOGROTATE_STATE_FILE = "executor.logrotate.state.file";
-  public static final String LOGROTATE_AFTER_BYTES = "executor.logrotate.after.bytes";  // TODO: figure this out
   public static final String LOGROTATE_DIRECTORY = "executor.logrotate.to.directory";
   public static final String LOGROTATE_MAXAGE_DAYS = "executor.logrotate.maxage.days";
   public static final String LOGROTATE_COUNT = "executor.logrotate.count";

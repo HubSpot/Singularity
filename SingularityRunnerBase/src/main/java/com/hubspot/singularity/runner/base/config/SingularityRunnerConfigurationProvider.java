@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -49,7 +50,7 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
 
       return config;
     } catch (Exception e) {
-      throw new RuntimeException(e);  // TODO: better exception?
+      throw Throwables.propagate(e);
     }
   }
 }
