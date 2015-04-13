@@ -202,6 +202,10 @@ public class SingularityExecutorCleanup {
     final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
     final Path logrotateToPath = taskDefinition.getServiceLogOutPath().getParent().resolve(executorConfiguration.getLogrotateToDirectory());
 
+    if (!logrotateToPath.toFile().exists() && !logrotateToPath.toFile().isDirectory()) {
+      LOG.warn("Skipping uncompressed logrotated file cleanup for {} -- {} does not exist (task sandbox was probably GC'd)", taskDefinition.getTaskId(), logrotateToPath);
+    }
+
     try {
       DirectoryStream<Path> dirStream = Files.newDirectoryStream(logrotateToPath, String.format("%s-*", serviceLogOutPath.getFileName()));
       return dirStream.iterator();
