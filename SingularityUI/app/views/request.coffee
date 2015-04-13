@@ -177,6 +177,7 @@ class RequestView extends View
                     <li class="auto-tail-task-start">Waiting for task to launch</li>
                     <li class="auto-tail-file-exists">Waiting for <code>#{ @autoTailFilename }</code> to exist</li>
                 </ol>
+                <div class='page-loader centered cushy'></div>
             """
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.NO), text: 'Close'
