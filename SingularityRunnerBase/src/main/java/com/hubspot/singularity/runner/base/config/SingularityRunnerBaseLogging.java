@@ -1,92 +1,76 @@
 package com.hubspot.singularity.runner.base.config;
 
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
+import io.dropwizard.configuration.ConfigurationValidationException;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.nio.file.Paths;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseLoggingConfiguration;
 
 public class SingularityRunnerBaseLogging {
-
-  private final String rootLogPath;
-  private final String hubSpotLogLevel;
-  private final String loggingPattern;
-  private final Properties properties;
-  private final String[] obfuscateKeys;
+  private final ObjectMapper yamlMapper;
+  private final Validator validator;
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
+  private final SingularityRunnerBaseLoggingConfiguration loggingConfiguration;
+  private final Set<BaseRunnerConfiguration> configurations;
 
   @Inject
-  public SingularityRunnerBaseLogging(
-      @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_DIRECTORY) String rootLogDirectory,
-      @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_FILENAME) String rootLogFilename,
-      @Named(SingularityRunnerBaseConfigurationLoader.LOGGING_PATTERN) String loggingPattern,
-      @Named(SingularityRunnerBaseConfigurationLoader.ROOT_LOG_LEVEL) String rootLogLevel,
-      @Named(SingularityRunnerBaseConfigurationLoader.HUBSPOT_LOG_LEVEL) String hubSpotLogLevel,
-      @Named(SingularityRunnerBaseConfigurationLoader.OBFUSCATE_KEYS) String obfuscateKeys,
-      Properties properties) {
-    this.rootLogPath = Paths.get(rootLogDirectory).resolve(rootLogFilename).toString();
-    this.loggingPattern = loggingPattern;
-    this.properties = properties;
-    this.hubSpotLogLevel = hubSpotLogLevel;
-    this.obfuscateKeys = obfuscateKeys.split("\\,");
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, Validator validator, SingularityRunnerBaseConfiguration baseConfiguration, SingularityRunnerBaseLoggingConfiguration loggingConfiguration, Set<BaseRunnerConfiguration> configurations) {
+    this.yamlMapper = yamlMapper;
+    this.validator = validator;
+    this.loggingConfiguration = loggingConfiguration;
+    this.configurations = configurations;
+    this.baseConfiguration = baseConfiguration;
 
-    Logger rootLogger = configureRootLogger(rootLogLevel);
-    printProperties(rootLogger);
+    printProperties(configureRootLogger());
+  }
+
+  public Optional<String> getRootLogPath() {
+    if (loggingConfiguration.getFilename().isPresent()) {
+      return Optional.of(Paths.get(loggingConfiguration.getDirectory().or(baseConfiguration.getLogging().getDirectory()).or(SingularityRunnerBaseLoggingConfiguration.DEFAULT_DIRECTORY)).resolve(loggingConfiguration.getFilename().get()).toString());
+    } else {
+      return Optional.absent();
+    }
+  }
+
+  public void validateConfigurations() throws ConfigurationValidationException{
+    for (BaseRunnerConfiguration config : configurations) {
+      final Set<ConstraintViolation<BaseRunnerConfiguration>> violations = validator.validate(config);
+      if (!violations.isEmpty()) {
+        throw new ConfigurationValidationException(config.getClass().getSimpleName(), violations);
+      }
+    }
+
   }
 
   public void printProperties(Logger rootLogger) {
-    rootLogger.info("Loaded {} properties", properties.size());
-
-    List<String> strKeys = Lists.newArrayListWithCapacity(properties.size());
-    for (Object object : properties.keySet()) {
-      strKeys.add(object.toString());
-    }
-    Collections.sort(strKeys);
-
-    for (String key : strKeys) {
-      String value = properties.getProperty(key);
-      if (!SingularityRunnerBaseConfigurationLoader.OBFUSCATE_KEYS.equals(key) && shouldObfuscateValue(key)) {
-        value = obfuscateValue(value);
-      }
-      rootLogger.info("  {} -> {}", key, value);
-    }
-  }
-
-  private boolean shouldObfuscateValue(String key) {
-    for (String obfuscateKey : obfuscateKeys) {
-      if (key.contains(obfuscateKey)) {
-        return true;
+    for (BaseRunnerConfiguration configuration : configurations) {
+      try {
+        final Configuration annotation = configuration.getClass().getAnnotation(Configuration.class);
+        final String filename = annotation == null ? "(unknown)" : annotation.value();
+        rootLogger.info("Loaded {} from {}:\n{}", new String[]{configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)});
+      } catch (Exception e) {
+        rootLogger.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);
       }
     }
-
-    return false;
-  }
-
-  public static String obfuscateValue(String value) {
-    if (value == null) {
-      return value;
-    }
-
-    if (value.length() > 4) {
-      return String.format("***************%s", value.substring(value.length() - 4, value.length()));
-    } else {
-      return "(OMITTED)";
-    }
-  }
-
-  public String getRootLogPath() {
-    return rootLogPath;
   }
 
   public Logger prepareRootLogger(LoggerContext context) {
@@ -97,18 +81,20 @@ public class SingularityRunnerBaseLogging {
     return rootLogger;
   }
 
-  public Logger configureRootLogger(String rootLogLevel) {
+  public Logger configureRootLogger() {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
 
     Logger rootLogger = prepareRootLogger(context);
 
-    rootLogger.setLevel(Level.toLevel(rootLogLevel));
+    rootLogger.setLevel(Level.toLevel(loggingConfiguration.getRootLogLevel().or(baseConfiguration.getLogging().getRootLogLevel()).or(SingularityRunnerBaseLoggingConfiguration.DEFAULT_ROOT_LOG_LEVEL)));
 
     Logger hubSpotLogger = context.getLogger("com.hubspot");
 
-    hubSpotLogger.setLevel(Level.toLevel(hubSpotLogLevel));
+    hubSpotLogger.setLevel(Level.toLevel(loggingConfiguration.getHubSpotLogLevel().or(baseConfiguration.getLogging().getHubSpotLogLevel()).or(SingularityRunnerBaseLoggingConfiguration.DEFAULT_HUBSPOT_LOG_LEVEL)));
 
-    rootLogger.addAppender(buildFileAppender(context, rootLogPath));
+    if (getRootLogPath().isPresent()) {
+      rootLogger.addAppender(buildFileAppender(context, getRootLogPath().get()));
+    }
 
     return rootLogger;
   }
@@ -121,7 +107,7 @@ public class SingularityRunnerBaseLogging {
 
     PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     encoder.setContext(context);
-    encoder.setPattern(loggingPattern);
+    encoder.setPattern(loggingConfiguration.getLoggingPattern().or(baseConfiguration.getLogging().getLoggingPattern()).or(JavaUtils.LOGBACK_LOGGING_PATTERN));
     encoder.start();
 
     fileAppender.setEncoder(encoder);
@@ -129,5 +115,4 @@ public class SingularityRunnerBaseLogging {
 
     return fileAppender;
   }
-
 }

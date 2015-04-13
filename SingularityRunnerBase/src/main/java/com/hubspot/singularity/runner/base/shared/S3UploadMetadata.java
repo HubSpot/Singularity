@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 
 /**
  *
@@ -148,18 +147,10 @@ public class S3UploadMetadata {
     return finishedAfterMillisWithoutNewFile;
   }
 
-  private String obfuscateValue(Optional<String> optional) {
-    if (!optional.isPresent()) {
-      return optional.toString();
-    }
-
-    return SingularityRunnerBaseLogging.obfuscateValue(optional.get());
-  }
-
   @Override
   public String toString() {
     return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", onFinishGlob="
-        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + obfuscateValue(s3AccessKey) + ", s3Secret=" + obfuscateValue(s3SecretKey) + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
+        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + s3AccessKey.or("") + ", s3Secret=" + s3SecretKey.or("") + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
   }
 
 }

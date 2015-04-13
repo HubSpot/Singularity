@@ -4,6 +4,7 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
@@ -26,15 +28,17 @@ public class SingularityExecutorTaskLogManager {
 
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final TemplateManager templateManager;
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration configuration;
   private final Logger log;
   private final JsonObjectFileHelper jsonObjectFileHelper;
 
-  public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefinition, TemplateManager templateManager, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
+  public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefinition, TemplateManager templateManager, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
     this.log = log;
     this.taskDefinition = taskDefinition;
     this.templateManager = templateManager;
     this.configuration = configuration;
+    this.baseConfiguration = baseConfiguration;
     this.jsonObjectFileHelper = jsonObjectFileHelper;
   }
 
@@ -146,7 +150,7 @@ public class SingularityExecutorTaskLogManager {
     }
 
     final TailMetadata tailMetadata = new TailMetadata(taskDefinition.getServiceLogOut(), taskDefinition.getExecutorData().getLoggingTag().get(), taskDefinition.getExecutorData().getLoggingExtraFields(), finished);
-    final Path path = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tailMetadata);
+    final Path path = TailMetadata.getTailMetadataPath(Paths.get(baseConfiguration.getLogWatcherMetadataDirectory()), baseConfiguration.getLogWatcherMetadataSuffix(), tailMetadata);
 
     return jsonObjectFileHelper.writeObject(tailMetadata, path, log);
   }
@@ -176,7 +180,7 @@ public class SingularityExecutorTaskLogManager {
   }
 
   public Path getLogrotateConfPath() {
-    return configuration.getLogrotateConfDirectory().resolve(taskDefinition.getTaskId());
+    return Paths.get(configuration.getLogrotateConfDirectory()).resolve(taskDefinition.getTaskId());
   }
 
   private boolean writeS3MetadataFile(boolean finished) {
@@ -185,9 +189,9 @@ public class SingularityExecutorTaskLogManager {
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished, Optional.<String> absent(), Optional.<Integer> absent(), Optional.<String> absent(),
         Optional.<String> absent(), Optional.<Long> absent());
 
-    String s3UploadMetadataFileName = String.format("%s%s", taskDefinition.getTaskId(), configuration.getS3MetadataSuffix());
+    String s3UploadMetadataFileName = String.format("%s%s", taskDefinition.getTaskId(), baseConfiguration.getS3UploaderMetadataSuffix());
 
-    Path s3UploadMetadataPath = configuration.getS3MetadataDirectory().resolve(s3UploadMetadataFileName);
+    Path s3UploadMetadataPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(s3UploadMetadataFileName);
 
     return jsonObjectFileHelper.writeObject(s3UploadMetadata, s3UploadMetadataPath, log);
   }
