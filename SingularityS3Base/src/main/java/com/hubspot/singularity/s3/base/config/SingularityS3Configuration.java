@@ -8,11 +8,14 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
+
+import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
 
 @Configuration("/etc/singularity.s3base.yaml")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
@@ -29,26 +32,33 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @DirectoryExists
+  @JsonProperty
   private String cacheDirectory;
 
   @NotNull
   @Obfuscate
+  @JsonProperty
   private String s3AccessKey = "";
 
   @NotNull
   @Obfuscate
+  @JsonProperty
   private String s3SecretKey = "";
 
   @Min(1)
+  @JsonProperty
   private long s3ChunkSize = 104857600;
 
   @Min(1)
+  @JsonProperty
   private long s3DownloadTimeoutMillis = TimeUnit.MINUTES.toMillis(1);
 
   @Min(0)
+  @JsonProperty
   private int localDownloadHttpPort = 7070;
 
   @NotEmpty
+  @JsonProperty
   private String localDownloadPath = "/download";
 
   public SingularityS3Configuration() {
@@ -109,6 +119,19 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   public void setLocalDownloadPath(String localDownloadPath) {
     this.localDownloadPath = localDownloadPath;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityS3Configuration[" +
+            "cacheDirectory='" + cacheDirectory + '\'' +
+            ", s3AccessKey='" + obfuscateValue(s3AccessKey) + '\'' +
+            ", s3SecretKey='" + obfuscateValue(s3SecretKey) + '\'' +
+            ", s3ChunkSize=" + s3ChunkSize +
+            ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
+            ", localDownloadHttpPort=" + localDownloadHttpPort +
+            ", localDownloadPath='" + localDownloadPath + '\'' +
+            ']';
   }
 
   @Override

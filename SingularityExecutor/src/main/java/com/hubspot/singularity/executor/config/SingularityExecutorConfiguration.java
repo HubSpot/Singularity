@@ -468,15 +468,40 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser
-        + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis
-        + ", stopDriverAfterMillis=" + stopDriverAfterMillis + ", globalTaskDefinitionDirectory=" + globalTaskDefinitionDirectory + ", globalTaskDefinitionSuffix=" + globalTaskDefinitionSuffix
-        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", threadCheckThreads=" + threadCheckThreads + ", checkThreadsEveryMillis=" + checkThreadsEveryMillis
-        + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory="
-        + logrotateConfDirectory + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat="
-        + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat + ", logrotateExtrasFiles=" + logrotateExtrasFiles + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog
-        + ", additionalS3FilesToBackup=" + additionalS3FilesToBackup + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket="
-        + s3Bucket + ", useLocalDownloadService=" + useLocalDownloadService + ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis + ", maxTaskThreads=" + maxTaskThreads + "]";
+    return "SingularityExecutorConfiguration[" +
+            "executorJavaLog='" + executorJavaLog + '\'' +
+            ", executorBashLog='" + executorBashLog + '\'' +
+            ", serviceLog='" + serviceLog + '\'' +
+            ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
+            ", taskAppDirectory='" + taskAppDirectory + '\'' +
+            ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+            ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
+            ", stopDriverAfterMillis=" + stopDriverAfterMillis +
+            ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
+            ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
+            ", hardKillAfterMillis=" + hardKillAfterMillis +
+            ", killThreads=" + killThreads +
+            ", threadCheckThreads=" + threadCheckThreads +
+            ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
+            ", maxTaskMessageLength=" + maxTaskMessageLength +
+            ", logrotateCommand='" + logrotateCommand + '\'' +
+            ", logrotateStateFile='" + logrotateStateFile + '\'' +
+            ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
+            ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
+            ", logrotateMaxageDays=" + logrotateMaxageDays +
+            ", logrotateCount=" + logrotateCount +
+            ", logrotateDateformat='" + logrotateDateformat + '\'' +
+            ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+            ", logrotateExtrasFiles=" + logrotateExtrasFiles +
+            ", additionalS3FilesToBackup=" + additionalS3FilesToBackup +
+            ", tailLogLinesToSave=" + tailLogLinesToSave +
+            ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
+            ", s3KeyPattern='" + s3KeyPattern + '\'' +
+            ", s3Bucket='" + s3Bucket + '\'' +
+            ", useLocalDownloadService=" + useLocalDownloadService +
+            ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
+            ", maxTaskThreads=" + maxTaskThreads +
+            ']';
   }
 
   @Override

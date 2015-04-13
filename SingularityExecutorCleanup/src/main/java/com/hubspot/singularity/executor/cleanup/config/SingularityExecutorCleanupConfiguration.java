@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.client.SingularityClientModule;
@@ -26,21 +27,27 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   public static final String EXECUTOR_CLEANUP_RESULTS_DIRECTORY = "executor.cleanup.results.directory";
   public static final String EXECUTOR_CLEANUP_RESULTS_SUFFIX = "executor.cleanup.results.suffix";
 
+  @JsonProperty
   private boolean safeModeWontRunWithNoTasks = true;
 
   @DirectoryExists
+  @JsonProperty
   private String executorCleanupResultsDirectory;
 
   @NotEmpty
+  @JsonProperty
   private String executorCleanupResultsSuffix = ".cleanup.json";
 
   @Min(1)
+  @JsonProperty
   private long cleanupAppDirectoryOfFailedTasksAfterMillis = TimeUnit.DAYS.toMillis(1);
 
   @NotNull
+  @JsonProperty
   private List<String> singularityHosts = Collections.emptyList();
 
   @NotNull
+  @JsonProperty
   private String singularityContextPath = "";
 
   public SingularityExecutorCleanupConfiguration() {
@@ -55,8 +62,8 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     this.safeModeWontRunWithNoTasks = safeModeWontRunWithNoTasks;
   }
 
-  public Path getExecutorCleanupResultsDirectory() {
-    return Paths.get(executorCleanupResultsDirectory);
+  public String getExecutorCleanupResultsDirectory() {
+    return executorCleanupResultsDirectory;
   }
 
   public void setExecutorCleanupResultsDirectory(String executorCleanupResultsDirectory) {
@@ -97,10 +104,15 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   @Override
   public String toString() {
-    return "SingularityExecutorCleanupConfiguration [safeModeWontRunWithNoTasks=" + safeModeWontRunWithNoTasks + ", executorCleanupResultsDirectory=" + executorCleanupResultsDirectory
-        + ", executorCleanupResultsSuffix=" + executorCleanupResultsSuffix + ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis + "]";
+    return "SingularityExecutorCleanupConfiguration[" +
+            "safeModeWontRunWithNoTasks=" + safeModeWontRunWithNoTasks +
+            ", executorCleanupResultsDirectory='" + executorCleanupResultsDirectory + '\'' +
+            ", executorCleanupResultsSuffix='" + executorCleanupResultsSuffix + '\'' +
+            ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
+            ", singularityHosts=" + singularityHosts +
+            ", singularityContextPath='" + singularityContextPath + '\'' +
+            ']';
   }
-
 
   @Override
   public void updateFromProperties(Properties properties) {

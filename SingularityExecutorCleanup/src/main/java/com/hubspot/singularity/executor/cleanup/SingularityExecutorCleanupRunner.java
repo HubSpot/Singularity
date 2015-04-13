@@ -3,6 +3,8 @@ package com.hubspot.singularity.executor.cleanup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Paths;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -64,7 +66,7 @@ public class SingularityExecutorCleanupRunner {
   public SingularityExecutorCleanupStatistics cleanup() {
     SingularityExecutorCleanupStatistics cleanupStatistics = cleanup.clean();
 
-    fileHelper.writeObject(cleanupStatistics, cleanupConfiguration.getExecutorCleanupResultsDirectory().resolve(String.format("%s%s", System.currentTimeMillis(), cleanupConfiguration.getExecutorCleanupResultsSuffix())), LOG);
+    fileHelper.writeObject(cleanupStatistics, Paths.get(cleanupConfiguration.getExecutorCleanupResultsDirectory()).resolve(String.format("%s%s", System.currentTimeMillis(), cleanupConfiguration.getExecutorCleanupResultsSuffix())), LOG);
 
     return cleanupStatistics;
   }

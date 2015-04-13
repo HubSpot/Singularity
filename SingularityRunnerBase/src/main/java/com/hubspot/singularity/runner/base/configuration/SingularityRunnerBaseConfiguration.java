@@ -1,8 +1,8 @@
 package com.hubspot.singularity.runner.base.configuration;
 
-import java.util.Properties;
-
 import org.hibernate.validator.constraints.NotEmpty;
+
+import java.util.Properties;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -21,12 +21,14 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   private String s3UploaderMetadataDirectory;
 
   @NotEmpty
+  @JsonProperty
   private String s3UploaderMetadataSuffix = ".s3.json";
 
   @JsonProperty
   private String logWatcherMetadataDirectory;
 
   @NotEmpty
+  @JsonProperty
   private String logWatcherMetadataSuffix = ".tail.json";
 
   public SingularityRunnerBaseConfiguration() {
@@ -64,6 +66,16 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
 
   public void setLogWatcherMetadataSuffix(String logWatcherMetadataSuffix) {
     this.logWatcherMetadataSuffix = logWatcherMetadataSuffix;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityRunnerBaseConfiguration[" +
+            "s3UploaderMetadataDirectory='" + s3UploaderMetadataDirectory + '\'' +
+            ", s3UploaderMetadataSuffix='" + s3UploaderMetadataSuffix + '\'' +
+            ", logWatcherMetadataDirectory='" + logWatcherMetadataDirectory + '\'' +
+            ", logWatcherMetadataSuffix='" + logWatcherMetadataSuffix + '\'' +
+            ']';
   }
 
   @Override

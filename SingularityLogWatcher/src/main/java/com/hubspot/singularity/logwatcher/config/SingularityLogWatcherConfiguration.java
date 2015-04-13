@@ -54,37 +54,6 @@ public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration 
     super(Optional.of("singularity-logwatcher.log"));
   }
 
-  @Override
-  public void updateFromProperties(Properties properties) {
-    if (properties.containsKey(BYTE_BUFFER_CAPACITY)) {
-      setByteBufferCapacity(Integer.parseInt(properties.getProperty(BYTE_BUFFER_CAPACITY)));
-    }
-
-    if (properties.containsKey(POLL_MILLIS)) {
-      setPollMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));
-    }
-
-    if (properties.containsKey(FLUENTD_HOSTS)) {
-      setFluentdHosts(properties.getProperty(FLUENTD_HOSTS));
-    }
-
-    if (properties.containsKey(STORE_DIRECTORY)) {
-      setStoreDirectory(properties.getProperty(STORE_DIRECTORY));
-    }
-
-    if (properties.containsKey(STORE_SUFFIX)) {
-      setStoreSuffix(properties.getProperty(STORE_SUFFIX));
-    }
-
-    if (properties.containsKey(RETRY_DELAY_SECONDS)) {
-      setRetryDelaySeconds(Long.parseLong(properties.getProperty(RETRY_DELAY_SECONDS)));
-    }
-
-    if (properties.containsKey(FLUENTD_TAG_PREFIX)) {
-      setFluentdTagPrefix(properties.getProperty(FLUENTD_TAG_PREFIX));
-    }
-  }
-
   public static class FluentdHost {
 
     private final String host;
@@ -178,8 +147,45 @@ public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration 
 
   @Override
   public String toString() {
-    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
-        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", retryDelaySeconds=" + retryDelaySeconds + "]";
+    return "SingularityLogWatcherConfiguration[" +
+            "byteBufferCapacity=" + byteBufferCapacity +
+            ", pollMillis=" + pollMillis +
+            ", fluentdHosts='" + fluentdHosts + '\'' +
+            ", storeDirectory='" + storeDirectory + '\'' +
+            ", storeSuffix='" + storeSuffix + '\'' +
+            ", fluentdTagPrefix='" + fluentdTagPrefix + '\'' +
+            ", retryDelaySeconds=" + retryDelaySeconds +
+            ']';
   }
 
+  @Override
+  public void updateFromProperties(Properties properties) {
+    if (properties.containsKey(BYTE_BUFFER_CAPACITY)) {
+      setByteBufferCapacity(Integer.parseInt(properties.getProperty(BYTE_BUFFER_CAPACITY)));
+    }
+
+    if (properties.containsKey(POLL_MILLIS)) {
+      setPollMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));
+    }
+
+    if (properties.containsKey(FLUENTD_HOSTS)) {
+      setFluentdHosts(properties.getProperty(FLUENTD_HOSTS));
+    }
+
+    if (properties.containsKey(STORE_DIRECTORY)) {
+      setStoreDirectory(properties.getProperty(STORE_DIRECTORY));
+    }
+
+    if (properties.containsKey(STORE_SUFFIX)) {
+      setStoreSuffix(properties.getProperty(STORE_SUFFIX));
+    }
+
+    if (properties.containsKey(RETRY_DELAY_SECONDS)) {
+      setRetryDelaySeconds(Long.parseLong(properties.getProperty(RETRY_DELAY_SECONDS)));
+    }
+
+    if (properties.containsKey(FLUENTD_TAG_PREFIX)) {
+      setFluentdTagPrefix(properties.getProperty(FLUENTD_TAG_PREFIX));
+    }
+  }
 }

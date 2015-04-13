@@ -66,6 +66,16 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   }
 
   @Override
+  public String toString() {
+    return "SingularityS3UploaderConfiguration[" +
+            "pollForShutDownMillis=" + pollForShutDownMillis +
+            ", executorMaxUploadThreads=" + executorMaxUploadThreads +
+            ", checkUploadsEverySeconds=" + checkUploadsEverySeconds +
+            ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
+            ']';
+  }
+
+  @Override
   public void updateFromProperties(Properties properties) {
     if (properties.containsKey(POLL_MILLIS)) {
       setPollForShutDownMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));

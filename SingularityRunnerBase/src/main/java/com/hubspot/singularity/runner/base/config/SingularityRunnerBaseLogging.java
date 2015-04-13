@@ -1,9 +1,19 @@
 package com.hubspot.singularity.runner.base.config;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
+import io.dropwizard.configuration.ConfigurationValidationException;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
 import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -15,18 +25,6 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseLoggingConfiguration;
 
-import io.dropwizard.configuration.ConfigurationValidationException;
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.FileAppender;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-
 public class SingularityRunnerBaseLogging {
   private final ObjectMapper yamlMapper;
   private final Validator validator;
@@ -35,7 +33,7 @@ public class SingularityRunnerBaseLogging {
   private final Set<BaseRunnerConfiguration> configurations;
 
   @Inject
-  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, Validator validator, SingularityRunnerBaseConfiguration baseConfiguration, SingularityRunnerBaseLoggingConfiguration loggingConfiguration, Set<BaseRunnerConfiguration> configurations) throws ConfigurationValidationException {
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, Validator validator, SingularityRunnerBaseConfiguration baseConfiguration, SingularityRunnerBaseLoggingConfiguration loggingConfiguration, Set<BaseRunnerConfiguration> configurations) {
     this.yamlMapper = yamlMapper;
     this.validator = validator;
     this.loggingConfiguration = loggingConfiguration;
@@ -68,9 +66,9 @@ public class SingularityRunnerBaseLogging {
       try {
         final Configuration annotation = configuration.getClass().getAnnotation(Configuration.class);
         final String filename = annotation == null ? "(unknown)" : annotation.value();
-        rootLogger.info("Loaded {} from {}:\n{}", new String[] {configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)});
+        rootLogger.info("Loaded {} from {}:\n{}", new String[]{configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)});
       } catch (Exception e) {
-        rootLogger.warn("Exception while attempting to print {}!", configuration.getClass().getName());
+        rootLogger.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);
       }
     }
   }

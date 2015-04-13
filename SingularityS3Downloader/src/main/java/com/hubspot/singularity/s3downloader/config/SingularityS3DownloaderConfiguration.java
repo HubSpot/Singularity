@@ -43,7 +43,10 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
 
   @Override
   public String toString() {
-    return "SingularityS3DownloaderConfiguration [httpServerTimeout=" + httpServerTimeout + ", numDownloaderThreads=" + numDownloaderThreads + "]";
+    return "SingularityS3DownloaderConfiguration[" +
+            "httpServerTimeout=" + httpServerTimeout +
+            ", numDownloaderThreads=" + numDownloaderThreads +
+            ']';
   }
 
   @Override

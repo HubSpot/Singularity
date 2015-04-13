@@ -73,8 +73,13 @@ public class SingularityOOMKillerConfiguration extends BaseRunnerConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityOOMKillerConfiguration [requestKillThresholdRatio=" + requestKillThresholdRatio + ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio + ", checkForOOMEveryMillis=" + checkForOOMEveryMillis
-        + ", slaveHostname=" + slaveHostname + ", cgroupProcsPathFormat=" + cgroupProcsPathFormat + "]";
+    return "SingularityOOMKillerConfiguration[" +
+            "requestKillThresholdRatio=" + requestKillThresholdRatio +
+            ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio +
+            ", checkForOOMEveryMillis=" + checkForOOMEveryMillis +
+            ", slaveHostname='" + slaveHostname + '\'' +
+            ", cgroupProcsPathFormat='" + cgroupProcsPathFormat + '\'' +
+            ']';
   }
 
   @Override
