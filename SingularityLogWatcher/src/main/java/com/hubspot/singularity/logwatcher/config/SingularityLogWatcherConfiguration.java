@@ -1,7 +1,5 @@
 package com.hubspot.singularity.logwatcher.config;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -9,6 +7,9 @@ import java.util.Properties;
 
 import javax.validation.constraints.Min;
 
+import org.hibernate.validator.constraints.NotEmpty;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
@@ -29,25 +30,31 @@ public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration 
   public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
 
   @Min(1)
+  @JsonProperty
   private int byteBufferCapacity = 8192;
 
   @Min(1)
+  @JsonProperty
   private long pollMillis = 1000;
 
   @NotEmpty
+  @JsonProperty
   private String fluentdHosts = "localhost:24224";
 
-  @NotEmpty
   @DirectoryExists
+  @JsonProperty
   private String storeDirectory;
 
   @NotEmpty
+  @JsonProperty
   private String storeSuffix = ".store";
 
   @NotEmpty
+  @JsonProperty
   private String fluentdTagPrefix = "forward";
 
   @Min(1)
+  @JsonProperty
   private long retryDelaySeconds = 60;
 
   public SingularityLogWatcherConfiguration() {

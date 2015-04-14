@@ -1,11 +1,12 @@
 package com.hubspot.singularity.runner.base.configuration;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.util.Properties;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration("/etc/singularity.base.yaml")
 public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration {
@@ -17,6 +18,7 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   public static final String S3_METADATA_SUFFIX = "s3uploader.metadata.suffix";
   public static final String S3_METADATA_DIRECTORY = "s3uploader.metadata.directory";
 
+  @DirectoryExists
   @JsonProperty
   private String s3UploaderMetadataDirectory;
 
@@ -24,6 +26,7 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private String s3UploaderMetadataSuffix = ".s3.json";
 
+  @DirectoryExists
   @JsonProperty
   private String logWatcherMetadataDirectory;
 

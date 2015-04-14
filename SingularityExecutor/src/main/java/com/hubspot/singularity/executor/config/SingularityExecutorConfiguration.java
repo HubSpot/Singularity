@@ -1,7 +1,5 @@
 package com.hubspot.singularity.executor.config;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -11,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -167,14 +167,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private List<String> logrotateExtrasFiles = Collections.emptyList();
+  private List<String> logrotateAdditionalFiles = Collections.emptyList();
 
   /**
    * Extra files to backup to S3 besides the service log.
    */
   @NotNull
   @JsonProperty
-  private List<String> additionalS3FilesToBackup = Collections.emptyList();
+  private List<String> s3UploaderAdditionalFiles = Collections.emptyList();
 
   @Min(1)
   @JsonProperty
@@ -185,10 +185,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private String serviceFinishedTailLog = "tail_of_finished_service.log";
 
   @JsonProperty
-  private String s3KeyPattern;
+  private String s3UploaderKeyPattern;
 
   @JsonProperty
-  private String s3Bucket;
+  private String s3UploaderBucket;
 
   @JsonProperty
   private boolean useLocalDownloadService = false;
@@ -203,6 +203,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
+  }
+
+  public List<String> getLogrotateAdditionalFiles() {
+    return logrotateAdditionalFiles;
+  }
+
+  public void setLogrotateAdditionalFiles(List<String> logrotateAdditionalFiles) {
+    this.logrotateAdditionalFiles = logrotateAdditionalFiles;
+  }
+
+  public List<String> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
+  public void setS3UploaderAdditionalFiles(List<String> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
   }
 
   public String getExecutorJavaLog() {
@@ -297,28 +313,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return logrotateExtrasDateformat;
   }
 
-  public List<String> getLogrotateExtrasFiles() {
-    return logrotateExtrasFiles;
-  }
-
-  public List<String> getAdditionalS3FilesToBackup() {
-    return additionalS3FilesToBackup;
-  }
-
   public int getTailLogLinesToSave() {
     return tailLogLinesToSave;
   }
 
   public String getServiceFinishedTailLog() {
     return serviceFinishedTailLog;
-  }
-
-  public String getS3KeyPattern() {
-    return s3KeyPattern;
-  }
-
-  public String getS3Bucket() {
-    return s3Bucket;
   }
 
   public boolean isUseLocalDownloadService() {
@@ -430,14 +430,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.logrotateExtrasDateformat = logrotateExtrasDateformat;
   }
 
-  public void setLogrotateExtrasFiles(List<String> logrotateExtrasFiles) {
-    this.logrotateExtrasFiles = logrotateExtrasFiles;
-  }
-
-  public void setAdditionalS3FilesToBackup(List<String> additionalS3FilesToBackup) {
-    this.additionalS3FilesToBackup = additionalS3FilesToBackup;
-  }
-
   public void setTailLogLinesToSave(int tailLogLinesToSave) {
     this.tailLogLinesToSave = tailLogLinesToSave;
   }
@@ -446,12 +438,20 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.serviceFinishedTailLog = serviceFinishedTailLog;
   }
 
-  public void setS3KeyPattern(String s3KeyPattern) {
-    this.s3KeyPattern = s3KeyPattern;
+  public String getS3UploaderKeyPattern() {
+    return s3UploaderKeyPattern;
   }
 
-  public void setS3Bucket(String s3Bucket) {
-    this.s3Bucket = s3Bucket;
+  public void setS3UploaderKeyPattern(String s3UploaderKeyPattern) {
+    this.s3UploaderKeyPattern = s3UploaderKeyPattern;
+  }
+
+  public String getS3UploaderBucket() {
+    return s3UploaderBucket;
+  }
+
+  public void setS3UploaderBucket(String s3UploaderBucket) {
+    this.s3UploaderBucket = s3UploaderBucket;
   }
 
   public void setUseLocalDownloadService(boolean useLocalDownloadService) {
@@ -492,12 +492,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", logrotateCount=" + logrotateCount +
             ", logrotateDateformat='" + logrotateDateformat + '\'' +
             ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
-            ", logrotateExtrasFiles=" + logrotateExtrasFiles +
-            ", additionalS3FilesToBackup=" + additionalS3FilesToBackup +
+            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
+            ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
             ", tailLogLinesToSave=" + tailLogLinesToSave +
             ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
-            ", s3KeyPattern='" + s3KeyPattern + '\'' +
-            ", s3Bucket='" + s3Bucket + '\'' +
+            ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
+            ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
             ", useLocalDownloadService=" + useLocalDownloadService +
             ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
             ", maxTaskThreads=" + maxTaskThreads +
@@ -601,7 +601,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     }
 
     if (properties.containsKey(LOGROTATE_EXTRAS_FILES)) {
-      setLogrotateExtrasFiles(commaSplitter.splitToList(properties.getProperty(LOGROTATE_EXTRAS_FILES)));
+      setLogrotateAdditionalFiles(commaSplitter.splitToList(properties.getProperty(LOGROTATE_EXTRAS_FILES)));
     }
 
     if (properties.containsKey(TAIL_LOG_LINES_TO_SAVE)) {
@@ -613,15 +613,15 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     }
 
     if (properties.containsKey(S3_FILES_TO_BACKUP)) {
-      setAdditionalS3FilesToBackup(commaSplitter.splitToList(properties.getProperty(S3_FILES_TO_BACKUP)));
+      setS3UploaderAdditionalFiles(commaSplitter.splitToList(properties.getProperty(S3_FILES_TO_BACKUP)));
     }
 
     if (properties.containsKey(S3_UPLOADER_PATTERN)) {
-      setS3KeyPattern(properties.getProperty(S3_UPLOADER_PATTERN));
+      setS3UploaderKeyPattern(properties.getProperty(S3_UPLOADER_PATTERN));
     }
 
     if (properties.containsKey(S3_UPLOADER_BUCKET)) {
-      setS3Bucket(properties.getProperty(S3_UPLOADER_BUCKET));
+      setS3UploaderBucket(properties.getProperty(S3_UPLOADER_BUCKET));
     }
 
     if (properties.containsKey(USE_LOCAL_DOWNLOAD_SERVICE)) {

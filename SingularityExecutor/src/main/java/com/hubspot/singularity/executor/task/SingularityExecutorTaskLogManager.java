@@ -8,9 +8,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
@@ -161,14 +161,14 @@ public class SingularityExecutorTaskLogManager {
    * @return file glob String.
    */
   private String getS3Glob() {
-    List<String> fileNames = new ArrayList<>(configuration.getAdditionalS3FilesToBackup());
+    List<String> fileNames = new ArrayList<>(configuration.getS3UploaderAdditionalFiles());
     fileNames.add(taskDefinition.getServiceLogOutPath().getFileName().toString());
 
     return String.format("{%s}*.gz*", Joiner.on(",").join(fileNames));
   }
 
   private String getS3KeyPattern() {
-    String s3KeyPattern = configuration.getS3KeyPattern();
+    String s3KeyPattern = configuration.getS3UploaderKeyPattern();
 
     final SingularityTaskId singularityTaskId = getSingularityTaskId();
 
@@ -186,7 +186,7 @@ public class SingularityExecutorTaskLogManager {
   private boolean writeS3MetadataFile(boolean finished) {
     Path logrotateDirectory = taskDefinition.getServiceLogOutPath().getParent().resolve(configuration.getLogrotateToDirectory());
 
-    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3Bucket(), getS3KeyPattern(), finished, Optional.<String> absent(), Optional.<Integer> absent(), Optional.<String> absent(),
+    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), configuration.getS3UploaderBucket(), getS3KeyPattern(), finished, Optional.<String> absent(), Optional.<Integer> absent(), Optional.<String> absent(),
         Optional.<String> absent(), Optional.<Long> absent());
 
     String s3UploadMetadataFileName = String.format("%s%s", taskDefinition.getTaskId(), baseConfiguration.getS3UploaderMetadataSuffix());
