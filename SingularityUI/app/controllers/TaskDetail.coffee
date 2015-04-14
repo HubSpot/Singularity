@@ -11,6 +11,7 @@ Deploys = require '../collections/Deploys'
 FileBrowserSubview = require '../views/fileBrowserSubview'
 ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
+HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
 
 TaskView = require '../views/task'
@@ -18,14 +19,15 @@ TaskView = require '../views/task'
 class TaskDetailController extends Controller
 
     templates:
-        overview:      require '../templates/taskDetail/taskOverview'
-        history:       require '../templates/taskDetail/taskHistory'
-        logs:          require '../templates/taskDetail/taskS3Logs'
-        lbUpdates:     require '../templates/taskDetail/taskLbUpdates'
-        healthChecks:  require '../templates/taskDetail/taskHealthChecks'
-        info:          require '../templates/taskDetail/taskInfo'
-        environment:   require '../templates/taskDetail/taskEnvironment'
-        resourceUsage: require '../templates/taskDetail/taskResourceUsage'
+        overview:                   require '../templates/taskDetail/taskOverview'
+        healthcheckNotification:    require '../templates/taskDetail/taskHealthcheckNotification'
+        history:                    require '../templates/taskDetail/taskHistory'
+        logs:                       require '../templates/taskDetail/taskS3Logs'
+        lbUpdates:                  require '../templates/taskDetail/taskLbUpdates'
+        healthChecks:               require '../templates/taskDetail/taskHealthChecks'
+        info:                       require '../templates/taskDetail/taskInfo'
+        environment:                require '../templates/taskDetail/taskEnvironment'
+        resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
 
     initialize: ({@taskId, @filePath}) ->
         #
@@ -52,8 +54,12 @@ class TaskDetailController extends Controller
         @subviews.overview = new OverviewSubview
             collection: @collections.taskCleanups
             model:      @models.task
-            deploys:    @collections.deploys
             template:   @templates.overview
+
+        @subviews.healthcheckNotification = new HealthcheckNotification
+            collection: @collections.deploys
+            model:      @models.task
+            template:   @templates.healthcheckNotification
 
         @subviews.history = new SimpleSubview
             model:    @models.task
