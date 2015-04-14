@@ -11,16 +11,13 @@ class taskOverviewSubview extends View
     events: ->
         _.extend super,
             'click [data-action="remove"]': 'promptKillTask'
-            'click [data-action="viewHealthchecks"]': 'triggerToggleHealthchecks'
 
-    initialize: ({@collection, @model, @template, @deploys}) ->
+    initialize: ({@collection, @model, @template}) ->
 
         @taskModel = new Task id: @model.taskId
-        @shouldPollHealthchecks = true
 
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @model, eventName, @render
-            @listenTo @deploys, eventName, @render
 
         # copy latest task cleanup object over to the task model whenever things change
         for eventName in ['add', 'reset']
@@ -38,40 +35,15 @@ class taskOverviewSubview extends View
 
 
     render: ->
-        return if not @model.synced or not @deploys.synced
-        @checkForPendingDeploy() if not @isDeployPending and @shouldPollHealthchecks
+        return if not @model.synced
         @$el.html @template @renderData()
 
     renderData: ->
-        config:           config
-        data:             @model.toJSON()
-        isDeployPending:  @isDeployPending
-        healthCheck:      @model.get('healthcheckResults')[0]
-        synced:           @model.synced and @collection.synced and @deploys.synced
+        config:         config
+        data:           @model.toJSON()
+        healthCheck:    @model.get('healthcheckResults')[0]
+        synced:         @model.synced and @collection.synced
 
-    # If we have a deploy pending for this task,
-    # we start polling until we get a healthcheck to show
-    checkForPendingDeploy: ->
-        @isDeployPending = false
-        for deploy in @deploys.toJSON()
-            if deploy.deployMarker.deployId is @model.get('task').taskId.deployId
-                @isDeployPending = true
-                @pollForHealthchecks()
-                break
-
-    # Poll for Healthchecks if the task 
-    # is part of a pending deploy
-    pollForHealthchecks: =>
-        do fetchModel = =>
-            @model.fetch().done =>
-                if @model.get('healthcheckResults').length > 0
-                    @render()
-                    return @shouldPollHealthchecks = false
-                    
-                setTimeout ( => fetchModel() ), 1500
-                   
-    triggerToggleHealthchecks: ->
-        @trigger 'toggleHealthchecks'
 
     # Choose prompt based on if we plan to 
     # gracefully kill (sigterm), or force kill (kill-9)
