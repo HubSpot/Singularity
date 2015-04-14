@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -202,8 +203,9 @@ public class SingularityExecutorCleanup {
     final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
     final Path logrotateToPath = taskDefinition.getServiceLogOutPath().getParent().resolve(executorConfiguration.getLogrotateToDirectory());
 
-    if (!logrotateToPath.toFile().exists() && !logrotateToPath.toFile().isDirectory()) {
-      LOG.warn("Skipping uncompressed logrotated file cleanup for {} -- {} does not exist (task sandbox was probably GC'd)", taskDefinition.getTaskId(), logrotateToPath);
+    if (!logrotateToPath.toFile().exists() || !logrotateToPath.toFile().isDirectory()) {
+      LOG.warn("Skipping uncompressed logrotated file cleanup for {} -- {} does not exist or is not a directory (task sandbox was probably garbage collected by Mesos)", taskDefinition.getTaskId(), logrotateToPath);
+      return Collections.emptyIterator();
     }
 
     try {
