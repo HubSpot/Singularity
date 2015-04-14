@@ -1,12 +1,12 @@
 package com.hubspot.singularity.s3.base.config;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -33,7 +33,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @NotEmpty
   @DirectoryExists
   @JsonProperty
-  private String cacheDirectory;
+  private String artifactCacheDirectory;
 
   @NotNull
   @Obfuscate
@@ -65,12 +65,12 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     super(Optional.<String>absent());
   }
 
-  public String getCacheDirectory() {
-    return cacheDirectory;
+  public String getArtifactCacheDirectory() {
+    return artifactCacheDirectory;
   }
 
-  public void setCacheDirectory(String cacheDirectory) {
-    this.cacheDirectory = cacheDirectory;
+  public void setArtifactCacheDirectory(String artifactCacheDirectory) {
+    this.artifactCacheDirectory = artifactCacheDirectory;
   }
 
   public String getS3AccessKey() {
@@ -124,7 +124,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @Override
   public String toString() {
     return "SingularityS3Configuration[" +
-            "cacheDirectory='" + cacheDirectory + '\'' +
+            "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
             ", s3AccessKey='" + obfuscateValue(s3AccessKey) + '\'' +
             ", s3SecretKey='" + obfuscateValue(s3SecretKey) + '\'' +
             ", s3ChunkSize=" + s3ChunkSize +
@@ -137,7 +137,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @Override
   public void updateFromProperties(Properties properties) {
     if (properties.containsKey(ARTIFACT_CACHE_DIRECTORY)) {
-      setCacheDirectory(properties.getProperty(ARTIFACT_CACHE_DIRECTORY));
+      setArtifactCacheDirectory(properties.getProperty(ARTIFACT_CACHE_DIRECTORY));
     }
 
     if (properties.containsKey(S3_ACCESS_KEY)) {

@@ -73,7 +73,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     this.baseConfiguration = baseConfiguration;
     this.metrics = metrics;
-    this.defaultCredentials = new AWSCredentials(s3Configuration.getS3AccessKey(), s3Configuration.getS3SecretKey());
+    this.defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()));
 
     this.fileSystem = FileSystems.getDefault();
 
