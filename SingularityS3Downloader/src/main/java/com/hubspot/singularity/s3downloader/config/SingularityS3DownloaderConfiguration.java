@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
@@ -16,9 +17,11 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
   public static final String HTTP_SERVER_TIMEOUT = "s3downloader.http.timeout";
 
   @Min(1)
+  @JsonProperty
   private long httpServerTimeout = TimeUnit.MINUTES.toMillis(30);
 
   @Min(1)
+  @JsonProperty
   private int numDownloaderThreads = 25;
 
   public SingularityS3DownloaderConfiguration() {

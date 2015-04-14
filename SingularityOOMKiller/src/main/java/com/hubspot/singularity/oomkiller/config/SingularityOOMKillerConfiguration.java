@@ -1,9 +1,12 @@
 package com.hubspot.singularity.oomkiller.config;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.util.Properties;
 
+import javax.validation.constraints.Min;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
@@ -16,15 +19,22 @@ public class SingularityOOMKillerConfiguration extends BaseRunnerConfiguration {
   public static final String SLAVE_HOSTNAME = "oomkiller.slave.hostname";
   public static final String CGROUP_PROCS_PATH_FORMAT = "oomkiller.cgroups.procs.path.format";
 
+  @JsonProperty
   private double requestKillThresholdRatio = 1.0;
+
+  @JsonProperty
   private double killProcessDirectlyThresholdRatio = 1.2;
 
+  @JsonProperty
+  @Min(1)
   private long checkForOOMEveryMillis = 100;
 
   @NotEmpty
+  @JsonProperty
   private String slaveHostname = "localhost";
 
   @NotEmpty
+  @JsonProperty
   private String cgroupProcsPathFormat = "/cgroup/cpu/mesos/%s/cgroup.procs";
 
   public SingularityOOMKillerConfiguration() {
