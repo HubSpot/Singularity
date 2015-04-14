@@ -2,8 +2,12 @@ View = require './view'
 
 # Reusable view for paginable tables
 #
-# You feed it a (server-side paginable) collection
+# You can feed it a (server-side paginable) collection
 # and a template and it works its magic
+#
+# You can also feed it a non-server-side paginable collection
+# Just pass in the option paginationMode: 'client'
+#
 #
 # If it's provided with a `.page-header h1` it can also be
 # expanded to fit the entire page and shrunk back down after
@@ -23,8 +27,10 @@ class ExpandableTableSubview extends View
             'click [data-action="expand"]': 'expand'
             'click [data-action="shrink"]': 'startShrink'
 
-    initialize: ({@collection, @template}) ->
+    initialize: ({@collection, @template, @paginationMode}) ->
         @listenTo @collection, 'sync', @render
+        @isClientPaginated = @paginationMode is 'client'
+
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
@@ -44,20 +50,30 @@ class ExpandableTableSubview extends View
 
             @collection.currentPage -= 1
             return undefined
-        
+
         # For after the render
         haveButtons = @$('.table-subview-buttons').length
 
-        @$el.html @template
-            synced:  @collection.synced
-            data:    _.pluck @collection.models, 'attributes'
-            config: config
+
+        if @isClientPaginated
+            @$el.html @template
+                synced:  @collection.synced
+                data:    @collection.getPaginatedCollection()
+                config: config
+        else
+            @$el.html @template
+                synced:  @collection.synced
+                data:    @collection.toJSON()
+                config: config
 
         @$('.actions-column a[title]').tooltip()
 
         @$('.table-container').css 'min-height', "#{ @containerMinHeight }px"
 
-        haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
+        if @isClientPaginated
+            haveMore = not (@collection.getPaginatedCollection().length isnt @collection.atATime and not haveButtons)
+        else
+            haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
 
         # Append expand / shrink link
         $header = @$('.page-header h1, .page-header h2, .page-header h3')
@@ -72,21 +88,33 @@ class ExpandableTableSubview extends View
         return if not haveMore
 
         # Append next / previous page buttons
+        if @isClientPaginated
+            hasNextButton = @collection.getPaginatedCollection().length is @collection.atATime
+        else
+            hasNextButton = @collection.length is @collection.atATime
+
         hasPrevButton = @collection.currentPage isnt 1
-        hasNextButton = @collection.length is @collection.atATime
 
         @$el.append @buttonsTemplate {hasPrevButton, hasNextButton}
 
     nextPage: ->
-        @collection.currentPage += 1 unless @collection.length isnt @collection.atATime
-        @collection.fetch()
+        if @isClientPaginated
+            @collection.currentPage += 1 unless @collection.getPaginatedCollection().length isnt @collection.atATime
+            @render()
+        else
+            @collection.currentPage += 1 unless @collection.length isnt @collection.atATime
+            @collection.fetch()
 
         # So the table doesn't shrink afterwards
         @containerMinHeight = @$('.table-container').height()
 
     previousPage: ->
-        @collection.currentPage -= 1 unless @collection.currentPage is 1
-        @collection.fetch()
+        if @isClientPaginated
+            @collection.currentPage -= 1 unless @collection.currentPage is 1
+            @render()
+        else
+            @collection.currentPage -= 1 unless @collection.currentPage is 1
+            @collection.fetch()
 
     expand: ->
         @expanded = true
@@ -121,8 +149,12 @@ class ExpandableTableSubview extends View
         # - 1 just in case
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
-        
-        @collection.fetch()
+
+        if @isClientPaginated
+            @collection.setPaginatedCollection()
+            @render()
+        else
+            @collection.fetch()
 
     startShrink: =>
         @$el.trigger 'shrink'
@@ -130,13 +162,18 @@ class ExpandableTableSubview extends View
 
     shrink: =>
         @expanded = false
-        
+
         @$('.table-container').css 'min-height', '0px'
         @containerMinHeight = 0
 
         @collection.atATime = 5
         @collection.currentPage = 1
-        @collection.fetch()
+
+        if @isClientPaginated
+            @collection.setPaginatedCollection()
+            @render()
+        else
+            @collection.fetch()
 
     flash: ->
         $(window).scrollTop @$el.offset().top

@@ -72,8 +72,9 @@ class TaskDetailController extends Controller
             scrollWhenReady: @filePath isnt null
 
         @subviews.s3Logs = new ExpandableTableSubview
-            collection: @collections.s3Logs
-            template:   @templates.logs
+            collection:     @collections.s3Logs
+            template:       @templates.logs
+            paginationMode: 'client'
 
         @subviews.lbUpdates = new SimpleSubview
             model:    @models.task
