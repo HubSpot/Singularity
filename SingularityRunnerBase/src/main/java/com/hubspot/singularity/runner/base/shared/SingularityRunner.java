@@ -32,7 +32,6 @@ public class SingularityRunner {
     });
 
     try {
-      logging.validateConfigurations();
       driver.startAndWait();
 
       LOG.info("Exiting normally");

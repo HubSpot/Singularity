@@ -4,9 +4,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,22 +22,19 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
-import io.dropwizard.configuration.ConfigurationValidationException;
 
 @Singleton
 public class SingularityRunnerBaseLogging {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityRunnerBaseLogging.class);
 
   private final ObjectMapper yamlMapper;
-  private final Validator validator;
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final BaseRunnerConfiguration primaryConfiguration;
   private final Set<BaseRunnerConfiguration> configurations;
 
   @Inject
-  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, Validator validator, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations) throws ConfigurationValidationException {
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations) {
     this.yamlMapper = yamlMapper;
-    this.validator = validator;
     this.primaryConfiguration = primaryConfiguration;
     this.configurations = configurations;
     this.baseConfiguration = baseConfiguration;
@@ -55,16 +49,6 @@ public class SingularityRunnerBaseLogging {
     } else {
       return Optional.absent();
     }
-  }
-
-  public void validateConfigurations() throws ConfigurationValidationException{
-    for (BaseRunnerConfiguration config : configurations) {
-      final Set<ConstraintViolation<BaseRunnerConfiguration>> violations = validator.validate(config);
-      if (!violations.isEmpty()) {
-        throw new ConfigurationValidationException(config.getClass().getSimpleName(), violations);
-      }
-    }
-
   }
 
   public void printProperties() {

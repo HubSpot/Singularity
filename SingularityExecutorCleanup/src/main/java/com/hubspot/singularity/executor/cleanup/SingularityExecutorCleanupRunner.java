@@ -1,9 +1,9 @@
 package com.hubspot.singularity.executor.cleanup;
 
+import java.nio.file.Paths;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.file.Paths;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
@@ -18,7 +18,6 @@ import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanu
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupModule;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -35,9 +34,6 @@ public class SingularityExecutorCleanupRunner {
       final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(SingularityExecutorCleanupConfiguration.class, ImmutableSet.of(SingularityS3Configuration.class, SingularityExecutorConfiguration.class)), new SingularityExecutorModule(), new SingularityExecutorCleanupModule(), new SingularityClientModule(), new SingularityMesosClientModule());
 
       final SingularityExecutorCleanupRunner runner = injector.getInstance(SingularityExecutorCleanupRunner.class);
-      final SingularityRunnerBaseLogging logging = injector.getInstance(SingularityRunnerBaseLogging.class);
-
-      logging.validateConfigurations();
 
       LOG.info("Starting cleanup");
 
