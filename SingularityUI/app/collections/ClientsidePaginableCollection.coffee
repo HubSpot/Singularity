@@ -15,6 +15,6 @@ class ClientsidePaginableCollection extends PaginableCollection
 
     getPaginatedCollection: ->
         @setPaginatedCollection() unless @isPaginated
-        @paginatedCollection[ @currentPage - 1 ]
+        @paginatedCollection[ @currentPage - 1 ] || []
 
 module.exports = ClientsidePaginableCollection
