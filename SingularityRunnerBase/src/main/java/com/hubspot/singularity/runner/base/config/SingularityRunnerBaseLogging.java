@@ -1,5 +1,24 @@
 package com.hubspot.singularity.runner.base.config;
 
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -7,45 +26,32 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import io.dropwizard.configuration.ConfigurationValidationException;
-import org.slf4j.LoggerFactory;
 
-import java.nio.file.Paths;
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
-import com.hubspot.singularity.runner.base.configuration.Configuration;
-import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
-import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseLoggingConfiguration;
-
+@Singleton
 public class SingularityRunnerBaseLogging {
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityRunnerBaseLogging.class);
+
   private final ObjectMapper yamlMapper;
   private final Validator validator;
   private final SingularityRunnerBaseConfiguration baseConfiguration;
-  private final SingularityRunnerBaseLoggingConfiguration loggingConfiguration;
+  private final BaseRunnerConfiguration primaryConfiguration;
   private final Set<BaseRunnerConfiguration> configurations;
 
   @Inject
-  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, Validator validator, SingularityRunnerBaseConfiguration baseConfiguration, SingularityRunnerBaseLoggingConfiguration loggingConfiguration, Set<BaseRunnerConfiguration> configurations) {
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, Validator validator, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations) throws ConfigurationValidationException {
     this.yamlMapper = yamlMapper;
     this.validator = validator;
-    this.loggingConfiguration = loggingConfiguration;
+    this.primaryConfiguration = primaryConfiguration;
     this.configurations = configurations;
     this.baseConfiguration = baseConfiguration;
 
-    printProperties(configureRootLogger());
+    configureRootLogger();
+    printProperties();
   }
 
   public Optional<String> getRootLogPath() {
-    if (loggingConfiguration.getFilename().isPresent()) {
-      return Optional.of(Paths.get(loggingConfiguration.getDirectory().or(baseConfiguration.getLogging().getDirectory()).or(SingularityRunnerBaseLoggingConfiguration.DEFAULT_DIRECTORY)).resolve(loggingConfiguration.getFilename().get()).toString());
+    if (primaryConfiguration.getLoggingFilename().isPresent()) {
+      return Optional.of(Paths.get(primaryConfiguration.getLoggingDirectory().or(baseConfiguration.getLoggingDirectory()).or(SingularityRunnerBaseConfiguration.DEFAULT_DIRECTORY)).resolve(primaryConfiguration.getLoggingFilename().get()).toString());
     } else {
       return Optional.absent();
     }
@@ -61,14 +67,14 @@ public class SingularityRunnerBaseLogging {
 
   }
 
-  public void printProperties(Logger rootLogger) {
+  public void printProperties() {
     for (BaseRunnerConfiguration configuration : configurations) {
       try {
         final Configuration annotation = configuration.getClass().getAnnotation(Configuration.class);
         final String filename = annotation == null ? "(unknown)" : annotation.value();
-        rootLogger.info("Loaded {} from {}:\n{}", new String[]{configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)});
+        LOG.info("Loaded {} from {}:\n{}", new String[]{ configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)});
       } catch (Exception e) {
-        rootLogger.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);
+        LOG.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);
       }
     }
   }
@@ -86,11 +92,16 @@ public class SingularityRunnerBaseLogging {
 
     Logger rootLogger = prepareRootLogger(context);
 
-    rootLogger.setLevel(Level.toLevel(loggingConfiguration.getRootLogLevel().or(baseConfiguration.getLogging().getRootLogLevel()).or(SingularityRunnerBaseLoggingConfiguration.DEFAULT_ROOT_LOG_LEVEL)));
+    context.getLogger("ROOT").setLevel(Level.toLevel(SingularityRunnerBaseConfiguration.DEFAULT_ROOT_LOG_LEVEL));
+    context.getLogger("com.hubspot").setLevel(Level.toLevel(SingularityRunnerBaseConfiguration.DEFAULT_HUBSPOT_LOG_LEVEL));
 
-    Logger hubSpotLogger = context.getLogger("com.hubspot");
+    for (Map.Entry<String, String> entry : baseConfiguration.getLoggingLevel().entrySet()) {
+      context.getLogger(entry.getKey()).setLevel(Level.toLevel(entry.getValue()));
+    }
 
-    hubSpotLogger.setLevel(Level.toLevel(loggingConfiguration.getHubSpotLogLevel().or(baseConfiguration.getLogging().getHubSpotLogLevel()).or(SingularityRunnerBaseLoggingConfiguration.DEFAULT_HUBSPOT_LOG_LEVEL)));
+    for (Map.Entry<String, String> entry : primaryConfiguration.getLoggingLevel().entrySet()) {
+      context.getLogger(entry.getKey()).setLevel(Level.toLevel(entry.getValue()));
+    }
 
     if (getRootLogPath().isPresent()) {
       rootLogger.addAppender(buildFileAppender(context, getRootLogPath().get()));
@@ -107,7 +118,7 @@ public class SingularityRunnerBaseLogging {
 
     PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     encoder.setContext(context);
-    encoder.setPattern(loggingConfiguration.getLoggingPattern().or(baseConfiguration.getLogging().getLoggingPattern()).or(JavaUtils.LOGBACK_LOGGING_PATTERN));
+    encoder.setPattern(primaryConfiguration.getLoggingPattern().or(baseConfiguration.getLoggingPattern()).or(JavaUtils.LOGBACK_LOGGING_PATTERN));
     encoder.start();
 
     fileAppender.setEncoder(encoder);
