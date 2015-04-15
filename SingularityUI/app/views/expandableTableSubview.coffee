@@ -35,7 +35,6 @@ class ExpandableTableSubview extends View
         @listenTo @collection, 'sync', @render
         @isClientPaginated = @paginationMode is 'client'
 
-
     render: ->
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
@@ -58,14 +57,10 @@ class ExpandableTableSubview extends View
         # For after the render
         haveButtons = @$('.table-subview-buttons').length
 
-        if @isClientPaginated
-            @$el.html @template
-                synced:  @collection.synced
-                data:    @collection.getPaginatedCollection()
-        else
-            @$el.html @template
-                synced:  @collection.synced
-                data:    @collection.toJSON()
+        data = if @isClientPaginated then @collection.getPaginatedCollection() else @collection.toJSON()
+        @$el.html @template
+            synced:  @collection.synced
+            data:    data
 
         @$('.actions-column a[title]').tooltip()
 
@@ -110,12 +105,8 @@ class ExpandableTableSubview extends View
         @containerMinHeight = @$('.table-container').height()
 
     previousPage: ->
-        if @isClientPaginated
-            @collection.currentPage -= 1 unless @collection.currentPage is 1
-            @render()
-        else
-            @collection.currentPage -= 1 unless @collection.currentPage is 1
-            @collection.fetch()
+        @collection.currentPage -= 1 unless @collection.currentPage is 1
+        if @isClientPaginated then @render() else @collection.fetch()
 
     expand: ->
         @expanded = true
