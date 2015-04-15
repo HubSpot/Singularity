@@ -129,7 +129,7 @@ fi
 # set up attached volumes
 DOCKER_VOLUMES="-v $CURRENT_DIR:/mnt/mesos/sandbox"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_SANDBOX=/mnt/mesos/sandbox"
-DOCKER_ENV="$DOCKER_ENV -e SANDBOX_LOG_DIR=/mnt/mesos/sandbox/logs"
+DOCKER_ENV="$DOCKER_ENV -e LOG_DIR=/mnt/mesos/sandbox/logs"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
 {{#each envContext.containerVolumes}}
 {{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
