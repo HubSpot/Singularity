@@ -10,6 +10,9 @@ class ClientsidePaginableCollection extends PaginableCollection
         @paginatedCollection = []
         collection = @toJSON()
 
+        # break the collection up into chunks that
+        # will be accessed by their index as a `page`
+        # in `expandableTableSubview`
         while collection.length
             @paginatedCollection.push collection.splice 0, @atATime
 
