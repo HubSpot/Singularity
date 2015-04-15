@@ -57,6 +57,8 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     if (!additionalConfigurationClasses.contains(SingularityRunnerBaseConfiguration.class)) {
       configurationBinder.bindConfiguration(SingularityRunnerBaseConfiguration.class);
     }
+
+    bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
   }
 
   @Provides
