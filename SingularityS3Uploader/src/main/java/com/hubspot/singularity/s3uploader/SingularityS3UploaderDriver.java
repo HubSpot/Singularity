@@ -5,6 +5,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.Collections;
@@ -37,6 +38,7 @@ import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
@@ -49,6 +51,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderDriver.class);
 
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityS3UploaderConfiguration configuration;
   private final ScheduledExecutorService scheduler;
   private final Map<S3UploadMetadata, SingularityS3Uploader> metadataToUploader;
@@ -65,11 +68,12 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private ScheduledFuture<?> future;
 
   @Inject
-  public SingularityS3UploaderDriver(SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration, SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper) {
-    super(configuration.getPollForShutDownMillis(), configuration.getS3MetadataDirectory(), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
+  public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration, SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper) {
+    super(configuration.getPollForShutDownMillis(), Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
+    this.baseConfiguration = baseConfiguration;
     this.metrics = metrics;
-    this.defaultCredentials = new AWSCredentials(s3Configuration.getS3AccessKey(), s3Configuration.getS3SecretKey());
+    this.defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()));
 
     this.fileSystem = FileSystems.getDefault();
 
@@ -92,11 +96,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private void readInitialFiles() throws IOException {
     final long start = System.currentTimeMillis();
-    LOG.info("Scanning for metadata files (*{}) in {}", configuration.getS3MetadataSuffix(), configuration.getS3MetadataDirectory());
+    LOG.info("Scanning for metadata files (*{}) in {}", baseConfiguration.getS3UploaderMetadataSuffix(), baseConfiguration.getS3UploaderMetadataDirectory());
 
     int foundFiles = 0;
 
-    for (Path file : JavaUtils.iterable(configuration.getS3MetadataDirectory())) {
+    for (Path file : JavaUtils.iterable(Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()))) {
       if (!isS3MetadataFile(file)) {
         continue;
       }
@@ -360,7 +364,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         return false;
       }
 
-      final Path fullPath = configuration.getS3MetadataDirectory().resolve(filename);
+      final Path fullPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(filename);
 
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
         Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
@@ -390,8 +394,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
 
   private boolean isS3MetadataFile(Path filename) {
-    if (!filename.toString().endsWith(configuration.getS3MetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getS3MetadataSuffix());
+    if (!filename.toString().endsWith(baseConfiguration.getS3UploaderMetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getS3UploaderMetadataSuffix());
       return false;
     }
 
