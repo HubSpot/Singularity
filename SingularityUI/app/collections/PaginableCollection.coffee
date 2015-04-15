@@ -30,21 +30,4 @@ class PaginableCollection extends Backbone.Collection
 
         super _.extend params, defaultParams
 
-
-    # Client-side pagination
-    isPaginated: false
-    
-    setPaginatedCollection: ->
-        @isPaginated = true
-        @paginatedCollection = []
-        collection = @toJSON()
-
-        while collection.length
-            @paginatedCollection.push collection.splice 0, @atATime
-
-    getPaginatedCollection: ->
-        @setPaginatedCollection() unless @isPaginated
-        @paginatedCollection[ @currentPage - 1 ]
-
-
 module.exports = PaginableCollection
