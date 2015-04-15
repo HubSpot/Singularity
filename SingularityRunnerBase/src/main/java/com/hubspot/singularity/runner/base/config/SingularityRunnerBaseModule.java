@@ -22,7 +22,6 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
-import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseLoggingConfiguration;
 import com.hubspot.singularity.runner.base.jackson.ObfuscateModule;
 
 public class SingularityRunnerBaseModule extends AbstractModule {
@@ -58,12 +57,6 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     if (!additionalConfigurationClasses.contains(SingularityRunnerBaseConfiguration.class)) {
       configurationBinder.bindConfiguration(SingularityRunnerBaseConfiguration.class);
     }
-  }
-
-  @Provides
-  @Singleton
-  public SingularityRunnerBaseLoggingConfiguration providesBaseLoggingConfiguration(BaseRunnerConfiguration configuration) {
-    return configuration.getLogging();
   }
 
   @Provides

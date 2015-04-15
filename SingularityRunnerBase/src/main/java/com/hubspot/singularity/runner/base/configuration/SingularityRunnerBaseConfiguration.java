@@ -36,7 +36,7 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
 
   public SingularityRunnerBaseConfiguration() {
     super(Optional.<String>absent());
-    setLogging(SingularityRunnerBaseLoggingConfiguration.defaultBaseConfig());
+    this.setLoggingDirectory(Optional.of("/var/log/singularity/"));
   }
 
   public String getS3UploaderMetadataDirectory() {

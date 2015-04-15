@@ -45,7 +45,7 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
           properties.load(br);
         }
         config.updateFromProperties(properties);
-        config.getLogging().updateFromProperties(properties);
+        config.updateLoggingFromProperties(properties);
       }
 
       return config;

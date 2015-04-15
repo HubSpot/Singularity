@@ -1,16 +1,13 @@
 package com.hubspot.singularity.executor.cleanup.config;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -42,11 +39,11 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   @JsonProperty
   private long cleanupAppDirectoryOfFailedTasksAfterMillis = TimeUnit.DAYS.toMillis(1);
 
-  @NotNull
+  @NotEmpty
   @JsonProperty
   private List<String> singularityHosts = Collections.emptyList();
 
-  @NotNull
+  @NotEmpty
   @JsonProperty
   private String singularityContextPath = "";
 
