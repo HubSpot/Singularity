@@ -2,12 +2,16 @@ View = require './view'
 
 # Reusable view for paginable tables
 #
-# You can feed it a (server-side paginable) collection
-# and a template and it works its magic
+# You can feed it a server-side paginable collection (PaginableCollection)
 #
-# You can also feed it a non-server-side paginable collection
-# Just pass in the option paginationMode: 'client'
+# or a non-server-side paginable collection (ClientsidePaginableCollection)
+# Just pass in the option paginationMode: 'client':
 # 
+#     @subviews.s3Logs = new ExpandableTableSubview
+#         collection:     @collections.s3Logs
+#         template:       @templates.logs
+#         paginationMode: 'client'
+#
 #
 # If it's provided with a `.page-header h1` it can also be
 # expanded to fit the entire page and shrunk back down after
