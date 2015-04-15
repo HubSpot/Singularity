@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.google.common.base.Optional;
 
 public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
   private static final ObfuscateSerializer OBFUSCATE_SERIALIZER = new ObfuscateSerializer();
@@ -27,7 +28,7 @@ public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
     }
   }
 
-  public static class ObfuscateSerializer extends JsonSerializer<String> {
+  public static class ObfuscateSerializer extends JsonSerializer<Object> {
     public static String obfuscateValue(String value) {
       if (value == null) {
         return value;
@@ -41,8 +42,16 @@ public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
     }
 
     @Override
-    public void serialize(String value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-      jgen.writeString(obfuscateValue(value));
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+      if (value instanceof Optional) {
+        if (((Optional)value).isPresent()) {
+          jgen.writeString(obfuscateValue(((Optional)value).get().toString()));
+        } else {
+          jgen.writeNull();
+        }
+      } else {
+        jgen.writeString(obfuscateValue(value.toString()));
+      }
     }
   }
 }

@@ -6,6 +6,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
@@ -15,12 +19,17 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 
+import io.dropwizard.configuration.ConfigurationValidationException;
+
 public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfiguration> implements Provider<T> {
   private final Class<T> clazz;
 
   @Inject
   @Named(SingularityRunnerBaseModule.YAML)
   private ObjectMapper objectMapper;
+
+  @Inject
+  private Validator validator;
 
   public SingularityRunnerConfigurationProvider(Class<T> clazz) {
     this.clazz = clazz;
@@ -46,6 +55,11 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
         }
         config.updateFromProperties(properties);
         config.updateLoggingFromProperties(properties);
+      }
+
+      final Set<ConstraintViolation<T>> violations = validator.validate(config);
+      if (!violations.isEmpty()) {
+        throw new ConfigurationValidationException(yamlPath, violations);
       }
 
       return config;
