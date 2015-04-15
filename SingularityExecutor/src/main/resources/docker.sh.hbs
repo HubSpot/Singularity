@@ -80,13 +80,13 @@ function setup_cgroups {
     if [ -d "/sys/fs/cgroup" ] ; then
       CGROUPS_DIR="/sys/fs/cgroup"
     else
-      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for task"
+      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
       return 0
     fi
   fi
   echo "Adding docker processes to mesos executor cgroup..."
   docker_root_pid=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Pid}} $1`
-  docker_processes=`pstree -pn $docker_root_pid |grep -o '([[:digit:]]*)' | grep -o '[[:digit:]]*'`
+  docker_processes=`pstree -pn $docker_root_pid | grep -o '([[:digit:]]*)' | grep -o '[[:digit:]]*'`
   subsystems=(memory cpu cpuacct)
   for s in "${subsystems[@]}" ; do
     while read line; do
