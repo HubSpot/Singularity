@@ -74,10 +74,10 @@ function fetch_image {
 }
 
 function setup_cgroups {
-  if [ -d "/cgroup" ] ;then
+  if [ -d "/cgroup/memory/mesos" ] ;then
     CGROUPS_DIR="/cgroup"
   else
-    if [ -d "/sys/fs/cgroup" ] ; then
+    if [ -d "/sys/fs/cgroup/memory/mesos" ] ; then
       CGROUPS_DIR="/sys/fs/cgroup"
     else
       echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
@@ -150,7 +150,8 @@ DOCKER_OPTIONS="-d --name={{{ runContext.taskId }}} $DOCKER_NETWORK $DOCKER_ENV 
 running=0
 
 echo "Starting continer with: sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}}"
-cid=$(sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}})
+sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE /bin/sh -c {{{bashEscaped runContext.cmd }}}
+cid=$(sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.Id}} {{{ runContext.taskId }}})
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
 
