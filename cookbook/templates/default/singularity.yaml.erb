@@ -42,3 +42,7 @@ ui:
   baseUrl: <%= node[:singularity][:base_url] %>
 
 loadBalancerUri: <%= @baragon_url.gsub(/\/$/, '') %>/request
+
+customExecutor:
+  memoryMb: 128
+  numCpus: 0.1
