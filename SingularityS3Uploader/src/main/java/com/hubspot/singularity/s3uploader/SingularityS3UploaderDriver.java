@@ -250,6 +250,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       try {
         Closeables.close(expiredUploader, true);
 
+        LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
         Files.delete(expiredUploader.getMetadataPath());
       } catch (IOException e) {
         LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
