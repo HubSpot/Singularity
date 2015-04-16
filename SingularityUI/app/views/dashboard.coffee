@@ -18,38 +18,38 @@ class DashboardView extends View
     render: =>
         deployUser = app.user.get 'deployUser'
 
-        partials = 
+        partials =
             partials:
                 requestsBody: @templateRequestsTable
 
         # Count up the Requests for the clicky boxes
-        userRequests = @collection.filter (model) ->
-          request = model.get('request')
-          deployUserTrimmed = deployUser.split("@")[0]
-          
-          if not request.owners
-            return false
+        if deployUser
+            deployUserTrimmed = deployUser.split("@")[0]
+            userRequests = @collection.filter (model) ->
+                request = model.get 'request'
 
-          for owner in request.owners
-            ownerTrimmed = owner.split("@")[0]
-            if deployUserTrimmed == ownerTrimmed
-              return true
+                return false unless request.owners
 
-          return false
-        userRequestTotals =
-            all: userRequests.length
-            onDemand:    0
-            worker:  0
-            scheduled: 0
-            runOnce: 0
-            service: 0
+                for owner in request.owners
+                    ownerTrimmed = owner.split("@")[0]
+                    return true if deployUserTrimmed is ownerTrimmed
 
-        _.each userRequests, (request) =>
-            if request.type == 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
-            if request.type == 'SCHEDULED'  then userRequestTotals.scheduled += 1
-            if request.type == 'WORKER'     then userRequestTotals.worker    += 1
-            if request.type == 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
-            if request.type == 'SERVICE'    then userRequestTotals.service   += 1
+                return false
+
+            userRequestTotals =
+                all: userRequests.length
+                onDemand: 0
+                worker: 0
+                scheduled: 0
+                runOnce: 0
+                service: 0
+
+            _.each userRequests, (request) =>
+                if request.type is 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
+                if request.type is 'SCHEDULED'  then userRequestTotals.scheduled += 1
+                if request.type is 'WORKER'     then userRequestTotals.worker    += 1
+                if request.type is 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
+                if request.type is 'SERVICE'    then userRequestTotals.service   += 1
 
         context =
             deployUser: deployUser
@@ -123,7 +123,7 @@ class DashboardView extends View
         $row = $target.parents 'tr'
 
         id = $row.data 'request-id'
-        
+
         @collection.toggleStar id
 
         $row.remove()
