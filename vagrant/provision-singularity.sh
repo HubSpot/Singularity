@@ -86,7 +86,6 @@ executor.logrotate.to.directory=logs
 executor.s3.uploader.bucket=bucket
 executor.s3.uploader.pattern=%requestId/%Y/%m/%taskId_%index-%s%fileext
 executor.logrotate.command=/usr/sbin/logrotate
-executor.task.app.directory=app
 EOF
   cat > /usr/local/bin/singularity-executor <<EOF
 #!/bin/bash
