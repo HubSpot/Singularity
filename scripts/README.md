@@ -3,6 +3,8 @@ Singularity Log Fetcher
 
 This log fetcher uses singularity endpoints to find and download log files relevant to a certain, request, task, or deploy. The log fetcher will download (and unzip if needed) all log files for the specified input and search them using grep.
 
+![my log has something to tell you](https://cloud.githubusercontent.com/assets/47152/7101893/b6910826-e03b-11e4-8d25-38ea1b5aa492.gif)
+
 ##Installation
 ```
 pip install singularity-logfetch

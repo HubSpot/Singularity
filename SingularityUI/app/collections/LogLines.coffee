@@ -77,6 +77,11 @@ class LogLines extends Collection
         @fetch data:
             offset: 0
 
+    fetchOffset: (offset) =>
+        @fetch data: 
+            offset: offset - 1
+            done: => @trigger 'initialOffsetData'
+
     # Overwrite default fetch
     fetch: (params = {}) ->
         defaultParams =
