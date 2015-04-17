@@ -27,7 +27,7 @@ mesos:
 
 zookeeper:
   quorum: <%= node[:singularity][:zk_hosts].join(',') %>
-  zkNamespace: singularity
+  zkNamespace: <%= node[:singularity][:zk_namespace] %>
   sessionTimeoutMillis: 60000
   connectTimeoutMillis: 5000
   retryBaseSleepTimeMilliseconds: 1000

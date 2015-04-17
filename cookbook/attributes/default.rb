@@ -29,6 +29,7 @@ default[:singularity] = {
 default[:singularity][:home] = '/usr/local/singularity'
 default[:singularity][:log_level] = 'INFO'
 default[:singularity][:mesos_framework_name] = 'Singularity'
+default[:singularity][:zk_namespace] = 'singularity'
 
 default[:singularity][:s3uploader][:metadata_dir] = '.'
 default[:singularity][:logwatcher][:metadata_dir] = '.'
