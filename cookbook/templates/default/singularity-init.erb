@@ -9,4 +9,4 @@ start on stopped rc RUNLEVEL=[2345]
 
 respawn
 
-exec java -Xmx512m -Djava.net.preferIPv4Stack=true -jar /usr/local/singularity/bin/singularity.jar server /etc/singularity/singularity.yaml >> /var/log/singularity/singularity.log 2>&1
+exec java -Xmx512m -Djava.net.preferIPv4Stack=true -jar <%= node[:singularity][:home] %>/bin/singularity.jar server <%= node[:singularity][:conf_dir] %>/singularity.yaml >> <%= node[:singularity][:log_dir] %>/singularity.log 2>&1
