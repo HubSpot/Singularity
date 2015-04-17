@@ -25,6 +25,7 @@ default[:singularity] = {
 
 default[:singularity][:home] = '/usr/local/singularity'
 default[:singularity][:log_level] = 'INFO'
+default[:singularity][:mesos_framework_name] = 'Singularity'
 
 default[:mesos] = {
   :package_version => "0.21.0-1.0.ubuntu1404",

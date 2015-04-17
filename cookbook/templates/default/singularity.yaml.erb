@@ -21,8 +21,8 @@ mesos:
   master: <%= node[:mesos][:master][:zk] %>
   defaultCpus: 1
   defaultMemory: 128
-  frameworkName: Singularity
-  frameworkId: Singularity
+  frameworkName: <%= node[:singularity][:mesos_framework_name] %>
+  frameworkId: <%= node[:singularity][:mesos_framework_name] %>
   frameworkFailoverTimeout: 1000000
 
 zookeeper:
