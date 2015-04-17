@@ -3,6 +3,9 @@ View = require './view'
 Deploy = require '../models/Deploy'
 TaskFiles = require '../collections/TaskFiles'
 
+autoTailWaitingTemplate = require 'templates/vex/autoTailingWaiting'
+autoTailFailureTemplate = require 'templates/vex/autoTailingFailure'
+
 interval = (a, b) -> setInterval(b, a)  # f u javascript
 timeout = (a, b) -> setTimeout(b, a)
 
@@ -120,10 +123,9 @@ class RequestView extends View
             @stopAutoTailPolling()
             vex.close()
             vex.dialog.alert
-                message: """
-                    <h3>Failure</h3>
-                    <code>#{ @autoTailFilename }</code> did not exist after #{ Math.floor(AUTO_TAIL_TIMEOUT / 60000) } minute(s).
-                """
+                message: autoTailFailureTemplate
+                    autoTailFilename: @autoTailFilename
+                    timeout: Math.floor(AUTO_TAIL_TIMEOUT / 60000)
                 buttons: [
                     $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
                 ]
@@ -164,13 +166,8 @@ class RequestView extends View
     showAutoTailWaitingDialog: ->
         vex.dialog.alert
             overlayClosesOnClick: false
-            message: """
-                <h3>Launching</h3>
-                <ol class="auto-tail-checklist">
-                    <li class="auto-tail-task-start">Waiting for task to launch</li>
-                    <li class="auto-tail-file-exists">Waiting for <code>#{ @autoTailFilename }</code> to exist</li>
-                </ol>
-            """
+            message: autoTailWaitingTemplate 
+                autoTailFilename: @autoTailFilename
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.NO), text: 'Close'
             ]

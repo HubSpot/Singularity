@@ -121,23 +121,36 @@ class Request extends Model
                 @unpause().done callback
 
     promptRun: (callback) =>
-                  
         vex.dialog.prompt
+            message: ""
             input: runTemplate id: @get "id"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
             ]
+
+            beforeClose: =>
+                fileName = @data.filename.trim()
+
+                if fileName.length is 0 and @data.autoTail is 'on'
+                    $(window.noFilenameError).removeClass('hide')
+                    return false
+
+                else                    
+                    localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                    localStorage.setItem('taskRunAutoTail', @data.autoTail)
+                    @data.id = @get 'id'
+
+                    @run( @data.commandLineInput ).done callback( @data )
+                    return true
+
             afterOpen: -> 
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
 
             callback: (data) =>
                 return if data is false
-                localStorage.setItem('taskRunRedirectFilename', data.filename) if data.filename?
-                localStorage.setItem('taskRunAutoTail', data.autoTail)
-                data.id = @get 'id'
-                @run(data.commandLineInput).done callback(data)
+                @data = data
 
     promptRemove: (callback) =>
         vex.dialog.confirm
