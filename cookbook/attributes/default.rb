@@ -6,6 +6,8 @@ else
   end.first
 end
 
+default[:singularity][:port] = 7099
+
 default[:singularity] = {
   :user                     => 'singularity',
   :group                    => 'singularity',
@@ -14,7 +16,8 @@ default[:singularity] = {
   :data_dir                 => '/var/lib/singularity',
   :log_dir                  => '/var/log/singularity',
   :conf_dir                 => '/etc/singularity',
-  :base_url                 => "http://#{node[:fqdn]}:7099/singularity",
+  :base_url                 =>
+    "http://#{node[:fqdn]}:#{node[:singularity][:port]}/singularity",
   :app_mysql_defaults       => { 'adapter' => 'mysql2',
                                  'pool' => 20,
                                  'timeout' => 5000 },
