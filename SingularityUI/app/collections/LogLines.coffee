@@ -70,10 +70,7 @@ class LogLines extends Collection
             # yet, so we'll pass a message to the view
             if response.status in [400, 404, 500]
                 app.caughtError()
-                @ajaxError.set
-                    status: response.status
-                    responseText: response.responseText
-                    present: true
+                @ajaxError.setFromErrorResponse response
     
     fetchPrevious: ->
         @fetch data:

@@ -8,12 +8,16 @@ class AjaxError extends Model
     present: false
     shouldRefresh: false
 
-  parse: (data) ->
-    if data.responseText.match /Task .*? does not have a directory yet - check again soon/
-      data.message = "Hang tight, this task is still starting up!"
+  setFromErrorResponse: (error) =>
+    if error.responseText.match /Task .*? does not have a directory yet - check again soon/
+      message = "Hang tight, this task is still starting up!"
     else
-      data.message = data.responseText
+      message = error.responseText
 
-    data.shouldRefresh = data.status is 400
+    @set
+      status: error.status
+      shouldRefresh: error.status is 400
+      present: true
+      message: message
 
 module.exports = AjaxError
