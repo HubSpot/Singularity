@@ -30,6 +30,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
@@ -205,7 +206,7 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
-  public SingularityRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
+  public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
       @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> user,
       @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
@@ -223,11 +224,13 @@ public class RequestResource extends AbstractRequestResource {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
 
-    SingularityCreateResult result = requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), user, pendingType, commandLineArgs));
+    final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), user, pendingType, commandLineArgs);
+
+    SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
     checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
-    return fillEntireRequest(requestWithState);
+    return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
   }
 
   @POST
