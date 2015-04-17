@@ -49,6 +49,8 @@ default[:mesos] = {
   :slave_attributes => {}
 }
 
+default[:mesos][:prefix] = '/usr/local'
+
 default[:docker] = {
   :enabled => true,
   :package_version => "1.0.1~dfsg1-0ubuntu1~ubuntu0.14.04.1",
