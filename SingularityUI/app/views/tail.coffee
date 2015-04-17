@@ -225,17 +225,5 @@ class TailView extends View
         @$('.line').removeClass('highlightLine')
         $(e.currentTarget).closest('.line').addClass('highlightLine')
 
-    # If we get a 400 we can render a nicer
-    # message that the file is being generated
-    handleAjaxError: (response) =>
-        @ajaxError =
-            status: true
-            errorType: response.errorType
-        
-        @dataInterval = setInterval =>
-            @collection.fetchInitialData()
-        , 2000
-
-        @render()
 
 module.exports = TailView
