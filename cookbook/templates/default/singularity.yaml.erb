@@ -35,13 +35,13 @@ zookeeper:
 
 logging:
   loggers:
-    "com.hubspot.singularity" : DEBUG
+    "com.hubspot.singularity" : <%= node[:singularity][:log_level] %>
 
 ui:
   title: Singularity (<%= node.chef_environment %>)
   baseUrl: <%= node[:singularity][:base_url] %>
 
-loadBalancerUri: <%= @baragon_url.gsub(/\/$/, '') %>/request
+loadBalancerUri: <%= node[:singularity][:baragon_url].gsub(/\/$/, '') %>/request
 
 customExecutor:
   memoryMb: 128
