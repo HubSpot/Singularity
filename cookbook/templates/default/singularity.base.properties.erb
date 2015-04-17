@@ -1,4 +1,4 @@
-logwatcher.metadata.directory=.
-s3uploader.metadata.directory=.
+logwatcher.metadata.directory=<%= node[:singularity][:logwatcher][:metadata_dir] %>
+s3uploader.metadata.directory=<%= node[:singularity][:s3uploader][:metadata_dir] %>
 root.log.directory=<%= node[:singularity][:log_dir] %>
 hubspot.log.level=<%= node[:singularity][:log_level] %>
