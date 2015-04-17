@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -391,7 +392,12 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
 
   private Optional<S3UploadMetadata> readS3UploadMetadata(Path filename) throws IOException {
-    return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
+    try {
+      return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
+    } catch (NoSuchFileException nsfe) {
+      LOG.warn("Tried to read {}, but it doesn't exist!", filename);
+      return Optional.absent();
+    }
   }
 
   private boolean isS3MetadataFile(Path filename) {
