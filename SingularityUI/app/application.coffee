@@ -116,10 +116,11 @@ class Application
                     hideAfter: 20
             else
                 console.log jqxhr.responseText
+
                 try
-                    serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
+                  serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
-                    serverMessage = jqxhr.responseText
+                  serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
 
