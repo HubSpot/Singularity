@@ -1,10 +1,10 @@
 package com.hubspot.singularity.executor.models;
 
-import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 
 /**
  * Handlebars context for generating logrotate.conf files.
@@ -24,11 +24,11 @@ public class LogrotateTemplateContext {
     return configuration.getLogrotateDateformat();
   }
 
-  public String getRotateCount() {
+  public int getRotateCount() {
     return configuration.getLogrotateCount();
   }
 
-  public String getMaxageDays() {
+  public int getMaxageDays() {
     return configuration.getLogrotateMaxageDays();
   }
 
@@ -41,7 +41,7 @@ public class LogrotateTemplateContext {
    * @return filenames to rotate.
    */
   public List<String> getExtrasFiles() {
-    final List<String> original = configuration.getLogrotateExtrasFiles();
+    final List<String> original = configuration.getLogrotateAdditionalFiles();
     final List<String> transformed = new ArrayList<>(original.size());
 
     for (String filename : original) {

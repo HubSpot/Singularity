@@ -14,14 +14,15 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 
 public class SingularityExecutorModule extends AbstractModule {
-
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
   public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
 
   @Override
-  protected void configure() {}
+  protected void configure() {
+
+  }
 
   @Provides
   @Singleton
@@ -64,5 +65,4 @@ public class SingularityExecutorModule extends AbstractModule {
 
     return handlebars;
   }
-
 }

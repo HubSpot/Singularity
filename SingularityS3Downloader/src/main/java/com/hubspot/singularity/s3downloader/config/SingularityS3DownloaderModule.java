@@ -13,7 +13,6 @@ import com.hubspot.singularity.s3.base.ArtifactManager;
 import com.hubspot.singularity.s3downloader.server.SingularityS3DownloaderServer;
 
 public class SingularityS3DownloaderModule extends AbstractModule {
-
   public static final String DOWNLOAD_EXECUTOR_SERVICE = "singularity.s3downloader.executor.service";
 
   @Override
@@ -28,5 +27,4 @@ public class SingularityS3DownloaderModule extends AbstractModule {
   public ThreadPoolExecutor getDownloadService(SingularityS3DownloaderConfiguration configuration) {
     return (ThreadPoolExecutor) Executors.newFixedThreadPool(configuration.getNumDownloaderThreads(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("S3AsyncDownloaderMainThread-%d").build());
   }
-
 }
