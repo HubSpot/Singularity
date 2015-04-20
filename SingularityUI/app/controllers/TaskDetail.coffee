@@ -46,8 +46,8 @@ class TaskDetailController extends Controller
 
         @collections.taskCleanups = new TaskCleanups
 
-        # For notifications at the task level
-        @collections.deploys = new Deploys {state: 'pending'}
+        @collections.pendingDeploys = new Deploys state: 'pending'
+
         #
         # Subviews
         #
@@ -57,9 +57,9 @@ class TaskDetailController extends Controller
             template:   @templates.overview
 
         @subviews.healthcheckNotification = new HealthcheckNotification
-            collection: @collections.deploys
-            model:      @models.task
-            template:   @templates.healthcheckNotification
+            model:          @models.task
+            template:       @templates.healthcheckNotification
+            pendingDeploys: @collections.pendingDeploys
 
         @subviews.history = new SimpleSubview
             model:    @models.task
@@ -128,7 +128,7 @@ class TaskDetailController extends Controller
 
         @collections.taskCleanups.fetch()
 
-        @collections.deploys.fetch()
+        @collections.pendingDeploys.fetch()
 
         @models.task.fetch()
             .done =>

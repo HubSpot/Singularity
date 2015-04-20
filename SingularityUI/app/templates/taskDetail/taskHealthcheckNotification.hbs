@@ -1,7 +1,11 @@
     {{#if isDeployPending}}
-        <div class="well text-muted">
-            <h4>Current Healthcheck</h4>
+        <div class="alert alert-warning" role="alert">
+            {{#if hasSuccessfulHealthcheck}}
+                <b>Deploy <code>{{data.task.taskId.deployId}}</code> is pending:</b> Waiting for successful load balancer update.
+            {{else}}
             {{#ifGT data.healthcheckResults.length 0}}
+                <b>Deploy <code>{{data.task.taskId.deployId}}</code> is pending:</b> Waiting for successful healthcheck response. <a href="#health-checks" data-action="viewHealthchecks">View all healthchecks.</a>
+                <hr/>
                 <div class="table-container">
                     <table class="table">
                         <thead>
@@ -13,10 +17,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                        {{#with healthCheck}}
+                            {{#with data.healthcheckResults.[0]}}
                             <tr>
                                 <td>
-                                   {{timestampFormattedWithSeconds timestamp}}
+                                   {{timestampFromNow timestamp}}
                                 </td>
                                 <td>
                                    {{durationMillis}}{{#if durationMillis}}ms{{/if}}
@@ -35,19 +39,14 @@
                                 <td>
                                     <pre class="healthcheck-message">{{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}</pre>
                                 </td>
-                                <td class="actions-column">
-                                    <a data-index="{{@index}}" data-key="healthcheckResults" data-action="viewJsonProperty" title="JSON">
-                                        { }
-                                    </a>
-                                </td>
                             </tr>
                            {{/with}}
                         </tbody>
                     </table>
                 </div>
-                <a href="#health-checks" data-action="viewHealthchecks">View full healthcheck history</a>    
             {{else}}
-                <p>Deploy for this task is pending. Healthchecks not run yet.</p>
+                <b>Deploy <code>{{data.task.taskId.deployId}}</code> is pending:</b> Waiting for task to become healthy.
             {{/ifGT}}
+            {{/if}}
         </div>
     {{/if}}
