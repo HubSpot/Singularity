@@ -1,7 +1,7 @@
 Controller = require './Controller'
 
 Request                = require '../models/Request'
-RequestActiveDeploy    = require '../models/RequestActiveDeploy'
+RequestDeployStatus    = require '../models/RequestDeployStatus'
 
 Tasks                  = require '../collections/Tasks'
 RequestTasks           = require '../collections/RequestTasks'
@@ -33,7 +33,7 @@ class RequestDetailController extends Controller
         #
         @models.request = new Request id: @requestId
 
-        @models.activeDeployStats = new RequestActiveDeploy
+        @models.activeDeployStats = new RequestDeployStatus
             requestId: @requestId
             deployId:  undefined
 

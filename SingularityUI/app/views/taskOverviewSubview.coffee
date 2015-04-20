@@ -12,8 +12,8 @@ class taskOverviewSubview extends View
         _.extend super,
             'click [data-action="remove"]': 'promptKillTask'
 
-
     initialize: ({@collection, @model, @template}) ->
+
         @taskModel = new Task id: @model.taskId
 
         for eventName in ['sync', 'add', 'remove', 'change']
@@ -35,13 +35,15 @@ class taskOverviewSubview extends View
 
 
     render: ->
-        return if not @model.synced and @model.isEmpty?()
+        return if not @model.synced
         @$el.html @template @renderData()
 
     renderData: ->
-        config:    config
-        data:      @model.toJSON()
-        synced:    @model.synced and @collection.synced
+        config:         config
+        data:           @model.toJSON()
+        healthCheck:    @model.get('healthcheckResults')[0]
+        synced:         @model.synced and @collection.synced
+
 
     # Choose prompt based on if we plan to 
     # gracefully kill (sigterm), or force kill (kill-9)
