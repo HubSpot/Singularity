@@ -41,7 +41,6 @@ class taskOverviewSubview extends View
     renderData: ->
         config:         config
         data:           @model.toJSON()
-        healthCheck:    @model.get('healthcheckResults')[0]
         synced:         @model.synced and @collection.synced
 
 
