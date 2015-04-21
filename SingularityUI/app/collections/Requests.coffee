@@ -59,8 +59,8 @@ class Requests extends Collection
         data = [
             { linkName: "all",        label: 'total',     total: userRequestTotals.all }
             { linkName: "ON_DEMAND",  label: 'On Demand', total: userRequestTotals.onDemand }    
-            { linkName: "WORKER",     label: 'Worker',    total: userRequestTotals.worker }
             { linkName: "SCHEDULED",  label: 'Scheduled', total: userRequestTotals.scheduled }
+            { linkName: "WORKER",     label: 'Worker',    total: userRequestTotals.worker }
             { linkName: "RUN_ONCE",   label: 'Run Once',  total: userRequestTotals.runOnce }
             { linkName: "SERVICE",    label: 'Service',   total: userRequestTotals.service }
         ]
