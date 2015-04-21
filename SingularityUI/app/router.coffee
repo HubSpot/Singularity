@@ -1,4 +1,6 @@
-DashboardController = require 'controllers/Dashboard'
+DashboardController         = require 'controllers/Dashboard'
+ReactDashboardController    = require 'react/controllers/DashboardCtrl'
+
 StatusController    = require 'controllers/Status'
 
 NewRequestController = require 'controllers/NewRequest'
@@ -20,6 +22,7 @@ class Router extends Backbone.Router
 
     routes:
         '(/)': 'dashboard'
+        'react/dashboard(/)': 'reactDashboard'
         'status(/)': 'status'
 
         'requests/new(/)': 'newRequest'
@@ -48,6 +51,9 @@ class Router extends Backbone.Router
 
     dashboard: ->
         app.bootstrapController new DashboardController
+
+    reactDashboard: ->
+        app.bootstrapController new ReactDashboardController        
 
     status: ->
         app.bootstrapController new StatusController

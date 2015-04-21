@@ -72,6 +72,8 @@ class Application
             return
         @currentController.refresh()
 
+        @currentView?.refresh()
+
     caughtError: ->
         # Ghetto try-catch
         #
@@ -136,6 +138,11 @@ class Application
 
     bootstrapController: (controller) ->
         @currentController = controller
+
+    # So we can refetch a collection/model
+    # from within a React component
+    bootstrapReactView: (view) ->
+        @currentView = view
 
     # Called by Controllers when their views are ready to take over
     showView: (view) ->
