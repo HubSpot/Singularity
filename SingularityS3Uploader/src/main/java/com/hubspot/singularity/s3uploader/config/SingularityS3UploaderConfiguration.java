@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3uploader.config;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -37,7 +38,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   @Min(1)
   @JsonProperty
-  private long stopCheckingAfterMillisWithoutNewFile = 168;
+  private long stopCheckingAfterMillisWithoutNewFile = TimeUnit.HOURS.toMillis(168);
 
   @NotNull
   @JsonProperty
