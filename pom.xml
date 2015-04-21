@@ -327,10 +327,6 @@
             <groupId>aopalliance</groupId>
             <artifactId>aopalliance</artifactId>
           </exclusion>
-          <!--<exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-          </exclusion>-->
           <exclusion>
             <groupId>org.glassfish.hk2.external</groupId>
             <artifactId>javax.inject</artifactId>
