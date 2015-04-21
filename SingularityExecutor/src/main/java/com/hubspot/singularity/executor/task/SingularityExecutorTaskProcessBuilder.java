@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.hubspot.singularity.executor.models.DockerContext;
+import com.spotify.docker.client.DockerClient;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -35,8 +36,15 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private Optional<SingularityExecutorTaskArtifactFetcher> taskArtifactFetcher;
 
-  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task, ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, TemplateManager templateManager, SingularityExecutorConfiguration configuration,
-      ExecutorData executorData, String executorPid) {
+  private DockerClient dockerClient;
+
+  public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task,
+                                               ExecutorUtils executorUtils,
+                                               SingularityExecutorArtifactFetcher artifactFetcher,
+                                               TemplateManager templateManager,
+                                               SingularityExecutorConfiguration configuration,
+                                               ExecutorData executorData, String executorPid,
+                                               DockerClient dockerClient) {
     this.executorData = executorData;
     this.task = task;
     this.executorUtils = executorUtils;
@@ -45,10 +53,16 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     this.configuration = configuration;
     this.executorPid = executorPid;
     this.taskArtifactFetcher = Optional.absent();
+    this.dockerClient = dockerClient;
   }
 
   @Override
   public ProcessBuilder call() throws Exception {
+    if (task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker()) {
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Pulling image... (executor pid: %s)", executorPid), task.getLog());
+      dockerClient.pull(task.getTaskInfo().getContainer().getDocker().getImage());
+    }
+
     executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
 
     taskArtifactFetcher = Optional.of(artifactFetcher.buildTaskFetcher(executorData, task));

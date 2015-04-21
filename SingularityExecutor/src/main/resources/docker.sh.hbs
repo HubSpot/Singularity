@@ -48,31 +48,6 @@ function handle_signal {
   running=0
 }
 
-function fetch_image {
-  have_image=0
-  possible_matches=`sudo -E -u {{{ runContext.user }}} docker images | grep ${1%:*} | awk '{print $1}'`
-  if [ -n "$possible_matches" ] ; then
-    specified_version=${1##*:}
-    if [[ "$specified_version" == *"/"* ]] ; then
-      specified_version="latest"
-    fi
-    possible_version_matches=`sudo -E -u {{{ runContext.user }}} docker images | grep ${1%:*} | awk '{print $2}'`
-    if [ -n "$possible_version_matches" ] ; then
-      while read -r line; do
-        if [[ "$specified_version" == "$line" ]]; then
-          have_image=1
-        fi
-      done <<< "$possible_version_matches"
-    fi
-  fi
-  if [[ "$have_image" != 1 ]] ; then
-    echo "Did not find image $1 locally, pulling from repository..."
-    sudo -E -u {{{ runContext.user }}} docker pull $1
-  else
-    echo "Image has already been pulled..."
-  fi
-}
-
 function setup_cgroups {
   if [ -d "/cgroup/memory/mesos" ] ;then
     CGROUPS_DIR="/cgroup"
@@ -96,7 +71,6 @@ function setup_cgroups {
 }
 
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
-fetch_image $DOCKER_IMAGE
 
 DOCKER_ENV=""
 
@@ -149,6 +123,7 @@ DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 DOCKER_OPTIONS="-d --name={{{ runContext.taskId }}} -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
+mkdir -p {{{ runContext.taskAppDirectory }}}
 sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
 # Start up the container

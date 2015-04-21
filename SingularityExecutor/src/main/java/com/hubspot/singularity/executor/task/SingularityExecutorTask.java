@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.spotify.docker.client.DockerClient;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
@@ -34,8 +35,18 @@ public class SingularityExecutorTask {
   private final SingularityExecutorTaskCleanup taskCleanup;
   private final SingularityExecutorTaskDefinition taskDefinition;
 
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
+  public SingularityExecutorTask(ExecutorDriver driver,
+                                 ExecutorUtils executorUtils,
+                                 SingularityExecutorConfiguration configuration,
+                                 SingularityExecutorTaskDefinition taskDefinition,
+                                 String executorPid,
+                                 SingularityExecutorArtifactFetcher artifactFetcher,
+                                 Protos.TaskInfo taskInfo,
+                                 TemplateManager templateManager,
+                                 ObjectMapper objectMapper,
+                                 Logger log,
+                                 JsonObjectFileHelper jsonObjectFileHelper,
+                                 DockerClient dockerClient) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;
@@ -50,8 +61,8 @@ public class SingularityExecutorTask {
     this.taskDefinition = taskDefinition;
 
     this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, configuration, log, jsonObjectFileHelper);
-    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, configuration, taskDefinition, log);
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, configuration, taskDefinition.getExecutorData(), executorPid);
+    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, configuration, taskDefinition, log, dockerClient);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, configuration, taskDefinition.getExecutorData(), executorPid, dockerClient);
   }
 
   public void cleanup(TaskState state) {

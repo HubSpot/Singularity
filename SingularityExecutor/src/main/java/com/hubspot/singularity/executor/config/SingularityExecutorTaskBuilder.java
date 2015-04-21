@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 
+import com.spotify.docker.client.DockerClient;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
@@ -33,6 +34,7 @@ public class SingularityExecutorTaskBuilder {
 
   private final SingularityExecutorConfiguration configuration;
   private final SingularityExecutorArtifactFetcher artifactFetcher;
+  private final DockerClient dockerClient;
 
   private final SingularityExecutorLogging executorLogging;
   private final ExecutorUtils executorUtils;
@@ -42,15 +44,22 @@ public class SingularityExecutorTaskBuilder {
   private final JsonObjectFileHelper jsonObjectFileHelper;
 
   @Inject
-  public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper, JsonObjectFileHelper jsonObjectFileHelper, TemplateManager templateManager,
-      SingularityExecutorLogging executorLogging,  SingularityExecutorConfiguration configuration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid,
-      ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher) {
+  public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper,
+                                        JsonObjectFileHelper jsonObjectFileHelper,
+                                        TemplateManager templateManager,
+                                        SingularityExecutorLogging executorLogging,
+                                        SingularityExecutorConfiguration configuration,
+                                        @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid,
+                                        ExecutorUtils executorUtils,
+                                        SingularityExecutorArtifactFetcher artifactFetcher,
+                                        DockerClient dockerClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
     this.executorLogging = executorLogging;
     this.configuration = configuration;
     this.artifactFetcher = artifactFetcher;
+    this.dockerClient = dockerClient;
     this.executorPid = executorPid;
     this.executorUtils = executorUtils;
   }
@@ -69,7 +78,7 @@ public class SingularityExecutorTaskBuilder {
 
     jsonObjectFileHelper.writeObject(taskDefinition, configuration.getTaskDefinitionPath(taskId), log);
 
-    return new SingularityExecutorTask(driver, executorUtils, configuration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, jsonObjectMapper, log, jsonObjectFileHelper);
+    return new SingularityExecutorTask(driver, executorUtils, configuration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, jsonObjectMapper, log, jsonObjectFileHelper, dockerClient);
   }
 
   private ExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {
