@@ -86,11 +86,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
     </dependency>
