@@ -28,6 +28,7 @@ class Application
 
         $body = $ 'body'
 
+        # for rendering react components
         @pageEl = document.getElementById 'page'
 
 
