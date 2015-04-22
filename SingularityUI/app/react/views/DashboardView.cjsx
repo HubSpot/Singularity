@@ -46,7 +46,7 @@ class DashboardView extends View
             )
 
     ##
-    ## Example of a handler that modifys models/collection
+    ## Example of a handler that modifies models/collection
     ##
     ## Define these methods in this view, then pass 
     ## them down as props to your components. This keeps
