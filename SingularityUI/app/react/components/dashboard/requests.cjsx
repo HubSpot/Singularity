@@ -1,9 +1,10 @@
 SectionHeader = require '../lib/SectionHeader'
 StarredRequestsTable   = require './starredRequestsTable'
-
 requestsTotal = require './requestsTotal'
 
 Requests = React.createClass
+  
+  displayName: 'requests'
 
   render: ->
     boxes = @props.requestTotals.map (item) =>
@@ -15,16 +16,24 @@ Requests = React.createClass
       )
       
     return(
-      <section>
-          <SectionHeader title='My requests' />
+      <div>
+          <div className="row">
+              <div className="col-md-12">
+                <SectionHeader title='My requests' />
+              </div>
+          </div>
           <div className="row">
               {boxes}
           </div>
-          <SectionHeader title='Starred requests' />
-          <StarredRequestsTable
-            starredRequests={@props.starredRequests}
-          />
-      </section>
+          <div className="row">
+             <div className="col-md-12">
+                <SectionHeader title='Starred requests' />
+                <StarredRequestsTable
+                  starredRequests={@props.starredRequests}
+                />
+            </div>
+          </div>
+      </div>
     )
 
 module.exports = Requests

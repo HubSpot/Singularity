@@ -1,5 +1,7 @@
 RequestsTotal = React.createClass
   
+  displayName: 'RequestsTotal'
+
   render: ->
 
     item = @props.item
