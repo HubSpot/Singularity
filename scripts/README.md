@@ -34,10 +34,13 @@ Two commands exist for downloading logs.
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk-size|Chunk size for writing responses to file system|8192
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)| Must be set!|
-|-s , --start-days|Search for logs no older than this many days|7
-|-e , --end-days|Search for logs no newer than this many days| None (today)
+|-s , --start-days|Search for logs no older than this, can be an integer number of days or date in format ‘mm-dd-yyyy’ |7
+|-e , --end-days|Search for logs no newer than this, can be an integer number of days or date in format ‘mm-dd-yyyy’| None (today)
+|-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
+|-nn, --no-name-fetch-off|If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files| None (fetch all)|
 |-g, --grep|Grep string for searching log files(Only for `logfetch`)|
 |-l, --logtype|Glob matcher for type of log file to download| None (match all)|
+|-V, --verbose|More verbose output||
 
 ##Grep and Log Files
 When the `-g` option is set, the log fetcher will grep the downloaded files for the provided regex.

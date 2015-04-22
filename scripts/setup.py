@@ -10,7 +10,7 @@ requirements = [
 
 setup(
     name='singularity-logfetch',
-    version='0.13.0',
+    version='0.15.0',
     description='Singularity log fetching and searching',
     author="HubSpot",
     author_email='singularity-users@googlegroups.com',

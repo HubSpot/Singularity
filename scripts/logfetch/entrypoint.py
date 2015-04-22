@@ -21,6 +21,7 @@ DEFAULT_CHUNK_SIZE = 8192
 DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
 DEFAULT_TASK_COUNT = 10
 DEFAULT_DAYS = 7
+DEFAULT_S3_PATTERN = '%requestId/%Y/%m/%taskId_%index-%s-%filename'
 
 def exit(reason, color='red'):
   sys.stderr.write(colored(reason, color) + '\n')
@@ -65,6 +66,9 @@ def check_args(args):
 
 def convert_to_date(argument):
     try:
+      if isinstance(argument, datetime):
+        return argument
+      else:
         val = datetime.now() - timedelta(days=int(argument))
     except:
       try:
@@ -87,8 +91,9 @@ def fetch():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : DEFAULT_DAYS,
-    "end_days" : 0 #today
+    "start_days" : datetime.now() - timedelta(days=DEFAULT_DAYS),
+    "file_pattern" : DEFAULT_S3_PATTERN,
+    "end_days" : datetime.now()
   }
 
   try:
@@ -112,6 +117,8 @@ def fetch():
   parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
   parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
   parser.add_argument("-l", "--log-type", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
+  parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
+  parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
   parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
@@ -139,8 +146,9 @@ def cat():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : DEFAULT_DAYS,
-    "end_days" : 0 #today
+    "start_days" : datetime.now() - timedelta(days=DEFAULT_DAYS),
+    "file_pattern" : DEFAULT_S3_PATTERN,
+    "end_days" : datetime.now()
   }
 
   try:
@@ -164,6 +172,8 @@ def cat():
   parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
   parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
   parser.add_argument("-l", "--logtype", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
+  parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
+  parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
