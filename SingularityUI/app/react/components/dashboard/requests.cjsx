@@ -1,13 +1,9 @@
-SectionHeader = require '../lib/sectionHeader'
+SectionHeader = require '../lib/SectionHeader'
+StarredRequestsTable   = require './starredRequestsTable'
+
 requestsTotal = require './requestsTotal'
 
 Requests = React.createClass
-
-  componentDidMount: ->    
-    # test collection event bindings:
-    # setTimeout ( =>
-    #   @props.requestsTotals
-    # ), 1500
 
   render: ->
     boxes = @props.requestTotals.map (item) =>
@@ -20,10 +16,14 @@ Requests = React.createClass
       
     return(
       <section>
-          <SectionHeader title='My Requests' />
+          <SectionHeader title='My requests' />
           <div className="row">
               {boxes}
           </div>
+          <SectionHeader title='Starred requests' />
+          <StarredRequestsTable
+            starredRequests={@props.starredRequests}
+          />
       </section>
     )
 

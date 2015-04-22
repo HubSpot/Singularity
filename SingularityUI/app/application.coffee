@@ -28,6 +28,9 @@ class Application
 
         $body = $ 'body'
 
+        @pageEl = document.getElementById 'page'
+
+
         @views.nav = new NavView
         @views.nav.render()
         $body.prepend @views.nav.$el

@@ -1,5 +1,8 @@
 UserInfo = React.createClass
 
+  propTypes:
+      user: React.PropTypes.instanceOf(Backbone.Model).isRequired
+
   handleChangeUser: ->
     app.deployUserPrompt()
 
