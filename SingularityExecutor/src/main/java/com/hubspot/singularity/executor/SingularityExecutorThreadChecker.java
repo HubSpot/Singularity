@@ -7,6 +7,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Optional;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.DockerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
@@ -29,12 +31,14 @@ public class SingularityExecutorThreadChecker {
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
+  private final DockerClient dockerClient;
 
   private SingularityExecutorMonitor monitor;
 
   @Inject
-  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerClient dockerClient) {
     this.configuration = configuration;
+    this.dockerClient = dockerClient;
 
     this.scheduledExecutorService = Executors.newScheduledThreadPool(configuration.getThreadCheckThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorThreadCheckerThread-%d").build());
   }
@@ -101,12 +105,11 @@ public class SingularityExecutorThreadChecker {
 
     Optional<Integer> dockerPid = Optional.absent();
     if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
-      List<String> dockerPidCmd = ImmutableList.of("docker", "inspect", "-f", "{{.State.Pid}}", taskProcess.getTask().getTaskId());
-      List<String> dockerPidOutput = checkThreadsProcessManager.runCommandWithOutput(dockerPidCmd);
-      if (dockerPidOutput.isEmpty()) {
+      try {
+        dockerPid = Optional.of(dockerClient.inspectContainer(taskProcess.getTask().getTaskId()).state().pid());
+      } catch (DockerException e) {
         throw new ProcessFailedException("Could not get docker root pid");
       }
-      dockerPid = Optional.of(Integer.parseInt(dockerPidOutput.get(0)));
     }
 
     List<String> cmd = ImmutableList.of("/bin/sh",
