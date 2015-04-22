@@ -143,7 +143,7 @@ class Application
         @currentController = controller
 
     # So we can refetch a collection/model
-    # from within a React component
+    # from within a React view
     bootstrapReactView: (view) ->
         @currentView = view
 
