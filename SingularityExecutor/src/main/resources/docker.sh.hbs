@@ -121,7 +121,6 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
 echo "Starting continer with: sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
 sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}} >> {{{ runContext.logFile }}} 2>&1 &
-#cid=$(sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.Id}} {{{ runContext.taskId }}})
 cid={{{ runContext.taskId }}}
 running=1
 
