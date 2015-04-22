@@ -1,8 +1,10 @@
-UserInfo = require './UserInfo'
+UserInfo = require './userInfo'
 Requests = require './requests'
 
 DashboardMain = React.createClass
 
+  displayName: 'DashboardMain'
+  
   render: ->
     return (
       <div>
