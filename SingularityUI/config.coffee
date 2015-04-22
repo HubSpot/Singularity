@@ -8,17 +8,6 @@ exports.config =
     paths:
         public: path.resolve(__dirname, '../SingularityService/target/generated-resources/assets')
 
-    # plugins:
-    #     react:
-    #         autoIncludeCommentBlock: yes
-
-    # modules:
-    #     nameCleaner: (path) ->
-    #         path
-    #         # Strip the .cjsx extension from module names
-    #         .replace(/\.cjsx/, '')
-
-
     files:
         javascripts:
             joinTo: 'static/js/app.js'
