@@ -12,7 +12,7 @@ starredRequestsTable = React.createClass
       
       link = "#{config.appRoot}/request/#{request.id}"
       return(
-        <tr data-request-id="{ request.id }">
+        <tr key={request.id} data-request-id="{ request.id }">
             <td>
                 <a className="star" data-action="unstar" data-starred="true">
                     <span className="glyphicon glyphicon-star"></span>
