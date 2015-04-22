@@ -12,6 +12,8 @@ class Task extends Model
     parse: (task) ->
         if task.offer?
             task.host = task.offer?.hostname?.split('.')[0]
+        else
+            task.host = task.host?.split('.')[0]
 
         if task.mesosTask?
             task.cpus     = _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''
