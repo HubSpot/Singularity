@@ -5,8 +5,9 @@ Requests = require '../../collections/Requests'
 class ReactDashboardController extends Controller
 
     initialize: ->
+    
         app.showPageLoader()
-
+        
         @requestsCollection = new Requests [], state: 'all'
 
         new DashboardView
