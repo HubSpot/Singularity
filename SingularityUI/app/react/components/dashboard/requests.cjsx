@@ -1,6 +1,6 @@
 SectionHeader = require '../lib/SectionHeader'
-StarredRequestsTable   = require './starredRequestsTable'
-requestsTotal = require './requestsTotal'
+StarredRequestsTable   = require './StarredRequestsTable'
+requestsTotal = require './RequestsTotal'
 
 Requests = React.createClass
   

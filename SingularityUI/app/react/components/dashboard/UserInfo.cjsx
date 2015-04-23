@@ -1,6 +1,6 @@
 UserInfo = React.createClass
   
-  displayName: 'userInfo'
+  displayName: 'UserInfo'
 
   handleChangeUser: ->
     app.deployUserPrompt()
