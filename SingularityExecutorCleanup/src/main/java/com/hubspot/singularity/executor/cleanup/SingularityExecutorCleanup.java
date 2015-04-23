@@ -34,11 +34,11 @@ import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
-import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -49,6 +49,7 @@ public class SingularityExecutorCleanup {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
 
   private final JsonObjectFileHelper jsonObjectFileHelper;
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
@@ -58,8 +59,9 @@ public class SingularityExecutorCleanup {
   private final DockerClient dockerClient;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
+  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
+    this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
     this.singularityClient = singularityClient;
@@ -89,12 +91,12 @@ public class SingularityExecutorCleanup {
 
     if (runningTaskIds.isEmpty()) {
       if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-        final String errorMessage = String.format("Running in safe mode (%s) and found 0 running tasks - aborting cleanup", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
+        final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
         LOG.error(errorMessage);
         statisticsBldr.setErrorMessage(errorMessage);
         return statisticsBldr.build();
       } else {
-        LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode ({})", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
+        LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode");
       }
     }
 
@@ -177,7 +179,7 @@ public class SingularityExecutorCleanup {
   }
 
   private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
-    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, executorConfiguration, LOG, jsonObjectFileHelper);
+    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
 

@@ -2,216 +2,223 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
+import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
-@Singleton
-public class SingularityExecutorConfiguration {
+@Configuration("/etc/singularity.executor.yaml")
+public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
+  public static final String SHUTDOWN_TIMEOUT_MILLIS = "executor.shutdown.timeout.millis";
 
-  private final String executorJavaLog;
-  private final String executorBashLog;
-  private final String serviceLog;
-  private final String defaultRunAsUser;
-  private final String taskAppDirectory;
-  private final long shutdownTimeoutWaitMillis;
-  private final long idleExecutorShutdownWaitMillis;
-  private final long stopDriverAfterMillis;
+  public static final String HARD_KILL_AFTER_MILLIS = "executor.hard.kill.after.millis";
+  public static final String NUM_CORE_KILL_THREADS = "executor.num.core.kill.threads";
 
-  private final String globalTaskDefinitionDirectory;
-  private final String globalTaskDefinitionSuffix;
+  public static final String NUM_CORE_THREAD_CHECK_THREADS = "executor.num.core.thread.check.threads";
+  public static final String CHECK_THREADS_EVERY_MILLIS = "executor.check.threads.every.millis";
 
-  private final long hardKillAfterMillis;
-  private final int killThreads;
+  public static final String MAX_TASK_MESSAGE_LENGTH = "executor.status.update.max.task.message.length";
 
-  private final int threadCheckThreads;
-  private final long checkThreadsEveryMillis;
+  public static final String IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS = "executor.idle.shutdown.after.millis";
+  public static final String SHUTDOWN_STOP_DRIVER_AFTER_MILLIS = "executor.shutdown.stop.driver.after.millis";
 
-  private final int maxTaskMessageLength;
+  public static final String TASK_APP_DIRECTORY = "executor.task.app.directory";
 
-  private final String logrotateCommand;
-  private final String logrotateStateFile;
-  private final Path logrotateConfDirectory;
-  private final String logrotateToDirectory;
-  private final String logrotateMaxageDays;
-  private final String logrotateCount;
-  private final String logrotateDateformat;
+  public static final String TASK_EXECUTOR_JAVA_LOG_PATH = "executor.task.java.log.path";
+  public static final String TASK_EXECUTOR_BASH_LOG_PATH = "executor.task.bash.log.path";
+  public static final String TASK_SERVICE_LOG_PATH = "executor.task.service.log.path";
 
-  private final String logrotateExtrasDateformat;
-  private final List<String> logrotateExtrasFiles;
+  public static final String DEFAULT_USER = "executor.default.user";
+
+  public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
+  public static final String GLOBAL_TASK_DEFINITION_SUFFIX = "executor.global.task.definition.suffix";
+
+  public static final String LOGROTATE_COMMAND = "executor.logrotate.command";
+  public static final String LOGROTATE_CONFIG_DIRECTORY = "executor.logrotate.config.folder";
+  public static final String LOGROTATE_STATE_FILE = "executor.logrotate.state.file";
+  public static final String LOGROTATE_DIRECTORY = "executor.logrotate.to.directory";
+  public static final String LOGROTATE_MAXAGE_DAYS = "executor.logrotate.maxage.days";
+  public static final String LOGROTATE_COUNT = "executor.logrotate.count";
+  public static final String LOGROTATE_DATEFORMAT = "executor.logrotate.dateformat";
+
+  public static final String LOGROTATE_EXTRAS_DATEFORMAT = "executor.logrotate.extras.dateformat";
+  public static final String LOGROTATE_EXTRAS_FILES = "executor.logrotate.extras.files";
+
+  public static final String TAIL_LOG_LINES_TO_SAVE = "executor.service.log.tail.lines.to.save";
+  public static final String TAIL_LOG_FILENAME = "executor.service.log.tail.file.name";
+
+  public static final String S3_FILES_TO_BACKUP = "executor.s3.uploader.extras.files";
+  public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
+  public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
+
+  public static final String USE_LOCAL_DOWNLOAD_SERVICE = "executor.use.local.download.service";
+
+  public static final String LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS = "executor.local.download.service.timeout.millis";
+
+  public static final String MAX_TASK_THREADS = "executor.max.task.threads";
+
+  @NotEmpty
+  @JsonProperty
+  private String executorJavaLog = "executor.java.log";
+
+  @NotEmpty
+  @JsonProperty
+  private String executorBashLog = "executor.bash.log";
+
+  @NotEmpty
+  @JsonProperty
+  private String serviceLog = "service.log";
+
+  @NotEmpty
+  @JsonProperty
+  private String defaultRunAsUser;
+
+  @NotEmpty
+  @JsonProperty
+  private String taskAppDirectory = "app";
+
+  @Min(0)
+  @JsonProperty
+  private long shutdownTimeoutWaitMillis = TimeUnit.MINUTES.toMillis(5);
+
+  @Min(0)
+  @JsonProperty
+  private long idleExecutorShutdownWaitMillis = TimeUnit.SECONDS.toMillis(30);
+
+  @Min(0)
+  @JsonProperty
+  private long stopDriverAfterMillis = TimeUnit.SECONDS.toMillis(5);
+
+  @NotEmpty
+  @DirectoryExists
+  @JsonProperty
+  private String globalTaskDefinitionDirectory;
+
+  @NotEmpty
+  @JsonProperty
+  private String globalTaskDefinitionSuffix = ".task.json";
+
+  @Min(1)
+  @JsonProperty
+  private long hardKillAfterMillis = TimeUnit.MINUTES.toMillis(3);
+
+  @Min(1)
+  @JsonProperty
+  private int killThreads = 1;
+
+  @Min(1)
+  @JsonProperty
+  private int threadCheckThreads = 1;
+
+  @Min(1)
+  @JsonProperty
+  private long checkThreadsEveryMillis = TimeUnit.SECONDS.toMillis(5);
+
+  @Min(0)
+  @JsonProperty
+  private int maxTaskMessageLength = 80;
+
+  @NotEmpty
+  @JsonProperty
+  private String logrotateCommand = "logrotate";
+
+  @NotEmpty
+  @JsonProperty
+  private String logrotateStateFile = "logrotate.status";
+
+  @NotEmpty
+  @DirectoryExists
+  @JsonProperty
+  private String logrotateConfDirectory = "/etc/logrotate.d";
+
+  @NotEmpty
+  @JsonProperty
+  private String logrotateToDirectory = "logs";
+
+  @Min(1)
+  @JsonProperty
+  private int logrotateMaxageDays = 7;
+
+  @Min(1)
+  @JsonProperty
+  private int logrotateCount = 20;
+
+  @NotEmpty
+  @JsonProperty
+  private String logrotateDateformat= "-%Y%m%d%s";
+
+  @NotEmpty
+  @JsonProperty
+  private String logrotateExtrasDateformat = "-%Y%m%d";
+
+  @NotNull
+  @JsonProperty
+  private List<String> logrotateAdditionalFiles = Collections.emptyList();
 
   /**
    * Extra files to backup to S3 besides the service log.
    */
-  private final List<String> additionalS3FilesToBackup;
+  @NotNull
+  @JsonProperty
+  private List<String> s3UploaderAdditionalFiles = Collections.emptyList();
 
-  private final Path logMetadataDirectory;
-  private final String logMetadataSuffix;
+  @Min(1)
+  @JsonProperty
+  private int tailLogLinesToSave = 500;
 
-  private final int tailLogLinesToSave;
-  private final String serviceFinishedTailLog;
+  @NotEmpty
+  @JsonProperty
+  private String serviceFinishedTailLog = "tail_of_finished_service.log";
 
-  private final String s3MetadataSuffix;
-  private final Path s3MetadataDirectory;
+  @JsonProperty
+  private String s3UploaderKeyPattern;
 
-  private final String s3KeyPattern;
-  private final String s3Bucket;
+  @JsonProperty
+  private String s3UploaderBucket;
 
-  private final boolean useLocalDownloadService;
-  private final long localDownloadServiceTimeoutMillis;
+  @JsonProperty
+  private boolean useLocalDownloadService = false;
 
-  private final Optional<Integer> maxTaskThreads;
+  @Min(1)
+  @JsonProperty
+  private long localDownloadServiceTimeoutMillis = TimeUnit.MINUTES.toMillis(3);
 
-  @Inject
-  public SingularityExecutorConfiguration(
-      @Named(SingularityExecutorConfigurationLoader.GLOBAL_TASK_DEFINITION_DIRECTORY) String globalTaskDefinitionDirectory,
-      @Named(SingularityExecutorConfigurationLoader.GLOBAL_TASK_DEFINITION_SUFFIX) String globalTaskDefinitionSuffix,
-      @Named(SingularityExecutorConfigurationLoader.TASK_APP_DIRECTORY) String taskAppDirectory,
-      @Named(SingularityExecutorConfigurationLoader.TASK_EXECUTOR_BASH_LOG_PATH) String executorBashLog,
-      @Named(SingularityExecutorConfigurationLoader.TASK_EXECUTOR_JAVA_LOG_PATH) String executorJavaLog,
-      @Named(SingularityExecutorConfigurationLoader.TASK_SERVICE_LOG_PATH) String serviceLog,
-      @Named(SingularityExecutorConfigurationLoader.DEFAULT_USER) String defaultRunAsUser,
-      @Named(SingularityExecutorConfigurationLoader.SHUTDOWN_STOP_DRIVER_AFTER_MILLIS) String stopDriverAfterMillis,
-      @Named(SingularityExecutorConfigurationLoader.SHUTDOWN_TIMEOUT_MILLIS) String shutdownTimeoutWaitMillis,
-      @Named(SingularityExecutorConfigurationLoader.IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS) String idleExecutorShutdownWaitMillis,
-      @Named(SingularityExecutorConfigurationLoader.HARD_KILL_AFTER_MILLIS) String hardKillAfterMillis,
-      @Named(SingularityExecutorConfigurationLoader.NUM_CORE_KILL_THREADS) String killThreads,
-      @Named(SingularityExecutorConfigurationLoader.NUM_CORE_THREAD_CHECK_THREADS) String threadCheckThreads,
-      @Named(SingularityExecutorConfigurationLoader.CHECK_THREADS_EVERY_MILLIS) String checkThreadsEveryMillis,
-      @Named(SingularityExecutorConfigurationLoader.MAX_TASK_MESSAGE_LENGTH) String maxTaskMessageLength,
-      @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
-      @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix,
-      @Named(SingularityExecutorConfigurationLoader.S3_FILES_TO_BACKUP) String s3FilesToBackup,
-      @Named(SingularityExecutorConfigurationLoader.S3_UPLOADER_BUCKET) String s3Bucket,
-      @Named(SingularityExecutorConfigurationLoader.S3_UPLOADER_PATTERN) String s3KeyPattern,
-      @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY) String s3MetadataDirectory,
-      @Named(SingularityRunnerBaseConfigurationLoader.S3_METADATA_SUFFIX) String s3MetadataSuffix,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_COMMAND) String logrotateCommand,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_COUNT) String logrotateCount,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_MAXAGE_DAYS) String logrotateMaxageDays,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DATEFORMAT) String logrotateDateformat,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_DIRECTORY) String logrotateToDirectory,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY) String logrotateConfDirectory,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_STATE_FILE) String logrotateStateFile,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_EXTRAS_DATEFORMAT) String logrotateExtrasDateformat,
-      @Named(SingularityExecutorConfigurationLoader.LOGROTATE_EXTRAS_FILES) String logrotateExtrasFiles,
-      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_LINES_TO_SAVE) String tailLogLinesToSave,
-      @Named(SingularityExecutorConfigurationLoader.TAIL_LOG_FILENAME) String serviceFinishedTailLog,
-      @Named(SingularityExecutorConfigurationLoader.USE_LOCAL_DOWNLOAD_SERVICE) String useLocalDownloadService,
-      @Named(SingularityExecutorConfigurationLoader.LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS) String localDownloadServiceTimeoutMillis,
-      @Named(SingularityExecutorConfigurationLoader.MAX_TASK_THREADS) String maxTaskThreadsAsString) {
-    this.executorBashLog = executorBashLog;
-    this.globalTaskDefinitionDirectory = globalTaskDefinitionDirectory;
-    this.globalTaskDefinitionSuffix = globalTaskDefinitionSuffix;
-    this.taskAppDirectory = taskAppDirectory;
-    this.executorJavaLog = executorJavaLog;
-    this.serviceLog = serviceLog;
-    this.defaultRunAsUser = defaultRunAsUser;
-    this.shutdownTimeoutWaitMillis = Long.parseLong(shutdownTimeoutWaitMillis);
-    this.idleExecutorShutdownWaitMillis = Long.parseLong(idleExecutorShutdownWaitMillis);
-    this.stopDriverAfterMillis = Long.parseLong(stopDriverAfterMillis);
-    this.hardKillAfterMillis = Long.parseLong(hardKillAfterMillis);
-    this.killThreads = Integer.parseInt(killThreads);
-    this.threadCheckThreads = Integer.parseInt(threadCheckThreads);
-    this.checkThreadsEveryMillis = Long.parseLong(checkThreadsEveryMillis);
-    this.maxTaskMessageLength = Integer.parseInt(maxTaskMessageLength);
-    this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY);
-    this.logMetadataSuffix = logMetadataSuffix;
-    this.logrotateCommand = logrotateCommand;
-    this.logrotateConfDirectory = JavaUtils.getValidDirectory(logrotateConfDirectory, SingularityExecutorConfigurationLoader.LOGROTATE_CONFIG_DIRECTORY);
-    this.logrotateToDirectory = logrotateToDirectory;
-    this.logrotateStateFile = logrotateStateFile;
-    this.logrotateCount = logrotateCount;
-    this.logrotateMaxageDays = logrotateMaxageDays;
-    this.logrotateDateformat = logrotateDateformat;
-    this.additionalS3FilesToBackup = Splitter.on(",").trimResults().omitEmptyStrings().splitToList(s3FilesToBackup);
-    this.s3Bucket = s3Bucket;
-    this.s3KeyPattern = s3KeyPattern;
-    this.s3MetadataSuffix = s3MetadataSuffix;
-    this.s3MetadataDirectory = JavaUtils.getValidDirectory(s3MetadataDirectory, SingularityRunnerBaseConfigurationLoader.S3_METADATA_DIRECTORY);
-    this.tailLogLinesToSave = Integer.parseInt(tailLogLinesToSave);
-    this.serviceFinishedTailLog = serviceFinishedTailLog;
-    this.logrotateExtrasDateformat = logrotateExtrasDateformat;
-    this.logrotateExtrasFiles = Splitter.on(",").trimResults().omitEmptyStrings().splitToList(logrotateExtrasFiles);
-    this.useLocalDownloadService = Boolean.parseBoolean(useLocalDownloadService);
-    this.localDownloadServiceTimeoutMillis = Long.parseLong(localDownloadServiceTimeoutMillis);
+  @NotNull
+  @JsonProperty
+  private Optional<Integer> maxTaskThreads = Optional.absent();
 
-    if (Strings.isNullOrEmpty(maxTaskThreadsAsString)) {
-      this.maxTaskThreads = Optional.absent();
-    } else {
-      this.maxTaskThreads = Optional.of(Integer.parseInt(maxTaskThreadsAsString));
-    }
+  public SingularityExecutorConfiguration() {
+    super(Optional.of("singularity-executor.log"));
   }
 
-  public boolean isUseLocalDownloadService() {
-    return useLocalDownloadService;
+  public List<String> getLogrotateAdditionalFiles() {
+    return logrotateAdditionalFiles;
   }
 
-  public long getLocalDownloadServiceTimeoutMillis() {
-    return localDownloadServiceTimeoutMillis;
+  public void setLogrotateAdditionalFiles(List<String> logrotateAdditionalFiles) {
+    this.logrotateAdditionalFiles = logrotateAdditionalFiles;
   }
 
-  public int getTailLogLinesToSave() {
-    return tailLogLinesToSave;
+  public List<String> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
   }
 
-  public Path getLogMetadataDirectory() {
-    return logMetadataDirectory;
-  }
-
-  public String getLogMetadataSuffix() {
-    return logMetadataSuffix;
-  }
-
-  public long getHardKillAfterMillis() {
-    return hardKillAfterMillis;
-  }
-
-  public long getCheckThreadsEveryMillis() {
-    return checkThreadsEveryMillis;
-  }
-
-  public int getKillThreads() {
-    return killThreads;
-  }
-
-  public String getLogrotateExtrasDateformat() {
-    return logrotateExtrasDateformat;
-  }
-
-  public List<String> getLogrotateExtrasFiles() {
-    return logrotateExtrasFiles;
-  }
-
-  public String getLogrotateStateFile() {
-    return logrotateStateFile;
-  }
-
-  public int getMaxTaskMessageLength() {
-    return maxTaskMessageLength;
-  }
-
-  public long getStopDriverAfterMillis() {
-    return stopDriverAfterMillis;
-  }
-
-  public long getIdleExecutorShutdownWaitMillis() {
-    return idleExecutorShutdownWaitMillis;
-  }
-
-  public int getThreadCheckThreads() {
-    return threadCheckThreads;
-  }
-
-  public long getShutdownTimeoutWaitMillis() {
-    return shutdownTimeoutWaitMillis;
+  public void setS3UploaderAdditionalFiles(List<String> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
   }
 
   public String getExecutorJavaLog() {
@@ -226,10 +233,6 @@ public class SingularityExecutorConfiguration {
     return serviceLog;
   }
 
-  public String getServiceFinishedTailLog() {
-    return serviceFinishedTailLog;
-  }
-
   public String getDefaultRunAsUser() {
     return defaultRunAsUser;
   }
@@ -238,48 +241,16 @@ public class SingularityExecutorConfiguration {
     return taskAppDirectory;
   }
 
-  public String getLogrotateCommand() {
-    return logrotateCommand;
+  public long getShutdownTimeoutWaitMillis() {
+    return shutdownTimeoutWaitMillis;
   }
 
-  public String getLogrotateToDirectory() {
-    return logrotateToDirectory;
+  public long getIdleExecutorShutdownWaitMillis() {
+    return idleExecutorShutdownWaitMillis;
   }
 
-  public String getLogrotateMaxageDays() {
-    return logrotateMaxageDays;
-  }
-
-  public String getLogrotateCount() {
-    return logrotateCount;
-  }
-
-  public String getLogrotateDateformat() {
-    return logrotateDateformat;
-  }
-
-  public String getS3MetadataSuffix() {
-    return s3MetadataSuffix;
-  }
-
-  public Path getS3MetadataDirectory() {
-    return s3MetadataDirectory;
-  }
-
-  public List<String> getAdditionalS3FilesToBackup() {
-    return additionalS3FilesToBackup;
-  }
-
-  public String getS3KeyPattern() {
-    return s3KeyPattern;
-  }
-
-  public String getS3Bucket() {
-    return s3Bucket;
-  }
-
-  public Path getLogrotateConfDirectory() {
-    return logrotateConfDirectory;
+  public long getStopDriverAfterMillis() {
+    return stopDriverAfterMillis;
   }
 
   public String getGlobalTaskDefinitionDirectory() {
@@ -290,26 +261,379 @@ public class SingularityExecutorConfiguration {
     return globalTaskDefinitionSuffix;
   }
 
-  public Path getTaskDefinitionPath(String taskId) {
-    return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(MesosUtils.getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
+  public long getHardKillAfterMillis() {
+    return hardKillAfterMillis;
+  }
+
+  public int getKillThreads() {
+    return killThreads;
+  }
+
+  public int getThreadCheckThreads() {
+    return threadCheckThreads;
+  }
+
+  public long getCheckThreadsEveryMillis() {
+    return checkThreadsEveryMillis;
+  }
+
+  public int getMaxTaskMessageLength() {
+    return maxTaskMessageLength;
+  }
+
+  public String getLogrotateCommand() {
+    return logrotateCommand;
+  }
+
+  public String getLogrotateStateFile() {
+    return logrotateStateFile;
+  }
+
+  public String getLogrotateConfDirectory() {
+    return logrotateConfDirectory;
+  }
+
+  public String getLogrotateToDirectory() {
+    return logrotateToDirectory;
+  }
+
+  public int getLogrotateMaxageDays() {
+    return logrotateMaxageDays;
+  }
+
+  public int getLogrotateCount() {
+    return logrotateCount;
+  }
+
+  public String getLogrotateDateformat() {
+    return logrotateDateformat;
+  }
+
+  public String getLogrotateExtrasDateformat() {
+    return logrotateExtrasDateformat;
+  }
+
+  public int getTailLogLinesToSave() {
+    return tailLogLinesToSave;
+  }
+
+  public String getServiceFinishedTailLog() {
+    return serviceFinishedTailLog;
+  }
+
+  public boolean isUseLocalDownloadService() {
+    return useLocalDownloadService;
+  }
+
+  public long getLocalDownloadServiceTimeoutMillis() {
+    return localDownloadServiceTimeoutMillis;
   }
 
   public Optional<Integer> getMaxTaskThreads() {
     return maxTaskThreads;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser
-        + ", taskAppDirectory=" + taskAppDirectory + ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis + ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis
-        + ", stopDriverAfterMillis=" + stopDriverAfterMillis + ", globalTaskDefinitionDirectory=" + globalTaskDefinitionDirectory + ", globalTaskDefinitionSuffix=" + globalTaskDefinitionSuffix
-        + ", hardKillAfterMillis=" + hardKillAfterMillis + ", killThreads=" + killThreads + ", threadCheckThreads=" + threadCheckThreads + ", checkThreadsEveryMillis=" + checkThreadsEveryMillis
-        + ", maxTaskMessageLength=" + maxTaskMessageLength + ", logrotateCommand=" + logrotateCommand + ", logrotateStateFile=" + logrotateStateFile + ", logrotateConfDirectory="
-        + logrotateConfDirectory + ", logrotateToDirectory=" + logrotateToDirectory + ", logrotateMaxageDays=" + logrotateMaxageDays + ", logrotateCount=" + logrotateCount + ", logrotateDateformat="
-        + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat + ", logrotateExtrasFiles=" + logrotateExtrasFiles + ", logMetadataDirectory="
-        + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog
-        + ", s3MetadataSuffix=" + s3MetadataSuffix + ", s3MetadataDirectory=" + s3MetadataDirectory + ", additionalS3FilesToBackup=" + additionalS3FilesToBackup + ", s3KeyPattern=" + s3KeyPattern + ", s3Bucket="
-        + s3Bucket + ", useLocalDownloadService=" + useLocalDownloadService + ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis + ", maxTaskThreads=" + maxTaskThreads + "]";
+  @JsonIgnore
+  public Path getTaskDefinitionPath(String taskId) {
+    return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(MesosUtils.getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
   }
 
+  public void setExecutorJavaLog(String executorJavaLog) {
+    this.executorJavaLog = executorJavaLog;
+  }
+
+  public void setExecutorBashLog(String executorBashLog) {
+    this.executorBashLog = executorBashLog;
+  }
+
+  public void setServiceLog(String serviceLog) {
+    this.serviceLog = serviceLog;
+  }
+
+  public void setDefaultRunAsUser(String defaultRunAsUser) {
+    this.defaultRunAsUser = defaultRunAsUser;
+  }
+
+  public void setTaskAppDirectory(String taskAppDirectory) {
+    this.taskAppDirectory = taskAppDirectory;
+  }
+
+  public void setShutdownTimeoutWaitMillis(long shutdownTimeoutWaitMillis) {
+    this.shutdownTimeoutWaitMillis = shutdownTimeoutWaitMillis;
+  }
+
+  public void setIdleExecutorShutdownWaitMillis(long idleExecutorShutdownWaitMillis) {
+    this.idleExecutorShutdownWaitMillis = idleExecutorShutdownWaitMillis;
+  }
+
+  public void setStopDriverAfterMillis(long stopDriverAfterMillis) {
+    this.stopDriverAfterMillis = stopDriverAfterMillis;
+  }
+
+  public void setGlobalTaskDefinitionDirectory(String globalTaskDefinitionDirectory) {
+    this.globalTaskDefinitionDirectory = globalTaskDefinitionDirectory;
+  }
+
+  public void setGlobalTaskDefinitionSuffix(String globalTaskDefinitionSuffix) {
+    this.globalTaskDefinitionSuffix = globalTaskDefinitionSuffix;
+  }
+
+  public void setHardKillAfterMillis(long hardKillAfterMillis) {
+    this.hardKillAfterMillis = hardKillAfterMillis;
+  }
+
+  public void setKillThreads(int killThreads) {
+    this.killThreads = killThreads;
+  }
+
+  public void setThreadCheckThreads(int threadCheckThreads) {
+    this.threadCheckThreads = threadCheckThreads;
+  }
+
+  public void setCheckThreadsEveryMillis(long checkThreadsEveryMillis) {
+    this.checkThreadsEveryMillis = checkThreadsEveryMillis;
+  }
+
+  public void setMaxTaskMessageLength(int maxTaskMessageLength) {
+    this.maxTaskMessageLength = maxTaskMessageLength;
+  }
+
+  public void setLogrotateCommand(String logrotateCommand) {
+    this.logrotateCommand = logrotateCommand;
+  }
+
+  public void setLogrotateStateFile(String logrotateStateFile) {
+    this.logrotateStateFile = logrotateStateFile;
+  }
+
+  public void setLogrotateConfDirectory(String logrotateConfDirectory) {
+    this.logrotateConfDirectory = logrotateConfDirectory;
+  }
+
+  public void setLogrotateToDirectory(String logrotateToDirectory) {
+    this.logrotateToDirectory = logrotateToDirectory;
+  }
+
+  public void setLogrotateMaxageDays(int logrotateMaxageDays) {
+    this.logrotateMaxageDays = logrotateMaxageDays;
+  }
+
+  public void setLogrotateCount(int logrotateCount) {
+    this.logrotateCount = logrotateCount;
+  }
+
+  public void setLogrotateDateformat(String logrotateDateformat) {
+    this.logrotateDateformat = logrotateDateformat;
+  }
+
+  public void setLogrotateExtrasDateformat(String logrotateExtrasDateformat) {
+    this.logrotateExtrasDateformat = logrotateExtrasDateformat;
+  }
+
+  public void setTailLogLinesToSave(int tailLogLinesToSave) {
+    this.tailLogLinesToSave = tailLogLinesToSave;
+  }
+
+  public void setServiceFinishedTailLog(String serviceFinishedTailLog) {
+    this.serviceFinishedTailLog = serviceFinishedTailLog;
+  }
+
+  public String getS3UploaderKeyPattern() {
+    return s3UploaderKeyPattern;
+  }
+
+  public void setS3UploaderKeyPattern(String s3UploaderKeyPattern) {
+    this.s3UploaderKeyPattern = s3UploaderKeyPattern;
+  }
+
+  public String getS3UploaderBucket() {
+    return s3UploaderBucket;
+  }
+
+  public void setS3UploaderBucket(String s3UploaderBucket) {
+    this.s3UploaderBucket = s3UploaderBucket;
+  }
+
+  public void setUseLocalDownloadService(boolean useLocalDownloadService) {
+    this.useLocalDownloadService = useLocalDownloadService;
+  }
+
+  public void setLocalDownloadServiceTimeoutMillis(long localDownloadServiceTimeoutMillis) {
+    this.localDownloadServiceTimeoutMillis = localDownloadServiceTimeoutMillis;
+  }
+
+  public void setMaxTaskThreads(Optional<Integer> maxTaskThreads) {
+    this.maxTaskThreads = maxTaskThreads;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityExecutorConfiguration[" +
+            "executorJavaLog='" + executorJavaLog + '\'' +
+            ", executorBashLog='" + executorBashLog + '\'' +
+            ", serviceLog='" + serviceLog + '\'' +
+            ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
+            ", taskAppDirectory='" + taskAppDirectory + '\'' +
+            ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+            ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
+            ", stopDriverAfterMillis=" + stopDriverAfterMillis +
+            ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
+            ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
+            ", hardKillAfterMillis=" + hardKillAfterMillis +
+            ", killThreads=" + killThreads +
+            ", threadCheckThreads=" + threadCheckThreads +
+            ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
+            ", maxTaskMessageLength=" + maxTaskMessageLength +
+            ", logrotateCommand='" + logrotateCommand + '\'' +
+            ", logrotateStateFile='" + logrotateStateFile + '\'' +
+            ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
+            ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
+            ", logrotateMaxageDays=" + logrotateMaxageDays +
+            ", logrotateCount=" + logrotateCount +
+            ", logrotateDateformat='" + logrotateDateformat + '\'' +
+            ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
+            ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
+            ", tailLogLinesToSave=" + tailLogLinesToSave +
+            ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
+            ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
+            ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
+            ", useLocalDownloadService=" + useLocalDownloadService +
+            ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
+            ", maxTaskThreads=" + maxTaskThreads +
+            ']';
+  }
+
+  @Override
+  public void updateFromProperties(Properties properties) {
+    final Splitter commaSplitter = Splitter.on(',').omitEmptyStrings().trimResults();
+
+    if (properties.containsKey(SHUTDOWN_TIMEOUT_MILLIS)) {
+      setShutdownTimeoutWaitMillis(Long.parseLong(properties.getProperty(SHUTDOWN_TIMEOUT_MILLIS)));
+    }
+
+    if (properties.containsKey(HARD_KILL_AFTER_MILLIS)) {
+      setHardKillAfterMillis(Long.parseLong(properties.getProperty(HARD_KILL_AFTER_MILLIS)));
+    }
+
+    if (properties.containsKey(NUM_CORE_KILL_THREADS)) {
+      setKillThreads(Integer.parseInt(properties.getProperty(NUM_CORE_KILL_THREADS)));
+    }
+
+    if (properties.containsKey(NUM_CORE_THREAD_CHECK_THREADS)) {
+      setThreadCheckThreads(Integer.parseInt(properties.getProperty(NUM_CORE_THREAD_CHECK_THREADS)));
+    }
+
+    if (properties.containsKey(CHECK_THREADS_EVERY_MILLIS)) {
+      setCheckThreadsEveryMillis(Long.parseLong(properties.getProperty(CHECK_THREADS_EVERY_MILLIS)));
+    }
+
+    if (properties.containsKey(MAX_TASK_MESSAGE_LENGTH)) {
+      setMaxTaskMessageLength(Integer.parseInt(properties.getProperty(MAX_TASK_MESSAGE_LENGTH)));
+    }
+
+    if (properties.containsKey(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS)) {
+      setIdleExecutorShutdownWaitMillis(Long.parseLong(properties.getProperty(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS)));
+    }
+
+    if (properties.containsKey(SHUTDOWN_STOP_DRIVER_AFTER_MILLIS)) {
+      setShutdownTimeoutWaitMillis(Long.parseLong(properties.getProperty(SHUTDOWN_STOP_DRIVER_AFTER_MILLIS)));
+    }
+
+    if (properties.containsKey(TASK_APP_DIRECTORY)) {
+      setTaskAppDirectory(properties.getProperty(TASK_APP_DIRECTORY));
+    }
+
+    if (properties.containsKey(TASK_EXECUTOR_JAVA_LOG_PATH)) {
+      setExecutorJavaLog(properties.getProperty(TASK_EXECUTOR_JAVA_LOG_PATH));
+    }
+
+    if (properties.containsKey(TASK_EXECUTOR_BASH_LOG_PATH)) {
+      setExecutorBashLog(properties.getProperty(TASK_EXECUTOR_BASH_LOG_PATH));
+    }
+
+    if (properties.containsKey(TASK_SERVICE_LOG_PATH)) {
+      setServiceLog(properties.getProperty(TASK_SERVICE_LOG_PATH));
+    }
+
+    if (properties.containsKey(DEFAULT_USER)) {
+      setDefaultRunAsUser(properties.getProperty(DEFAULT_USER));
+    }
+
+    if (properties.containsKey(GLOBAL_TASK_DEFINITION_DIRECTORY)) {
+      setGlobalTaskDefinitionDirectory(properties.getProperty(GLOBAL_TASK_DEFINITION_DIRECTORY));
+    }
+
+    if (properties.containsKey(GLOBAL_TASK_DEFINITION_SUFFIX)) {
+      setGlobalTaskDefinitionSuffix(properties.getProperty(GLOBAL_TASK_DEFINITION_SUFFIX));
+    }
+
+    if (properties.containsKey(LOGROTATE_COMMAND)) {
+      setLogrotateCommand(properties.getProperty(LOGROTATE_COMMAND));
+    }
+
+    if (properties.containsKey(LOGROTATE_CONFIG_DIRECTORY)) {
+      setLogrotateConfDirectory(properties.getProperty(LOGROTATE_CONFIG_DIRECTORY));
+    }
+
+    if (properties.containsKey(LOGROTATE_STATE_FILE)) {
+      setLogrotateStateFile(properties.getProperty(LOGROTATE_STATE_FILE));
+    }
+
+    if (properties.containsKey(LOGROTATE_DIRECTORY)) {
+      setLogrotateToDirectory(properties.getProperty(LOGROTATE_DIRECTORY));
+    }
+
+    if (properties.containsKey(LOGROTATE_MAXAGE_DAYS)) {
+      setLogrotateMaxageDays(Integer.parseInt(properties.getProperty(LOGROTATE_MAXAGE_DAYS)));
+    }
+
+    if (properties.containsKey(LOGROTATE_COUNT)) {
+      setLogrotateCount(Integer.parseInt(properties.getProperty(LOGROTATE_COUNT)));
+    }
+
+    if (properties.containsKey(LOGROTATE_DATEFORMAT)) {
+      setLogrotateDateformat(properties.getProperty(LOGROTATE_DATEFORMAT));
+    }
+
+    if (properties.containsKey(LOGROTATE_EXTRAS_DATEFORMAT)) {
+      setLogrotateExtrasDateformat(properties.getProperty(LOGROTATE_EXTRAS_DATEFORMAT));
+    }
+
+    if (properties.containsKey(LOGROTATE_EXTRAS_FILES)) {
+      setLogrotateAdditionalFiles(commaSplitter.splitToList(properties.getProperty(LOGROTATE_EXTRAS_FILES)));
+    }
+
+    if (properties.containsKey(TAIL_LOG_LINES_TO_SAVE)) {
+      setTailLogLinesToSave(Integer.parseInt(properties.getProperty(TAIL_LOG_LINES_TO_SAVE)));
+    }
+
+    if (properties.containsKey(TAIL_LOG_FILENAME)) {
+      setServiceFinishedTailLog(properties.getProperty(TAIL_LOG_FILENAME));
+    }
+
+    if (properties.containsKey(S3_FILES_TO_BACKUP)) {
+      setS3UploaderAdditionalFiles(commaSplitter.splitToList(properties.getProperty(S3_FILES_TO_BACKUP)));
+    }
+
+    if (properties.containsKey(S3_UPLOADER_PATTERN)) {
+      setS3UploaderKeyPattern(properties.getProperty(S3_UPLOADER_PATTERN));
+    }
+
+    if (properties.containsKey(S3_UPLOADER_BUCKET)) {
+      setS3UploaderBucket(properties.getProperty(S3_UPLOADER_BUCKET));
+    }
+
+    if (properties.containsKey(USE_LOCAL_DOWNLOAD_SERVICE)) {
+      setUseLocalDownloadService(Boolean.parseBoolean(properties.getProperty(USE_LOCAL_DOWNLOAD_SERVICE)));
+    }
+
+    if (properties.containsKey(LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS)) {
+      setLocalDownloadServiceTimeoutMillis(Long.parseLong(properties.getProperty(LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS)));
+    }
+
+    if (properties.containsKey(MAX_TASK_THREADS)) {
+      setMaxTaskThreads(Optional.of(Integer.parseInt(properties.getProperty(MAX_TASK_THREADS))));
+    }
+  }
 }

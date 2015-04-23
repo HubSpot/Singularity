@@ -65,18 +65,16 @@ class LogStreamer(threading.Thread):
 
   def get_initial_offset(self, uri, path):
     params = {"path" : path}
-    return requests.get(uri, params=params).json()['offset']
+    return long(requests.get(uri, params=params).json()['offset'])
 
   def fetch_new_log_data(self, uri, path, offset, args, task):
     params = {
       "path" : path,
       "offset" : offset
     }
-    if args.grep:
-      params['grep'] = args.grep
     response = requests.get(uri, params=params).json()
     prefix = '({0}) =>\n'.format(task) if args.verbose else ''
-    if response['data'] != '':
+    if len(response['data'].encode('utf-8')) > 0:
       if args.grep:
         filename = '{0}/.grep{1}'.format(args.dest, self.Task)
         self.create_grep_file(args, filename, response['data'])
@@ -85,7 +83,9 @@ class LogStreamer(threading.Thread):
         self.remove_grep_file(filename)
       else:
         sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
-    return offset + len(response['data'].encode('utf-8'))
+      return offset + len(response['data'].encode('utf-8'))
+    else:
+      return offset
 
   def create_grep_file(self, args, filename, content):
     grep_file = open(filename, 'wb')

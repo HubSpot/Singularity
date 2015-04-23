@@ -287,6 +287,8 @@ public class SingularityDeployChecker {
 
     SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(lbRequestId, request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
 
+    updateLoadBalancerStateForTasks(deployTasks, LoadBalancerRequestType.ADD, enqueueResult);
+
     DeployState deployState = interpretLoadBalancerState(enqueueResult, DeployState.WAITING);
 
     updatePendingDeploy(pendingDeploy, enqueueResult, deployState);
@@ -368,6 +370,8 @@ public class SingularityDeployChecker {
 
     if (shouldCheckLbState(pendingDeploy)) {
       final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(getLoadBalancerRequestId(pendingDeploy.getDeployMarker()));
+
+      updateLoadBalancerStateForTasks(deployActiveTasks, LoadBalancerRequestType.ADD, lbUpdate);
 
       DeployState deployState = interpretLoadBalancerState(lbUpdate, pendingDeploy.getCurrentDeployState());
 

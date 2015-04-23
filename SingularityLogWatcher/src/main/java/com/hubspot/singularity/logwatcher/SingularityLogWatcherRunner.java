@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Module;
-import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfigurationLoader;
+import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherModule;
 import com.hubspot.singularity.logwatcher.config.test.SingularityLogWatcherNoopModule;
 import com.hubspot.singularity.logwatcher.config.test.SingularityLogWatcherTestModule;
@@ -22,7 +22,7 @@ public class SingularityLogWatcherRunner {
 
   public void run(String[] args) {
     List<Module> modules = Lists.newArrayListWithCapacity(3);
-    modules.add(new SingularityRunnerBaseModule(new SingularityLogWatcherConfigurationLoader()));
+    modules.add(new SingularityRunnerBaseModule(SingularityLogWatcherConfiguration.class));
     modules.add(new SingularityLogWatcherModule());
 
     if (args.length > 0) {

@@ -88,6 +88,20 @@ executor.use.local.download.service=true
 exec java -Djava.library.path=/usr/local/lib -jar path/to/SingularityExecutor-*-shaded.jar
 ```
 
+#### 2d. Update Singularity configuration to allocate resources for custom executors.
+
+When launching Mesos tasks with a custom executor (i.e. `SingularityExecutor`), you must allocate additional resources to the executor process. Custom executor resources can be set via the `customExecutor` field:
+
+```yaml
+customExecutor:
+  memoryMb: 128
+  numCpus: 0.1
+```
+
+This snippet will make Singularity launch tasks with an additional `128 MB` of memory and `0.1 CPU` devoted solely to the executor.
+
+(This is not necessary if you're not using custom executors -- Mesos will automatically pad your resources to accommodate the default executor.)
+
 ### 3. Install SingularityExecutorCleanup (optional)
 
 #### 3a. Create an `/etc/singularity.executor.cleanup.properties` file on each slave.

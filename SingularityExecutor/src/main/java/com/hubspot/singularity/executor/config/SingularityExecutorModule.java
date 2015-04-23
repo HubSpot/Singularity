@@ -17,7 +17,6 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorModule extends AbstractModule {
-
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
@@ -25,7 +24,9 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
 
   @Override
-  protected void configure() {}
+  protected void configure() {
+
+  }
 
   @Provides
   @Singleton
