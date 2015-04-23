@@ -1,6 +1,6 @@
 Helpers = require '../helpers'  
 
-starredRequestsTable = React.createClass
+StarredRequestsTable = React.createClass
   
   displayName: 'starredRequestsTable'
 
@@ -54,4 +54,4 @@ starredRequestsTable = React.createClass
       </table>
     )
 
-module.exports = starredRequestsTable
+module.exports = StarredRequestsTable
