@@ -17,6 +17,7 @@ class RequestDetailController extends Controller
 
     templates:
         header:         require '../templates/requestDetail/requestHeader'
+        taskHistoryMsg: require '../templates/requestDetail/taskHistoryMsg'
         stats:          require '../templates/requestDetail/requestStats'
 
         activeTasks:    require '../templates/requestDetail/requestActiveTasks'
@@ -55,6 +56,13 @@ class RequestDetailController extends Controller
         @subviews.header = new SimpleSubview
             model:      @models.request
             template:   @templates.header
+        
+        # would have used header subview for this info,
+        # but header expects a request model that
+        # no longer exists if a request is deleted
+        @subviews.taskHistoryMsg = new SimpleSubview
+            collection: @collections.requestHistory
+            template:   @templates.taskHistoryMsg
 
         @subviews.stats = new SimpleSubview
             model:      @models.activeDeployStats
@@ -103,9 +111,10 @@ class RequestDetailController extends Controller
 
     refresh: ->
         @models.request.fetch().error =>
-            # Doesn't exist, 404
+            # ignore 404 so we can still display info about
+            # deleted requests (show in `taskHistoryMsg`)
+            @ignore404
             app.caughtError()
-            app.router.notFound()
 
         if @models.activeDeployStats.deployId?
             @models.activeDeployStats.fetch().error @ignore404
@@ -114,7 +123,14 @@ class RequestDetailController extends Controller
         @collections.scheduledTasks.fetch().error @ignore404
         
         if @collections.requestHistory.currentPage is 1
-            @collections.requestHistory.fetch().error @ignore404
+            @collections.requestHistory.fetch()
+                .done =>
+                    # Request never existed
+                    if @collections.requestHistory.length is 0
+                        app.router.notFound()
+                .error =>
+                    @ignore404
+
         if @collections.taskHistory.currentPage is 1
             @collections.taskHistory.fetch().error    @ignore404
         if @collections.deployHistory.currentPage is 1

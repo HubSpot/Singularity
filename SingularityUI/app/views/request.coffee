@@ -30,6 +30,7 @@ class RequestView extends View
 
         # Attach subview elements
         @$('#header').html           @subviews.header.$el
+        @$('#task-history-msg').html @subviews.taskHistoryMsg.$el
         @$('#stats').html            @subviews.stats.$el
         @$('#active-tasks').html     @subviews.activeTasks.$el
         @$('#scheduled-tasks').html  @subviews.scheduledTasks.$el
