@@ -130,6 +130,8 @@ class Request extends Model
             ]
 
             beforeClose: =>
+                return if @data is false
+                
                 fileName = @data.filename.trim()
 
                 if fileName.length is 0 and @data.autoTail is 'on'
@@ -149,7 +151,6 @@ class Request extends Model
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
 
             callback: (data) =>
-                return if data is false
                 @data = data
 
     promptRemove: (callback) =>
