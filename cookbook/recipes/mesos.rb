@@ -2,6 +2,8 @@ apt_repository "mesosphere" do
   uri "http://repos.mesosphere.io/ubuntu"
   distribution node['lsb']['codename']
   components ["main"]
+  key node['mesos']['apt_key']
+  keyserver node['mesos']['apt_key_server']
 end
 
 apt_package "mesos" do

@@ -50,6 +50,8 @@ default[:mesos] = {
   :slave_attributes => {}
 }
 
+default[:mesos][:apt_key] = 'E56151BF'
+default[:mesos][:apt_key_server] = 'keyserver.ubuntu.com'
 default[:mesos][:prefix] = '/usr/local'
 
 default[:docker] = {
