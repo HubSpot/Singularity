@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.spotify.docker.client.DockerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +56,10 @@ public class SingularityExecutorCleanup {
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
   private final MesosClient mesosClient;
   private final ProcessUtils processUtils;
+  private final DockerClient dockerClient;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient) {
+  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -66,6 +68,7 @@ public class SingularityExecutorCleanup {
     this.templateManager = templateManager;
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
+    this.dockerClient = dockerClient;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -178,7 +181,7 @@ public class SingularityExecutorCleanup {
   private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
     SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
-    SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG);
+    SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
 
     boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
 
@@ -198,7 +201,9 @@ public class SingularityExecutorCleanup {
 
     checkForUncompressedLogrotatedFile(taskDefinition);
 
-    return taskCleanup.cleanup(cleanupTaskAppDirectory);
+    boolean isDocker = (taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
+
+    return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
   }
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {
