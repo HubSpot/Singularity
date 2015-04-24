@@ -16,9 +16,9 @@ SimpleSubview          = require '../views/simpleSubview'
 class RequestDetailController extends Controller
 
     templates:
-        header:         require '../templates/requestDetail/requestHeader'
-        taskHistoryMsg: require '../templates/requestDetail/taskHistoryMsg'
-        stats:          require '../templates/requestDetail/requestStats'
+        header:             require '../templates/requestDetail/requestHeader'
+        requestHistoryMsg:  require '../templates/requestDetail/requestHistoryMsg'
+        stats:              require '../templates/requestDetail/requestStats'
 
         activeTasks:    require '../templates/requestDetail/requestActiveTasks'
         scheduledTasks: require '../templates/requestDetail/requestScheduledTasks'
@@ -60,9 +60,9 @@ class RequestDetailController extends Controller
         # would have used header subview for this info,
         # but header expects a request model that
         # no longer exists if a request is deleted
-        @subviews.taskHistoryMsg = new SimpleSubview
+        @subviews.requestHistoryMsg = new SimpleSubview
             collection: @collections.requestHistory
-            template:   @templates.taskHistoryMsg
+            template:   @templates.requestHistoryMsg
 
         @subviews.stats = new SimpleSubview
             model:      @models.activeDeployStats
@@ -112,7 +112,7 @@ class RequestDetailController extends Controller
     refresh: ->
         @models.request.fetch().error =>
             # ignore 404 so we can still display info about
-            # deleted requests (show in `taskHistoryMsg`)
+            # deleted requests (show in `requestHistoryMsg`)
             @ignore404
             app.caughtError()
 
