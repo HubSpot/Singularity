@@ -6,9 +6,7 @@ class DashboardView extends View
     # Set this view as app.currentView so app.globalRefresh
     # can trigger this view to refresh().
     # Listen to events and kick off the initial fetch.
-    initialize:  =>
-        app.bootstrapReactView @
-    
+    initialize:  =>        
         @listenTo @collection, 'change', @renderReact
         @listenTo app.user, 'change', @renderReact
     
