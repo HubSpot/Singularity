@@ -1,5 +1,5 @@
 UserInfo = require './UserInfo'
-Requests = require './requests'
+Requests = require './Requests'
 
 DashboardMain = React.createClass
 
