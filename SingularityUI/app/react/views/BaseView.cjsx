@@ -3,26 +3,8 @@ class View extends Backbone.View
     constructor: (params = {}) ->
         super params
 
-    events: ->
-        'click a': 'routeLink'
-
-    routeLink: (e) =>
-        $link = $(e.target)
-
-        $parentLink = $link.parents('a[href]')
-        $link = $parentLink if $parentLink.length
-
-        url = $link.attr('href')
-
-        return true if $link.attr('target') is '_blank' or url is 'javascript:;' or typeof url is 'undefined' or url.indexOf(config.appRoot) != 0
-
-        if e.metaKey or e.ctrlKey or e.shiftKey
-            return
-
-        e.preventDefault()
-
-        url = url.replace(config.appRoot, '')
-
-        app.router.navigate url, trigger: true
+    # `refresh` can be called by `app` for the global refresh or by the
+    # view whenever it requires. It should trigger the necessary fetches
+    refresh: ->
 
 module.exports = View
