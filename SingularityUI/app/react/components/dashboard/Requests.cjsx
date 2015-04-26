@@ -30,6 +30,8 @@ Requests = React.createClass
                 <SectionHeader title='Starred requests' />
                 <StarredRequestsTable
                   starredRequests={@props.starredRequests}
+                  unstar={@props.unstar}
+                  sortStarredRequests={@props.sortStarredRequests}
                 />
             </div>
           </div>
