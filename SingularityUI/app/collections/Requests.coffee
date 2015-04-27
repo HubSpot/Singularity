@@ -90,4 +90,38 @@ class Requests extends Collection
 
         localStorage.setItem 'starredRequests', JSON.stringify starredRequests
 
+
+    sortCollection: (newSortAttribute) ->
+        @isSorted = true
+
+        if newSortAttribute is @sortAttribute and @sortAscending?
+            @sortAscending = not @sortAscending
+        else
+            # timestamp should be DESC by default
+            @sortAscending = if newSortAttribute is "timestamp" then false else true
+        
+        @sortAttribute = newSortAttribute
+        requests = _.pluck @getStarredOnly(), "attributes"
+        
+        # Sort the table if the user clicked on the table heading things
+        if @sortAttribute?
+            requests = _.sortBy requests, (request) =>
+
+                # Traverse through the properties to find what we're after
+                attributes = @sortAttribute.split '.'
+                value = request
+                for attribute in attributes
+                    value = value[attribute]                
+                    value = '' if not value?
+                return value
+
+            if not @sortAscending
+                requests = requests.reverse()
+        else
+            requests.reverse()
+
+        return requests
+    
+       
+
 module.exports = Requests
