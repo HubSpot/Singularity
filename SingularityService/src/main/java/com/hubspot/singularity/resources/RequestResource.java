@@ -1,11 +1,11 @@
 package com.hubspot.singularity.resources;
 
-import java.util.Collections;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +18,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -45,6 +47,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.ldap.SingularityLDAPManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -65,8 +68,11 @@ public class RequestResource extends AbstractRequestResource {
   private final RequestManager requestManager;
   private final DeployManager deployManager;
 
+  private final HttpHeaders headers;
+  private final SingularityLDAPManager ldapManager;
+
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, @Context HttpHeaders headers, SingularityLDAPManager ldapManager) {
     super(requestManager, deployManager);
 
     this.validator = validator;
@@ -74,6 +80,9 @@ public class RequestResource extends AbstractRequestResource {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
+
+    this.headers = headers;
+    this.ldapManager = ldapManager;
   }
 
   private static class SingularityRequestDeployHolder {
@@ -122,16 +131,18 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
   public SingularityRequestParent submit(@ApiParam("The Singularity request to create or update") SingularityRequest request,
-      @ApiParam("Username of the person requesting to create or update") @QueryParam("user") Optional<String> user) {
+      @ApiParam("Username of the person requesting to create or update") @QueryParam("user") Optional<String> queryUser) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
 
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
 
     SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
 
-    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
+    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
 
     checkConflict(maybeOldRequest.isPresent() || !requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
@@ -184,8 +195,12 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> user) {
+      @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
@@ -206,10 +221,14 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
-  public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> user,
+  public SingularityRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
+      @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> queryUser,
       @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
@@ -240,15 +259,19 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request is already paused or being cleaned"),
   })
   public SingularityRequestParent pause(@ApiParam("The request ID to pause") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the pause") @QueryParam("user") Optional<String> user,
+      @ApiParam("Username of the person requesting the pause") @QueryParam("user") Optional<String> queryUser,
       @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to pause (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     Optional<Boolean> killTasks = Optional.absent();
     if (pauseRequest.isPresent()) {
-      user = pauseRequest.get().getUser();
+      user = user.or(pauseRequest.get().getUser());
       killTasks = pauseRequest.get().getKillTasks();
     }
 
@@ -272,8 +295,12 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request is not paused"),
   })
   public SingularityRequestParent unpause(@ApiParam("The request ID to unpause") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the unpause") @QueryParam("user") Optional<String> user) {
+      @ApiParam("Username of the person requesting the unpause") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     checkConflict(requestWithState.getState() == RequestState.PAUSED, "Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
 
@@ -386,8 +413,12 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequest deleteRequest(@ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the delete") @QueryParam("user") Optional<String> user) {
+      @ApiParam("Username of the person requesting the delete") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequest request = fetchRequest(requestId);
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+
+    validator.checkForAuthorization(request, Optional.<SingularityRequest>absent(), user);
 
     requestManager.deleteRequest(request, user);
 
@@ -404,11 +435,13 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequest updateInstances(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the scale") @QueryParam("user") Optional<String> user,
+      @ApiParam("Username of the person requesting the scale") @QueryParam("user") Optional<String> queryUser,
       @ApiParam("Object to hold number of instances to request") SingularityRequestInstances newInstances) {
 
     checkBadRequest(requestId != null && newInstances.getId() != null && requestId.equals(newInstances.getId()), "Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
     checkConflict(!requestManager.cleanupRequestExists(requestId), "Request %s is currently cleaning. Try again after a few moments", requestId);
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
 
     SingularityRequest oldRequest = fetchRequest(requestId);
     Optional<SingularityRequest> maybeOldRequest = Optional.of(oldRequest);
@@ -416,7 +449,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestDeployHolder deployHolder = getDeployHolder(newInstances.getId());
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(newInstances.getInstances()).build();
 
-    validator.checkSingularityRequest(newRequest, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
+    validator.checkSingularityRequest(newRequest, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
 
     final long now = System.currentTimeMillis();
 
