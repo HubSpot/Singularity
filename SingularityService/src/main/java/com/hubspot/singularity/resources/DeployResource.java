@@ -15,8 +15,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -40,7 +38,7 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -57,19 +55,17 @@ public class DeployResource extends AbstractRequestResource {
   private final RequestManager requestManager;
   private final SingularityValidator validator;
 
-  private final HttpHeaders headers;
-  private final SingularityLDAPManager ldapManager;
+  private final SingularityAuthManager authManager;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, @Context HttpHeaders headers, SingularityLDAPManager ldapManager) {
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthManager authManager) {
     super(requestManager, deployManager);
 
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.validator = validator;
 
-    this.headers = headers;
-    this.ldapManager = ldapManager;
+    this.authManager = authManager;
   }
 
   @GET
@@ -88,8 +84,7 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
   public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
-
-    final Optional<String> deployUser = ldapManager.getUserFromHeaders(headers).or(deployRequest.getUser());
+    final Optional<String> deployUser = authManager.getUser().or(deployRequest.getUser());
 
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
@@ -140,7 +135,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
