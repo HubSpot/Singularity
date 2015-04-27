@@ -4,18 +4,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
-import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -59,15 +54,5 @@ public class SingularityLDAPManager {
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
-  }
-
-  public Optional<String> getUserFromHeaders(HttpHeaders headers) {
-    final List<String> userValues = headers.getRequestHeader(configuration.getLdapConfiguration().getRequestUserHeaderName());
-
-    if (userValues.isEmpty()) {
-      return Optional.absent();
-    }
-
-    return Optional.fromNullable(Strings.emptyToNull(userValues.get(0)));
   }
 }

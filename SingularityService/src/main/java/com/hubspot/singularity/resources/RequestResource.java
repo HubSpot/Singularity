@@ -18,8 +18,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -46,7 +44,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -67,11 +65,10 @@ public class RequestResource extends AbstractRequestResource {
   private final RequestManager requestManager;
   private final DeployManager deployManager;
 
-  private final HttpHeaders headers;
-  private final SingularityLDAPManager ldapManager;
+  private final SingularityAuthManager authManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, @Context HttpHeaders headers, SingularityLDAPManager ldapManager) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthManager authManager) {
     super(requestManager, deployManager);
 
     this.validator = validator;
@@ -80,8 +77,7 @@ public class RequestResource extends AbstractRequestResource {
     this.deployManager = deployManager;
     this.requestManager = requestManager;
 
-    this.headers = headers;
-    this.ldapManager = ldapManager;
+    this.authManager = authManager;
   }
 
   private static class SingularityRequestDeployHolder {
@@ -134,7 +130,7 @@ public class RequestResource extends AbstractRequestResource {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
@@ -197,7 +193,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
@@ -225,7 +221,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
@@ -260,7 +256,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    Optional<String> user = authManager.getUser();
 
     validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
@@ -295,7 +291,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the unpause") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
@@ -413,7 +409,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the delete") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequest request = fetchRequest(requestId);
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     validator.checkForAuthorization(request, Optional.<SingularityRequest>absent(), user);
 
@@ -438,7 +434,7 @@ public class RequestResource extends AbstractRequestResource {
     checkBadRequest(requestId != null && newInstances.getId() != null && requestId.equals(newInstances.getId()), "Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
     checkConflict(!requestManager.cleanupRequestExists(requestId), "Request %s is currently cleaning. Try again after a few moments", requestId);
 
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
 
     SingularityRequest oldRequest = fetchRequest(requestId);
     Optional<SingularityRequest> maybeOldRequest = Optional.of(oldRequest);
