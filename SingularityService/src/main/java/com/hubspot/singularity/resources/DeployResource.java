@@ -1,10 +1,10 @@
 package com.hubspot.singularity.resources;
 
-import java.util.Collections;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -15,6 +15,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -38,6 +40,7 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.ldap.SingularityLDAPManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -54,13 +57,19 @@ public class DeployResource extends AbstractRequestResource {
   private final RequestManager requestManager;
   private final SingularityValidator validator;
 
+  private final HttpHeaders headers;
+  private final SingularityLDAPManager ldapManager;
+
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator) {
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, @Context HttpHeaders headers, SingularityLDAPManager ldapManager) {
     super(requestManager, deployManager);
 
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.validator = validator;
+
+    this.headers = headers;
+    this.ldapManager = ldapManager;
   }
 
   @GET
@@ -80,7 +89,7 @@ public class DeployResource extends AbstractRequestResource {
   })
   public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
 
-    final Optional<String> deployUser = deployRequest.getUser();
+    final Optional<String> deployUser = ldapManager.getUserFromHeaders(headers).or(deployRequest.getUser());
 
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
@@ -90,11 +99,13 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
 
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), deployUser);
+
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    deploy = validator.checkDeploy(request, deploy);
+    deploy = validator.checkDeploy(request, deploy, deployRequest.getUser());
 
     final long now = System.currentTimeMillis();
 
@@ -126,8 +137,12 @@ public class DeployResource extends AbstractRequestResource {
   public SingularityRequestParent cancelDeploy(
       @ApiParam(required=true,  value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
       @ApiParam(required=true,  value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId,
-      @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> user) {
+      @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
