@@ -33,6 +33,8 @@ public class SingularityRequestBuilder {
 
   private Optional<Boolean> loadBalanced;
 
+  private Optional<String> group;
+
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = id;
     this.requestType = requestType;
@@ -49,11 +51,12 @@ public class SingularityRequestBuilder {
     this.slavePlacement = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.daemon = Optional.absent();
+    this.group = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule);
+        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -192,12 +195,21 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<String> getGroup() {
+    return group;
+  }
+
+  public SingularityRequestBuilder setGroup(Optional<String> group) {
+    this.group = group;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule
         + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis
         + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule + ", daemon="
-        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + "]";
+        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + ", group=" + group + "]";
   }
 
 }
