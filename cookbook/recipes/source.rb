@@ -25,3 +25,12 @@ execute 'build_singularity' do
           'SNAPSHOT-shaded.jar'
   cwd     "#{Chef::Config[:file_cache_path]}/Singularity"
 end
+
+remote_file "#{node[:singularity][:home]}/bin/" \
+            "SingularityService-#{node[:singularity][:version]}-shaded.jar" do
+  mode   0644
+  source "file://#{Chef::Config[:file_cache_path]}/Singularity/" \
+         'SingularityService/target/' \
+         "SingularityService-#{node[:singularity][:version]}-SNAPSHOT-" \
+         'shaded.jar'
+end
