@@ -19,6 +19,8 @@ default[:singularity] = {
   },
 }
 
+default['singularity']['install_type'] = 'package'
+
 default[:mesos] = {
   :package_version => "0.21.0-1.0.ubuntu1404",
   :common => {
