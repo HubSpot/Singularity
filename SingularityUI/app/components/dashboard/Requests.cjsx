@@ -32,6 +32,7 @@ Requests = React.createClass
                   starredRequests={@props.starredRequests}
                   unstar={@props.unstar}
                   sortStarredRequests={@props.sortStarredRequests}
+                  sortedAsc={@props.sortedAsc}
                 />
             </div>
           </div>

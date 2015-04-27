@@ -19,19 +19,19 @@ StarredRequestsTable = React.createClass
 
   handleSort: (e) ->
     attribute = $(e.currentTarget).data('sort-attribute')
-
-    @setState({
-      sortedAttribute: attribute
-    })
-
+    @setState({ sortedAttribute: attribute })
     @props.sortStarredRequests attribute
 
   render: ->
     if @props.starredRequests.length is 0
-      return (
-        <EmptyTableMsg msg='No starred Requests' />
-      )
+      return <EmptyTableMsg msg='No starred Requests' />
     
+    # Direction arrows during sorting
+    arrowDirection = "glyphicon glyphicon-chevron-#{if @props.sortedAsc then 'up' else 'down' }"
+    
+    sortDirection = (attr) =>
+      if @state.sortedAttribute is attr then arrowDirection else ''
+
     tbody = @props.starredRequests.map (request) =>
       
       link = "#{config.appRoot}/request/#{request.id}"
@@ -62,15 +62,33 @@ StarredRequestsTable = React.createClass
         </tr>
       )
 
+    attribute =
+      id: 'request.id'
+      timestamp: 'requestDeployState.activeDeploy.timestamp'
+      user: 'requestDeployState.activeDeploy.user'
+      instances: 'request.Instances'
+
     return (
       <table className="table table-striped table-staged">
         <thead>
           <tr>
             <th data-sortable="false"></th>
-            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is 'request.id'} data-sort-attribute="request.id">Request</th>
-            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is 'requestDeployState.activeDeploy.timestamp'} data-sort-attribute="requestDeployState.activeDeploy.timestamp" className="hidden-xs">Requested</th>
-            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is 'requestDeployState.activeDeploy.user'} data-sort-attribute="requestDeployState.activeDeploy.user" className="visible-lg visible-xl">Deploy user</th>
-            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is 'request.instances'} data-sort-attribute="request.instances" className="visible-lg visible-xl">Instances</th>
+            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is attribute.id} data-sort-attribute={attribute.id}>
+              Request
+              <span className={ sortDirection(attribute.id) }></span>
+            </th>
+            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is attribute.timestamp} data-sort-attribute={attribute.timestamp} className="hidden-xs">
+              Requested 
+              <span className={ sortDirection(attribute.timestamp) }></span>
+            </th>
+            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is attribute.user} data-sort-attribute={attribute.user} className="visible-lg visible-xl">
+              Deploy user
+              <span className={ sortDirection(attribute.user) }></span>
+            </th>
+            <th onClick={@handleSort} data-sorted={@state.sortedAttribute is attribute.instances} data-sort-attribute={attribute.instances} className="visible-lg visible-xl">
+              Instances 
+              <span className={ sortDirection(attribute.instances) }></span>
+            </th>
           </tr>
         </thead>
         <tbody>
