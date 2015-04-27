@@ -9,8 +9,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -21,7 +19,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -35,17 +33,15 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   private final RackManager rackManager;
   private final SingularityValidator validator;
 
-  private final HttpHeaders headers;
-  private final SingularityLDAPManager ldapManager;
+  private final SingularityAuthManager authManager;
 
   @Inject
-  public RackResource(RackManager rackManager, SingularityValidator validator, @Context HttpHeaders headers, SingularityLDAPManager ldapManager) {
+  public RackResource(RackManager rackManager, SingularityValidator validator, SingularityAuthManager authManager) {
     super(rackManager);
     this.rackManager = rackManager;
     this.validator = validator;
 
-    this.headers = headers;
-    this.ldapManager = ldapManager;
+    this.authManager = authManager;
   }
 
   @Override
@@ -71,7 +67,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}")
   @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
   public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, @QueryParam("user") Optional<String> queryUser) {
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
     validator.checkForAdminAuthorization(user);
     super.remove(rackId);
   }
@@ -81,7 +77,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Deprecated
   public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
       @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
     validator.checkForAdminAuthorization(user);
     super.decommission(rackId, user);
   }
@@ -91,7 +87,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @ApiOperation("Begin decommissioning a specific active rack")
   public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
       @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
     validator.checkForAdminAuthorization(user);
     super.decommission(rackId, user);
   }
@@ -101,7 +97,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
       @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> queryUser) {
-    final Optional<String> user = ldapManager.getUserFromHeaders(headers).or(queryUser);
+    final Optional<String> user = authManager.getUser();
     validator.checkForAdminAuthorization(user);
     super.activate(rackId, user);
   }

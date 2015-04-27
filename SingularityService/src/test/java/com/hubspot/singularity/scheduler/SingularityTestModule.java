@@ -6,16 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
@@ -58,6 +49,7 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
@@ -156,42 +148,7 @@ public class SingularityTestModule implements Module {
               }
             }));
 
-            binder.bind(HttpHeaders.class).annotatedWith(Context.class).toInstance(new HttpHeaders() {
-              @Override
-              public List<String> getRequestHeader(String name) {
-                return null;
-              }
-
-              @Override
-              public MultivaluedMap<String, String> getRequestHeaders() {
-                return null;
-              }
-
-              @Override
-              public List<MediaType> getAcceptableMediaTypes() {
-                return null;
-              }
-
-              @Override
-              public List<Locale> getAcceptableLanguages() {
-                return null;
-              }
-
-              @Override
-              public MediaType getMediaType() {
-                return null;
-              }
-
-              @Override
-              public Locale getLanguage() {
-                return null;
-              }
-
-              @Override
-              public Map<String, Cookie> getCookies() {
-                return null;
-              }
-            });
+            binder.bind(SingularityAuthManager.class).toInstance(new SingularityAuthManager(configuration, null, null));
           }
         }));
 
