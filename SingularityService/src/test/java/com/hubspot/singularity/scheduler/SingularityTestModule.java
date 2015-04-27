@@ -4,12 +4,18 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.lifecycle.Managed;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
-import net.kencochrane.raven.Raven;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
@@ -18,14 +24,13 @@ import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -63,6 +68,13 @@ import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.lifecycle.Managed;
+import net.kencochrane.raven.Raven;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
@@ -133,8 +145,53 @@ public class SingularityTestModule implements Module {
 
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
 
-            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven> absent());
+            binder.bind(new TypeLiteral<Optional<Raven>>() {
+            }).toInstance(Optional.<Raven> absent());
             binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration> absent());
+
+            binder.bind(new TypeLiteral<LoadingCache<String, Set<String>>>() {}).toInstance(CacheBuilder.newBuilder().build(new CacheLoader<String, Set<String>>() {
+              @Override
+              public Set<String> load(String key) throws Exception {
+                return Collections.emptySet();
+              }
+            }));
+
+            binder.bind(HttpHeaders.class).annotatedWith(Context.class).toInstance(new HttpHeaders() {
+              @Override
+              public List<String> getRequestHeader(String name) {
+                return null;
+              }
+
+              @Override
+              public MultivaluedMap<String, String> getRequestHeaders() {
+                return null;
+              }
+
+              @Override
+              public List<MediaType> getAcceptableMediaTypes() {
+                return null;
+              }
+
+              @Override
+              public List<Locale> getAcceptableLanguages() {
+                return null;
+              }
+
+              @Override
+              public MediaType getMediaType() {
+                return null;
+              }
+
+              @Override
+              public Locale getLanguage() {
+                return null;
+              }
+
+              @Override
+              public Map<String, Cookie> getCookies() {
+                return null;
+              }
+            });
           }
         }));
 
