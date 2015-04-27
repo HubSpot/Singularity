@@ -77,7 +77,6 @@ function install_runnable_config {
 root.log.directory=/etc/singularity
 logwatcher.metadata.directory=/usr/share/mesos/logwatcher
 s3uploader.metadata.directory=/usr/share/mesos/s3
-artifact.cache.directory=/usr/share/mesos/artifacts
 EOF
   cat > /etc/singularity.executor.properties <<EOF
 executor.global.task.definition.directory=/usr/share/mesos
@@ -86,6 +85,9 @@ executor.logrotate.to.directory=logs
 executor.s3.uploader.bucket=bucket
 executor.s3.uploader.pattern=%requestId/%Y/%m/%taskId_%index-%s%fileext
 executor.logrotate.command=/usr/sbin/logrotate
+EOF
+cat > /etc/singularity.s3base.yaml <<EOF
+artifactCacheDirectory: /usr/share/mesos/artifacts
 EOF
   cat > /usr/local/bin/singularity-executor <<EOF
 #!/bin/bash

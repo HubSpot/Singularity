@@ -14,7 +14,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +101,10 @@ public class SingularityExecutorCleanup {
       } else {
         LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode");
       }
+    }
+
+    if (cleanupConfiguration.isRunDockerCleanup()) {
+      cleanDocker(runningTaskIds);
     }
 
     for (Path file : JavaUtils.iterable(directory)) {
@@ -264,5 +271,33 @@ public class SingularityExecutorCleanup {
     }
   }
 
-
+  private void cleanDocker(Set<String> runningTaskIds) {
+    try {
+      for (Container container : dockerClient.listContainers()) {
+        boolean isStoppedTaskContainer = false;
+        for (String name : container.names()) {
+          if (name.startsWith(executorConfiguration.getDockerPrefix())) {
+            if (!runningTaskIds.contains(name.substring(executorConfiguration.getDockerPrefix().length()))) {
+              isStoppedTaskContainer = true;
+            }
+          }
+        }
+        if (isStoppedTaskContainer) {
+          try {
+            ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
+            if (containerInfo.state().running()) {
+              dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
+              LOG.debug(String.format("Forcefully stopped container %s", container.names()));
+            }
+            dockerClient.removeContainer(container.id(), true);
+            LOG.debug(String.format("Removed container %s", container.names()));
+          } catch (Exception e) {
+            LOG.error("Failed to remove contianer {}", container.names(), e);
+          }
+        }
+      }
+    } catch (Exception e) {
+      LOG.error("Could not get list of containers", e);
+    }
+  }
 }

@@ -6,7 +6,9 @@
 
 set -e
 
-STOP_TIME=5 # Max time to wait for container to stop before killing
+STOP_TIME={{{ stopTimeout }}} # Max time to wait for container to stop before killing
+
+CONTAINER_NAME="{{{ prefix }}}{{{ runContext.taskId }}}"
 
 CURRENT_DIR=`pwd`
 CGROUPS_GUID=${CURRENT_DIR##*runs/}
@@ -111,7 +113,7 @@ DOCKER_NETWORK="--net=host"
 
 DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name={{{ runContext.taskId }}} -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
@@ -121,27 +123,22 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
 echo "Starting continer with: sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
 sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}} >> {{{ runContext.logFile }}} 2>&1 &
-cid={{{ runContext.taskId }}}
 running=1
 
-setup_signals "$cid" "handle_signal" SIGINT SIGTERM
+setup_signals "$CONTAINER_NAME" "handle_signal" SIGINT SIGTERM
 
 set +e
-setup_cgroups "$cid" "$CGROUPS_GUID"
-
-
-# Attach for logging and wait for signals, then exit with container exist status
-#sudo -E -u {{{ runContext.user }}} docker attach "$cid" >> {{{ runContext.logFile }}} 2>&1 &
+setup_cgroups "$CONTAINER_NAME" "$CGROUPS_GUID"
 set -e
 
 while true; do
   if [ "$running" = "1" ]; then
     sleep 10
-    check_contianer_running "$cid"
+    check_contianer_running "$CONTAINER_NAME"
   else
     break
   fi
 done
 
-exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
+exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$CONTAINER_NAME"`
 exit "$exit_code"

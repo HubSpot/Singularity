@@ -6,8 +6,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.spotify.docker.client.ContainerNotFoundException;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerInfo;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
@@ -100,28 +101,22 @@ public class SingularityExecutorTaskCleanup {
   }
 
   private boolean cleanDocker() {
+    String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskDefinition.getTaskId());
     try {
-      if (!checkContainerRemoved()) {
-        log.info(String.format("Attempting to remove container %s", taskDefinition.getTaskId()));
-        dockerClient.removeContainer(taskDefinition.getTaskId());
+      ContainerInfo containerInfo = dockerClient.inspectContainer(containerName);
+      if (containerInfo.state().running()) {
+        dockerClient.stopContainer(containerName, configuration.getDockerStopTimeout());
       }
+      dockerClient.removeContainer(containerName);
+      log.info(String.format("Removed container %s", containerName));
+      return true;
+    } catch (ContainerNotFoundException e) {
+      log.info(String.format("Container %s was already removed", containerName));
+      return true;
     } catch (Exception e) {
       log.info(String.format("Could not ensure removal of docker container due to error %s", e));
     }
-    return checkContainerRemoved();
-  }
-
-  private boolean checkContainerRemoved() {
-    try {
-      for (Container info : dockerClient.listContainers()) {
-        if (info.names().contains(taskDefinition.getTaskId())) {
-          return true;
-        }
-      }
-    } catch (Exception e) {
-      log.info(String.format("Could not ensure removal of docker container due to error %s", e));
-    }
-    return true;
+    return false;
   }
 
 }
