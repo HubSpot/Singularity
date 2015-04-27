@@ -13,6 +13,7 @@ DashboardMain = React.createClass
     refresh: React.PropTypes.func.isRequired
     unstar: React.PropTypes.func.isRequired
     sortStarredRequests: React.PropTypes.func.isRequired
+    sortedAsc: React.PropTypes.bool
     
   render: ->
     return (
@@ -27,6 +28,7 @@ DashboardMain = React.createClass
           username={@props.username}
           unstar={@props.unstar}
           sortStarredRequests={@props.sortStarredRequests}
+          sortedAsc={@props.sortedAsc}
         />
       </div>
     )

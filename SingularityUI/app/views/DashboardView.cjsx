@@ -1,5 +1,5 @@
 DashboardMain = require '../components/dashboard/DashboardMainCmpt'
-View = require './BaseView'
+View = require './ReactBaseView'
 
 class DashboardView extends View
 
@@ -19,39 +19,48 @@ class DashboardView extends View
     @collection.fetch().done =>
       @renderReact()
     
-  ## Pass data into the parent component as plain objects 
+  ## Pass data into the parent component as plain objects
   renderReact: ->
     totals = @collection.getUserRequestsTotals()
     user = app.user
     username = app.user.get('deployUser')
-    
+
     React.render(
         <DashboardMain
             totals={totals}
-            starredRequests={@getStarredRequests()}
+            starredRequests={@starredRequests()}
             user={user}
             username={username}
             refresh={@refresh}
             unstar={@unstar}
             sortStarredRequests={@sortStarredRequests}
+            sortedAsc={@sortedAsc()}
         />, 
         app.pageEl
       )
 
-  getStarredRequests: ->
-    requests = _.pluck @collection.getStarredOnly(), "attributes"
-    return requests
+  ##
+  ## Render Data
+  ##
+  starredRequests: ->
+    if @collection.isSorted
+      @sortedRequests
+    else
+      _.pluck @collection.getStarredOnly(), "attributes"
 
+  sortedAsc: ->
+    @collection.sortAscending
 
   ##
   ## Starred Request Table Handlers
   ##
   unstar: (id) =>
     @collection.toggleStar id
-    @refresh()
+    @renderReact()
 
   sortStarredRequests: (attribute) =>
-    console.log 'sort by: ', attribute
+    @sortedRequests = @collection.sortCollection attribute
     @renderReact()
+
 
 module.exports = DashboardView
