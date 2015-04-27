@@ -1,8 +1,3 @@
-node.default[:singularity][:baragon_url] =
-  'http://localhost:' \
-  "#{node['baragon']['service_yaml']['server']['connector']['port']}" \
-  '/baragon/v2'
-
 template "#{node[:singularity][:conf_dir]}/singularity.yaml" do
   source 'singularity.yaml.erb'
   owner  'root'

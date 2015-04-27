@@ -67,6 +67,10 @@ default[:mysql] = {
 }
 
 default['baragon']['service_yaml']['server']['connector']['port'] = 8088
+default[:singularity][:baragon_url] =
+  'http://localhost:' \
+  "#{node['baragon']['service_yaml']['server']['connector']['port']}" \
+  '/baragon/v2'
 
 override['java']['install_flavor'] = "oracle"
 override['java']['jdk_version'] = "7"
