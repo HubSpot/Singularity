@@ -1,4 +1,4 @@
-ReactDashboardController    = require 'react/controllers/DashboardCtrl'
+ReactDashboardController    = require 'controllers/Dashboard'
 
 StatusController    = require 'controllers/Status'
 
