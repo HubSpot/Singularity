@@ -96,8 +96,6 @@ class RequestDetailController extends Controller
         #
         @setView new RequestDetailView _.extend {@requestId, @subviews},
             model: @models.request
-            history: @collections.taskHistory
-            activeTasks: @collections.activeTasks
 
         @refresh()
 
