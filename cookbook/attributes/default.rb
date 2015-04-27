@@ -26,6 +26,7 @@ default[:singularity] = {
                                  :password => "9thlevel" }
 }
 
+default['singularity']['install_type'] = 'package'
 default[:singularity][:home] = '/usr/local/singularity'
 default[:singularity][:log_level] = 'INFO'
 default[:singularity][:mesos_framework_name] = 'Singularity'
