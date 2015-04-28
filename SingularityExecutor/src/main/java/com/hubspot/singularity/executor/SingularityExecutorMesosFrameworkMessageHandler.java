@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
+import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 
 public class SingularityExecutorMesosFrameworkMessageHandler {
@@ -19,12 +21,14 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorMesosFrameworkMessageHandler.class);
 
   private final SingularityExecutorMonitor monitor;
+  private final SingularityExecutorConfiguration executorConfiguration;
   private final ObjectMapper objectMapper;
 
   @Inject
-  public SingularityExecutorMesosFrameworkMessageHandler(ObjectMapper objectMapper, SingularityExecutorMonitor monitor) {
+  public SingularityExecutorMesosFrameworkMessageHandler(ObjectMapper objectMapper, SingularityExecutorMonitor monitor, SingularityExecutorConfiguration executorConfiguration) {
     this.objectMapper = objectMapper;
     this.monitor = monitor;
+    this.executorConfiguration = executorConfiguration;
   }
 
   public void handleMessage(byte[] data) {
@@ -38,7 +42,10 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
         return;
       }
 
-      SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, matchingTask.get(), objectMapper, monitor.createExecutorService(shellRequest.getTaskId().getId()));
+      SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(objectMapper, shellRequest, matchingTask.get());
+
+      SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
+          monitor.createExecutorService(shellRequest.getTaskId().getId()), updater);
 
       shellRunner.start();
 
