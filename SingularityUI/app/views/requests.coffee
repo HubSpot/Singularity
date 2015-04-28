@@ -1,5 +1,5 @@
 View = require './view'
-AutoTailer = require '../lib/AutoTailer'
+AutoTailer = require './AutoTailer'
 Request = require '../models/Request'
 
 class RequestsView extends View

@@ -3,7 +3,7 @@ View = require './view'
 Deploy = require '../models/Deploy'
 TaskFiles = require '../collections/TaskFiles'
 
-AutoTailer = require '../lib/AutoTailer'
+AutoTailer = require './AutoTailer'
 
 class RequestView extends View
 
