@@ -1,6 +1,6 @@
 Controller = require './ReactController'
 DashboardView = require '../views/DashboardView'
-Requests = require '../../collections/Requests'
+Requests = require '../collections/Requests'
 
 class ReactDashboardController extends Controller
 
