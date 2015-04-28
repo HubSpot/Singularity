@@ -12,12 +12,15 @@ class ClientsidePaginableCollection extends PaginableCollection
 
         # break the collection up into chunks that
         # will be accessed by their index as a `page`
-        # in `expandableTableSubview`
+        # in `paginatedTableClientsideView`
         while collection.length
             @paginatedCollection.push collection.splice 0, @atATime
+
+        @totalPages = @paginatedCollection.length
 
     getPaginatedCollection: ->
         @setPaginatedCollection() unless @isPaginated
         @paginatedCollection[ @currentPage - 1 ] || []
+
 
 module.exports = ClientsidePaginableCollection
