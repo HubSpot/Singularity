@@ -10,7 +10,8 @@ RequestDeployHistory   = require '../collections/RequestDeployHistory'
 RequestHistory         = require '../collections/RequestHistory'
 
 RequestDetailView      = require '../views/request'
-ExpandableTableSubview = require '../views/expandableTableSubview'
+PaginatedTableServersideView = require '../views/paginatedTableServersideView'
+
 SimpleSubview          = require '../views/simpleSubview'
 
 class RequestDetailController extends Controller
@@ -78,15 +79,15 @@ class RequestDetailController extends Controller
             extraRenderData: (subView) =>
                 { request: @models.request.toJSON() }
 
-        @subviews.taskHistory = new ExpandableTableSubview
+        @subviews.taskHistory = new PaginatedTableServersideView
             collection: @collections.taskHistory
             template:   @templates.taskHistory
 
-        @subviews.deployHistory = new ExpandableTableSubview
+        @subviews.deployHistory = new PaginatedTableServersideView
             collection: @collections.deployHistory
             template:   @templates.deployHistory
 
-        @subviews.requestHistory = new ExpandableTableSubview
+        @subviews.requestHistory = new PaginatedTableServersideView
             collection: @collections.requestHistory
             template:   @templates.requestHistory
 

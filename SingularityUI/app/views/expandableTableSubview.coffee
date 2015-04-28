@@ -1,19 +1,9 @@
 View = require './view'
 
-# Reusable view for paginable tables
-#
-# You can feed it a server-side paginable collection (PaginableCollection)
-#
-# or a non-server-side paginable collection (ClientsidePaginableCollection)
-# Just pass in the option paginationMode: 'client':
-#
-#     @subviews.s3Logs = new ExpandableTableSubview
-#         collection:     @collections.s3Logs
-#         template:       @templates.logs
-#         paginationMode: 'client'
+# Reusable base view for paginable tables
+# Extended by PaginatedTableServersideView
+# and PaginatedTableClientsideView
 
-#
-#
 # If it's provided with a `.page-header h1` it can also be
 # expanded to fit the entire page and shrunk back down after
 class ExpandableTableSubview extends View
@@ -32,13 +22,13 @@ class ExpandableTableSubview extends View
             'click [data-action="expand"]': 'expand'
             'click [data-action="shrink"]': 'startShrink'
 
-    initialize: ({@collection, @template, @paginationMode}) ->
+    initialize: ({@collection, @template}) ->
         @listenTo @collection, 'sync', @render
-        @isClientPaginated = @paginationMode is 'client'
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
+
         if not @collection.length and @collection.currentPage isnt 1
             # Disable the next button and don't render anything
             $nextButton = @$('[data-action="next-page"]')
@@ -56,9 +46,10 @@ class ExpandableTableSubview extends View
             return undefined
 
         # For after the render
-        haveButtons = @$('.table-subview-buttons').length
+        @haveButtons = @$('.table-subview-buttons').length
 
-        data = if @isClientPaginated then @collection.getPaginatedCollection() else @collection.toJSON()
+        data = @getRenderData()
+
         @$el.html @template
             synced:  @collection.synced
             data:    data
@@ -68,10 +59,7 @@ class ExpandableTableSubview extends View
 
         @$('.table-container').css 'min-height', "#{ @containerMinHeight }px"
 
-        if @isClientPaginated
-            haveMore = not (@collection.getPaginatedCollection().length isnt @collection.atATime and not haveButtons)
-        else
-            haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
+        haveMore = @checkCollectionLength()
 
         # Append expand / shrink link
         $header = @$('.page-header h1, .page-header h2, .page-header h3')
@@ -86,29 +74,19 @@ class ExpandableTableSubview extends View
         return if not haveMore
 
         # Append next / previous page buttons
-        if @isClientPaginated
-            hasNextButton = @collection.getPaginatedCollection().length is @collection.atATime
-        else
-            hasNextButton = @collection.length is @collection.atATime
-
+        hasNextButton = @checkHasNextButton()
         hasPrevButton = @collection.currentPage isnt 1
 
         @$el.append @buttonsTemplate {hasPrevButton, hasNextButton}
 
     nextPage: ->
-        if @isClientPaginated
-            @collection.currentPage += 1 unless @collection.getPaginatedCollection().length isnt @collection.atATime
-            @render()
-        else
-            @collection.currentPage += 1 unless @collection.length isnt @collection.atATime
-            @collection.fetch()
-
+        @loadNextPage()
         # So the table doesn't shrink afterwards
         @containerMinHeight = @$('.table-container').height()
 
     previousPage: ->
         @collection.currentPage -= 1 unless @collection.currentPage is 1
-        if @isClientPaginated then @render() else @collection.fetch()
+        @loadPreviousPage()
 
     expand: ->
         @expanded = true
@@ -144,11 +122,7 @@ class ExpandableTableSubview extends View
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
 
-        if @isClientPaginated
-            @collection.setPaginatedCollection()
-            @render()
-        else
-            @collection.fetch()
+        @refreshCollection()
 
     startShrink: =>
         @$el.trigger 'shrink'
