@@ -11,10 +11,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
+import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 
 public class SingularityExecutorMesosFrameworkMessageHandler {
 
@@ -44,8 +46,15 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
 
       SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(objectMapper, shellRequest, matchingTask.get());
 
+      Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
+
+      if (!taskProcess.isPresent()) {
+        updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"));
+        return;
+      }
+
       SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
-          monitor.createExecutorService(shellRequest.getTaskId().getId()), updater);
+          taskProcess.get(), monitor.createExecutorService(shellRequest.getTaskId().getId()), updater);
 
       shellRunner.start();
 

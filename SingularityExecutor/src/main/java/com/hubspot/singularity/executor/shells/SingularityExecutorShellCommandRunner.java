@@ -15,11 +15,13 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
+import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 
 public class SingularityExecutorShellCommandRunner {
 
   private final SingularityTaskShellCommandRequest shellRequest;
   private final SingularityExecutorTask task;
+  private final SingularityExecutorTaskProcessCallable taskProcess;
   private final ListeningExecutorService shellCommandExecutorService;
   private final SingularityExecutorShellCommandUpdater shellCommandUpdater;
   private final SingularityExecutorConfiguration executorConfiguration;
@@ -34,10 +36,11 @@ public class SingularityExecutorShellCommandRunner {
   }
 
   public SingularityExecutorShellCommandRunner(SingularityTaskShellCommandRequest shellRequest, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTask task,
-      ListeningExecutorService shellCommandExecutorService, SingularityExecutorShellCommandUpdater shellCommandUpdater) {
+      SingularityExecutorTaskProcessCallable taskProcess, ListeningExecutorService shellCommandExecutorService, SingularityExecutorShellCommandUpdater shellCommandUpdater) {
     this.shellRequest = shellRequest;
     this.executorConfiguration = executorConfiguration;
     this.task = task;
+    this.taskProcess = taskProcess;
     this.shellCommandUpdater = shellCommandUpdater;
     this.shellCommandExecutorService = shellCommandExecutorService;
   }
@@ -106,6 +109,15 @@ public class SingularityExecutorShellCommandRunner {
     final SingularityExecutorShellCommandDescriptor shellCommandDescriptor = matchingShellCommandDescriptor.get();
 
     List<String> command = new ArrayList<>(shellCommandDescriptor.getCommand());
+
+    for (int i = 0; i < command.size(); i++) {
+      if (command.get(i).equals(executorConfiguration.getPidCommandPlaceholder())) {
+        if (!taskProcess.getCurrentPid().isPresent()) {
+          throw new InvalidShellCommandException("No PID found");
+        }
+        command.set(i, Integer.toString(taskProcess.getCurrentPid().get()));
+      }
+    }
 
     for (SingularityExecutorShellCommandOptionDescriptor option : shellCommandDescriptor.getOptions()) {
       if (shellRequest.getShellCommand().getOptions().contains(option.getName())) {

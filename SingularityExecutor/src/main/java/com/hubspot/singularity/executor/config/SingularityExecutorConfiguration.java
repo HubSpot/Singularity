@@ -214,8 +214,19 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
 
+  @JsonProperty
+  private String pidCommandPlaceholder = "{PID}";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
+  }
+
+  public String getPidCommandPlaceholder() {
+    return pidCommandPlaceholder;
+  }
+
+  public void setPidCommandPlaceholder(String pidCommandPlaceholder) {
+    this.pidCommandPlaceholder = pidCommandPlaceholder;
   }
 
   public List<String> getLogrotateAdditionalFiles() {

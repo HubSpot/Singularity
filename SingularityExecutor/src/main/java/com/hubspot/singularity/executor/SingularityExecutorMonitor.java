@@ -246,6 +246,10 @@ public class SingularityExecutorMonitor {
     return processRunningTasks.values();
   }
 
+  public Optional<SingularityExecutorTaskProcessCallable> getTaskProcess(String taskId) {
+    return Optional.fromNullable(processRunningTasks.get(taskId));
+  }
+
   public Optional<SingularityExecutorTask> getTask(String taskId) {
     return Optional.fromNullable(tasks.get(taskId));
   }
