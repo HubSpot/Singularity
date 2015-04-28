@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -55,6 +57,7 @@ public class SingularityExecutorMonitor {
   private final Map<String, SingularityExecutorTask> tasks;
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
+  private final Map<String, ListeningExecutorService> taskToShellCommandPool;
 
   @Inject
   public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
@@ -69,6 +72,7 @@ public class SingularityExecutorMonitor {
     this.tasks = Maps.newConcurrentMap();
     this.processBuildingTasks = Maps.newConcurrentMap();
     this.processRunningTasks = Maps.newConcurrentMap();
+    this.taskToShellCommandPool = Maps.newConcurrentMap();
 
     this.processBuilderPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessBuilder-%d").build()));
     this.runningProcessPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessRunner-%d").build()));
@@ -101,6 +105,11 @@ public class SingularityExecutorMonitor {
     }
 
     processKiller.getExecutorService().shutdown();
+
+    for (Entry<String, ListeningExecutorService> taskIdToShellCommandPool : taskToShellCommandPool.entrySet()) { // in case
+      LOG.warn("Shutting down abandoned pool for {}", taskIdToShellCommandPool.getKey());
+      taskIdToShellCommandPool.getValue().shutdown();
+    }
 
     exitChecker.shutdown();
 
@@ -237,6 +246,20 @@ public class SingularityExecutorMonitor {
     return processRunningTasks.values();
   }
 
+  public Optional<SingularityExecutorTask> getTask(String taskId) {
+    return Optional.fromNullable(tasks.get(taskId));
+  }
+
+  public ListeningExecutorService createExecutorService(String taskId) {
+    Preconditions.checkState(!taskToShellCommandPool.containsKey(taskId));
+
+    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(taskId + "-shellCommandPool-%d").build()));
+
+    taskToShellCommandPool.put(taskId, executorService);
+
+    return executorService;
+  }
+
   public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
     try {
       processKiller.cancelDestroyFuture(task.getTaskId());
@@ -322,6 +345,17 @@ public class SingularityExecutorMonitor {
     processBuildingTasks.remove(task.getTaskId());
 
     task.cleanup(taskState);
+
+    ListeningExecutorService executorService = taskToShellCommandPool.remove(task.getTaskId());
+
+    if (executorService != null) {
+      executorService.shutdownNow();
+      try {
+        executorService.awaitTermination(5, TimeUnit.MILLISECONDS);
+      } catch (InterruptedException e) {
+        LOG.warn("Awaiting shutdown of shell executor service", e);
+      }
+    }
 
     logging.stopTaskLogger(task.getTaskId(), task.getLogbackLog());
 
