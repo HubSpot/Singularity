@@ -11,6 +11,8 @@ TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
 REQUEST_FORMAT = '/request/{0}'
 
+FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
+
 def download_s3_logs(args):
   sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
   logs = logs_for_all_requests(args)
@@ -20,15 +22,19 @@ def download_s3_logs(args):
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
     if logfetch_base.is_in_date_range(args, time_from_filename(filename)):
-      if not already_downloaded(args.dest, filename):
-        async_requests.append(
-          grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose))
-        )
+      if not args.logtype or log_matches(args, filename):
+        if not already_downloaded(args.dest, filename):
+          async_requests.append(
+            grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose))
+          )
+        else:
+          if args.verbose:
+            sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'magenta') + '\n')
+          all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
+        zipped_files.append('{0}/{1}'.format(args.dest, filename))
       else:
         if args.verbose:
-          sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'magenta') + '\n')
-        all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
-      zipped_files.append('{0}/{1}'.format(args.dest, filename))
+          sys.stderr.write(colored('Excluding {0} log does not match logtype argument {1}'.format(filename, args.logtype), 'magenta') + '\n')
     else:
       if args.verbose:
         sys.stderr.write(colored('Excluding {0}, not in date range'.format(filename), 'magenta') + '\n')
@@ -69,4 +75,16 @@ def s3_task_logs_uri(args, idString):
 
 def s3_request_logs_uri(args, idString):
   return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), REQUEST_FORMAT.format(idString))
+
+def log_matches(args, filename):
+  if 'filename' in args.file_pattern:
+    return logfetch_base.log_matches(filename, '*{0}*'.format(args.logtype.replace('logs/', '')))
+  else:
+    sys.stderr.write(colored('Cannot match on log file names for s3 logs when filename is not in s3 pattern', 'red'))
+    if args.no_name_fetch_off:
+      sys.stderr.write(colored('Will not fetch any s3 logs beacuse --no-name-fetch-off is set, remove this setting to fetch all for this case instead', 'red'))
+      return False
+    else:
+      sys.stderr.write(colored('Will fetch all s3 logs, set --no-name-fetch-off to skip s3 logs instead for this case', 'red'))
+      return True
 

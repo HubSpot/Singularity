@@ -4,6 +4,7 @@
             <tr>
                 <th>ID</th>
                 <th>State</th>
+                <th>Since</th>
                 <th>Rack</th>
                 <th>Host</th>
                 <th class="hidden-xs">Uptime</th>
@@ -23,6 +24,7 @@
                         <a href="{{appRoot}}/tasks/active/{{ host }}">{{ id }}</a>
                     </td>
                     <td>{{ state }}</td>
+                    <td>{{timestampFormatted currentState.timestamp }}</td>
                     <td>{{ rackId }}</td>
                     <td>{{ host }}</td>
                     <td class="hidden-xs" data-value="{{ uptime }}">

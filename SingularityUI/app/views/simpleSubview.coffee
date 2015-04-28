@@ -49,4 +49,8 @@ class SimpleSubview extends View
         @expanded = not @expanded
         @render()
 
+    expandToggleIfClosed: ->
+        return if @expanded
+        @expandToggle()
+
 module.exports = SimpleSubview

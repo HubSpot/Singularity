@@ -9,7 +9,7 @@
         text-overflow ellipsis
         position relative
 
-        .btn.copy-link
+        .btn.offset-link
             background #fff
 
             &:hover, &:focus
@@ -51,6 +51,9 @@
         
         &[data-state='SYSTEM_COOLDOWN']
             color #BF5D36
+        
+        &[data-state='DELETED']
+            color #ff0000
         
         &:empty
             display none

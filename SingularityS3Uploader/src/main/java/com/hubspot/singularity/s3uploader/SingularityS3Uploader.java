@@ -41,6 +41,7 @@ public class SingularityS3Uploader implements Closeable {
   private final Path metadataPath;
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
+  private final String hostname;
 
   public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
     AWSCredentials credentials = defaultCredentials;
@@ -66,6 +67,7 @@ public class SingularityS3Uploader implements Closeable {
       finishedPathMatcher = Optional.<PathMatcher> absent();
     }
 
+    this.hostname = JavaUtils.getHostName().or("unknownhost");
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
@@ -168,7 +170,7 @@ public class SingularityS3Uploader implements Closeable {
   private void uploadSingle(int sequence, Path file) throws Exception {
     final long start = System.currentTimeMillis();
 
-    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString());
+    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
 
     LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
 

@@ -6,6 +6,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.DockerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
@@ -28,12 +31,14 @@ public class SingularityExecutorThreadChecker {
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
+  private final DockerClient dockerClient;
 
   private SingularityExecutorMonitor monitor;
 
   @Inject
-  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerClient dockerClient) {
     this.configuration = configuration;
+    this.dockerClient = dockerClient;
 
     this.scheduledExecutorService = Executors.newScheduledThreadPool(configuration.getThreadCheckThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorThreadCheckerThread-%d").build());
   }
@@ -98,16 +103,25 @@ public class SingularityExecutorThreadChecker {
   private int getNumUsedThreads(SingularityExecutorTaskProcessCallable taskProcess) throws InterruptedException, ProcessFailedException {
     SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
 
+    Optional<Integer> dockerPid = Optional.absent();
+    if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
+      try {
+        String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
+        dockerPid = Optional.of(dockerClient.inspectContainer(containerName).state().pid());
+      } catch (DockerException e) {
+        throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
+      }
+    }
+
     List<String> cmd = ImmutableList.of("/bin/sh",
-        "-c",
-        String.format("pstree %s -p | wc -l", taskProcess.getCurrentPid().get()));
+      "-c",
+      String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
 
     List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
 
     if (output.isEmpty()) {
       throw new ProcessFailedException("Output from ps was empty");
     }
-
     return Integer.parseInt(output.get(0));
   }
 
