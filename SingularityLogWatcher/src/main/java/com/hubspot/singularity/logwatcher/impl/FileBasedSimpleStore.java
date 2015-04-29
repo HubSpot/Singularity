@@ -23,6 +23,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.logwatcher.SimpleStore;
 import com.hubspot.singularity.logwatcher.TailMetadataListener;
 import com.hubspot.singularity.logwatcher.config.SingularityLogWatcherConfiguration;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
@@ -31,15 +32,17 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
 
   private static final Logger LOG = LoggerFactory.getLogger(FileBasedSimpleStore.class);
 
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityLogWatcherConfiguration configuration;
 
   private final List<TailMetadataListener> listeners;
   private final JsonObjectFileHelper jsonObjectFileHelper;
 
   @Inject
-  public FileBasedSimpleStore(SingularityLogWatcherConfiguration configuration, JsonObjectFileHelper jsonObjectFileHelper) {
-    super(configuration.getPollMillis(), configuration.getLogMetadataDirectory(), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
+  public FileBasedSimpleStore(SingularityRunnerBaseConfiguration baseConfiguration, SingularityLogWatcherConfiguration configuration, JsonObjectFileHelper jsonObjectFileHelper) {
+    super(configuration.getPollMillis(), Paths.get(baseConfiguration.getLogWatcherMetadataDirectory()), Arrays.asList(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
     this.configuration = configuration;
+    this.baseConfiguration = baseConfiguration;
     this.jsonObjectFileHelper = jsonObjectFileHelper;
 
     this.listeners = Lists.newArrayList();
@@ -55,8 +58,8 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
   }
 
   private boolean isMetadataFile(Path filename) {
-    if (!filename.toString().endsWith(configuration.getLogMetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, configuration.getLogMetadataSuffix());
+    if (!filename.toString().endsWith(baseConfiguration.getLogWatcherMetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getLogWatcherMetadataSuffix());
       return false;
     }
 
@@ -71,7 +74,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
 
     LOG.trace("Handling {} event on {}", kind, filename);
 
-    Optional<TailMetadata> tail = read(configuration.getLogMetadataDirectory().resolve(filename));
+    Optional<TailMetadata> tail = read(Paths.get(baseConfiguration.getLogWatcherMetadataDirectory()).resolve(filename));
 
     if (!tail.isPresent()) {
       return false;
@@ -97,7 +100,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
 
   @Override
   public void markConsumed(TailMetadata tail) throws StoreException {
-    Path tailMetadataPath = TailMetadata.getTailMetadataPath(configuration.getLogMetadataDirectory(), configuration.getLogMetadataSuffix(), tail);
+    Path tailMetadataPath = TailMetadata.getTailMetadataPath(Paths.get(baseConfiguration.getLogWatcherMetadataDirectory()), baseConfiguration.getLogWatcherMetadataSuffix(), tail);
     Path storePath = getStorePath(tail);
 
     try {
@@ -147,7 +150,7 @@ public class FileBasedSimpleStore extends WatchServiceHelper implements SimpleSt
     try {
       final List<TailMetadata> tails = Lists.newArrayList();
 
-      for (Path file : JavaUtils.iterable(configuration.getLogMetadataDirectory())) {
+      for (Path file : JavaUtils.iterable(Paths.get(baseConfiguration.getLogWatcherMetadataDirectory()))) {
         if (!isMetadataFile(file)) {
           continue;
         }
