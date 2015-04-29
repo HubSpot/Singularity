@@ -1,5 +1,9 @@
 package com.hubspot.singularity.data;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkForbidden;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -13,13 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
@@ -27,14 +29,10 @@ import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityLDAPModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hubspot.singularity.WebExceptions.checkBadRequest;
-import static com.hubspot.singularity.WebExceptions.checkForbidden;
+import com.hubspot.singularity.ldap.SingularityLDAPManager;
 
 @Singleton
 public class SingularityValidator {
@@ -59,10 +57,10 @@ public class SingularityValidator {
   private final boolean ldapEnabled;
   private final ImmutableSet<String> ldapRequiredGroups;
   private final ImmutableSet<String> ldapAdminGroups;
-  private final LoadingCache<String, Set<String>> ldapGroupCache;
+  private final SingularityLDAPManager ldapManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, @Named(SingularityLDAPModule.LDAP_GROUP_CACHE) LoadingCache<String, Set<String>> ldapGroupCache) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, SingularityLDAPManager ldapManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -82,7 +80,7 @@ public class SingularityValidator {
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
     this.ldapEnabled = configuration.getLdapConfiguration().isEnabled();
-    this.ldapGroupCache = ldapGroupCache;
+    this.ldapManager = ldapManager;
     this.ldapRequiredGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getRequiredGroups());
     this.ldapAdminGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getAdminGroups());
   }
@@ -91,7 +89,7 @@ public class SingularityValidator {
     if (ldapEnabled) {
       checkBadRequest(user.isPresent(), "user must be present");
 
-      final Set<String> groups = ldapGroupCache.getUnchecked(user.get());
+      final Set<String> groups = ldapManager.getGroupsForUser(user.get());
 
       // check for required group membership
       if (!ldapRequiredGroups.isEmpty()) {
@@ -117,7 +115,7 @@ public class SingularityValidator {
       if (!ldapAdminGroups.isEmpty()) {
         checkBadRequest(user.isPresent(), "user must be present");
 
-        final Set<String> groups = ldapGroupCache.getUnchecked(user.get());
+        final Set<String> groups = ldapManager.getGroupsForUser(user.get());
 
         checkForbidden(!Sets.intersection(groups, ldapAdminGroups).isEmpty(), "User %s must be part of an admin group", user);
       }

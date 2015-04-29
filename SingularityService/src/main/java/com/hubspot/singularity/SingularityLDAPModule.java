@@ -1,21 +1,15 @@
 package com.hubspot.singularity;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.ldap.client.api.DefaultPoolableLdapConnectionFactory;
 import org.apache.directory.ldap.client.api.LdapConnectionConfig;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.inject.servlet.ServletScopes;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.ldap.SingularityAuthManager;
@@ -53,19 +47,5 @@ public class SingularityLDAPModule implements Module {
     pool.setWhenExhaustedAction(LdapConnectionPool.WHEN_EXHAUSTED_BLOCK); // instead of spawning a new connection when more requests come in, block until a connection is freed
 
     return pool;
-  }
-
-  @Provides
-  @Singleton
-  @Named(LDAP_GROUP_CACHE)
-  public LoadingCache<String, Set<String>> providesGroupCache(final SingularityLDAPManager ldapManager) {
-    return CacheBuilder.newBuilder()
-            .expireAfterWrite(configuration.getLdapConfiguration().getCacheExpirationMs(), TimeUnit.MILLISECONDS)
-            .build(new CacheLoader<String, Set<String>>() {
-              @Override
-              public Set<String> load(String key) throws Exception {
-                return ldapManager.getGroupsForUser(key);
-              }
-            });
   }
 }
