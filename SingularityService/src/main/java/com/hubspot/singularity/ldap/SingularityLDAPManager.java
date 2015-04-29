@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.message.SearchScope;
@@ -12,6 +13,9 @@ import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 
 import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -20,14 +24,23 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityLDAPManager {
   private final LdapConnectionPool connectionPool;
   private final SingularityConfiguration configuration;
+  private final LoadingCache<String, Set<String>> userGroupCache;
 
   @Inject
   public SingularityLDAPManager(LdapConnectionPool connectionPool, SingularityConfiguration configuration) {
     this.connectionPool = connectionPool;
     this.configuration = configuration;
+
+    this.userGroupCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(configuration.getLdapConfiguration().getCacheExpirationMs(), TimeUnit.MILLISECONDS)
+            .build(new LDAPGroupCacheLoader());
   }
 
-  public final Set<String> getGroupsForUser(String user) {
+  public Set<String> getGroupsForUser(String user) {
+    return userGroupCache.getUnchecked(user);
+  }
+
+  private Set<String> getGroupsForUserFromLDAP(String user) {
     if (!configuration.getLdapConfiguration().isEnabled()) {
       return Collections.emptySet();
     }
@@ -53,6 +66,13 @@ public class SingularityLDAPManager {
       return groups;
     } catch (Exception e) {
       throw Throwables.propagate(e);
+    }
+  }
+
+  private class LDAPGroupCacheLoader extends CacheLoader<String, Set<String>> {
+    @Override
+    public Set<String> load(String key) throws Exception {
+      return getGroupsForUserFromLDAP(key);
     }
   }
 }
