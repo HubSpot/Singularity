@@ -1,51 +1,49 @@
 {{#if synced}}
 <div class="row same-size-row-top">
     <div class="col-md-6 col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading panel-heading--narrow">
-                <a href="{{appRoot}}/requests"><h3>Requests</h3></a>
-            </div>
-            <div class="panel-body">       
-                <div class="row">
-                    <div class="col-md-3 col-sm-3 hidden-xs chart">
-                        <div class='chart__column'>
-                            {{#each requests}}
-                                <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
-                            {{/each}}
-                        </div>
-                        <h5 class='text-center'>{{totalRequests}} Total</h5>
+        <div class="panel-heading">
+            <a class='headline-link' href="{{appRoot}}/requests"><h2>Requests</h2></a>
+        </div>
+        <div class="panel-body">       
+            <div class="row">
+                <div class="col-md-3 col-sm-3 hidden-xs chart">
+                    <div class='chart__column'>
+                        {{#each requests}}
+                            <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                        {{/each}}
                     </div>
-                    <div class="col-md-9 col-sm-9">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <ul class="list-group list-group--links list-group--plain list-group--slim">
-                                    {{#each requests}}
-                                    <li class="list-group-item">
-                                        {{#if link}}
-                                        <a href="{{appRoot}}{{ link }}">
-                                            <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }}  {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
-                                        </a>
-                                        {{else}}
-                                        <span class="badge" id="{{ type }}">{{ count }}</span>
-                                        {{ label }}
-                                        {{/if}}
-                                    </li>
-                                    {{/each}}
-                                </ul>
-                                <ul class='list-plain'>
-                                    <li>
-                                        <strong>{{state.overProvisionedRequests}}</strong>
-                                        Over Provisioned
-                                    </li>
-                                    <li>
-                                        <span {{#ifGT state.underProvisionedRequests 0}}class='color-warning'{{/ifGT}}>
-                                            <strong>{{state.underProvisionedRequests}}</strong>
-                                            Under Provisioned
-                                        <span>
-                                    </li>
-                                </ul>
-                            </div>
+                    <h5 class='text-center'>{{totalRequests}} Total</h5>
+                </div>
+                <div class="col-md-9 col-sm-9">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <ul class="list-group list-group--links list-group--plain list-group--slim">
+                                {{#each requests}}
+                                <li class="list-group-item">
+                                    {{#if link}}
+                                    <a class='chart__legend-link' href="{{appRoot}}{{ link }}">
+                                        <span class="chart__legend-fill chart-fill-{{ type }}"></span>
+                                        <span class='chart__label'>{{ count }}  {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
+                                    </a>
+                                    {{else}}
+                                    <span class="badge" id="{{ type }}">{{ count }}</span>
+                                    {{ label }}
+                                    {{/if}}
+                                </li>
+                                {{/each}}
+                            </ul>
+                            <ul class='list-plain'>
+                                <li>
+                                    <strong>{{state.overProvisionedRequests}}</strong>
+                                    Over Provisioned
+                                </li>
+                                <li>
+                                    <span {{#ifGT state.underProvisionedRequests 0}}class='color-warning'{{/ifGT}}>
+                                        <strong>{{state.underProvisionedRequests}}</strong>
+                                        Under Provisioned
+                                    <span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -53,43 +51,41 @@
         </div>
     </div>
     <div class="col-md-6 col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading panel-heading--narrow">
-                <a href="{{appRoot}}/tasks"><h3>Tasks</h3></a>
-            </div>
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-md-3 col-sm-3 chart hidden-xs">
-                        <div class='chart__column'>
-                            {{#each tasks}}
-                                <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
-                            {{/each}}
-                        </div>
-                        <h5 class='text-center'>{{totalTasks}} Total</h5>
+        <div class="panel-heading">
+            <a class='headline-link' href="{{appRoot}}/tasks"><h2>Tasks</h2></a>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-3 col-sm-3 chart hidden-xs">
+                    <div class='chart__column'>
+                        {{#each tasks}}
+                            <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                        {{/each}}
                     </div>
-                    <div class="col-md-9 col-sm-9">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <ul class="list-group list-group--links list-group--plain list-group--slim">
-                                    {{#each tasks}}
-                                    <li class="list-group-item">
-                                        <a {{#unless link}}class='inactive-link'{{/unless}} {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
-                                            <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }} {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
-                                        </a>
-                                    </li>
-                                    {{/each}}
-                                </ul>
-                                <ul class="list-group list-group--plain">
-                                    <li class="list-group-item">
-                                        Max Task Lag:
-                                        <span>
-                                            {{timestampDuration state.maxTaskLag}}
-                                            {{#ifEqual 0 state.maxTaskLag }}0{{/ifEqual}}
-                                        </span>
-                                    </li>
-                                </ul>
-                            </div>
+                    <h5 class='text-center'>{{totalTasks}} Total</h5>
+                </div>
+                <div class="col-md-9 col-sm-9">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <ul class="list-group list-group--links list-group--plain list-group--slim">
+                                {{#each tasks}}
+                                <li class="list-group-item">
+                                    <a class='chart__legend-link {{#unless link}}inactive-link{{/unless}}' {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
+                                        <span class="chart__legend-fill chart-fill-{{ type }}"></span>
+                                        <span class='chart__label'>{{ count }} {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
+                                    </a>
+                                </li>
+                                {{/each}}
+                            </ul>
+                            <ul class='list-plain'>
+                                <li>
+                                    Max Task Lag:
+                                    <span>
+                                        {{timestampDuration state.maxTaskLag}}
+                                        {{#ifEqual 0 state.maxTaskLag }}0{{/ifEqual}}
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -97,89 +93,54 @@
         </div>
     </div>
 </div>
-
-
 <div class="row">
-
-    <div class="col-md-4">
-
-
-        <div class="panel panel-default panel--list">
-            <div class="panel-heading">
-                <a href="{{appRoot}}/racks"><h3 class="panel-title">Racks</h3></a>
-            </div>
-
-            <div class="panel-body">
-            
-                <ul class="list-group list-group--links">
-                    <li class="list-group-item">
-                        <a href="{{appRoot}}/racks">{{state.activeRacks}} Active Racks</a>
-                    </li>
-                    <li class="list-group-item">
-                        <a href="{{appRoot}}/racks">{{state.decommissioningRacks}} Decommissioning Racks</a>
-                    </li>
-                    <li class="list-group-item {{#ifGT state.deadRacks 0}}color-warning{{/ifGT}}">
-                        <a href="{{appRoot}}/racks">{{state.deadRacks}} Dead Racks</a>
-                    </li>
-                </ul>
-            
-            </div>
-        </div>
-
-
+    <div class="col-md-4 col-sm-4">
+        <a class='headline-link' href="{{appRoot}}/racks"><h2>Racks</h2></a>
+        <ul class="list-group list-group--links list-group--plain list-group--slim">
+            <li class='list-group-item'>
+                <a href="{{appRoot}}/racks">{{state.activeRacks}} Active Racks</a>
+            </li>
+            <li class='list-group-item'>
+                <a href="{{appRoot}}/racks">{{state.decommissioningRacks}} Decommissioning Racks</a>
+            </li>
+            <li class="list-group-item {{#ifGT state.deadRacks 0}}color-warning{{/ifGT}}">
+                <a href="{{appRoot}}/racks">{{state.deadRacks}} Dead Racks</a>
+            </li>
+        </ul>
     </div>
-
-
-
-    <div class="col-md-4">
-        <div class="panel panel-default panel--list">
-            <div class="panel-heading">
-                <a href="{{appRoot}}/slaves"><h3 class="panel-title">Slaves</h3></a>
-            </div>
-            <div class="panel-body">
-                <ul class="list-group list-group--links">
-                    <li class="list-group-item">
-                        <a href="{{appRoot}}/slaves/active"> {{state.activeSlaves}} Active Slaves </a>
-                    </li>
-                    <li class="list-group-item">
-                        <a href="{{appRoot}}/slaves/decommission"> {{state.decommissioningSlaves}} Decommissioning Slaves</a>
-                    </li>
-                    <li class="list-group-item">
-                        <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.deadSlaves}} Dead Slaves </a>
-                    </li>
-                    <li class="list-group-item">
-                        <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.unknownSlaves}} Unknown Slaves </a>
-                    </span>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <div class="col-md-4 col-sm-4">
+        <a class='headline-link' href="{{appRoot}}/slaves"><h2>Slaves</h2></a>
+        <ul class="list-group list-group--links list-group--plain list-group--slim">
+            <li class="list-group-item">
+                <a href="{{appRoot}}/slaves/active"> {{state.activeSlaves}} Active Slaves </a>
+            </li>
+            <li class="list-group-item">
+                <a href="{{appRoot}}/slaves/decommission"> {{state.decommissioningSlaves}} Decommissioning Slaves</a>
+            </li>
+            <li class="list-group-item">
+                <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.deadSlaves}} Dead Slaves </a>
+            </li>
+            <li class="list-group-item">
+                <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.unknownSlaves}} Unknown Slaves </a>
+            </span>
+            </li>
+        </ul>
     </div>
-    <div class="col-md-4">
-        <div class="panel panel-default panel--list">
-            <div class="panel-heading">
-                <a href="{{appRoot}}"><h3 class="panel-title">Deploys</h3></a>
-            </div>
-            <div class="panel-body">
-                <ul class="list-group ">
-                    <li class="list-group-item {{#ifLT state.numDeploys 2}}text-muted{{/ifLT}}">
-                        <strong>{{state.numDeploys}}</strong>
-                        Active Deploys
-                    </li>
-                    {{#ifNotEqual state.oldestDeploy 0}}
-                    <li class="list-group-item">
-                        <strong>{{timestampDuration state.oldestDeploy}}</strong>
-                         since last deploy
-                    </li>
-                    {{/ifNotEqual}}
-                </ul>
-            </div>
-        </div>
+    <div class="col-md-4 col-sm-4">
+        <a class='headline-link' href="{{appRoot}}"><h2>Deploys</h2></a>
+        <ul class="list-group list-group--links list-group--plain list-group--slim">
+            <li class="list-group-item {{#ifLT state.numDeploys 2}}text-muted{{/ifLT}}">
+                <strong>{{state.numDeploys}}</strong>
+                Active Deploys
+            </li>
+            {{#ifNotEqual state.oldestDeploy 0}}
+            <li class="list-group-item">
+                <strong>{{timestampDuration state.oldestDeploy}}</strong>
+                 since last deploy
+            </li>
+            {{/ifNotEqual}}
+        </ul>
     </div>
-
-
-
-
 </div>
 <div class="row">
     <div class="col-md-12">
