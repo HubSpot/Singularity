@@ -5,8 +5,20 @@ import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
@@ -50,6 +62,7 @@ import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.ldap.SingularityAuthManager;
+import com.hubspot.singularity.ldap.SingularityLDAPManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
@@ -60,6 +73,8 @@ import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
+import com.sun.jersey.api.uri.UriBuilderImpl;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -148,7 +163,8 @@ public class SingularityTestModule implements Module {
               }
             }));
 
-            binder.bind(SingularityAuthManager.class).toInstance(new SingularityAuthManager(configuration, null, null));
+            binder.bind(SingularityAuthManager.class).toInstance(new SingularityAuthManager(configuration, EMPTY_HEADERS, EMPTY_URI_INFO));
+            binder.bind(SingularityLDAPManager.class).toInstance(new SingularityLDAPManager(null, configuration));
           }
         }));
 
@@ -211,4 +227,130 @@ public class SingularityTestModule implements Module {
 
     return config;
   }
+
+  private static UriInfo EMPTY_URI_INFO = new UriInfo() {
+
+    @Override
+    public String getPath() {
+      return "";
+    }
+
+    @Override
+    public String getPath(boolean decode) {
+      return "";
+    }
+
+    @Override
+    public List<PathSegment> getPathSegments() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<PathSegment> getPathSegments(boolean decode) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public URI getRequestUri() {
+      return URI.create("");
+    }
+
+    @Override
+    public UriBuilder getRequestUriBuilder() {
+      return UriBuilder.fromUri("");
+    }
+
+    @Override
+    public URI getAbsolutePath() {
+      return UriBuilder.fromUri("").build();
+    }
+
+    @Override
+    public UriBuilder getAbsolutePathBuilder() {
+      return UriBuilder.fromUri("");
+    }
+
+    @Override
+    public URI getBaseUri() {
+      return UriBuilder.fromUri("").build();
+    }
+
+    @Override
+    public UriBuilder getBaseUriBuilder() {
+      return new UriBuilderImpl();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getPathParameters() {
+      return new MultivaluedMapImpl();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getPathParameters(boolean decode) {
+      return new MultivaluedMapImpl();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getQueryParameters() {
+      return new MultivaluedMapImpl();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
+      return new MultivaluedMapImpl();
+    }
+
+    @Override
+    public List<String> getMatchedURIs() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<String> getMatchedURIs(boolean decode) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<Object> getMatchedResources() {
+      return Collections.emptyList();
+    }
+  };
+
+  private static HttpHeaders EMPTY_HEADERS = new HttpHeaders() {
+
+    @Override
+    public List<String> getRequestHeader(String name) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getRequestHeaders() {
+      return new MultivaluedMapImpl();
+    }
+
+    @Override
+    public List<MediaType> getAcceptableMediaTypes() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<Locale> getAcceptableLanguages() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public MediaType getMediaType() {
+      return MediaType.WILDCARD_TYPE;
+    }
+
+    @Override
+    public Locale getLanguage() {
+      return Locale.ENGLISH;
+    }
+
+    @Override
+    public Map<String, Cookie> getCookies() {
+      return Collections.emptyMap();
+    }
+  };
 }
