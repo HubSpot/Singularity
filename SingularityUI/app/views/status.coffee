@@ -16,13 +16,12 @@ class StatusView extends View
             synced: @model.synced
             tasks: @tasks(@model)
             requests: @requests(@model)
+            totalRequests: @totalRequests
+            totalTasks: @totalTasks
 
         @$('.chart .chart__data-point[title]').tooltip(placement: 'right')
 
         @captureLastState()
-
-
-
 
     requests: (model) =>
         total_requests = @model.get 'allRequests'
@@ -64,6 +63,9 @@ class StatusView extends View
                 link: '/requests/cleaning'
             },
         ]
+
+        @totalRequests = @sumValues requests, 'count'
+
         return requests
 
 
@@ -105,6 +107,15 @@ class StatusView extends View
                 percent: @model.get('lbCleanupTasks') / total_tasks * 100
             }
         ]
+        
+        @totalTasks = @sumValues tasks, 'count'
+
         return tasks
+
+    sumValues: (obj, key) ->
+        total = 0
+        for item in obj
+            total = total + item[key]
+        total
 
 module.exports = StatusView

@@ -13,6 +13,7 @@
                                 <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
                             {{/each}}
                         </div>
+                        <h5 class='text-center'>{{totalRequests}} Total</h5>
                     </div>
                     <div class="col-md-9 col-sm-9">
                         <div class="row">
@@ -23,7 +24,7 @@
                                         {{#if link}}
                                         <a href="{{appRoot}}{{ link }}">
                                             <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }}  {{ label }} ({{fixedDecimal percent place="0"}}%) </span>
+                                            <span class='chart__label'>{{ count }}  {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
                                         </a>
                                         {{else}}
                                         <span class="badge" id="{{ type }}">{{ count }}</span>
@@ -64,6 +65,7 @@
                                 <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
                             {{/each}}
                         </div>
+                        <h5 class='text-center'>{{totalTasks}} Total</h5>
                     </div>
                     <div class="col-md-9 col-sm-9">
                         <div class="row">
@@ -73,9 +75,8 @@
                                     <li class="list-group-item">
                                         <a {{#unless link}}class='inactive-link'{{/unless}} {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
                                             <span class="chart__legend-fill chart-fill-{{ type }}"> </span>
-                                            <span class='chart__label'>{{ count }} {{ label }} ({{fixedDecimal percent place="0"}}%)</span>
+                                            <span class='chart__label'>{{ count }} {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
                                         </a>
-
                                     </li>
                                     {{/each}}
                                 </ul>
