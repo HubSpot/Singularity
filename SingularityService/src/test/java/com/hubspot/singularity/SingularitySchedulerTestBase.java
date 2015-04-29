@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
@@ -107,6 +108,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityMailer mailer;
   @Inject
   protected SingularityScheduledJobPoller scheduledJobPoller;
+  @Inject
+  protected ZkDataMigrationRunner migrationRunner;
 
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
@@ -135,6 +138,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Before
   public final void setupDriver() throws Exception {
     driver = driverSupplier.get().get();
+
+    migrationRunner.checkMigrations();
   }
 
   protected Offer createOffer(double cpus, double memory) {
@@ -174,13 +179,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
-    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, "host", "rack");
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
+    Offer offer = createOffer(125, 1024);
+
+    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
-    Offer offer = createOffer(125, 1024);
     TaskInfo taskInfo = TaskInfo.newBuilder()
         .setSlaveId(offer.getSlaveId())
         .setTaskId(taskIdProto)

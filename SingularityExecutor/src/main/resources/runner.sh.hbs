@@ -32,6 +32,13 @@ if [[ ! -d ./tmp ]]; then
   sudo chown -R {{{ user }}} ./tmp
 fi
 
+# Create log directory for logrotate runs
+if [[ ! -d {{{ logDir }}} ]]; then
+    echo "Creating log directory ({{{ logDir }}})"
+    mkdir -p {{{ logDir }}}
+    sudo chown -R {{{ user }}} {{{ logDir }}}
+fi
+
 echo "Ensuring {{{ taskAppDirectory }}} is owned by {{{ user }}}"
 sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
 
@@ -48,5 +55,5 @@ else
 fi
 
 # execute command
-echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1"
-exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logfile }}} 2>&1
+echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
+exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1

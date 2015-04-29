@@ -1,56 +1,64 @@
 package com.hubspot.singularity.logwatcher.config;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Properties;
 
+import javax.validation.constraints.Min;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseConfigurationLoader;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
+import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
-public class SingularityLogWatcherConfiguration {
+@Configuration("/etc/singularity.logwatcher.yaml")
+public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration {
+  public static final String BYTE_BUFFER_CAPACITY = "logwatcher.bytebuffer.capacity";
+  public static final String POLL_MILLIS = "logwatcher.poll.millis";
+  public static final String FLUENTD_HOSTS = "logwatcher.fluentd.comma.separated.hosts.and.ports";
 
-  private final int byteBufferCapacity;
-  private final long pollMillis;
-  private final List<FluentdHost> fluentdHosts;
-  private final Path storeDirectory;
-  private final String storeSuffix;
-  private final String fluentdTagPrefix;
-  private final long retryDelaySeconds;
+  public static final String STORE_DIRECTORY = "logwatcher.store.directory";
+  public static final String STORE_SUFFIX = "logwatcher.store.suffix";
 
-  private final Path logMetadataDirectory;
-  private final String logMetadataSuffix;
+  public static final String RETRY_DELAY_SECONDS = "logwatcher.retry.delay.seconds";
 
-  @Inject
-  public SingularityLogWatcherConfiguration(
-      @Named(SingularityLogWatcherConfigurationLoader.BYTE_BUFFER_CAPACITY) String byteBufferCapacity,
-      @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_TAG_PREFIX) String fluentdTagPrefix,
-      @Named(SingularityLogWatcherConfigurationLoader.POLL_MILLIS) String pollMillis,
-      @Named(SingularityLogWatcherConfigurationLoader.FLUENTD_HOSTS) String fluentdHosts,
-      @Named(SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY) String storeDirectory,
-      @Named(SingularityLogWatcherConfigurationLoader.STORE_SUFFIX) String storeSuffix,
-      @Named(SingularityLogWatcherConfigurationLoader.RETRY_DELAY_SECONDS) String retryDelaySeconds,
-      @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY) String logMetadataDirectory,
-      @Named(SingularityRunnerBaseConfigurationLoader.LOG_METADATA_SUFFIX) String logMetadataSuffix
-      ) {
-    this.byteBufferCapacity = Integer.parseInt(byteBufferCapacity);
-    this.pollMillis = Long.parseLong(pollMillis);
-    this.fluentdHosts = parseFluentdHosts(fluentdHosts);
-    this.storeSuffix = storeSuffix;
-    this.fluentdTagPrefix = fluentdTagPrefix;
-    this.storeDirectory = JavaUtils.getValidDirectory(storeDirectory, SingularityLogWatcherConfigurationLoader.STORE_DIRECTORY);
-    this.retryDelaySeconds = Long.parseLong(retryDelaySeconds);
-    this.logMetadataSuffix = logMetadataSuffix;
-    this.logMetadataDirectory = JavaUtils.getValidDirectory(logMetadataDirectory, SingularityRunnerBaseConfigurationLoader.LOG_METADATA_DIRECTORY);
-  }
+  public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
 
-  public Path getLogMetadataDirectory() {
-    return logMetadataDirectory;
-  }
+  @Min(1)
+  @JsonProperty
+  private int byteBufferCapacity = 8192;
 
-  public String getLogMetadataSuffix() {
-    return logMetadataSuffix;
+  @Min(1)
+  @JsonProperty
+  private long pollMillis = 1000;
+
+  @NotEmpty
+  @JsonProperty
+  private String fluentdHosts = "localhost:24224";
+
+  @DirectoryExists
+  @JsonProperty
+  private String storeDirectory;
+
+  @NotEmpty
+  @JsonProperty
+  private String storeSuffix = ".store";
+
+  @NotEmpty
+  @JsonProperty
+  private String fluentdTagPrefix = "forward";
+
+  @Min(1)
+  @JsonProperty
+  private long retryDelaySeconds = 60;
+
+  public SingularityLogWatcherConfiguration() {
+    super(Optional.of("singularity-logwatcher.log"));
   }
 
   public static class FluentdHost {
@@ -78,18 +86,6 @@ public class SingularityLogWatcherConfiguration {
 
   }
 
-  public Path getStoreDirectory() {
-    return storeDirectory;
-  }
-
-  public String getStoreSuffix() {
-    return storeSuffix;
-  }
-
-  public long getRetryDelaySeconds() {
-    return retryDelaySeconds;
-  }
-
   private List<FluentdHost> parseFluentdHosts(String fluentdHosts) {
     final String[] split = fluentdHosts.split(",");
     final List<FluentdHost> hosts = Lists.newArrayListWithCapacity(split.length);
@@ -100,26 +96,103 @@ public class SingularityLogWatcherConfiguration {
     return hosts;
   }
 
-  public long getPollMillis() {
-    return pollMillis;
-  }
-
   public int getByteBufferCapacity() {
     return byteBufferCapacity;
   }
 
+  public void setByteBufferCapacity(int byteBufferCapacity) {
+    this.byteBufferCapacity = byteBufferCapacity;
+  }
+
+  public long getPollMillis() {
+    return pollMillis;
+  }
+
+  public void setPollMillis(long pollMillis) {
+    this.pollMillis = pollMillis;
+  }
+
   public List<FluentdHost> getFluentdHosts() {
-    return fluentdHosts;
+    return parseFluentdHosts(fluentdHosts);
+  }
+
+  public void setFluentdHosts(String fluentdHosts) {
+    this.fluentdHosts = fluentdHosts;
+  }
+
+  public Path getStoreDirectory() {
+    return Paths.get(storeDirectory);
+  }
+
+  public void setStoreDirectory(String storeDirectory) {
+    this.storeDirectory = storeDirectory;
+  }
+
+  public String getStoreSuffix() {
+    return storeSuffix;
+  }
+
+  public void setStoreSuffix(String storeSuffix) {
+    this.storeSuffix = storeSuffix;
   }
 
   public String getFluentdTagPrefix() {
     return fluentdTagPrefix;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityLogWatcherConfiguration [byteBufferCapacity=" + byteBufferCapacity + ", pollMillis=" + pollMillis + ", fluentdHosts=" + fluentdHosts + ", storeDirectory=" + storeDirectory + ", storeSuffix=" + storeSuffix
-        + ", fluentdTagPrefix=" + fluentdTagPrefix + ", retryDelaySeconds=" + retryDelaySeconds + ", logMetadataDirectory=" + logMetadataDirectory + ", logMetadataSuffix=" + logMetadataSuffix + "]";
+  public void setFluentdTagPrefix(String fluentdTagPrefix) {
+    this.fluentdTagPrefix = fluentdTagPrefix;
   }
 
+  public long getRetryDelaySeconds() {
+    return retryDelaySeconds;
+  }
+
+  public void setRetryDelaySeconds(long retryDelaySeconds) {
+    this.retryDelaySeconds = retryDelaySeconds;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityLogWatcherConfiguration[" +
+            "byteBufferCapacity=" + byteBufferCapacity +
+            ", pollMillis=" + pollMillis +
+            ", fluentdHosts='" + fluentdHosts + '\'' +
+            ", storeDirectory='" + storeDirectory + '\'' +
+            ", storeSuffix='" + storeSuffix + '\'' +
+            ", fluentdTagPrefix='" + fluentdTagPrefix + '\'' +
+            ", retryDelaySeconds=" + retryDelaySeconds +
+            ']';
+  }
+
+  @Override
+  public void updateFromProperties(Properties properties) {
+    if (properties.containsKey(BYTE_BUFFER_CAPACITY)) {
+      setByteBufferCapacity(Integer.parseInt(properties.getProperty(BYTE_BUFFER_CAPACITY)));
+    }
+
+    if (properties.containsKey(POLL_MILLIS)) {
+      setPollMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));
+    }
+
+    if (properties.containsKey(FLUENTD_HOSTS)) {
+      setFluentdHosts(properties.getProperty(FLUENTD_HOSTS));
+    }
+
+    if (properties.containsKey(STORE_DIRECTORY)) {
+      setStoreDirectory(properties.getProperty(STORE_DIRECTORY));
+    }
+
+    if (properties.containsKey(STORE_SUFFIX)) {
+      setStoreSuffix(properties.getProperty(STORE_SUFFIX));
+    }
+
+    if (properties.containsKey(RETRY_DELAY_SECONDS)) {
+      setRetryDelaySeconds(Long.parseLong(properties.getProperty(RETRY_DELAY_SECONDS)));
+    }
+
+    if (properties.containsKey(FLUENTD_TAG_PREFIX)) {
+      setFluentdTagPrefix(properties.getProperty(FLUENTD_TAG_PREFIX));
+    }
+  }
 }

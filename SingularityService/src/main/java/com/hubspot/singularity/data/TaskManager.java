@@ -1,16 +1,5 @@
 package com.hubspot.singularity.data;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.mesos.Protos.TaskStatus;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -44,9 +33,25 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.mesos.Protos.TaskStatus;
+import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
+
+  private static final Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
 
   private static final String TASKS_ROOT = "/tasks";
 
@@ -105,6 +110,12 @@ public class TaskManager extends CuratorAsyncManager {
     this.singularityEventListener = singularityEventListener;
 
     this.serverId = serverId;
+  }
+
+  // since we can't use creatingParentsIfNeeded in transactions
+  public void createRequiredParents() {
+    create(HISTORY_PATH_ROOT);
+    create(ACTIVE_PATH_ROOT);
   }
 
   private String getLastHealthcheckPath(SingularityTaskId taskId) {
@@ -241,6 +252,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsyncChildren(CLEANUP_PATH_ROOT, taskCleanupTranscoder);
   }
 
+  public Optional<SingularityTaskCleanup> getTaskCleanup(String taskId) {
+    return getData(getCleanupPath(taskId), taskCleanupTranscoder);
+  }
+
   public List<SingularityTask> getActiveTasks() {
     List<String> children = Lists.transform(getChildrenAsIds(ACTIVE_PATH_ROOT, taskIdTranscoder), new Function<SingularityTaskId, String>() {
 
@@ -270,7 +285,7 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsync(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, paths, taskStatusTranscoder);
   }
 
-  public List<SingularityTask> getTasksOnSlave(List<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
+  public List<SingularityTask> getTasksOnSlave(Collection<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
     List<SingularityTask> tasks = Lists.newArrayList();
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -460,8 +475,13 @@ public class TaskManager extends CuratorAsyncManager {
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.<String>absent()));
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
-    create(getTaskPath(task.getTaskId()), task, taskTranscoder);
-    create(getActivePath(task.getTaskId().getId()));
+    try {
+      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(getTaskPath(task.getTaskId()), taskTranscoder.toBytes(task)).and();
+
+      transaction.create().forPath(getActivePath(task.getTaskId().getId())).and().commit();
+    } catch (KeeperException.NodeExistsException nee) {
+      LOG.error("Task or active path already existed for {}", task.getTaskId());
+    }
   }
 
   public List<SingularityTaskId> getLBCleanupTasks() {
@@ -500,17 +520,36 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getLastActiveTaskStatusPath(taskId));
   }
 
-  public SingularityCreateResult createCleanupTask(SingularityTaskCleanup cleanupTask) {
-    StringBuilder msg = new StringBuilder(cleanupTask.getCleanupType().name());
+  public SingularityCreateResult saveTaskCleanup(SingularityTaskCleanup cleanup) {
+    saveTaskHistoryUpdate(cleanup);
 
-    if (cleanupTask.getUser().isPresent()) {
-      msg.append(" - ");
-      msg.append(cleanupTask.getUser().get());
+    return save(getCleanupPath(cleanup.getTaskId().getId()), cleanup, taskCleanupTranscoder);
+  }
+
+  private void saveTaskHistoryUpdate(SingularityTaskCleanup cleanup) {
+    StringBuilder msg = new StringBuilder(cleanup.getCleanupType().name());
+
+    if (cleanup.getUser().isPresent()) {
+      msg.append(" by ");
+      msg.append(cleanup.getUser().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanupTask.getTaskId(), cleanupTask.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
+    if (cleanup.getMessage().isPresent()) {
+      msg.append(" - ");
+      msg.append(cleanup.getMessage().get());
+    }
 
-    return create(getCleanupPath(cleanupTask.getTaskId().getId()), cleanupTask, taskCleanupTranscoder);
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
+  }
+
+  public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {
+    final SingularityCreateResult result = create(getCleanupPath(cleanup.getTaskId().getId()), cleanup, taskCleanupTranscoder);
+
+    if (result == SingularityCreateResult.CREATED) {
+      saveTaskHistoryUpdate(cleanup);
+    }
+
+    return result;
   }
 
   public void deleteActiveTask(String taskId) {

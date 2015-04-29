@@ -58,7 +58,7 @@
     <dep.swagger.version>1.3.12</dep.swagger.version>
     <dep.swagger-plugin.version>2.3.2</dep.swagger-plugin.version>
 
-    <baragon.version>0.1.2</baragon.version>
+    <baragon.version>0.1.4</baragon.version>
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.1</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>
@@ -169,6 +169,30 @@
             <groupId>org.eclipse.jetty.orbit</groupId>
             <artifactId>javax.servlet</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-configuration</artifactId>
+        <version>${dropwizard.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-validation</artifactId>
+        <version>${dropwizard.version}</version>
+        <exclusions>
           <exclusion>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
@@ -527,6 +551,12 @@
             <artifactId>jackson-core</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>${dep.jackson.version}</version>
       </dependency>
 
       <dependency>

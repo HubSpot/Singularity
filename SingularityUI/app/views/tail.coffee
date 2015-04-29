@@ -12,13 +12,15 @@ class TailView extends View
         _.extend super,
             'click .tail-top-button': 'goToTop'
             'click .tail-bottom-button': 'goToBottom'
+            'click .offset-link' : 'offsetLink'
 
-    initialize: ({@taskId, @path, firstRequest}) ->
+    initialize: ({@taskId, @path, firstRequest, @offset}) ->
         @filename = _.last @path.split '/'
 
         @listenTo @collection, 'reset',       @dumpContents
         @listenTo @collection, 'sync',        @renderLines
         @listenTo @collection, 'initialdata', @afterInitialData
+        @listenTo @collection, 'initialOffsetData', @afterInitialOffsetData
 
         @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
         @listenTo @collection.state, 'change:moreToFetchAtBeginning', @showOrHideMoreToFetchSpinners
@@ -28,6 +30,8 @@ class TailView extends View
             @$el.addClass 'fetching-data'
         @listenTo @collection, 'sync', =>
             @$el.removeClass 'fetching-data'
+        
+        @listenTo @model, 'change:isStillRunning', => @stopTailing() unless @model.get 'isStillRunning'        
 
     handleAjaxError: (response) =>
         # ATM we get 404s if we request dirs and 500s if the file doesn't exist
@@ -44,7 +48,10 @@ class TailView extends View
         @$linesWrapper = @$contents.children('.lines-wrapper')
 
         # Attach scroll event manually because Backbone is poopy about it
-        @$contents.on 'scroll', @handleScroll
+        @$contents.on 'scroll, mousewheel', @handleScroll
+        # FireFox support
+        @$contents.on 'DOMMouseScroll', @handleScroll
+        
 
         # Some stuff in the app can change this stuff. We wanna reset it
         $('html, body').css 'min-height', '0px'
@@ -55,10 +62,11 @@ class TailView extends View
         # Well, or just render them if we're starting fresh
         $firstLine = @$linesWrapper.find '.line:first-child'
         $lastLine  = @$linesWrapper.find '.line:last-child'
-
         # If starting fresh
         if $firstLine.length is 0
-            @$linesWrapper.html @linesTemplate lines: @collection.toJSON()
+
+            @$linesWrapper.html @linesTemplate 
+                lines: @collection.toJSON()
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
             lastLineOffset  = parseInt $lastLine.data 'offset'
@@ -66,7 +74,8 @@ class TailView extends View
             if @collection.getMinOffset() < firstLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') < firstLineOffset
-                @$linesWrapper.prepend @linesTemplate lines: _.pluck lines, 'attributes'
+                @$linesWrapper.prepend @linesTemplate 
+                    lines: _.pluck lines, 'attributes'
 
                 # Gonna need to scroll back to the previous `firstLine` after otherwise
                 # we end up at the top again
@@ -75,7 +84,8 @@ class TailView extends View
             else if @collection.getStartOffsetOfLastLine() > lastLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') > lastLineOffset
-                @$linesWrapper.append @linesTemplate lines: _.pluck lines, 'attributes'
+                @$linesWrapper.append @linesTemplate 
+                    lines: _.pluck lines, 'attributes'
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
@@ -141,14 +151,22 @@ class TailView extends View
 
         @startTailing()
 
-    startTailing: =>
-        return if @isTailing is true
+    afterInitialOffsetData: =>
+        setTimeout =>
+            @$contents.scrollTop 1
+            @$('.lines-wrapper').find('.line').first().addClass('highlightLine')
+        , 150
 
+    startTailing: =>
+        return if @isTailing or not @model.get 'isStillRunning'
+    
         @isTailing = true
         @scrollToBottom()
 
         clearInterval @tailInterval
         @tailInterval = setInterval =>
+            @stopTailing() if not @model.get 'isStillRunning'
+
             @collection.fetchNext().done =>
                 # Only show the newly tail-ed lines if we are still tailing
                 @scrollToBottom() if @isTailing
@@ -189,12 +207,15 @@ class TailView extends View
             @startTailing()
 
     showOrHideMoreToFetchSpinners: (state) ->
-        if state.changed.moreToFetchAtBeginning?
+        if state.changed.moreToFetchAtBeginning? and not @offset
             @$('.tail-fetching-start').toggle(state.changed.moreToFetchAtBeginning)
 
         if state.changed.moreToFetch?
             @$('.tail-fetching-end').toggle(state.changed.moreToFetch)
 
+    offsetLink: (e) ->
+        @$('.line').removeClass('highlightLine')
+        $(e.currentTarget).closest('.line').addClass('highlightLine')
 
 
 module.exports = TailView

@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wordnik.swagger.annotations.ApiModel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
@@ -34,6 +35,18 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
   @ApiModelProperty("Slave hostname")
   public String getHost() {
     return host;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getName() {
+    return String.format("%s (%s)", getHost(), getId());
+  }
+
+  @JsonIgnore
+  @Override
+  public String getTypeName() {
+    return "Slave";
   }
 
   @ApiModelProperty("Slave rack ID")

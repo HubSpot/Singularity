@@ -26,6 +26,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -362,7 +363,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testOneOffsDontRunByThemselves() {
-    requestId = "oneoffRequest";
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     requestResource.submit(bldr.build(), Optional.<String> absent());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
@@ -374,6 +374,65 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
+    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+
+    resourceOffers();
+    Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
+
+    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+    Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
+  }
+
+  @Test
+  public void testOneOffsDontMoveDuringDecomission() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    requestResource.submit(bldr.build(), Optional.<String> absent());
+    deploy("d2");
+
+    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+
+    validateTaskDoesntMoveDuringDecommission();
+  }
+
+  private void validateTaskDoesntMoveDuringDecommission() {
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+
+    Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    cleaner.drainCleanupQueue();
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+
+    cleaner.drainCleanupQueue();
+
+    // task should not move!
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 1);
   }
 
   @Test
@@ -395,7 +454,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
-    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FINISHED);
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
 
     resourceOffers();
 
@@ -419,6 +478,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testRunOnceDontMoveDuringDecomission() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
+    request = bldr.build();
+    saveRequest(request);
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    deployChecker.checkDeploys();
+
+    validateTaskDoesntMoveDuringDecommission();
   }
 
   @Test
@@ -895,7 +969,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     saveRequest(request.toBuilder().setScheduledExpectedRuntimeMillis(Optional.of(1L)).build());
 
-    SingularityTask thirdTask = launchTask(request, firstDeploy, now - 500, 1, TaskState.TASK_RUNNING);
+    SingularityTask thirdTask = launchTask(request, firstDeploy, now - 502, 1, TaskState.TASK_RUNNING);
 
     scheduledJobPoller.runActionOnPoll();
 
@@ -966,7 +1040,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDECOMMissioning() {
+  public void testDecommissioning() {
     initRequest();
     initFirstDeploy();
 
@@ -1083,7 +1157,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testEmptyDECOMMissioning() {
+  public void testEmptyDecommissioning() {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
@@ -1094,5 +1168,72 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
   }
 
+  @Test
+  public void testJobRescheduledWhenItFinishesDuringDecommission() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    resourceOffers();
+
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1"));
+
+    cleaner.drainCleanupQueue();
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    statusUpdate(task, TaskState.TASK_FINISHED);
+
+    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testScaleDownTakesHighestInstances() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(5)));
+
+    resourceOffers();
+
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    requestResource.updateInstances(requestId, Optional.of("user1"), new SingularityRequestInstances(requestId, Optional.of(2)));
+
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(3, taskManager.getKilledTaskIdRecords().size());
+
+    for (SingularityKilledTaskIdRecord taskId : taskManager.getKilledTaskIdRecords()) {
+      Assert.assertTrue(taskId.getTaskId().getInstanceNo() > 2);
+    }
+
+  }
+
+  @Test
+  public void testWaitAfterTaskWorks() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    statusUpdate(task, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() < 1000L);
+
+    resourceOffers();
+
+    long extraWait = 100000L;
+
+    saveAndSchedule(request.toBuilder().setWaitAtLeastMillisAfterTaskFinishesForReschedule(Optional.of(extraWait)).setInstances(Optional.of(2)));
+    resourceOffers();
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() > 1000L);
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
 
 }

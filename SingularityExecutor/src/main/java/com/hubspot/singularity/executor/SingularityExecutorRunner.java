@@ -5,16 +5,18 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.executor.config.SingularityExecutorConfigurationLoader;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
-import com.hubspot.singularity.s3.base.config.SingularityS3ConfigurationLoader;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
 public class SingularityExecutorRunner {
 
@@ -24,7 +26,7 @@ public class SingularityExecutorRunner {
     final long start = System.currentTimeMillis();
 
     try {
-      final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(new SingularityS3ConfigurationLoader(), new SingularityExecutorConfigurationLoader()), new SingularityExecutorModule());
+      final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(SingularityExecutorConfiguration.class, ImmutableSet.<Class<? extends BaseRunnerConfiguration>>of(SingularityS3Configuration.class)), new SingularityExecutorModule());
       final SingularityExecutorRunner executorRunner = injector.getInstance(SingularityExecutorRunner.class);
 
       final Protos.Status driverStatus = executorRunner.run();

@@ -39,7 +39,6 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -177,9 +176,10 @@ public class SingularityDeployChecker {
     }
   }
 
-  private void cleanupTasks(Iterable<SingularityTaskId> tasksToKill, TaskCleanupType cleanupType, long timestamp) {
+  private void cleanupTasks(SingularityDeployMarker deployMarker, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
     for (SingularityTaskId matchingTask : tasksToKill) {
-      taskManager.createCleanupTask(new SingularityTaskCleanup(Optional.<String> absent(), cleanupType, timestamp, matchingTask));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(deployMarker.getUser(), deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp(), matchingTask,
+          Optional.of(String.format("Deploy %s - %s", deployMarker.getDeployId(), deployResult.getDeployState().name()))));
     }
   }
 
@@ -201,7 +201,7 @@ public class SingularityDeployChecker {
     SingularityRequest request = requestWithState.getRequest();
 
     if (!request.isOneOff()) {
-      cleanupTasks(tasksToKill, deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp());
+      cleanupTasks(pendingDeploy.getDeployMarker(), deployResult, tasksToKill);
     }
 
     if (!request.isDeployable() && !request.isOneOff()) {
@@ -287,6 +287,8 @@ public class SingularityDeployChecker {
 
     SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(lbRequestId, request, deploy, getTasks(deployTasks, tasks), getTasks(allOtherTasks, tasks));
 
+    updateLoadBalancerStateForTasks(deployTasks, LoadBalancerRequestType.ADD, enqueueResult);
+
     DeployState deployState = interpretLoadBalancerState(enqueueResult, DeployState.WAITING);
 
     updatePendingDeploy(pendingDeploy, enqueueResult, deployState);
@@ -307,6 +309,7 @@ public class SingularityDeployChecker {
       case SUCCESS:
         return DeployState.SUCCEEDED;
       case FAILED:
+      case INVALID_REQUEST_NOOP:
         return DeployState.FAILED;
       case CANCELING:
         return DeployState.CANCELING;
@@ -367,6 +370,8 @@ public class SingularityDeployChecker {
 
     if (shouldCheckLbState(pendingDeploy)) {
       final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(getLoadBalancerRequestId(pendingDeploy.getDeployMarker()));
+
+      updateLoadBalancerStateForTasks(deployActiveTasks, LoadBalancerRequestType.ADD, lbUpdate);
 
       DeployState deployState = interpretLoadBalancerState(lbUpdate, pendingDeploy.getCurrentDeployState());
 

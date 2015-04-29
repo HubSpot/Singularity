@@ -1,8 +1,10 @@
+import os
 import sys
 import logfetch_base
 import requests
 import time
 import threading
+from grep import grep_command
 from termcolor import colored
 
 TAIL_LOG_FORMAT = '{0}/sandbox/{1}/read'
@@ -12,13 +14,13 @@ THREAD_TIMEOUT = 100000
 def start_tail(args):
   if args.requestId:
     sys.stderr.write('Fetching tasks\n')
-    tasks = [str(t) for t in logfetch_base.tasks_for_request(args)]
+    tasks = [str(t) for t in logfetch_base.tasks_for_requests(args)]
   else:
     tasks = [args.taskId]
   if args.verbose:
     sys.stderr.write(colored('Tailing logs for tasks:\n', 'green'))
     for t in tasks:
-      sys.stderr.write(colored('{0}\n'.format(t), 'blue'))
+      sys.stderr.write(colored('{0}\n'.format(t), 'yellow'))
   sys.stderr.write(colored('ctrl+c to exit\n', 'cyan'))
   try:
     threads = []
@@ -31,7 +33,7 @@ def start_tail(args):
       if not t.isAlive:
         break
   except KeyboardInterrupt:
-    sys.stderr.write(colored('Stopping tail', 'cyan'))
+    sys.stderr.write(colored('Stopping tail', 'magenta') + '\n')
     sys.exit(0)
 
 class LogStreamer(threading.Thread):
@@ -73,6 +75,24 @@ class LogStreamer(threading.Thread):
     if args.grep:
       params['grep'] = args.grep
     response = requests.get(uri, params=params).json()
-    prefix = '({0}) =>'.format(task) if args.verbose else ''
-    sys.stdout.write('{0}{1}\n'.format(colored(prefix, 'blue'), response['data']))
+    prefix = '({0}) =>\n'.format(task) if args.verbose else ''
+    if response['data'] != '':
+      if args.grep:
+        filename = '{0}/.grep{1}'.format(args.dest, self.Task)
+        self.create_grep_file(args, filename, response['data'])
+        output = os.popen(grep_command(args, filename)).read()
+        sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), output))
+        self.remove_grep_file(filename)
+      else:
+        sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
     return offset + len(response['data'].encode('utf-8'))
+
+  def create_grep_file(self, args, filename, content):
+    grep_file = open(filename, 'wb')
+    grep_file.write(content.encode('utf-8'))
+    grep_file.close()
+
+
+  def remove_grep_file(self, grep_file):
+    if os.path.isfile(grep_file):
+      os.remove(grep_file)

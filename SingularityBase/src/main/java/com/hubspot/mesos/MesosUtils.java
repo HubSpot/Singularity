@@ -2,6 +2,8 @@ package com.hubspot.mesos;
 
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -54,7 +56,7 @@ public final class MesosUtils {
       }
     }
 
-    return null;
+    return Ranges.getDefaultInstance();
   }
 
   private static Ranges getRanges(TaskInfo taskInfo, String name) {
@@ -64,16 +66,8 @@ public final class MesosUtils {
   private static int getNumRanges(List<Resource> resources, String name) {
     int totalRanges = 0;
 
-
-    Ranges ranges = getRanges(resources, name);
-
-    if (ranges == null) {
-      return 0;
-    }
-
-    for (Range range : ranges.getRangeList()) {
-      long num = range.getEnd() - range.getBegin();
-      totalRanges += num;
+    for (Range range : getRanges(resources, name).getRangeList()) {
+      totalRanges += (range.getEnd() - range.getBegin()) + 1;
     }
 
     return totalRanges;
@@ -104,6 +98,8 @@ public final class MesosUtils {
     return ports;
   }
 
+  public static Resource getPortRangeResource(long begin, long end) { return newRange(PORTS, begin, end); }
+
   public static List<Long> getAllPorts(TaskInfo taskInfo) {
     final List<Long> ports = Lists.newArrayList();
 
@@ -127,7 +123,7 @@ public final class MesosUtils {
   public static Resource getPortsResource(int numPorts, List<Resource> resources) {
     Ranges ranges = getRanges(resources, PORTS);
 
-    Preconditions.checkState(ranges != null, "Ports %s should have existed in resources %s", PORTS, resources);
+    Preconditions.checkState(ranges.getRangeCount() > 0, "Ports %s should have existed in resources %s", PORTS, resources);
 
     Ranges.Builder rangesBldr = Ranges.newBuilder();
 
@@ -168,6 +164,10 @@ public final class MesosUtils {
 
   private static Resource newScalar(String name, double value) {
     return Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build()).build();
+  }
+
+  private static Resource newRange(String name, long begin, long end) {
+    return Resource.newBuilder().setName(name).setType(Type.RANGES).setRanges(Ranges.newBuilder().addRange(Range.newBuilder().setBegin(begin).setEnd(end).build()).build()).build();
   }
 
   public static double getNumCpus(Offer offer) {
@@ -311,4 +311,15 @@ public final class MesosUtils {
     return remaining;
   }
 
+  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
+    return new Resources(getNumCpus(resources), getMemory(resources), getNumPorts(resources));
+  }
+
+  public static Path getTaskDirectoryPath(String taskId) {
+    return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
+  }
+
+  public static String getSafeTaskIdForDirectory(String taskId) {
+    return taskId.replace(":", "_");
+  }
 }

@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import javax.inject.Provider;
@@ -16,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -23,6 +27,8 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -35,6 +41,8 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularityS3Log;
+import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
@@ -61,12 +69,8 @@ public class SingularityClient {
   private static final String RACKS_DELETE_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/rack/%s/decomissioning";
 
   private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
-  private static final String SLAVES_GET_ACTIVE_FORMAT = SLAVES_FORMAT + "/active";
-  private static final String SLAVES_GET_DEAD_FORMAT = SLAVES_FORMAT + "/dead";
-  private static final String SLAVES_GET_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/decomissioning";
-  private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decomission";
-  private static final String SLAVES_DELETE_DECOMISSIONING_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
-  private static final String SLAVES_DELETE_DEAD_FORMAT = SLAVES_FORMAT + "/slave/%s/dead";
+  private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decommission";
+  private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
@@ -76,6 +80,7 @@ public class SingularityClient {
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
+  private static final String REQUEST_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/requests";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
@@ -103,6 +108,15 @@ public class SingularityClient {
   private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request/%s";
   private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task/%s";
 
+  private static final String SANDBOX_FORMAT = "http://%s/%s/sandbox";
+  private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";
+  private static final String SANDBOX_READ_FILE_FORMAT = SANDBOX_FORMAT + "/%s/read";
+
+  private static final String S3_LOG_FORMAT = "http://%s/%s/logs";
+  private static final String S3_LOG_GET_TASK_LOGS = S3_LOG_FORMAT + "/task/%s";
+  private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
+  private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
+
   private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
@@ -115,6 +129,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
+  private static final TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
+  private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_HISTORY_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -172,13 +188,24 @@ public class SingularityClient {
   }
 
   private <T> Optional<T> getSingle(String uri, String type, String id, Class<T> clazz) {
+    return getSingleWithParams(uri, type, id, Optional.<Map<String, Object>>absent(), clazz);
+  }
+
+  private <T> Optional<T> getSingleWithParams(String uri, String type, String id, Optional<Map<String, Object>> queryParams, Class<T> clazz) {
     checkNotNull(id, String.format("Provide a %s id", type));
 
     LOG.info("Getting {} {} from {}", type, id, uri);
 
     final long start = System.currentTimeMillis();
 
-    HttpResponse response = httpClient.execute(HttpRequest.newBuilder().setUrl(uri).build());
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        .setUrl(uri);
+
+    if (queryParams.isPresent()) {
+      addQueryParams(requestBuilder, queryParams.get());
+    }
+
+    HttpResponse response = httpClient.execute(requestBuilder.build());
 
     if (response.getStatusCode() == 404) {
       return Optional.absent();
@@ -192,11 +219,22 @@ public class SingularityClient {
   }
 
   private <T> Collection<T> getCollection(String uri, String type, TypeReference<Collection<T>> typeReference) {
+    return getCollectionWithParams(uri, type, Optional.<Map<String, Object>>absent(), typeReference);
+  }
+
+  private <T> Collection<T> getCollectionWithParams(String uri, String type, Optional<Map<String, Object>> queryParams, TypeReference<Collection<T>> typeReference) {
     LOG.info("Getting all {} from {}", type, uri);
 
     final long start = System.currentTimeMillis();
 
-    HttpResponse response = httpClient.execute(HttpRequest.newBuilder().setUrl(uri).build());
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        .setUrl(uri);
+
+    if (queryParams.isPresent()) {
+      addQueryParams(requestBuilder, queryParams.get());
+    }
+
+    HttpResponse response = httpClient.execute(requestBuilder.build());
 
     if (response.getStatusCode() == 404) {
       return ImmutableList.of();
@@ -207,6 +245,23 @@ public class SingularityClient {
     LOG.info("Got {} in {}ms", type, System.currentTimeMillis() - start);
 
     return response.getAs(typeReference);
+  }
+
+  private void addQueryParams(HttpRequest.Builder requestBuilder, Map<String, Object> queryParams) {
+    for (Entry<String, Object> queryParamEntry : queryParams.entrySet()) {
+      if (queryParamEntry.getValue() instanceof String) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (String) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Integer) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Integer) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Long) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Long) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Boolean) {
+        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Boolean) queryParamEntry.getValue());
+      } else {
+        throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
+            queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
+      }
+    }
   }
 
   private <T> void delete(String uri, String type, String id, Optional<String> user) {
@@ -572,22 +627,55 @@ public class SingularityClient {
   // SLAVES
   //
 
+  /**
+   * Use {@link getSlaves} specifying the desired slave state to filter by
+   *
+   */
+  @Deprecated
   public Collection<SingularitySlave> getActiveSlaves() {
-    return getSlaves(SLAVES_GET_ACTIVE_FORMAT, "active");
+    return getSlaves(Optional.of(MachineState.ACTIVE));
   }
 
+  /**
+   * Use {@link getSlaves} specifying the desired slave state to filter by
+   *
+   */
+  @Deprecated
   public Collection<SingularitySlave> getDeadSlaves() {
-    return getSlaves(SLAVES_GET_DEAD_FORMAT, "dead");
+    return getSlaves(Optional.of(MachineState.DEAD));
   }
 
+  /**
+   * Use {@link getSlaves} specifying the desired slave state to filter by
+   *
+   */
+  @Deprecated
   public Collection<SingularitySlave> getDecomissioningSlaves() {
-    return getSlaves(SLAVES_GET_DECOMISSIONING_FORMAT, "decomissioning");
+    return getSlaves(Optional.of(MachineState.DECOMMISSIONING));
   }
 
-  private Collection<SingularitySlave> getSlaves(String format, String type) {
-    final String requestUri = String.format(format, getHost(), contextPath);
+  /**
+   * Retrieve the list of all known slaves, optionally filtering by a particular slave state
+   *
+   * @param slaveState
+   *    Optionally specify a particular state to filter slaves by
+   * @return
+   *    A collection of {@link SingularitySlave}
+   */
+  public Collection<SingularitySlave> getSlaves(Optional<MachineState> slaveState) {
+    final String requestUri = String.format(SLAVES_FORMAT, getHost(), contextPath);
 
-    return getCollection(requestUri, type, SLAVES_COLLECTION);
+    Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
+
+    String type = "slaves";
+
+    if (slaveState.isPresent()) {
+      maybeQueryParams = Optional.<Map<String, Object>>of(ImmutableMap.<String, Object>of("state", slaveState.get().toString()));
+
+      type = String.format("%s slaves", slaveState.get().toString());
+    }
+
+    return getCollectionWithParams(requestUri, type, maybeQueryParams, SLAVES_COLLECTION);
   }
 
   public void decomissionSlave(String slaveId, Optional<String> user) {
@@ -596,16 +684,49 @@ public class SingularityClient {
     post(requestUri, String.format("decomission slave %s", slaveId), Optional.absent(), user);
   }
 
-  public void deleteDecomissioningSlave(String slaveId, Optional<String> user) {
-    final String requestUri = String.format(SLAVES_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, slaveId);
+  public void deleteSlave(String slaveId, Optional<String> user) {
+    final String requestUri = String.format(SLAVES_DELETE_FORMAT, getHost(), contextPath, slaveId);
 
-    delete(requestUri, "decomissioning slave", slaveId, user);
+    delete(requestUri, "deleting slave", slaveId, user);
   }
 
-  public void deleteDeadSlave(String slaveId, Optional<String> user) {
-    final String requestUri = String.format(SLAVES_DELETE_DEAD_FORMAT, getHost(), contextPath, slaveId);
+  //
+  // REQUEST HISTORY
+  //
 
-    delete(requestUri, "dead slave", slaveId, user);
+  /**
+   * Retrieve a paged list of updates for a particular {@link SingularityRequest}
+   *
+   * @param requestId
+   *    Request ID to look up
+   * @param count
+   *    Number of items to return per page
+   * @param page
+   *    Which page of items to return
+   * @return
+   *    A list of {@link SingularityRequestHistory}
+   */
+  public Collection<SingularityRequestHistory> getHistoryForRequest(String requestId,  Optional<Integer> count, Optional<Integer> page) {
+    final String requestUri = String.format(REQUEST_HISTORY_FORMAT, getHost(), contextPath, requestId);
+
+    Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
+
+    ImmutableMap.Builder<String, Object> queryParamsBuilder = ImmutableMap.<String, Object>builder();
+
+    if (count.isPresent() ) {
+      queryParamsBuilder.put("count", count.get());
+    }
+
+    if (page.isPresent()) {
+      queryParamsBuilder.put("page", page.get());
+    }
+
+    Map<String, Object> queryParams = queryParamsBuilder.build();
+    if (!queryParams.isEmpty()) {
+      maybeQueryParams = Optional.of(queryParams);
+    }
+
+    return getCollectionWithParams(requestUri, "request history", maybeQueryParams, REQUEST_HISTORY_COLLECTION);
   }
 
   //
@@ -678,6 +799,119 @@ public class SingularityClient {
     final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getHost(), contextPath, webhookId);
 
     return getCollection(requestUri, "request updates", TASK_UPDATES_COLLECTION);
+  }
+
+  //
+  // SANDBOX
+  //
+
+  /**
+   * Retrieve information about a specific task's sandbox
+   *
+   * @param taskId
+   *    The task ID to browse
+   * @param path
+   *    The path to browse from.
+   *    if not specified it will browse from the sandbox root.
+   * @return
+   *    A {@link SingularitySandbox} object that captures the information for the path to a specific task's Mesos sandbox
+   */
+  public Optional<SingularitySandbox> browseTaskSandBox(String taskId, String path) {
+    final String requestUrl = String.format(SANDBOX_BROWSE_FORMAT, getHost(), contextPath, taskId);
+
+    return getSingleWithParams(requestUrl, "browse sandbox for task", taskId, Optional.<Map<String, Object>>of(ImmutableMap.<String, Object>of("path", path)), SingularitySandbox.class);
+
+  }
+
+  /**
+   * Retrieve part of the contents of a file in a specific task's sandbox.
+   *
+   * @param taskId
+   *    The task ID of the sandbox to read from
+   * @param path
+   *    The path to the file to be read. Relative to the sandbox root (without a leading slash)
+   * @param grep
+   *    Optional string to grep for
+   * @param offset
+   *    Byte offset to start reading from
+   * @param length
+   *    Maximum number of bytes to read
+   * @return
+   *    A {@link MesosFileChunkObject} that contains the requested partial file contents
+   */
+  public Optional<MesosFileChunkObject> readSandBoxFile(String taskId, String path, Optional<String> grep, Optional<Long> offset, Optional<Long> length) {
+    final String requestUrl = String.format(SANDBOX_READ_FILE_FORMAT, getHost(), contextPath, taskId);
+
+    Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("path", path);
+
+    if (grep.isPresent()) {
+      queryParamBuider.put("grep", grep.get());
+    }
+    if (offset.isPresent()) {
+      queryParamBuider.put("offset", offset.get());
+    }
+    if (length.isPresent()) {
+      queryParamBuider.put("length", length.get());
+    }
+
+    return getSingleWithParams(requestUrl, "Read sandbox file for task", taskId, Optional.<Map<String, Object>>of(queryParamBuider.build()), MesosFileChunkObject.class);
+  }
+
+  //
+  // S3 LOGS
+  //
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific task
+   *
+   * @param taskId
+   *    The task ID to search for
+   *
+   * @return
+   *    A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getTaskLogs(String taskId) {
+    final String requestUri = String.format(S3_LOG_GET_TASK_LOGS, getHost(), contextPath, taskId);
+
+    final String type = String.format("S3 logs for task %s", taskId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+  }
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific request
+   *
+   * @param requestId
+   *    The request ID to search for
+   *
+   * @return
+   *     A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getRequestLogs(String requestId) {
+    final String requestUri = String.format(S3_LOG_GET_REQUEST_LOGS, getHost(), contextPath, requestId);
+
+    final String type = String.format("S3 logs for request %s", requestId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+  }
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific deploy if a singularity request
+   *
+   * @param requestId
+   *    The request ID to search for
+   * @param deployId
+   *    The deploy ID (within the specified request) to search for
+   *
+   * @return
+   *    A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getDeployLogs(String requestId, String deployId) {
+    final String requestUri = String.format(S3_LOG_GET_DEPLOY_LOGS, getHost(), contextPath, requestId, deployId);
+
+    final String type = String.format("S3 logs for deploy %s of request %s", deployId, requestId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
   }
 
 }

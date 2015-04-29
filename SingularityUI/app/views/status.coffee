@@ -66,7 +66,7 @@ class StatusView extends View
 
         @totalRequests = @sumValues requests, 'count'
 
-        return requests
+        requests
 
 
     tasks: (model) =>
@@ -107,15 +107,17 @@ class StatusView extends View
                 percent: @model.get('lbCleanupTasks') / total_tasks * 100
             }
         ]
+
         
         @totalTasks = @sumValues tasks, 'count'
 
-        return tasks
+        tasks
 
     sumValues: (obj, key) ->
         total = 0
         for item in obj
             total = total + item[key]
         total
+
 
 module.exports = StatusView

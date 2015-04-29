@@ -2,6 +2,10 @@ Model = require './model'
 
 Slave = require './Slave'
 
+DECOMMISION_STATES = ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+
+TERMINAL_TASK_STATES = ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+
 # This model hits up the history API and gets us the record for
 # an old (or current) Task
 class TaskHistory extends Model
@@ -12,7 +16,9 @@ class TaskHistory extends Model
 
     parse: (taskHistory) ->
         _.sortBy taskHistory.taskUpdates, (t) -> t.timestamp
+
         taskHistory.task?.mesosTask?.executor?.command?.environment?.variables = _.sortBy taskHistory.task.mesosTask.executor.command.environment.variables, "name"
+
 
         ports = []
 
@@ -25,14 +31,17 @@ class TaskHistory extends Model
 
         taskHistory.ports = ports
 
+
         isStillRunning = true
 
         for taskUpdate in taskHistory.taskUpdates
-          if taskUpdate.taskState in ["TASK_KILLED", "TASK_LOST", "TASK_FAILED", "TASK_FINISHED"]
+          if taskUpdate.taskState in TERMINAL_TASK_STATES
             isStillRunning = false
             break
 
         taskHistory.isStillRunning = isStillRunning
+
+
         if taskHistory.task.offer?
             taskHistory.slaveId = taskHistory.task.offer.slaveId.value
             taskHistory.slave = new Slave id: taskHistory.slaveId
@@ -40,11 +49,15 @@ class TaskHistory extends Model
                 async: false
                 error: =>
                     app.caughtError()
-            decommission_states = ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
-            if taskHistory.slave.attributes[0].state in decommission_states
+            if taskHistory.slave.attributes.state in DECOMMISION_STATES
                 taskHistory.decommissioning = true
             else if taskHistory.slave.attributes.state is not 'ACTIVE'
                 taskHistory.slaveMissing = true
+
+
+        taskHistory.isCleaning = _.last( taskHistory.taskUpdates ).taskState is 'TASK_CLEANING'
+
+
         taskHistory
 
     parseResources: (task) ->

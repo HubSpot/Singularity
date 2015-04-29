@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
@@ -40,6 +41,7 @@ import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 @Singleton
@@ -50,15 +52,17 @@ class SingularityMesosTaskBuilder {
   private final ObjectMapper objectMapper;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final ExecutorIdGenerator idGenerator;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration) {
     this.objectMapper = objectMapper;
     this.slaveAndRackManager = slaveAndRackManager;
     this.idGenerator = idGenerator;
+    this.configuration = configuration;
   }
 
-  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources) {
+  public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
     final String rackId = slaveAndRackManager.getRackId(offer);
     final String host = slaveAndRackManager.getSlaveHost(offer);
 
@@ -81,9 +85,9 @@ class SingularityMesosTaskBuilder {
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
-      prepareCustomExecutor(bldr, taskId, taskRequest, ports);
+      prepareCustomExecutor(bldr, taskId, taskRequest, offer, ports, desiredExecutorResources);
     } else {
-      prepareCommand(bldr, taskId, taskRequest, ports);
+      prepareCommand(bldr, taskId, taskRequest, offer, ports);
     }
 
     if (portsResource.isPresent()) {
@@ -109,11 +113,11 @@ class SingularityMesosTaskBuilder {
     envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
   }
 
-  private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Optional<long[]> ports) {
+  private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final Protos.Offer offer, final Optional<long[]> ports) {
     Environment.Builder envBldr = Environment.newBuilder();
 
     setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
-    setEnv(envBldr, "TASK_HOST", taskId.getHost());
+    setEnv(envBldr, "TASK_HOST", offer.getHostname());
     setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
     setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
     setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
@@ -167,6 +171,20 @@ class SingularityMesosTaskBuilder {
         .build());
   }
 
+  private String fillInTaskIdValues(String string, SingularityTaskId taskId) {
+    if (!Strings.isNullOrEmpty(string)) {
+      string = string.replace("${TASK_REQUEST_ID}", taskId.getRequestId())
+              .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
+              .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
+              .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
+              .replace("${TASK_HOST}", taskId.getHost())
+              .replace("${TASK_RACK_ID}", taskId.getRackId())
+              .replace("${TASK_ID}", taskId.toString());
+    }
+
+    return string;
+  }
+
   private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
     containerBuilder.setType(containerInfo.getType());
@@ -198,9 +216,9 @@ class SingularityMesosTaskBuilder {
 
     for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
       final Volume.Builder volumeBuilder = Volume.newBuilder();
-      volumeBuilder.setContainerPath(volumeInfo.getContainerPath());
+      volumeBuilder.setContainerPath(fillInTaskIdValues(volumeInfo.getContainerPath(), taskId));
       if (volumeInfo.getHostPath().isPresent()) {
-        volumeBuilder.setHostPath(volumeInfo.getHostPath().get());
+        volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), taskId));
       }
       volumeBuilder.setMode(volumeInfo.getMode());
       containerBuilder.addVolumes(volumeBuilder);
@@ -209,16 +227,31 @@ class SingularityMesosTaskBuilder {
     bldr.setContainer(containerBuilder);
   }
 
-  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
+  private List<Resource> buildMesosResources(final Resources resources) {
+    ImmutableList.Builder<Resource> builder = ImmutableList.builder();
+
+    if (resources.getCpus() > 0) {
+      builder.add(MesosUtils.getCpuResource(resources.getCpus()));
+    }
+
+    if (resources.getMemoryMb() > 0) {
+      builder.add(MesosUtils.getMemoryResource(resources.getMemoryMb()));
+    }
+
+    return builder.build();
+  }
+
+  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Protos.Offer offer, final Optional<long[]> ports, final Resources desiredExecutorResources) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
-    prepareEnvironment(task, taskId, commandBuilder, ports);
+    prepareEnvironment(task, taskId, commandBuilder, offer, ports);
 
-    bldr.setExecutor(
-        ExecutorInfo.newBuilder()
-        .setCommand(commandBuilder.build())
-        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
-        .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+    bldr.setExecutor(ExecutorInfo.newBuilder()
+            .setCommand(commandBuilder.build())
+            .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
+            .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+            .addAllResources(buildMesosResources(desiredExecutorResources))
+            .build()
         );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
@@ -252,7 +285,7 @@ class SingularityMesosTaskBuilder {
   }
 
 
-  private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Optional<long[]> ports) {
+  private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Protos.Offer offer, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
     if (task.getDeploy().getCommand().isPresent()) {
@@ -276,7 +309,7 @@ class SingularityMesosTaskBuilder {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
     }
 
-    prepareEnvironment(task, taskId, commandBldr, ports);
+    prepareEnvironment(task, taskId, commandBldr, offer, ports);
 
     bldr.setCommand(commandBldr);
   }

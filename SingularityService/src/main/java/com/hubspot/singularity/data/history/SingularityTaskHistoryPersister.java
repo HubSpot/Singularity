@@ -40,7 +40,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Override
   public void runActionOnPoll() {
-    LOG.info("Checking inactive task ids for task history persistance");
+    LOG.info("Checking inactive task ids for task history persistence");
 
     final long start = System.currentTimeMillis();
 
@@ -86,6 +86,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
 
     if (taskHistory.isPresent()) {
+      LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
       } catch (Throwable t) {

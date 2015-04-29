@@ -1,5 +1,6 @@
 package com.hubspot.singularity.s3uploader;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -11,36 +12,62 @@ import java.util.Set;
 
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
+import org.jets3t.service.ServiceException;
+import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
+import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 
-public class SingularityS3Uploader {
+public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
+  private final Optional<PathMatcher> finishedPathMatcher;
   private final String fileDirectory;
   private final S3Service s3Service;
   private final S3Bucket s3Bucket;
   private final Path metadataPath;
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
+  private final String hostname;
 
-  public SingularityS3Uploader(S3Service s3Service, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
-    this.s3Service = s3Service;
+  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
+    AWSCredentials credentials = defaultCredentials;
+
+    if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
+      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
+    }
+
+    try {
+      this.s3Service = new RestS3Service(credentials);
+    } catch (S3ServiceException e) {
+      throw Throwables.propagate(e);
+    }
+
     this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
     this.pathMatcher = fileSystem.getPathMatcher("glob:" + uploadMetadata.getFileGlob());
+
+    if (uploadMetadata.getOnFinishGlob().isPresent()) {
+      finishedPathMatcher = Optional.of(fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get()));
+    } else {
+      finishedPathMatcher = Optional.<PathMatcher> absent();
+    }
+
+    this.hostname = JavaUtils.getHostName().or("unknownhost");
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
@@ -55,11 +82,20 @@ public class SingularityS3Uploader {
   }
 
   @Override
+  public void close() throws IOException {
+    try {
+      s3Service.shutdown();
+    } catch (ServiceException e) {
+      throw new IOException(e);
+    }
+  }
+
+  @Override
   public String toString() {
     return "SingularityS3Uploader [uploadMetadata=" + uploadMetadata + ", metadataPath=" + metadataPath + "]";
   }
 
-  public int upload(Set<Path> synchronizedToUpload) throws IOException {
+  public int upload(Set<Path> synchronizedToUpload, boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
     int found = 0;
 
@@ -72,7 +108,16 @@ public class SingularityS3Uploader {
 
     for (Path file : JavaUtils.iterable(directory)) {
       if (!pathMatcher.matches(file.getFileName())) {
-        LOG.trace("{} Skipping {} because it didn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+        if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(file.getFileName())) {
+          LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+          continue;
+        } else {
+          LOG.trace("Not skipping file {} because it matched finish glob {}", file, uploadMetadata.getOnFinishGlob().get());
+        }
+      }
+
+      if (Files.size(file) == 0) {
+        LOG.trace("{} Skipping {} because its size is 0", logIdentifier, file);
         continue;
       }
 
@@ -110,7 +155,7 @@ public class SingularityS3Uploader {
         Files.delete(file);
       } catch (S3ServiceException se) {
         metrics.error();
-        LOG.warn("{} Couldn't upload due to {} ({}) - {}", logIdentifier, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage());
+        LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
       } catch (Exception e) {
         metrics.error();
         LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
@@ -125,7 +170,7 @@ public class SingularityS3Uploader {
   private void uploadSingle(int sequence, Path file) throws Exception {
     final long start = System.currentTimeMillis();
 
-    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString());
+    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
 
     LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
 

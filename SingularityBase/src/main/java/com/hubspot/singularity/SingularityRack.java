@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityRack extends SingularityMachineAbstraction<SingularityRack> {
@@ -17,6 +18,18 @@ public class SingularityRack extends SingularityMachineAbstraction<SingularityRa
   @Override
   public SingularityRack changeState(SingularityMachineStateHistoryUpdate newState) {
     return new SingularityRack(getId(), getFirstSeenAt(), newState);
+  }
+
+  @JsonIgnore
+  @Override
+  public String getName() {
+    return getId();
+  }
+
+  @JsonIgnore
+  @Override
+  public String getTypeName() {
+    return "rack";
   }
 
   @Override

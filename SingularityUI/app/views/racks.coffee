@@ -52,6 +52,7 @@ class RacksView extends View
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
+            host:  null
             state: state
 
         rackModel.promptRemove => @trigger 'refreshrequest'
@@ -61,6 +62,7 @@ class RacksView extends View
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
+            host:  null
             state: state
 
         rackModel.promptDecommission => @trigger 'refreshrequest'
@@ -70,6 +72,7 @@ class RacksView extends View
         state = $target.data 'state'
         rackModel = new Rack
             id:    $target.data 'rack-id'
+            host:  null
             state: state
 
         rackModel.promptReactivate => @trigger 'refreshrequest'

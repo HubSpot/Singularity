@@ -127,6 +127,7 @@ public class SingularityWebhookSender {
       if (!task.isPresent()) {
         LOG.warn("Couldn't find task for taskUpdate {}", taskUpdate);
         webhookManager.deleteTaskUpdate(webhook, taskUpdate);
+        continue;
       }
 
       executeWebhook(webhook, new SingularityTaskWebhook(task.get(), taskUpdate), new SingularityTaskWebhookAsyncHandler(webhookManager, webhook, taskUpdate, shouldDeleteUpdateOnFailure(numTaskUpdates, taskUpdate.getTimestamp())));

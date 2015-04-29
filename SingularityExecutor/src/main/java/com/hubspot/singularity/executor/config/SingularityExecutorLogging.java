@@ -31,7 +31,9 @@ public class SingularityExecutorLogging {
     Logger taskLogger = context.getLogger(taskId);
     taskLogger.detachAndStopAllAppenders();
 
-    taskLogger.addAppender(baseLogging.buildFileAppender(context, baseLogging.getRootLogPath()));
+    if (baseLogging.getRootLogPath().isPresent()) {
+      taskLogger.addAppender(baseLogging.buildFileAppender(context, baseLogging.getRootLogPath().get()));
+    }
     taskLogger.addAppender(baseLogging.buildFileAppender(context, taskLogFile));
 
     context.start();

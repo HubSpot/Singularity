@@ -247,7 +247,7 @@ public class SingularityCleaner {
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
 
-      taskManager.createCleanupTask(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId, Optional.<String> absent()));
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(), PendingType.BOUNCE));
@@ -384,6 +384,8 @@ public class SingularityCleaner {
       case WAITING:
       case SUCCESS:
         return true;
+      case INVALID_REQUEST_NOOP:
+        return false;  // don't need to remove because Baragon doesnt know about it
       default:
         LOG.trace("Task {} had abnormal LB state {}", taskId, loadBalancerUpdate);
         return false;
@@ -417,6 +419,7 @@ public class SingularityCleaner {
       case CANCELING:
       case SUCCESS:
       case WAITING:
+      case INVALID_REQUEST_NOOP:
     }
 
     return false;
@@ -464,12 +467,17 @@ public class SingularityCleaner {
       case CANCELED:
         LOG.error("LB removal request {} ({}) got unexpected response {}", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
         exceptionNotifier.notify(String.format("LB removal failed for %s", lbAddUpdate.get().getLoadBalancerRequestId().toString()),
-            ImmutableMap.<String, String> of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
+            ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
         return CheckLBState.RETRY;
       case UNKNOWN:
       case CANCELING:
       case WAITING:
         LOG.trace("Waiting on LB cleanup request {} in state {}", loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+        break;
+      case INVALID_REQUEST_NOOP:
+        exceptionNotifier.notify(String.format("LB removal failed for %s", lbAddUpdate.get().getLoadBalancerRequestId().toString()),
+          ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
+        return CheckLBState.LOAD_BALANCE_FAILED;
     }
 
     return CheckLBState.WAITING;

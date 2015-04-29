@@ -17,7 +17,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
  - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/ui.md)
  - Rich load balancer integration with Baragon
  - Deployments, automatic rollbacks, and healthchecks
- - Webhooks for third party integrations
+ - [Webhooks for third party integrations](Docs/webhooks.md)
  - Configurable email alerts to service owners
  - [Historical deployment and task data](Docs/database.md)
  - [Custom executor with extended log features](Docs/details.md#optional-slave-components)
@@ -61,4 +61,6 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 - [Third-party load balancer API design requirements](Docs/development/lbs.md)
 - [Publishing releases (for committers)](Docs/development/maven.md)
 
- 
+----------
+
+Singularity is built and used by a number of different companies. Check out the list of adopters [here](Docs/adopters.md). 

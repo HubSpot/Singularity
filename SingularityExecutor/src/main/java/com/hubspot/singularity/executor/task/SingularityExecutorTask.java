@@ -16,6 +16,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 
 public class SingularityExecutorTask {
@@ -27,13 +28,14 @@ public class SingularityExecutorTask {
   private final AtomicBoolean killed;
   private final AtomicInteger threadCountAtOverage;
   private final AtomicBoolean killedAfterThreadOverage;
-  private final AtomicBoolean destroyed;
+  private final AtomicBoolean destroyedAfterWaiting;
+  private final AtomicBoolean forceDestroyed;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
   private final SingularityExecutorTaskCleanup taskCleanup;
   private final SingularityExecutorTaskDefinition taskDefinition;
 
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
+  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
       SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
     this.driver = driver;
     this.taskInfo = taskInfo;
@@ -41,15 +43,16 @@ public class SingularityExecutorTask {
 
     this.lock = new ReentrantLock();
     this.killed = new AtomicBoolean(false);
-    this.destroyed = new AtomicBoolean(false);
+    this.destroyedAfterWaiting = new AtomicBoolean(false);
+    this.forceDestroyed = new AtomicBoolean(false);
     this.killedAfterThreadOverage = new AtomicBoolean(false);
     this.threadCountAtOverage = new AtomicInteger(0);
 
     this.taskDefinition = taskDefinition;
 
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, configuration, log, jsonObjectFileHelper);
-    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, configuration, taskDefinition, log);
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, configuration, taskDefinition.getExecutorData(), executorPid);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper);
+    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid);
   }
 
   public void cleanup(TaskState state) {
@@ -88,8 +91,12 @@ public class SingularityExecutorTask {
     return processBuilder;
   }
 
-  public boolean wasDestroyed() {
-    return destroyed.get();
+  public boolean wasForceDestroyed() {
+    return forceDestroyed.get();
+  }
+
+  public boolean wasDestroyedAfterWaiting() {
+    return destroyedAfterWaiting.get();
   }
 
   public boolean wasKilled() {
@@ -113,9 +120,12 @@ public class SingularityExecutorTask {
     return threadCountAtOverage.get();
   }
 
+  public void markForceDestroyed() {
+    this.forceDestroyed.set(true);
+  }
 
-  public void markDestroyed() {
-    this.destroyed.set(true);
+  public void markDestroyedAfterWaiting() {
+    this.destroyedAfterWaiting.set(true);
   }
 
   public ExecutorDriver getDriver() {

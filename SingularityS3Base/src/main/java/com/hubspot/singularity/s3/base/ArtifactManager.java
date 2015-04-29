@@ -35,7 +35,7 @@ public class ArtifactManager extends SimpleProcessManager {
   public ArtifactManager(SingularityS3Configuration configuration, Logger log) {
     super(log);
 
-    this.cacheDirectory = Paths.get(configuration.getCacheDirectory());
+    this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
     this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log);
   }

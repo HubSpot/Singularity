@@ -13,7 +13,6 @@ import com.hubspot.singularity.logwatcher.driver.SingularityLogWatcherDriver;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 
 public class SingularityLogWatcherModule extends AbstractModule {
-
   @Override
   protected void configure() {
     bind(SingularityDriver.class).to(SingularityLogWatcherDriver.class);
@@ -28,5 +27,4 @@ public class SingularityLogWatcherModule extends AbstractModule {
     }
     return loggers;
   }
-
 }

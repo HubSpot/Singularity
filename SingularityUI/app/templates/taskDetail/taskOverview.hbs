@@ -1,3 +1,18 @@
+{{#if data.isStillRunning}}
+    {{! If there's a TaskCleanup object associated with this task, display its info }}
+    {{#if data.cleanup}}
+        <div class="alert alert-warning" role="alert">
+            <b>Task is cleaning:</b> {{data.cleanup.message}}
+        </div>
+    {{else}}
+        {{#if data.isCleaning}}
+            <div class="alert alert-warning" role="alert">
+                <b>Task is terminating:</b> To issue a non-graceful termination (kill -term), click Destroy Task.
+            </div>
+        {{/if}}
+    {{/if}}
+{{/if}}
+
 {{! Part of taskBase }}
 <header class='detail-header'>
     <div class="row">
@@ -9,7 +24,6 @@
                     <a href="{{appRoot}}/request/{{ request.id }}">
                         {{ request.id }}
                     </a>
-
                 </h5>
             {{/with}}
         </div>
@@ -20,26 +34,28 @@
                 {{ data.task.taskId.id }}
             </h3>
         </div>
-        {{#if data.decommissioning}}
-            <div class="col-md-1">
-                <span class='label label-warning'>DECOM</span>
-            </div>
-        {{/if}}
-
         {{! Right side, buttons }}
         <div class="col-md-4 button-container">
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
             </a>
-
             {{#if data.isStillRunning}}
-                <a class="btn btn-danger" data-action="remove">
-                Kill task
-                </a>
+                {{#if data.cleanup}}
+                    {{#if data.cleanup.isImmediate}}
+                        <a class="btn btn-danger" data-action="remove"> Destroy task </a>
+                    {{else}}
+                        <a class="btn btn-danger" data-action="remove"> Override cleanup </a>
+                    {{/if}}
+                {{else}}
+                    {{#if data.isCleaning}}
+                        <a class="btn btn-danger" data-action="remove"> Destroy task </a>
+                    {{else}}
+                        <a class="btn btn-danger" data-action="remove"> Kill task </a>
+                    {{/if}}
+                {{/if}}
             {{/if}}
         </div>
     </div>
-
 </header>
 
 {{#if data.taskUpdates}}

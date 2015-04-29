@@ -20,8 +20,10 @@
                     </th>
 
                     {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
-                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl">
-                            Schedule
+                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl schedule-header">
+                            <span id="schedule">
+                                Schedule <span class="glyphicon glyphicon-question-sign"/>
+                            </span>
                         </th>
                     {{/ifInSubFilter}}
 
@@ -55,7 +57,15 @@
 
                         {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
-                                {{ request.schedule }}
+                                {{#if request.quartzSchedule}}
+                                    {{ request.quartzSchedule }}
+                                {{else}}
+                                    {{#ifEqual request.scheduleType "quartz"}}
+                                        {{ request.schedule }}
+                                    {{else}}
+                                        {{ request.schedule }} {{ request.scheduleType }}
+                                    {{/ifEqual}}
+                                {{/if}}
                             </td>
                         {{/ifInSubFilter}}
 
