@@ -26,7 +26,7 @@ public class SingularityAuthManager {
   public Optional<String> getUser() {
     final List<String> headerValues = headers.getRequestHeader(configuration.getLdapConfiguration().getRequestUserHeaderName());
 
-    if (headerValues.isEmpty()) {
+    if (headerValues == null || headerValues.isEmpty()) {
       return queryUser;
     }
 
