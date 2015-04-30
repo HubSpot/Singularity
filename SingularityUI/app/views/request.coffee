@@ -38,13 +38,14 @@ class RequestView extends View
             config: config
 
         # Attach subview elements
-        @$('#header').html           @subviews.header.$el
-        @$('#stats').html            @subviews.stats.$el
-        @$('#active-tasks').html     @subviews.activeTasks.$el
-        @$('#scheduled-tasks').html  @subviews.scheduledTasks.$el
-        @$('#task-history').html     @subviews.taskHistory.$el
-        @$('#deploy-history').html   @subviews.deployHistory.$el
-        @$('#request-history').html  @subviews.requestHistory.$el
+        @$('#header').html              @subviews.header.$el
+        @$('#request-history-msg').html @subviews.requestHistoryMsg.$el
+        @$('#stats').html               @subviews.stats.$el
+        @$('#active-tasks').html        @subviews.activeTasks.$el
+        @$('#scheduled-tasks').html     @subviews.scheduledTasks.$el
+        @$('#task-history').html        @subviews.taskHistory.$el
+        @$('#deploy-history').html      @subviews.deployHistory.$el
+        @$('#request-history').html     @subviews.requestHistory.$el
 
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
