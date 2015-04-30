@@ -1,7 +1,7 @@
 {{#if synced}}
-<div class="row same-size-row-top">
+<div class="row page-width-normal">
     <div class="col-md-6 col-sm-6">
-        <div class="panel-heading">
+        <div>
             <a class='headline-link' href="{{appRoot}}/requests"><h2>Requests</h2></a>
         </div>
         <div class="panel-body">       
@@ -49,7 +49,7 @@
         </div>
     </div>
     <div class="col-md-6 col-sm-6">
-        <div class="panel-heading">
+        <div>
             <a class='headline-link' href="{{appRoot}}/tasks"><h2>Tasks</h2></a>
         </div>
         <div class="panel-body">
@@ -76,14 +76,12 @@
                                 </li>
                                 {{/each}}
                             </ul>
-
-
                             <ul class='list-plain'>
                                 <li>
                                     Max Task Lag:
                                     <span>
                                         {{timestampDuration state.maxTaskLag}}
-                                        {{#ifEqual 0 state.maxTaskLag }}0{{/ifEqual}}
+                                        {{#ifEqual 0 state.maxTaskLag }}(no lag){{/ifEqual}}
                                     </span>
                                 </li>
                             </ul>
@@ -94,9 +92,11 @@
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-4 col-sm-4">
-        <a class='headline-link' href="{{appRoot}}/racks"><h2>Racks</h2></a>
+<div class="row page-width-normal">
+    <div class="col-md-3 col-sm-3">
+        <div>
+            <a class='headline-link' href="{{appRoot}}/racks"><h2>Racks</h2></a>
+        </div>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class='list-group-item'>
                 <a href="{{appRoot}}/racks">
@@ -118,8 +118,10 @@
             </li>
         </ul>
     </div>
-    <div class="col-md-4 col-sm-4">
-        <a class='headline-link' href="{{appRoot}}/slaves"><h2>Slaves</h2></a>
+    <div class="col-md-3 col-sm-3 col-md-offset-1">
+        <div>
+            <a class='headline-link' href="{{appRoot}}/slaves"><h2>Slaves</h2></a>
+        </div>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class="list-group-item">
                 <a href="{{appRoot}}/slaves/active"> 
@@ -148,8 +150,10 @@
             </li>
         </ul>
     </div>
-    <div class="col-md-4 col-sm-4">
-        <a class='headline-link' href="{{appRoot}}"><h2>Deploys</h2></a>
+    <div class="col-md-3 col-sm-3 col-md-offset-1">
+        <div>
+            <h2>Deploys</h2>
+        </div>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class="list-group-item {{#ifLT state.numDeploys 2}}text-muted{{/ifLT}}">
                 <strong data-state-attribute='numDeploys'>{{state.numDeploys}}</strong>
@@ -166,8 +170,8 @@
 </div>
 <div class="row">
     <div class="col-md-12">
-        <div class="page-header">
-            <h2>Singularity schedular instances</h2>
+        <div>
+            <h2>Singularity scheduler instances</h2>
         </div>
         <table class="table table-striped">
             <thead>
@@ -182,7 +186,7 @@
                 {{#each state.hostStates}}
                 <tr>
                     <td>{{ hostname }}</td>
-                    <td {{#ifEqual driverStatus 'DRIVER_NOT_STARTED'}}class='text-muted'{{/ifEqual}}>{{humanizeText driverStatus }}
+                    <td class='{{#ifEqual driverStatus 'DRIVER_NOT_STARTED'}}text-muted{{/ifEqual}}{{#ifEqual driverStatus 'DRIVER_RUNNING'}}color-success{{/ifEqual}}'>{{humanizeText driverStatus }}
                     </td>
                     <td data-value="{{ uptime }}" class="hidden-xs">
                         {{timestampDuration uptime}}
