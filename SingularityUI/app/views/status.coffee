@@ -14,110 +14,43 @@ class StatusView extends View
         @$el.html @template
             state:  @model.toJSON()
             synced: @model.synced
-            tasks: @tasks(@model)
-            requests: @requests(@model)
-            totalRequests: @totalRequests
-            totalTasks: @totalTasks
+            tasks: @model.taskDetail().tasks
+            requests: @model.requestDetail().requests
+            totalRequests: @model.requestDetail().total
+            totalTasks: @model.taskDetail().total
+
+        if @lastState?
+            changedNumbers = {}
+            numberAttributes = []
+            # Go through each key. If the value is a number, we'll (try to)
+            # perform a change animation on that key's box
+            _.each _.keys(@model.attributes), (attribute) =>
+                if typeof @model.attributes[attribute] is 'number'
+                    numberAttributes.push attribute
+
+            for numberAttribute in numberAttributes
+                oldNumber = @lastState[numberAttribute]
+                newNumber = @model.attributes[numberAttribute]
+                if oldNumber isnt newNumber
+                    changedNumbers[numberAttribute] =
+                        direction: "#{ if newNumber > oldNumber then 'inc' else 'dec' }rease"
+                        difference: "#{ if newNumber > oldNumber then '+' else '-' }#{ Math.abs(newNumber - oldNumber) }"
+
+            for attributeName, changes of changedNumbers
+                changeClassName = "changed-direction-#{ changes.direction }"
+                $attribute = @$el.find("""[data-state-attribute="#{ attributeName }"]""")
+                $bigNumber = $attribute.closest('.list-group-item')
+                $bigNumber.find('a').addClass(changeClassName).append("<span class='changeDifference'>#{changes.difference}</span>")
+                $attribute.html @model.attributes[attributeName]
+
+                do ($bigNumber, changeClassName) -> 
+                    setTimeout (-> 
+                        $bigNumber.find('a').removeClass(changeClassName)
+                                  .find('changeDifference').remove().end()
+                                  .find('.changeDifference').fadeOut(1500)
+                    ), 2500
 
         @$('.chart .chart__data-point[title]').tooltip(placement: 'right')
-
         @captureLastState()
-
-    requests: (model) =>
-        total_requests = @model.get 'allRequests'
-
-        requests = [
-            {
-                type: 'active'
-                label: 'active'
-                count: @model.get('activeRequests')
-                percent: @model.get('activeRequests') / total_requests * 100
-                link: '/requests/active'
-            }
-            {
-                type: 'paused'
-                label: 'paused'
-                count: @model.get('pausedRequests')
-                percent: @model.get('pausedRequests') / total_requests * 100
-                link: '/requests/paused'
-            }
-            {
-                type: 'cooldown'
-                label: 'cooling down'
-                count: @model.get('cooldownRequests')
-                percent: @model.get('cooldownRequests') / total_requests * 100
-                link: '/requests/cooldown'
-            }
-            {
-                type: 'pending'
-                label: 'pending'
-                count: @model.get('pendingRequests')
-                percent: @model.attributes.pendingRequests / total_requests * 100
-                link: '/requests/pending'
-            }
-            {
-                type: 'cleaning'
-                label: 'cleaning'
-                count: @model.get('cleaningRequests')
-                percent: @model.get('cleaningRequests') / total_requests * 100
-                link: '/requests/cleaning'
-            },
-        ]
-
-        @totalRequests = @sumValues requests, 'count'
-
-        requests
-
-
-    tasks: (model) =>
-        total_tasks = @model.get('activeTasks') + @model.get('lateTasks') + @model.get('scheduledTasks') + @model.get('lbCleanupTasks')
-
-        tasks = [
-            {
-                type: 'active'
-                label: 'active'
-                count: @model.get('activeTasks')
-                percent: @model.get('activeTasks') / total_tasks * 100
-                link: '/tasks'
-            }
-            {
-                type: 'scheduled'
-                label: 'scheduled'
-                count: @model.get('scheduledTasks')
-                percent: @model.get('scheduledTasks') / total_tasks * 100
-                link: '/tasks/scheduled'
-            }
-            {
-                type: 'overdue'
-                label: 'overdue'
-                count: @model.get('lateTasks')
-                percent: @model.get('lateTasks') / total_tasks * 100
-            }
-            {
-                type: 'cleaning'
-                label: 'cleaning'
-                count: @model.get('cleaningTasks')
-                percent: @model.get('cleaningTasks') / total_tasks * 100
-                link: 'tasks/cleaning'
-            }
-            {
-                type: 'lbCleanup'
-                label: 'load balancer cleanup'
-                count: @model.get('lbCleanupTasks')
-                percent: @model.get('lbCleanupTasks') / total_tasks * 100
-            }
-        ]
-
-        
-        @totalTasks = @sumValues tasks, 'count'
-
-        tasks
-
-    sumValues: (obj, key) ->
-        total = 0
-        for item in obj
-            total = total + item[key]
-        total
-
 
 module.exports = StatusView

@@ -14,30 +14,31 @@
 
 // List of links in a panel
 .list-group--links
-    border: none
+    border none
 
     .list-group-item
-        padding: 0
+        padding 0
         a
-            display block
-            padding 10px 15px            
+            display inline-block
             &.inactive-link
+
                 &:hover
-                    background: inherit
-                    color: $base-text
+                    background inherit
+                    color $base-text
                 
     .list-group--slim
         .list-group-item a
-            padding: 5px 15px
+            padding 5px 15px
             
 .list-group--plain
     .list-group-item
-        border: none
+        border none
         a, li
-            padding: 5px 0
+            margin: 5px 0
 
-.inactive-link
+.inactive-link, .inactive-link .chart__label
     color $grey
+    text-decoration none
     &:hover
         text-decoration none
         color $grey

@@ -9,7 +9,7 @@
                 <div class="col-md-3 col-sm-3 hidden-xs chart">
                     <div class='chart__column'>
                         {{#each requests}}
-                            <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                            <span data-state-attribute='{{ attribute }}' style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
                         {{/each}}
                     </div>
                     <h5 class='text-center'>{{totalRequests}} Total</h5>
@@ -21,13 +21,11 @@
                                 {{#each requests}}
                                 <li class="list-group-item">
                                     {{#if link}}
-                                    <a class='chart__legend-link' href="{{appRoot}}{{ link }}">
-                                        <span class="chart__legend-fill chart-fill-{{ type }}"></span>
-                                        <span class='chart__label'>{{ count }}  {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
-                                    </a>
+                                        <a class='chart__legend-link' href="{{appRoot}}{{ link }}">
+                                            <span class="chart__legend-fill chart-fill-{{ type }}"></span><span class='chart__label'><span data-state-attribute='{{ attribute }}'>{{ count }}</span> {{ label }} <span class='percent'>{{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span></span>
+                                        </a>
                                     {{else}}
-                                    <span class="badge" id="{{ type }}">{{ count }}</span>
-                                    {{ label }}
+                                        <span class="badge" id="{{ type }}">{{ count }}</span> {{ label }}
                                     {{/if}}
                                 </li>
                                 {{/each}}
@@ -67,16 +65,19 @@
                 <div class="col-md-9 col-sm-9">
                     <div class="row">
                         <div class="col-md-8">
+
+
                             <ul class="list-group list-group--links list-group--plain list-group--slim">
                                 {{#each tasks}}
                                 <li class="list-group-item">
                                     <a class='chart__legend-link {{#unless link}}inactive-link{{/unless}}' {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
-                                        <span class="chart__legend-fill chart-fill-{{ type }}"></span>
-                                        <span class='chart__label'>{{ count }} {{ label }} {{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span>
+                                        <span class="chart__legend-fill chart-fill-{{ type }}"></span><span class='chart__label'><span data-state-attribute='{{ attribute }}' class='count'>{{ count }}</span> {{ label }} <span class='percent'>{{#ifGT percent 0}}({{fixedDecimal percent place="0"}}%){{/ifGT}}</span></span>
                                     </a>
                                 </li>
                                 {{/each}}
                             </ul>
+
+
                             <ul class='list-plain'>
                                 <li>
                                     Max Task Lag:
@@ -98,13 +99,22 @@
         <a class='headline-link' href="{{appRoot}}/racks"><h2>Racks</h2></a>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class='list-group-item'>
-                <a href="{{appRoot}}/racks">{{state.activeRacks}} Active Racks</a>
+                <a href="{{appRoot}}/racks">
+                    <span data-state-attribute='activeRacks'>{{state.activeRacks}}</span> 
+                    Active Racks
+                </a>
             </li>
             <li class='list-group-item'>
-                <a href="{{appRoot}}/racks">{{state.decommissioningRacks}} Decommissioning Racks</a>
+                <a href="{{appRoot}}/racks">
+                    <span data-state-attribute='decomissioningRacks'>{{state.decomissioningRacks}}</span>
+                    Decommissioning Racks
+                </a>
             </li>
             <li class="list-group-item {{#ifGT state.deadRacks 0}}color-warning{{/ifGT}}">
-                <a href="{{appRoot}}/racks">{{state.deadRacks}} Dead Racks</a>
+                <a href="{{appRoot}}/racks">
+                    <span data-state-attribute='deadRacks'>{{state.deadRacks}}</span>
+                    Dead Racks
+                </a>
             </li>
         </ul>
     </div>
@@ -112,16 +122,28 @@
         <a class='headline-link' href="{{appRoot}}/slaves"><h2>Slaves</h2></a>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class="list-group-item">
-                <a href="{{appRoot}}/slaves/active"> {{state.activeSlaves}} Active Slaves </a>
+                <a href="{{appRoot}}/slaves/active"> 
+                    <span data-state-attribute='activeSlaves'>{{state.activeSlaves}} </span>
+                    Active Slaves 
+                </a>
             </li>
             <li class="list-group-item">
-                <a href="{{appRoot}}/slaves/decommission"> {{state.decommissioningSlaves}} Decommissioning Slaves</a>
+                <a href="{{appRoot}}/slaves/decommission"> 
+                    <span data-state-attribute='decomissioningSlaves'>{{state.decomissioningSlaves}} </span>
+                    Decommissioning Slaves
+                </a>
             </li>
             <li class="list-group-item">
-                <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.deadSlaves}} Dead Slaves </a>
+                <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> 
+                    <span data-state-attribute='deadSlaves'>{{state.deadSlaves}} </span>
+                    Dead Slaves
+                </a>
             </li>
             <li class="list-group-item">
-                <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> {{state.unknownSlaves}} Unknown Slaves </a>
+                <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> 
+                    <span data-state-attribute='unknownSlaves'>{{state.unknownSlaves}} </span>
+                    Unknown Slaves 
+                </a>
             </span>
             </li>
         </ul>
@@ -130,7 +152,7 @@
         <a class='headline-link' href="{{appRoot}}"><h2>Deploys</h2></a>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class="list-group-item {{#ifLT state.numDeploys 2}}text-muted{{/ifLT}}">
-                <strong>{{state.numDeploys}}</strong>
+                <strong data-state-attribute='numDeploys'>{{state.numDeploys}}</strong>
                 Active Deploys
             </li>
             {{#ifNotEqual state.oldestDeploy 0}}
