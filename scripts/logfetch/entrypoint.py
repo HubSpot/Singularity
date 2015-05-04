@@ -153,9 +153,9 @@ def cat():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : datetime.now() - timedelta(days=DEFAULT_DAYS),
+    "start_days" : datetime.utcnow() - timedelta(days=DEFAULT_DAYS),
     "file_pattern" : DEFAULT_S3_PATTERN,
-    "end_days" : datetime.now()
+    "end_days" : datetime.utcnow()
   }
 
   try:
