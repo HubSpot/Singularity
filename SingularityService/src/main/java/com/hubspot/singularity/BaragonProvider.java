@@ -9,7 +9,7 @@ import com.google.inject.name.Named;
 import com.hubspot.baragon.client.BaragonClientProvider;
 import com.hubspot.baragon.client.BaragonServiceClient;
 import com.hubspot.horizon.HttpClient;
-import com.hubspot.singularity.config.LoadBalancerConfiguration;
+import com.hubspot.singularity.config.BaragonConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,14 +30,16 @@ public class BaragonProvider {
     try {
       BaragonClientProvider provider = new BaragonClientProvider(httpClient);
       if (config.getLoadBalancerConfig().isPresent()) {
-        LoadBalancerConfiguration lbConfig = config.getLoadBalancerConfig().get();
+        BaragonConfiguration lbConfig = config.getLoadBalancerConfig().get();
         provider.setAuthkey(lbConfig.getAuthkey());
         provider.setContextPath(parseContextPath(lbConfig.getBaseUri()));
         provider.setHosts(parseHost(lbConfig.getBaseUri()));
       } else if (config.getLoadBalancerUri() != null) {
+        LOG.info("Setting loadBalancerUri is deprecated, please specify the baragon => baseUri instead");
         provider.setHosts(parseHost(config.getLoadBalancerUri()));
         provider.setContextPath(parseContextPath(config.getLoadBalancerUri()));
         if (config.getLoadBalancerQueryParams().isPresent() && config.getLoadBalancerQueryParams().get().containsKey("authkey")) {
+          LOG.info("Setting loadBalancerQueryParams is deprecated, please specify the baragon => authkey instead");
           provider.setAuthkey(Optional.of(config.getLoadBalancerQueryParams().get().get("authkey")));
         }
       }

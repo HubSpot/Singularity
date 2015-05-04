@@ -97,7 +97,7 @@ public class SingularityConfiguration extends Configuration {
   private int listenerThreadpoolSize = 3;
 
   @JsonProperty("baragon")
-  private Optional<LoadBalancerConfiguration> loadBalancerConfig = Optional.absent();
+  private Optional<BaragonConfiguration> loadBalancerConfig = Optional.absent();
 
   @JsonProperty("loadBalancerQueryParams")
   private Map<String, String> loadBalancerQueryParams;
@@ -305,7 +305,7 @@ public class SingularityConfiguration extends Configuration {
     return listenerThreadpoolSize;
   }
 
-  public Optional<LoadBalancerConfiguration> getLoadBalancerConfig() {
+  public Optional<BaragonConfiguration> getLoadBalancerConfig() {
     return loadBalancerConfig;
   }
 

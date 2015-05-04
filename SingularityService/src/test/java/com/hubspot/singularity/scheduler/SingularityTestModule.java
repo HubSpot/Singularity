@@ -73,10 +73,10 @@ public class SingularityTestModule implements Module {
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    rootLogger.setLevel(Level.INFO);
+    rootLogger.setLevel(Level.ERROR);
 
     Logger hsLogger = context.getLogger("com.hubspot");
-    hsLogger.setLevel(Level.INFO);
+    hsLogger.setLevel(Level.ERROR);
 
     this.ts = new TestingServer();
   }

@@ -66,9 +66,13 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SingularityMainModule implements Module {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMainModule.class);
 
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
@@ -217,6 +221,7 @@ public class SingularityMainModule implements Module {
       httpBuilder.setRequestTimeoutSeconds(config.getLoadBalancerConfig().get().getRequestTimeoutMs());
     } else {
       httpBuilder.setRequestTimeoutSeconds((config.getLoadBalancerRequestTimeoutMillis()));
+      LOG.info("Setting loadBalancerRequestTimeoutMillis is deprecated, please specify the baragon => requestTimeoutMs instead");
     }
     return new NingHttpClient(httpBuilder.build());
   }
