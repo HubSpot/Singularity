@@ -42,7 +42,7 @@ When vagrant command finishes check that everything has been installed successfu
 
 First verify that Zookeeper is running by logging into the virtual machine and using the zookeeper command line tool to connect to the zookeeper server and list the available nodes:
 ```bash
-vagrant ssh
+vagrant ssh develop
 sudo /usr/share/zookeeper/bin/zkCli.sh -server localhost:2181
 
 # When connected execute the following command to list the root nodes:
