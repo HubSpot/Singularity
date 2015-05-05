@@ -39,6 +39,7 @@ public class SingularityValidator {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityValidator.class);
 
   private static final Joiner JOINER = Joiner.on(" ");
+  private static final Joiner COMMA_JOINER = Joiner.on(", ");
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
@@ -91,12 +92,13 @@ public class SingularityValidator {
 
       final Set<String> groups = ldapManager.getGroupsForUser(user.get());
 
-      // check for required group membership
+      // check for required group membership...
       if (!ldapRequiredGroups.isEmpty()) {
-        checkForbidden(Sets.intersection(groups, ldapRequiredGroups).isEmpty(), "User %s must be part of required groups %s", ldapRequiredGroups);
+        checkForbidden(!Sets.intersection(groups, ldapRequiredGroups).isEmpty(), "User %s must be part of one or more required groups: %s", user.get(), COMMA_JOINER.join(ldapRequiredGroups));
       }
 
-      if (ldapAdminGroups.isEmpty() || !Sets.intersection(groups, ldapAdminGroups).isEmpty()) {
+      // if user isn't part of an admin group...
+      if (Sets.intersection(groups, ldapAdminGroups).isEmpty()) {
         // if changing groups, check for group membership of old group
         if (existingRequest.isPresent() && existingRequest.get().getGroup().isPresent() && !request.getGroup().equals(existingRequest.get().getGroup())) {
           checkForbidden(groups.contains(existingRequest.get().getGroup().get()), "User %s must be part of old group %s", user.get(), existingRequest.get().getGroup().get());
