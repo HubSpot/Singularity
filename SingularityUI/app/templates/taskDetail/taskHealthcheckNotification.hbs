@@ -1,0 +1,52 @@
+    {{#if isDeployPending}}
+        <div class="alert alert-warning" role="alert">
+            {{#if hasSuccessfulHealthcheck}}
+                <b>Deploy <code>{{data.task.taskId.deployId}}</code> is pending:</b> Waiting for successful load balancer update.
+            {{else}}
+            {{#ifGT data.healthcheckResults.length 0}}
+                <b>Deploy <code>{{data.task.taskId.deployId}}</code> is pending:</b> Waiting for successful healthcheck response. <a href="#health-checks" data-action="viewHealthchecks">View all healthchecks.</a>
+                <hr/>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#with data.healthcheckResults.[0]}}
+                            <tr>
+                                <td>
+                                   {{timestampFromNow timestamp}}
+                                </td>
+                                <td>
+                                   {{durationMillis}}{{#if durationMillis}}ms{{/if}}
+                                </td>
+                                <td>
+                                    {{#if statusCode}}
+                                        {{#ifEqual statusCode 200}}
+                                            <span class="label label-success">HTTP {{statusCode}}</span>
+                                        {{else}}
+                                            <span class="label label-danger">HTTP {{statusCode}}</span>
+                                        {{/ifEqual}}
+                                    {{else}}
+                                        <span class="label label-warning">No Response</span>
+                                    {{/if}}
+                                </td>
+                                <td>
+                                    <pre class="healthcheck-message">{{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}</pre>
+                                </td>
+                            </tr>
+                           {{/with}}
+                        </tbody>
+                    </table>
+                </div>
+            {{else}}
+                <b>Deploy <code>{{data.task.taskId.deployId}}</code> is pending:</b> Waiting for task to become healthy.
+            {{/ifGT}}
+            {{/if}}
+        </div>
+    {{/if}}

@@ -42,16 +42,9 @@ class RequestView extends View
         id = $target.data 'id'
         collectionName = $target.data 'collection'
 
-        if collectionName is 'deployHistory'
-            deploy = new Deploy {},
-                requestId: @model.id
-                deployId:  id
-
-            utils.viewJSON deploy
-        else
-            # Need to reach into subviews to get the necessary data
-            collection = @subviews[collectionName].collection
-            utils.viewJSON collection.get id
+        # Need to reach into subviews to get the necessary data
+        collection = @subviews[collectionName].collection
+        utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
         utils.viewJSON @model
