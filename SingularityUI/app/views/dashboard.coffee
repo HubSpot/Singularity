@@ -23,33 +23,7 @@ class DashboardView extends View
                 requestsBody: @templateRequestsTable
 
         # Count up the Requests for the clicky boxes
-        userRequests = @collection.filter (model) ->
-          request = model.get('request')
-          deployUserTrimmed = deployUser.split("@")[0]
-          
-          if not request.owners
-            return false
-
-          for owner in request.owners
-            ownerTrimmed = owner.split("@")[0]
-            if deployUserTrimmed == ownerTrimmed
-              return true
-
-          return false
-        userRequestTotals =
-            all: userRequests.length
-            onDemand:    0
-            worker:  0
-            scheduled: 0
-            runOnce: 0
-            service: 0
-
-        _.each userRequests, (request) =>
-            if request.type == 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
-            if request.type == 'SCHEDULED'  then userRequestTotals.scheduled += 1
-            if request.type == 'WORKER'     then userRequestTotals.worker    += 1
-            if request.type == 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
-            if request.type == 'SERVICE'    then userRequestTotals.service   += 1
+        userRequestTotals = @collection.getUserRequestTotals deployUser
 
         context =
             deployUser: deployUser
