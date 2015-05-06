@@ -19,8 +19,8 @@ execute 'migrate_singularity_db' do
   action  :nothing
 end
 
-remote_file "#{node[:singularity][:home]}/mysql/migrations.sql" do
-  source   "file:///#{Chef::Config[:file_cache_path]}/Singularity/mysql/migrations.sql"
+cookbook_file "#{node[:singularity][:home]}/mysql/migrations.sql" do
+  source   'migrations.sql'
   owner    'root'
   group    'root'
   mode     0644
