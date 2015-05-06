@@ -9,8 +9,8 @@ end
 default[:singularity] = {
   :user                     => 'singularity',
   :group                    => 'singularity',
-  :git_ref                  => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
-  :version                  => '0.4.2',
+  :git_ref                  => 'Singularity-0.4.1',
+  :version                  => '0.4.1',
   :data_dir                 => '/var/lib/singularity',
   :log_dir                  => '/var/log/singularity',
   :conf_dir                 => '/etc/singularity',
@@ -22,6 +22,8 @@ default[:singularity] = {
                                  :username => "singularity",
                                  :password => "9thlevel" }
 }
+
+default['singularity']['install_type'] = 'package'
 
 default[:singularity][:home] = '/usr/local/singularity'
 default[:singularity][:log_level] = 'INFO'
