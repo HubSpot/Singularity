@@ -11,7 +11,8 @@ end
 
 execute 'migrate_singularity_db' do
   command "#{node[:java][:java_home]}/bin/java " \
-          "-jar #{node[:singularity][:home]}/bin/singularity.jar " \
+          "-jar #{node[:singularity][:home]}/bin/" \
+          "SingularityService-#{node[:singularity][:version]}-shaded.jar " \
           "db migrate #{node[:singularity][:conf_dir]}/singularity.yaml " \
           "--migrations #{node[:singularity][:home]}/mysql/migrations.sql " \
           "&& touch #{node[:singularity][:conf_dir]}/migration_ran"
