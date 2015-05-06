@@ -9,7 +9,7 @@ end
 default[:singularity] = {
   :user => 'singularity',
   :group => 'singularity',
-  :git_ref => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
+  :git_ref => 'Singularity-0.4.1',
   :version => '0.4.1',
   :home => '/home/singularity',
   :database => {
