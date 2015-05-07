@@ -36,28 +36,10 @@ function handle_signal {
   echo "Received $2"
   echo "Stopping via sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
   sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
+  exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
   echo "Attempting to remove container"
   sudo -E -u {{{ runContext.user }}} docker rm $1
-  running=0
-}
-
-function setup_cgroups {
-  if [ -d "/cgroup/memory/mesos" ] ;then
-    CGROUPS_DIR="/cgroup"
-  else
-    if [ -d "/sys/fs/cgroup/memory/mesos" ] ; then
-      CGROUPS_DIR="/sys/fs/cgroup"
-    else
-      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
-      return 0
-    fi
-  fi
-  echo "Adding docker root process to mesos executor cgroup..."
-  docker_root_pid=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Pid}} $1`
-  subsystems=(memory cpu cpuacct)
-  for s in "${subsystems[@]}" ; do
-    echo $docker_root_pid >> "$CGROUPS_DIR/$s/mesos/$2/tasks"
-  done
+  exit "$exit_code"
 }
 
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
@@ -88,7 +70,8 @@ else
 fi
 
 # set up port mappings
-{{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS="$DOCKER_PORTS -p {{{ hostPort }}}:{{{ containerPort }}}"{{/each}}
+{{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS="$DOCKER_PORTS -p {{{ hostPort }}}:{{{ containerPort }}}"
+{{/each}}
 
 # set up attached volumes
 DOCKER_VOLUMES="-v $CURRENT_DIR:/mnt/mesos/sandbox"
@@ -110,7 +93,7 @@ DOCKER_NETWORK="--net=host"
 
 DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
@@ -121,10 +104,9 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 echo "Creating continer with: sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
 cid=`sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
 sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
+running=1
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
-
-setup_cgroups "$cid" "$CGROUPS_GUID"
 
 while true; do
   if [ "$running" = "1" ]; then
