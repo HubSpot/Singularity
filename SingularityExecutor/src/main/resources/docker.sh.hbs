@@ -52,14 +52,11 @@ function setup_cgroups {
       return 0
     fi
   fi
-  echo "Adding docker processes to mesos executor cgroup..."
+  echo "Adding docker root process to mesos executor cgroup..."
   docker_root_pid=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Pid}} $1`
-  docker_processes=`pstree -pn $docker_root_pid | grep -o '([[:digit:]]*)' | grep -o '[[:digit:]]*'`
   subsystems=(memory cpu cpuacct)
   for s in "${subsystems[@]}" ; do
-    while read line; do
-      echo $line >> "$CGROUPS_DIR/$s/mesos/$2/tasks"
-    done <<< "$docker_processes"
+    echo $docker_root_pid >> "$CGROUPS_DIR/$s/mesos/$2/tasks"
   done
 }
 
@@ -121,24 +118,22 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
 # Start up the container
 
-echo "Starting continer with: sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
-sudo -E -u {{{ runContext.user }}} docker run $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}} >> {{{ runContext.logFile }}} 2>&1 &
-running=1
+echo "Creating continer with: sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
+cid=`sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
+sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 
-setup_signals "$CONTAINER_NAME" "handle_signal" SIGINT SIGTERM
+setup_signals "$cid" "handle_signal" SIGINT SIGTERM
 
-set +e
-setup_cgroups "$CONTAINER_NAME" "$CGROUPS_GUID"
-set -e
+setup_cgroups "$cid" "$CGROUPS_GUID"
 
 while true; do
   if [ "$running" = "1" ]; then
     sleep 10
-    check_contianer_running "$CONTAINER_NAME"
+    check_contianer_running "$cid"
   else
     break
   fi
 done
 
-exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$CONTAINER_NAME"`
+exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
 exit "$exit_code"
