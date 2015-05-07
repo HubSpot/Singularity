@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.inject.Singleton;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
@@ -34,6 +35,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
+@Singleton
 public class SingularityExecutorMonitor {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorMonitor.class);
