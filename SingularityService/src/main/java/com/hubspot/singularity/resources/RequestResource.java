@@ -218,7 +218,6 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> user,
       @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> queryUser,
       @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
