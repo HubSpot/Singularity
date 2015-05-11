@@ -97,9 +97,9 @@ def fetch():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : datetime.utcnow() - timedelta(days=DEFAULT_DAYS),
+    "start_days" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
     "file_pattern" : DEFAULT_S3_PATTERN,
-    "end_days" : datetime.utcnow()
+    "end_days" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S")
   }
 
   try:
@@ -153,9 +153,9 @@ def cat():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : datetime.utcnow() - timedelta(days=DEFAULT_DAYS),
+    "start_days" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
     "file_pattern" : DEFAULT_S3_PATTERN,
-    "end_days" : datetime.utcnow()
+    "end_days" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S")
   }
 
   try:
