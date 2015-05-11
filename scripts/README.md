@@ -34,8 +34,8 @@ Two commands exist for downloading logs.
 |-n --num-parallel-fetches|Max number of log fetches to make at once|5
 |-cs, --chunk-size|Chunk size for writing responses to file system|8192
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)| Must be set!|
-|-s , --start-days|Search for logs no older than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will use the current time for h-m-s | 7 days ago
-|-e , --end-days|Search for logs no newer than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will use the current time for h-m-s| None (now)
+|-s , --start-days|Search for logs no older than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (00:00:00) | 7 days ago
+|-e , --end-days|Search for logs no newer than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (23:59:59)| None (now)
 |-z , --local-zone|Specify times for `-s` and `-e` in your local time zone. If this is not set, times are assumed to be in UTC|unset/false|
 |-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
 |-nn, --no-name-fetch-off|If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files| None (fetch all)|
