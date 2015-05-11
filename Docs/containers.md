@@ -6,7 +6,7 @@ Singularity supports containers in a fex different contexts:
 The default mesos containerizer for processes which sets resource limits/etc. Enabled by adding `mesos` to the `--containerizers` argument when running `mesos-slave`. If this is enabled, commands with no `containerInfo` definition will run under this containerizer.
 
 ###Mesos Docker Containerizer
-The [built-in docekr containerizer](https://mesos.apache.org/documentation/latest/docker-containerizer/) which comes with mesos. This will manage the starting and stopping of your docker container as well as mapping ports, adding environment vairables, and mapping volumes in the container to the mesos sandbox for that task. Enable this containerizer by adding `docker` to the arguments of `--containerizers` when running `mesos-slave`.
+The [built-in docker containerizer](https://mesos.apache.org/documentation/latest/docker-containerizer/) which comes with mesos. This will manage the starting and stopping of your docker container as well as mapping ports, adding environment vairables, and mapping volumes in the container to the mesos sandbox for that task. Enable this containerizer by adding `docker` to the arguments of `--containerizers` when running `mesos-slave`.
 
 To use Singularity with the Docekr containerizer, add a `containerInfo` to the SingularityDeploy object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's' `containerInfo` field mirrors the Mesos `containerInfo` definition:
 
