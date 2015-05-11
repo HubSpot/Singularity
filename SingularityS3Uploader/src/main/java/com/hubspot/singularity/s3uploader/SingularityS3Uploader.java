@@ -48,7 +48,7 @@ public class SingularityS3Uploader implements Closeable {
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
   private final String hostname;
-  SingularityS3UploaderConfiguration configuration;
+  private final SingularityS3UploaderConfiguration configuration;
 
   public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath, SingularityS3UploaderConfiguration configuration) {
     AWSCredentials credentials = defaultCredentials;
