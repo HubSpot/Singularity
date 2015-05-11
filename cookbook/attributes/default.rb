@@ -6,18 +6,34 @@ else
   end.first
 end
 
+default[:singularity][:port] = 7099
+
 default[:singularity] = {
-  :user => 'singularity',
-  :group => 'singularity',
-  :git_ref => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
-  :version => '0.4.2',
-  :home => '/home/singularity',
-  :database => {
-    :db_name => "singularity",
-    :username => "singularity",
-    :password => "9thlevel"
-  },
+  :user                     => 'singularity',
+  :group                    => 'singularity',
+  :git_ref                  => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
+  :version                  => '0.4.1',
+  :data_dir                 => '/var/lib/singularity',
+  :log_dir                  => '/var/log/singularity',
+  :conf_dir                 => '/etc/singularity',
+  :base_url                 =>
+    "http://#{node[:fqdn]}:#{node[:singularity][:port]}/singularity",
+  :app_mysql_defaults       => { 'adapter' => 'mysql2',
+                                 'pool' => 20,
+                                 'timeout' => 5000 },
+  :database                 => { :db_name => "singularity",
+                                 :username => "singularity",
+                                 :password => "9thlevel" }
 }
+
+default['singularity']['install_type'] = 'package'
+default[:singularity][:home] = '/usr/local/singularity'
+default[:singularity][:log_level] = 'INFO'
+default[:singularity][:mesos_framework_name] = 'Singularity'
+default[:singularity][:zk_namespace] = 'singularity'
+
+default[:singularity][:s3uploader][:metadata_dir] = '.'
+default[:singularity][:logwatcher][:metadata_dir] = '.'
 
 default[:mesos] = {
   :package_version => "0.21.0-1.0.ubuntu1404",
@@ -35,6 +51,10 @@ default[:mesos] = {
   :slave_attributes => {}
 }
 
+default[:mesos][:apt_key] = 'E56151BF'
+default[:mesos][:apt_key_server] = 'keyserver.ubuntu.com'
+default[:mesos][:prefix] = '/usr/local'
+
 default[:docker] = {
   :enabled => true,
   :package_version => "1.0.1~dfsg1-0ubuntu1~ubuntu0.14.04.1",
@@ -45,6 +65,12 @@ default[:mysql] = {
   :bind_address => '0.0.0.0',
   :version => '5.5',
 }
+
+default['baragon']['service_yaml']['server']['connector']['port'] = 8088
+default[:singularity][:baragon_url] =
+  'http://localhost:' \
+  "#{node['baragon']['service_yaml']['server']['connector']['port']}" \
+  '/baragon/v2'
 
 override['java']['install_flavor'] = "oracle"
 override['java']['jdk_version'] = "7"

@@ -1,11 +1,12 @@
 ---
 driver:
   name: vagrant
-  require_chef_omnibus: 11.16.4
 
 provisioner:
-  name: chef_solo
+  name: chef_zero
   encrypted_data_bag_secret_key_path: <%= ENV['HOME'] %>/.chef/encrypted_data_bag_secret
+  client_rb:
+    environment: dev
 
 platforms:
   - name: ubuntu-14.04
@@ -20,5 +21,12 @@ platforms:
 suites:
   - name: default
     run_list:
+      - recipe[java]
+      - recipe[baragon::server]
+      - recipe[nginx]
+      - recipe[baragon::agent]
       - recipe[singularity::default]
     attributes:
+      singularity:
+        zk_hosts:
+        - 'localhost:2181'
