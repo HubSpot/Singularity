@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.ServiceException;
@@ -44,10 +45,9 @@ public class SingularityS3Uploader implements Closeable {
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
   private final String hostname;
-  private final long maxSingleUploadSizeBytes;
-  private final long uploadPartSize;
+  private final SingularityS3UploaderConfiguration configuration;
 
-  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath, long maxSingleUploadSizeBytes, long uploadPartSize) {
+  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath, SingularityS3UploaderConfiguration configuration) {
     AWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
@@ -75,8 +75,7 @@ public class SingularityS3Uploader implements Closeable {
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
-    this.maxSingleUploadSizeBytes = maxSingleUploadSizeBytes;
-    this.uploadPartSize = uploadPartSize;
+    this.configuration = configuration;
   }
 
   public Path getMetadataPath() {
@@ -184,7 +183,7 @@ public class SingularityS3Uploader implements Closeable {
     S3Object object = new S3Object(s3Bucket, file.toFile());
     object.setKey(key);
 
-    if (fileSizeBytes > maxSingleUploadSizeBytes) {
+    if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
       multipartUpload(object);
     } else {
       s3Service.putObject(s3Bucket, object);
@@ -197,7 +196,7 @@ public class SingularityS3Uploader implements Closeable {
 
     List objectsToUploadAsMultipart = Arrays.asList(object);
 
-    MultipartUtils mpUtils = new MultipartUtils(uploadPartSize);
+    MultipartUtils mpUtils = new MultipartUtils(configuration.getUploadPartSize());
     mpUtils.uploadObjects(s3Bucket.getName(), s3Service, objectsToUploadAsMultipart, null);
   }
 
