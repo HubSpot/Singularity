@@ -9,7 +9,13 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
-
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.ServiceException;
@@ -42,8 +48,9 @@ public class SingularityS3Uploader implements Closeable {
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
   private final String hostname;
+  SingularityS3UploaderConfiguration configuration;
 
-  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
+  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath, SingularityS3UploaderConfiguration configuration) {
     AWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
@@ -71,6 +78,7 @@ public class SingularityS3Uploader implements Closeable {
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
+    this.configuration = configuration;
   }
 
   public Path getMetadataPath() {
@@ -168,18 +176,43 @@ public class SingularityS3Uploader implements Closeable {
   }
 
   private void uploadSingle(int sequence, Path file) throws Exception {
-    final long start = System.currentTimeMillis();
+    Callable<Boolean> uploader = new Uploader(sequence, file);
 
-    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
+    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+      .retryIfExceptionOfType(S3ServiceException.class)
+      .retryIfRuntimeException()
+      .withWaitStrategy(WaitStrategies.fixedWait(configuration.getRetryWaitMs(), TimeUnit.MILLISECONDS))
+      .withStopStrategy(StopStrategies.stopAfterAttempt(configuration.getRetryCount()))
+      .build();
+      retryer.call(uploader);
+  }
 
-    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
+  class Uploader implements Callable<Boolean> {
+    private int sequence;
+    private Path file;
 
-    S3Object object = new S3Object(s3Bucket, file.toFile());
-    object.setKey(key);
+    public Uploader(int sequence, Path file) {
+      this.file = file;
+      this.sequence = sequence;
+    }
 
-    s3Service.putObject(s3Bucket, object);
+    @Override
+    public Boolean call() throws Exception {
+      final long start = System.currentTimeMillis();
 
-    LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+      final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
+
+      LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
+
+      S3Object object = new S3Object(s3Bucket, file.toFile());
+      object.setKey(key);
+
+      s3Service.putObject(s3Bucket, object);
+
+      LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+
+      return true;
+    }
   }
 
 }
