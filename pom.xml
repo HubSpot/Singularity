@@ -62,6 +62,7 @@
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.1</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>
+    <guava.retry.version>1.0.7</guava.retry.version>
     <mesos.version>0.21.0</mesos.version>
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
@@ -390,6 +391,12 @@
             <artifactId>commons-logging</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.rholder</groupId>
+        <artifactId>guava-retrying</artifactId>
+        <version>${guava.retry.version}</version>
       </dependency>
 
       <dependency>
