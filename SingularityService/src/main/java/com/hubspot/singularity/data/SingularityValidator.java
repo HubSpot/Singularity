@@ -2,18 +2,24 @@ package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.quartz.CronExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -26,11 +32,14 @@ import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
+import com.hubspot.singularity.ldap.SingularityLDAPManager;
 
 @Singleton
 public class SingularityValidator {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityValidator.class);
 
   private static final Joiner JOINER = Joiner.on(" ");
+  private static final Joiner COMMA_JOINER = Joiner.on(", ");
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
@@ -46,9 +55,13 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
+  private final boolean ldapEnabled;
+  private final ImmutableSet<String> ldapRequiredGroups;
+  private final ImmutableSet<String> ldapAdminGroups;
+  private final SingularityLDAPManager ldapManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, SingularityLDAPManager ldapManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -66,6 +79,49 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.ldapEnabled = configuration.getLdapConfiguration().isEnabled();
+    this.ldapManager = ldapManager;
+    this.ldapRequiredGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getRequiredGroups());
+    this.ldapAdminGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getAdminGroups());
+  }
+
+  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<String> user) {
+    if (ldapEnabled) {
+      checkBadRequest(user.isPresent(), "user must be present");
+
+      final Set<String> groups = ldapManager.getGroupsForUser(user.get());
+
+      // check for required group membership...
+      if (!ldapRequiredGroups.isEmpty()) {
+        checkForbidden(!Sets.intersection(groups, ldapRequiredGroups).isEmpty(), "User %s must be part of one or more required groups: %s", user.get(), COMMA_JOINER.join(ldapRequiredGroups));
+      }
+
+      // if user isn't part of an admin group...
+      if (Sets.intersection(groups, ldapAdminGroups).isEmpty()) {
+        // if changing groups, check for group membership of old group
+        if (existingRequest.isPresent() && existingRequest.get().getGroup().isPresent() && !request.getGroup().equals(existingRequest.get().getGroup())) {
+          checkForbidden(groups.contains(existingRequest.get().getGroup().get()), "User %s must be part of old group %s", user.get(), existingRequest.get().getGroup().get());
+        }
+
+        // check for group membership of current / new group
+        if (request.getGroup().isPresent()) {
+          checkForbidden(groups.contains(request.getGroup().get()), "User %s must be part of group %s", user.get(), request.getGroup().get());
+        }
+      }
+    }
+  }
+
+  public void checkForAdminAuthorization(Optional<String> user) {
+    if (ldapEnabled) {
+      if (!ldapAdminGroups.isEmpty()) {
+        checkBadRequest(user.isPresent(), "user must be present");
+
+        final Set<String> groups = ldapManager.getGroupsForUser(user.get());
+
+        checkForbidden(!Sets.intersection(groups, ldapAdminGroups).isEmpty(), "User %s must be part of an admin group", user);
+      }
+    }
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
@@ -92,7 +148,9 @@ public class SingularityValidator {
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
-      Optional<SingularityDeploy> pendingDeploy) {
+      Optional<SingularityDeploy> pendingDeploy, Optional<String> user) {
+    checkForAuthorization(request, existingRequest, user);
+
     checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
     if (!allowRequestsWithoutOwners) {
@@ -160,9 +218,11 @@ public class SingularityValidator {
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
-  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
+  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy, Optional<String> user) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
+
+    checkForAuthorization(request, Optional.<SingularityRequest>absent(), user);
 
     String deployId = deploy.getId();
 
