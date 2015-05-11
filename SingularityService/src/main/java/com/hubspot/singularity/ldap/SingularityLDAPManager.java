@@ -37,6 +37,9 @@ public class SingularityLDAPManager {
   }
 
   public Set<String> getGroupsForUser(String user) {
+    if (configuration.getLdapConfiguration().isStripUserEmailDomain()) {
+      user = user.split("@")[0];
+    }
     return userGroupCache.getUnchecked(user);
   }
 
