@@ -33,18 +33,32 @@ public class SingularityLDAPModule implements Module {
   @Provides
   @Singleton
   public LdapConnectionPool providePool() throws IOException {
-    LdapConnectionConfig config = new LdapConnectionConfig();
+    final LdapConnectionConfig config = new LdapConnectionConfig();
     config.setLdapHost(configuration.getLdapConfiguration().getHostname());
     config.setLdapPort(configuration.getLdapConfiguration().getPort());
     config.setName(configuration.getLdapConfiguration().getBindDn());
     config.setCredentials(configuration.getLdapConfiguration().getBindPassword());
 
-    DefaultPoolableLdapConnectionFactory factory = new DefaultPoolableLdapConnectionFactory(config);
-    LdapConnectionPool pool = new LdapConnectionPool(factory);
-    pool.setTestOnBorrow(true); // test the validity of borrowed connections on borrow, if not valid, removes the connection from the pool and sends a different connection
-    pool.setTestOnReturn(true); // test the validity of a borrowed connection on connection return, toss if invalid
-    pool.setTestWhileIdle(true); // periodically tests the validity of connections
-    pool.setWhenExhaustedAction(LdapConnectionPool.WHEN_EXHAUSTED_BLOCK); // instead of spawning a new connection when more requests come in, block until a connection is freed
+    final DefaultPoolableLdapConnectionFactory factory = new DefaultPoolableLdapConnectionFactory(config);
+
+    final LdapConnectionPool pool = new LdapConnectionPool(factory);
+    pool.setTestOnBorrow(configuration.getLdapConfiguration().isPoolTestOnBorrow());
+    pool.setTestOnReturn(configuration.getLdapConfiguration().isPoolTestOnReturn());
+    pool.setTestWhileIdle(configuration.getLdapConfiguration().isPoolTestWhileIdle());
+
+    switch (configuration.getLdapConfiguration().getPoolWhenExhaustedAction()) {
+      case BLOCK:
+        pool.setWhenExhaustedAction(LdapConnectionPool.WHEN_EXHAUSTED_BLOCK);
+        break;
+      case FAIL:
+        pool.setWhenExhaustedAction(LdapConnectionPool.WHEN_EXHAUSTED_FAIL);
+        break;
+      case GROW:
+        pool.setWhenExhaustedAction(LdapConnectionPool.WHEN_EXHAUSTED_GROW);
+        break;
+      default:
+        pool.setWhenExhaustedAction(LdapConnectionPool.DEFAULT_WHEN_EXHAUSTED_ACTION);
+    }
 
     return pool;
   }
