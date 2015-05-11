@@ -57,6 +57,9 @@ public class LDAPConfiguration {
   private Set<String> requiredGroups = new HashSet<>();  // these are group(s) that any user must be a part of
 
   @JsonProperty
+  private boolean stripUserEmailDomain = true;  // when authenticating, strip email domain from username
+
+  @JsonProperty
   @Min(1)
   private long cacheExpirationMs = 5000;
 
@@ -203,6 +206,14 @@ public class LDAPConfiguration {
 
   public void setPoolWhenExhaustedAction(LdapPoolWhenExhaustedAction poolWhenExhaustedAction) {
     this.poolWhenExhaustedAction = poolWhenExhaustedAction;
+  }
+
+  public boolean isStripUserEmailDomain() {
+    return stripUserEmailDomain;
+  }
+
+  public void setStripUserEmailDomain(boolean stripUserEmailDomain) {
+    this.stripUserEmailDomain = stripUserEmailDomain;
   }
 
   public enum LdapPoolWhenExhaustedAction {
