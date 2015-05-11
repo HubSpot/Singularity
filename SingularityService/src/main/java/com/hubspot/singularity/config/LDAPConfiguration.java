@@ -54,7 +54,7 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotNull
-  private Set<String> requiredGroups = new HashSet<>();  // these are groups
+  private Set<String> requiredGroups = new HashSet<>();  // these are group(s) that any user must be a part of
 
   @JsonProperty
   @Min(1)
@@ -63,6 +63,19 @@ public class LDAPConfiguration {
   @JsonProperty
   @NotEmpty
   private String requestUserHeaderName = "X-Username";
+
+  @JsonProperty
+  private boolean poolTestOnBorrow = true;
+
+  @JsonProperty
+  private boolean poolTestOnReturn = true;
+
+  @JsonProperty
+  private boolean poolTestWhileIdle = true;
+
+  @JsonProperty
+  @NotNull
+  private LdapPoolWhenExhaustedAction poolWhenExhaustedAction = LdapPoolWhenExhaustedAction.BLOCK;
 
   public String getHostname() {
     return hostname;
@@ -158,5 +171,43 @@ public class LDAPConfiguration {
 
   public void setRequestUserHeaderName(String requestUserHeaderName) {
     this.requestUserHeaderName = requestUserHeaderName;
+  }
+
+  public boolean isPoolTestOnBorrow() {
+    return poolTestOnBorrow;
+  }
+
+  public void setPoolTestOnBorrow(boolean poolTestOnBorrow) {
+    this.poolTestOnBorrow = poolTestOnBorrow;
+  }
+
+  public boolean isPoolTestOnReturn() {
+    return poolTestOnReturn;
+  }
+
+  public void setPoolTestOnReturn(boolean poolTestOnReturn) {
+    this.poolTestOnReturn = poolTestOnReturn;
+  }
+
+  public boolean isPoolTestWhileIdle() {
+    return poolTestWhileIdle;
+  }
+
+  public void setPoolTestWhileIdle(boolean poolTestWhileIdle) {
+    this.poolTestWhileIdle = poolTestWhileIdle;
+  }
+
+  public LdapPoolWhenExhaustedAction getPoolWhenExhaustedAction() {
+    return poolWhenExhaustedAction;
+  }
+
+  public void setPoolWhenExhaustedAction(LdapPoolWhenExhaustedAction poolWhenExhaustedAction) {
+    this.poolWhenExhaustedAction = poolWhenExhaustedAction;
+  }
+
+  public enum LdapPoolWhenExhaustedAction {
+    BLOCK,
+    FAIL,
+    GROW
   }
 }
