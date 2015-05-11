@@ -34,9 +34,6 @@ public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
 
-  private final long maxSingleUploadSizeBytes = 5368709120L;
-  private final long uploadPartSize = 1048576L;
-
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
   private final Optional<PathMatcher> finishedPathMatcher;
@@ -47,8 +44,10 @@ public class SingularityS3Uploader implements Closeable {
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
   private final String hostname;
+  private final long maxSingleUploadSizeBytes;
+  private final long uploadPartSize;
 
-  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
+  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath, long maxSingleUploadSizeBytes, long uploadPartSize) {
     AWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
@@ -76,6 +75,8 @@ public class SingularityS3Uploader implements Closeable {
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
+    this.maxSingleUploadSizeBytes = maxSingleUploadSizeBytes;
+    this.uploadPartSize = uploadPartSize;
   }
 
   public Path getMetadataPath() {
