@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
 import org.jets3t.service.security.AWSCredentials;
+import org.jets3t.service.utils.MultipartUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,9 @@ import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
+
+  private final long maxSingleUploadSizeBytes = 5368709120L;
+  private final long uploadPartSize = 1048576L;
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
@@ -172,14 +177,27 @@ public class SingularityS3Uploader implements Closeable {
 
     final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
 
-    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
+    long fileSizeBytes = Files.size(file);
+    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
 
     S3Object object = new S3Object(s3Bucket, file.toFile());
     object.setKey(key);
 
-    s3Service.putObject(s3Bucket, object);
+    if (fileSizeBytes > maxSingleUploadSizeBytes) {
+      multipartUpload(object);
+    } else {
+      s3Service.putObject(s3Bucket, object);
+    }
 
     LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+  }
+
+  private void multipartUpload(S3Object object) throws Exception {
+
+    List objectsToUploadAsMultipart = Arrays.asList(object);
+
+    MultipartUtils mpUtils = new MultipartUtils(uploadPartSize);
+    mpUtils.uploadObjects(s3Bucket.getName(), s3Service, objectsToUploadAsMultipart, null);
   }
 
 }
