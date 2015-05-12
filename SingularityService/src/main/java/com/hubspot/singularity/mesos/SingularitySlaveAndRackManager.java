@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -129,13 +130,20 @@ class SingularitySlaveAndRackManager {
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     double numOnRack = 0;
     double numOnSlave = 0;
+    double cleaningOnSlave = 0;
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), Collections.<SingularityTaskId> emptyList())) {
+    Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
+
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), Collections.<SingularityTaskId>emptyList())) {
       // TODO consider using executorIds
       if (taskId.getHost().equals(host)) {
-        numOnSlave++;
+        if (cleaningTasks.contains(taskId)) {
+          cleaningOnSlave++;
+        } else {
+          numOnSlave++;
+        }
       }
-      if (taskId.getRackId().equals(rackId)) {
+      if (taskId.getRackId().equals(rackId) && !cleaningTasks.contains(taskId)) {
         numOnRack++;
       }
     }
@@ -153,7 +161,7 @@ class SingularitySlaveAndRackManager {
 
     switch (slavePlacement) {
       case SEPARATE:
-        if (numOnSlave > 0) {
+        if (numOnSlave > 0 || cleaningOnSlave > 0) {
           LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }

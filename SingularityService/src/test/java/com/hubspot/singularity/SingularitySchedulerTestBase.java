@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.event.SingularityEventListener;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
@@ -110,6 +111,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityScheduledJobPoller scheduledJobPoller;
   @Inject
   protected ZkDataMigrationRunner migrationRunner;
+  @Inject
+  protected SingularityEventListener eventListener;
 
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
