@@ -154,7 +154,7 @@ class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack);
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, cleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
