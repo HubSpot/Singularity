@@ -95,32 +95,32 @@
 <div class="row page-width-normal">
     <div class="col-md-3 col-sm-3">
         <div>
-            <a class='headline-link' href="{{appRoot}}/racks"><h2>Racks</h2></a>
+            <h2>Racks</h2>
         </div>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class='list-group-item'>
-                <a href="{{appRoot}}/racks">
+                <a href="{{appRoot}}/racks/active">
                     <span data-state-attribute='activeRacks'>{{state.activeRacks}}</span> 
                     Active Racks
                 </a>
             </li>
             <li class='list-group-item'>
-                <a href="{{appRoot}}/racks">
+                <a href="{{appRoot}}/racks/decommission">
                     <span data-state-attribute='decomissioningRacks'>{{state.decomissioningRacks}}</span>
                     Decommissioning Racks
                 </a>
             </li>
             <li class="list-group-item {{#ifGT state.deadRacks 0}}color-warning{{/ifGT}}">
-                <a href="{{appRoot}}/racks">
+                <a href="{{appRoot}}/racks/inactive">
                     <span data-state-attribute='deadRacks'>{{state.deadRacks}}</span>
-                    Dead Racks
+                    Inactive Racks
                 </a>
             </li>
         </ul>
     </div>
     <div class="col-md-3 col-sm-3 col-md-offset-1">
         <div>
-            <a class='headline-link' href="{{appRoot}}/slaves"><h2>Slaves</h2></a>
+            <h2>Slaves</h2>
         </div>
         <ul class="list-group list-group--links list-group--plain list-group--slim">
             <li class="list-group-item">
@@ -138,7 +138,7 @@
             <li class="list-group-item">
                 <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> 
                     <span data-state-attribute='deadSlaves'>{{state.deadSlaves}} </span>
-                    Dead Slaves
+                    Inactive Slaves
                 </a>
             </li>
             <li class="list-group-item">

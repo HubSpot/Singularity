@@ -82,6 +82,7 @@ class State extends Model
                 label: 'overdue'
                 count: @get('lateTasks')
                 percent: @get('lateTasks') / total * 100
+                link: '/tasks/scheduled'
             }
             {
                 type: 'cleaning'
