@@ -1,5 +1,7 @@
 Helpers = require '../helpers'  
 EmptyTableMsg = require '../lib/EmptyTableMsg'
+Table = ReactBootstrap.Table
+
 
 StarredRequestsTable = React.createClass
   
@@ -69,7 +71,7 @@ StarredRequestsTable = React.createClass
       instances: 'request.Instances'
 
     return (
-      <table className="table table-striped table-staged">
+      <Table striped className="table-staged">
         <thead>
           <tr>
             <th data-sortable="false"></th>
@@ -94,7 +96,7 @@ StarredRequestsTable = React.createClass
         <tbody>
           {tbody}
         </tbody>
-      </table>
+      </Table>
     )
 
 module.exports = StarredRequestsTable
