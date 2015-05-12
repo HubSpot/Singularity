@@ -130,7 +130,7 @@ class SingularitySlaveAndRackManager {
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     double numOnRack = 0;
     double numOnSlave = 0;
-    double cleaningOnSlave = 0;
+    double numCleaningOnSlave = 0;
 
     Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
 
@@ -138,7 +138,7 @@ class SingularitySlaveAndRackManager {
       // TODO consider using executorIds
       if (taskId.getHost().equals(host)) {
         if (cleaningTasks.contains(taskId)) {
-          cleaningOnSlave++;
+          numCleaningOnSlave++;
         } else {
           numOnSlave++;
         }
@@ -154,14 +154,14 @@ class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, cleaningOnSlave);
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
 
     switch (slavePlacement) {
       case SEPARATE:
-        if (numOnSlave > 0 || cleaningOnSlave > 0) {
+        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
           LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
