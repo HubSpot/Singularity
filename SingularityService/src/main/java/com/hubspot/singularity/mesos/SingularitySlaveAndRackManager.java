@@ -130,7 +130,7 @@ class SingularitySlaveAndRackManager {
     double numOnRack = 0;
     double numOnSlave = 0;
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), Collections.<SingularityTaskId> emptyList())) {
       // TODO consider using executorIds
       if (taskId.getHost().equals(host)) {
         numOnSlave++;
