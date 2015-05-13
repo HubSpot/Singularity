@@ -32,7 +32,7 @@ class DashboardView extends View
   ## Render Data
   ##
   getRenderData: ->
-    totals: @collection.getUserRequestsTotals()
+    totals: @collection.getUserRequestsTotals(app.user.get('deployUser'))
     starredRequests: @starredRequests()
     user: app.user
     username: app.user.get('deployUser')
