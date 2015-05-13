@@ -30,16 +30,23 @@ class Requests extends Collection
 
         JSON.parse jsonRequests
 
-    getUserRequestsTotals: ->
-        deployUser = app.user.get 'deployUser'
-        userRequests = @.filter (model) ->
+
+    getUserRequests: (user) ->
+        
+        @.filter (model) ->
             request = model.get('request')
-            deployUserTrimmed = deployUser.split("@")[0]
+            deployUserTrimmed = user.split("@")[0]
             return false if not request.owners
             for owner in request.owners
                 ownerTrimmed = owner.split("@")[0]
                 return true if deployUserTrimmed == ownerTrimmed
             return false
+
+
+
+    getUserRequestsTotals: (user) ->
+
+        userRequests = @getUserRequests user
 
         userRequestTotals =
             all: userRequests.length
@@ -50,11 +57,14 @@ class Requests extends Collection
             service: 0
 
         for request in userRequests
-            if request.type == 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
-            if request.type == 'SCHEDULED'  then userRequestTotals.scheduled += 1
-            if request.type == 'WORKER'     then userRequestTotals.worker    += 1
-            if request.type == 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
-            if request.type == 'SERVICE'    then userRequestTotals.service   += 1
+            
+            continue if request.get('state') isnt 'ACTIVE'
+
+            if request.get('type') == 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
+            if request.get('type') == 'SCHEDULED'  then userRequestTotals.scheduled += 1
+            if request.get('type') == 'WORKER'     then userRequestTotals.worker    += 1
+            if request.get('type') == 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
+            if request.get('type') == 'SERVICE'    then userRequestTotals.service   += 1
 
         data = [
             { linkName: "all",        label: 'total',     total: userRequestTotals.all }
@@ -66,9 +76,12 @@ class Requests extends Collection
         ]
 
         for request in data
-            request.link = "#{config.appRoot}/requests/active/#{name}/all/#{deployUser}"
+            request.link = "#{config.appRoot}/requests/active/#{name}/all/#{user}"
 
         return data
+
+
+
 
     isStarred: (id) ->
         starredRequests = @getStarredRequests()
