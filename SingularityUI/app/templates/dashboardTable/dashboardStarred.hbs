@@ -5,8 +5,9 @@
                 <th data-sortable="false">{{! Star column }}</th>
                 <th data-sort-attribute="request.id">Request</th>
                 <th class="hidden-xs" data-sort-attribute="requestDeployState.activeDeploy.timestamp">Requested</th>
-                <th class="visible-lg visible-xl" data-sort-attribute="requestDeployState.activeDeploy.user">Deploy user</th>
-                <th class="visible-lg visible-xl" data-sort-attribute="request.instances">Instances</th>
+                <th data-sort-attribute="state">Status</th>
+                <th class="visible-lg visible-md" data-sort-attribute="requestDeployState.activeDeploy.user">Deploy user</th>
+                <th class="visible-lg visible-md" data-sort-attribute="request.instances">Instances</th>
             </tr>
         </thead>
         <tbody>
@@ -28,10 +29,13 @@
                     {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                 </span>
             </td>
-            <td class="visible-lg visible-xl">
+            <td>
+                {{humanizeText state}}
+            </td>
+            <td class="visible-lg visible-md">
                 {{usernameFromEmail requestDeployState.activeDeploy.user}}
             </td>
-            <td class="visible-lg visible-xl">
+            <td class="visible-lg visible-md">
                 {{ request.instances }}
             </td>
         </tr>
