@@ -48,6 +48,22 @@ public final class JavaUtils {
 
   public static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
 
+  public static String obfuscateValue(String value) {
+    if (value == null) {
+      return value;
+    }
+
+    if (value.length() > 4) {
+      return String.format("***************%s", value.substring(value.length() - 4, value.length()));
+    } else {
+      return "(OMITTED)";
+    }
+  }
+
+  public static String obfuscateValue(Optional<String> value) {
+    return value.isPresent() ?  obfuscateValue(value.get()) : "**empty**";
+  }
+
   public static String urlEncode(String string) {
     try {
       return URLEncoder.encode(string, UTF_8.name());

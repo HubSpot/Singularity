@@ -1,5 +1,7 @@
 package com.hubspot.singularity.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
@@ -24,6 +26,9 @@ public class S3Configuration {
 
   @NotNull
   private String s3Bucket;
+
+  @NotNull
+  private Map<String, String> s3BucketForGroup = new HashMap<>();
 
   /**
    * S3 Key format for finding logs. Should be the same as
@@ -103,4 +108,11 @@ public class S3Configuration {
     this.s3SecretKey = s3SecretKey;
   }
 
+  public Map<String, String> getS3BucketForGroup() {
+    return s3BucketForGroup;
+  }
+
+  public void setS3BucketForGroup(Map<String, String> s3BucketForGroup) {
+    this.s3BucketForGroup = s3BucketForGroup;
+  }
 }
