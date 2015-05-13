@@ -3,7 +3,7 @@ SectionHeader = React.createClass
   displayName: 'SectionHeader'
 
   render: ->
-    <div className="page-header">
+    <div className="section-header">
       <h2>{@props.title}</h2>
     </div>
 
