@@ -19,22 +19,11 @@ class DashboardView extends View
     @collection.fetch().done =>
       @renderReact()
     
-  ## Pass data into the parent component as plain objects
   renderReact: ->
-    totals = @collection.getUserRequestsTotals()
-    user = app.user
-    username = app.user.get('deployUser')
-
     React.render(
         <DashboardMain
-            totals={totals}
-            starredRequests={@starredRequests()}
-            user={user}
-            username={username}
-            refresh={@refresh}
-            unstar={@unstar}
-            sortStarredRequests={@sortStarredRequests}
-            sortedAsc={@sortedAsc()}
+          data={@getRenderData()}
+          actions={@actions}            
         />, 
         app.pageEl
       )
@@ -42,18 +31,27 @@ class DashboardView extends View
   ##
   ## Render Data
   ##
+  getRenderData: ->
+    totals: @collection.getUserRequestsTotals()
+    starredRequests: @starredRequests()
+    user: app.user
+    username: app.user.get('deployUser')
+    refresh: @refresh
+    sortedAsc: @collection.sortAscending
+
   starredRequests: ->
     if @collection.isSorted
       @sortedRequests
     else
       _.pluck @collection.getStarredOnly(), "attributes"
 
-  sortedAsc: ->
-    @collection.sortAscending
+  ##
+  ## Actions
+  ##
+  actions: =>
+    unstar: @unstar
+    sortStarredRequests: @sortStarredRequests
 
-  ##
-  ## Starred Request Table Handlers
-  ##
   unstar: (id) =>
     @collection.toggleStar id
     @renderReact()

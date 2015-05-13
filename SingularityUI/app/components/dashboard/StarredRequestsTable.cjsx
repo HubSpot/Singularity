@@ -7,6 +7,10 @@ StarredRequestsTable = React.createClass
   
   displayName: 'starredRequestsTable'
 
+  propTypes:
+    sortStarredRequests: React.PropTypes.func.isRequired
+    unstar: React.PropTypes.func.isRequired
+
   getInitialState: ->
     return{
       sortedAttribute: ''
@@ -25,16 +29,16 @@ StarredRequestsTable = React.createClass
     @props.sortStarredRequests attribute
 
   render: ->
-    if @props.starredRequests.length is 0
+    if @props.data.starredRequests.length is 0
       return <EmptyTableMsg msg='No starred Requests' />
     
     # Direction arrows during sorting
-    arrowDirection = "glyphicon glyphicon-chevron-#{if @props.sortedAsc then 'up' else 'down' }"
+    arrowDirection = "glyphicon glyphicon-chevron-#{if @props.data.sortedAsc then 'up' else 'down' }"
     
     sortDirection = (attr) =>
       if @state.sortedAttribute is attr then arrowDirection else ''
 
-    tbody = @props.starredRequests.map (request) =>
+    tbody = @props.data.starredRequests.map (request) =>
       
       link = "#{config.appRoot}/request/#{request.id}"
 
