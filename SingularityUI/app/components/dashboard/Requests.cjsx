@@ -13,7 +13,7 @@ Requests = React.createClass
 
     boxes = @props.data.totals.map (item) =>
       return(
-        <Col md={2} key=item.label>
+        <Col md={2} key={item.label}>
           <requestsTotal 
             item=item 
           /> 
