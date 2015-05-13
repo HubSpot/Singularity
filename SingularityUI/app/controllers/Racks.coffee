@@ -1,23 +1,21 @@
-Controller = require './Controller'
+Controller = require './ReactController'
+
+AdminSubview = require '../views/AdminSubview'
 
 Racks = require '../collections/Racks'
-
-RacksView = require '../views/racks'
-SimpleSubview = require '../views/simpleSubview'
+Rack = require '../models/Rack'
 
 class RacksController extends Controller
 
     initialize: ->
+    
         app.showPageLoader()
-        @collections.racks     = new Racks []
-        @setView new RacksView
-            collection: @collections.racks
+        @racksCollection = new Racks []
 
-        app.showView @view
+        new AdminSubview
+            collection: @racksCollection
+            model: Rack
+            label: 'racks'
 
-        @refresh()
-
-    refresh: ->
-        @collections.racks.fetch()
 
 module.exports = RacksController

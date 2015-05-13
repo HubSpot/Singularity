@@ -7,6 +7,9 @@ class Slaves extends Collection
 
     url: => "#{ config.apiRoot }/slaves"
 
-    initialize: (models) =>
+    filterByState: (states) ->
+        new Slaves(@filter (model) ->
+            model.get('state') in states
+        ).toJSON()
 
 module.exports = Slaves

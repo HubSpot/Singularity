@@ -11,3 +11,16 @@ module.exports =
   usernameFromEmail: (email) ->
     return '' if not email
     email.split('@')[0]
+
+  timestampFormatted: (timestamp) ->
+    return '' if not timestamp
+    timeObject = moment timestamp
+    timeObject.format 'lll'
+
+  timestampDuration: (timestamp) ->
+    return '' if not timestamp
+    moment.duration(timestamp).humanize()
+
+  titleCase: (str) ->
+    str.replace /\w\S*/g, (txt) ->
+      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
