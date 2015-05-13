@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3.base.config;
 
+import static com.hubspot.mesos.JavaUtils.obfuscateValue;
+
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -14,8 +16,6 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
-
-import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
 
 @Configuration("/etc/singularity.s3base.yaml")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
