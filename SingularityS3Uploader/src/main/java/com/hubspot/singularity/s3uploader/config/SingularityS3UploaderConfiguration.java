@@ -26,6 +26,8 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
   public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
+  public static final String RETRY_WAIT_MS = "s3uploader.retry.wait.ms";
+  public static final String RETRY_COUNT = "s3uploader.retry.count";
 
   @Min(0)
   @JsonProperty
@@ -58,6 +60,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   @JsonProperty
   private long uploadPartSize = 1048576L;
+
+  @JsonProperty
+  private int retryWaitMs = 1000;
+
+  @JsonProperty
+  private int retryCount = 1;
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -127,6 +135,22 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.uploadPartSize = uploadPartSize;
   }
 
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+  }
+
+  public int getRetryWaitMs() {
+    return retryWaitMs;
+  }
+
+  public void setRetryWaitMs(int retryWaitMs) {
+    this.retryWaitMs = retryWaitMs;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -138,6 +162,8 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
             ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
             ", uploadPartSize=" + uploadPartSize +
+            ", retryWaitMs=" + retryWaitMs +
+            ", retryCount=" + retryCount +
             ']';
   }
 
@@ -171,6 +197,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     }
     if (properties.containsKey(UPLOAD_PART_SIZE)) {
       setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
+    }
+    if (properties.containsKey(RETRY_COUNT)) {
+      setRetryCount(Integer.parseInt(properties.getProperty(RETRY_COUNT)));
+    }
+    if (properties.containsKey(RETRY_WAIT_MS)) {
+      setRetryWaitMs(Integer.parseInt(RETRY_WAIT_MS));
     }
   }
 }
