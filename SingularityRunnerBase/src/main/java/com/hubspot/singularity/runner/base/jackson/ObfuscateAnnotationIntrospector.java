@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.jackson;
 
+import static com.hubspot.mesos.JavaUtils.obfuscateValue;
+
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -29,18 +31,6 @@ public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
   }
 
   public static class ObfuscateSerializer extends JsonSerializer<Object> {
-    public static String obfuscateValue(String value) {
-      if (value == null) {
-        return value;
-      }
-
-      if (value.length() > 4) {
-        return String.format("***************%s", value.substring(value.length() - 4, value.length()));
-      } else {
-        return "(OMITTED)";
-      }
-    }
-
     @Override
     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
       if (value instanceof Optional) {

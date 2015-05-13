@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -12,8 +14,7 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-
-import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
+import com.hubspot.singularity.s3.base.config.SingularityS3Credentials;
 
 @Configuration("/etc/singularity.s3uploader.yaml")
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
@@ -49,6 +50,10 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   @Obfuscate
   private Optional<String> s3SecretKey = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -102,6 +107,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3SecretKey = s3SecretKey;
   }
 
+  public Map<String, SingularityS3Credentials> getS3BucketCredentials() {
+    return s3BucketCredentials;
+  }
+
+  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
+    this.s3BucketCredentials = s3BucketCredentials;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -109,8 +122,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", executorMaxUploadThreads=" + executorMaxUploadThreads +
             ", checkUploadsEverySeconds=" + checkUploadsEverySeconds +
             ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
-            ", s3AccessKey=" + (s3AccessKey.isPresent() ? obfuscateValue(s3AccessKey.get()) : "(blank)") +
-            ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
+            ", s3AccessKey=" + s3AccessKey +
+            ", s3SecretKey=" + s3SecretKey +
+            ", s3BucketCredentials=" + s3BucketCredentials +
             ']';
   }
 
