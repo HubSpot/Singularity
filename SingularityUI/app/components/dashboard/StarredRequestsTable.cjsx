@@ -7,6 +7,9 @@ StarredRequestsTable = React.createClass
   
   displayName: 'starredRequestsTable'
 
+  ##
+  ## Default State/Props
+  ##
   propTypes:
     sortStarredRequests: React.PropTypes.func.isRequired
     unstar: React.PropTypes.func.isRequired
@@ -19,6 +22,9 @@ StarredRequestsTable = React.createClass
   getDefaultProps: ->
     starredRequests: []
 
+  ##
+  ## Event Handlers
+  ##
   handleUnstar: (e) ->
     id = $(e.currentTarget).data('id')
     @props.unstar id
@@ -28,15 +34,27 @@ StarredRequestsTable = React.createClass
     @setState({ sortedAttribute: attribute })
     @props.sortStarredRequests attribute
 
+  ##
+  ## Build Table
+  ##
   render: ->
-    if @props.data.starredRequests.length is 0
-      return <EmptyTableMsg msg='No starred Requests' />
-    
-    # Direction arrows during sorting
+
+    ##
+    ## Helper variables/Fns
+    ##
+    attribute =
+      id: 'request.id'
+      timestamp: 'requestDeployState.activeDeploy.timestamp'
+      user: 'requestDeployState.activeDeploy.user'
+      instances: 'request.Instances'
+
     arrowDirection = "glyphicon glyphicon-chevron-#{if @props.data.sortedAsc then 'up' else 'down' }"
     
     sortDirection = (attr) =>
       if @state.sortedAttribute is attr then arrowDirection else ''
+
+    if @props.data.starredRequests.length is 0
+      return <EmptyTableMsg msg='No starred Requests' />      
 
     tbody = @props.data.starredRequests.map (request) =>
       
@@ -67,12 +85,6 @@ StarredRequestsTable = React.createClass
           </td>
         </tr>
       )
-
-    attribute =
-      id: 'request.id'
-      timestamp: 'requestDeployState.activeDeploy.timestamp'
-      user: 'requestDeployState.activeDeploy.user'
-      instances: 'request.Instances'
 
     return (
       <Table striped className="table-staged">
