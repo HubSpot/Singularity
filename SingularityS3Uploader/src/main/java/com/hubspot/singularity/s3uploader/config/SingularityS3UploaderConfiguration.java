@@ -24,6 +24,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public static final String EXECUTOR_MAX_UPLOAD_THREADS = "s3uploader.max.upload.threads";
 
+  public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
+  public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
+
   @Min(0)
   @JsonProperty
   private long pollForShutDownMillis = 1000;
@@ -49,6 +52,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   @Obfuscate
   private Optional<String> s3SecretKey = Optional.absent();
+
+  @JsonProperty
+  private long maxSingleUploadSizeBytes = 5368709120L;
+
+  @JsonProperty
+  private long uploadPartSize = 1048576L;
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -102,6 +111,22 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3SecretKey = s3SecretKey;
   }
 
+  public long getMaxSingleUploadSizeBytes() {
+    return maxSingleUploadSizeBytes;
+  }
+
+  public void setMaxSingleUploadSizeBytes(long maxSingleUploadSizeBytes) {
+    this.maxSingleUploadSizeBytes = maxSingleUploadSizeBytes;
+  }
+
+  public long getUploadPartSize() {
+    return uploadPartSize;
+  }
+
+  public void setUploadPartSize(long uploadPartSize) {
+    this.uploadPartSize = uploadPartSize;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -111,6 +136,8 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
             ", s3AccessKey=" + (s3AccessKey.isPresent() ? obfuscateValue(s3AccessKey.get()) : "(blank)") +
             ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
+            ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
+            ", uploadPartSize=" + uploadPartSize +
             ']';
   }
 
@@ -138,6 +165,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
     if (properties.containsKey(SingularityS3Configuration.S3_SECRET_KEY)) {
       setS3SecretKey(Optional.of(properties.getProperty(SingularityS3Configuration.S3_SECRET_KEY)));
+    }
+    if (properties.containsKey(MAX_SINGLE_UPLOAD_BYTES)) {
+      setMaxSingleUploadSizeBytes(Long.parseLong(properties.getProperty(MAX_SINGLE_UPLOAD_BYTES)));
+    }
+    if (properties.containsKey(UPLOAD_PART_SIZE)) {
+      setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
     }
   }
 }
