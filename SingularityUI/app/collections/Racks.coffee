@@ -11,7 +11,12 @@ class Racks extends Collection
     initialize: (models) =>
 
     parse: (racks) ->
-        _.map racks, (rack) =>
-            rack
+      _.map racks, (rack) =>
+        rack
+    
+    filterByState: (states) ->
+      new Racks(@filter (model) ->
+        model.get('state') in states
+      ).toJSON()
 
 module.exports = Racks
