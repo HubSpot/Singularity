@@ -59,7 +59,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   private long maxSingleUploadSizeBytes = 5368709120L;
 
   @JsonProperty
-  private long uploadPartSize = 1048576L;
+  private long uploadPartSize = 20971520L;
 
   @JsonProperty
   private int retryWaitMs = 1000;
