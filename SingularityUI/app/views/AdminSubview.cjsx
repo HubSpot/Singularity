@@ -7,15 +7,13 @@ View = require './ReactBaseView'
 
 class AdminSubview extends View
 
-  initialize: (options) ->
-    @model = options.model
-    @label = options.label
+  initialize: (@options) ->
     @refresh()
 
   renderReact: ->
     React.render(
         <AdminMainCmpt
-          label={@label}
+          label={@options.label}
           data={@getRenderData()}
           actions={@actions}
         />, 
@@ -42,7 +40,7 @@ class AdminSubview extends View
 
   changeItemState: (item) =>
 
-    model = new @model
+    model = new @options.model
       id:    item.id
       host:  item.host
       state: item.state

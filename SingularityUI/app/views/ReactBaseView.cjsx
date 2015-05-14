@@ -1,7 +1,9 @@
 class View extends Backbone.View
 
-  constructor: (params = {}) ->
-    super params
+  constructor: (@options) ->
+    @collections = @options.collections
+    @models = @options.models
+    super
     app.bootstrapReactView @
 
   # `refresh` can be called by `app` for the global refresh or by the
