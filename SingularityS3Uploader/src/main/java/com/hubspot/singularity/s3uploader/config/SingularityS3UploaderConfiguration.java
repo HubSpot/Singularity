@@ -57,7 +57,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   private int retryWaitMs = 1000;
 
   @JsonProperty
-  private int retryCount = 1;
+  private int retryCount = 2;
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
