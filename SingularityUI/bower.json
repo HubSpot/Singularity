@@ -34,7 +34,8 @@
     "backbone.localStorage": "~1.1.9",
     "underscore": "~1.6.0",
     "react": "~0.13.1",
-    "react-bootstrap": "~0.21.2"
+    "react-bootstrap": "~0.21.2",
+    "classnames": "~2.1.1"
   },
   "resolutions": {
     "backbone": "~1.1.2"

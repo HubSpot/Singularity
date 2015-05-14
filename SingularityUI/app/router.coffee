@@ -8,7 +8,7 @@ NewDeployController  = require 'controllers/NewDeploy'
 RequestDetailController = require 'controllers/RequestDetail'
 RequestsTableController = require 'controllers/RequestsTable'
 
-TasksTableController = require 'controllers/TasksTable'
+TasksController = require 'controllers/Tasks'
 TaskDetailController = require 'controllers/TaskDetail'
 TailController = require 'controllers/Tail'
 
@@ -34,9 +34,9 @@ class Router extends Backbone.Router
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
-        'tasks/:state/:searchFilter(/)': 'tasksTable'
-        'tasks/:state(/)': 'tasksTable'
-        'tasks(/)': 'tasksTable'
+        'tasks/:state/:searchFilter(/)': 'tasks'
+        'tasks/:state(/)': 'tasks'
+        'tasks(/)': 'tasks'
 
         'task/:taskId(/)': 'taskDetail'
         'task/:taskId/files(/)*path': 'taskFileBrowser'
@@ -68,8 +68,8 @@ class Router extends Backbone.Router
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}
 
-    tasksTable: (state = 'active', searchFilter = '') ->
-        app.bootstrapController new TasksTableController {state, searchFilter}
+    tasks: (state = 'active', searchFilter = '') ->
+        app.bootstrapController new TasksController {state, searchFilter}
 
     taskDetail: (taskId) ->
         app.bootstrapController new TaskDetailController {taskId, filePath:null}
