@@ -136,11 +136,7 @@ class ExpandableTableSubview extends View
         @collection.atATime = 5
         @collection.currentPage = 1
 
-        if @isClientPaginated
-            @collection.setPaginatedCollection()
-            @render()
-        else
-            @collection.fetch()
+        @refreshCollection()    
 
     flash: ->
         $(window).scrollTop @$el.offset().top
