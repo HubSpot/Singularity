@@ -3,6 +3,7 @@ import ConfigParser
 import sys
 import os
 import pkg_resources
+import time
 from datetime import datetime, timedelta
 from termcolor import colored
 from fake_section_head import FakeSectionHead
@@ -64,17 +65,22 @@ def check_args(args):
   elif not args.requestId and not args.deployId and not args.taskId:
     exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
 
-def convert_to_date(argument):
+def convert_to_date(args, argument):
     try:
       if isinstance(argument, datetime):
         return argument
       else:
-        val = datetime.now() - timedelta(days=int(argument))
+        val = datetime.utcnow() - timedelta(days=int(argument))
     except:
       try:
-        val = datetime.strptime(argument, "%m-%d-%Y")
+        if args.zone:
+            timestring = '{0} {1}'.format(argument, datetime.now().strftime("%H:%M:%S")) if len(argument) < 11 else argument
+            val = datetime.utcfromtimestamp(time.mktime(datetime.strptime(timestring, "%Y-%m-%d %H:%M:%S").timetuple()))
+        else:
+            timestring = '{0} {1}'.format(argument, datetime.utcnow().strftime("%H:%M:%S")) if len(argument) < 11 else argument
+            val = datetime.strptime('{0} UTC'.format(timestring), "%Y-%m-%d %H:%M:%S %Z")
       except:
-        exit('Start/End days value must be either a number of days or a date in format "mm-dd-yyyy"')
+          exit('Start/End days value must be either a number of days or a date in format "%Y-%m-%d %H:%M:%S" or "%Y-%m-%d"')
     return val
 
 def fetch():
@@ -91,9 +97,9 @@ def fetch():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : datetime.now() - timedelta(days=DEFAULT_DAYS),
+    "start_days" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
     "file_pattern" : DEFAULT_S3_PATTERN,
-    "end_days" : datetime.now()
+    "end_days" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S")
   }
 
   try:
@@ -114,19 +120,20 @@ def fetch():
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
   parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
-  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
+  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d'")
+  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d' (defaults to None/now)")
   parser.add_argument("-l", "--log-type", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
   parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
   parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
+  parser.add_argument("-z", "--local-zone", dest="zone", help="If specified, input times in the local time zone and convert to UTC, if not specified inputs are assumed to be UTC", action="store_true")
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start_days = convert_to_date(args.start_days)
-  args.end_days = convert_to_date(args.end_days)
+  args.start_days = convert_to_date(args, args.start_days)
+  args.end_days = convert_to_date(args, args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
@@ -146,9 +153,9 @@ def cat():
     "chunk_size" : DEFAULT_CHUNK_SIZE,
     "dest" : DEFAULT_DEST,
     "task_count" : DEFAULT_TASK_COUNT,
-    "start_days" : datetime.now() - timedelta(days=DEFAULT_DAYS),
+    "start_days" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
     "file_pattern" : DEFAULT_S3_PATTERN,
-    "end_days" : datetime.now()
+    "end_days" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S")
   }
 
   try:
@@ -169,18 +176,19 @@ def cat():
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
   parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format 'mm-dd-yyyy'")
-  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format 'mm-dd-yyyy' (defaults to None/today)")
+  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d'")
+  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d' (defaults to None/now)")
   parser.add_argument("-l", "--logtype", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
   parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
+  parser.add_argument("-z", "--local-zone", dest="zone", help="If specified, input times in the local time zone and convert to UTC, if not specified inputs are assumed to be UTC", action="store_true")
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start_days = convert_to_date(args.start_days)
-  args.end_days = convert_to_date(args.end_days)
+  args.start_days = convert_to_date(args, args.start_days)
+  args.end_days = convert_to_date(args, args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
 
