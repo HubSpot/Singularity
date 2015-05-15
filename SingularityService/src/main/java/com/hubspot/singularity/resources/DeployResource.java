@@ -34,11 +34,11 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -55,17 +55,17 @@ public class DeployResource extends AbstractRequestResource {
   private final RequestManager requestManager;
   private final SingularityValidator validator;
 
-  private final SingularityAuthManager authManager;
+  private final Optional<SingularityUser> user;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthManager authManager) {
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, Optional<SingularityUser> user) {
     super(requestManager, deployManager);
 
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.validator = validator;
 
-    this.authManager = authManager;
+    this.user = user;
   }
 
   @GET
@@ -84,7 +84,7 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
   public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
-    final Optional<String> deployUser = authManager.getUser().or(deployRequest.getUser());
+    final Optional<String> deployUser = deployRequest.getUser();
 
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
@@ -94,13 +94,13 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
 
-    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), deployUser);
+    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    deploy = validator.checkDeploy(request, deploy, deployRequest.getUser());
+    deploy = validator.checkDeploy(request, deploy, user);
 
     final long now = System.currentTimeMillis();
 
@@ -135,8 +135,6 @@ public class DeployResource extends AbstractRequestResource {
       @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    final Optional<String> user = authManager.getUser();
-
     validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
@@ -145,7 +143,7 @@ public class DeployResource extends AbstractRequestResource {
       throw badRequest("Request %s does not have a pending deploy %s", requestId, deployId);
     }
 
-    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user));
+    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), queryUser));
 
     return fillEntireRequest(requestWithState);
   }

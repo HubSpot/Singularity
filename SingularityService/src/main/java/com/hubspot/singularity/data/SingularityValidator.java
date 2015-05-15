@@ -30,9 +30,9 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
 
 @Singleton
 public class SingularityValidator {
@@ -58,10 +58,9 @@ public class SingularityValidator {
   private final boolean ldapEnabled;
   private final ImmutableSet<String> ldapRequiredGroups;
   private final ImmutableSet<String> ldapAdminGroups;
-  private final SingularityLDAPManager ldapManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, SingularityLDAPManager ldapManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -81,16 +80,15 @@ public class SingularityValidator {
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
     this.ldapEnabled = configuration.getLdapConfiguration().isEnabled();
-    this.ldapManager = ldapManager;
     this.ldapRequiredGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getRequiredGroups());
     this.ldapAdminGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getAdminGroups());
   }
 
-  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<String> user) {
+  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityUser> user) {
     if (ldapEnabled) {
       checkBadRequest(user.isPresent(), "user must be present");
 
-      final Set<String> groups = ldapManager.getGroupsForUser(user.get());
+      final Set<String> groups = user.get().getGroups();
 
       // check for required group membership...
       if (!ldapRequiredGroups.isEmpty()) {
@@ -112,12 +110,12 @@ public class SingularityValidator {
     }
   }
 
-  public void checkForAdminAuthorization(Optional<String> user) {
+  public void checkForAdminAuthorization(Optional<SingularityUser> user) {
     if (ldapEnabled) {
       if (!ldapAdminGroups.isEmpty()) {
         checkBadRequest(user.isPresent(), "user must be present");
 
-        final Set<String> groups = ldapManager.getGroupsForUser(user.get());
+        final Set<String> groups = user.get().getGroups();
 
         checkForbidden(!Sets.intersection(groups, ldapAdminGroups).isEmpty(), "User %s must be part of an admin group", user);
       }
@@ -148,7 +146,7 @@ public class SingularityValidator {
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
-      Optional<SingularityDeploy> pendingDeploy, Optional<String> user) {
+      Optional<SingularityDeploy> pendingDeploy, Optional<SingularityUser> user) {
     checkForAuthorization(request, existingRequest, user);
 
     checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
@@ -218,7 +216,7 @@ public class SingularityValidator {
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
-  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy, Optional<String> user) {
+  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy, Optional<SingularityUser> user) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
 
