@@ -10,9 +10,7 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.servlet.ServletScopes;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.hubspot.singularity.ldap.SingularityLDAPManager;
 
 public class SingularityLDAPModule implements Module {
@@ -27,7 +25,6 @@ public class SingularityLDAPModule implements Module {
   @Override
   public void configure(Binder binder) {
     binder.bind(SingularityLDAPManager.class);
-    binder.bind(SingularityAuthManager.class).in(ServletScopes.REQUEST);
   }
 
   @Provides

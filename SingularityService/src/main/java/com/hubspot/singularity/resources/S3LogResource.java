@@ -49,6 +49,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -56,7 +57,6 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
-import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -75,7 +75,8 @@ public class S3LogResource extends AbstractHistoryResource {
   private final RequestHistoryHelper requestHistoryHelper;
   private final RequestManager requestManager;
   private final SingularityValidator validator;
-  private final SingularityAuthManager authManager;
+
+  private final Optional<SingularityUser> user;
 
   private static final Comparator<SingularityS3Log> LOG_COMPARATOR = new Comparator<SingularityS3Log>() {
 
@@ -88,7 +89,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @Inject
   public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3,
-      Optional<S3Configuration> configuration, SingularityValidator validator, SingularityAuthManager authManager) {
+      Optional<S3Configuration> configuration, SingularityValidator validator, Optional<SingularityUser> user) {
     super(historyManager, taskManager, deployManager);
     this.requestManager = requestManager;
     this.s3 = s3;
@@ -96,7 +97,7 @@ public class S3LogResource extends AbstractHistoryResource {
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;
     this.validator = validator;
-    this.authManager = authManager;
+    this.user = user;
   }
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId) {
@@ -244,7 +245,7 @@ public class S3LogResource extends AbstractHistoryResource {
     try {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(taskIdObject.getRequestId());
       checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", taskIdObject.getRequestId());
-      validator.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), authManager.getUser());
+      validator.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
       return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForTask(taskIdObject));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
@@ -262,7 +263,7 @@ public class S3LogResource extends AbstractHistoryResource {
     try {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
       checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", requestId);
-      validator.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), authManager.getUser());
+      validator.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
       return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForRequest(requestId));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
@@ -281,7 +282,7 @@ public class S3LogResource extends AbstractHistoryResource {
     try {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
       checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", requestId);
-      validator.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), authManager.getUser());
+      validator.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
       return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForDeploy(requestId, deployId));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
