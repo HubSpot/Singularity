@@ -24,6 +24,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public static final String EXECUTOR_MAX_UPLOAD_THREADS = "s3uploader.max.upload.threads";
 
+  public static final String RETRY_WAIT_MS = "s3uploader.retry.wait.ms";
+  public static final String RETRY_COUNT = "s3uploader.retry.count";
+
   @Min(0)
   @JsonProperty
   private long pollForShutDownMillis = 1000;
@@ -49,6 +52,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   @Obfuscate
   private Optional<String> s3SecretKey = Optional.absent();
+
+  @JsonProperty
+  private int retryWaitMs = 1000;
+
+  @JsonProperty
+  private int retryCount = 2;
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -102,6 +111,22 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3SecretKey = s3SecretKey;
   }
 
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+  }
+
+  public int getRetryWaitMs() {
+    return retryWaitMs;
+  }
+
+  public void setRetryWaitMs(int retryWaitMs) {
+    this.retryWaitMs = retryWaitMs;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -111,6 +136,8 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
             ", s3AccessKey=" + (s3AccessKey.isPresent() ? obfuscateValue(s3AccessKey.get()) : "(blank)") +
             ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
+            ", retryWaitMs=" + retryWaitMs +
+            ", retryCount=" + retryCount +
             ']';
   }
 
@@ -138,6 +165,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
     if (properties.containsKey(SingularityS3Configuration.S3_SECRET_KEY)) {
       setS3SecretKey(Optional.of(properties.getProperty(SingularityS3Configuration.S3_SECRET_KEY)));
+    }
+    if (properties.containsKey(RETRY_COUNT)) {
+      setRetryCount(Integer.parseInt(properties.getProperty(RETRY_COUNT)));
+    }
+    if (properties.containsKey(RETRY_WAIT_MS)) {
+      setRetryWaitMs(Integer.parseInt(RETRY_WAIT_MS));
     }
   }
 }
