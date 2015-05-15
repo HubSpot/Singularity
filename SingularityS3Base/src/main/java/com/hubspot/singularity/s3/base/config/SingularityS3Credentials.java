@@ -34,8 +34,12 @@ public class SingularityS3Credentials {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     SingularityS3Credentials that = (SingularityS3Credentials) o;
     return Objects.equals(accessKey, that.accessKey) &&
             Objects.equals(secretKey, that.secretKey);
