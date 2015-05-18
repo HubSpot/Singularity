@@ -208,13 +208,18 @@ public class SingularityS3Uploader implements Closeable {
       long fileSizeBytes = Files.size(file);
       LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
 
-      S3Object object = new S3Object(s3Bucket, file.toFile());
-      object.setKey(key);
+      try {
+        S3Object object = new S3Object(s3Bucket, file.toFile());
+        object.setKey(key);
 
-      if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
-        multipartUpload(object);
-      } else {
-        s3Service.putObject(s3Bucket, object);
+        if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
+          multipartUpload(object);
+        } else {
+          s3Service.putObject(s3Bucket, object);
+        }
+      } catch (Exception e) {
+        LOG.warn("Exception uploading {}", file, e);
+        throw e;
       }
 
       LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
