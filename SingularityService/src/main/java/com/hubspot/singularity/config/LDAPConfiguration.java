@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.apache.directory.ldap.client.api.LdapConnectionPool;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -75,6 +76,19 @@ public class LDAPConfiguration {
 
   @JsonProperty
   private boolean poolTestWhileIdle = true;
+
+  @JsonProperty
+  private int poolMaxActive = LdapConnectionPool.DEFAULT_MAX_ACTIVE;
+
+  @JsonProperty
+  private int poolMaxIdle = LdapConnectionPool.DEFAULT_MAX_IDLE;
+
+  @JsonProperty
+  private int poolMinIdle = LdapConnectionPool.DEFAULT_MIN_IDLE;
+
+  @JsonProperty
+  private long poolMaxWait = LdapConnectionPool.DEFAULT_MAX_WAIT;
+
 
   @JsonProperty
   @NotNull
@@ -214,6 +228,38 @@ public class LDAPConfiguration {
 
   public void setStripUserEmailDomain(boolean stripUserEmailDomain) {
     this.stripUserEmailDomain = stripUserEmailDomain;
+  }
+
+  public int getPoolMaxActive() {
+    return poolMaxActive;
+  }
+
+  public void setPoolMaxActive(int poolMaxActive) {
+    this.poolMaxActive = poolMaxActive;
+  }
+
+  public int getPoolMaxIdle() {
+    return poolMaxIdle;
+  }
+
+  public void setPoolMaxIdle(int poolMaxIdle) {
+    this.poolMaxIdle = poolMaxIdle;
+  }
+
+  public int getPoolMinIdle() {
+    return poolMinIdle;
+  }
+
+  public void setPoolMinIdle(int poolMinIdle) {
+    this.poolMinIdle = poolMinIdle;
+  }
+
+  public long getPoolMaxWait() {
+    return poolMaxWait;
+  }
+
+  public void setPoolMaxWait(long poolMaxWait) {
+    this.poolMaxWait = poolMaxWait;
   }
 
   public enum LdapPoolWhenExhaustedAction {

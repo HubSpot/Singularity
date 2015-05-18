@@ -43,6 +43,11 @@ public class SingularityLDAPModule implements Module {
     pool.setTestOnReturn(configuration.getLdapConfiguration().isPoolTestOnReturn());
     pool.setTestWhileIdle(configuration.getLdapConfiguration().isPoolTestWhileIdle());
 
+    pool.setMaxActive(configuration.getLdapConfiguration().getPoolMaxActive());
+    pool.setMaxIdle(configuration.getLdapConfiguration().getPoolMaxIdle());
+    pool.setMinIdle(configuration.getLdapConfiguration().getPoolMinIdle());
+    pool.setMaxWait(configuration.getLdapConfiguration().getPoolMaxWait());
+
     switch (configuration.getLdapConfiguration().getPoolWhenExhaustedAction()) {
       case BLOCK:
         pool.setWhenExhaustedAction(LdapConnectionPool.WHEN_EXHAUSTED_BLOCK);
