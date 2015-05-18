@@ -70,8 +70,15 @@ EOF
 }
 
 function build_singularity {
+  # lame hack to install a recent mvn, thanks ubuntu...
+  if [ ! -f /usr/share/apache-maven-3.3.3/bin/mvn ]; then
+    wget -q http://apache.spinellicreations.com/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip -O /tmp/apache-maven-3.3.3-bin.zip
+
+    unzip /tmp/apache-maven-3.3.3-bin.zip -d /usr/share/
+  fi
+
   cd /singularity
-  sudo -u vagrant HOME=/home/vagrant mvn clean package -DskipTests
+  sudo -u vagrant HOME=/home/vagrant /usr/share/apache-maven-3.3.3/bin/mvn clean package -DskipTests
 }
 
 function install_singularity {
