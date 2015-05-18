@@ -204,10 +204,14 @@ public class SingularityS3Uploader implements Closeable {
 
       LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
 
-      S3Object object = new S3Object(s3Bucket, file.toFile());
-      object.setKey(key);
+      try {
+        S3Object object = new S3Object(s3Bucket, file.toFile());
+        object.setKey(key);
 
-      s3Service.putObject(s3Bucket, object);
+        s3Service.putObject(s3Bucket, object);
+      } catch (Exception e) {
+        LOG.warn("Exception uploading {}", file, e);
+      }
 
       LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
 
