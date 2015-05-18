@@ -269,6 +269,10 @@ class SingularityMesosTaskBuilder {
         extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList());
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
 
+        if (task.getRequest().getGroup().isPresent() && configuration.getS3Configuration().get().getS3BucketForGroup().containsKey(task.getRequest().getGroup().get())) {
+          executorDataBldr.setLoggingS3Bucket(Optional.of(configuration.getS3Configuration().get().getS3BucketForGroup().get(task.getRequest().getGroup().get())));
+        }
+
         executorData = executorDataBldr.build();
       }
 
