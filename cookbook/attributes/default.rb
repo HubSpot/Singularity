@@ -9,8 +9,8 @@ end
 default[:singularity] = {
   :user => 'singularity',
   :group => 'singularity',
-  :git_ref => 'e2405eb5ca1a1ba006a89a27bdb3299433ae96d5',
-  :version => '0.4.2',
+  :git_ref => 'Singularity-0.4.1',
+  :version => '0.4.1',
   :home => '/home/singularity',
   :database => {
     :db_name => "singularity",
@@ -18,6 +18,8 @@ default[:singularity] = {
     :password => "9thlevel"
   },
 }
+
+default['singularity']['install_type'] = 'package'
 
 default[:mesos] = {
   :package_version => "0.21.0-1.0.ubuntu1404",
