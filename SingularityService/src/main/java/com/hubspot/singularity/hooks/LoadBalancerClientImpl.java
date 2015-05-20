@@ -124,7 +124,9 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
       LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
 
-      if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
+      if (response.getStatusCode() == 504) {
+        return new LoadBalancerUpdateHolder(BaragonRequestState.UNKNOWN, Optional.of(String.format("LB %s request %s timed out", request.getMethod(), loadBalancerRequestId)));
+      } else if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
         return new LoadBalancerUpdateHolder(onFailure, Optional.of(String.format("Response status code %s", response.getStatusCode())));
       }
 
