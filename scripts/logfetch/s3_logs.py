@@ -21,7 +21,8 @@ def download_s3_logs(args):
   all_logs = []
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
-    if logfetch_base.is_in_date_range(args, time_from_filename(filename)):
+    print log_file
+    if logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3])):
       if not args.logtype or log_matches(args, filename):
         if not already_downloaded(args.dest, filename):
           async_requests.append(
