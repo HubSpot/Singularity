@@ -1,0 +1,41 @@
+zk:
+  image: bobrik/zookeeper
+  ports:
+   - 2181:2181
+  environment:
+    ZK_CONFIG: tickTime=2000,initLimit=10,syncLimit=5,maxClientCnxns=128,forceSync=no,clientPort=2181
+    ZK_ID: 1
+
+master:
+  image: mesosphere/mesos-master:0.21.1-1.1.ubuntu1404
+  net: host
+  environment:
+    MESOS_ZK: zk://127.0.0.1:2181
+    MESOS_HOSTNAME: 192.168.59.103
+    MESOS_IP: 192.168.59.103
+    MESOS_QUORUM: 1
+    MESOS_CLUSTER: docker-compose
+    MESOS_WORK_DIR: /var/lib/mesos
+
+slave:
+  image: mesosphere/mesos-slave:0.21.1-1.1.ubuntu1404
+  entrypoint: mesos-slave
+  net: host
+  pid: host
+  environment:
+    MESOS_MASTER: zk://127.0.0.1:2181
+    MESOS_HOSTNAME: 192.168.59.103
+    MESOS_IP: 192.168.59.103
+    MESOS_CONTAINERIZERS: docker,mesos
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup
+    - /usr/local/bin/docker:/usr/bin/docker
+    - /var/run/docker.sock:/var/run/docker.sock
+
+singularity:
+  image: ssalinas/singularity:0.4.1
+  net: host
+  environment:
+    SINGULARITY_MASTER: zk://127.0.0.1:2181
+    SINGULARITY_ZK: zk://127.0.0.1:2181
+    SINGULARITY_HOSTNAME: 192.168.59.103
