@@ -42,24 +42,6 @@ function handle_signal {
   exit "$exit_code"
 }
 
-function setup_cgroups {
-  if [ -d "/cgroup" ] ;then
-    CGROUPS_DIR="/cgroup"
-  else
-    if [ -d "/sys/fs/cgroup" ] ; then
-      CGROUPS_DIR="/sys/fs/cgroup"
-    else
-      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
-      return 0
-    fi
-  fi
-  echo "Adding docker processes to mesos executor cgroup..."
-  subsystems=(memory cpu cpuacct)
-  for s in "${subsystems[@]}" ; do
-    cat $CGROUPS_DIR/$s/mesos/$CGROUPS_GUID/$1/tasks >> $CGROUPS_DIR/$s/mesos/$CGROUPS_GUID/tasks
-  done
-}
-
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 DOCKER_ENV=""
@@ -94,7 +76,7 @@ fi
 # set up attached volumes
 DOCKER_VOLUMES="-v $CURRENT_DIR:/mnt/mesos/sandbox"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_SANDBOX=/mnt/mesos/sandbox"
-DOCKER_ENV="$DOCKER_ENV -e LOG_DIR=/mnt/mesos/sandbox/logs"
+DOCKER_ENV="$DOCKER_ENV -e LOG_HOME=/mnt/mesos/sandbox/logs"
 DOCKER_ENV="$DOCKER_ENV -e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
 {{#each envContext.containerVolumes}}
 {{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
@@ -125,10 +107,6 @@ sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFil
 running=1
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
-
-set +e
-setup_cgroups "$cid"
-set -e
 
 while true; do
   if [ "$running" = "1" ]; then
