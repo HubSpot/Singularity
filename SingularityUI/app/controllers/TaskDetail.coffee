@@ -6,10 +6,12 @@ TaskResourceUsage = require '../models/TaskResourceUsage'
 TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 TaskCleanups = require '../collections/TaskCleanups'
+Deploys = require '../collections/Deploys'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
 ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
+HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
 
 TaskView = require '../views/task'
@@ -17,12 +19,15 @@ TaskView = require '../views/task'
 class TaskDetailController extends Controller
 
     templates:
-        overview:      require '../templates/taskDetail/taskOverview'
-        history:       require '../templates/taskDetail/taskHistory'
-        logs:          require '../templates/taskDetail/taskS3Logs'
-        info:          require '../templates/taskDetail/taskInfo'
-        environment:   require '../templates/taskDetail/taskEnvironment'
-        resourceUsage: require '../templates/taskDetail/taskResourceUsage'
+        overview:                   require '../templates/taskDetail/taskOverview'
+        healthcheckNotification:    require '../templates/taskDetail/taskHealthcheckNotification'
+        history:                    require '../templates/taskDetail/taskHistory'
+        logs:                       require '../templates/taskDetail/taskS3Logs'
+        lbUpdates:                  require '../templates/taskDetail/taskLbUpdates'
+        healthChecks:               require '../templates/taskDetail/taskHealthChecks'
+        info:                       require '../templates/taskDetail/taskInfo'
+        environment:                require '../templates/taskDetail/taskEnvironment'
+        resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
 
     initialize: ({@taskId, @filePath}) ->
         #
@@ -41,6 +46,8 @@ class TaskDetailController extends Controller
 
         @collections.taskCleanups = new TaskCleanups
 
+        @collections.pendingDeploys = new Deploys state: 'pending'
+
         #
         # Subviews
         #
@@ -48,6 +55,11 @@ class TaskDetailController extends Controller
             collection: @collections.taskCleanups
             model:      @models.task
             template:   @templates.overview
+
+        @subviews.healthcheckNotification = new HealthcheckNotification
+            model:          @models.task
+            template:       @templates.healthcheckNotification
+            pendingDeploys: @collections.pendingDeploys
 
         @subviews.history = new SimpleSubview
             model:    @models.task
@@ -62,6 +74,14 @@ class TaskDetailController extends Controller
         @subviews.s3Logs = new ExpandableTableSubview
             collection: @collections.s3Logs
             template:   @templates.logs
+
+        @subviews.lbUpdates = new SimpleSubview
+            model:    @models.task
+            template:   @templates.lbUpdates
+
+        @subviews.healthChecks = new SimpleSubview
+            model:    @models.task
+            template:   @templates.healthChecks
 
         @subviews.info = new SimpleSubview
             model:    @models.task
@@ -107,6 +127,8 @@ class TaskDetailController extends Controller
         @resourcesFetched = false
 
         @collections.taskCleanups.fetch()
+
+        @collections.pendingDeploys.fetch()
 
         @models.task.fetch()
             .done =>

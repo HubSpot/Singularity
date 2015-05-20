@@ -29,29 +29,23 @@ class RequestView extends View
           config: config
 
         # Attach subview elements
-        @$('#header').html           @subviews.header.$el
-        @$('#stats').html            @subviews.stats.$el
-        @$('#active-tasks').html     @subviews.activeTasks.$el
-        @$('#scheduled-tasks').html  @subviews.scheduledTasks.$el
-        @$('#task-history').html     @subviews.taskHistory.$el
-        @$('#deploy-history').html   @subviews.deployHistory.$el
-        @$('#request-history').html  @subviews.requestHistory.$el
+        @$('#header').html              @subviews.header.$el
+        @$('#request-history-msg').html @subviews.requestHistoryMsg.$el
+        @$('#stats').html               @subviews.stats.$el
+        @$('#active-tasks').html        @subviews.activeTasks.$el
+        @$('#scheduled-tasks').html     @subviews.scheduledTasks.$el
+        @$('#task-history').html        @subviews.taskHistory.$el
+        @$('#deploy-history').html      @subviews.deployHistory.$el
+        @$('#request-history').html     @subviews.requestHistory.$el
 
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
         collectionName = $target.data 'collection'
 
-        if collectionName is 'deployHistory'
-            deploy = new Deploy {},
-                requestId: @model.id
-                deployId:  id
-
-            utils.viewJSON deploy
-        else
-            # Need to reach into subviews to get the necessary data
-            collection = @subviews[collectionName].collection
-            utils.viewJSON collection.get id
+        # Need to reach into subviews to get the necessary data
+        collection = @subviews[collectionName].collection
+        utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
         utils.viewJSON @model
