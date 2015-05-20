@@ -1,6 +1,5 @@
 import os
 import sys
-import re
 import grequests
 import logfetch_base
 from termcolor import colored
@@ -66,10 +65,6 @@ def logs_for_all_requests(args):
       s3_logs = get_json_response(s3_request_logs_uri(args, request))
       logs = logs + s3_logs if s3_logs else logs
     return [dict(t) for t in set([tuple(l.items()) for l in logs])] # remove any duplicates
-
-def time_from_filename(filename):
-  time_string = re.search('(\d{13})', filename).group(1)
-  return int(time_string[0:-3])
 
 def s3_task_logs_uri(args, idString):
   return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), TASK_FORMAT.format(idString))
