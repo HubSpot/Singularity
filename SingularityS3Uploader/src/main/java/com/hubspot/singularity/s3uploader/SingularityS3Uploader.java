@@ -1,9 +1,7 @@
 package com.hubspot.singularity.s3uploader;
 
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +10,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.ServiceException;
@@ -190,18 +190,14 @@ public class SingularityS3Uploader implements Closeable {
 
   public static boolean fileOpen(Path path) {
     try {
-      Process plsof = new ProcessBuilder(new String[]{"lsof", "|", "grep", path.toAbsolutePath().toString()}).start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(plsof.getInputStream()));
-      String line;
-      while((line=reader.readLine())!=null) {
+      SimpleProcessManager lsof = new SimpleProcessManager(LOG);
+      List<String> cmd = ImmutableList.of("lsof", "|", "grep", path.toAbsolutePath().toString());
+      List < String > output = lsof.runCommandWithOutput(cmd);
+      for (String line : output) {
         if(line.contains(path.toAbsolutePath().toString())) {
-          reader.close();
-          plsof.destroy();
           return true;
         }
       }
-      reader.close();
-      plsof.destroy();
     } catch(Exception e) {
       LOG.error("Could not determine if file {} was in use, skipping", path, e);
       return true;
