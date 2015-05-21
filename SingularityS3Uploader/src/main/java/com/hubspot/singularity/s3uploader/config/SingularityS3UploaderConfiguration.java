@@ -27,6 +27,8 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
   public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
 
+  public static final String CHECK_FOR_OPEN_FILES = "s3uploader.check.for.open.files";
+
   @Min(0)
   @JsonProperty
   private long pollForShutDownMillis = 1000;
@@ -58,6 +60,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   @JsonProperty
   private long uploadPartSize = 20971520L;
+
+  @JsonProperty
+  private boolean checkForOpenFiles = true;
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -127,6 +132,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.uploadPartSize = uploadPartSize;
   }
 
+  public boolean isCheckForOpenFiles() {
+    return checkForOpenFiles;
+  }
+
+  public void setCheckForOpenFiles(boolean checkForOpenFiles) {
+    this.checkForOpenFiles = checkForOpenFiles;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -138,6 +151,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
             ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
             ", uploadPartSize=" + uploadPartSize +
+            ", chkecForOpenFiles=" + checkForOpenFiles +
             ']';
   }
 
@@ -171,6 +185,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     }
     if (properties.containsKey(UPLOAD_PART_SIZE)) {
       setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
+    }
+    if (properties.containsKey(CHECK_FOR_OPEN_FILES)) {
+      setCheckForOpenFiles(Boolean.parseBoolean(properties.getProperty(CHECK_FOR_OPEN_FILES)));
     }
   }
 }

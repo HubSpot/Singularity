@@ -11,12 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-<<<<<<< HEAD
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-=======
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
->>>>>>> multipart
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.ServiceException;
@@ -158,7 +155,7 @@ public class SingularityS3Uploader implements Closeable {
     for (int i = 0; i < toUpload.size(); i++) {
       final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
-      if (!fileOpen(file)) {
+      if (!configuration.isCheckForOpenFiles() || !fileOpen(file)) {
         try {
           uploadSingle(i, file);
           metrics.upload();
@@ -204,7 +201,7 @@ public class SingularityS3Uploader implements Closeable {
   public static boolean fileOpen(Path path) {
     try {
       SimpleProcessManager lsof = new SimpleProcessManager(LOG);
-      List<String> cmd = ImmutableList.of("lsof", "|", "grep", path.toAbsolutePath().toString());
+      List<String> cmd = ImmutableList.of("lsof", path.toAbsolutePath().toString());
       List<String> output = lsof.runCommandWithOutput(cmd);
       for (String line : output) {
         if (line.contains(path.toAbsolutePath().toString())) {
