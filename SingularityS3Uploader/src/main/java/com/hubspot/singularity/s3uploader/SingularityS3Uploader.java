@@ -7,11 +7,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+<<<<<<< HEAD
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+=======
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
+>>>>>>> multipart
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.ServiceException;
@@ -19,6 +24,7 @@ import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
 import org.jets3t.service.security.AWSCredentials;
+import org.jets3t.service.utils.MultipartUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +50,9 @@ public class SingularityS3Uploader implements Closeable {
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
   private final String hostname;
+  private final SingularityS3UploaderConfiguration configuration;
 
-  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath) {
+  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath, SingularityS3UploaderConfiguration configuration) {
     AWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
@@ -73,6 +80,7 @@ public class SingularityS3Uploader implements Closeable {
     this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
+    this.configuration = configuration;
   }
 
   public Path getMetadataPath() {
@@ -178,12 +186,17 @@ public class SingularityS3Uploader implements Closeable {
 
     final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
 
-    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, Files.size(file));
+    long fileSizeBytes = Files.size(file);
+    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
 
     S3Object object = new S3Object(s3Bucket, file.toFile());
     object.setKey(key);
 
-    s3Service.putObject(s3Bucket, object);
+    if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
+      multipartUpload(object);
+    } else {
+      s3Service.putObject(s3Bucket, object);
+    }
 
     LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
   }
@@ -192,17 +205,25 @@ public class SingularityS3Uploader implements Closeable {
     try {
       SimpleProcessManager lsof = new SimpleProcessManager(LOG);
       List<String> cmd = ImmutableList.of("lsof", "|", "grep", path.toAbsolutePath().toString());
-      List < String > output = lsof.runCommandWithOutput(cmd);
+      List<String> output = lsof.runCommandWithOutput(cmd);
       for (String line : output) {
-        if(line.contains(path.toAbsolutePath().toString())) {
+        if (line.contains(path.toAbsolutePath().toString())) {
           return true;
         }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       LOG.error("Could not determine if file {} was in use, skipping", path, e);
       return true;
     }
     return false;
+  }
+
+  private void multipartUpload(S3Object object) throws Exception {
+
+    List objectsToUploadAsMultipart = Arrays.asList(object);
+
+    MultipartUtils mpUtils = new MultipartUtils(configuration.getUploadPartSize());
+    mpUtils.uploadObjects(s3Bucket.getName(), s3Service, objectsToUploadAsMultipart, null);
   }
 
 }
