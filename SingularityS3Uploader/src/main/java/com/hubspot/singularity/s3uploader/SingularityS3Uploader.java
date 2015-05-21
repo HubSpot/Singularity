@@ -1,7 +1,9 @@
 package com.hubspot.singularity.s3uploader;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -148,19 +150,23 @@ public class SingularityS3Uploader implements Closeable {
     for (int i = 0; i < toUpload.size(); i++) {
       final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
-      try {
-        uploadSingle(i, file);
-        metrics.upload();
-        success++;
-        Files.delete(file);
-      } catch (S3ServiceException se) {
-        metrics.error();
-        LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
-      } catch (Exception e) {
-        metrics.error();
-        LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
-      } finally {
-        context.stop();
+      if (!fileOpen(file)) {
+        try {
+          uploadSingle(i, file);
+          metrics.upload();
+          success++;
+          Files.delete(file);
+        } catch (S3ServiceException se) {
+          metrics.error();
+          LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
+        } catch (Exception e) {
+          metrics.error();
+          LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
+        } finally {
+          context.stop();
+        }
+      } else {
+        LOG.info("{} is in use by another process, will retry upload later", file);
       }
     }
 
@@ -180,6 +186,27 @@ public class SingularityS3Uploader implements Closeable {
     s3Service.putObject(s3Bucket, object);
 
     LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+  }
+
+  public static boolean fileOpen(Path path) {
+    try {
+      Process plsof = new ProcessBuilder(new String[]{"lsof", "|", "grep", path.toAbsolutePath().toString()}).start();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(plsof.getInputStream()));
+      String line;
+      while((line=reader.readLine())!=null) {
+        if(line.contains(path.toAbsolutePath().toString())) {
+          reader.close();
+          plsof.destroy();
+          return true;
+        }
+      }
+      reader.close();
+      plsof.destroy();
+    } catch(Exception e) {
+      LOG.error("Could not determine if file {} was in use, skipping", path, e);
+      return true;
+    }
+    return false;
   }
 
 }
