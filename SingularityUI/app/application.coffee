@@ -157,21 +157,7 @@ class Application
         @user = new User
         @user.fetch() # Syncronous because it uses localStorage
 
-        if not @user.get('deployUser')
-            Backbone.history.once 'route', =>
-                setTimeout (=> @deployUserPrompt()), 1000
-
     getUsername: =>
-        @user.get "deployUser" or "Unknown"
-
-    deployUserPrompt: (welcome) ->
-        vex.dialog.prompt
-            message: require('templates/vex/usernamePrompt')()
-            value: @user.get('deployUser')
-            placeholder: 'user'
-            callback: (user) =>
-                if _.isString(user) and user isnt ''
-                    @user.set('deployUser', @user.deployUser = user)
-                    @user.save()
+        @user.get 'username'
 
 module.exports = new Application

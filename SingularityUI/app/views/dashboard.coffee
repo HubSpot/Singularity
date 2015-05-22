@@ -16,7 +16,7 @@ class DashboardView extends View
         @listenTo @collection, 'sync', @render
 
     render: =>
-        deployUser = app.user.get 'deployUser'
+        deployUser = app.getUsername()
 
         partials = 
             partials:
