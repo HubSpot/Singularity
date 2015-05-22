@@ -8,7 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
@@ -20,15 +22,27 @@ public class SimpleProcessManager extends SafeProcessManager {
     super(log);
   }
 
+  public void runCommand(final List<String> command, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
+    runCommand(command, Redirect.INHERIT, acceptableExitCodes);
+  }
+
   public void runCommand(final List<String> command) throws InterruptedException, ProcessFailedException {
-    runCommand(command, Redirect.INHERIT);
+    runCommand(command, Redirect.INHERIT, Sets.newHashSet(0));
+  }
+
+  public List<String> runCommandWithOutput(final List<String> command, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
+    return runCommand(command, Redirect.PIPE, acceptableExitCodes);
   }
 
   public List<String> runCommandWithOutput(final List<String> command) throws InterruptedException, ProcessFailedException {
-    return runCommand(command, Redirect.PIPE);
+    return runCommand(command, Redirect.PIPE, Sets.newHashSet(0));
   }
 
   public List<String> runCommand(final List<String> command, final Redirect redirectOutput) throws InterruptedException, ProcessFailedException {
+    return runCommand(command, redirectOutput, Sets.newHashSet(0));
+  }
+
+  public List<String> runCommand(final List<String> command, final Redirect redirectOutput, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
     Optional<Integer> exitCode = Optional.absent();
@@ -70,8 +84,8 @@ public class SimpleProcessManager extends SafeProcessManager {
       processFinished(exitCode);
     }
 
-    if (exitCode.isPresent() && exitCode.get() != 0) {
-      throw new ProcessFailedException(String.format("Got non-zero exit code %s while running %s", exitCode, getCurrentProcessToString()));
+    if (exitCode.isPresent() && !acceptableExitCodes.contains(exitCode.get())) {
+      throw new ProcessFailedException(String.format("Got unacceptable exit code %s while running %s", exitCode, getCurrentProcessToString()));
     }
 
     if (!reader.isPresent()) {
