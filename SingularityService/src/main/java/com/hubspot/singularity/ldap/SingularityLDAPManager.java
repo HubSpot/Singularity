@@ -57,6 +57,11 @@ public class SingularityLDAPManager {
       return Collections.emptySet();
     }
 
+    if (Thread.interrupted()) {
+      LOG.warn("Current thread is interrupted -- returning empty group set for user {}", user);
+      return Collections.emptySet();
+    }
+
     final Set<String> groups = new HashSet<>();
 
     try {
