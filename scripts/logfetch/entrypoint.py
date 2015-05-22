@@ -22,7 +22,7 @@ DEFAULT_CHUNK_SIZE = 8192
 DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
 DEFAULT_TASK_COUNT = 10
 DEFAULT_DAYS = 7
-DEFAULT_S3_PATTERN = '%requestId/%Y/%m/%taskId_%index-%s-%filename'
+DEFAULT_S3_PATTERN = '%requestId/%%Y/%m/%taskId_%index-%s-%filename'
 
 def exit(reason, color='red'):
   sys.stderr.write(colored(reason, color) + '\n')
@@ -80,7 +80,7 @@ def convert_to_date(args, argument):
             timestring = '{0} {1}'.format(argument, datetime.utcnow().strftime("%H:%M:%S")) if len(argument) < 11 else argument
             val = datetime.strptime('{0} UTC'.format(timestring), "%Y-%m-%d %H:%M:%S %Z")
       except:
-          exit('Start/End days value must be either a number of days or a date in format "%Y-%m-%d %H:%M:%S" or "%Y-%m-%d"')
+          exit('Start/End days value must be either a number of days or a date in format "%%Y-%%m-%%d %%H:%%M:%%S" or [M#V]"%%Y-%%m-%%d"')
     return val
 
 def fetch():
@@ -120,8 +120,8 @@ def fetch():
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
   parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d'")
-  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d' (defaults to None/now)")
+  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d'")
+  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d' (defaults to None/now)")
   parser.add_argument("-l", "--log-type", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
   parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
@@ -176,8 +176,8 @@ def cat():
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
   parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d'")
-  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format '%Y-%m-%d %H:%M:%S' or '%Y-%m-%d' (defaults to None/now)")
+  parser.add_argument("-s", "--start-days", dest="start_days", help="Search for logs no older than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d'")
+  parser.add_argument("-e", "--end-days", dest="end_days", help="Search for logs no newer than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d' (defaults to None/now)")
   parser.add_argument("-l", "--logtype", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
   parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
