@@ -92,19 +92,19 @@ public class SingularityValidator {
 
       // check for required group membership...
       if (!ldapRequiredGroups.isEmpty()) {
-        checkForbidden(!Sets.intersection(groups, ldapRequiredGroups).isEmpty(), "User %s must be part of one or more required groups: %s", user.get(), COMMA_JOINER.join(ldapRequiredGroups));
+        checkForbidden(!Sets.intersection(groups, ldapRequiredGroups).isEmpty(), "User %s must be part of one or more required groups: %s", user.get().getUsername(), COMMA_JOINER.join(ldapRequiredGroups));
       }
 
       // if user isn't part of an admin group...
       if (Sets.intersection(groups, ldapAdminGroups).isEmpty()) {
         // if changing groups, check for group membership of old group
         if (existingRequest.isPresent() && existingRequest.get().getGroup().isPresent() && !request.getGroup().equals(existingRequest.get().getGroup())) {
-          checkForbidden(groups.contains(existingRequest.get().getGroup().get()), "User %s must be part of old group %s", user.get(), existingRequest.get().getGroup().get());
+          checkForbidden(groups.contains(existingRequest.get().getGroup().get()), "User %s must be part of old group %s", user.get().getUsername(), existingRequest.get().getGroup().get());
         }
 
         // check for group membership of current / new group
         if (request.getGroup().isPresent()) {
-          checkForbidden(groups.contains(request.getGroup().get()), "User %s must be part of group %s", user.get(), request.getGroup().get());
+          checkForbidden(groups.contains(request.getGroup().get()), "User %s must be part of group %s", user.get().getUsername(), request.getGroup().get());
         }
       }
     }
@@ -117,7 +117,7 @@ public class SingularityValidator {
 
         final Set<String> groups = user.get().getGroups();
 
-        checkForbidden(!Sets.intersection(groups, ldapAdminGroups).isEmpty(), "User %s must be part of an admin group", user);
+        checkForbidden(!Sets.intersection(groups, ldapAdminGroups).isEmpty(), "User %s must be part of an admin group", user.get().getUsername());
       }
     }
   }
