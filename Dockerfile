@@ -1,5 +1,7 @@
 FROM mesosphere/mesos:0.21.1-1.1.ubuntu1404
 
+MAINTAINER platform-infrastructure-groups@hubspot.com
+
 # Java Version
 ENV JAVA_VERSION_MAJOR 8
 ENV JAVA_VERSION_MINOR 45
@@ -14,8 +16,7 @@ RUN apt-get update && \
     gunzip ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz &&\
     tar -xf ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar -C /opt &&\
     rm ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar &&\
-    ln -s /opt/jdk1.${JAVA_VERSION_MAJOR}.0_${JAVA_VERSION_MINOR} /opt/jdk &&\
-    ln -fs /opt/jdk/bin/java /usr/bin/java8
+    ln -s /opt/jdk1.${JAVA_VERSION_MAJOR}.0_${JAVA_VERSION_MINOR} /opt/jdk
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
