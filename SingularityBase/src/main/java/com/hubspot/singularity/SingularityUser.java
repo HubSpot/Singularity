@@ -30,8 +30,12 @@ public class SingularityUser {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     SingularityUser that = (SingularityUser) o;
     return Objects.equals(username, that.username) &&
             Objects.equals(groups, that.groups);
