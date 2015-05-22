@@ -23,6 +23,6 @@ COPY SingularityService/target/SingularityService-0.4.2-SNAPSHOT-shaded.jar /etc
 COPY docker/singularity/start.sh /etc/singularity/start.sh
 COPY docker/singularity/singularity.yaml /etc/singularity/singularity.yaml
 
-ENTRYPOINT ['/etc/singularity/start.sh']
+CMD '/etc/singularity/start.sh'
 
 

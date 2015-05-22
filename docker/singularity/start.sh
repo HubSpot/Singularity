@@ -8,7 +8,7 @@ env PORT=7092
 exec java \
   -Xmx512m \
   -Djava.net.preferIPv4Stack=true \
-   -Ddw.mesos.master=$SINGULARITY_MASTER \
+  -Ddw.mesos.master=$SINGULARITY_MASTER \
   -Ddw.zookeeper.quorum=$SINGULARITY_ZK \
   -Ddw.ui.baseUrl="http://$SINGULARITY_HOSTNAME:7099/singularity" \
   -jar /etc/singularity/singularity.jar \
