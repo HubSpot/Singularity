@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
 import java.util.Set;
 
 public class SingularityUser {
@@ -17,5 +18,27 @@ public class SingularityUser {
 
   public Set<String> getGroups() {
     return groups;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityUser[" +
+            "username='" + username + '\'' +
+            ", groups=" + groups +
+            ']';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    SingularityUser that = (SingularityUser) o;
+    return Objects.equals(username, that.username) &&
+            Objects.equals(groups, that.groups);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(username, groups);
   }
 }
