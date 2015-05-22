@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 import org.jets3t.service.S3Service;
@@ -202,7 +203,7 @@ public class SingularityS3Uploader implements Closeable {
     try {
       SimpleProcessManager lsof = new SimpleProcessManager(LOG);
       List<String> cmd = ImmutableList.of("lsof", path.toAbsolutePath().toString());
-      List<String> output = lsof.runCommandWithOutput(cmd);
+      List<String> output = lsof.runCommandWithOutput(cmd, Sets.newHashSet(0, 1));
       for (String line : output) {
         if (line.contains(path.toAbsolutePath().toString())) {
           return true;
