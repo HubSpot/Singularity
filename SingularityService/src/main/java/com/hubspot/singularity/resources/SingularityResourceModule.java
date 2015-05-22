@@ -36,6 +36,7 @@ public class SingularityResourceModule extends AbstractModule {
     bind(TaskResource.class);
     bind(TestResource.class);
     bind(WebhookResource.class);
+    bind(AuthResource.class);
 
     switch (uiConfiguration.getRootUrlMode()) {
     case UI_REDIRECT: {
