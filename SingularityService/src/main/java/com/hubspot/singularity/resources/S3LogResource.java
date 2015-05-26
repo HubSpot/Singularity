@@ -71,12 +71,8 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private final Optional<S3Service> s3;
   private final Optional<S3Configuration> configuration;
-  private final DeployManager deployManager;
   private final RequestHistoryHelper requestHistoryHelper;
   private final RequestManager requestManager;
-  private final SingularityValidator validator;
-
-  private final Optional<SingularityUser> user;
 
   private static final Comparator<SingularityS3Log> LOG_COMPARATOR = new Comparator<SingularityS3Log>() {
 
@@ -90,14 +86,11 @@ public class S3LogResource extends AbstractHistoryResource {
   @Inject
   public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3,
       Optional<S3Configuration> configuration, SingularityValidator validator, Optional<SingularityUser> user) {
-    super(historyManager, taskManager, deployManager);
+    super(historyManager, taskManager, deployManager, validator, user);
     this.requestManager = requestManager;
     this.s3 = s3;
-    this.deployManager = deployManager;
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;
-    this.validator = validator;
-    this.user = user;
   }
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId) {

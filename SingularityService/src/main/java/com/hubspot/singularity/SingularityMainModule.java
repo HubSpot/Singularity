@@ -3,9 +3,6 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.SimpleServerFactory;
-
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.UUID;
@@ -62,6 +59,8 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 
 
 public class SingularityMainModule implements Module {
@@ -86,6 +85,9 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
+
+  public static final String LDAP_REFRESH_THREADPOOL_NAME = "_ldap_refresh_threadpool";
+  public static final Named LDAP_REFRESH_THREADPOOL_NAMED = Names.named(LDAP_REFRESH_THREADPOOL_NAME);
 
   private final SingularityConfiguration configuration;
 
@@ -136,12 +138,14 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityManagedScheduledExecutorServiceFactory.class).in(Scopes.SINGLETON);
 
     binder.bind(ScheduledExecutorService.class).annotatedWith(HEALTHCHECK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getHealthcheckStartThreads(),
-        configuration.getThreadpoolShutdownDelayInSeconds(),
-        "healthcheck")).in(Scopes.SINGLETON);
+            configuration.getThreadpoolShutdownDelayInSeconds(),
+            "healthcheck")).in(Scopes.SINGLETON);
 
     binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
+
+    binder.bind(ScheduledExecutorService.class).annotatedWith(LDAP_REFRESH_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getLdapConfiguration().getCacheThreads(), configuration.getThreadpoolShutdownDelayInSeconds(), "ldap-cache")).in(Scopes.SINGLETON);
 
     try {
       binder.bindConstant().annotatedWith(Names.named(HOST_ADDRESS_PROPERTY)).to(JavaUtils.getHostAddress());

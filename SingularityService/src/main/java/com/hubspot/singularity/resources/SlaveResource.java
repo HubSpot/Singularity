@@ -30,18 +30,9 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   public static final String PATH = SingularityService.API_BASE_PATH + "/slaves";
 
-  private final SlaveManager slaveManager;
-  private final SingularityValidator validator;
-
-  private final Optional<SingularityUser> user;
-
   @Inject
   public SlaveResource(SlaveManager slaveManager, SingularityValidator validator, Optional<SingularityUser> user) {
-    super(slaveManager);
-
-    this.slaveManager = slaveManager;
-    this.validator = validator;
-    this.user = user;
+    super(slaveManager, validator, user);
   }
 
   @Override
@@ -53,14 +44,16 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/")
   @ApiOperation("Retrieve the list of all known slaves, optionally filtering by a particular state")
   public List<SingularitySlave> getSlaves(@ApiParam("Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
-    return slaveManager.getObjectsFiltered(filterState);
+    validator.checkForAdminAuthorization(user);
+    return manager.getObjectsFiltered(filterState);
   }
 
   @GET
   @Path("/slave/{slaveId}")
   @ApiOperation("Retrieve the history of a given slave")
   public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
-    return slaveManager.getHistory(slaveId);
+    validator.checkForAdminAuthorization(user);
+    return manager.getHistory(slaveId);
   }
 
   @DELETE

@@ -149,7 +149,7 @@ public class SingularityTestModule implements Module {
               }
             }));
 
-            binder.bind(SingularityLDAPManager.class).toInstance(new SingularityLDAPManager(null, configuration));
+            binder.bind(SingularityLDAPManager.class).toInstance(new SingularityLDAPManager(null, null, configuration));
             binder.bind(new TypeLiteral<Optional<SingularityUser>>() {}).toInstance(Optional.<SingularityUser>absent());
           }
         }));

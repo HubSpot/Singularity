@@ -1,5 +1,8 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
+
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -7,10 +10,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -18,7 +22,10 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -34,28 +41,28 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class HistoryResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH +  "/history";
 
-  private final HistoryManager historyManager;
-  private final TaskManager taskManager;
   private final DeployHistoryHelper deployHistoryHelper;
   private final TaskHistoryHelper taskHistoryHelper;
   private final RequestHistoryHelper requestHistoryHelper;
+  private final RequestManager requestManager;
 
   @Inject
   public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
-      RequestHistoryHelper requestHistoryHelper) {
-    super(historyManager, taskManager, deployManager);
+      RequestHistoryHelper requestHistoryHelper, RequestManager requestManager, SingularityValidator validator, Optional<SingularityUser> user) {
+    super(historyManager, taskManager, deployManager, validator, user);
 
-    this.taskManager = taskManager;
     this.requestHistoryHelper = requestHistoryHelper;
     this.deployHistoryHelper = deployHistoryHelper;
-    this.historyManager = historyManager;
     this.taskHistoryHelper = taskHistoryHelper;
+    this.requestManager = requestManager;
   }
 
   @GET
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve the history for a specific task.")
   public SingularityTaskHistory getHistoryForTask(@ApiParam("Task ID to look up") @PathParam("taskId") String taskId) {
+    validator.checkForAuthorizationByTaskId(taskId, user);
+
     SingularityTaskId taskIdObj = getTaskIdObject(taskId);
 
     return getTaskHistory(taskIdObj);
@@ -66,9 +73,7 @@ public class HistoryResource extends AbstractHistoryResource {
       return 100;
     }
 
-    if (countParam < 1) {
-      throw new WebApplicationException(Status.BAD_REQUEST);
-    }
+    checkBadRequest(countParam >= 0, "count param must be non-zero");
 
     if (countParam > 1000) {
       return 1000;
@@ -82,9 +87,7 @@ public class HistoryResource extends AbstractHistoryResource {
       return 0;
     }
 
-    if (pageParam < 1) {
-      throw new WebApplicationException(Status.BAD_REQUEST);
-    }
+    checkBadRequest(pageParam >= 1, "page param must be 1 or greater");
 
     return limitCount * (pageParam - 1);
   }
@@ -93,6 +96,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks/active")
   @ApiOperation("Retrieve the history for all active tasks of a specific request.")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
+    validator.checkForAuthorizationByRequestId(requestId, user);
+
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
     return taskHistoryHelper.getHistoriesFor(activeTaskIds);
@@ -103,6 +108,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @ApiOperation("Retrieve the history for a specific deploy.")
   public SingularityDeployHistory getDeploy(@ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
+    validator.checkForAuthorizationByRequestId(requestId, user);
     return getDeployHistory(requestId, deployId);
   }
 
@@ -114,6 +120,8 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
+
+    validator.checkForAuthorizationByRequestId(requestId, user);
 
     return taskHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
@@ -127,6 +135,8 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
+    validator.checkForAuthorizationByRequestId(requestId, user);
+
     return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
 
@@ -139,19 +149,26 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
+    validator.checkForAuthorizationByRequestId(requestId, user);
+
     return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
 
   @GET
   @Path("/requests/search")
   @ApiOperation("Search for requests.")
-  public List<String> getRequestHistoryForRequestLike(@ApiParam("Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
+  public Iterable<String> getRequestHistoryForRequestLike(@ApiParam("Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
+    return Iterables.filter(historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount), new Predicate<String>() {
+      @Override
+      public boolean apply(String input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input));
+      }
+    });
   }
 
 }
