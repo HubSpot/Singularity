@@ -3,9 +3,9 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
+import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
 
 import java.util.Collections;
-import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -18,6 +18,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
@@ -51,29 +53,26 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
-  private final DeployManager deployManager;
-  private final RequestManager requestManager;
   private final SingularityValidator validator;
-
-  private final Optional<SingularityUser> user;
 
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, Optional<SingularityUser> user) {
-    super(requestManager, deployManager);
+    super(requestManager, deployManager, user);
 
-    this.requestManager = requestManager;
-    this.deployManager = deployManager;
     this.validator = validator;
-
-    this.user = user;
   }
 
   @GET
   @PropertyFiltering
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
-  public List<SingularityPendingDeploy> getPendingDeploys() {
-    return deployManager.getPendingDeploys();
+  public Iterable<SingularityPendingDeploy> getPendingDeploys() {
+    return Iterables.filter(deployManager.getPendingDeploys(), new Predicate<SingularityPendingDeploy>() {
+      @Override
+      public boolean apply(SingularityPendingDeploy input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getDeployMarker().getRequestId()));
+      }
+    });
   }
 
   @POST

@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
@@ -17,10 +19,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityLDAPPoolStats;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
@@ -30,14 +37,16 @@ public class SingularityLDAPManager {
   private final LdapConnectionPool connectionPool;
   private final SingularityConfiguration configuration;
   private final LoadingCache<String, Set<String>> userGroupCache;
+  private final ExecutorService executorService;
 
   @Inject
-  public SingularityLDAPManager(LdapConnectionPool connectionPool, SingularityConfiguration configuration) {
+  public SingularityLDAPManager(@Named(SingularityMainModule.LDAP_REFRESH_THREADPOOL_NAME) ExecutorService executorService, LdapConnectionPool connectionPool, SingularityConfiguration configuration) {
     this.connectionPool = connectionPool;
     this.configuration = configuration;
+    this.executorService = executorService;
 
     this.userGroupCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(configuration.getLdapConfiguration().getCacheExpirationMs(), TimeUnit.MILLISECONDS)
+            .refreshAfterWrite(configuration.getLdapConfiguration().getCacheExpirationMs(), TimeUnit.MILLISECONDS)
             .build(new LDAPGroupCacheLoader());
   }
 
@@ -94,11 +103,29 @@ public class SingularityLDAPManager {
     }
   }
 
+  public CacheStats getCacheStats() {
+    return userGroupCache.stats();
+  }
+
   private class LDAPGroupCacheLoader extends CacheLoader<String, Set<String>> {
     @Override
     public Set<String> load(String key) throws Exception {
       LOG.debug("Hitting LDAP for {}'s groups", key);
       return getGroupsForUserFromLDAP(key);
+    }
+
+    @Override
+    public ListenableFuture<Set<String>> reload(final String key, Set<String> oldValue) throws Exception {
+      LOG.debug("Reloading {}'s groups", key);
+
+      final ListenableFutureTask<Set<String>> task = ListenableFutureTask.create(new Callable<Set<String>>() {
+        @Override
+        public Set<String> call() throws Exception {
+          return getGroupsForUserFromLDAP(key);
+        }
+      });
+      executorService.submit(task);
+      return task;
     }
   }
 }

@@ -4,6 +4,7 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
+import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -63,22 +66,14 @@ public class RequestResource extends AbstractRequestResource {
 
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
-  private final RequestManager requestManager;
-  private final DeployManager deployManager;
-
-  private final Optional<SingularityUser> user;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, Optional<SingularityUser> user) {
-    super(requestManager, deployManager);
+    super(requestManager, deployManager, user);
 
     this.validator = validator;
     this.mailer = mailer;
     this.taskManager = taskManager;
-    this.deployManager = deployManager;
-    this.requestManager = requestManager;
-
-    this.user = user;
   }
 
   private static class SingularityRequestDeployHolder {
@@ -199,7 +194,7 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
-        new SingularityRequestCleanup(queryUser, RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
+            new SingularityRequestCleanup(queryUser, RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
@@ -306,17 +301,16 @@ public class RequestResource extends AbstractRequestResource {
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
   }
 
-  @GET
-  @PropertyFiltering
-  @Path("/active")
-  @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getActiveRequests() {
-    return getRequestsWithDeployState(requestManager.getActiveRequests());
-  }
-
   private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests) {
+    final Iterable<SingularityRequestWithState> authorizedRequests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
+      @Override
+      public boolean apply(SingularityRequestWithState input) {
+        return userIsAuthorizedForRequest(user, input.getRequest());
+      }
+    });
+
     List<String> requestIds = Lists.newArrayList();
-    for (SingularityRequestWithState requestWithState : requests) {
+    for (SingularityRequestWithState requestWithState : authorizedRequests) {
       requestIds.add(requestWithState.getRequest().getId());
     }
 
@@ -324,12 +318,20 @@ public class RequestResource extends AbstractRequestResource {
 
     Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
 
-    for (SingularityRequestWithState requestWithState : requests) {
+    for (SingularityRequestWithState requestWithState : authorizedRequests) {
       Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
       parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(), Optional.<SingularityPendingDeploy> absent()));
     }
 
     return parents;
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/active")
+  @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
+  public List<SingularityRequestParent> getActiveRequests() {
+    return getRequestsWithDeployState(requestManager.getActiveRequests());
   }
 
   @GET
@@ -367,16 +369,26 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/queued/pending")
   @ApiOperation(value="Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
-  public List<SingularityPendingRequest> getPendingRequests() {
-    return requestManager.getPendingRequests();
+  public Iterable<SingularityPendingRequest> getPendingRequests() {
+    return Iterables.filter(requestManager.getPendingRequests(), new Predicate<SingularityPendingRequest>() {
+      @Override
+      public boolean apply(SingularityPendingRequest input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
+      }
+    });
   }
 
   @GET
   @PropertyFiltering
   @Path("/queued/cleanup")
   @ApiOperation(value="Retrieve the list of requests being cleaned up", response=SingularityRequestCleanup.class, responseContainer="List")
-  public List<SingularityRequestCleanup> getCleanupRequests() {
-    return requestManager.getCleanupRequests();
+  public Iterable<SingularityRequestCleanup> getCleanupRequests() {
+    return Iterables.filter(requestManager.getCleanupRequests(), new Predicate<SingularityRequestCleanup>() {
+      @Override
+      public boolean apply(SingularityRequestCleanup input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
+      }
+    });
   }
 
   @GET

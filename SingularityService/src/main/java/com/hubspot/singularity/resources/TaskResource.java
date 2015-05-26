@@ -3,6 +3,7 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
+import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -30,6 +32,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
@@ -37,6 +40,9 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
@@ -56,31 +62,48 @@ public class TaskResource {
   private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
+  private final RequestManager requestManager;
+  private final SingularityValidator validator;
+  private final Optional<SingularityUser> user;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
+                      RequestManager requestManager, SingularityValidator validator, Optional<SingularityUser> user) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
+    this.requestManager = requestManager;
+    this.validator = validator;
+    this.user = user;
   }
 
   @GET
   @PropertyFiltering
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
-  public List<SingularityTaskRequest> getScheduledTasks() {
+  public Iterable<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
-    return taskRequestManager.getTaskRequests(tasks);
+    return Iterables.filter(taskRequestManager.getTaskRequests(tasks), new Predicate<SingularityTaskRequest>() {
+      @Override
+      public boolean apply(SingularityTaskRequest input) {
+        return userIsAuthorizedForRequest(user, input.getRequest());
+      }
+    });
   }
 
   @GET
   @PropertyFiltering
   @Path("/scheduled/ids")
   @ApiOperation("Retrieve list of scheduled task IDs.")
-  public List<SingularityPendingTaskId> getScheduledTaskIds() {
-    return taskManager.getPendingTaskIds();
+  public Iterable<SingularityPendingTaskId> getScheduledTaskIds() {
+    return Iterables.filter(taskManager.getPendingTaskIds(), new Predicate<SingularityPendingTaskId>() {
+      @Override
+      public boolean apply(SingularityPendingTaskId input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
+      }
+    });
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -112,6 +135,8 @@ public class TaskResource {
 
     checkNotFound(!taskRequestList.isEmpty(), "Couldn't find: " + pendingTaskIdStr);
 
+    validator.checkForAuthorization(taskRequestList.get(0).getRequest(), Optional.<SingularityRequest>absent(), user);
+
     return Iterables.getFirst(taskRequestList, null);
   }
 
@@ -120,6 +145,8 @@ public class TaskResource {
   @Path("/scheduled/request/{requestId}")
   @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
   public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
+    validator.checkForAuthorizationByRequestId(requestId, user);
+
     final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
 
     return taskRequestManager.getTaskRequests(tasks);
@@ -128,36 +155,56 @@ public class TaskResource {
   @GET
   @Path("/active/slave/{slaveId}")
   @ApiOperation("Retrieve list of active tasks on a specific slave.")
-  public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
+  public Iterable<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get());
+    return Iterables.filter(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), new Predicate<SingularityTask>() {
+      @Override
+      public boolean apply(SingularityTask input) {
+        return userIsAuthorizedForRequest(user, input.getTaskRequest().getRequest());
+      }
+    });
   }
 
   @GET
   @PropertyFiltering
   @Path("/active")
   @ApiOperation("Retrieve the list of active tasks.")
-  public List<SingularityTask> getActiveTasks() {
-    return taskManager.getActiveTasks();
+  public Iterable<SingularityTask> getActiveTasks() {
+    return Iterables.filter(taskManager.getActiveTasks(), new Predicate<SingularityTask>() {
+      @Override
+      public boolean apply(SingularityTask input) {
+        return userIsAuthorizedForRequest(user, input.getTaskRequest().getRequest());
+      }
+    });
   }
 
   @GET
   @PropertyFiltering
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
-  public List<SingularityTaskCleanup> getCleaningTasks() {
-    return taskManager.getCleanupTasks();
+  public Iterable<SingularityTaskCleanup> getCleaningTasks() {
+    return Iterables.filter(taskManager.getCleanupTasks(), new Predicate<SingularityTaskCleanup>() {
+      @Override
+      public boolean apply(SingularityTaskCleanup input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getTaskId().getRequestId()));
+      }
+    });
   }
 
   @GET
   @PropertyFiltering
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
-  public List<SingularityTaskId> getLbCleanupTasks() {
-    return taskManager.getLBCleanupTasks();
+  public Iterable<SingularityTaskId> getLbCleanupTasks() {
+    return Iterables.filter(taskManager.getLBCleanupTasks(), new Predicate<SingularityTaskId>() {
+      @Override
+      public boolean apply(SingularityTaskId input) {
+        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
+      }
+    });
   }
 
   private SingularityTask checkActiveTask(String taskId) {
@@ -166,6 +213,10 @@ public class TaskResource {
     Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
     checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
+
+    if (task.isPresent()) {
+      validator.checkForAuthorization(task.get(), user);
+    }
 
     return task.get();
   }
@@ -204,6 +255,8 @@ public class TaskResource {
   @Path("/task/{taskId}/cleanup")
   @ApiOperation("Get the cleanup object for the task, if it exists")
   public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
+    validator.checkForAuthorizationByTaskId(taskId, user);
+
     return taskManager.getTaskCleanup(taskId);
   }
 
@@ -213,10 +266,10 @@ public class TaskResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
   })
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user, @ApiParam("Pass true to save over any existing cleanup requests") @QueryParam("override") Optional<Boolean> override) {
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, @ApiParam("Pass true to save over any existing cleanup requests") @QueryParam("override") Optional<Boolean> override) {
     final SingularityTask task = checkActiveTask(taskId);
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(user, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId(), Optional.<String> absent());
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(queryUser, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId(), Optional.<String> absent());
 
     if (override.isPresent() && override.get().booleanValue()) {
       taskManager.saveTaskCleanup(taskCleanup);
