@@ -12,8 +12,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.ldap.SingularityLDAPManager;
 
 public class SingularityAuthModule implements Module {
-  public static final String USERNAME = "singularity.auth.username";
-
   private final SingularityConfiguration configuration;
 
   public SingularityAuthModule(SingularityConfiguration configuration) {
