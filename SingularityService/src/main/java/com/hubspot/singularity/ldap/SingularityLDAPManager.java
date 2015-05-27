@@ -55,6 +55,10 @@ public class SingularityLDAPManager {
     return new SingularityLDAPPoolStats(connectionPool.getNumActive(), connectionPool.getNumIdle());
   }
 
+  public CacheStats getGroupCacheStats() {
+    return userGroupCache.stats();
+  }
+
   public Set<String> getGroupsForUser(String user) {
     if (configuration.getLdapConfiguration().isStripUserEmailDomain()) {
       user = user.split("@")[0];
@@ -104,10 +108,6 @@ public class SingularityLDAPManager {
     }
   }
 
-  public CacheStats getCacheStats() {
-    return userGroupCache.stats();
-  }
-
   private class LDAPGroupCacheLoader extends CacheLoader<String, Set<String>> {
     @Override
     public Set<String> load(String key) throws Exception {
@@ -119,10 +119,13 @@ public class SingularityLDAPManager {
     public ListenableFuture<Set<String>> reload(final String key, Set<String> oldValue) throws Exception {
       LOG.debug("Reloading {}'s groups", key);
 
+      final long refreshStartTime = System.currentTimeMillis();
       final ListenableFutureTask<Set<String>> task = ListenableFutureTask.create(new Callable<Set<String>>() {
         @Override
         public Set<String> call() throws Exception {
-          return getGroupsForUserFromLDAP(key);
+          final Set<String> groups = getGroupsForUserFromLDAP(key);
+          LOG.debug("Refreshed {}'s groups in {} ms", key, System.currentTimeMillis() - refreshStartTime);
+          return groups;
         }
       });
       executorService.submit(task);
