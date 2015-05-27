@@ -20,13 +20,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
-import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.SingularityLDAPCacheStats;
 import com.hubspot.singularity.SingularityLDAPPoolStats;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -55,8 +55,8 @@ public class SingularityLDAPManager {
     return new SingularityLDAPPoolStats(connectionPool.getNumActive(), connectionPool.getNumIdle());
   }
 
-  public CacheStats getGroupCacheStats() {
-    return userGroupCache.stats();
+  public SingularityLDAPCacheStats getGroupCacheStats() {
+    return SingularityLDAPCacheStats.fromGuavaCacheStats(userGroupCache.stats());
   }
 
   public Set<String> getGroupsForUser(String user) {

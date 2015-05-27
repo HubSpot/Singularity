@@ -8,8 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.cache.CacheStats;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityLDAPCacheStats;
 import com.hubspot.singularity.SingularityLDAPPoolStats;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
@@ -61,7 +61,7 @@ public class StateResource {
 
   @GET
   @Path("/ldap/cache")
-  public CacheStats getGroupCacheStats() {
+  public SingularityLDAPCacheStats getGroupCacheStats() {
     return ldapManager.getGroupCacheStats();
   }
 }
