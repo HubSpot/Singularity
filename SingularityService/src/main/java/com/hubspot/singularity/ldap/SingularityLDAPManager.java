@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
@@ -40,7 +41,7 @@ public class SingularityLDAPManager {
   private final ExecutorService executorService;
 
   @Inject
-  public SingularityLDAPManager(@Named(SingularityMainModule.LDAP_REFRESH_THREADPOOL_NAME) ExecutorService executorService, LdapConnectionPool connectionPool, SingularityConfiguration configuration) {
+  public SingularityLDAPManager(@Named(SingularityMainModule.LDAP_REFRESH_THREADPOOL_NAME) ScheduledExecutorService executorService, LdapConnectionPool connectionPool, SingularityConfiguration configuration) {
     this.connectionPool = connectionPool;
     this.configuration = configuration;
     this.executorService = executorService;
