@@ -109,12 +109,6 @@
         <artifactId>BaragonCore</artifactId>
         <version>${baragon.version}</version>
       </dependency>
-
-      <dependency>
-        <groupId>org.jdbi</groupId>
-        <artifactId>jdbi</artifactId>
-        <version>2.55</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
