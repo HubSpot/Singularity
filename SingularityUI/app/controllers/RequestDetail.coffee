@@ -12,6 +12,7 @@ RequestHistory         = require '../collections/RequestHistory'
 
 RequestDetailView      = require '../views/request'
 PaginatedTableServersideView = require '../views/paginatedTableServersideView'
+PaginatedTableClientsideView = require '../views/paginatedTableClientsideView'
 ExpandableTableSubview = require '../views/expandableTableSubview'
 
 SimpleSubview          = require '../views/simpleSubview'
@@ -75,7 +76,7 @@ class RequestDetailController extends Controller
             collection: @collections.activeTasks
             template:   @templates.activeTasks
 
-        @subviews.requestTasksLogs = new ExpandableTableSubview
+        @subviews.requestTasksLogs = new PaginatedTableClientsideView
             collection: @collections.requestTasksLogs
             template:   @templates.logs
 

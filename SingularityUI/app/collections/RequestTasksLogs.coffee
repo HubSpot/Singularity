@@ -1,8 +1,9 @@
 S3Log = require '../models/S3Log'
 
 Collection = require './collection'
+ClientsidePaginableCollection = require './ClientsidePaginableCollection'
 
-class RequestTasksLogs extends Collection
+class RequestTasksLogs extends ClientsidePaginableCollection
 
     model: S3Log
 
