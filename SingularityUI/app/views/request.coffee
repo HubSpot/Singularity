@@ -1,6 +1,9 @@
 View = require './view'
 
 Deploy = require '../models/Deploy'
+TaskFiles = require '../collections/TaskFiles'
+
+AutoTailer = require './AutoTailer'
 
 class RequestView extends View
 
@@ -26,7 +29,7 @@ class RequestView extends View
 
     render: ->
         @$el.html @template
-          config: config
+            config: config
 
         # Attach subview elements
         @$('#header').html              @subviews.header.$el
@@ -55,11 +58,20 @@ class RequestView extends View
             app.router.navigate 'requests', trigger: true
 
     runRequest: (e) =>
-        @model.promptRun =>
-            @trigger 'refreshrequest'
-            setTimeout =>
+        @model.promptRun (data) =>   
+            # If user wants to redirect to a file after the task starts
+            if data.autoTail is 'on'
+                autoTailer = new AutoTailer({
+                    requestId: @requestId
+                    autoTailFilename: data.filename
+                    autoTailTimestamp: +new Date()
+                })
+
+                autoTailer.startAutoTailPolling()
+
+            else
                 @trigger 'refreshrequest'
-            , 2500
+                setTimeout ( => @trigger 'refreshrequest'), 2500
 
     scaleRequest: (e) =>
         @model.promptScale =>
@@ -82,8 +94,7 @@ class RequestView extends View
 
         @model.promptRun =>
             @subviews.scheduledTasks.collection.remove id
-            @subviews.scheduledTasks.render()
-
+            @subviews.scheduledTasks.render()            
             setTimeout =>
                 @trigger 'refreshrequest'
             , 3000
