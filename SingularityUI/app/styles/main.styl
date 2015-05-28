@@ -93,3 +93,14 @@ code
 @-moz-document url-prefix()
     fieldset
         display table-cell
+
+.auto-tail-checklist
+    margin-top 10px
+    .auto-tail-task-start
+        font-weight bolder
+
+    &.waiting-for-file
+        .auto-tail-task-start
+            font-weight normal
+        .auto-tail-file-exists
+            font-weight bolder
