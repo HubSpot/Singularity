@@ -2,7 +2,7 @@
 <header class='detail-header'>
     <div class="row">
         {{! Left side, info }}
-        <div class="col-md-8">
+        <div class="col-md-7">
             <h4>
                 <span class="request-state" data-state="{{ data.state }}">
                     {{humanizeText data.state}}
@@ -20,7 +20,7 @@
         </div>
 
         {{! Right side, buttons }}
-        <div class="col-md-4 button-container">
+        <div class="col-md-5 button-container">
             <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
                 JSON
             </a>
@@ -68,6 +68,10 @@
                     Bounce
                 </a>
             {{/if}}
+
+            <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
+                Edit
+            </a>
 
             {{#unless data.deleted}}
                 <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
