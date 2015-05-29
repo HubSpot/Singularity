@@ -104,3 +104,6 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
     return '' if not email
     email.split('@')[0]
+
+Handlebars.logger.level = 0;
+

@@ -54,6 +54,20 @@ public class UIConfiguration {
   @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
+  @NotEmpty
+  private String runningTaskLogPath = "stdout";
+
+  @NotEmpty
+  private String finishedTaskLogPath = "stdout";
+
+  public String getRunningTaskLogPath() {
+    return runningTaskLogPath;
+  }
+
+  public String getFinishedTaskLogPath() {
+    return finishedTaskLogPath;
+  }
+
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
@@ -132,4 +146,11 @@ public class UIConfiguration {
     this.shellCommands = shellCommands;
   }
 
+  public void setRunningTaskLogPath(String runningTaskLogPath) {
+    this.runningTaskLogPath = runningTaskLogPath;
+  }
+
+  public void setFinishedTaskLogPath(String finishedTaskLogPath) {
+    this.finishedTaskLogPath = finishedTaskLogPath;
+  }
 }

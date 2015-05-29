@@ -27,9 +27,11 @@
             hideNewRequestButton: {{{hideNewRequestButton}}},
             defaultCpus: {{{defaultCpus}}},
             defaultMemory: {{{defaultMemory}}},
-            defaultHealthcheckIntervalSeconds: {{{defaultHealthcheckIntervalSeconds}}},
-            defaultHealthcheckTimeoutSeconds: {{{defaultHealthcheckTimeoutSeconds}}},
-            defaultDeployHealthTimeoutSeconds: {{{defaultDeployHealthTimeoutSeconds}}},
+            defaultHealthcheckIntervalSeconds: 5,
+            defaultHealthcheckTimeoutSeconds: 10,
+            defaultDeployHealthTimeoutSeconds: 120,
+            runningTaskLogPath: "{{{ runningTaskLogPath }}}",
+            finishedTaskLogPath: "{{{ finishedTaskLogPath }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
             {{#slaveHttpsPort}}
             slaveHttpsPort: {{{slaveHttpsPort}}}

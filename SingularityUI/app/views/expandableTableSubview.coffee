@@ -52,7 +52,8 @@ class ExpandableTableSubview extends View
 
         @$el.html @template
             synced:  @collection.synced
-            data:    data
+            data:    data  
+            config: config
 
         @$('.actions-column a[title]').tooltip()
 
@@ -77,6 +78,9 @@ class ExpandableTableSubview extends View
         hasPrevButton = @collection.currentPage isnt 1
         
         @$el.append @buttonsTemplate {hasPrevButton, hasNextButton}
+
+    getRenderData: ->
+        _.pluck @collection.models, 'attributes'
 
     nextPage: ->
         @loadNextPage()

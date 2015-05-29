@@ -1,3 +1,4 @@
+{{! Part of requestBase }}
 <div class="page-header">
     <h2>Task history</h2>
 </div>
@@ -48,8 +49,8 @@
                         <td class="hidden-xs">
                             {{timestampFromNow updatedAt}}
                         </td>
-                        <td class="actions-column hidden-xs">
-                            <a href="{{appRoot}}/task/{{ taskId.id }}/tail/{{taskId.id }}/tail_of_finished_service.log" title="Log">
+                        <td class="hidden-xs actions-column">
+                            <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ ../../config.runningTaskLogPath }}" title="Log">
                                 ...
                             </a>
                         </td>
