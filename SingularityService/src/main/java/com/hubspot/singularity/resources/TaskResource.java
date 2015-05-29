@@ -82,28 +82,28 @@ public class TaskResource {
   @PropertyFiltering
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
-  public Iterable<SingularityTaskRequest> getScheduledTasks() {
+  public List<SingularityTaskRequest> getScheduledTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
-    return Iterables.filter(taskRequestManager.getTaskRequests(tasks), new Predicate<SingularityTaskRequest>() {
+    return Lists.newArrayList(Iterables.filter(taskRequestManager.getTaskRequests(tasks), new Predicate<SingularityTaskRequest>() {
       @Override
       public boolean apply(SingularityTaskRequest input) {
         return userIsAuthorizedForRequest(user, input.getRequest());
       }
-    });
+    }));
   }
 
   @GET
   @PropertyFiltering
   @Path("/scheduled/ids")
   @ApiOperation("Retrieve list of scheduled task IDs.")
-  public Iterable<SingularityPendingTaskId> getScheduledTaskIds() {
-    return Iterables.filter(taskManager.getPendingTaskIds(), new Predicate<SingularityPendingTaskId>() {
+  public List<SingularityPendingTaskId> getScheduledTaskIds() {
+    return Lists.newArrayList(Iterables.filter(taskManager.getPendingTaskIds(), new Predicate<SingularityPendingTaskId>() {
       @Override
       public boolean apply(SingularityPendingTaskId input) {
         return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
       }
-    });
+    }));
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -155,56 +155,56 @@ public class TaskResource {
   @GET
   @Path("/active/slave/{slaveId}")
   @ApiOperation("Retrieve list of active tasks on a specific slave.")
-  public Iterable<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
+  public List<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return Iterables.filter(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), new Predicate<SingularityTask>() {
+    return Lists.newArrayList(Iterables.filter(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), new Predicate<SingularityTask>() {
       @Override
       public boolean apply(SingularityTask input) {
         return userIsAuthorizedForRequest(user, input.getTaskRequest().getRequest());
       }
-    });
+    }));
   }
 
   @GET
   @PropertyFiltering
   @Path("/active")
   @ApiOperation("Retrieve the list of active tasks.")
-  public Iterable<SingularityTask> getActiveTasks() {
-    return Iterables.filter(taskManager.getActiveTasks(), new Predicate<SingularityTask>() {
+  public List<SingularityTask> getActiveTasks() {
+    return Lists.newArrayList(Iterables.filter(taskManager.getActiveTasks(), new Predicate<SingularityTask>() {
       @Override
       public boolean apply(SingularityTask input) {
         return userIsAuthorizedForRequest(user, input.getTaskRequest().getRequest());
       }
-    });
+    }));
   }
 
   @GET
   @PropertyFiltering
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
-  public Iterable<SingularityTaskCleanup> getCleaningTasks() {
-    return Iterables.filter(taskManager.getCleanupTasks(), new Predicate<SingularityTaskCleanup>() {
+  public List<SingularityTaskCleanup> getCleaningTasks() {
+    return Lists.newArrayList(Iterables.filter(taskManager.getCleanupTasks(), new Predicate<SingularityTaskCleanup>() {
       @Override
       public boolean apply(SingularityTaskCleanup input) {
         return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getTaskId().getRequestId()));
       }
-    });
+    }));
   }
 
   @GET
   @PropertyFiltering
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
-  public Iterable<SingularityTaskId> getLbCleanupTasks() {
-    return Iterables.filter(taskManager.getLBCleanupTasks(), new Predicate<SingularityTaskId>() {
+  public List<SingularityTaskId> getLbCleanupTasks() {
+    return Lists.newArrayList(Iterables.filter(taskManager.getLBCleanupTasks(), new Predicate<SingularityTaskId>() {
       @Override
       public boolean apply(SingularityTaskId input) {
         return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
       }
-    });
+    }));
   }
 
   private SingularityTask checkActiveTask(String taskId) {
