@@ -1,11 +1,12 @@
 Controller = require './Controller'
 
-NewRequestView = require 'views/newRequest'
+RequestFormView = require 'views/requestForm'
 
 class NewRequestController extends Controller
 
     initialize: ->
-        @setView new NewRequestView
+        @setView new RequestFormView
+          type: 'create'
 
         app.showView @view
 
