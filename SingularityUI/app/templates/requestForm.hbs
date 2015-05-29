@@ -1,25 +1,29 @@
 <h3>
-    New Request
+    {{#if model.id}}
+        Editing <a href="{{appRoot}}/request/{{model.id}}">{{model.id}}</a>
+    {{else}}
+        New Request
+    {{/if}}
 </h3>
 
 <div class="row new-form">
     <form class="col-md-5">
-        <div class="form-group required">
-            <label for="id">ID</label>
-            <input type="text" id="id" class="form-control" placeholder="eg: my-awesome-request">
+        <div class="form-group {{#unless model.id}}required{{/unless}}">
+            {{#unless model.id}}
+                <label for="id">ID</label>
+                <input type="text" id="id" class="form-control" placeholder="eg: my-awesome-request">
+            {{/unless}}
         </div>
 
         <div class="form-group">
             <label for="owner-0">Owners</label>
-            
-            <div class="multi-input">
+            <div id="owners" class="multi-input">
                 <input type="text" id="owner-0" class="owner form-control" placeholder="eg: user@example.com">
             </div>
         </div>
 
         <div class="form-group">
             <label>Type</label>
-
             <div id="type" class="btn-group">
                 <button data-type="SERVICE" class="btn btn-default">
                     Service
@@ -58,8 +62,8 @@
             </div>
             <div class="col-sm-4">
                 <div class="form-group">
-                    <label for="load-balanced">
-                        <input type="checkbox" id="load-balanced">
+                    <label for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
+                        <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
                         Load balanced
                     </label>
                 </div>
@@ -90,13 +94,11 @@
                 <label for="schedule">Schedule</label>
                 <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
             </div>
-
             <div class="form-group">
                 <label for="retries-on-failure">Number of retries on failure</label>
                 <input type="text" id="retries-on-failure" class="form-control">
             </div>
         </div>
-
         <div id="button-row">
             <span>
                 <button type="submit" class="btn btn-success btn-lg" disabled>
@@ -108,7 +110,7 @@
             </button>
         </div>
     </form>
-
+    
     <div id="help-column" class="col-md-6 col-md-offset-1 hidden-xs hidden-sm">
         
     </div>
