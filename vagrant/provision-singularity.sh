@@ -95,6 +95,7 @@ exec java -Djava.library.path=/usr/local/lib -jar /singularity/SingularityExecut
 EOF
   chmod 755 /usr/local/bin/singularity-executor
 }
+
 function build_singularity {
   # lame hack to install a recent mvn, thanks ubuntu...
   if [ ! -f /usr/share/apache-maven-3.3.3/bin/mvn ]; then

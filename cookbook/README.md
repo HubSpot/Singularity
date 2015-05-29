@@ -1,8 +1,1 @@
-cookbook-singularity
-====================
-
-This cookbook provides the dependencies for the Singularity Mesos framework:
-
-- ZooKeeper
-- Mesos
-- MySQL
+The cookbook [has moved](https://github.com/evertrue/singularity-cookbook).
