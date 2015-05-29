@@ -42,6 +42,20 @@ function handle_signal {
   exit "$exit_code"
 }
 
+function enable_cgroup_hierarchy {
+  if [ -d "/cgroup/memory/mesos" ] ;then
+    CGROUPS_DIR="/cgroup"
+  else
+    if [ -d "/sys/fs/cgroup/memory/mesos" ] ; then
+      CGROUPS_DIR="/sys/fs/cgroup"
+    else
+      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
+      return 0
+    fi
+  fi
+  echo 1 > $CGROUPS_DIR/memory/mesos/$CGROUPS_GUID/memory.use_hierarchy
+}
+
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 DOCKER_ENV=""
@@ -99,8 +113,9 @@ echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.us
 mkdir -p {{{ runContext.taskAppDirectory }}}
 sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
-# Start up the container
+enable_cgroup_hierarchy || true
 
+# Start up the container
 echo "Creating continer with: sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
 cid=`sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
 sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
