@@ -30,8 +30,8 @@ public class IndexView extends View {
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
 
-  private String runningTaskLogPath;
-  private String finishedTaskLogPath;
+  private final String runningTaskLogPath;
+  private final String finishedTaskLogPath;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
     super("index.mustache");
