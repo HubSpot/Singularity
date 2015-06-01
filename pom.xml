@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>10.4</version>
+    <version>10.7</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
@@ -35,6 +35,7 @@
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
     <baragon.version>0.1.4</baragon.version>
+    <horizon.version>0.0.13</horizon.version>
   </properties>
 
   <modules>
@@ -105,6 +106,18 @@
       </dependency>
 
       <dependency>
+        <groupId>com.hubspot.jackson</groupId>
+        <artifactId>jackson-datatype-protobuf</artifactId>
+        <version>0.8.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot.jackson</groupId>
+        <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
+        <version>0.7.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>BaragonCore</artifactId>
         <version>${baragon.version}</version>
@@ -114,6 +127,18 @@
             <artifactId>guava</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonCore</artifactId>
+        <version>${horizon.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonNing</artifactId>
+        <version>${horizon.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
