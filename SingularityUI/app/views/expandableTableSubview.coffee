@@ -22,7 +22,7 @@ class ExpandableTableSubview extends View
             'click [data-action="expand"]': 'expand'
             'click [data-action="shrink"]': 'startShrink'
 
-    initialize: ({@collection, @template}) ->
+    initialize: ({@collection, @template, @extraRenderData}) ->
         @listenTo @collection, 'sync', @render
 
     render: ->
@@ -50,10 +50,11 @@ class ExpandableTableSubview extends View
 
         data = @getRenderData()
 
-        @$el.html @template
-            synced:  @collection.synced
-            data:    data  
-            config: config
+        templateData = {synced: @collection.synced, data}
+        if @extraRenderData?
+            _.extend(templateData, @extraRenderData())
+
+        @$el.html @template(templateData)
 
         @$('.actions-column a[title]').tooltip()
 

@@ -56,6 +56,9 @@ Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     timeObject = moment timestamp
     "#{timeObject.fromNow()} (#{ timeObject.format 'lll'})"
 
+Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
+    value.replace('$TASK_ID', taskId)
+
 Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
     return options.inverse @ if not timestamp
     timeObject = moment timestamp
@@ -104,6 +107,3 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
     return '' if not email
     email.split('@')[0]
-
-Handlebars.logger.level = 0;
-

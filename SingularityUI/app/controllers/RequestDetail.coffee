@@ -60,7 +60,7 @@ class RequestDetailController extends Controller
         @subviews.header = new SimpleSubview
             model:      @models.request
             template:   @templates.header
-        
+
         # would have used header subview for this info,
         # but header expects a request model that
         # no longer exists if a request is deleted
@@ -75,6 +75,8 @@ class RequestDetailController extends Controller
         @subviews.activeTasks = new SimpleSubview
             collection: @collections.activeTasks
             template:   @templates.activeTasks
+            extraRenderData: ->
+                { taskLogPath: config.runningTaskLogPath }
 
         @subviews.requestTasksLogs = new PaginatedTableClientsideView
             collection: @collections.requestTasksLogs
@@ -89,6 +91,8 @@ class RequestDetailController extends Controller
         @subviews.taskHistory = new PaginatedTableServersideView
             collection: @collections.taskHistory
             template:   @templates.taskHistory
+            extraRenderData: ->
+                { taskLogPath: config.finishedTaskLogPath }
 
         @subviews.deployHistory = new PaginatedTableServersideView
             collection: @collections.deployHistory
