@@ -26,7 +26,7 @@ cd Singularity/vagrant
 ls
 ```
 
-Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command:
+Look for the provided *Vagrantfile* that contains the required vagrant commands for setting up a *VirtualBox* VM with all required software. You will need [ChefDK](https://downloads.chef.io/chef-dk/) installed to complete this step. The utilized vagrant provisioner for performing the installation is *chef-solo* along with the *Berkshelf* plugin for handling the required chef recipe. The provided *Berksfile* contains information about the *singularity* chef recipe that builds the VM. To start building the VM run the following command:
 
 ```bash
 vagrant up develop

@@ -10,13 +10,13 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;

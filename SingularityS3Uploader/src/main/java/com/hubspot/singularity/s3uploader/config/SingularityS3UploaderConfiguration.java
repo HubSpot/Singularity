@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
+
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -13,8 +15,6 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
-import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
-
 @Configuration("/etc/singularity.s3uploader.yaml")
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
   public static final String POLL_MILLIS = "s3uploader.poll.for.shutdown.millis";
@@ -24,10 +24,10 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public static final String EXECUTOR_MAX_UPLOAD_THREADS = "s3uploader.max.upload.threads";
 
-  public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
-  public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
   public static final String RETRY_WAIT_MS = "s3uploader.retry.wait.ms";
   public static final String RETRY_COUNT = "s3uploader.retry.count";
+  public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
+  public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
 
   public static final String CHECK_FOR_OPEN_FILES = "s3uploader.check.for.open.files";
 
@@ -58,16 +58,16 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   private Optional<String> s3SecretKey = Optional.absent();
 
   @JsonProperty
-  private long maxSingleUploadSizeBytes = 5368709120L;
-
-  @JsonProperty
-  private long uploadPartSize = 20971520L;
-
-  @JsonProperty
   private int retryWaitMs = 1000;
 
   @JsonProperty
   private int retryCount = 2;
+
+  @JsonProperty
+  private long maxSingleUploadSizeBytes = 5368709120L;
+
+  @JsonProperty
+  private long uploadPartSize = 20971520L;
 
   @JsonProperty
   private boolean checkForOpenFiles = true;
@@ -124,6 +124,22 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3SecretKey = s3SecretKey;
   }
 
+  public int getRetryWaitMs() {
+    return retryWaitMs;
+  }
+
+  public void setRetryWaitMs(int retryWaitMs) {
+    this.retryWaitMs = retryWaitMs;
+  }
+
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+  }
+
   public long getMaxSingleUploadSizeBytes() {
     return maxSingleUploadSizeBytes;
   }
@@ -138,22 +154,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public void setUploadPartSize(long uploadPartSize) {
     this.uploadPartSize = uploadPartSize;
-  }
-
-  public int getRetryCount() {
-    return retryCount;
-  }
-
-  public void setRetryCount(int retryCount) {
-    this.retryCount = retryCount;
-  }
-
-  public int getRetryWaitMs() {
-    return retryWaitMs;
-  }
-
-  public void setRetryWaitMs(int retryWaitMs) {
-    this.retryWaitMs = retryWaitMs;
   }
 
   public boolean isCheckForOpenFiles() {
@@ -173,11 +173,11 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
             ", s3AccessKey=" + (s3AccessKey.isPresent() ? obfuscateValue(s3AccessKey.get()) : "(blank)") +
             ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
-            ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
-            ", uploadPartSize=" + uploadPartSize +
             ", retryWaitMs=" + retryWaitMs +
             ", retryCount=" + retryCount +
-            ", chkecForOpenFiles=" + checkForOpenFiles +
+            ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
+            ", uploadPartSize=" + uploadPartSize +
+            ", checkForOpenFiles=" + checkForOpenFiles +
             ']';
   }
 
@@ -206,17 +206,17 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     if (properties.containsKey(SingularityS3Configuration.S3_SECRET_KEY)) {
       setS3SecretKey(Optional.of(properties.getProperty(SingularityS3Configuration.S3_SECRET_KEY)));
     }
-    if (properties.containsKey(MAX_SINGLE_UPLOAD_BYTES)) {
-      setMaxSingleUploadSizeBytes(Long.parseLong(properties.getProperty(MAX_SINGLE_UPLOAD_BYTES)));
-    }
-    if (properties.containsKey(UPLOAD_PART_SIZE)) {
-      setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
-    }
     if (properties.containsKey(RETRY_COUNT)) {
       setRetryCount(Integer.parseInt(properties.getProperty(RETRY_COUNT)));
     }
     if (properties.containsKey(RETRY_WAIT_MS)) {
       setRetryWaitMs(Integer.parseInt(RETRY_WAIT_MS));
+    }
+    if (properties.containsKey(MAX_SINGLE_UPLOAD_BYTES)) {
+      setMaxSingleUploadSizeBytes(Long.parseLong(properties.getProperty(MAX_SINGLE_UPLOAD_BYTES)));
+    }
+    if (properties.containsKey(UPLOAD_PART_SIZE)) {
+      setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
     }
     if (properties.containsKey(CHECK_FOR_OPEN_FILES)) {
       setCheckForOpenFiles(Boolean.parseBoolean(properties.getProperty(CHECK_FOR_OPEN_FILES)));
