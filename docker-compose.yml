@@ -10,8 +10,8 @@ master:
   net: host
   environment:
     MESOS_ZK: zk://localhost:2181/mesos
-    MESOS_HOSTNAME: 192.168.59.103
-    MESOS_IP: 192.168.59.103
+    MESOS_HOSTNAME: localhost
+    MESOS_IP: 127.0.0.1
     MESOS_QUORUM: 1
     MESOS_CLUSTER: docker-compose
     MESOS_WORK_DIR: /var/lib/mesos
@@ -22,30 +22,33 @@ slave:
   net: host
   environment:
     MESOS_MASTER: zk://localhost:2181/mesos
-    MESOS_HOSTNAME: 192.168.59.103
-    MESOS_IP: 192.168.59.103
+    MESOS_HOSTNAME: localhost
+    MESOS_IP: 127.0.0.1
     MESOS_CONTAINERIZERS: docker,mesos
   volumes:
     - /sys/fs/cgroup:/sys/fs/cgroup
     - /usr/local/bin/docker:/usr/bin/docker
     - /var/run/docker.sock:/var/run/docker.sock
 
-singularity:
+scheduler:
   image: hubspot/singularity:0.4.2
   net: host
   environment:
-    SINGULARITY_MASTER: zk://localhost:2181/mesos
-    SINGULARITY_ZK: localhost:2181
-    SINGULARITY_HOSTNAME: 192.168.59.103
+    LOAD_BALANCER_URI: http://localhost:8080/baragon/v2/request
+    SINGULARITY_URI_BASE: http://192.168.59.103:7099/singularity
 
 baragonservice:
   image: hubspot/baragonservice:0.1.7
   net: host
   environment:
     BARAGON_TYPE: service
+    BARAGON_PORT: 8080
 
 baragonagent:
   image: hubspot/baragonagent:0.1.7
   net: host
   environment:
     BARAGON_TYPE: agent
+    NGINX_PORT: 80
+    BARAGON_PORT: 8882
+    BARAGON_AGENT_GROUP: test

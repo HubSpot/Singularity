@@ -28,12 +28,10 @@ zookeeper:
 
 logging:
   loggers:
-    "com.hubspot.singularity" : DEBUG
+    "com.hubspot.singularity" : TRACE
 
 ui:
   title: Singularity (dev)
-  baseUrl: http://vagrant-singularity:7099/singularity
-
-loadBalancerUri: http://localhost:8080/baragon/v2/request
+  baseUrl: http://localhost:7099/singularity
 
 enableCorsFilter: true
