@@ -1,4 +1,6 @@
 View = require './view'
+AutoTailer = require './AutoTailer'
+Request = require '../models/Request'
 
 class RequestsView extends View
 
@@ -314,9 +316,27 @@ class RequestsView extends View
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
 
-        @collection.get(id).promptRun =>
-            $row.addClass 'flash'
-            setTimeout (=> $row.removeClass 'flash'), 500
+        request = new Request id: id
+
+        request.promptRun (data) =>   
+
+            # If user wants to redirect to a file after the task starts
+            if data.autoTail is 'on'
+                autoTailer = new AutoTailer({
+                    requestId: id
+                    autoTailFilename: data.filename
+                    autoTailTimestamp: +new Date()
+                })
+
+                autoTailer.startAutoTailPolling()
+
+            else
+                $row.addClass 'flash'
+                setTimeout (=> $row.removeClass 'flash'), 500
+
+                @trigger 'refreshrequest'
+                setTimeout ( => @trigger 'refreshrequest'), 2500
+
 
     toggleStar: (e) ->
         $target = $(e.currentTarget)
