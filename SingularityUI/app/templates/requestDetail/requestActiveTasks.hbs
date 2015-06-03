@@ -36,9 +36,11 @@
                     <td class="hidden-xs" data-value="{{ taskId.updatedAt }}">
                         {{timestampFromNow updatedAt}}
                     </td>
-                    <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.runningTaskLogPath taskId.id }}" title="Log">
-                        ...
-                    </a>
+                    <td class="hidden-xs actions-column">
+                        <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.runningTaskLogPath taskId.id }}" title="Log">
+                            ...
+                        </a>
+                    </td>
                     <td class="actions-column hidden-xs">
                         <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../taskLogPath taskId.id }}" title="Log">
                             ...
