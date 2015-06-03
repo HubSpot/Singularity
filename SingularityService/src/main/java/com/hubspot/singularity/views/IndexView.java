@@ -63,7 +63,7 @@ public class IndexView extends View {
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
-    this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedLogPath();
+    this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
   }
 
   public String getAppRoot() {
