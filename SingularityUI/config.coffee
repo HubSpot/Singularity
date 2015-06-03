@@ -50,9 +50,8 @@ exports.config =
             defaultDeployHealthTimeoutSeconds: process.env.SINGULARITY_DEPLOY_HEALTH_TIMEOUT_SECONDS ? 120
             hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON ? "false"
             hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON ? "false"
-            defaultHealthcheckIntervalSeconds: 5
-            defaultHealthcheckTimeoutSeconds: 10
-            defaultDeployHealthTimeoutSeconds: 120
-            
+            runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH ? "stdout"
+            finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
+
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate
