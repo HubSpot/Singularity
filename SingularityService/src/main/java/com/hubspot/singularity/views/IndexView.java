@@ -30,6 +30,9 @@ public class IndexView extends View {
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
 
+  private final String runningTaskLogPath;
+  private final String finishedTaskLogPath;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
     super("index.mustache");
 
@@ -58,6 +61,9 @@ public class IndexView extends View {
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
+
+    this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
+    this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedLogPath();
   }
 
   public String getAppRoot() {
@@ -118,6 +124,14 @@ public class IndexView extends View {
 
   public long getDefaultDeployHealthTimeoutSeconds() {
     return defaultDeployHealthTimeoutSeconds;
+  }
+
+  public String getRunningTaskLogPath() {
+    return runningTaskLogPath;
+  }
+
+  public String getFinishedTaskLogPath() {
+    return finishedTaskLogPath;
   }
 
   @Override
