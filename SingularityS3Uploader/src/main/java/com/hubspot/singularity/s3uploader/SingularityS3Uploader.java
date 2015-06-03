@@ -10,7 +10,16 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
@@ -153,19 +162,23 @@ public class SingularityS3Uploader implements Closeable {
     for (int i = 0; i < toUpload.size(); i++) {
       final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
-      try {
-        uploadSingle(i, file);
-        metrics.upload();
-        success++;
-        Files.delete(file);
-      } catch (S3ServiceException se) {
-        metrics.error();
-        LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
-      } catch (Exception e) {
-        metrics.error();
-        LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
-      } finally {
-        context.stop();
+      if (!configuration.isCheckForOpenFiles() || !fileOpen(file)) {
+        try {
+          uploadSingle(i, file);
+          metrics.upload();
+          success++;
+          Files.delete(file);
+        } catch (S3ServiceException se) {
+          metrics.error();
+          LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
+        } catch (Exception e) {
+          metrics.error();
+          LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
+        } finally {
+          context.stop();
+        }
+      } else {
+        LOG.info("{} is in use by another process, will retry upload later", file);
       }
     }
 
@@ -173,23 +186,70 @@ public class SingularityS3Uploader implements Closeable {
   }
 
   private void uploadSingle(int sequence, Path file) throws Exception {
-    final long start = System.currentTimeMillis();
+    Callable<Boolean> uploader = new Uploader(sequence, file);
 
-    final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
+    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+      .retryIfExceptionOfType(S3ServiceException.class)
+      .retryIfRuntimeException()
+      .withWaitStrategy(WaitStrategies.fixedWait(configuration.getRetryWaitMs(), TimeUnit.MILLISECONDS))
+      .withStopStrategy(StopStrategies.stopAfterAttempt(configuration.getRetryCount()))
+      .build();
+      retryer.call(uploader);
+  }
 
-    long fileSizeBytes = Files.size(file);
-    LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
+  class Uploader implements Callable<Boolean> {
+    private int sequence;
+    private Path file;
 
-    S3Object object = new S3Object(s3Bucket, file.toFile());
-    object.setKey(key);
-
-    if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
-      multipartUpload(object);
-    } else {
-      s3Service.putObject(s3Bucket, object);
+    public Uploader(int sequence, Path file) {
+      this.file = file;
+      this.sequence = sequence;
     }
 
-    LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+    @Override
+    public Boolean call() throws Exception {
+      final long start = System.currentTimeMillis();
+
+      final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
+
+      long fileSizeBytes = Files.size(file);
+      LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
+
+      try {
+        S3Object object = new S3Object(s3Bucket, file.toFile());
+        object.setKey(key);
+
+        if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
+          multipartUpload(object);
+        } else {
+          s3Service.putObject(s3Bucket, object);
+        }
+      } catch (Exception e) {
+        LOG.warn("Exception uploading {}", file, e);
+        throw e;
+      }
+
+      LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+
+      return true;
+    }
+  }
+
+  public static boolean fileOpen(Path path) {
+    try {
+      SimpleProcessManager lsof = new SimpleProcessManager(LOG);
+      List<String> cmd = ImmutableList.of("lsof", path.toAbsolutePath().toString());
+      List<String> output = lsof.runCommandWithOutput(cmd, Sets.newHashSet(0, 1));
+      for (String line : output) {
+        if (line.contains(path.toAbsolutePath().toString())) {
+          return true;
+        }
+      }
+    } catch (Exception e) {
+      LOG.error("Could not determine if file {} was in use, skipping", path, e);
+      return true;
+    }
+    return false;
   }
 
   private void multipartUpload(S3Object object) throws Exception {
