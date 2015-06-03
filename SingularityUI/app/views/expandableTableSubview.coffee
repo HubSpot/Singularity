@@ -54,7 +54,10 @@ class ExpandableTableSubview extends View
         if @extraRenderData?
             _.extend(templateData, @extraRenderData())
 
-        @$el.html @template(templateData)
+        @$el.html @template
+            synced:  @collection.synced
+            data:    _.pluck @collection.models, 'attributes'
+            config: config
 
         @$('.actions-column a[title]').tooltip()
 

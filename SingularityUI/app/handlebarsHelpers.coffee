@@ -107,3 +107,6 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
     return '' if not email
     email.split('@')[0]
+
+Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
+    value.replace('$TASK_ID', taskId)
