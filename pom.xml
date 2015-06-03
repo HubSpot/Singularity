@@ -670,6 +670,15 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <configuration>
+            <gitDescribe>
+              <match>Singularity*</match>  <!-- logfetch tags exist too... don't use those -->
+            </gitDescribe>
+          </configuration>
+        </plugin>
+        <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
           <version>0.0.23</version>
