@@ -48,9 +48,12 @@
                         <td class="hidden-xs">
                             {{timestampFromNow updatedAt}}
                         </td>
-                        <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
-                            ...
-                        </a>
+                        {{log ../../config.finishedTaskLogPath}}
+                        <td class="hidden-xs actions-column">
+                            <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
+                                ...
+                            </a>
+                        </td>
                         <td class="hidden-xs actions-column">
                             <a data-action="viewJSON" title="JSON">
                                 { }
