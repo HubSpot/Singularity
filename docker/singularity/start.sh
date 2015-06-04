@@ -4,7 +4,13 @@ PATH=/usr/local/singularity/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib64/qt-3.
 MESOS_HOME=/usr/local
 MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so
 PORT=7092
-DEFAULT_URI_BASE="http://localhost:${SINGULARITY_PORT:=7099}/singularity"
+
+if [ ${DOCKER_HOST} ]; then
+	HOST_AND_PORT=`echo $DOCKER_HOST | awk -F/ '{print $3}'`
+	HOST_IP="${HOST_AND_PORT%:*}"
+fi
+
+DEFAULT_URI_BASE="http://${HOST_IP:=localhost}:${SINGULARITY_PORT:=7099}${SINGULARITY_UI_BASE:=/singularity}"
 
 
 [[ ! ${SINGULARITY_PORT:-} ]] || args+=( -Ddw.server.connector.port="$SINGULARITY_PORT" )

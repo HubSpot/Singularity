@@ -24,13 +24,13 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ----------
 
-### Quick Start with Docker ###
+### Try It Out! ###
 
 If you want to give Singularity a try, you can install [docker](https://docs.docker.com/installation/) and [docker-compose](https://docs.docker.com/compose/#installation-and-set-up) to run our example cluster.
 
-Run `docker-compose pull` first to get all of the needed images **Note: This may take a few minutes**
+Run `docker-compose pull` first to get all of the needed images. *Note: This may take a few minutes*
 
-Then simply run `docker-compose up` to start:
+Then simply run `docker-compose up` to start containers for...
 - mesos master
 - mesos slave (docker/mesos containerizers enabled)
 - zookeeper host
@@ -38,11 +38,11 @@ Then simply run `docker-compose up` to start:
 - [Baragon Service](https://github.com/HubSpot/Baragon) for load balancer management
 - [Baragon Agent](https://github.com/HubSpot/Baragon) + Nginx as a load balancer
 
-**Note: It may take a minute or two to pull all of the images**
-
-This docker-compose example currently has IPs set to work with [boot2docker](http://boot2docker.io/). After running `docker-compose up` the following UIs will be available:
+...and the following UIs will be available:
 - Singularity UI => http://localhost:7099/singularity
 - Baragon UI => http://localhost:8080/baragon/v2/ui
+
+*if using [boot2docker](http://boot2docker.io/) replace localhost with your `boot2docker ip`*
 
 ----------
 

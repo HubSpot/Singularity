@@ -34,8 +34,8 @@ scheduler:
   image: hubspot/singularity
   net: host
   environment:
-    LOAD_BALANCER_URI: http://localhost:8080/baragon/v2/request
-    SINGULARITY_URI_BASE: http://192.168.59.103:7099/singularity
+    - DOCKER_HOST
+    - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
 
 baragonservice:
   image: hubspot/baragonservice:0.1.7
