@@ -92,6 +92,11 @@ class LogLines extends Collection
 
         request
 
+    fetchMagicString: =>
+        initialData = @fetch data:
+            offset: 0
+            length: 30
+
     reset: ->
         # Reset the state too
         @state.set
