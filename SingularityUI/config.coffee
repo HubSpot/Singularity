@@ -38,15 +38,20 @@ exports.config =
 
         templateData =
             staticRoot: process.env.SINGULARITY_STATIC_URI ? "#{ @config.server.base }/static"
-            appRoot: "#{ @config.server.base }/ui"
+            appRoot: process.env.SINGULARITY_APP_URI ? "#{ @config.server.base }/ui"
             apiRoot: process.env.SINGULARITY_API_URI ? ''
-            slaveHttpPort: 5051
+            slaveHttpPort: process.env.SINGULARITY_SLAVE_HTTP_PORT ? 5051
             title: process.env.SINGULARITY_TITLE ? 'Singularity (local dev)'
             navColor: process.env.SINGULARITY_NAV_COLOR ? ''
-            defaultCpus: 1
-            defaultMemory: 128
+            defaultCpus: process.env.SINGUALRITY_DEFAULT_CPUS ? 1
+            defaultMemory: process.env.SINGULARITY_DEFAULT_MEMORY ? 128
+            defaultHealthcheckIntervalSeconds: process.env.SINGULARITY_DEFAULT_HEALTHCHECK_INTERVAL_SECONDS ? 5
+            defaultHealthcheckTimeoutSeconds: process.env.SINGULARITY_HEALTHCHECK_TIMEOUT_SECONDS ? 5
+            defaultDeployHealthTimeoutSeconds: process.env.SINGULARITY_DEPLOY_HEALTH_TIMEOUT_SECONDS ? 120
             hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON ? "false"
             hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON ? "false"
-            
+            runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH ? "stdout"
+            finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
+
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

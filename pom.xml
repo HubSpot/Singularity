@@ -62,6 +62,7 @@
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.1</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>
+    <guava.retry.version>1.0.7</guava.retry.version>
     <mesos.version>0.21.0</mesos.version>
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
@@ -393,6 +394,18 @@
       </dependency>
 
       <dependency>
+        <groupId>com.github.rholder</groupId>
+        <artifactId>guava-retrying</artifactId>
+        <version>${guava.retry.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-continuation</artifactId>
         <version>${dep.jetty.version}</version>
@@ -644,6 +657,15 @@
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <configuration>
+            <gitDescribe>
+              <match>Singularity*</match>  <!-- logfetch tags exist too... don't use those -->
+            </gitDescribe>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>

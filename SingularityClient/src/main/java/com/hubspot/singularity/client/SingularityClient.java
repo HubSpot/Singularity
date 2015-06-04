@@ -117,7 +117,7 @@ public class SingularityClient {
   private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
   private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
 
-  private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
+  private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
@@ -474,10 +474,10 @@ public class SingularityClient {
    * {@link SingularityClient#getCoolDownSingularityRequests()} respectively to get only the ACTIVE, PAUSED or COOLDOWN requests.
    *
    * @return
-   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequest} instances.
+   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequestParent} instances.
    *
    */
-  public Collection<SingularityRequest> getSingularityRequests() {
+  public Collection<SingularityRequestParent> getSingularityRequests() {
     final String requestUri = String.format(REQUESTS_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "[ACTIVE, PAUSED, COOLDOWN] requests", REQUESTS_COLLECTION);
@@ -487,9 +487,9 @@ public class SingularityClient {
    * Get all requests that their state is ACTIVE
    *
    * @return
-   *    All ACTIVE {@link SingularityRequest} instances
+   *    All ACTIVE {@link SingularityRequestParent} instances
    */
-  public Collection<SingularityRequest> getActiveSingularityRequests() {
+  public Collection<SingularityRequestParent> getActiveSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "ACTIVE requests", REQUESTS_COLLECTION);
@@ -500,9 +500,9 @@ public class SingularityClient {
    * ACTIVE requests are paused by users, which is equivalent to stop their tasks from running without undeploying them
    *
    * @return
-   *    All PAUSED {@link SingularityRequest} instances
+   *    All PAUSED {@link SingularityRequestParent} instances
    */
-  public Collection<SingularityRequest> getPausedSingularityRequests() {
+  public Collection<SingularityRequestParent> getPausedSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "PAUSED requests", REQUESTS_COLLECTION);
@@ -512,9 +512,9 @@ public class SingularityClient {
    * Get all requests that has been set to a COOLDOWN state by singularity
    *
    * @return
-   *    All {@link SingularityRequest} instances that their state is COOLDOWN
+   *    All {@link SingularityRequestParent} instances that their state is COOLDOWN
    */
-  public Collection<SingularityRequest> getCoolDownSingularityRequests() {
+  public Collection<SingularityRequestParent> getCoolDownSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_COOLDOWN_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "COOLDOWN requests", REQUESTS_COLLECTION);
