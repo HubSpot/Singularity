@@ -71,6 +71,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public static final String MAX_TASK_THREADS = "executor.max.task.threads";
 
+  public static final String DOCKER_PREFIX = "executor.docker.prefix";
+  public static final String DOCKER_STOP_TIMEOUT = "executor.docker.stop.timeout";
+
   @NotEmpty
   @JsonProperty
   private String executorJavaLog = "executor.java.log";
@@ -200,6 +203,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotNull
   @JsonProperty
   private Optional<Integer> maxTaskThreads = Optional.absent();
+
+  @JsonProperty
+  private String dockerPrefix = "se-";
+
+  @JsonProperty
+  private int dockerStopTimeout = 15;
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -331,6 +340,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public Optional<Integer> getMaxTaskThreads() {
     return maxTaskThreads;
+  }
+
+  public String getDockerPrefix() {
+    return dockerPrefix;
+  }
+
+  public int getDockerStopTimeout() {
+    return dockerStopTimeout;
   }
 
   @JsonIgnore
@@ -466,6 +483,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.maxTaskThreads = maxTaskThreads;
   }
 
+  public void setDockerPrefix(String dockerPrefix) {
+    this.dockerPrefix = dockerPrefix;
+  }
+
+  public void setDockerStopTimeout(int dockerStopTimeout) {
+    this.dockerStopTimeout = dockerStopTimeout;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -501,6 +526,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", useLocalDownloadService=" + useLocalDownloadService +
             ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
             ", maxTaskThreads=" + maxTaskThreads +
+            ", dockerPrefix=" + dockerPrefix +
+            ", dockerStopTimeout=" + dockerStopTimeout +
             ']';
   }
 
@@ -634,6 +661,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
     if (properties.containsKey(MAX_TASK_THREADS)) {
       setMaxTaskThreads(Optional.of(Integer.parseInt(properties.getProperty(MAX_TASK_THREADS))));
+    }
+
+    if (properties.containsKey(DOCKER_PREFIX)) {
+      setDockerPrefix(properties.getProperty(DOCKER_PREFIX));
+    }
+
+    if (properties.containsKey(DOCKER_STOP_TIMEOUT)) {
+      setDockerStopTimeout(Integer.parseInt(properties.getProperty(DOCKER_STOP_TIMEOUT)));
     }
   }
 }

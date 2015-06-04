@@ -144,7 +144,19 @@ function start_singularity {
   service singularity start
 }
 
+function docker_upgrades {
+  version=`docker -v`
+  if [[ $version == *"1.6"* ]]
+  then
+    echo "Docker up to date"
+  else
+    wget -qO- https://get.docker.com/ | sh
+  fi
+  echo "ISOLATION=cgroups/cpu,cgroups/mem" >> /etc/default/mesos-slave
+}
+
 stop_singularity
+docker_upgrades
 install_singularity_config
 build_singularity
 install_singularity

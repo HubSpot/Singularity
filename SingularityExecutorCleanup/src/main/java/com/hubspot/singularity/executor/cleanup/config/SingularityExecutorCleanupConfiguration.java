@@ -23,6 +23,7 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   public static final String EXECUTOR_CLEANUP_CLEANUP_APP_DIRECTORY_OF_FAILED_TASKS_AFTER_MILLIS = "executor.cleanup.cleanup.app.directory.of.failed.tasks.after.millis";
   public static final String EXECUTOR_CLEANUP_RESULTS_DIRECTORY = "executor.cleanup.results.directory";
   public static final String EXECUTOR_CLEANUP_RESULTS_SUFFIX = "executor.cleanup.results.suffix";
+  public static final String EXECUTOR_CLEANUP_RUN_DOCKER = "executor.cleanup.docker";
 
   @JsonProperty
   private boolean safeModeWontRunWithNoTasks = true;
@@ -46,6 +47,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   @NotEmpty
   @JsonProperty
   private String singularityContextPath = "";
+
+  @JsonProperty
+  private boolean runDockerCleanup = false;
 
   public SingularityExecutorCleanupConfiguration() {
     super(Optional.of("singularity-executor-cleanup.log"));
@@ -99,6 +103,14 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     this.singularityContextPath = singularityContextPath;
   }
 
+  public boolean isRunDockerCleanup() {
+    return runDockerCleanup;
+  }
+
+  public void setRunDockerCleanup(boolean runDockerCleanup) {
+    this.runDockerCleanup = runDockerCleanup;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorCleanupConfiguration[" +
@@ -108,6 +120,7 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
             ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
             ", singularityHosts=" + singularityHosts +
             ", singularityContextPath='" + singularityContextPath + '\'' +
+            ", runDockerCleanup='" + runDockerCleanup + '\'' +
             ']';
   }
 
@@ -135,6 +148,10 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
     if (properties.containsKey(SingularityClientModule.CONTEXT_PATH)) {
       setSingularityContextPath(properties.getProperty(SingularityClientModule.CONTEXT_PATH));
+    }
+
+    if (properties.containsKey(EXECUTOR_CLEANUP_RUN_DOCKER)) {
+      setRunDockerCleanup(Boolean.parseBoolean(properties.getProperty(EXECUTOR_CLEANUP_RUN_DOCKER)));
     }
   }
 }
