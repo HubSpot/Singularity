@@ -3,7 +3,6 @@
 PATH=/usr/local/singularity/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin
 MESOS_HOME=/usr/local
 MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so
-PORT=7092
 
 if [ ${DOCKER_HOST} ]; then
 	HOST_AND_PORT=`echo $DOCKER_HOST | awk -F/ '{print $3}'`
