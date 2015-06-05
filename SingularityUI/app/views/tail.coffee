@@ -62,10 +62,15 @@ class TailView extends View
         # Well, or just render them if we're starting fresh
         $firstLine = @$linesWrapper.find '.line:first-child'
         $lastLine  = @$linesWrapper.find '.line:last-child'
+        isImage = false
+
         # If starting fresh
         if $firstLine.length is 0
+            magicString = @collection.fetchMagicString()
+            magicString.done (res) =>
+                isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
 
-            @$linesWrapper.html @linesTemplate 
+            @$linesWrapper.html @linesTemplate
                 lines: @collection.toJSON()
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
@@ -74,8 +79,9 @@ class TailView extends View
             if @collection.getMinOffset() < firstLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') < firstLineOffset
-                @$linesWrapper.prepend @linesTemplate 
+                @$linesWrapper.prepend @linesTemplate
                     lines: _.pluck lines, 'attributes'
+                    isImage: isImage
 
                 # Gonna need to scroll back to the previous `firstLine` after otherwise
                 # we end up at the top again
@@ -84,8 +90,10 @@ class TailView extends View
             else if @collection.getStartOffsetOfLastLine() > lastLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') > lastLineOffset
+                console.log(isImage)
                 @$linesWrapper.append @linesTemplate 
                     lines: _.pluck lines, 'attributes'
+                    isImage: isImage
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
