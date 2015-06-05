@@ -59,8 +59,9 @@ class TailView extends View
     renderLines: ->
         @collection.fetchMagicString().done (res) =>
             isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
-            @collection.state.set
-                moreToFetch: false
+            if isImage is true
+                @collection.state.set
+                    moreToFetch: false
 
             # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
             # Well, or just render them if we're starting fresh
