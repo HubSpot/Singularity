@@ -82,7 +82,6 @@ class TailView extends View
                     lines = @collection.filter (line) => line.get('offset') < firstLineOffset
                     @$linesWrapper.prepend @linesTemplate
                         lines: _.pluck lines, 'attributes'
-                        isImage: isImage
 
                     # Gonna need to scroll back to the previous `firstLine` after otherwise
                     # we end up at the top again
@@ -93,7 +92,6 @@ class TailView extends View
                     lines = @collection.filter (line) => line.get('offset') > lastLineOffset
                     @$linesWrapper.append @linesTemplate 
                         lines: _.pluck lines, 'attributes'
-                        isImage: isImage
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
