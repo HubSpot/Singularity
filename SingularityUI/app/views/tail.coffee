@@ -51,7 +51,6 @@ class TailView extends View
         @$contents.on 'scroll, mousewheel', @handleScroll
         # FireFox support
         @$contents.on 'DOMMouseScroll', @handleScroll
-        
 
         # Some stuff in the app can change this stuff. We wanna reset it
         $('html, body').css 'min-height', '0px'
@@ -60,6 +59,8 @@ class TailView extends View
     renderLines: ->
         @collection.fetchMagicString().done (res) =>
             isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
+            @collection.state.set
+                moreToFetch: false
 
             # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
             # Well, or just render them if we're starting fresh
