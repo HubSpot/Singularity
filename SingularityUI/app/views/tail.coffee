@@ -17,10 +17,6 @@ class TailView extends View
     initialize: ({@taskId, @path, firstRequest, @offset}) ->
         @filename = _.last @path.split '/'
 
-        fetchDone = _.after 2, => @afterInitialData()
-        @model.once 'sync', => fetchDone()
-        @listenTo @collection, 'initialdata', fetchDone()
-
         @listenTo @collection, 'reset',       @dumpContents
         @listenTo @collection, 'sync',        @renderLines
         @listenTo @collection, 'initialOffsetData', @afterInitialOffsetData
