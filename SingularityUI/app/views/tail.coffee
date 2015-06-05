@@ -61,7 +61,6 @@ class TailView extends View
         magicString = @collection.fetchMagicString()
         magicString.done (res) =>
             isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
-            console.log(isImage)
 
             # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
             # Well, or just render them if we're starting fresh
