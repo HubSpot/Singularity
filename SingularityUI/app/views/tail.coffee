@@ -90,7 +90,7 @@ class TailView extends View
                 else if @collection.getStartOffsetOfLastLine() > lastLineOffset
                     # Get only the new lines
                     lines = @collection.filter (line) => line.get('offset') > lastLineOffset
-                    @$linesWrapper.append @linesTemplate 
+                    @$linesWrapper.append @linesTemplate
                         lines: _.pluck lines, 'attributes'
 
     scrollToTop:    => @$contents.scrollTop 0
