@@ -58,8 +58,7 @@ class TailView extends View
         $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
     renderLines: ->
-        magicString = @collection.fetchMagicString()
-        magicString.done (res) =>
+        @collection.fetchMagicString().done (res) =>
             isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
 
             # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
