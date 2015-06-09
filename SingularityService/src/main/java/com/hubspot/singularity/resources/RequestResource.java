@@ -64,19 +64,19 @@ public class RequestResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
 
   private final SingularityValidator validator;
-  private final SingularityAuthorizationHelper adminHelper;
+  private final SingularityAuthorizationHelper authHelper;
 
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper adminHelper, Optional<SingularityUser> user) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
     super(requestManager, deployManager, user);
 
     this.validator = validator;
     this.mailer = mailer;
     this.taskManager = taskManager;
-    this.adminHelper = adminHelper;
+    this.authHelper = authHelper;
   }
 
   private static class SingularityRequestDeployHolder {
@@ -375,7 +375,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/queued/pending")
   @ApiOperation(value="Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
   public List<SingularityPendingRequest> getPendingRequests() {
-    return adminHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID);
   }
 
   @GET
@@ -383,7 +383,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/queued/cleanup")
   @ApiOperation(value="Retrieve the list of requests being cleaned up", response=SingularityRequestCleanup.class, responseContainer="List")
   public Iterable<SingularityRequestCleanup> getCleanupRequests() {
-    return adminHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID);
   }
 
   @GET

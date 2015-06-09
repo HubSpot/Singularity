@@ -41,17 +41,17 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployHistoryHelper deployHistoryHelper;
   private final TaskHistoryHelper taskHistoryHelper;
   private final RequestHistoryHelper requestHistoryHelper;
-  private final SingularityAuthorizationHelper adminHelper;
+  private final SingularityAuthorizationHelper authHelper;
 
   @Inject
   public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
-      RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper adminHelper, SingularityValidator validator, Optional<SingularityUser> user) {
+      RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper authHelper, SingularityValidator validator, Optional<SingularityUser> user) {
     super(historyManager, taskManager, deployManager, validator, user);
 
     this.requestHistoryHelper = requestHistoryHelper;
     this.deployHistoryHelper = deployHistoryHelper;
     this.taskHistoryHelper = taskHistoryHelper;
-    this.adminHelper = adminHelper;
+    this.authHelper = authHelper;
   }
 
   @GET
@@ -162,7 +162,7 @@ public class HistoryResource extends AbstractHistoryResource {
 
     List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
 
-    return adminHelper.filterAuthorizedRequestIds(user, requestIds);  // TODO: will this screw up pagination?
+    return authHelper.filterAuthorizedRequestIds(user, requestIds);  // TODO: will this screw up pagination?
   }
 
 }
