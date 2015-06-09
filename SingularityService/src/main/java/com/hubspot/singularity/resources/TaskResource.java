@@ -62,18 +62,18 @@ public class TaskResource {
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
   private final SingularityValidator validator;
-  private final SingularityAuthorizationHelper adminHelper;
+  private final SingularityAuthorizationHelper authHelper;
   private final Optional<SingularityUser> user;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
-                      SingularityValidator validator, SingularityAuthorizationHelper adminHelper, Optional<SingularityUser> user) {
+                      SingularityValidator validator, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
     this.validator = validator;
-    this.adminHelper = adminHelper;
+    this.authHelper = authHelper;
     this.user = user;
   }
 
@@ -81,8 +81,8 @@ public class TaskResource {
   @PropertyFiltering
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
-  public Iterable<SingularityTaskRequest> getScheduledTasks() {
-    return taskRequestManager.getTaskRequests(adminHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID));
+  public List<SingularityTaskRequest> getScheduledTasks() {
+    return taskRequestManager.getTaskRequests(authHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID));
   }
 
   @GET
@@ -90,7 +90,7 @@ public class TaskResource {
   @Path("/scheduled/ids")
   @ApiOperation("Retrieve list of scheduled task IDs.")
   public List<SingularityPendingTaskId> getScheduledTaskIds() {
-    return adminHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID);
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -147,7 +147,7 @@ public class TaskResource {
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return adminHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
   }
 
   @GET
@@ -155,7 +155,7 @@ public class TaskResource {
   @Path("/active")
   @ApiOperation("Retrieve the list of active tasks.")
   public List<SingularityTask> getActiveTasks() {
-    return adminHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
   }
 
   @GET
@@ -163,7 +163,7 @@ public class TaskResource {
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
   public List<SingularityTaskCleanup> getCleaningTasks() {
-    return adminHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID);
   }
 
   @GET
@@ -171,7 +171,7 @@ public class TaskResource {
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
   public List<SingularityTaskId> getLbCleanupTasks() {
-    return adminHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID);
   }
 
   private SingularityTask checkActiveTask(String taskId) {
