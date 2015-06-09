@@ -28,7 +28,7 @@ public class S3Configuration {
   private String s3Bucket;
 
   @NotNull
-  private Map<String, String> s3BucketForGroup = new HashMap<>();
+  private Map<String, S3GroupOverrideConfiguration> groupOverrides = new HashMap<>();
 
   /**
    * S3 Key format for finding logs. Should be the same as
@@ -108,11 +108,11 @@ public class S3Configuration {
     this.s3SecretKey = s3SecretKey;
   }
 
-  public Map<String, String> getS3BucketForGroup() {
-    return s3BucketForGroup;
+  public Map<String, S3GroupOverrideConfiguration> getGroupOverrides() {
+    return groupOverrides;
   }
 
-  public void setS3BucketForGroup(Map<String, String> s3BucketForGroup) {
-    this.s3BucketForGroup = s3BucketForGroup;
+  public void setGroupOverrides(Map<String, S3GroupOverrideConfiguration> groupOverrides) {
+    this.groupOverrides = groupOverrides;
   }
 }

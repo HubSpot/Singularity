@@ -5,6 +5,8 @@ import static com.google.inject.name.Names.named;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -23,6 +25,7 @@ import org.jets3t.service.security.AWSCredentials;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -37,6 +40,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
+import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -203,6 +207,22 @@ public class SingularityMainModule implements Module {
     }
 
     return Optional.<S3Service>of(new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
+  }
+
+  @Provides
+  @Singleton
+  public Map<String, S3Service> s3ServiceGroupOverrides(Optional<S3Configuration> config) throws S3ServiceException {
+    if (!config.isPresent() || config.get().getGroupOverrides().isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    final ImmutableMap.Builder<String, S3Service> s3ServiceBuilder = ImmutableMap.builder();
+
+    for (Map.Entry<String, S3GroupOverrideConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
+      s3ServiceBuilder.put(entry.getKey(), new RestS3Service(new AWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey())));
+    }
+
+    return s3ServiceBuilder.build();
   }
 
   @Provides
