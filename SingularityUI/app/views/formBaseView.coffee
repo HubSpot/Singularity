@@ -23,9 +23,13 @@ class FormBaseView extends View
             model: @model?.toJSON()
         
         @checkForm()
+        @afterRender()
 
         # @$('#help-column').css 'height', "#{ @$('form').height() }px"
 
+    afterRender: ->
+        return
+        
     checkForm: ->
         return if @lockdown
         @checkMultiInputs()
@@ -133,6 +137,9 @@ class FormBaseView extends View
             output.push val if val
 
         return if _.isEmpty output then undefined else output
+
+    taggableList: (selector) =>        
+        @$(selector).select2("val")
 
     postSave: ->
         @lockdown = false

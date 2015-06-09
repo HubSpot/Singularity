@@ -29,7 +29,6 @@ class RequestForm extends FormBaseView
         @$("#type [data-type='#{type}']").addClass 'active'
         @$('.expandable').addClass 'hide'
         @$("##{ type }-expandable").removeClass 'hide'
-
         @checkForm()
 
     renderEditForm: ->
@@ -39,14 +38,8 @@ class RequestForm extends FormBaseView
         @render()
         @changeType request.type
 
-        ownerField = (owner) ->
-            "<input type='text' value='#{owner}' class='owner form-control' placeholder='eg: user@example.com'>"
-
-        if request.request.owners isnt undefined
-            @$('#owner-0').val request.request.owners[0]
-            for owner, i in request.request.owners
-                continue if i is 0
-                @$('#owners').append ownerField(owner)
+        ownersList = _.map request.request.owners, (name, i) -> id: name, text: name
+        @ownersInput.select2 'data', ownersList
 
         if request.type is 'SERVICE' or 'WORKER'
             @$("#instances-#{request.type}").val request.instances
@@ -58,8 +51,35 @@ class RequestForm extends FormBaseView
 
         typeButtons = @$('#type .btn').prop('disabled', true)
         @$("[data-type='#{request.type}']").prop('disabled', false)
+        @setEditingRequestTooltips()
         app.$page.show()
 
+    afterRender: ->
+        @renderFormElements()
+        @setTooltips()
+
+    renderFormElements: ->
+        @ownersInput = @$("#owners").select2
+            tags: true
+            tokenSeparators: [',',' ','\n','\t']
+
+        @$('#rackAffinity-SERVICE').select2
+            tags: true
+            tokenSeparators: [',',' ','\n','\t']
+
+        @$('#rackAffinity-WORKER').select2
+            tags: true
+            tokenSeparators: [',',' ','\n','\t']
+
+    setTooltips: ->
+        @$(".tagging-input").tooltip
+            title: 'Comma separate values'
+            placement: 'top'
+
+    setEditingRequestTooltips: ->
+        @$("[data-tooltip='rack-sensitive']").tooltip
+            title: 'Changes will only affect new tasks.'
+            placement: 'top'
 
     submit: (event) ->
         event.preventDefault()
@@ -73,29 +93,48 @@ class RequestForm extends FormBaseView
 
         requestObject.requestType = @$('#type .active').data 'type'
         type = requestObject.requestType
-        requestObject.owners = @multiList '.owner'
+
+        requestObject.owners = @taggableList '#owners'
+
+        slavePlacement = @$('#slavePlacement').val()
+        if slavePlacement.length > 0
+            requestObject.slavePlacement = slavePlacement
 
         if type in ['SERVICE', 'WORKER']
             requestObject.daemon = true
 
             instances                   = parseInt @$("#instances-#{ type }").val()
             requestObject.instances     = instances if instances
+
+            waitAtLeastMillisAfterTaskFinishesForReschedule = parseInt @$("#waitAtLeastMillisAfterTaskFinishesForReschedule-#{ type }").val()
+            requestObject.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule if waitAtLeastMillisAfterTaskFinishesForReschedule
+
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
+            
+            requestObject.rackAffinity = @taggableList "#rackAffinity-#{ type }"
 
-            if type is 'SERVICE'
-                requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
-        else if type is 'SCHEDULED'
-            schedule = @$('#schedule').val()
-            retries  = parseInt @$('#retries-on-failure').val()
+        if type in ['SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
+            requestObject.killOldNonLongRunningTasksAfterMillis = parseInt @$("#killOldNRL-#{ type }").val()
 
-            if schedule
-                requestObject.schedule = schedule
-
-            requestObject.numRetriesOnFailure = retries if retries
-        else if type is 'ON_DEMAND' or type is 'RUN_ONCE'
+        if type in ['ON_DEMAND', 'RUN_ONCE']
             requestObject.daemon = false
 
-        return if @invalid
+        if type is 'SCHEDULED'
+            retries  = parseInt @$('#retries-on-failure').val()
+            schedule = @$('#schedule').val()
+            expectedRuntime = parseInt @$('#scheduled-expected-runtime').val()
+
+            requestObject.schedule = schedule if schedule
+            requestObject.numRetriesOnFailure = retries if retries
+            requestObject.scheduledExpectedRuntimeMillis = expectedRuntime if expectedRuntime
+
+        if type is 'SERVICE'
+            requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
+
+        # TO DO: Add validation
+        ## killOldNonLongRunningTasksAfterMillis 
+        ## scheduledExpectedRuntimeMillis
+        ## waitAtLeastMillisAfterTaskFinishesForReschedule
 
         request = new Request requestObject
         request.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"

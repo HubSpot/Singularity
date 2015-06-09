@@ -1,117 +1,173 @@
-<h3>
-    {{#if model.id}}
-        Editing <a href="{{appRoot}}/request/{{model.id}}">{{model.id}}</a>
-    {{else}}
-        New Request
-    {{/if}}
-</h3>
-
 <div class="row new-form">
-    <form class="col-md-5">
-        <div class="form-group {{#unless model.id}}required{{/unless}}">
-            {{#unless model.id}}
-                <label for="id">ID</label>
-                <input type="text" id="id" class="form-control" placeholder="eg: my-awesome-request">
-            {{/unless}}
-        </div>
+  
+  <div class="col-md-5 col-md-offset-3">
+    <h3>
+      {{#if model.id}}
+        Editing <a href="{{appRoot}}/request/{{model.id}}">{{model.id}}</a>
+      {{else}}
+        New Request
+      {{/if}}
+    </h3>
+    <form>
+      <div class="form-group {{#unless model.id}}required{{/unless}}">
+        {{#unless model.id}}
+        <label for="id">ID</label>
+        <input type="text" id="id" class="form-control" placeholder="eg: my-awesome-request">
+        {{/unless}}
+      </div>
+      <div class="form-group">
+        <label for="owner">Owners</label>
+        <input id="owners" class="tagging-input" data-placeholder="Comma separate values">
 
-        <div class="form-group">
-            <label for="owner-0">Owners</label>
-            <div id="owners" class="multi-input">
-                <input type="text" id="owner-0" class="owner form-control" placeholder="eg: user@example.com">
-            </div>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <div id="type" class="btn-group">
+          <button data-type="SERVICE" class="btn btn-default">
+            Service
+          </button>
+          <button data-type="WORKER" class="btn btn-default">
+            Worker
+          </button>
+          <button data-type="SCHEDULED" class="btn btn-default">
+            Scheduled
+          </button>
+          <button data-type="ON_DEMAND" class="btn btn-default">
+            On-demand
+          </button>
+          <button data-type="RUN_ONCE" class="btn btn-default">
+            Run-once
+          </button>
         </div>
+      </div>
+      <div class="form-group">
+        <label for="slavePlacement">Slave Placement</label>
+        <select  id="slavePlacement" class="form-control">
+          <option value="">Default</option>
+          <option value="SEPARATE">Separate</option>
+          <option value="OPTIMISTIC">Optimistic</option>
+          <option value="GREEDY">Greedy</option>
+        </select>                
+      </div>
 
-        <div class="form-group">
-            <label>Type</label>
-            <div id="type" class="btn-group">
-                <button data-type="SERVICE" class="btn btn-default">
-                    Service
-                </button>
-                <button data-type="WORKER" class="btn btn-default">
-                    Worker
-                </button>
-                <button data-type="SCHEDULED" class="btn btn-default">
-                    Scheduled
-                </button>
-                <button data-type="ON_DEMAND" class="btn btn-default">
-                    On-demand
-                </button>
-                <button data-type="RUN_ONCE" class="btn btn-default">
-                    Run-once
-                </button>
-            </div>
-        </div>
-
-        <div id="SERVICE-expandable" class="row expandable hide">
-            <div class="col-sm-4">
-                <div class="form-group">
-                    <label for="instances-SERVICE" class="col-sm-6">Instances</label>
-                    <div class="col-sm-6">
-                        <input type="text" id="instances-SERVICE" class="form-control" placeholder="1">
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="form-group">
-                    <label for="rack-sensitive-SERVICE">
-                        <input type="checkbox" id="rack-sensitive-SERVICE">
-                        Rack sensitive
-                    </label>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="form-group">
-                    <label for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
-                        <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
-                        Load balanced
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <div id="WORKER-expandable" class="row expandable hide">
-            <div class="col-sm-4">
-                <div class="form-group">
-                    <label for="instances-WORKER" class="col-sm-6">Instances</label>
-                    <div class="col-sm-6">
-                        <input type="text" id="instances-WORKER" class="form-control" placeholder="1">
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="form-group">
-                    <label for="rack-sensitive-WORKER">
-                        <input type="checkbox" id="rack-sensitive-WORKER" checked>    
-                        Rack sensitive
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <div id="SCHEDULED-expandable" class="expandable hide">
-            <div class="form-group required">
-                <label for="schedule">Schedule</label>
-                <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
-            </div>
+      <div id="SERVICE-expandable" class="expandable hide">
+        <div class="row">
+          <div class="col-sm-4">
             <div class="form-group">
-                <label for="retries-on-failure">Number of retries on failure</label>
-                <input type="text" id="retries-on-failure" class="form-control">
+              <label for="instances-SERVICE" class="col-sm-6">Instances</label>
+              <div class="col-sm-6">
+                <input type="text" id="instances-SERVICE" class="form-control" placeholder="1">
+              </div>
             </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="rack-sensitive-SERVICE" data-tooltip='rack-sensitive'>
+                <input type="checkbox" id="rack-sensitive-SERVICE">
+                Rack sensitive
+              </label>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
+                <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
+                Load balanced
+              </label>
+            </div>
+          </div>
         </div>
-        <div id="button-row">
-            <span>
-                <button type="submit" class="btn btn-success btn-lg" disabled>
-                    Save
-                </button>
-            </span>
-            <button id="reset-button" class="btn btn-default btn-lg hide">
-                Reset
-            </button>
+        <div class="form-group">
+          <label for="">Milliseconds to wait after task finishes for reschedule</label>
+          <input type="text" id="waitAtLeastMillisAfterTaskFinishesForReschedule-SERVICE" class="form-control" placeholder="**need to confirm location of this field">
         </div>
+        <div class="form-group">
+          <label for="rackAffinity-SERVICE">Rack Affinity</label>
+          <input data-type='rack-affinity' type="text" id="rackAffinity-SERVICE" class="tagging-input" placeholder="Comma separate values">
+        </div>
+      </div>
+
+      <div id="WORKER-expandable" class="expandable hide">        
+        <div class='row'>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="instances-WORKER" class="col-sm-6">Instances</label>
+              <div class="col-sm-6">
+                <input type="text" id="instances-WORKER" class="form-control" placeholder="1">
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="rack-sensitive-WORKER" data-tooltip='rack-sensitive'>
+                <input type="checkbox" id="rack-sensitive-WORKER" checked>
+                Rack sensitive
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="">Milliseconds to wait after task finishes for reschedule</label>
+          <input type="text" id="waitAtLeastMillisAfterTaskFinishesForReschedule-WORKER" class="form-control" placeholder="**need to confirm location of this field">
+        </div>
+        <div class="form-group">
+          <label for="rackAffinity-SERVICE">Rack Affinity</label>
+          <input data-type='rack-affinity' type="text" id="rackAffinity-WORKER" class="tagging-input" placeholder="Comma separate values">
+        </div>
+      </div>
+
+      <div id="SCHEDULED-expandable" class="expandable hide">
+        <div class="form-group required">
+          <label for="schedule">Schedule</label>
+          <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
+        </div>
+        <div class="form-group">
+          <label for="retries-on-failure">Number of retries on failure</label>
+          <input type="text" id="retries-on-failure" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="killOldNRL-SCHEDULED">
+            Kill Old Non-Long-Running Tasks After Milliseconds
+          </label>
+          <input type="text" id="killOldNRL-SCHEDULED" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="scheduled-expected-runtime">
+            Scheduled Expected Runtime in Milliseconds
+          </label>
+          <input type="text" id="scheduled-expected-runtime" class="form-control">
+        </div>
+      </div>
+
+      <div id="ON_DEMAND-expandable" class="expandable hide">
+        <div class="form-group">
+          <label for="killOldNRL-ON_DEMAND">
+            Kill Old Non-Long-Running Tasks After Milliseconds
+          </label>
+          <input type="text" id="killOldNRL-ON_DEMAND" class="form-control">
+        </div>
+      </div>
+
+      <div id="RUN_ONCE-expandable" class="expandable hide">
+        <div class="form-group">
+          <label for="killOldNRL-RUN_ONCE">
+            Kill Old Non-Long-Running Tasks After Milliseconds
+          </label>
+          <input type="text" id="killOldNRL-RUN_ONCE" class="form-control">
+        </div>
+      </div>
+
+      <div id="button-row">
+        <span>
+          <button type="submit" class="btn btn-success btn-lg" disabled>
+            Save
+          </button>
+        </span>
+        <button id="reset-button" class="btn btn-default btn-lg hide">
+          Reset
+        </button>
+      </div>
     </form>
-    
-    <div id="help-column" class="col-md-6 col-md-offset-1 hidden-xs hidden-sm">
-        
-    </div>
+
+  </div>
 </div>
