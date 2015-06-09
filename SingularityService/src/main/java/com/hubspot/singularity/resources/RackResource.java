@@ -30,18 +30,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class RackResource extends AbstractMachineResource<SingularityRack> {
   public static final String PATH = SingularityService.API_BASE_PATH + "/racks";
 
-  private final RackManager rackManager;
-  private final SingularityValidator validator;
-
-  private final Optional<SingularityUser> user;
 
   @Inject
   public RackResource(RackManager rackManager, SingularityValidator validator, Optional<SingularityUser> user) {
-    super(rackManager);
-    this.rackManager = rackManager;
-    this.validator = validator;
-
-    this.user = user;
+    super(rackManager, validator, user);
   }
 
   @Override
@@ -53,14 +45,16 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/")
   @ApiOperation("Retrieve the list of all known racks, optionally filtering by a particular state")
   public List<SingularityRack> getRacks(@ApiParam("Optionally specify a particular state to filter racks by") @QueryParam("state") Optional<MachineState> filterState) {
-    return rackManager.getObjectsFiltered(filterState);
+    validator.checkForAdminAuthorization(user);
+    return manager.getObjectsFiltered(filterState);
   }
 
   @GET
   @Path("/rack/{rackId}")
   @ApiOperation("Retrieve the history of a given rack")
   public List<SingularityMachineStateHistoryUpdate> getRackHistory(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
-    return rackManager.getHistory(rackId);
+    validator.checkForAdminAuthorization(user);
+    return manager.getHistory(rackId);
   }
 
   @DELETE

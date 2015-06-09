@@ -72,12 +72,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private int retryCount = 2;
 
+  @JsonProperty
+  private boolean checkForOpenFiles = true;
+
   @NotNull
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
-
-  @JsonProperty
-  private boolean checkForOpenFiles = true;
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -163,20 +163,20 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.retryCount = retryCount;
   }
 
-  public Map<String, SingularityS3Credentials> getS3BucketCredentials() {
-    return s3BucketCredentials;
-  }
-
-  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
-    this.s3BucketCredentials = s3BucketCredentials;
-  }
-
   public boolean isCheckForOpenFiles() {
     return checkForOpenFiles;
   }
 
   public void setCheckForOpenFiles(boolean checkForOpenFiles) {
     this.checkForOpenFiles = checkForOpenFiles;
+  }
+
+  public Map<String, SingularityS3Credentials> getS3BucketCredentials() {
+    return s3BucketCredentials;
+  }
+
+  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
+    this.s3BucketCredentials = s3BucketCredentials;
   }
 
   @Override
@@ -192,10 +192,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", uploadPartSize=" + uploadPartSize +
             ", retryWaitMs=" + retryWaitMs +
             ", retryCount=" + retryCount +
-            ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
             ", s3BucketCredentials=" + s3BucketCredentials +
-            ", uploadPartSize=" + uploadPartSize +
             ", checkForOpenFiles=" + checkForOpenFiles +
+            ", s3BucketCredentials=" + s3BucketCredentials +
             ']';
   }
 

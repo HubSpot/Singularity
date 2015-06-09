@@ -38,6 +38,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -50,7 +51,7 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.auth.SingularityLDAPManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
@@ -159,7 +160,8 @@ public class SingularityTestModule implements Module {
               }
             }));
 
-            binder.bind(SingularityLDAPManager.class).toInstance(new SingularityLDAPManager(null, configuration));
+            binder.bind(SingularityLDAPManager.class).toInstance(new SingularityLDAPManager(null, null, configuration));
+            binder.bind(SingularityAuthorizationHelper.class).toInstance(new SingularityAuthorizationHelper(null, null));
             binder.bind(new TypeLiteral<Optional<SingularityUser>>() {}).toInstance(Optional.<SingularityUser>absent());
           }
         }));
@@ -224,4 +226,5 @@ public class SingularityTestModule implements Module {
 
     return config;
   }
+
 }

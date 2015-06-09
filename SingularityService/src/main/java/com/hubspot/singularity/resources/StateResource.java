@@ -9,11 +9,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityLDAPCacheStats;
 import com.hubspot.singularity.SingularityLDAPPoolStats;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.data.StateManager;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.auth.SingularityLDAPManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -56,5 +57,11 @@ public class StateResource {
   @Path("/ldap/pool")
   public SingularityLDAPPoolStats getLdapStats() {
     return ldapManager.getPoolStats();
+  }
+
+  @GET
+  @Path("/ldap/cache")
+  public SingularityLDAPCacheStats getGroupCacheStats() {
+    return ldapManager.getGroupCacheStats();
   }
 }

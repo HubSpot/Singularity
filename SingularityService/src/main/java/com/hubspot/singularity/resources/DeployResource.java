@@ -34,11 +34,13 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.ldap.SingularityAuthManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -52,21 +54,15 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
-  private final DeployManager deployManager;
-  private final RequestManager requestManager;
   private final SingularityValidator validator;
-
-  private final Optional<SingularityUser> user;
+  private final SingularityAuthorizationHelper adminHelper;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, Optional<SingularityUser> user) {
-    super(requestManager, deployManager);
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper adminHelper, Optional<SingularityUser> user) {
+    super(requestManager, deployManager, user);
 
-    this.requestManager = requestManager;
-    this.deployManager = deployManager;
     this.validator = validator;
-
-    this.user = user;
+    this.adminHelper = adminHelper;
   }
 
   @GET
@@ -74,7 +70,7 @@ public class DeployResource extends AbstractRequestResource {
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
   public List<SingularityPendingDeploy> getPendingDeploys() {
-    return deployManager.getPendingDeploys();
+    return adminHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
   }
 
   @POST

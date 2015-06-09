@@ -10,12 +10,11 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.auth.SingularityLDAPManager;
 
 public class SingularityLDAPModule implements Module {
-  public static final String LDAP_GROUP_CACHE = "ldap.group.cache";
-
   private final SingularityConfiguration configuration;
 
   public SingularityLDAPModule(SingularityConfiguration configuration) {
@@ -25,6 +24,7 @@ public class SingularityLDAPModule implements Module {
   @Override
   public void configure(Binder binder) {
     binder.bind(SingularityLDAPManager.class);
+    binder.bind(SingularityAuthorizationHelper.class);
   }
 
   @Provides

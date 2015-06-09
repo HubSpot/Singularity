@@ -9,11 +9,9 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.servlet.RequestScoped;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.auth.SingularityLDAPManager;
 
 public class SingularityAuthModule implements Module {
-  public static final String USERNAME = "singularity.auth.username";
-
   private final SingularityConfiguration configuration;
 
   public SingularityAuthModule(SingularityConfiguration configuration) {

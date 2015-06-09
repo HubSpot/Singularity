@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
+import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeploy;
@@ -9,23 +10,31 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 
 public class AbstractRequestResource {
 
-  private final RequestManager requestManager;
-  private final DeployManager deployManager;
+  protected final RequestManager requestManager;
+  protected final DeployManager deployManager;
+  protected final Optional<SingularityUser> user;
 
-  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager) {
+  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user) {
     this.requestManager = requestManager;
     this.deployManager = deployManager;
+    this.user = user;
   }
 
   protected SingularityRequestWithState fetchRequestWithState(String requestId) {
     Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId);
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
+
+    if (request.get().getRequest().getGroup().isPresent()) {
+      checkUnauthorized(user.isPresent(), "User must be present");
+      checkUnauthorized(user.get().getGroups().contains(request.get().getRequest().getGroup().get()), "User is unauthorized for request %s", requestId);
+    }
 
     return request.get();
   }
