@@ -85,6 +85,7 @@ class TailView extends View
                 @$linesWrapper.html @linesTemplate
                     lines: @collection.toJSON()
                     isImage: isImage
+                    downloadLink: downloadLink
             else
                 firstLineOffset = parseInt $firstLine.data 'offset'
                 lastLineOffset  = parseInt $lastLine.data 'offset'
