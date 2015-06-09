@@ -47,6 +47,7 @@ public class SingularityLDAPManager {
     this.executorService = executorService;
 
     this.userGroupCache = CacheBuilder.newBuilder()
+            .recordStats()
             .refreshAfterWrite(configuration.getLdapConfiguration().getCacheExpirationMs(), TimeUnit.MILLISECONDS)
             .build(new LDAPGroupCacheLoader());
   }
@@ -57,6 +58,10 @@ public class SingularityLDAPManager {
 
   public SingularityLDAPCacheStats getGroupCacheStats() {
     return SingularityLDAPCacheStats.fromGuavaCacheStats(userGroupCache.stats());
+  }
+
+  public void clearGroupCache() {
+    userGroupCache.invalidateAll();
   }
 
   public Set<String> getGroupsForUser(String user) {
@@ -111,20 +116,20 @@ public class SingularityLDAPManager {
   private class LDAPGroupCacheLoader extends CacheLoader<String, Set<String>> {
     @Override
     public Set<String> load(String key) throws Exception {
-      LOG.debug("Hitting LDAP for {}'s groups", key);
+      LOG.trace("Hitting LDAP for {}'s groups", key);
       return getGroupsForUserFromLDAP(key);
     }
 
     @Override
     public ListenableFuture<Set<String>> reload(final String key, Set<String> oldValue) throws Exception {
-      LOG.debug("Reloading {}'s groups", key);
+      LOG.trace("Reloading {}'s groups", key);
 
       final long refreshStartTime = System.currentTimeMillis();
       final ListenableFutureTask<Set<String>> task = ListenableFutureTask.create(new Callable<Set<String>>() {
         @Override
         public Set<String> call() throws Exception {
           final Set<String> groups = getGroupsForUserFromLDAP(key);
-          LOG.debug("Refreshed {}'s groups in {} ms", key, System.currentTimeMillis() - refreshStartTime);
+          LOG.trace("Refreshed {}'s groups in {} ms", key, System.currentTimeMillis() - refreshStartTime);
           return groups;
         }
       });

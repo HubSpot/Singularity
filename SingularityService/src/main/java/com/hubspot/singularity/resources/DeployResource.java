@@ -55,14 +55,14 @@ public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
   private final SingularityValidator validator;
-  private final SingularityAuthorizationHelper adminHelper;
+  private final SingularityAuthorizationHelper authHelper;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper adminHelper, Optional<SingularityUser> user) {
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
     super(requestManager, deployManager, user);
 
     this.validator = validator;
-    this.adminHelper = adminHelper;
+    this.authHelper = authHelper;
   }
 
   @GET
@@ -70,7 +70,7 @@ public class DeployResource extends AbstractRequestResource {
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
   public List<SingularityPendingDeploy> getPendingDeploys() {
-    return adminHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
+    return authHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
   }
 
   @POST
