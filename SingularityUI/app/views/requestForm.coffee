@@ -9,6 +9,14 @@ class RequestForm extends FormBaseView
 
     template: require '../templates/requestForm'
 
+    # A hash of request inputs that we want taggable
+    taggables: ->
+        type = @model?.get('request').requestType || @requestType
+        [
+            { name: 'owners', selector: '#owners' }
+            { name: 'rackAffinity', selector: "#rackAffinity-#{type}" }
+        ]
+
     events: ->
         _.extend super,
             'click #type .btn': 'handleChangeType'
@@ -21,26 +29,32 @@ class RequestForm extends FormBaseView
 
     handleChangeType: (event) ->
         return false if @type is 'edit'
-        type = $(event.currentTarget).data 'type'
-        @changeType type
-
-    changeType: (type) ->
+        @requestType = $(event.currentTarget).data 'type'
+        @changeType()
+        @renderFormElements()
+    
+    # Expands a given request type form fields
+    changeType: ->
         @$('#type .btn').removeClass 'active'
-        @$("#type [data-type='#{type}']").addClass 'active'
+        @$("#type [data-type='#{ @requestType }']").addClass 'active'
         @$('.expandable').addClass 'hide'
-        @$("##{ type }-expandable").removeClass 'hide'
+        @$("##{ @requestType }-expandable").removeClass 'hide'
         @checkForm()
 
     renderEditForm: ->
         @model = @collection?.get @requestId
         request = @model.toJSON()
-    
+        @requestType = request.type
+
+        # render our request models info
         @render()
-        @changeType request.type
+        # expand appropriate form fields
+        @changeType()
 
-        ownersList = _.map request.request.owners, (name, i) -> id: name, text: name
-        @ownersInput.select2 'data', ownersList
-
+        # render taggagble data
+        for tag in @taggables()
+            @renderTaggable @[tag.name], request.request[tag.name]
+        
         if request.type is 'SERVICE' or 'WORKER'
             @$("#instances-#{request.type}").val request.instances
             @$("#rack-sensitive-#{request.type}").prop 'checked', request.request.rackSensitive
@@ -55,21 +69,14 @@ class RequestForm extends FormBaseView
         app.$page.show()
 
     afterRender: ->
-        @renderFormElements()
+        @renderFormElements() if @model or @type isnt 'edit'
         @setTooltips()
 
     renderFormElements: ->
-        @ownersInput = @$("#owners").select2
-            tags: true
-            tokenSeparators: [',',' ','\n','\t']
-
-        @$('#rackAffinity-SERVICE').select2
-            tags: true
-            tokenSeparators: [',',' ','\n','\t']
-
-        @$('#rackAffinity-WORKER').select2
-            tags: true
-            tokenSeparators: [',',' ','\n','\t']
+        for input in @taggables()
+            @[input.name] = @$("#{input.selector}").select2
+                tags: true
+                tokenSeparators: [',',' ','\n','\t']
 
     setTooltips: ->
         @$(".tagging-input").tooltip
