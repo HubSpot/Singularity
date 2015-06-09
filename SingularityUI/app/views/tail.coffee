@@ -62,7 +62,7 @@ class TailView extends View
             if isImage is true
                 @collection.state.set
                     moreToFetch: false
-                
+
                 httpPrefix = "http"
                 httpPort = config.slaveHttpPort
                 if config.slaveHttpsPort
@@ -71,7 +71,6 @@ class TailView extends View
                 fullPath = "#{@model.get('directory')}/#{@path}"
 
                 downloadLink = encodeURI("#{httpPrefix}://#{ @model.get('task').offer.hostname }:#{httpPort}/files/download.json?path=#{ fullPath }")
-                console.log downloadLink
             # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
             # Well, or just render them if we're starting fresh
             $firstLine = @$linesWrapper.find '.line:first-child'
