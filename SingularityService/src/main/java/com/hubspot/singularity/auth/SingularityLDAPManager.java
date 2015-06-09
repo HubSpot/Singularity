@@ -1,4 +1,4 @@
-package com.hubspot.singularity.ldap;
+package com.hubspot.singularity.auth;
 
 import static com.google.common.base.Preconditions.checkState;
 

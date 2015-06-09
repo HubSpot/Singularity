@@ -4,7 +4,6 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
-import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,8 +42,10 @@ import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -63,17 +64,19 @@ public class RequestResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
 
   private final SingularityValidator validator;
+  private final SingularityAuthorizationHelper adminHelper;
 
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, Optional<SingularityUser> user) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper adminHelper, Optional<SingularityUser> user) {
     super(requestManager, deployManager, user);
 
     this.validator = validator;
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.adminHelper = adminHelper;
   }
 
   private static class SingularityRequestDeployHolder {
@@ -302,23 +305,25 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests) {
-    final Iterable<SingularityRequestWithState> authorizedRequests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
-      @Override
-      public boolean apply(SingularityRequestWithState input) {
-        return userIsAuthorizedForRequest(user, input.getRequest());
-      }
-    });
+    if (!validator.hasAdminAuthorization(user)) {
+      requests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
+        @Override
+        public boolean apply(SingularityRequestWithState input) {
+          return validator.isAuthorizedForRequest(input.getRequest(), user);
+        }
+      });
+    }
 
-    List<String> requestIds = Lists.newArrayList();
-    for (SingularityRequestWithState requestWithState : authorizedRequests) {
+    final List<String> requestIds = Lists.newArrayList();
+    for (SingularityRequestWithState requestWithState : requests) {
       requestIds.add(requestWithState.getRequest().getId());
     }
 
-    List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requestIds.size());
+    final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requestIds.size());
 
-    Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
+    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
 
-    for (SingularityRequestWithState requestWithState : authorizedRequests) {
+    for (SingularityRequestWithState requestWithState : requests) {
       Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
       parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(), Optional.<SingularityPendingDeploy> absent()));
     }
@@ -369,13 +374,8 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/queued/pending")
   @ApiOperation(value="Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
-  public Iterable<SingularityPendingRequest> getPendingRequests() {
-    return Iterables.filter(requestManager.getPendingRequests(), new Predicate<SingularityPendingRequest>() {
-      @Override
-      public boolean apply(SingularityPendingRequest input) {
-        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
-      }
-    });
+  public List<SingularityPendingRequest> getPendingRequests() {
+    return adminHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID);
   }
 
   @GET
@@ -383,12 +383,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/queued/cleanup")
   @ApiOperation(value="Retrieve the list of requests being cleaned up", response=SingularityRequestCleanup.class, responseContainer="List")
   public Iterable<SingularityRequestCleanup> getCleanupRequests() {
-    return Iterables.filter(requestManager.getCleanupRequests(), new Predicate<SingularityRequestCleanup>() {
-      @Override
-      public boolean apply(SingularityRequestCleanup input) {
-        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getRequestId()));
-      }
-    });
+    return adminHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID);
   }
 
   @GET

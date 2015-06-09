@@ -1,7 +1,6 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
-import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
 
 import java.util.List;
 
@@ -13,8 +12,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -24,13 +21,13 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -44,17 +41,17 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployHistoryHelper deployHistoryHelper;
   private final TaskHistoryHelper taskHistoryHelper;
   private final RequestHistoryHelper requestHistoryHelper;
-  private final RequestManager requestManager;
+  private final SingularityAuthorizationHelper adminHelper;
 
   @Inject
   public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
-      RequestHistoryHelper requestHistoryHelper, RequestManager requestManager, SingularityValidator validator, Optional<SingularityUser> user) {
+      RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper adminHelper, SingularityValidator validator, Optional<SingularityUser> user) {
     super(historyManager, taskManager, deployManager, validator, user);
 
     this.requestHistoryHelper = requestHistoryHelper;
     this.deployHistoryHelper = deployHistoryHelper;
     this.taskHistoryHelper = taskHistoryHelper;
-    this.requestManager = requestManager;
+    this.adminHelper = adminHelper;
   }
 
   @GET
@@ -163,12 +160,9 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return Iterables.filter(historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount), new Predicate<String>() {
-      @Override
-      public boolean apply(String input) {
-        return userIsAuthorizedForRequest(user, requestManager.getRequest(input));
-      }
-    });
+    List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
+
+    return adminHelper.filterAuthorizedRequestIds(user, requestIds);  // TODO: will this screw up pagination?
   }
 
 }
