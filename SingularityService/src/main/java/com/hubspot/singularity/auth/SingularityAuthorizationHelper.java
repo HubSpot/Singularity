@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -37,24 +37,22 @@ public class SingularityAuthorizationHelper {
     }
 
     final Set<String> requestIds = ImmutableSet.copyOf(Iterables.transform(objects, new Function<T, String>() {
-      @Nullable
       @Override
-      public String apply(@Nullable T input) {
+      public String apply(@Nonnull T input) {
         return requestIdFunction.apply(input);
       }
     }));
 
     final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds), new Function<SingularityRequestWithState, String>() {
-      @Nullable
       @Override
-      public String apply(@Nullable SingularityRequestWithState input) {
+      public String apply(@Nonnull SingularityRequestWithState input) {
         return input.getRequest().getId();
       }
     });
 
     return ImmutableList.copyOf(Iterables.filter(objects, new Predicate<T>() {
       @Override
-      public boolean apply(@Nullable T input) {
+      public boolean apply(@Nonnull T input) {
         final String requestId = requestIdFunction.apply(input);
         return requestMap.containsKey(requestId) && validator.isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user);
       }
@@ -67,16 +65,15 @@ public class SingularityAuthorizationHelper {
     }
 
     final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds), new Function<SingularityRequestWithState, String>() {
-      @Nullable
       @Override
-      public String apply(@Nullable SingularityRequestWithState input) {
+      public String apply(@Nonnull SingularityRequestWithState input) {
         return input.getRequest().getId();
       }
     });
 
     return ImmutableList.copyOf(Iterables.filter(requestIds, new Predicate<String>() {
       @Override
-      public boolean apply(@Nullable String input) {
+      public boolean apply(@Nonnull String input) {
         return requestMap.containsKey(input) && validator.isAuthorizedForRequest(requestMap.get(input).getRequest(), user);
       }
     }));
