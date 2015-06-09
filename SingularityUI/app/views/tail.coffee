@@ -40,9 +40,10 @@ class TailView extends View
             @$el.html "<h1>Could not get request file.</h1>"
 
     render: =>
-        breadcrumbs = utils.pathToBreadcrumbs @path
+        isImage = @isImage()
 
-        @$el.html @template {@taskId, @filename, breadcrumbs}
+        breadcrumbs = utils.pathToBreadcrumbs @path
+        @$el.html @template {@taskId, @filename, breadcrumbs, isImage}
 
         @$contents = @$ '.tail-contents'
         @$linesWrapper = @$contents.children('.lines-wrapper')
@@ -57,50 +58,49 @@ class TailView extends View
         $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
     renderLines: ->
-        @collection.fetchMagicString().done (res) =>
-            isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
-            if isImage is true
-                @collection.state.set
-                    moreToFetch: false
+        isImage = @isImage()
+        if isImage
+            @collection.state.set
+                moreToFetch: false
 
-                httpPrefix = "http"
-                httpPort = config.slaveHttpPort
-                if config.slaveHttpsPort
-                  httpPrefix = "https"
-                  httpPort = config.slaveHttpsPort
-                fullPath = "#{@model.get('directory')}/#{@path}"
+            httpPrefix = "http"
+            httpPort = config.slaveHttpPort
+            if config.slaveHttpsPort
+              httpPrefix = "https"
+              httpPort = config.slaveHttpsPort
+            fullPath = "#{@model.get('directory')}/#{@path}"
 
-                downloadLink = encodeURI("#{httpPrefix}://#{ @model.get('task').offer.hostname }:#{httpPort}/files/download.json?path=#{ fullPath }")
-            # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
-            # Well, or just render them if we're starting fresh
-            $firstLine = @$linesWrapper.find '.line:first-child'
-            $lastLine  = @$linesWrapper.find '.line:last-child'
+            downloadLink = encodeURI("#{httpPrefix}://#{ @model.get('task').offer.hostname }:#{httpPort}/files/download.json?path=#{ fullPath }")
+        # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
+        # Well, or just render them if we're starting fresh
+        $firstLine = @$linesWrapper.find '.line:first-child'
+        $lastLine  = @$linesWrapper.find '.line:last-child'
 
-            # If starting fresh
-            if $firstLine.length is 0
-                @$linesWrapper.html @linesTemplate
-                    lines: @collection.toJSON()
-                    isImage: isImage
-                    downloadLink: downloadLink
-            else
-                firstLineOffset = parseInt $firstLine.data 'offset'
-                lastLineOffset  = parseInt $lastLine.data 'offset'
-                # Prepending
-                if @collection.getMinOffset() < firstLineOffset
-                    # Get only the new lines
-                    lines = @collection.filter (line) => line.get('offset') < firstLineOffset
-                    @$linesWrapper.prepend @linesTemplate
-                        lines: _.pluck lines, 'attributes'
+        # If starting fresh
+        if $firstLine.length is 0
+            @$linesWrapper.html @linesTemplate
+                lines: @collection.toJSON()
+                isImage: isImage
+                downloadLink: downloadLink
+        else
+            firstLineOffset = parseInt $firstLine.data 'offset'
+            lastLineOffset  = parseInt $lastLine.data 'offset'
+            # Prepending
+            if @collection.getMinOffset() < firstLineOffset
+                # Get only the new lines
+                lines = @collection.filter (line) => line.get('offset') < firstLineOffset
+                @$linesWrapper.prepend @linesTemplate
+                    lines: _.pluck lines, 'attributes'
 
-                    # Gonna need to scroll back to the previous `firstLine` after otherwise
-                    # we end up at the top again
-                    @$contents.scrollTop $firstLine.offset().top
-                # Appending
-                else if @collection.getStartOffsetOfLastLine() > lastLineOffset
-                    # Get only the new lines
-                    lines = @collection.filter (line) => line.get('offset') > lastLineOffset
-                    @$linesWrapper.append @linesTemplate
-                        lines: _.pluck lines, 'attributes'
+                # Gonna need to scroll back to the previous `firstLine` after otherwise
+                # we end up at the top again
+                @$contents.scrollTop $firstLine.offset().top
+            # Appending
+            else if @collection.getStartOffsetOfLastLine() > lastLineOffset
+                # Get only the new lines
+                lines = @collection.filter (line) => line.get('offset') > lastLineOffset
+                @$linesWrapper.append @linesTemplate
+                    lines: _.pluck lines, 'attributes'
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>
@@ -196,6 +196,10 @@ class TailView extends View
         @isTailing = false
         clearInterval @tailInterval
         @$el.removeClass 'tailing'
+
+    isImage: ->
+        @collection.fetchMagicString().done (res) =>
+            isImage = /PNG|ÿØÿà|GIF89a|GIF87a/.test(res.data)
 
     remove: ->
         @stopTailing()
