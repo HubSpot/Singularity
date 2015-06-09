@@ -9,7 +9,7 @@ class RequestForm extends FormBaseView
 
     template: require '../templates/requestForm'
 
-    # A hash of request inputs that we want taggable
+    # A list of request inputs that we want taggable
     taggables: ->
         type = @model?.get('request').requestType || @requestType
         [
@@ -51,7 +51,7 @@ class RequestForm extends FormBaseView
         # expand appropriate form fields
         @changeType()
 
-        # render taggagble data
+        # render taggable data
         for tag in @taggables()
             @renderTaggable @[tag.name], request.request[tag.name]
         
@@ -59,9 +59,15 @@ class RequestForm extends FormBaseView
             @$("#instances-#{request.type}").val request.instances
             @$("#rack-sensitive-#{request.type}").prop 'checked', request.request.rackSensitive
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
+            @$("#waitAtLeast-#{request.type}").val request.request.waitAtLeastMillisAfterTaskFinishesForReschedule
 
         if request.type is 'SCHEDULED'
             @$("#schedule").val request.request.schedule
+            @$("#retries-on-failure").val request.request.numRetriesOnFailure
+            @$("#scheduled-expected-runtime").val request.request.scheduledExpectedRuntimeMillis
+
+        if request.type in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
+            @$("#killOldNRL-#{request.type}").val request.request.killOldNonLongRunningTasksAfterMillis
 
         typeButtons = @$('#type .btn').prop('disabled', true)
         @$("[data-type='#{request.type}']").prop('disabled', false)
@@ -103,6 +109,8 @@ class RequestForm extends FormBaseView
 
         requestObject.owners = @taggableList '#owners'
 
+        ## TO DO:
+        ## NOT UPDATING
         slavePlacement = @$('#slavePlacement').val()
         if slavePlacement.length > 0
             requestObject.slavePlacement = slavePlacement
@@ -113,8 +121,8 @@ class RequestForm extends FormBaseView
             instances                   = parseInt @$("#instances-#{ type }").val()
             requestObject.instances     = instances if instances
 
-            waitAtLeastMillisAfterTaskFinishesForReschedule = parseInt @$("#waitAtLeastMillisAfterTaskFinishesForReschedule-#{ type }").val()
-            requestObject.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule if waitAtLeastMillisAfterTaskFinishesForReschedule
+            waitAtLeast = parseInt @$("#waitAtLeast-#{ type }").val()
+            requestObject.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeast if waitAtLeast
 
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
             
