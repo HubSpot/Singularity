@@ -129,14 +129,15 @@ class RequestForm extends FormBaseView
             requestObject.rackAffinity = @taggableList "#rackAffinity-#{ type }"
 
         if type in ['SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
-            requestObject.killOldNonLongRunningTasksAfterMillis = parseInt @$("#killOldNRL-#{ type }").val()
+            killOld = parseInt @$("#killOldNRL-#{ type }").val()
+            requestObject.killOldNonLongRunningTasksAfterMillis = killOld if killOld
 
         if type in ['ON_DEMAND', 'RUN_ONCE']
             requestObject.daemon = false
 
         if type is 'SCHEDULED'
-            retries  = parseInt @$('#retries-on-failure').val()
             schedule = @$('#schedule').val()
+            retries  = parseInt @$('#retries-on-failure').val()
             expectedRuntime = parseInt @$('#scheduled-expected-runtime').val()
 
             requestObject.schedule = schedule if schedule
@@ -146,10 +147,6 @@ class RequestForm extends FormBaseView
         if type is 'SERVICE'
             requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
 
-        # TO DO: Add validation
-        ## killOldNonLongRunningTasksAfterMillis 
-        ## scheduledExpectedRuntimeMillis
-        ## waitAtLeastMillisAfterTaskFinishesForReschedule
 
         request = new Request requestObject
         request.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
