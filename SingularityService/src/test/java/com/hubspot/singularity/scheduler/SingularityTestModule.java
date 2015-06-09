@@ -50,7 +50,7 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.ldap.SingularityLDAPManager;
+import com.hubspot.singularity.auth.SingularityLDAPManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;

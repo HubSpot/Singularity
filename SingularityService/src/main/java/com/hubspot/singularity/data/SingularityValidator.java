@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
+import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import java.util.List;
 import java.util.Set;
@@ -31,7 +32,6 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -108,13 +108,38 @@ public class SingularityValidator {
     }
   }
 
-  public void checkForAuthorization(SingularityTask task, Optional<SingularityUser> user) {
-    checkForAuthorization(task.getTaskRequest().getRequest(), Optional.<SingularityRequest>absent(), user);
+  public boolean isAuthorizedForRequest(SingularityRequest request, Optional<SingularityUser> user) {
+    // auth disabled == everyone is authorized
+    if (!ldapEnabled) {
+      return true;
+    }
+
+    // not authenticated == no authorization
+    if (!user.isPresent()) {
+      return false;
+    }
+
+    // check admin groups
+    if (!Sets.intersection(user.get().getGroups(), ldapAdminGroups).isEmpty()) {
+      return true;
+    }
+
+    // check required groups
+    if (!ldapRequiredGroups.isEmpty() && Sets.intersection(user.get().getGroups(), ldapRequiredGroups).isEmpty()) {
+      return false;
+    }
+
+    // check request groups
+    if (request.getGroup().isPresent()) {
+      return user.get().getGroups().contains(request.getGroup().get());
+    }
+
+    return true;
   }
 
   public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityUser> user) {
     if (ldapEnabled) {
-      checkBadRequest(user.isPresent(), "user must be present");
+      checkUnauthorized(user.isPresent(), "user must be present");
 
       final Set<String> groups = user.get().getGroups();
 
@@ -138,15 +163,22 @@ public class SingularityValidator {
     }
   }
 
+  public boolean hasAdminAuthorization(Optional<SingularityUser> user) {
+    if (!ldapEnabled) {
+      return true;
+    }
+
+    if (!user.isPresent() || user.get().getGroups().isEmpty() || ldapAdminGroups.isEmpty()) {
+      return false;
+    }
+
+    return !Sets.intersection(user.get().getGroups(), ldapAdminGroups).isEmpty();
+  }
+
   public void checkForAdminAuthorization(Optional<SingularityUser> user) {
     if (ldapEnabled) {
-      if (!ldapAdminGroups.isEmpty()) {
-        checkBadRequest(user.isPresent(), "user must be present");
-
-        final Set<String> groups = user.get().getGroups();
-
-        checkForbidden(!Sets.intersection(groups, ldapAdminGroups).isEmpty(), "User %s must be part of an admin group", user.get().getUsername());
-      }
+      checkUnauthorized(user.isPresent(), "User must be present");
+      checkForbidden(hasAdminAuthorization(user), "User must be part of an admin group");
     }
   }
 
@@ -400,25 +432,5 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
-  }
-
-  public static boolean userIsAuthorizedForRequest(Optional<SingularityUser> user, SingularityRequest request) {
-    if (!request.getGroup().isPresent()) {
-      return true;
-    }
-
-    return user.isPresent() && user.get().getGroups().contains(request.getGroup().get());
-  }
-
-  public static boolean userIsAuthorizedForRequest(Optional<SingularityUser> user, Optional<SingularityRequestWithState> request) {
-    if (request.isPresent()) {
-      if (!request.get().getRequest().getGroup().isPresent()) {
-        return true;
-      }
-
-      return user.isPresent() && user.get().getGroups().contains(request.get().getRequest().getGroup().get());
-    }
-
-    return true; // TODO: is this right?
   }
 }

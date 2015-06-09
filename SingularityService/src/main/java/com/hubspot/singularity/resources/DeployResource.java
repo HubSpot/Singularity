@@ -3,9 +3,9 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
-import static com.hubspot.singularity.data.SingularityValidator.userIsAuthorizedForRequest;
 
 import java.util.Collections;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -18,8 +18,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
@@ -36,11 +34,13 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -54,25 +54,22 @@ public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
   private final SingularityValidator validator;
+  private final SingularityAuthorizationHelper adminHelper;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, Optional<SingularityUser> user) {
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper adminHelper, Optional<SingularityUser> user) {
     super(requestManager, deployManager, user);
 
     this.validator = validator;
+    this.adminHelper = adminHelper;
   }
 
   @GET
   @PropertyFiltering
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
-  public Iterable<SingularityPendingDeploy> getPendingDeploys() {
-    return Iterables.filter(deployManager.getPendingDeploys(), new Predicate<SingularityPendingDeploy>() {
-      @Override
-      public boolean apply(SingularityPendingDeploy input) {
-        return userIsAuthorizedForRequest(user, requestManager.getRequest(input.getDeployMarker().getRequestId()));
-      }
-    });
+  public List<SingularityPendingDeploy> getPendingDeploys() {
+    return adminHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
   }
 
   @POST
