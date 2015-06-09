@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -70,6 +71,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
   private final Optional<S3Service> s3;
+  private final Map<String, S3Service> s3GroupOverride;
   private final Optional<S3Configuration> configuration;
   private final RequestHistoryHelper requestHistoryHelper;
   private final RequestManager requestManager;
@@ -88,7 +90,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @Inject
   public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3,
-      Optional<S3Configuration> configuration, SingularityValidator validator, Optional<SingularityUser> user) {
+      Optional<S3Configuration> configuration, SingularityValidator validator, Optional<SingularityUser> user, Map<String, S3Service> s3GroupOverride) {
     super(historyManager, taskManager, deployManager, validator, user);
     this.requestManager = requestManager;
     this.s3 = s3;
@@ -96,6 +98,7 @@ public class S3LogResource extends AbstractHistoryResource {
     this.requestHistoryHelper = requestHistoryHelper;
     this.validator = validator;
     this.user = user;
+    this.s3GroupOverride = s3GroupOverride;
   }
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId) {
@@ -171,14 +174,16 @@ public class S3LogResource extends AbstractHistoryResource {
   private List<SingularityS3Log> getS3LogsWithExecutorService(Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
     List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
 
-    final String s3Bucket = (group.isPresent() && configuration.get().getS3BucketForGroup().containsKey(group.get())) ? configuration.get().getS3BucketForGroup().get(group.get()) : configuration.get().getS3Bucket();
+    final String s3Bucket = (group.isPresent() && configuration.get().getGroupOverrides().containsKey(group.get())) ? configuration.get().getGroupOverrides().get(group.get()).getS3Bucket() : configuration.get().getS3Bucket();
+
+    final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3.get();
 
     for (final String s3Prefix : prefixes) {
       futures.add(executorService.submit(new Callable<S3Object[]>() {
 
         @Override
         public S3Object[] call() throws Exception {
-          return s3.get().listObjects(s3Bucket, s3Prefix, null);
+          return s3Service.listObjects(s3Bucket, s3Prefix, null);
         }
       }));
     }
