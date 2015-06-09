@@ -38,6 +38,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -150,6 +151,7 @@ public class SingularityTestModule implements Module {
             }));
 
             binder.bind(SingularityLDAPManager.class).toInstance(new SingularityLDAPManager(null, null, configuration));
+            binder.bind(SingularityAuthorizationHelper.class).toInstance(new SingularityAuthorizationHelper(null, null));
             binder.bind(new TypeLiteral<Optional<SingularityUser>>() {}).toInstance(Optional.<SingularityUser>absent());
           }
         }));
