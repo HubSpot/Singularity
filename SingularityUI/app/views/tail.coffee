@@ -62,15 +62,12 @@ class TailView extends View
             if isImage is true
                 @collection.state.set
                     moreToFetch: false
-                    isStillRunning: false
-                @stopTailing()
+                
                 httpPrefix = "http"
                 httpPort = config.slaveHttpPort
-                
                 if config.slaveHttpsPort
                   httpPrefix = "https"
                   httpPort = config.slaveHttpsPort
-
                 fullPath = "#{@model.get('directory')}/#{@path}"
 
                 downloadLink = encodeURI("#{httpPrefix}://#{ @model.get('task').offer.hostname }:#{httpPort}/files/download.json?path=#{ fullPath }")
