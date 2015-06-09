@@ -26,6 +26,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   }
 
   protected void remove(String objectId) {
+    validator.checkForAdminAuthorization(user);
     checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DELETED, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
   }
 
@@ -46,12 +47,14 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   }
 
-  protected void decommission(String objectId, Optional<String> user) {
-    changeState(objectId, MachineState.STARTING_DECOMMISSION, user);
+  protected void decommission(String objectId, Optional<String> queryUser) {
+    validator.checkForAdminAuthorization(user);
+    changeState(objectId, MachineState.STARTING_DECOMMISSION, queryUser);
   }
 
-  protected void activate(String objectId, Optional<String> user) {
-    changeState(objectId, MachineState.ACTIVE, user);
+  protected void activate(String objectId, Optional<String> queryUser) {
+    validator.checkForAdminAuthorization(user);
+    changeState(objectId, MachineState.ACTIVE, queryUser);
   }
 
 }
