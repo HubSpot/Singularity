@@ -68,10 +68,12 @@
                     Bounce
                 </a>
             {{/if}}
-
-            <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
-                Edit
-            </a>
+            
+            {{#unless config.hideNewRequestButton}}
+                <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
+                    Edit
+                </a>
+            {{/unless}}
 
             {{#unless data.deleted}}
                 <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
