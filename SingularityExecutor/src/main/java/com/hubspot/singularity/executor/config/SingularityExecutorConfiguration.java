@@ -3,9 +3,7 @@ package com.hubspot.singularity.executor.config;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -195,10 +193,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private String s3UploaderBucket;
-
-  @NotNull
-  @JsonProperty
-  private Map<String, String> s3UploaderBucketForGroup = new HashMap<>();
 
   @JsonProperty
   private boolean useLocalDownloadService = false;
@@ -520,14 +514,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommands = shellCommands;
   }
 
-  public Map<String, String> getS3UploaderBucketForGroup() {
-    return s3UploaderBucketForGroup;
-  }
-
-  public void setS3UploaderBucketForGroup(Map<String, String> s3UploaderBucketForGroup) {
-    this.s3UploaderBucketForGroup = s3UploaderBucketForGroup;
-  }
-
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration" +
@@ -560,7 +546,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
             ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
             ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
-            ", s3UploaderBucketForGroup=" + s3UploaderBucketForGroup +
             ", useLocalDownloadService=" + useLocalDownloadService +
             ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
             ", maxTaskThreads=" + maxTaskThreads +
