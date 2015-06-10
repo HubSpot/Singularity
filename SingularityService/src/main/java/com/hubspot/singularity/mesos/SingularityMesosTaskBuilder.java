@@ -255,12 +255,18 @@ class SingularityMesosTaskBuilder {
         );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
-      ExecutorData executorData = task.getDeploy().getExecutorData().get();
+      final ExecutorDataBuilder executorDataBldr = task.getDeploy().getExecutorData().get().toBuilder();
+
+      if (configuration.getS3Configuration().isPresent()) {
+        if (task.getRequest().getGroup().isPresent() && configuration.getS3Configuration().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
+          final Optional<String> loggingS3Bucket = Optional.of(configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket());
+          LOG.trace("Setting loggingS3Bucket to {} for task {} executorData", loggingS3Bucket, taskId.getId());
+          executorDataBldr.setLoggingS3Bucket(loggingS3Bucket);
+        }
+      }
 
       if (!task.getPendingTask().getCmdLineArgsList().isEmpty()) {
         LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
-
-        ExecutorDataBuilder executorDataBldr = executorData.toBuilder();
 
         final ImmutableList.Builder<String> extraCmdLineArgsBuilder = ImmutableList.builder();
         if (executorDataBldr.getExtraCmdLineArgs() != null && !executorDataBldr.getExtraCmdLineArgs().isEmpty()) {
@@ -268,15 +274,9 @@ class SingularityMesosTaskBuilder {
         }
         extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList());
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
-
-        if (configuration.getS3Configuration().isPresent()) {
-          if (task.getRequest().getGroup().isPresent() && configuration.getS3Configuration().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
-            executorDataBldr.setLoggingS3Bucket(Optional.of(configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket()));
-          }
-        }
-
-        executorData = executorDataBldr.build();
       }
+
+      final ExecutorData executorData = executorDataBldr.build();
 
       try {
         bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
