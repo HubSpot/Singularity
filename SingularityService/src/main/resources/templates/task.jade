@@ -48,9 +48,9 @@ html
               | The task has been running for #{ runTime }. Consider checking whether this task is running correctly.
               ul
                 li This is a one-time notification about this task.
-                li It was expected to run again at #{ expectedNextRunTime }. 
+                li It was expected to run again at #{ expectedRunTime }. 
                 li This can be configured on a per-request basis with scheduledExpectedRuntimeMillis, otherwise it is calculated based on the schedule or historical average.
-                li The warning threshold is #{ warningThreshold } of expectedNextRunTime. (part of global configuration.)
+                li The warning threshold is #{ warningThreshold } of expectedRunTime. (part of global configuration.)
           if requestScheduled
             if !taskStateRunning
               if taskWillRetry
