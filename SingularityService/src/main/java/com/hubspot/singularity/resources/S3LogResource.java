@@ -209,7 +209,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
         @Override
         public SingularityS3Log call() throws Exception {
-          String getUrl = s3Service.createSignedGetUrl(configuration.get().getS3Bucket(), s3Object.getKey(), expireAt);
+          String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
 
           return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
         }
