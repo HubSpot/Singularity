@@ -54,14 +54,12 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
-  private final SingularityValidator validator;
   private final SingularityAuthorizationHelper authHelper;
 
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
-    super(requestManager, deployManager, user);
+    super(requestManager, deployManager, user, validator);
 
-    this.validator = validator;
     this.authHelper = authHelper;
   }
 
