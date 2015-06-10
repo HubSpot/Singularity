@@ -70,7 +70,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
-  private final Optional<S3Service> s3;
+  private final Optional<S3Service> s3ServiceDefault;
   private final Map<String, S3Service> s3GroupOverride;
   private final Optional<S3Configuration> configuration;
   private final RequestHistoryHelper requestHistoryHelper;
@@ -89,11 +89,11 @@ public class S3LogResource extends AbstractHistoryResource {
   };
 
   @Inject
-  public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3,
+  public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3ServiceDefault,
       Optional<S3Configuration> configuration, SingularityValidator validator, Optional<SingularityUser> user, Map<String, S3Service> s3GroupOverride) {
     super(historyManager, taskManager, deployManager, validator, user);
     this.requestManager = requestManager;
-    this.s3 = s3;
+    this.s3ServiceDefault = s3ServiceDefault;
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;
     this.validator = validator;
@@ -176,7 +176,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
     final String s3Bucket = (group.isPresent() && configuration.get().getGroupOverrides().containsKey(group.get())) ? configuration.get().getGroupOverrides().get(group.get()).getS3Bucket() : configuration.get().getS3Bucket();
 
-    final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3.get();
+    final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3ServiceDefault.get();
 
     for (final String s3Prefix : prefixes) {
       futures.add(executorService.submit(new Callable<S3Object[]>() {
@@ -209,7 +209,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
         @Override
         public SingularityS3Log call() throws Exception {
-          String getUrl = s3.get().createSignedGetUrl(configuration.get().getS3Bucket(), s3Object.getKey(), expireAt);
+          String getUrl = s3Service.createSignedGetUrl(configuration.get().getS3Bucket(), s3Object.getKey(), expireAt);
 
           return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
         }
@@ -234,7 +234,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private void checkS3() {
-    checkNotFound(s3.isPresent(), "S3 configuration was absent");
+    checkNotFound(s3ServiceDefault.isPresent(), "S3 configuration was absent");
   }
 
   @GET
