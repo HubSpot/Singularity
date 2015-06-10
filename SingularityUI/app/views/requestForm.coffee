@@ -11,21 +11,19 @@ class RequestForm extends FormBaseView
 
     # A list of request inputs that we want taggable
     taggables: ->
-        type = @model?.get('request').requestType || @requestType
+        type = @model?.get('request')?.requestType || @requestType
+        racks = _.pluck @racks.toJSON(), 'id'
         [
-            { name: 'owners', selector: '#owners' }
-            { name: 'rackAffinity', selector: "#rackAffinity-#{type}" }
+            { name: 'owners', selector: '#owners', tags: true }
+            { name: 'rackAffinity', selector: "#rackAffinity-#{type}", tags: racks  }
         ]
 
     events: ->
         _.extend super,
             'click #type .btn': 'handleChangeType'
 
-    initialize: ({@type, @requestId, @collection}) ->
+    initialize: ({@type, @requestId, @racks}) ->
         super
-        if @type is 'edit'
-            app.$page.hide()
-            @listenTo @collection, 'sync', @renderEditForm
 
     handleChangeType: (event) ->
         return false if @type is 'edit'
@@ -42,10 +40,9 @@ class RequestForm extends FormBaseView
         @checkForm()
 
     renderEditForm: ->
-        @model = @collection?.get @requestId
         request = @model.toJSON()
-        @requestType = request.type
 
+        @requestType = request.type
         # render our request models info
         @render()
         # expand appropriate form fields
@@ -54,6 +51,8 @@ class RequestForm extends FormBaseView
         # render taggable data
         for tag in @taggables()
             @renderTaggable @[tag.name], request.request[tag.name]
+        
+        @$('#slavePlacement').val request.request.slavePlacement
         
         if request.type is 'SERVICE' or 'WORKER'
             @$("#instances-#{request.type}").val request.instances
@@ -72,22 +71,15 @@ class RequestForm extends FormBaseView
         typeButtons = @$('#type .btn').prop('disabled', true)
         @$("[data-type='#{request.type}']").prop('disabled', false)
         @setEditingRequestTooltips()
-        app.$page.show()
 
     afterRender: ->
         @renderFormElements() if @model or @type isnt 'edit'
-        @setTooltips()
 
     renderFormElements: ->
         for input in @taggables()
             @[input.name] = @$("#{input.selector}").select2
-                tags: true
+                tags: input.tags
                 tokenSeparators: [',',' ','\n','\t']
-
-    setTooltips: ->
-        @$(".tagging-input").tooltip
-            title: 'Comma separate values'
-            placement: 'top'
 
     setEditingRequestTooltips: ->
         @$("[data-tooltip='rack-sensitive']").tooltip
@@ -109,8 +101,6 @@ class RequestForm extends FormBaseView
 
         requestObject.owners = @taggableList '#owners'
 
-        ## TO DO:
-        ## NOT UPDATING
         slavePlacement = @$('#slavePlacement').val()
         if slavePlacement.length > 0
             requestObject.slavePlacement = slavePlacement
