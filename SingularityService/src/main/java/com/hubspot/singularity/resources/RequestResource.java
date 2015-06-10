@@ -63,7 +63,6 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class RequestResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
 
-  private final SingularityValidator validator;
   private final SingularityAuthorizationHelper authHelper;
 
   private final SingularityMailer mailer;
@@ -71,9 +70,8 @@ public class RequestResource extends AbstractRequestResource {
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
-    super(requestManager, deployManager, user);
+    super(requestManager, deployManager, user, validator);
 
-    this.validator = validator;
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.authHelper = authHelper;
