@@ -58,6 +58,8 @@ class TailView extends View
         $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
     renderLines: ->
+        [..., task] = @model.get('taskUpdates')
+        console.log(task.taskState)
         # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
         # Well, or just render them if we're starting fresh
         $firstLine = @$linesWrapper.find '.line:first-child'
