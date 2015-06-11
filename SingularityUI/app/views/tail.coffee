@@ -180,6 +180,7 @@ class TailView extends View
     stopTailing: ->
         [..., task] = @model.get('taskUpdates')
         return if @isTailing isnt true and task.taskState in TERMINAL_TASK_STATES
+
         @isTailing = false
         clearInterval @tailInterval
         @$el.removeClass 'tailing'
