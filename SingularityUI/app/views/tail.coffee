@@ -1,5 +1,7 @@
 View = require './view'
 
+TERMINAL_TASK_STATES = ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+
 class TailView extends View
 
     pollingTimeout: 3000
@@ -58,8 +60,6 @@ class TailView extends View
         $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
     renderLines: ->
-        [..., task] = @model.get('taskUpdates')
-        console.log(task.taskState)
         # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
         # Well, or just render them if we're starting fresh
         $firstLine = @$linesWrapper.find '.line:first-child'
@@ -178,8 +178,8 @@ class TailView extends View
         @$el.addClass 'tailing'
 
     stopTailing: ->
-        return if @isTailing isnt true
-
+        [..., task] = @model.get('taskUpdates')
+        return if @isTailing isnt true and task.taskState in TERMINAL_TASK_STATES
         @isTailing = false
         clearInterval @tailInterval
         @$el.removeClass 'tailing'
