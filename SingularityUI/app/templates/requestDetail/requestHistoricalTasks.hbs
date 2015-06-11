@@ -37,7 +37,8 @@
                             </span>
                         </td>
                         <td class="hidden-sm hidden-xs">
-                            {{humanizeText lastTaskState}}
+                            {{log lastTaskState}}
+                            <span class="label label-default">{{humanizeText lastTaskState}}</span>
                         </td>
                         <td class="hidden-sm hidden-xs">
                             {{ taskId.deployId }}
