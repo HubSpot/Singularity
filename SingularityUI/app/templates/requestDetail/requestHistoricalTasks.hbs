@@ -37,7 +37,6 @@
                             </span>
                         </td>
                         <td class="hidden-sm hidden-xs">
-                            {{log lastTaskState}}
                             <span class="label label-{{getLabelClass lastTaskState}}">{{humanizeText lastTaskState}}</span>
                         </td>
                         <td class="hidden-sm hidden-xs">
@@ -49,7 +48,6 @@
                         <td class="hidden-xs">
                             {{timestampFromNow updatedAt}}
                         </td>
-                        {{log ../../config.finishedTaskLogPath}}
                         <td class="hidden-xs actions-column">
                             <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
                                 ...
