@@ -96,7 +96,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
             configuration.getServiceLog(),
             task.getTaskId(),
             executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-            getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())));
+            !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())));
 
     task.getLog().info("Writing a runner script to execute {} with {}", cmd, runnerContext);
 
