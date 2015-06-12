@@ -4,8 +4,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.hubspot.singularity.executor.models.DockerContext;
-import com.spotify.docker.client.DockerClient;
+import javax.ws.rs.HEAD;
+
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -14,10 +14,12 @@ import com.google.common.collect.Lists;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.models.DockerContext;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher.SingularityExecutorTaskArtifactFetcher;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
@@ -94,24 +96,27 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return bldr.toString();
   }
 
-  private boolean checkIfCommandInfoUserMatchesExecutorDataUser(TaskInfo taskInfo, ExecutorData executorData) {
-    final Optional<String> commandInfoUser = taskInfo.hasCommand() && taskInfo.getCommand().hasUser() ? Optional.of(taskInfo.getCommand().getUser()) : Optional.<String>absent();
-
-    return commandInfoUser.equals(executorData.getUser());
+  private String getExecutorUser() {
+    return System.getProperty("user.name");  // TODO: better way to do this?
   }
 
   private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData) {
     final String cmd = getCommand(executorData);
-    RunnerContext runnerContext = new RunnerContext(
-      cmd,
-      configuration.getTaskAppDirectory(),
-      configuration.getLogrotateToDirectory(),
-      executorData.getUser().or(configuration.getDefaultRunAsUser()),
-      configuration.getServiceLog(),
-      task.getTaskId(),
-      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-      !checkIfCommandInfoUserMatchesExecutorDataUser(taskInfo, executorData));
-    EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
+
+    final EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
+
+    templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(taskInfo));
+
+    final RunnerContext runnerContext = new RunnerContext(
+            cmd,
+            configuration.getTaskAppDirectory(),
+            configuration.getLogrotateToDirectory(),
+            executorData.getUser().or(configuration.getDefaultRunAsUser()),
+            configuration.getServiceLog(),
+            task.getTaskId(),
+            executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
+            !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())));
+
     if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
 
@@ -119,7 +124,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 
-      task.getLog().info("Writing a runner script to execute {}", cmd);
+      task.getLog().info("Writing a runner script to execute {} with {}", cmd, runnerContext);
 
       templateManager.writeRunnerScript(getPath("runner.sh"), runnerContext);
     }

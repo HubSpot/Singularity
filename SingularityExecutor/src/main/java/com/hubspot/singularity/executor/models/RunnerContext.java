@@ -63,15 +63,15 @@ public class RunnerContext {
 
   @Override
   public String toString() {
-    return "RunnerContext [" +
-        "cmd='" + cmd + "'" +
-        ", taskAppDirectory='" + taskAppDirectory + "'" +
-        ", logDir='" + logDir + "'" +
-        ", user='" + user + "'" +
-        ", logFile='" + logFile + "'" +
-        ", taskId='" + taskId + "'" +
-        ", maxTaskThreads=" + maxTaskThreads +
-        ", shouldChangeUser=" + shouldChangeUser +
-        ']';
+    return "RunnerContext[" +
+            "cmd='" + cmd + '\'' +
+            ", taskAppDirectory='" + taskAppDirectory + '\'' +
+            ", logDir='" + logDir + '\'' +
+            ", user='" + user + '\'' +
+            ", logFile='" + logFile + '\'' +
+            ", taskId='" + taskId + '\'' +
+            ", maxTaskThreads=" + maxTaskThreads +
+            ", shouldChangeUser=" + shouldChangeUser +
+            ']';
   }
 }
