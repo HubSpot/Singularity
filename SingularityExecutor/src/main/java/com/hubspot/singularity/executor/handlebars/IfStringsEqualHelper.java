@@ -10,7 +10,7 @@ public class IfStringsEqualHelper implements Helper<Object> {
 
   @Override
   public CharSequence apply(Object context, Options options) throws IOException {
-    if (options.param(0).toString().equals(options.param(1).toString())) {
+    if (context.toString().equals(options.param(0).toString())) {
       return options.fn(context);
     } else {
       return options.inverse(context);
