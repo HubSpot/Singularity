@@ -19,7 +19,6 @@ class TailView extends View
 
         @listenTo @collection, 'reset',       @dumpContents
         @listenTo @collection, 'sync',        @renderLines
-        @listenTo @collection, 'initialdata', @afterInitialData
         @listenTo @collection, 'initialOffsetData', @afterInitialOffsetData
 
         @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
