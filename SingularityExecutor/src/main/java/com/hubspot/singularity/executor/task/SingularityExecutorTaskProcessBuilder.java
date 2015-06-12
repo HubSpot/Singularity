@@ -118,7 +118,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 
-      task.getLog().info("Writing a runner script to execute {}", cmd);
+      task.getLog().info("Writing a runner script to execute {} with {}", cmd, runnerContext);
 
       templateManager.writeRunnerScript(getPath("runner.sh"), runnerContext);
     }
