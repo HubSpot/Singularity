@@ -18,7 +18,7 @@
             {{#each data}}
                 <tr>
                     <td>{{ id }}</td>
-                    <td>{{ state }}</td>
+                    <td>{{humanizeText state }}</td>
                     <td data-value="{{ uptime }}">{{timestampDuration uptime}}</td>
                     {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                         <td>{{ user }}</td>
