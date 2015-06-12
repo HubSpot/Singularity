@@ -94,10 +94,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return bldr.toString();
   }
 
-  private boolean checkIfCommandInfoUserMatchesExecutorDataUser(TaskInfo taskInfo, ExecutorData executorData) {
-    final Optional<String> commandInfoUser = taskInfo.hasCommand() && taskInfo.getCommand().hasUser() ? Optional.of(taskInfo.getCommand().getUser()) : Optional.<String>absent();
-
-    return commandInfoUser.equals(executorData.getUser());
+  private String getExecutorUser() {
+    return System.getProperty("user.name");  // TODO: better way to do this?
   }
 
   private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData) {
@@ -107,11 +105,11 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       cmd,
       configuration.getTaskAppDirectory(),
       configuration.getLogrotateToDirectory(),
+      getExecutorUser(),
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
       configuration.getServiceLog(),
       task.getTaskId(),
-      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-      !checkIfCommandInfoUserMatchesExecutorDataUser(taskInfo, executorData));
+      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()));
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
     if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
