@@ -11,7 +11,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
-import com.hubspot.singularity.executor.handlebars.IfStringsEqualHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.spotify.docker.client.DefaultDockerClient;
@@ -74,7 +73,6 @@ public class SingularityExecutorModule extends AbstractModule {
 
     handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());
     handlebars.registerHelper(IfPresentHelper.NAME, new IfPresentHelper());
-    handlebars.registerHelper(IfStringsEqualHelper.NAME, new IfStringsEqualHelper());
 
     return handlebars;
   }

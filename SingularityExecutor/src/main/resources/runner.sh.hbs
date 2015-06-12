@@ -55,10 +55,10 @@ else
 fi
 
 # execute command
-{{#ifStringsEqual executorUser user}}
+{{#if shouldChangeUser}}
 echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
 exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
 {{else}}
 echo "Executing: {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
 exec {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
-{{/ifStringsEqual}}
+{{/if}}
