@@ -37,6 +37,7 @@ public class SingularityDeployBuilder {
   private Optional<Long> healthcheckIntervalSeconds;
   private Optional<Long> healthcheckTimeoutSeconds;
   private Optional<Boolean> skipHealthchecksOnDeploy;
+  private Optional<String> healthcheckScheme;
 
   private Optional<Long> deployHealthTimeoutSeconds;
 
@@ -68,6 +69,7 @@ public class SingularityDeployBuilder {
     this.healthcheckTimeoutSeconds = Optional.absent();
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
+    this.healthcheckScheme = Optional.absent();
     this.considerHealthyAfterRunningForSeconds = Optional.absent();
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
@@ -76,7 +78,7 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
-        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy);
+        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckScheme);
   }
 
   public String getRequestId() {
@@ -299,6 +301,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getHealthcheckScheme() {
+    return healthcheckScheme;
+  }
+
+  public SingularityDeployBuilder setHealthcheckScheme(Optional<String> healthcheckScheme) {
+    this.healthcheckScheme = healthcheckScheme;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder [" +
@@ -324,6 +335,7 @@ public class SingularityDeployBuilder {
         ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
         ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
         ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+        ", healthcheckScheme=" + healthcheckScheme +
         ", serviceBasePath=" + serviceBasePath +
         ", loadBalancerGroups=" + loadBalancerGroups +
         ", loadBalancerOptions=" + loadBalancerOptions +

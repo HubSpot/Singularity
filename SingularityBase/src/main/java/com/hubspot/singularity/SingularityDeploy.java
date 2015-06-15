@@ -134,6 +134,7 @@ public class SingularityDeploy {
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
     .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
     .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
+    .setHealthcheckScheme(healthcheckScheme)
 
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
@@ -302,6 +303,7 @@ public class SingularityDeploy {
         ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
         ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
         ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+        ", healthcheckScheme=" + healthcheckScheme +
         ", serviceBasePath=" + serviceBasePath +
         ", loadBalancerGroups=" + loadBalancerGroups +
         ", loadBalancerOptions=" + loadBalancerOptions +
