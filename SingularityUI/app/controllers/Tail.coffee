@@ -16,12 +16,11 @@ class TailController extends Controller
             model: @models.taskHistory
 
         app.showView @view
-        if @offset?
-            @collections.logLines.fetchOffset @offset
-        else
-            @collections.logLines.fetchInitialData()
 
-        @refresh()
+        if @offset?
+            $.when( @collections.logLines.fetchOffset(@offset), @refresh() ).then => @view.afterInitialOffsetData()
+        else
+            $.when( @collections.logLines.fetchInitialData(), @refresh() ).then => @view.afterInitialData()
 
     refresh: ->
         @models.taskHistory.fetch()
