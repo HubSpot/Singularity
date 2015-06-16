@@ -83,7 +83,7 @@ public class SingularityDeploy {
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
-      @JsonProperty("healthCheckScheme") Optional<HealthcheckProtocol> healthcheckProtocol) {
+      @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol) {
     this.requestId = requestId;
 
     this.command = command;
@@ -238,7 +238,7 @@ public class SingularityDeploy {
     return healthcheckUri;
   }
 
-  @ApiModelProperty(required=false, value="Healthcheck scheme")
+  @ApiModelProperty(required=false, value="Healthcheck protocol")
   public Optional<HealthcheckProtocol> getHealthcheckProtocol() {
     return healthcheckProtocol;
   }

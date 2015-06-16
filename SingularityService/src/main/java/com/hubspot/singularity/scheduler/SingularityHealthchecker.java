@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -32,7 +33,7 @@ import com.ning.http.client.RequestBuilder;
 @SuppressWarnings("deprecation")
 @Singleton
 public class SingularityHealthchecker {
-  private static final String DEFAULT_HEALTH_CHECK_SCHEME = "http";
+  private static final HealthcheckProtocol DEFAULT_HEALTH_CHECK_SCHEME = HealthcheckProtocol.HTTP;
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -150,9 +151,9 @@ public class SingularityHealthchecker {
       uri = uri.substring(1);
     }
 
-    String scheme = task.getTaskRequest().getDeploy().getHealthcheckScheme().or(DEFAULT_HEALTH_CHECK_SCHEME);
+    HealthcheckProtocol protocol = task.getTaskRequest().getDeploy().getHealthcheckProtocol().or(DEFAULT_HEALTH_CHECK_SCHEME);
 
-    return Optional.of(String.format("%s://%s:%d/%s", scheme, hostname, firstPort.get(), uri));
+    return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, firstPort.get(), uri));
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
