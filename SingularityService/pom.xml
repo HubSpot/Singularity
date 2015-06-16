@@ -352,6 +352,54 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>hubspot/singularityservice:${project.version}</name>
+              <build>
+                <from>java:8u45-jre</from>
+                <maintainer>tpetr@hubspot.com</maintainer>
+                <ports>
+                  <port>7099</port>
+                </ports>
+                <entryPoint>
+                  <exec>
+                    <arg>/etc/singularity/start.sh</arg>
+                  </exec>
+                </entryPoint>
+                <cmd>
+                  <exec>
+                    <args>server</args>
+                    <args>/etc/singularity/singularity.yaml</args>
+                  </exec>
+                </cmd>
+                <assembly>
+                  <mode>dir</mode>
+                  <basedir>/</basedir>
+                  <inline>
+                    <fileSets>
+                      <fileSet>
+                        <directory>${project.basedir}/src/main/docker/etc</directory>
+                        <outputDirectory>/etc</outputDirectory>
+                      </fileSet>
+                    </fileSets>
+                    <files>
+                      <file>
+                        <source>${project.basedir}/target/${project.name}-${project.version}-shaded.jar</source>
+                        <outputDirectory>/etc/singularity</outputDirectory>
+                        <destName>singularity.jar</destName>
+                      </file>
+                    </files>
+                  </inline>
+                </assembly>
+              </build>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>com.github.kongchen</groupId>
         <artifactId>swagger-maven-plugin</artifactId>
         <executions>
