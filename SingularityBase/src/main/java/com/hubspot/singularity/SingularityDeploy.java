@@ -43,7 +43,7 @@ public class SingularityDeploy {
   private final Optional<Long> healthcheckIntervalSeconds;
   private final Optional<Long> healthcheckTimeoutSeconds;
   private final Optional<Boolean> skipHealthchecksOnDeploy;
-  private final Optional<String> healthcheckScheme;
+  private final Optional<HealthcheckProtocol> healthcheckProtocol;
 
   private final Optional<Long> deployHealthTimeoutSeconds;
 
@@ -83,7 +83,7 @@ public class SingularityDeploy {
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
-      @JsonProperty("healthCheckScheme") Optional<String> healthcheckScheme) {
+      @JsonProperty("healthCheckScheme") Optional<HealthcheckProtocol> healthcheckProtocol) {
     this.requestId = requestId;
 
     this.command = command;
@@ -109,7 +109,7 @@ public class SingularityDeploy {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
     this.skipHealthchecksOnDeploy = skipHealthchecksOnDeploy;
-    this.healthcheckScheme = healthcheckScheme;
+    this.healthcheckProtocol = healthcheckProtocol;
 
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
 
@@ -134,7 +134,7 @@ public class SingularityDeploy {
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
     .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
     .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
-    .setHealthcheckScheme(healthcheckScheme)
+    .setHealthcheckProtocol(healthcheckProtocol)
 
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
@@ -239,8 +239,8 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="Healthcheck scheme")
-  public Optional<String> getHealthcheckScheme() {
-    return healthcheckScheme;
+  public Optional<HealthcheckProtocol> getHealthcheckProtocol() {
+    return healthcheckProtocol;
   }
 
   @ApiModelProperty(required=false, value="Health check interval in seconds.")
@@ -303,7 +303,7 @@ public class SingularityDeploy {
         ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
         ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
         ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-        ", healthcheckScheme=" + healthcheckScheme +
+        ", healthcheckProtocol=" + healthcheckProtocol +
         ", serviceBasePath=" + serviceBasePath +
         ", loadBalancerGroups=" + loadBalancerGroups +
         ", loadBalancerOptions=" + loadBalancerOptions +
