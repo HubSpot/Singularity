@@ -19,5 +19,5 @@ args+=( -Ddw.mesos.master="${SINGULARITY_MESOS_MASTER:=zk://localhost:2181/mesos
 args+=( -Ddw.zookeeper.quorum="${SINGULARITY_ZK:=localhost:2181}" )
 args+=( -Ddw.ui.baseUrl="${SINGULARITY_URI_BASE:=$DEFAULT_URI_BASE}" )
 
-echo "Running: java ${args[@]} -jar /etc/singularity/singularity.jar $*"
-exec java "${args[@]}" -jar /etc/singularity/singularity.jar $*
+echo "Running: java ${args[@]} -jar /SingularityService.jar $*"
+exec java "${args[@]}" -jar /SingularityService.jar $*
