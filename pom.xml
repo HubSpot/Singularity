@@ -64,7 +64,7 @@
     <jets3t.version>0.9.0</jets3t.version>
     <guava.retry.version>1.0.7</guava.retry.version>
     <mesos.version>0.21.0</mesos.version>
-    <mesos.docker.tag>0.21.0-1.0.ubuntu1404</mesos.docker.tag>
+    <mesos.docker.tag>0.21.1-1.1.ubuntu1404</mesos.docker.tag> <!-- 0.21.0-1.0.ubuntu1404 is missing for mesos-slave -->
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
     <sentry.version>5.0</sentry.version>
