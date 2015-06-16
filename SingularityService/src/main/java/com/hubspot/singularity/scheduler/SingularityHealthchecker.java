@@ -150,17 +150,9 @@ public class SingularityHealthchecker {
       uri = uri.substring(1);
     }
 
-    String scheme = getHealthcheckScheme(task.getTaskRequest().getDeploy());
+    String scheme = task.getTaskRequest().getDeploy().getHealthcheckScheme().or(DEFAULT_HEALTH_CHECK_SCHEME);
 
     return Optional.of(String.format("%s://%s:%d/%s", scheme, hostname, firstPort.get(), uri));
-  }
-
-  private String getHealthcheckScheme(SingularityDeploy deploy) {
-    if (deploy.getHealthcheckScheme().isPresent()) {
-      return deploy.getHealthcheckScheme().get();
-    } else {
-      return DEFAULT_HEALTH_CHECK_SCHEME;
-    }
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
