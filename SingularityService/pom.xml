@@ -548,13 +548,13 @@
                     </ports>
                     <entryPoint>
                       <exec>
-                        <arg>/etc/singularity/start.sh</arg>
+                        <arg>/start-${project.name}.sh</arg>
                       </exec>
                     </entryPoint>
                     <cmd>
                       <exec>
                         <args>server</args>
-                        <args>/etc/singularity/singularity.yaml</args>
+                        <args>/etc/singularity.yaml</args>
                       </exec>
                     </cmd>
                     <assembly>
@@ -563,15 +563,15 @@
                       <inline>
                         <fileSets>
                           <fileSet>
-                            <directory>${project.basedir}/src/main/docker/etc</directory>
-                            <outputDirectory>/etc</outputDirectory>
+                            <directory>${project.basedir}/src/main/docker</directory>
+                            <outputDirectory>/</outputDirectory>
                           </fileSet>
                         </fileSets>
                         <files>
                           <file>
                             <source>${project.basedir}/target/${project.name}-${project.version}-shaded.jar</source>
-                            <outputDirectory>/etc/singularity</outputDirectory>
-                            <destName>singularity.jar</destName>
+                            <destName>${project.name}.jar</destName>
+                            <outputDirectory>/</outputDirectory>
                           </file>
                         </files>
                       </inline>
