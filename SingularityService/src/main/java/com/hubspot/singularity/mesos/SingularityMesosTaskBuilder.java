@@ -220,7 +220,9 @@ class SingularityMesosTaskBuilder {
       if (volumeInfo.getHostPath().isPresent()) {
         volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), taskId));
       }
-      volumeBuilder.setMode(volumeInfo.getMode());
+      if (volumeInfo.getMode().isPresent()) {
+        volumeBuilder.setMode(volumeInfo.getMode().get());
+      }
       containerBuilder.addVolumes(volumeBuilder);
     }
 

@@ -9,13 +9,13 @@ import com.google.common.base.Optional;
 public class SingularityVolume {
   private final String containerPath;
   private final Optional<String> hostPath;
-  private final Mode mode;
+  private final Optional<Mode> mode;
 
   @JsonCreator
   public SingularityVolume(
       @JsonProperty("containerPath") String containerPath,
       @JsonProperty("hostPath") Optional<String> hostPath,
-      @JsonProperty("mode") Mode mode) {
+      @JsonProperty("mode") Optional<Mode> mode) {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
     this.mode = mode;
@@ -29,7 +29,7 @@ public class SingularityVolume {
     return hostPath;
   }
 
-  public Mode getMode() {
+  public Optional<Mode> getMode() {
     return mode;
   }
 
