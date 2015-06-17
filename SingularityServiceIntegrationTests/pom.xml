@@ -117,6 +117,7 @@
                       <MESOS_QUORUM>1</MESOS_QUORUM>
                       <MESOS_CLUSTER>singularity-integration-test</MESOS_CLUSTER>
                       <MESOS_WORK_DIR>/var/lib/mesos</MESOS_WORK_DIR>
+                      <MESOS_HOSTNAME>singularity-test-master</MESOS_HOSTNAME>
                     </env>
                     <wait>
                       <log>Elected as the leading master</log>
@@ -138,6 +139,7 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_HOSTNAME>singularity-test-slave1</MESOS_HOSTNAME>
                     </env>
                     <volumes>
                       <bind>
@@ -166,6 +168,7 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_HOSTNAME>singularity-test-slave2</MESOS_HOSTNAME>
                     </env>
                     <volumes>
                       <bind>
@@ -194,6 +197,7 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_HOSTNAME>singularity-test-slave3</MESOS_HOSTNAME>
                     </env>
                     <volumes>
                       <bind>
@@ -215,6 +219,9 @@
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
+                      <link>singularity-test-slave1</link>
+                      <link>singularity-test-slave2</link>
+                      <link>singularity-test-slave3</link>
                     </links>
                     <ports>
                       <port>singularity.port:7099</port>
