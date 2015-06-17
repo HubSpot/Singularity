@@ -1,6 +1,6 @@
 Controller = require './ReactController'
 
-AdminSubview = require '../views/AdminSubview'
+SlavesView = require '../views/SlavesView'
 
 Slave = require '../models/Slave'
 Slaves = require '../collections/Slaves'
@@ -12,9 +12,8 @@ class SlavesController extends Controller
         app.showPageLoader()
         @slavesCollection = new Slaves []
 
-        new AdminSubview
+        new SlavesView
             collection: @slavesCollection
             model: Slave
-            label: 'slaves'
 
 module.exports = SlavesController

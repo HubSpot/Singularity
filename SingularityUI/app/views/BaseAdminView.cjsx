@@ -1,31 +1,17 @@
-AdminMainCmpt = require '../components/admin/AdminMainCmpt'
+##
+## Used by Slave and Rack Views
+##
 
-##
-## Used by Slave and Rack views
-##
 View = require './ReactBaseView'
 
-class AdminSubview extends View
-
-  initialize: (@options) ->
-    @refresh()
-
-  renderReact: ->
-    React.render(
-        <AdminMainCmpt
-          label={@options.label}
-          data={@getRenderData()}
-          actions={@actions}
-        />, 
-        app.pageEl
-      )    
+class BaseAdminView extends View
 
   refresh: =>
     @collection.fetch({reset:true}).done =>
       @renderReact()
 
   ##
-  ## Render Dasta
+  ## Render Data
   ##
   getRenderData: ->
     active: @collection.filterByState(['ACTIVE'])
@@ -39,7 +25,6 @@ class AdminSubview extends View
     changeItemState: @changeItemState
 
   changeItemState: (item) =>
-
     model = new @options.model
       id:    item.id
       host:  item.host
@@ -58,4 +43,4 @@ class AdminSubview extends View
         @renderReact()
 
 
-module.exports = AdminSubview
+module.exports = BaseAdminView
