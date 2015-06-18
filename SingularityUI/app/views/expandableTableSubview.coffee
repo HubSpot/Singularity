@@ -56,7 +56,7 @@ class ExpandableTableSubview extends View
 
         @$el.html @template
             synced:  @collection.synced
-            data:    _.pluck @collection.models, 'attributes'
+            data:    data
             config: config
 
         @$('.actions-column a[title]').tooltip()
@@ -80,7 +80,7 @@ class ExpandableTableSubview extends View
         # Append next / previous page buttons
         hasNextButton = @checkHasNextButton()
         hasPrevButton = @collection.currentPage isnt 1
-        
+
         @$el.append @buttonsTemplate {hasPrevButton, hasNextButton}
 
     getRenderData: ->
@@ -128,7 +128,7 @@ class ExpandableTableSubview extends View
         # - 1 just in case
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
-        
+
         @refreshCollection()
 
     startShrink: =>
@@ -137,7 +137,7 @@ class ExpandableTableSubview extends View
 
     shrink: =>
         @expanded = false
-        
+
         @$('.table-container').css 'min-height', '0px'
         @containerMinHeight = 0
 
