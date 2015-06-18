@@ -6,8 +6,10 @@ ScheduledTasksTable = React.createClass
     tasks: React.PropTypes.array.isRequired
     # actions: React.PropTypes.func.isRequired
   
-  render: ->
+  componentWillMount: ->
+    console.log 'ScheduledTasksTable will mount'
 
+  render: ->
     <div>
       ScheduledTasksTable
     </div>

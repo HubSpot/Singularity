@@ -3,25 +3,27 @@
 # Slaves = require '../collections/Slaves'
 
 
-TasksMain = require '../components/tasks/TasksMainCmpt'
+TasksMain = require '../components/tasks/TasksMain'
 View = require './ReactBaseView'
 
 class TasksView extends View
 
   initialize: =>
+    console.log 'init'
     @refresh()
 
   refresh: =>
+    ## TO DO: show a loader
+    # $.when( @collections.tasks.fetch(), @collections.slaves.fetch() ).done =>
     @collections.tasks.fetch().done =>
+      console.log 'refresh done: ', @collections.tasks.toJSON().length
       @renderReact()
-    @collections.slaves.fetch().done =>
-      @renderReact()
-    
+
   renderReact: ->
     React.render(
       <TasksMain
         data={@getRenderData()}
-        actions={@actions}            
+        actions={@actions}
       />, app.pageEl
     )
 
@@ -38,13 +40,6 @@ class TasksView extends View
   ## Actions
   ##
   actions: =>
-    changeFilterState: @changeFilterState
-
-
-  changeFilterState: (filter) =>
-    @filterState = filter
-    @renderReact()
-
 
 
 module.exports = TasksView
