@@ -1,4 +1,4 @@
-DashboardMain = require '../components/dashboard/DashboardMainCmpt'
+DashboardMain = require '../components/dashboard/DashboardMain'
 View = require './ReactBaseView'
 
 class DashboardView extends View

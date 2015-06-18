@@ -5,9 +5,11 @@ ActiveTasksTable = React.createClass
   propTypes:
     tasks: React.PropTypes.array.isRequired
     # actions: React.PropTypes.func.isRequired
-  
-  render: ->
 
+  componentWillMount: ->
+    console.log 'ActiveTasksTable will mount'
+
+  render: ->
     <div>
       ActiveTasksTable
     </div>

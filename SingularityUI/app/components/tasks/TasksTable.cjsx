@@ -1,6 +1,11 @@
 Helpers = require '../helpers'
-ActiveTasksTable = require './tables/ActiveTasksTable'
-ScheduledTasksTable = require  './tables/ScheduledTasksTable'
+
+Tables =
+  'active'    : require './tables/ActiveTasksTable'
+  'scheduled' : require './tables/ScheduledTasksTable'
+  'cleaning'  : require './tables/CleaningTasksTable'
+  'lbcleanup' : require './tables/LBCleanupTasksTable'
+  'decommissioning' : require './tables/DecommTasksTable'
 
 TasksTable = React.createClass
 
@@ -9,23 +14,16 @@ TasksTable = React.createClass
   propTypes:
     data: React.PropTypes.object.isRequired
     actions: React.PropTypes.func.isRequired
+
+  componentDidMount: ->
+    console.log 'componentDidMount'
   
-  
+  componentWillUnmount: ->
+    console.log 'componentWillMount'
+
   render: ->
     filter = @props.data.filterState || @props.data.initialFilterState
-   
-    # TableComponent = Helpers.titleCase(filter) + 'TasksTable'
-    console.log 'filter: ', filter
-
-    if filter is 'active'
-      table = 
-        <div>
-          <ActiveTasksTable
-            tasks={@props.data.tasks}
-          />
-        </div>
-
-    return table
+    table = Tables[filter]
+    React.createElement(table, {tasks: @props.data.tasks} )
 
 module.exports = TasksTable
-
