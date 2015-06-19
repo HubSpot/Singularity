@@ -4,8 +4,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.hubspot.singularity.executor.models.DockerContext;
-import com.spotify.docker.client.DockerClient;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -14,10 +12,12 @@ import com.google.common.collect.Lists;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.models.DockerContext;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher.SingularityExecutorTaskArtifactFetcher;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
@@ -94,8 +94,13 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return bldr.toString();
   }
 
+  private String getExecutorUser() {
+    return System.getProperty("user.name");  // TODO: better way to do this?
+  }
+
   private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData) {
     final String cmd = getCommand(executorData);
+
     RunnerContext runnerContext = new RunnerContext(
       cmd,
       configuration.getTaskAppDirectory(),
@@ -103,7 +108,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
       configuration.getServiceLog(),
       task.getTaskId(),
-      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()));
+      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
+      !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())));
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
     if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
@@ -112,7 +118,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 
-      task.getLog().info("Writing a runner script to execute {}", cmd);
+      task.getLog().info("Writing a runner script to execute {} with {}", cmd, runnerContext);
 
       templateManager.writeRunnerScript(getPath("runner.sh"), runnerContext);
     }

@@ -3,11 +3,10 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.SimpleServerFactory;
-
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -26,6 +25,7 @@ import org.jets3t.service.security.AWSCredentials;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -40,6 +40,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
+import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -62,6 +63,8 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 
 
 public class SingularityMainModule implements Module {
@@ -86,6 +89,9 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
+
+  public static final String LDAP_REFRESH_THREADPOOL_NAME = "_ldap_refresh_threadpool";
+  public static final Named LDAP_REFRESH_THREADPOOL_NAMED = Names.named(LDAP_REFRESH_THREADPOOL_NAME);
 
   private final SingularityConfiguration configuration;
 
@@ -136,12 +142,14 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityManagedScheduledExecutorServiceFactory.class).in(Scopes.SINGLETON);
 
     binder.bind(ScheduledExecutorService.class).annotatedWith(HEALTHCHECK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getHealthcheckStartThreads(),
-        configuration.getThreadpoolShutdownDelayInSeconds(),
-        "healthcheck")).in(Scopes.SINGLETON);
+            configuration.getThreadpoolShutdownDelayInSeconds(),
+            "healthcheck")).in(Scopes.SINGLETON);
 
     binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
+
+    binder.bind(ScheduledExecutorService.class).annotatedWith(LDAP_REFRESH_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getLdapConfiguration().getCacheThreads(), configuration.getThreadpoolShutdownDelayInSeconds(), "ldap-cache")).in(Scopes.SINGLETON);
 
     try {
       binder.bindConstant().annotatedWith(Names.named(HOST_ADDRESS_PROPERTY)).to(JavaUtils.getHostAddress());
@@ -199,6 +207,22 @@ public class SingularityMainModule implements Module {
     }
 
     return Optional.<S3Service>of(new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
+  }
+
+  @Provides
+  @Singleton
+  public Map<String, S3Service> s3ServiceGroupOverrides(Optional<S3Configuration> config) throws S3ServiceException {
+    if (!config.isPresent() || config.get().getGroupOverrides().isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    final ImmutableMap.Builder<String, S3Service> s3ServiceBuilder = ImmutableMap.builder();
+
+    for (Map.Entry<String, S3GroupOverrideConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
+      s3ServiceBuilder.put(entry.getKey(), new RestS3Service(new AWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey())));
+    }
+
+    return s3ServiceBuilder.build();
   }
 
   @Provides

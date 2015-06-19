@@ -14,6 +14,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +30,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
 
   private String contextPath = DEFAULT_CONTEXT_PATH;
   private List<String> hosts = Collections.emptyList();
+  private Optional<SingularityClientCredentials> credentials = Optional.absent();
 
   @Inject
   public SingularityClientProvider(@Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
@@ -57,6 +59,12 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     return this;
   }
 
+  @Inject(optional=true)
+  public SingularityClientProvider setCredentials(@Named(SingularityClientModule.CREDENTIALS_PROPERTY_NAME) SingularityClientCredentials credentials) {
+    this.credentials = Optional.of(credentials);
+    return this;
+  }
+
   public SingularityClientProvider setHosts(String... hosts) {
     this.hosts = Arrays.asList(hosts);
     return this;
@@ -66,7 +74,14 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   public SingularityClient get() {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
-    return new SingularityClient(contextPath, httpClient, hosts);
+    return new SingularityClient(contextPath, httpClient, hosts, credentials);
+  }
+
+  public SingularityClient get(Optional<SingularityClientCredentials> credentials) {
+    Preconditions.checkState(contextPath != null, "contextPath null");
+    Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
+    Preconditions.checkNotNull(credentials);
+    return new SingularityClient(contextPath, httpClient, hosts, credentials);
   }
 
   @Deprecated

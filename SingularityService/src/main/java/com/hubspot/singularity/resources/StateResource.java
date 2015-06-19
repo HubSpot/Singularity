@@ -9,9 +9,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityLDAPCacheStats;
+import com.hubspot.singularity.SingularityLDAPPoolStats;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.auth.SingularityLDAPManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -22,10 +25,12 @@ public class StateResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/state";
 
   private final StateManager stateManager;
+  private final SingularityLDAPManager ldapManager;
 
   @Inject
-  public StateResource(StateManager stateManager) {
+  public StateResource(StateManager stateManager, SingularityLDAPManager ldapManager) {
     this.stateManager = stateManager;
+    this.ldapManager = ldapManager;
   }
 
   @GET
@@ -48,4 +53,15 @@ public class StateResource {
     return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
   }
 
+  @GET
+  @Path("/ldap/pool")
+  public SingularityLDAPPoolStats getLdapStats() {
+    return ldapManager.getPoolStats();
+  }
+
+  @GET
+  @Path("/ldap/cache")
+  public SingularityLDAPCacheStats getGroupCacheStats() {
+    return ldapManager.getGroupCacheStats();
+  }
 }

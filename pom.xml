@@ -666,6 +666,18 @@
         <artifactId>jukito</artifactId>
         <version>${jukito.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.directory.api</groupId>
+        <artifactId>api-all</artifactId>
+        <version>1.0.0-M28</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.antlr</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

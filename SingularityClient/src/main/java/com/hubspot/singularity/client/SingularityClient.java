@@ -137,23 +137,26 @@ public class SingularityClient {
   private final String contextPath;
 
   private final HttpClient httpClient;
+  private final Optional<SingularityClientCredentials> credentials;
 
   @Inject
   @Deprecated
   public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
-    this(contextPath, httpClient, Arrays.asList(hosts.split(",")));
+    this(contextPath, httpClient, Arrays.asList(hosts.split(",")), Optional.<SingularityClientCredentials>absent());
   }
 
-  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts) {
-    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)));
+  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts, Optional<SingularityClientCredentials> credentials) {
+    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)), credentials);
   }
 
-  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider) {
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
     this.hostsProvider = hostsProvider;
     this.random = new Random();
+
+    this.credentials = credentials;
   }
 
   private String getHost() {
@@ -205,6 +208,8 @@ public class SingularityClient {
       addQueryParams(requestBuilder, queryParams.get());
     }
 
+    addCredentials(requestBuilder);
+
     HttpResponse response = httpClient.execute(requestBuilder.build());
 
     if (response.getStatusCode() == 404) {
@@ -233,6 +238,8 @@ public class SingularityClient {
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
     }
+
+    addCredentials(requestBuilder);
 
     HttpResponse response = httpClient.execute(requestBuilder.build());
 
@@ -264,6 +271,12 @@ public class SingularityClient {
     }
   }
 
+  private void addCredentials(HttpRequest.Builder requestBuilder) {
+    if (credentials.isPresent()) {
+      requestBuilder.addHeader(credentials.get().getHeaderName(), credentials.get().getToken());
+    }
+  }
+
   private <T> void delete(String uri, String type, String id, Optional<String> user) {
     delete(uri, type, id, user, Optional.<Class<T>> absent());
   }
@@ -278,6 +291,8 @@ public class SingularityClient {
     if (user.isPresent()) {
       request.addQueryParam("user", user.get());
     }
+
+    addCredentials(request);
 
     HttpResponse response = httpClient.execute(request.build());
 
@@ -326,6 +341,8 @@ public class SingularityClient {
       request.setBody(body.get());
     }
 
+    addCredentials(request);
+
     HttpResponse response = httpClient.execute(request.build());
 
     checkResponse(type, response);
@@ -354,6 +371,8 @@ public class SingularityClient {
     if (includeRequestIds.isPresent()) {
       request.addQueryParam("includeRequestIds", includeRequestIds.get().booleanValue());
     }
+
+    addCredentials(request);
 
     HttpResponse response = httpClient.execute(request.build());
 

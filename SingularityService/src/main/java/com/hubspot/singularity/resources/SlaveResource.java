@@ -17,6 +17,8 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -28,13 +30,9 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   public static final String PATH = SingularityService.API_BASE_PATH + "/slaves";
 
-  private final SlaveManager slaveManager;
-
   @Inject
-  public SlaveResource(SlaveManager slaveManager) {
-    super(slaveManager);
-
-    this.slaveManager = slaveManager;
+  public SlaveResource(SlaveManager slaveManager, SingularityValidator validator, Optional<SingularityUser> user) {
+    super(slaveManager, validator, user);
   }
 
   @Override
@@ -46,20 +44,20 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/")
   @ApiOperation("Retrieve the list of all known slaves, optionally filtering by a particular state")
   public List<SingularitySlave> getSlaves(@ApiParam("Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
-    return slaveManager.getObjectsFiltered(filterState);
+    return manager.getObjectsFiltered(filterState);
   }
 
   @GET
   @Path("/slave/{slaveId}")
   @ApiOperation("Retrieve the history of a given slave")
   public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
-    return slaveManager.getHistory(slaveId);
+    return manager.getHistory(slaveId);
   }
 
   @DELETE
   @Path("/slave/{slaveId}")
   @ApiOperation("Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")
-  public void removeSlave(@ApiParam("Active SlaveId") @PathParam("slaveId") String slaveId) {
+  public void removeSlave(@ApiParam("Active SlaveId") @PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> queryUser) {
     super.remove(slaveId);
   }
 
@@ -67,24 +65,24 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}/decomission")
   @Deprecated
   public void decomissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
-    super.decommission(slaveId, user);
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
+    super.decommission(slaveId, queryUser);
   }
 
   @POST
   @Path("/slave/{slaveId}/decommission")
   @ApiOperation("Begin decommissioning a specific active slave")
   public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
-    super.decommission(slaveId, user);
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
+    super.decommission(slaveId, queryUser);
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
-    super.activate(slaveId, user);
+      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> queryUser) {
+    super.activate(slaveId, queryUser);
   }
 
 }
