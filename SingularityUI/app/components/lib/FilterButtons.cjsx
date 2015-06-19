@@ -3,7 +3,7 @@ Col = ReactBootstrap.Col
 
 PillsNav = require '../lib/PillsNav'
 NavItem = ReactBootstrap.NavItem
-BaseMixins = require '../mixins/BaseMixins'
+BaseMixins = require '../utils/mixins/BaseMixins'
 
 FilterButtons = React.createClass
 

@@ -1,7 +1,7 @@
-Helpers       = require '../helpers'  
+Helpers       = require '../utils/helpers'  
 Table         = ReactBootstrap.Table
 EmptyTableMsg = require '../lib/EmptyTableMsg'
-AdminTable    = require '../mixins/AdminTable'
+AdminTable    = require '../utils/mixins/AdminTable'
 
 SlavesTable = React.createClass
   

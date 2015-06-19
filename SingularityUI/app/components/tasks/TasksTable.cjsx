@@ -1,4 +1,4 @@
-Helpers = require '../helpers'
+Helpers = require '../utils/helpers'
 
 Tables =
   'active'    : require './tables/ActiveTasksTable'

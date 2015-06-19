@@ -1,4 +1,4 @@
-Helpers = require '../helpers'  
+Helpers = require '../utils/helpers'  
 EmptyTableMsg = require '../lib/EmptyTableMsg'
 Table = ReactBootstrap.Table
 
